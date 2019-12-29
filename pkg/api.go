@@ -16,6 +16,15 @@ type Checker interface {
 	CheckArgs(args map[string]interface{}) *CheckResult
 }
 
+// URL information
+type URL struct {
+	IP     string
+	Port   int
+	Host   string
+	Scheme string
+	Path  string
+}
+
 type CheckResult struct {
 	Pass    bool
 	Invalid bool
