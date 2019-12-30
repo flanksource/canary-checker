@@ -59,8 +59,9 @@ func main() {
 	})
 
 	root.PersistentFlags().CountP("loglevel", "v", "Increase logging level")
+	root.PersistentFlags().StringP("configfile", "c", "", "Specify configfile")
 	root.SetUsageTemplate(root.UsageTemplate() + fmt.Sprintf("\nversion: %s\n ", version))
-
+	root.MarkPersistentFlagRequired("configfile")
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}

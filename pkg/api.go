@@ -13,7 +13,16 @@ type Config struct {
 }
 
 type Checker interface {
-	Check(args map[string]interface{}) *CheckResult
+	CheckArgs(args map[string]interface{}) *CheckResult
+}
+
+// URL information
+type URL struct {
+	IP     string
+	Port   int
+	Host   string
+	Scheme string
+	Path  string
 }
 
 type CheckResult struct {
@@ -23,18 +32,38 @@ type CheckResult struct {
 }
 
 type Metric struct {
+	Name  string
+	Value interface{}
 }
 
 type Check struct {
 }
 
+type HTTPCheck struct {
+	Endpoints       []string `yaml:"endpoints"`
+	ThresholdMillis int      `yaml:"thresholdMillis"`
+	ResponseCodes   []int    `yaml:"responseCodes"`
+	ResponseContent string   `yaml:"responseContent"`
+	MaxSSLExpiry    int      `yaml:"maxSSLExpiry"`
+}
+
+type HTTPCheckResult struct {
+	Endpoint     string
+	Record       string
+	ResponseCode int
+	SSLExpiry    int
+	Content      string
+	ResponseTime int64
+}
+
 type HTTP struct {
-	Check `yaml:",inline"`
+	HTTPCheck `yaml:",inline"`
 }
 
 type SSL struct {
 	Check `yaml:",inline"`
 }
+
 type DNS struct {
 	Check `yaml:",inline"`
 }
