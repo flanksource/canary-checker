@@ -121,7 +121,11 @@ func checkHTTP(urlObj pkg.URL) (*pkg.HTTPCheckResult, error) {
 	} else {
 		urlString = fmt.Sprintf("%s://%s%s", urlObj.Scheme, urlObj.IP, urlObj.Path)
 	}
-	client := &http.Client{}
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 	req, err := http.NewRequest("GET", urlString, nil)
 	if err != nil {
 		return nil, err
