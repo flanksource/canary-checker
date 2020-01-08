@@ -3,7 +3,6 @@ package http
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/flanksource/canary-checker/pkg"
 	"io/ioutil"
 	"log"
 	"net"
@@ -11,7 +10,45 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/pkg/errors"
+
+	"github.com/flanksource/canary-checker/pkg"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+var (
+	opsProcessed = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "canary_checker_http_ops",
+		Help: "The total number of checks",
+	})
+
+	dnsFailed = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "canary_checker_http_dns_failed",
+		Help: "The total number of dns requests failed",
+	})
+
+	responseStatus = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "canary_checker_http_response_status",
+			Help: "The response status for HTTP checks per route.",
+		},
+		[]string{"status", "statusClass", "url"},
+	)
+
+	requestLatency = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "canary_checker_http_request_time",
+			Help:    "A histogram of the response latency for HTTP requests in milliseconds.",
+			Buckets: []float64{50, 100, 200, 400, 800, 1600, 3200},
+		},
+		[]string{"url", "statusClass"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(opsProcessed, dnsFailed, responseStatus, requestLatency)
+}
 
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
@@ -22,12 +59,13 @@ func Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 		lookupResult, err := DNSLookup(endpoint)
 		if err != nil {
 			log.Printf("Failed to resolve DNS for %s", endpoint)
+			opsProcessed.Inc()
+			dnsFailed.Inc()
 			return []*pkg.CheckResult{{
 				Pass:    false,
 				Invalid: true,
 				Metrics: []pkg.Metric{},
 			}}
-
 		}
 		for _, urlObj := range lookupResult {
 			checkResults, err := checkHTTP(urlObj)
@@ -58,12 +96,14 @@ func Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 					Metrics: m,
 				}
 				result = append(result, checkResult)
+				processResultMetric(endpoint, checkResult)
 			} else {
 				checkResult := &pkg.CheckResult{
 					Pass:    false,
 					Invalid: true,
 					Metrics: []pkg.Metric{},
 				}
+				opsProcessed.Inc()
 				result = append(result, checkResult)
 			}
 		}
@@ -147,4 +187,58 @@ func DNSLookup(endpoint string) ([]pkg.URL, error) {
 
 	return result, nil
 
+}
+
+func processResultMetric(url string, result *pkg.CheckResult) {
+	opsProcessed.Inc()
+	statusCodeI, err := findMetric(result, "response_code")
+	if err != nil {
+		log.Printf("Failed to find metric response_code: %v", err)
+		return
+	}
+	statusCode, ok := statusCodeI.(int)
+	if !ok {
+		log.Printf("Failed to convert status code %v to int", statusCodeI)
+		return
+	}
+	statusClass := statusCodeToClass(statusCode)
+	responseStatus.WithLabelValues(strconv.Itoa(statusCode), statusClass, url).Inc()
+
+	responseTimeI, err := findMetric(result, "response_time")
+	if err != nil {
+		log.Printf("Failed to find metric response_time: %v", err)
+		return
+	}
+	responseTime, ok := responseTimeI.(int64)
+	if !ok {
+		log.Printf("Failed to convert response time %v to int64", responseTimeI)
+		return
+	}
+
+	requestLatency.WithLabelValues(url, statusClass).Observe(float64(responseTime))
+}
+
+func findMetric(result *pkg.CheckResult, name string) (interface{}, error) {
+	for _, m := range result.Metrics {
+		if m.Name == name {
+			return m.Value, nil
+		}
+	}
+	return nil, errors.Errorf("metric with name %s not found", name)
+}
+
+func statusCodeToClass(statusCode int) string {
+	if statusCode >= 100 && statusCode < 200 {
+		return "1xx"
+	} else if statusCode >= 200 && statusCode < 300 {
+		return "2xx"
+	} else if statusCode >= 300 && statusCode < 400 {
+		return "3xx"
+	} else if statusCode >= 400 && statusCode < 500 {
+		return "4xx"
+	} else if statusCode >= 500 && statusCode < 600 {
+		return "5xx"
+	} else {
+		return "unknown"
+	}
 }
