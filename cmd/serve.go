@@ -4,10 +4,10 @@ import (
 	"fmt"
 	nethttp "net/http"
 
-	"github.com/flanksource/canary-checker/http"
+	"github.com/flanksource/canary-checker/checks"
+
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/jasonlvhit/gocron"
-	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -24,13 +24,13 @@ var Serve = &cobra.Command{
 		httpPort, _ := cmd.Flags().GetInt("httpPort")
 		interval, _ := cmd.Flags().GetUint64("interval")
 
-		for _, conf := range config.HTTP {
-			httpCheck := pkg.HTTPCheck{}
-			if err := copier.Copy(&httpCheck, &conf.HTTPCheck); err != nil {
-				log.Printf("error copying %v", err)
-			}
-			gocron.Every(interval).Seconds().Do(func() {
-				http.Check(httpCheck)
+		var checks = []checks.Checker{
+			&checks.HttpChecker{},
+		}
+
+		for _, c := range checks {
+			c.Schedule(config, interval, func(results []*pkg.CheckResult) {
+				processMetrics(c.Type(), results)
 			})
 		}
 
@@ -46,6 +46,20 @@ var Serve = &cobra.Command{
 			log.Fatal(errors.Wrap(err, "failed to start server"))
 		}
 	},
+}
+
+func processMetrics(checkType string, results []*pkg.CheckResult) {
+	for _, result := range results {
+		pkg.OpsCount.WithLabelValues(checkType).Inc()
+		if result.Pass {
+			pkg.OpsSuccessCount.WithLabelValues(checkType).Inc()
+			if result.Duration > 0 {
+				pkg.RequestLatency.WithLabelValues(checkType, result.Endpoint).Observe(float64(result.Duration))
+			}
+		} else {
+			pkg.OpsFailedCount.WithLabelValues(checkType).Inc()
+		}
+	}
 }
 
 func init() {

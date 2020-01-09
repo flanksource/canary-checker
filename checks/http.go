@@ -1,4 +1,4 @@
-package http
+package checks
 
 import (
 	"crypto/tls"
@@ -11,64 +11,85 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/jasonlvhit/gocron"
+	"github.com/jinzhu/copier"
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
-	opsProcessed = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "canary_checker_http_ops",
-		Help: "The total number of checks",
-	})
-
 	dnsFailed = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "canary_checker_http_dns_failed",
+		Name: "canary_check_http_dns_failed",
 		Help: "The total number of dns requests failed",
 	})
 
 	responseStatus = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "canary_checker_http_response_status",
+			Name: "canary_check_http_response_status",
 			Help: "The response status for HTTP checks per route.",
 		},
 		[]string{"status", "statusClass", "url"},
 	)
-
-	requestLatency = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "canary_checker_http_request_time",
-			Help:    "A histogram of the response latency for HTTP requests in milliseconds.",
-			Buckets: []float64{50, 100, 200, 400, 800, 1600, 3200},
-		},
-		[]string{"url", "statusClass"},
-	)
 )
 
 func init() {
-	prometheus.MustRegister(opsProcessed, dnsFailed, responseStatus, requestLatency)
+	prometheus.MustRegister(dnsFailed, responseStatus)
+}
+
+type HttpChecker struct{}
+
+// Type: returns checker type
+func (c *HttpChecker) Type() string {
+	return "http"
+}
+
+// Schedule: Add every check as a cron job, calls MetricProcessor with the set of metrics
+func (c *HttpChecker) Schedule(config pkg.Config, interval uint64, mp MetricProcessor) {
+	for _, conf := range config.HTTP {
+		httpCheck := pkg.HTTPCheck{}
+		if err := copier.Copy(&httpCheck, &conf.HTTPCheck); err != nil {
+			log.Printf("error copying %v", err)
+		}
+		gocron.Every(interval).Seconds().Do(func() {
+			metrics := c.Check(httpCheck)
+			mp(metrics)
+		})
+	}
+}
+
+// Run: Check every entry from config according to Checker interface
+// Returns check result and metrics
+func (c *HttpChecker) Run(config pkg.Config) []*pkg.CheckResult {
+	var checks []*pkg.CheckResult
+	for _, conf := range config.HTTP {
+		for _, result := range c.Check(conf.HTTPCheck) {
+			checks = append(checks, result)
+			fmt.Println(result)
+		}
+	}
+	return checks
 }
 
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
-func Check(check pkg.HTTPCheck) []*pkg.CheckResult {
+func (c *HttpChecker) Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 	var result []*pkg.CheckResult
 	for _, endpoint := range check.Endpoints {
 		rcOK, contentOK, timeOK, sslOK := false, false, false, false
 		lookupResult, err := DNSLookup(endpoint)
 		if err != nil {
 			log.Printf("Failed to resolve DNS for %s", endpoint)
-			opsProcessed.Inc()
 			dnsFailed.Inc()
 			return []*pkg.CheckResult{{
-				Pass:    false,
-				Invalid: true,
-				Metrics: []pkg.Metric{},
+				Pass:     false,
+				Invalid:  true,
+				Endpoint: endpoint,
+				Metrics:  []pkg.Metric{},
 			}}
 		}
 		for _, urlObj := range lookupResult {
-			checkResults, err := checkHTTP(urlObj)
+			checkResults, err := c.checkHTTP(urlObj)
 			if err == nil {
 				for _, rc := range check.ResponseCodes {
 					if rc == checkResults.ResponseCode {
@@ -91,19 +112,21 @@ func Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 					{Name: "ssl_certificate_expiry", Value: checkResults.SSLExpiry},
 				}
 				checkResult := &pkg.CheckResult{
-					Pass:    pass,
-					Invalid: false,
-					Metrics: m,
+					Pass:     pass,
+					Duration: checkResults.ResponseTime,
+					Endpoint: endpoint,
+					Invalid:  false,
+					Metrics:  m,
 				}
 				result = append(result, checkResult)
-				processResultMetric(endpoint, checkResult)
+				c.processResponseCode(endpoint, checkResults.ResponseCode)
 			} else {
 				checkResult := &pkg.CheckResult{
-					Pass:    false,
-					Invalid: true,
-					Metrics: []pkg.Metric{},
+					Pass:     false,
+					Invalid:  true,
+					Endpoint: endpoint,
+					Metrics:  []pkg.Metric{},
 				}
-				opsProcessed.Inc()
 				result = append(result, checkResult)
 			}
 		}
@@ -111,7 +134,7 @@ func Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 	return result
 }
 
-func checkHTTP(urlObj pkg.URL) (*pkg.HTTPCheckResult, error) {
+func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*pkg.HTTPCheckResult, error) {
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	var exp time.Time
 	start := time.Now()
@@ -193,45 +216,12 @@ func DNSLookup(endpoint string) ([]pkg.URL, error) {
 
 }
 
-func processResultMetric(url string, result *pkg.CheckResult) {
-	opsProcessed.Inc()
-	statusCodeI, err := findMetric(result, "response_code")
-	if err != nil {
-		log.Printf("Failed to find metric response_code: %v", err)
-		return
-	}
-	statusCode, ok := statusCodeI.(int)
-	if !ok {
-		log.Printf("Failed to convert status code %v to int", statusCodeI)
-		return
-	}
-	statusClass := statusCodeToClass(statusCode)
+func (c *HttpChecker) processResponseCode(url string, statusCode int) {
+	statusClass := c.statusCodeToClass(statusCode)
 	responseStatus.WithLabelValues(strconv.Itoa(statusCode), statusClass, url).Inc()
-
-	responseTimeI, err := findMetric(result, "response_time")
-	if err != nil {
-		log.Printf("Failed to find metric response_time: %v", err)
-		return
-	}
-	responseTime, ok := responseTimeI.(int64)
-	if !ok {
-		log.Printf("Failed to convert response time %v to int64", responseTimeI)
-		return
-	}
-
-	requestLatency.WithLabelValues(url, statusClass).Observe(float64(responseTime))
 }
 
-func findMetric(result *pkg.CheckResult, name string) (interface{}, error) {
-	for _, m := range result.Metrics {
-		if m.Name == name {
-			return m.Value, nil
-		}
-	}
-	return nil, errors.Errorf("metric with name %s not found", name)
-}
-
-func statusCodeToClass(statusCode int) string {
+func (c *HttpChecker) statusCodeToClass(statusCode int) string {
 	if statusCode >= 100 && statusCode < 200 {
 		return "1xx"
 	} else if statusCode >= 200 && statusCode < 300 {
