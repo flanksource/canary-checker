@@ -34,10 +34,10 @@ type CheckResult struct {
 }
 
 type Metric struct {
-	Name  string
-	Type  MetricType
-	Meta  string
-	Value float64
+	Name   string
+	Type   MetricType
+	Labels map[string]string
+	Value  float64
 }
 
 type Check struct {

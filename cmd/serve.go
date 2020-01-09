@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	nethttp "net/http"
+	"strconv"
 
 	"github.com/flanksource/canary-checker/checks"
 
@@ -60,7 +61,7 @@ func processMetrics(checkType string, results []*pkg.CheckResult) {
 			for _, m := range result.Metrics {
 				switch m.Type {
 				case pkg.CounterType:
-					pkg.GenericCounter.WithLabelValues(checkType, m.Name, m.Meta).Inc()
+					pkg.GenericCounter.WithLabelValues(checkType, m.Name, strconv.Itoa(int(m.Value))).Inc()
 				case pkg.GaugeType:
 					pkg.GenericGauge.WithLabelValues(checkType, m.Name).Set(m.Value)
 				}
