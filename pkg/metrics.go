@@ -2,7 +2,12 @@ package pkg
 
 import "github.com/prometheus/client_golang/prometheus"
 
+type MetricType string
+
 var (
+	CounterType MetricType = "counter"
+	GaugeType   MetricType = "gauge"
+
 	OpsCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "canary_check_count",
@@ -35,8 +40,24 @@ var (
 		},
 		[]string{"type", "endpoint"},
 	)
+
+	GenericGauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "canary_check_gauge",
+			Help: "A gauge representing duration",
+		},
+		[]string{"type", "metric"},
+	)
+
+	GenericCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "canary_check_counter",
+			Help: "A gauge representing counters",
+		},
+		[]string{"type", "metric", "value"},
+	)
 )
 
 func init() {
-	prometheus.MustRegister(OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency)
+	prometheus.MustRegister(OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency, GenericGauge, GenericCounter)
 }

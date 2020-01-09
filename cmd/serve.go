@@ -56,6 +56,15 @@ func processMetrics(checkType string, results []*pkg.CheckResult) {
 			if result.Duration > 0 {
 				pkg.RequestLatency.WithLabelValues(checkType, result.Endpoint).Observe(float64(result.Duration))
 			}
+
+			for _, m := range result.Metrics {
+				switch m.Type {
+				case pkg.CounterType:
+					pkg.GenericCounter.WithLabelValues(checkType, m.Name, m.Meta).Inc()
+				case pkg.GaugeType:
+					pkg.GenericGauge.WithLabelValues(checkType, m.Name).Set(m.Value)
+				}
+			}
 		} else {
 			pkg.OpsFailedCount.WithLabelValues(checkType).Inc()
 		}

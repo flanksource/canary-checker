@@ -107,9 +107,8 @@ func (c *HttpChecker) Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 				}
 				pass := rcOK && contentOK && timeOK && sslOK
 				m := []pkg.Metric{
-					{Name: "response_time", Value: checkResults.ResponseTime},
-					{Name: "response_code", Value: checkResults.ResponseCode},
-					{Name: "ssl_certificate_expiry", Value: checkResults.SSLExpiry},
+					{Name: "response_code", Type: pkg.CounterType, Meta: strconv.Itoa(checkResults.ResponseCode)},
+					{Name: "ssl_certificate_expiry", Type: pkg.GaugeType, Value: float64(checkResults.SSLExpiry)},
 				}
 				checkResult := &pkg.CheckResult{
 					Pass:     pass,
@@ -119,7 +118,6 @@ func (c *HttpChecker) Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 					Metrics:  m,
 				}
 				result = append(result, checkResult)
-				c.processResponseCode(endpoint, checkResults.ResponseCode)
 			} else {
 				checkResult := &pkg.CheckResult{
 					Pass:     false,
@@ -214,25 +212,4 @@ func DNSLookup(endpoint string) ([]pkg.URL, error) {
 
 	return result, nil
 
-}
-
-func (c *HttpChecker) processResponseCode(url string, statusCode int) {
-	statusClass := c.statusCodeToClass(statusCode)
-	responseStatus.WithLabelValues(strconv.Itoa(statusCode), statusClass, url).Inc()
-}
-
-func (c *HttpChecker) statusCodeToClass(statusCode int) string {
-	if statusCode >= 100 && statusCode < 200 {
-		return "1xx"
-	} else if statusCode >= 200 && statusCode < 300 {
-		return "2xx"
-	} else if statusCode >= 300 && statusCode < 400 {
-		return "3xx"
-	} else if statusCode >= 400 && statusCode < 500 {
-		return "4xx"
-	} else if statusCode >= 500 && statusCode < 600 {
-		return "5xx"
-	} else {
-		return "unknown"
-	}
 }

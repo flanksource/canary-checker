@@ -35,7 +35,9 @@ type CheckResult struct {
 
 type Metric struct {
 	Name  string
-	Value interface{}
+	Type  MetricType
+	Meta  string
+	Value float64
 }
 
 type Check struct {
