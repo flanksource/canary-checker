@@ -22,18 +22,22 @@ type URL struct {
 	Port   int
 	Host   string
 	Scheme string
-	Path  string
+	Path   string
 }
 
 type CheckResult struct {
-	Pass    bool
-	Invalid bool
-	Metrics []Metric
+	Pass     bool
+	Invalid  bool
+	Duration int64
+	Endpoint string
+	Metrics  []Metric
 }
 
 type Metric struct {
-	Name  string
-	Value interface{}
+	Name   string
+	Type   MetricType
+	Labels map[string]string
+	Value  float64
 }
 
 type Check struct {

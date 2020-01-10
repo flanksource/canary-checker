@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/flanksource/canary-checker/http"
+
+	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/spf13/cobra"
 )
@@ -21,12 +22,18 @@ func init() {
 
 }
 func RunChecks(config pkg.Config) []*pkg.CheckResult {
-	var checks []*pkg.CheckResult
-	for _, conf := range config.HTTP {
-		for _, result := range http.Check(conf.HTTPCheck) {
-			checks = append(checks, result)
+	var checks = []checks.Checker{
+		&checks.HttpChecker{},
+	}
+
+	var results []*pkg.CheckResult
+
+	for _, c := range checks {
+		for _, result := range c.Run(config) {
+			results = append(results, result)
 			fmt.Println(result)
 		}
 	}
-	return checks
+
+	return results
 }
