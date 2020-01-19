@@ -10,6 +10,7 @@ type Config struct {
 	PodAndIngress []PodAndIngress `yaml:"pod_and_ingress,omitempty"`
 	LDAP          []LDAP          `yaml:"ldap,omitempty"`
 	SSL           []SSL           `yaml:"ssl,omitempty"`
+	ICMP          []ICMP          `yaml:"icmp,omitempty"`
 }
 
 type Checker interface {
@@ -60,6 +61,20 @@ type HTTPCheckResult struct {
 	ResponseTime int64
 }
 
+type ICMPCheck struct {
+	Endpoints           []string `yaml:"endpoints"`
+	ThresholdMillis     int      `yaml:"thresholdMillis"`
+	PacketLossThreshold float64  `yaml:"packetLossThreshold"`
+	PacketCount         int      `yaml:"packetCount"`
+}
+
+type ICMPCheckResult struct {
+	Endpoint   string
+	Record     string
+	Latency    float64
+	PacketLoss int64
+}
+
 type HTTP struct {
 	HTTPCheck `yaml:",inline"`
 }
@@ -97,5 +112,9 @@ type LDAP struct {
 }
 
 type PostgreSQL struct {
+	Check `yaml:",inline"`
+}
+
+type ICMP struct {
 	Check `yaml:",inline"`
 }
