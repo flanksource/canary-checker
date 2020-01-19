@@ -1,0 +1,6 @@
+http:
+  - endpoints:
+      - google.com
+    thresholdMillis: 3000
+    packetLossThreshold: 0.01
+    packetCount: 2
