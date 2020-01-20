@@ -1,4 +1,4 @@
-http:
+icmp:
   - endpoints:
       - google.com
     thresholdMillis: 3000

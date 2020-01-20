@@ -116,5 +116,5 @@ type PostgreSQL struct {
 }
 
 type ICMP struct {
-	Check `yaml:",inline"`
+	ICMPCheck `yaml:",inline"`
 }
