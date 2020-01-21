@@ -10,13 +10,16 @@ import (
     "net/http"
     "net/url"
 
+    "github.com/jasonlvhit/gocron"
+    "github.com/jinzhu/copier"
+    "github.com/sparrc/go-ping"
+
     "github.com/flanksource/canary-checker/pkg"
     "github.com/prometheus/client_golang/prometheus"
-    "github.com/sparrc/go-ping"
 )
 
 var (
-    dnsFailed = prometheus.NewCounter(prometheus.CounterOpts{
+    icmpDnsFailed = prometheus.NewCounter(prometheus.CounterOpts{
         Name: "canary_check_icmp_dns_failed",
         Help: "The total number of dns requests failed",
     })
@@ -42,7 +45,7 @@ var (
 
 
 func init() {
-    prometheus.MustRegister(dnsFailed, packetLoss, icmpLatency)
+    prometheus.MustRegister(icmpDnsFailed, packetLoss, icmpLatency)
 }
 
 type IcmpChecker struct{}
@@ -51,6 +54,21 @@ type IcmpChecker struct{}
 func (c *IcmpChecker) Type() string {
     return "icmp"
 }
+
+// Schedule: Add every check as a cron job, calls MetricProcessor with the set of metrics
+func (c *IcmpChecker) Schedule(config pkg.Config, interval uint64, mp MetricProcessor) {
+    for _, conf := range config.ICMP {
+        icmpCheck := pkg.HTTPCheck{}
+        if err := copier.Copy(&icmpCheck, &conf.ICMPCheck); err != nil {
+            log.Printf("error copying %v", err)
+        }
+        gocron.Every(interval).Seconds().Do(func() {
+            metrics := c.Check(icmpCheck)
+            mp(metrics)
+        })
+    }
+}
+
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
@@ -74,7 +92,7 @@ func (c *IcmpChecker) Check(check pkg.ICMPCheck) []*pkg.CheckResult {
         lookupResult, err := DNSLookup(endpoint)
         if err != nil {
             log.Printf("Failed to resolve DNS for %s", endpoint)
-            dnsFailed.Inc()
+            icmpDnsFailed.Inc()
             checkResult := &pkg.CheckResult{
                     Pass:     false,
                     Invalid:  true,
@@ -100,7 +118,7 @@ func (c *IcmpChecker) Check(check pkg.ICMPCheck) []*pkg.CheckResult {
                         Type: pkg.HistogramType,
                         Labels: map[string]string{
                             "endpoint": endpoint,
-                            "ip":       urlObj.IP
+                            "ip":       urlObj.IP,
                         },
                         Value: float64(checkResults.Latency),
                     },
@@ -109,7 +127,7 @@ func (c *IcmpChecker) Check(check pkg.ICMPCheck) []*pkg.CheckResult {
                         Type: pkg.GaugeType,
                         Labels: map[string]string{
                             "endpoint": endpoint,
-                            "ip":       urlObj.IP
+                            "ip":       urlObj.IP,
                         },
                         Value: float64(checkResults.PacketLoss),
                     },
@@ -163,27 +181,3 @@ func (c *IcmpChecker) checkICMP(urlObj pkg.URL, packetCount int) (*pkg.ICMPCheck
     return &checkResult, nil
 }
 
-func DNSLookup(endpoint string) ([]pkg.URL, error) {
-    var result []pkg.URL
-    parsedURL, err := url.Parse(endpoint)
-    if err != nil {
-        return nil, err
-    }
-    ips, err := net.LookupIP(parsedURL.Hostname())
-    if err != nil {
-        return nil, err
-    }
-    for _, ip := range ips {
-        port, _ := strconv.Atoi(parsedURL.Port())
-        urlObj := pkg.URL{
-            IP:     ip.String(),
-            Port:   port,
-            Host:   parsedURL.Hostname(),
-            Scheme: parsedURL.Scheme,
-            Path:   parsedURL.Path,
-        }
-        result = append(result, urlObj)
-    }
-
-    return result, nil
-}
