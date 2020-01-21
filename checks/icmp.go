@@ -2,13 +2,13 @@ package checks
 
 import (
     "fmt"
-    "io/ioutil"
+//    "io/ioutil"
     "log"
-    "time"
-    "strconv"
-    "net"
-    "net/http"
-    "net/url"
+//    "time"
+//    "strconv"
+//    "net"
+//    "net/http"
+//    "net/url"
 
     "github.com/jasonlvhit/gocron"
     "github.com/jinzhu/copier"
@@ -58,7 +58,7 @@ func (c *IcmpChecker) Type() string {
 // Schedule: Add every check as a cron job, calls MetricProcessor with the set of metrics
 func (c *IcmpChecker) Schedule(config pkg.Config, interval uint64, mp MetricProcessor) {
     for _, conf := range config.ICMP {
-        icmpCheck := pkg.HTTPCheck{}
+        icmpCheck := pkg.ICMPCheck{}
         if err := copier.Copy(&icmpCheck, &conf.ICMPCheck); err != nil {
             log.Printf("error copying %v", err)
         }
@@ -135,7 +135,7 @@ func (c *IcmpChecker) Check(check pkg.ICMPCheck) []*pkg.CheckResult {
                 checkResult := &pkg.CheckResult{
                     Pass:     pass,
                     Invalid:  false,
-                    Duration: int(checkResults.Latency),
+                    Duration: int64(checkResults.Latency),
                     Endpoint: endpoint,
                     Metrics:  m,
                 }
@@ -144,8 +144,7 @@ func (c *IcmpChecker) Check(check pkg.ICMPCheck) []*pkg.CheckResult {
                 packetLoss.WithLabelValues(endpoint,urlObj.IP).Set(float64(checkResults.PacketLoss))
                 icmpLatency.WithLabelValues(endpoint,urlObj.IP).Observe(float64(checkResults.Latency))
 
-            }
-            else {
+            } else {
                 checkResult := &pkg.CheckResult{
                     Pass:     false,
                     Invalid:  true,
@@ -175,7 +174,7 @@ func (c *IcmpChecker) checkICMP(urlObj pkg.URL, packetCount int) (*pkg.ICMPCheck
     checkResult := pkg.ICMPCheckResult{
         Endpoint:   urlObj.Host,
         Record:     urlObj.IP,
-        Latency:    latency,
+        Latency:    float64(latency),
         PacketLoss: packetLoss,
     }
     return &checkResult, nil
