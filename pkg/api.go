@@ -63,7 +63,7 @@ type HTTPCheckResult struct {
 
 type ICMPCheck struct {
 	Endpoints           []string `yaml:"endpoints"`
-	ThresholdMillis     int      `yaml:"thresholdMillis"`
+	ThresholdMillis     float64      `yaml:"thresholdMillis"`
 	PacketLossThreshold float64  `yaml:"packetLossThreshold"`
 	PacketCount         int      `yaml:"packetCount"`
 }
@@ -72,7 +72,7 @@ type ICMPCheckResult struct {
 	Endpoint   string
 	Record     string
 	Latency    float64
-	PacketLoss int64
+	PacketLoss float64
 }
 
 type HTTP struct {
