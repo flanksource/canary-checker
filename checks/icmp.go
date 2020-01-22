@@ -169,7 +169,7 @@ func (c *IcmpChecker) checkICMP(urlObj pkg.URL, packetCount int) (*pkg.ICMPCheck
     pinger.Timeout = time.Second * 10       // 10 seconds
     pinger.Run()
     pingerStats := pinger.Statistics()
-    latency := pingerStats.AvgRtt.Miliseconds()   
+    latency := pingerStats.AvgRtt.Milliseconds()   
     packetLoss := pingerStats.PacketLoss
     
     checkResult := pkg.ICMPCheckResult{
