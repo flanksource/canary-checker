@@ -2,13 +2,8 @@ package checks
 
 import (
     "fmt"
-//    "io/ioutil"
     "log"
     "time"
-//    "strconv"
-//    "net"
-//    "net/http"
-//    "net/url"
 
     "github.com/jasonlvhit/gocron"
     "github.com/jinzhu/copier"
