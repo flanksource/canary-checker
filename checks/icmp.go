@@ -4,7 +4,7 @@ import (
     "fmt"
 //    "io/ioutil"
     "log"
-//    "time"
+    "time"
 //    "strconv"
 //    "net"
 //    "net/http"
@@ -166,9 +166,10 @@ func (c *IcmpChecker) checkICMP(urlObj pkg.URL, packetCount int) (*pkg.ICMPCheck
         return nil, err
     }
     pinger.Count = packetCount
+    pinger.Timeout = time.Second * 10       // 10 seconds
     pinger.Run()
     pingerStats := pinger.Statistics()
-    latency := pingerStats.AvgRtt
+    latency := pingerStats.AvgRtt.Miliseconds()   
     packetLoss := pingerStats.PacketLoss
     
     checkResult := pkg.ICMPCheckResult{
