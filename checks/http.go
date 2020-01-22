@@ -89,12 +89,14 @@ func (c *HttpChecker) Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 		if err != nil {
 			log.Printf("Failed to resolve DNS for %s", endpoint)
 			dnsFailed.Inc()
-			return []*pkg.CheckResult{{
+			checkResult := &pkg.CheckResult{
 				Pass:     false,
 				Invalid:  true,
 				Endpoint: endpoint,
 				Metrics:  []pkg.Metric{},
-			}}
+			}
+			result = append(result, checkResult)
+			continue
 		}
 		for _, urlObj := range lookupResult {
 			checkResults, err := c.checkHTTP(urlObj)
