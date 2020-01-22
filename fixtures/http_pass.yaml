@@ -8,6 +8,6 @@ http:
 icmp:
   - endpoints:
       - https://google.com
-    thresholdMillis: 1000000
+    thresholdMillis: 500
     packetLossThreshold: 0.5
     packetCount: 2
