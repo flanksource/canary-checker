@@ -5,9 +5,3 @@ http:
     responseCodes: [201,200,301]
     responseContent: ""
     maxSSLExpiry: 60
-icmp:
-  - endpoints:
-      - https://google.com
-    thresholdMillis: 500
-    packetLossThreshold: 0.5
-    packetCount: 2
