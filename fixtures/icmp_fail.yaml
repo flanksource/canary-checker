@@ -1,0 +1,6 @@
+icmp:
+  - endpoints:
+      - https://github.com
+    thresholdMillis: 400
+    packetLossThreshold: 0.5
+    packetCount: 2
