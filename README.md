@@ -1,4 +1,5 @@
 # canary-checker
+
 Command to build Docker Image:
 bash build/build.sh
 
