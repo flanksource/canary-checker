@@ -38,7 +38,7 @@ github-release upload -R -u $GITHUB_USER -r ${NAME} --tag $TAG -n ${NAME}_osx -f
 
 echo Building docker image
 
-docker build --build-arg NAME=$NAME -t $GITHUB_USER/$NAME:$TAG -f build/Dockerfile .
+docker build -t $GITHUB_USER/$NAME:$TAG --build-arg VERSION="$VERSION" -f build/Dockerfile .
 
 echo Pushing docker image
 docker login --username $DOCKER_LOGIN --password $DOCKER_PASS
