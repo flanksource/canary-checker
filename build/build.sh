@@ -2,7 +2,7 @@
 
 # Create Docker Image from root of Repo
 docker_image_name="canary-checker:v1"
-docker build -t $docker_image_name -f build/Dockerfile .
+docker build -t $docker_image_name --build-arg VERSION="$VERSION" -f build/Dockerfile .
 
 # RUN docker container
 command_to_run="run -c http_multiple.yaml -v 2"
