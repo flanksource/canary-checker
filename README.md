@@ -1,8 +1,5 @@
 # canary-checker
 
-Command to build Docker Image:
-bash build/build.sh
+1. To build the docker image: `make image`
 
-Available variables in build.sh:
-docker_image_name -> Name of docker image
-command_to_run    -> Parameters for canary-checker build
+2. To run image: `docker run --sysctl net.ipv4.ping_group_range="0   2147483647" -it flanksource/canary-checker OPTIONS`
