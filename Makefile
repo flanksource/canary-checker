@@ -26,3 +26,7 @@ compress:
 .PHONY: install
 install:
 	cp ./.bin/$(NAME) /usr/local/bin/
+
+.PHONY: image
+image:
+	docker build -t $(NAME) --build-arg VERSION="$(VERSION)" -f Dockerfile .
