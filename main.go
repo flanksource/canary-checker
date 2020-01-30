@@ -39,7 +39,7 @@ func main() {
 	}
 	root.AddCommand(&cobra.Command{
 		Use:   "version",
-		Short: "Print the version of platform-cli",
+		Short: "Print the version of canary-checker",
 		Args:  cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(version)
