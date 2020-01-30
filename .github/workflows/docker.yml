@@ -3,15 +3,12 @@ name: Docker Image CI
 on: [push]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
-
+    env:
+      DOCKER_LOGIN: ${{ secrets.DOCKER_LOGIN }}
+      DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
     steps:
-    - uses: actions/checkout@v1
-    - name: Build the Docker image
-      run: | 
-        tag=$(date +%s)
-        docker build . --file Dockerfile --tag docker.pkg.github.com/flanksource/canary-checker:$tag
-        docker push docker.pkg.github.com/flanksource/canary-checker:$tag
+      - uses: actions/checkout@v1
+      - name: Build the Docker image
+        run: ./release.sh
