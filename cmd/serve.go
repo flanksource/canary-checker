@@ -27,6 +27,7 @@ var Serve = &cobra.Command{
 
 		var checks = []checks.Checker{
 			&checks.HttpChecker{},
+			&checks.IcmpChecker{},
 		}
 
 		for _, c := range checks {

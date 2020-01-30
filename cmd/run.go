@@ -24,6 +24,7 @@ func init() {
 func RunChecks(config pkg.Config) []*pkg.CheckResult {
 	var checks = []checks.Checker{
 		&checks.HttpChecker{},
+		&checks.IcmpChecker{},
 	}
 
 	var results []*pkg.CheckResult

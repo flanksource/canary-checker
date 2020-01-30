@@ -5,8 +5,9 @@ import "github.com/prometheus/client_golang/prometheus"
 type MetricType string
 
 var (
-	CounterType MetricType = "counter"
-	GaugeType   MetricType = "gauge"
+	CounterType   MetricType = "counter"
+	GaugeType     MetricType = "gauge"
+	HistogramType MetricType = "histogram"
 
 	OpsCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
