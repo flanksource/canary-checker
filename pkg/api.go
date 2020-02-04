@@ -3,7 +3,7 @@ package pkg
 type Config struct {
 	HTTP          []HTTP          `yaml:"http,omitempty"`
 	DNS           []DNS           `yaml:"dns,omitempty"`
-	DockerPull    []DockerPull    `yaml:"docker,omitempty"`
+	DockerPull    []DockerPull    `yaml:"dockerpull,omitempty"`
 	S3            []S3            `yaml:"s3,omitempty"`
 	TCP           []TCP           `yaml:"tcp,omitempty"`
 	Pod           []Pod           `yaml:"pod,omitempty"`
@@ -75,6 +75,17 @@ type ICMPCheckResult struct {
 	PacketLoss float64
 }
 
+type DockerPullCheck struct {
+	Images []string `yaml:"images"`
+}
+
+type DockerPullCheckResult struct {
+	Image       string
+	PullTime    float64
+	TotalLayers int
+	Size        float64
+}
+
 type HTTP struct {
 	HTTPCheck `yaml:",inline"`
 }
@@ -88,7 +99,7 @@ type DNS struct {
 }
 
 type DockerPull struct {
-	Check `yaml:",inline"`
+	DockerPullCheck `yaml:",inline"`
 }
 
 type S3 struct {
