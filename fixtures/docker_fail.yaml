@@ -1,0 +1,6 @@
+docker:
+  - image: docker.io/busybox
+    username:
+    password:
+    expectedDigest: abcdef123
+    expectedSize: 200m
