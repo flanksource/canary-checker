@@ -88,6 +88,14 @@ type ICMPCheckResult struct {
 	PacketLoss float64
 }
 
+type DockerPullCheck struct {
+	Image          string `yaml:"image"`
+	Username       string `yaml:"username"`
+	Password       string `yaml:"password"`
+	ExpectedDigest string `yaml:"expectedDigest"`
+	ExpectedSize   int64  `yaml:"expectedSize"`
+}
+
 type HTTP struct {
 	HTTPCheck `yaml:",inline"`
 }
@@ -101,7 +109,7 @@ type DNS struct {
 }
 
 type DockerPull struct {
-	Check `yaml:",inline"`
+	DockerPullCheck `yaml:",inline"`
 }
 
 type S3 struct {
