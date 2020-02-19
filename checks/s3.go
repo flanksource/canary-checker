@@ -1,12 +1,19 @@
 package checks
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/jasonlvhit/gocron"
 	"github.com/jinzhu/copier"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
+	"time"
 )
 
 var (
@@ -15,35 +22,41 @@ var (
 		Help: "The total number of S3 checks failed",
 	})
 
+	s3DnsFailed = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "canary_check_s3_dns_failed",
+		Help: "The total number of S3 endpoint lookup failed",
+	})
+
 	lookupTime = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "canary_check_s3_lookup_time",
 			Help:    "S3 lookup in milliseconds",
 			Buckets: []float64{25, 50, 100, 200, 400, 800, 1000, 1200, 1500, 2000},
 		},
-		[]string{"s3", "lookup"},
+		[]string{"endpoint", "bucket"},
 	)
 
 	listCount = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "canary_check_s3_list",
 		Help: "The total number of S3 list operations",
 	})
-	updateCount = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "canary_check_s3_update",
-		Help: "The total number of S3 update operations",
-	})
 	readCount = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "canary_check_s3_read",
 		Help: "The total number of S3 read operations",
 	})
+	updateCount = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "canary_check_s3_update",
+		Help: "The total number of S3 update operations",
+	})
 )
 
 func init() {
-	prometheus.MustRegister(s3Failed, lookupTime, listCount, updateCount, readCount)
+	prometheus.MustRegister(s3Failed, s3DnsFailed, lookupTime, listCount, readCount, updateCount)
 }
 
-type S3Checker struct {}
+type S3Checker struct{}
 
+// Schedule: Add every check as a cron job, calls MetricProcessor with the set of metrics
 func (c *S3Checker) Schedule(config pkg.Config, interval uint64, mp MetricProcessor) {
 	for _, conf := range config.S3 {
 		s3Check := pkg.S3Check{}
@@ -57,6 +70,8 @@ func (c *S3Checker) Schedule(config pkg.Config, interval uint64, mp MetricProces
 	}
 }
 
+// Run: Check every entry from config according to Checker interface
+// Returns check result and metrics
 func (c *S3Checker) Run(config pkg.Config) []*pkg.CheckResult {
 	var checks []*pkg.CheckResult
 	for _, conf := range config.S3 {
@@ -74,6 +89,107 @@ func (c *S3Checker) Type() string {
 }
 
 func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
-	return nil
+	var result []*pkg.CheckResult
+	for _, bucket := range check.Buckets {
+		checkStart := time.Now()
+		_, err := DNSLookup(bucket.Endpoint)
+		lookupTime.WithLabelValues(bucket.Endpoint, bucket.Name).Observe(float64(time.Since(checkStart).Milliseconds()))
+		if err != nil {
+			result = append(result,
+				c.handleError(fmt.Sprintf("Failed to resolve DNS for %s", bucket.Endpoint),
+					bucket.Endpoint,
+					[]pkg.Metric{}),
+			)
+			continue
+		}
+
+		cfg := aws.NewConfig().
+			WithRegion(bucket.Region).
+			WithEndpoint(bucket.Endpoint).
+			WithCredentials(
+				credentials.NewStaticCredentials(check.AccessKey, check.SecretKey, ""),
+			)
+		ssn, err := session.NewSession(cfg)
+		if err != nil {
+			result = append(result,
+				c.handleError(fmt.Sprintf("Failed to create S3 session for %s", bucket.Name),
+					bucket.Endpoint,
+					[]pkg.Metric{}),
+			)
+			continue
+		}
+		client := s3.New(ssn)
+
+		_, err = client.ListObjects(&s3.ListObjectsInput{Bucket: &bucket.Name})
+		if err != nil {
+			result = append(result,
+				c.handleError(fmt.Sprintf("Failed to list objects in bucket %s", bucket.Name),
+					bucket.Endpoint,
+					[]pkg.Metric{}),
+			)
+			continue
+		}
+		listCount.Inc()
+
+		obj, err := client.GetObject(&s3.GetObjectInput{
+			Bucket: &bucket.Name,
+			Key:    &check.ObjectPath,
+		})
+		if err != nil {
+			result = append(result,
+				c.handleError(fmt.Sprintf("Failed to get object %s in bucket %s", check.ObjectPath, bucket.Name),
+					bucket.Endpoint,
+					[]pkg.Metric{}),
+			)
+			continue
+		}
+		readCount.Inc()
+
+		data, _ := ioutil.ReadAll(obj.Body)
+		_, err = client.PutObject(&s3.PutObjectInput{
+			Bucket: &bucket.Name,
+			Key:    &check.ObjectPath,
+			Body:   bytes.NewReader(data),
+		})
+		if err != nil {
+			result = append(result,
+				c.handleError(fmt.Sprintf("Failed to put object %s in bucket %s", check.ObjectPath, bucket.Name),
+					bucket.Endpoint,
+					[]pkg.Metric{}),
+			)
+			continue
+		}
+		updateCount.Inc()
+
+		m := []pkg.Metric{
+			{
+				Name: "lookupTime",
+				Type: pkg.HistogramType,
+				Labels: map[string]string{
+					"bucket": bucket.Name,
+				},
+				Value: float64(time.Since(checkStart).Milliseconds()),
+			},
+		}
+		checkResult := &pkg.CheckResult{
+			Pass:     true,
+			Invalid:  false,
+			Duration: time.Since(checkStart).Milliseconds(),
+			Endpoint: bucket.Endpoint,
+			Metrics:  m,
+		}
+		result = append(result, checkResult)
+	}
+	return result
 }
 
+func (c *S3Checker) handleError(errMessage string, endpoint string, metrics []pkg.Metric) *pkg.CheckResult {
+	log.Print(errMessage)
+	s3Failed.Inc()
+	return &pkg.CheckResult{
+		Pass:     false,
+		Invalid:  true,
+		Endpoint: endpoint,
+		Metrics:  metrics,
+	}
+}
