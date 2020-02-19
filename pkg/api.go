@@ -63,9 +63,22 @@ type HTTPCheckResult struct {
 
 type ICMPCheck struct {
 	Endpoints           []string `yaml:"endpoints"`
-	ThresholdMillis     float64      `yaml:"thresholdMillis"`
+	ThresholdMillis     float64  `yaml:"thresholdMillis"`
 	PacketLossThreshold float64  `yaml:"packetLossThreshold"`
 	PacketCount         int      `yaml:"packetCount"`
+}
+
+type Bucket struct {
+	Name     string `yaml:"name"`
+	Region   string `yaml:"region"`
+	Endpoint string `yaml:"endpoint"`
+}
+
+type S3Check struct {
+	Buckets    []Bucket `yaml:"buckets"`
+	AccessKey  string   `yaml:"accessKey"`
+	SecretKey  string   `yaml:"secretKey"`
+	ObjectPath string   `yaml:"objectPath"`
 }
 
 type ICMPCheckResult struct {
@@ -92,7 +105,7 @@ type DockerPull struct {
 }
 
 type S3 struct {
-	Check `yaml:",inline"`
+	S3Check `yaml:",inline"`
 }
 
 type TCP struct {
