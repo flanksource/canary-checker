@@ -7,15 +7,50 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/flanksource/canary-checker/internal"
+	"github.com/docker/docker/client"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/jasonlvhit/gocron"
 	"github.com/jinzhu/copier"
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
+
+var (
+	dockerClient *client.Client
+
+	imagePullFailed = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "canary_check_docker_pull_failed",
+		Help: "The total number of docker image pull failed",
+	})
+
+	size = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "canary_check_image_size",
+			Help: "Size of docker image",
+		},
+		[]string{"image"},
+	)
+
+	imagePullTime = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "canary_check_image_pull_time",
+			Help:    "Image pull time",
+			Buckets: []float64{10, 25, 50, 100, 200, 400, 800, 1000, 1200, 1500, 2000},
+		},
+		[]string{"image"},
+	)
+)
+
+func init() {
+	var err error
+	dockerClient, err = client.NewEnvClient()
+	if err != nil {
+		panic(err)
+	}
+	prometheus.MustRegister(imagePullFailed, size, imagePullTime)
+}
 
 type DockerPullChecker struct{}
 
@@ -60,9 +95,11 @@ func (c *DockerPullChecker) Check(check pkg.DockerPullCheck) *pkg.CheckResult {
 	}
 	encodedJSON, _ := json.Marshal(authConfig)
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
-	out, err := internal.DockerCLI.ImagePull(ctx, check.Image, types.ImagePullOptions{RegistryAuth: authStr})
+	out, err := dockerClient.ImagePull(ctx, check.Image, types.ImagePullOptions{RegistryAuth: authStr})
+	elapsed := time.Since(start)
 	if err != nil {
 		log.Printf("Failed to pull image: %s", err)
+		imagePullFailed.Inc()
 	} else {
 		buf := new(bytes.Buffer)
 		defer out.Close()
@@ -72,26 +109,35 @@ func (c *DockerPullChecker) Check(check pkg.DockerPullCheck) *pkg.CheckResult {
 		}
 	}
 
-	args := filters.NewArgs()
-	slice := strings.Split(check.Image, "/")
-	args.Add("reference", fmt.Sprintf("*%s", slice[len(slice)-1]))
-	images, _ := internal.DockerCLI.ImageList(ctx, types.ImageListOptions{
-		Filters: args,
-	})
-	for _, imageSummary := range images {
-		if imageSummary.Size == check.ExpectedSize {
-			sizeVerified = true
-		}
+	inspect, _, _ := dockerClient.ImageInspectWithRaw(ctx, check.Image)
+	if inspect.Size == check.ExpectedSize {
+		sizeVerified = true
+	}
+	m := []pkg.Metric{
+		{
+			Name: "pull_time", Type: pkg.HistogramType,
+			Labels: map[string]string{"image": check.Image},
+			Value:  float64(elapsed.Milliseconds()),
+		},
+		{
+			Name: "totalLayers", Type: pkg.GaugeType,
+			Labels: map[string]string{"image": check.Image},
+			Value:  float64(len(inspect.RootFS.Layers)),
+		},
+		{
+			Name: "size", Type: pkg.GaugeType,
+			Labels: map[string]string{"image": check.Image},
+			Value:  float64(inspect.Size),
+		},
 	}
 
-	elapsed := time.Since(start)
-	m := []pkg.Metric{
-		{Name: "pull_time", Type: pkg.GaugeType, Value: float64(elapsed.Milliseconds())},
-	}
+	size.WithLabelValues(check.Image).Set(float64(inspect.Size))
+	imagePullTime.WithLabelValues(check.Image).Observe(float64(elapsed.Milliseconds()))
 	return &pkg.CheckResult{
 		Pass:     digestVerified && sizeVerified,
 		Invalid:  !(digestVerified && sizeVerified),
 		Duration: elapsed.Milliseconds(),
+		Endpoint: check.Image,
 		Metrics:  m,
 	}
 }
