@@ -68,6 +68,19 @@ type ICMPCheck struct {
 	PacketCount         int      `yaml:"packetCount"`
 }
 
+type Bucket struct {
+	Name     string `yaml:"name"`
+	Region   string `yaml:"region"`
+	Endpoint string `yaml:"endpoint"`
+}
+
+type S3Check struct {
+	Buckets    []Bucket `yaml:"buckets"`
+	AccessKey  string   `yaml:"accessKey"`
+	SecretKey  string   `yaml:"secretKey"`
+	ObjectPath string   `yaml:"objectPath"`
+}
+
 type ICMPCheckResult struct {
 	Endpoint   string
 	Record     string
@@ -100,7 +113,7 @@ type DockerPull struct {
 }
 
 type S3 struct {
-	Check `yaml:",inline"`
+	S3Check `yaml:",inline"`
 }
 
 type TCP struct {
