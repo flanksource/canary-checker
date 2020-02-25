@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/moshloop/konfigadm/pkg/utils"
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/flanksource/commons/utils"
 	"github.com/flanksource/canary-checker/pkg"
 )
 
