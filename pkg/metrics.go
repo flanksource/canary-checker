@@ -37,7 +37,7 @@ var (
 		prometheus.HistogramOpts{
 			Name:    "canary_check_duration",
 			Help:    "A histogram of the response latency in milliseconds.",
-			Buckets: []float64{50, 100, 200, 400, 800, 1600, 3200},
+			Buckets: []float64{5, 10, 25, 50, 200, 500, 1000, 3000, 10000, 30000},
 		},
 		[]string{"type", "endpoint"},
 	)

@@ -4,18 +4,17 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/jasonlvhit/gocron"
-	"github.com/jinzhu/copier"
+	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -52,20 +51,6 @@ func (c *HttpChecker) Type() string {
 	return "http"
 }
 
-// Schedule: Add every check as a cron job, calls MetricProcessor with the set of metrics
-func (c *HttpChecker) Schedule(config pkg.Config, interval uint64, mp MetricProcessor) {
-	for _, conf := range config.HTTP {
-		httpCheck := pkg.HTTPCheck{}
-		if err := copier.Copy(&httpCheck, &conf.HTTPCheck); err != nil {
-			log.Printf("error copying %v", err)
-		}
-		gocron.Every(interval).Seconds().Do(func() {
-			metrics := c.Check(httpCheck)
-			mp(metrics)
-		})
-	}
-}
-
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
 func (c *HttpChecker) Run(config pkg.Config) []*pkg.CheckResult {
@@ -73,7 +58,6 @@ func (c *HttpChecker) Run(config pkg.Config) []*pkg.CheckResult {
 	for _, conf := range config.HTTP {
 		for _, result := range c.Check(conf.HTTPCheck) {
 			checks = append(checks, result)
-			fmt.Println(result)
 		}
 	}
 	return checks
@@ -100,67 +84,57 @@ func (c *HttpChecker) Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 		}
 		for _, urlObj := range lookupResult {
 			checkResults, err := c.checkHTTP(urlObj)
-			if err == nil {
-				for _, rc := range check.ResponseCodes {
-					if rc == checkResults.ResponseCode {
-						rcOK = true
-					}
-				}
-				if check.ResponseContent == checkResults.Content {
-					contentOK = true
-				}
-				if check.ThresholdMillis >= int(checkResults.ResponseTime) {
-					timeOK = true
-				}
-				if check.MaxSSLExpiry <= checkResults.SSLExpiry {
-					sslOK = true
-				}
-				pass := rcOK && contentOK && timeOK && sslOK
-				m := []pkg.Metric{
-					{
-						Name: "response_code",
-						Type: pkg.CounterType,
-						Labels: map[string]string{
-							"code":     strconv.Itoa(checkResults.ResponseCode),
-							"endpoint": endpoint,
-						},
-					},
-					{
-						Name: "ssl_certificate_expiry",
-						Type: pkg.GaugeType,
-						Labels: map[string]string{
-							"endpoint": endpoint,
-						},
-						Value: float64(checkResults.SSLExpiry),
-					},
-				}
-				checkResult := &pkg.CheckResult{
-					Pass:     pass,
-					Duration: checkResults.ResponseTime,
-					Endpoint: endpoint,
-					Invalid:  false,
-					Metrics:  m,
-				}
-				result = append(result, checkResult)
-
-				responseStatus.WithLabelValues(strconv.Itoa(checkResults.ResponseCode), statusCodeToClass(checkResults.ResponseCode), endpoint).Inc()
-				sslExpiration.WithLabelValues(endpoint).Set(float64(checkResults.SSLExpiry))
-			} else {
+			if err != nil {
 				checkResult := &pkg.CheckResult{
 					Pass:     false,
 					Invalid:  true,
+					Message:  fmt.Sprintf("%s", err),
 					Endpoint: endpoint,
 					Metrics:  []pkg.Metric{},
 				}
 				result = append(result, checkResult)
+				continue
 			}
+			for _, rc := range check.ResponseCodes {
+				if rc == checkResults.ResponseCode {
+					rcOK = true
+				}
+			}
+
+			contentOK = check.ResponseContent == "" || strings.Contains(checkResults.Content, check.ResponseContent)
+			timeOK = check.ThresholdMillis >= int(checkResults.ResponseTime)
+			sslOK = check.MaxSSLExpiry <= checkResults.SSLExpiry
+
+			pass := rcOK && contentOK && timeOK && sslOK
+			m := []pkg.Metric{
+				{
+					Name: "response_code",
+					Type: pkg.CounterType,
+					Labels: map[string]string{
+						"code":     strconv.Itoa(checkResults.ResponseCode),
+						"endpoint": endpoint,
+					},
+				},
+			}
+			checkResult := &pkg.CheckResult{
+				Pass:     pass,
+				Duration: checkResults.ResponseTime,
+				Endpoint: endpoint,
+				Invalid:  false,
+				Metrics:  m,
+			}
+			result = append(result, checkResult)
+
+			responseStatus.WithLabelValues(strconv.Itoa(checkResults.ResponseCode), statusCodeToClass(checkResults.ResponseCode), endpoint).Inc()
+			sslExpiration.WithLabelValues(endpoint).Set(float64(checkResults.SSLExpiry))
+
 		}
+
 	}
 	return result
 }
 
 func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*pkg.HTTPCheckResult, error) {
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	var exp time.Time
 	start := time.Now()
 	var urlString string
@@ -170,6 +144,13 @@ func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*pkg.HTTPCheckResult, error) {
 		urlString = fmt.Sprintf("%s://%s%s", urlObj.Scheme, urlObj.IP, urlObj.Path)
 	}
 	client := &http.Client{
+		Transport: &http.Transport{
+			DisableKeepAlives: true,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+				ServerName:         urlObj.Host,
+			},
+		},
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
@@ -178,7 +159,9 @@ func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*pkg.HTTPCheckResult, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	req.Host = urlObj.Host
+	req.Header.Add("Host", urlObj.Host)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -216,6 +199,9 @@ func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*pkg.HTTPCheckResult, error) {
 }
 
 func DNSLookup(endpoint string) ([]pkg.URL, error) {
+	if net.ParseIP(endpoint) != nil {
+		return []pkg.URL{pkg.URL{IP: endpoint}}, nil
+	}
 	var result []pkg.URL
 	parsedURL, err := url.Parse(endpoint)
 	if err != nil {
@@ -226,6 +212,9 @@ func DNSLookup(endpoint string) ([]pkg.URL, error) {
 		return nil, err
 	}
 	for _, ip := range ips {
+		if ip.To4() == nil {
+			continue
+		}
 		port, _ := strconv.Atoi(parsedURL.Port())
 		urlObj := pkg.URL{
 			IP:     ip.String(),

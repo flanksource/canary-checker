@@ -5,16 +5,15 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
-	"github.com/flanksource/canary-checker/pkg"
-	"github.com/jasonlvhit/gocron"
-	"github.com/jinzhu/copier"
-	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"strings"
 	"time"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
+	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/flanksource/canary-checker/pkg"
 )
 
 var (
@@ -37,7 +36,7 @@ var (
 		prometheus.HistogramOpts{
 			Name:    "canary_check_image_pull_time",
 			Help:    "Image pull time",
-			Buckets: []float64{10, 25, 50, 100, 200, 400, 800, 1000, 1200, 1500, 2000},
+			Buckets: []float64{100, 500, 1000, 5000, 15000, 30000},
 		},
 		[]string{"image"},
 	)
@@ -54,26 +53,11 @@ func init() {
 
 type DockerPullChecker struct{}
 
-// Schedule: Add every check as a cron job, calls MetricProcessor with the set of metrics
-func (c *DockerPullChecker) Schedule(config pkg.Config, interval uint64, mp MetricProcessor) {
-	for _, conf := range config.DockerPull {
-		dockerPullCheck := pkg.DockerPullCheck{}
-		if err := copier.Copy(&dockerPullCheck, &conf.DockerPullCheck); err != nil {
-			log.Printf("error copying %v", err)
-		}
-		gocron.Every(interval).Seconds().Do(func() {
-			metrics := c.Check(dockerPullCheck)
-			mp([]*pkg.CheckResult{metrics})
-		})
-	}
-}
-
 func (c *DockerPullChecker) Run(config pkg.Config) []*pkg.CheckResult {
 	var checks []*pkg.CheckResult
 	for _, conf := range config.DockerPull {
 		result := c.Check(conf.DockerPullCheck)
 		checks = append(checks, result)
-		fmt.Println(result)
 	}
 	return checks
 }

@@ -5,14 +5,15 @@ import (
 	nethttp "net/http"
 	"strconv"
 
-	"github.com/flanksource/canary-checker/checks"
-
-	"github.com/flanksource/canary-checker/pkg"
 	"github.com/jasonlvhit/gocron"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+
+	"github.com/flanksource/canary-checker/checks"
+	"github.com/flanksource/canary-checker/pkg"
 )
 
 var Serve = &cobra.Command{
@@ -21,7 +22,6 @@ var Serve = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		configfile, _ := cmd.Flags().GetString("configfile")
 		config := pkg.ParseConfig(configfile)
-
 		httpPort, _ := cmd.Flags().GetInt("httpPort")
 		interval, _ := cmd.Flags().GetUint64("interval")
 
@@ -29,17 +29,19 @@ var Serve = &cobra.Command{
 			&checks.HttpChecker{},
 			&checks.IcmpChecker{},
 			&checks.S3Checker{},
+			&checks.DockerPullChecker{},
 		}
 
-		for _, c := range checks {
-			c.Schedule(config, interval, func(results []*pkg.CheckResult) {
+		gocron.Every(interval).Seconds().Do(func() {
+			for _, c := range checks {
+				results := c.Run(config)
 				processMetrics(c.Type(), results)
-			})
-		}
+			}
+		})
 
 		gocron.Start()
 
-		nethttp.Handle("/metrics", promhttp.Handler())
+		nethttp.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
 
 		addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
 		log.Infof("Starting health dashboard at http://%s", addr)
@@ -51,8 +53,13 @@ var Serve = &cobra.Command{
 	},
 }
 
+var counters map[string]prometheus.Counter
+
 func processMetrics(checkType string, results []*pkg.CheckResult) {
 	for _, result := range results {
+		if log.IsLevelEnabled(log.DebugLevel) {
+			fmt.Println(result)
+		}
 		pkg.OpsCount.WithLabelValues(checkType).Inc()
 		if result.Pass {
 			pkg.OpsSuccessCount.WithLabelValues(checkType).Inc()
@@ -75,7 +82,7 @@ func processMetrics(checkType string, results []*pkg.CheckResult) {
 }
 
 func init() {
-	Serve.Flags().Int("httpPort", 0, "Port to expose a health dashboard ")
-	Serve.Flags().Uint64("interval", 5, "Default interval (in seconds) to run checks on")
+	Serve.Flags().Int("httpPort", 8080, "Port to expose a health dashboard ")
+	Serve.Flags().Uint64("interval", 30, "Default interval (in seconds) to run checks on")
 	Serve.Flags().Int("failureThreshold", 2, "Default Number of consecutive failures required to fail a check")
 }

@@ -1,5 +1,11 @@
 package pkg
 
+import (
+	"fmt"
+
+	"github.com/flanksource/commons/console"
+)
+
 type Config struct {
 	HTTP          []HTTP          `yaml:"http,omitempty"`
 	DNS           []DNS           `yaml:"dns,omitempty"`
@@ -31,7 +37,16 @@ type CheckResult struct {
 	Invalid  bool
 	Duration int64
 	Endpoint string
+	Message  string
 	Metrics  []Metric
+}
+
+func (c CheckResult) String() string {
+	if c.Pass {
+		return fmt.Sprintf("[%s] %s duration=%d %s %s", console.Greenf("PASS"), c.Endpoint, c.Duration, c.Metrics, c.Message)
+	} else {
+		return fmt.Sprintf("[%s] %s duration=%d %s %s", console.Redf("FAIL"), c.Endpoint, c.Duration, c.Metrics, c.Message)
+	}
 }
 
 type Metric struct {
@@ -39,6 +54,10 @@ type Metric struct {
 	Type   MetricType
 	Labels map[string]string
 	Value  float64
+}
+
+func (m Metric) String() string {
+	return fmt.Sprintf("%s=%d", m.Name, int(m.Value))
 }
 
 type Check struct {
