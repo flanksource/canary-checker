@@ -11,6 +11,7 @@ type Config struct {
 	DNS           []DNS           `yaml:"dns,omitempty"`
 	DockerPull    []DockerPull    `yaml:"docker,omitempty"`
 	S3            []S3            `yaml:"s3,omitempty"`
+	S3Bucket      []S3Bucket      `yaml:"s3Bucket,omitempty"`
 	TCP           []TCP           `yaml:"tcp,omitempty"`
 	Pod           []Pod           `yaml:"pod,omitempty"`
 	PodAndIngress []PodAndIngress `yaml:"pod_and_ingress,omitempty"`
@@ -100,6 +101,21 @@ type S3Check struct {
 	ObjectPath string   `yaml:"objectPath"`
 }
 
+type S3BucketCheck struct {
+	Bucket    string `yaml:"bucket"`
+	AccessKey string `yaml:"accessKey"`
+	SecretKey string `yaml:"secretKey"`
+	Region    string `yaml:"region"`
+	Endpoint  string `yaml:"endpoint"`
+	// glob path to restrict matches to a subet
+	ObjectPath string `yaml:"objectPath"`
+	ReadWrite  bool   `yaml:"readWrite"`
+	// maximum allowed age of matched objects
+	MaxAge int64 `yaml:"maxAge"`
+	// min size of of most recent matched object
+	MinSize int64 `yaml:"minSize"`
+}
+
 type ICMPCheckResult struct {
 	Endpoint   string
 	Record     string
@@ -133,6 +149,10 @@ type DockerPull struct {
 
 type S3 struct {
 	S3Check `yaml:",inline"`
+}
+
+type S3Bucket struct {
+	S3BucketCheck `yaml:",inline"`
 }
 
 type TCP struct {
