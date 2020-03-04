@@ -50,6 +50,20 @@ func TestRunChecks(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "postgres_fail",
+			args: args{
+				pkg.ParseConfig("../fixtures/postgres_fail.yaml"),
+			},
+			want: []pkg.CheckResult{
+				{
+					Pass:     false,
+					Invalid:  true,
+					Endpoint: "user=pqgotest dbname=pqgotest sslmode=verify-full",
+					Metrics:  []pkg.Metric{},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -63,8 +77,8 @@ func TestRunChecks(t *testing.T) {
 					/* TODO: test metrics? */
 					if run.Invalid != tt.want[i].Invalid ||
 						run.Pass != tt.want[i].Pass ||
-						run.Endpoint != tt.want[i].Endpoint ||
-						run.Message != tt.want[i].Message {
+						(tt.want[i].Endpoint != "" && run.Endpoint != tt.want[i].Endpoint) ||
+						(tt.want[i].Message != "" && run.Message != tt.want[i].Message) {
 						t.Errorf("Test %s failed. Expected result is %v, but found %v", tt.name, tt.want, run)
 					}
 				}

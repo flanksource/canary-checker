@@ -17,6 +17,7 @@ type Config struct {
 	LDAP          []LDAP          `yaml:"ldap,omitempty"`
 	SSL           []SSL           `yaml:"ssl,omitempty"`
 	ICMP          []ICMP          `yaml:"icmp,omitempty"`
+	Postgres      []Postgres      `yaml:"postgres,omitempty"`
 }
 
 type Checker interface {
@@ -119,6 +120,12 @@ type DockerPullCheck struct {
 	ExpectedSize   int64  `yaml:"expectedSize"`
 }
 
+type PostgresCheck struct {
+	Connection string `yaml:"connection"`
+	Query      string `yaml:"query"`
+	Results    string `yaml:"results"`
+}
+
 type HTTP struct {
 	HTTPCheck `yaml:",inline"`
 }
@@ -161,4 +168,8 @@ type PostgreSQL struct {
 
 type ICMP struct {
 	ICMPCheck `yaml:",inline"`
+}
+
+type Postgres struct {
+	PostgresCheck `yaml:",inline"`
 }

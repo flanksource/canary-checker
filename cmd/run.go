@@ -28,6 +28,7 @@ func RunChecks(config pkg.Config) []*pkg.CheckResult {
 		&checks.IcmpChecker{},
 		&checks.DockerPullChecker{},
 		&checks.S3Checker{},
+		&checks.PostgresChecker{},
 	}
 
 	var results []*pkg.CheckResult
