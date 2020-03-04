@@ -25,7 +25,7 @@ func TestRunChecks(t *testing.T) {
 				{
 					Pass:     true,
 					Invalid:  false,
-					Endpoint: "https://httpstat.us/2006",
+					Endpoint: "https://httpstat.us/200",
 					Metrics:  []pkg.Metric{},
 				},
 			},
