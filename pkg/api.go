@@ -45,7 +45,11 @@ func (c CheckResult) String() string {
 	if c.Pass {
 		return fmt.Sprintf("[%s] %s duration=%d %s %s", console.Greenf("PASS"), c.Endpoint, c.Duration, c.Metrics, c.Message)
 	} else {
-		return fmt.Sprintf("[%s] %s duration=%d %s %s", console.Redf("FAIL"), c.Endpoint, c.Duration, c.Metrics, c.Message)
+		if c.Invalid {
+			return fmt.Sprintf("[%s] <%s> %s duration=%d %s %s", console.Redf("FAIL"), console.Redf("INVALID"), c.Endpoint, c.Duration, c.Metrics, c.Message)
+		} else {
+			return fmt.Sprintf("[%s] <%s> %s duration=%d %s %s", console.Redf("FAIL"), console.Greenf("VALID"), c.Endpoint, c.Duration, c.Metrics, c.Message)
+		}
 	}
 }
 
