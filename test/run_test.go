@@ -16,7 +16,7 @@ func TestRunChecks(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []pkg.CheckResult
+		want []pkg.CheckResult // each config can result in multiple checks
 	}{
 		{
 			name: "http_pass",
@@ -69,25 +69,27 @@ func TestRunChecks(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runs := cmd.RunChecks(tt.args.config)
+			checkResults := cmd.RunChecks(tt.args.config)
 
-			for i, run := range runs {
+			for i, res := range checkResults {
+				// check if this result is extra
 				if i > len(tt.want)-1 {
-					t.Errorf("Test %s failed. Found unexpected extra result is %v", tt.name, run)
+					t.Errorf("Test %s failed. Found unexpected extra result is %v", tt.name, res)
 				} else {
 					/* Not checking durations we don't want equality*/
 					/* TODO: test metrics? */
-					if run.Invalid != tt.want[i].Invalid ||
-						run.Pass != tt.want[i].Pass ||
-						(tt.want[i].Endpoint != "" && run.Endpoint != tt.want[i].Endpoint) ||
-						(tt.want[i].Message != "" && run.Message != tt.want[i].Message) {
-						t.Errorf("Test %s failed. Expected result is %v, but found %v", tt.name, tt.want, run)
+					if res.Invalid != tt.want[i].Invalid ||
+						res.Pass != tt.want[i].Pass ||
+						(tt.want[i].Endpoint != "" && res.Endpoint != tt.want[i].Endpoint) ||
+						(tt.want[i].Message != "" && res.Message != tt.want[i].Message) {
+						t.Errorf("Test %s failed. Expected result is %v, but found %v", tt.name, tt.want, res)
 					}
 				}
 			}
-			if len(tt.want) > len(runs) {
-				t.Errorf("Test %s failed. Expected %d results, but found %d ", tt.name, len(tt.want), len(runs))
-				for i := len(runs); i <= len(tt.want)-1; i++ {
+			// check if we have more expected results than were found
+			if len(tt.want) > len(checkResults) {
+				t.Errorf("Test %s failed. Expected %d results, but found %d ", tt.name, len(tt.want), len(checkResults))
+				for i := len(checkResults); i <= len(tt.want)-1; i++ {
 					t.Errorf("Did not find %s %v", tt.name, tt.want[i])
 				}
 
@@ -96,7 +98,7 @@ func TestRunChecks(t *testing.T) {
 	}
 }
 
-// a successful case
+// Test the connectivity with a mock DB
 func TestPostgresCheckWithDbMock(t *testing.T) {
 
 	// create a mock db
