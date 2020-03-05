@@ -1,6 +1,8 @@
 package checks
 
 import (
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 
@@ -16,10 +18,19 @@ var (
 		Name: "canary_check_postgres_connectivity_failed",
 		Help: "The total number of postgres connectivity checks failed",
 	})
+
+	queryTime = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "canary_check_postgres_query_time",
+			Help:    "Duration of connection and test query",
+			Buckets: []float64{100, 500, 1000, 5000, 15000, 30000},
+		},
+		[]string{"connection"},
+	)
 )
 
 func init() {
-	prometheus.MustRegister(postgresFailed)
+	prometheus.MustRegister(postgresFailed, queryTime)
 }
 
 type PostgresChecker struct{}
@@ -48,11 +59,15 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 
 	var result []*pkg.CheckResult
 
+	start := time.Now()
 	queryResult, err := connectWithDriver(check.Driver, check.Connection, check.Query)
+	elapsed := time.Since(start)
 	if (err != nil) || (queryResult != check.Result) {
+		postgresFailed.Inc()
 		checkResult := &pkg.CheckResult{
 			Pass:     false,
 			Invalid:  false,
+			Duration: elapsed.Milliseconds(),
 			Endpoint: check.Connection,
 			Metrics:  []pkg.Metric{},
 		}
@@ -66,11 +81,20 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 		return result
 	}
 
+	m := []pkg.Metric{
+		{
+			Name: "canary_check_postgres_query_time", Type: pkg.HistogramType,
+			Labels: map[string]string{"connection": check.Connection},
+			Value:  float64(elapsed.Milliseconds()),
+		},
+	}
+
 	checkResult := &pkg.CheckResult{
 		Pass:     true,
 		Invalid:  false,
+		Duration: elapsed.Milliseconds(),
 		Endpoint: check.Connection,
-		Metrics:  []pkg.Metric{},
+		Metrics:  m,
 	}
 	result = append(result, checkResult)
 	return result
