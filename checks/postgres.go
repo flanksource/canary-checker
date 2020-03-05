@@ -56,6 +56,12 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 			Endpoint: check.Connection,
 			Metrics:  []pkg.Metric{},
 		}
+		if err != nil {
+			log.Error(err.Error())
+		}
+		if queryResult != check.Result {
+			log.Error("Query '%s', did not return '%d', but '%d'", check.Query, check.Result, queryResult)
+		}
 		result = append(result, checkResult)
 		return result
 	}
