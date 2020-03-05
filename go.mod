@@ -3,6 +3,7 @@ module github.com/flanksource/canary-checker
 go 1.12
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/aws/aws-sdk-go v1.29.5
 	github.com/docker/distribution v2.7.1+incompatible // indirect

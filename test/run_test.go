@@ -5,6 +5,8 @@ import (
 
 	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg"
+
+	"github.com/DATA-DOG/go-sqlmock"
 )
 
 func TestRunChecks(t *testing.T) {
