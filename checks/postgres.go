@@ -7,6 +7,8 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 
 	"database/sql"
+
+	_ "github.com/lib/pq"
 )
 
 var (
