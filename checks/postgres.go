@@ -1,16 +1,13 @@
 package checks
 
 import (
+	"database/sql"
 	"time"
 
+	"github.com/flanksource/canary-checker/pkg"
+	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/flanksource/canary-checker/pkg"
-
-	"database/sql"
-
-	_ "github.com/lib/pq"
 )
 
 var (
@@ -22,7 +19,7 @@ var (
 	queryTime = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "canary_check_postgres_query_time",
-			Help:    "Duration of connection and test query",
+			Help:    "Duration of connection and test query in milliseconds",
 			Buckets: []float64{100, 500, 1000, 5000, 15000, 30000},
 		},
 		[]string{"connection"},
@@ -72,10 +69,10 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 			Metrics:  []pkg.Metric{},
 		}
 		if err != nil {
-			log.Error(err.Error())
+			log.Errorf(err.Error())
 		}
 		if queryResult != check.Result {
-			log.Error("Query '%s', did not return '%d', but '%d'", check.Query, check.Result, queryResult)
+			log.Errorf("Query '%s', did not return '%d', but '%d'", check.Query, check.Result, queryResult)
 		}
 		result = append(result, checkResult)
 		return result
@@ -83,7 +80,8 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 
 	m := []pkg.Metric{
 		{
-			Name: "canary_check_postgres_query_time", Type: pkg.HistogramType,
+			Name:   "canary_check_postgres_query_time",
+			Type:   pkg.HistogramType,
 			Labels: map[string]string{"connection": check.Connection},
 			Value:  float64(elapsed.Milliseconds()),
 		},
@@ -97,6 +95,8 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 		Metrics:  m,
 	}
 	result = append(result, checkResult)
+	queryTime.WithLabelValues(check.Connection).Observe(float64(elapsed.Milliseconds()))
+	log.Debugf("Metric %f", float64(elapsed.Milliseconds()))
 	return result
 
 }
@@ -119,7 +119,7 @@ func connectWithDriver(driver string, connectionSting string, query string) (int
 		log.Error(err.Error())
 		return 0, err
 	}
-	log.Debugf("Connection test query result of %i", resultValue)
+	log.Debugf("Connection test query result of %d", resultValue)
 
 	return resultValue, nil
 }

@@ -77,13 +77,13 @@ func TestRunChecks(t *testing.T) {
 					t.Errorf("Test %s failed. Found unexpected extra result is %v", tt.name, res)
 				} else {
 					/* Not checking durations we don't want equality*/
-					/* TODO: test metrics? */
 					if res.Invalid != tt.want[i].Invalid ||
 						res.Pass != tt.want[i].Pass ||
 						(tt.want[i].Endpoint != "" && res.Endpoint != tt.want[i].Endpoint) ||
 						(tt.want[i].Message != "" && res.Message != tt.want[i].Message) {
 						t.Errorf("Test %s failed. Expected result is %v, but found %v", tt.name, tt.want, res)
 					}
+
 				}
 			}
 			// check if we have more expected results than were found
@@ -94,6 +94,7 @@ func TestRunChecks(t *testing.T) {
 				}
 
 			}
+
 		})
 	}
 }
