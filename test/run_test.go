@@ -95,3 +95,41 @@ func TestRunChecks(t *testing.T) {
 		})
 	}
 }
+
+// a successful case
+func TestPostgresCheckWithDbMock(t *testing.T) {
+
+	// create a mock db
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	// This is the result we expect
+	rows := sqlmock.NewRows([]string{"column"}).
+		AddRow(1)
+
+	// declare our expectation
+	mock.ExpectQuery("^SELECT 1$").WillReturnRows(rows)
+
+	config := pkg.ParseConfig("../fixtures/postgres_succeed.yaml")
+
+	results := cmd.RunChecks(config)
+
+	expectationErr := mock.ExpectationsWereMet()
+	if expectationErr != nil {
+		t.Errorf("Test %s failed. Expected queries not made: %v", "postgres_succeed", expectationErr)
+	}
+
+	for _, result := range results {
+		if result.Invalid {
+			t.Errorf("Test %s failed. Expected valid result, but found %v", "postgres_succeed", result.Invalid)
+		}
+		if !result.Pass {
+			t.Errorf("Test %s failed. Expected PASS result, but found %v", "postgres_succeed", result.Pass)
+		}
+
+	}
+
+}
