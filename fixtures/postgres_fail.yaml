@@ -1,4 +1,4 @@
 postgres:
   - connection: "user=pqgotest dbname=pqgotest sslmode=verify-full"
     query:  "SELECT 1"
-    results: "1"
+    results: 1

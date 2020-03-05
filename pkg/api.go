@@ -121,9 +121,26 @@ type DockerPullCheck struct {
 }
 
 type PostgresCheck struct {
+	Driver     string `yaml:"driver"`
 	Connection string `yaml:"connection"`
 	Query      string `yaml:"query"`
-	Results    string `yaml:"results"`
+	Result     int    `yaml:"results"`
+}
+
+// This is used to supply a default value for unsupplied fields
+func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type rawPostgresCheck PostgresCheck
+	raw := rawPostgresCheck{
+		Driver: "postgres",
+		Query:  "SELECT 1",
+		Result: 1,
+	}
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	*c = PostgresCheck(raw)
+	return nil
 }
 
 type HTTP struct {

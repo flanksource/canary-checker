@@ -60,7 +60,7 @@ func TestRunChecks(t *testing.T) {
 			want: []pkg.CheckResult{
 				{
 					Pass:     false,
-					Invalid:  true,
+					Invalid:  false,
 					Endpoint: "user=pqgotest dbname=pqgotest sslmode=verify-full",
 					Metrics:  []pkg.Metric{},
 				},
