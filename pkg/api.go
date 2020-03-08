@@ -110,9 +110,9 @@ type S3BucketCheck struct {
 	// glob path to restrict matches to a subet
 	ObjectPath string `yaml:"objectPath"`
 	ReadWrite  bool   `yaml:"readWrite"`
-	// maximum allowed age of matched objects
+	// maximum allowed age of matched objects in seconds
 	MaxAge int64 `yaml:"maxAge"`
-	// min size of of most recent matched object
+	// min size of of most recent matched object in bytes
 	MinSize int64 `yaml:"minSize"`
 }
 
