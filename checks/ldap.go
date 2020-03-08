@@ -10,14 +10,6 @@ import (
 )
 
 var (
-	ldapLookupHistogram = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "canary_check_ldap_lookup",
-			Help:    "LDAP Lookup time",
-			Buckets: []float64{25, 50, 100, 200, 400, 800, 1000, 1200, 1500, 2000},
-		},
-		[]string{"endpoint", "bindDN"},
-	)
 	ldapLookupRecordCount = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "canary_check_ldap_record_count",
@@ -28,7 +20,7 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(ldapLookupHistogram)
+	prometheus.MustRegister(ldapLookupRecordCount)
 }
 
 type LdapChecker struct{}
@@ -82,7 +74,6 @@ func (c *LdapChecker) Check(check pkg.LDAPCheck) []*pkg.CheckResult {
 	}
 	timer := NewTimer()
 	res, err := ld.Search(req)
-	ldapLookupHistogram.WithLabelValues(check.Host, check.BindDN).Observe(timer.Elapsed())
 
 	if err != nil {
 		result = append(result, &pkg.CheckResult{
@@ -99,6 +90,7 @@ func (c *LdapChecker) Check(check pkg.LDAPCheck) []*pkg.CheckResult {
 		Pass:     true,
 		Endpoint: endpoint,
 		Message:  fmt.Sprintf("LDAP search %s for host %s DN %s successful", check.UserSearch, check.Host, check.BindDN),
+		Duration: int64(timer.Elapsed()),
 	})
 
 	return result
