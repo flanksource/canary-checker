@@ -1,0 +1,20 @@
+repo_url: https://github.com/flanksource/canary-checker/
+repo_name: Canary Checker
+site_name: Canary Checker
+theme: material
+markdown_extensions:
+  - admonition
+  - fenced_code
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - codehilite:
+      linenums: true
+nav:
+  - Installation: ./installation.md
+  - Checks:
+      - Docker: ./docker.md
+      - HTTP: ./http.md
+      - ICMP: ./icmp.md
+      - S3: ./s3.md
+      - S3 Bucket: ./s3_bucket.md
+      - LDAP: ./ldap.md
