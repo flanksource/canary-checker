@@ -82,9 +82,8 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 
 }
 
-// Connect to a  db using the specified driver and connectionstring
-// `connectionString`.
-// Performs a `SELECT 1` test query.
+// Connects to a db using the specified `driver` and `connectionstring`
+// Performs the test query given in `query`.
 // Gives the single row test query result as result.
 func connectWithDriver(driver string, connectionSting string, query string) (int, error) {
 	db, err := sql.Open(driver, connectionSting)
