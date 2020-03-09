@@ -11,6 +11,7 @@ type Config struct {
 	DNS           []DNS           `yaml:"dns,omitempty"`
 	DockerPull    []DockerPull    `yaml:"docker,omitempty"`
 	S3            []S3            `yaml:"s3,omitempty"`
+	S3Bucket      []S3Bucket      `yaml:"s3Bucket,omitempty"`
 	TCP           []TCP           `yaml:"tcp,omitempty"`
 	Pod           []Pod           `yaml:"pod,omitempty"`
 	PodAndIngress []PodAndIngress `yaml:"pod_and_ingress,omitempty"`
@@ -105,6 +106,21 @@ type S3Check struct {
 	ObjectPath string   `yaml:"objectPath"`
 }
 
+type S3BucketCheck struct {
+	Bucket    string `yaml:"bucket"`
+	AccessKey string `yaml:"accessKey"`
+	SecretKey string `yaml:"secretKey"`
+	Region    string `yaml:"region"`
+	Endpoint  string `yaml:"endpoint"`
+	// glob path to restrict matches to a subet
+	ObjectPath string `yaml:"objectPath"`
+	ReadWrite  bool   `yaml:"readWrite"`
+	// maximum allowed age of matched objects in seconds
+	MaxAge int64 `yaml:"maxAge"`
+	// min size of of most recent matched object in bytes
+	MinSize int64 `yaml:"minSize"`
+}
+
 type ICMPCheckResult struct {
 	Endpoint   string
 	Record     string
@@ -142,6 +158,13 @@ func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*c = PostgresCheck(raw)
 	return nil
 }
+type LDAPCheck struct {
+	Host       string `yaml:"host"`
+	Username   string `yaml:"username"`
+	Password   string `yaml:"password"`
+	BindDN     string `yaml:"bindDN"`
+	UserSearch string `yaml:"userSearch"`
+}
 
 type HTTP struct {
 	HTTPCheck `yaml:",inline"`
@@ -163,6 +186,10 @@ type S3 struct {
 	S3Check `yaml:",inline"`
 }
 
+type S3Bucket struct {
+	S3BucketCheck `yaml:",inline"`
+}
+
 type TCP struct {
 	Check `yaml:",inline"`
 }
@@ -176,7 +203,7 @@ type PodAndIngress struct {
 }
 
 type LDAP struct {
-	Check `yaml:",inline"`
+	LDAPCheck `yaml:",inline"`
 }
 
 type PostgreSQL struct {

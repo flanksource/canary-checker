@@ -11,6 +11,7 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/flanksource/commons v1.0.2
+	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/jasonlvhit/gocron v0.0.0-20191228163020-98b59b546dee
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a // indirect
 	github.com/lib/pq v1.3.0

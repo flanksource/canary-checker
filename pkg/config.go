@@ -31,6 +31,12 @@ func ApplyTemplates(config Config) Config {
 		s3.SecretKey = template(s3.SecretKey)
 		buckets = append(buckets, s3)
 	}
+	s3Buckets := []S3Bucket{}
+	for _, bucket := range config.S3Bucket {
+		bucket.AccessKey = template(bucket.AccessKey)
+		bucket.SecretKey = template(bucket.SecretKey)
+		s3Buckets = append(s3Buckets, bucket)
+	}
 	config.S3 = buckets
 	return config
 }

@@ -29,8 +29,10 @@ var Serve = &cobra.Command{
 			&checks.HttpChecker{},
 			&checks.IcmpChecker{},
 			&checks.S3Checker{},
+			&checks.S3BucketChecker{},
 			&checks.DockerPullChecker{},
 			&checks.PostgresChecker{},
+			&checks.LdapChecker{},
 		}
 
 		gocron.Every(interval).Seconds().Do(func() {
