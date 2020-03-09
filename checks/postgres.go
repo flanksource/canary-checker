@@ -68,7 +68,7 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 		Metrics:  []pkg.Metric{},
 	}
 	result = append(result, checkResult)
-	log.Debugf("Metric %f", float64(elapsed.Milliseconds()))
+	log.Debugf("Duration %f", float64(elapsed.Milliseconds()))
 	return result
 
 }
