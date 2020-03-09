@@ -6,19 +6,11 @@ import (
 
 	"github.com/flanksource/canary-checker/pkg"
 	_ "github.com/lib/pq"
-	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
 
-var (
-	postgresFailed = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "canary_check_postgres_connectivity_failed",
-		Help: "The total number of postgres connectivity checks failed",
-	})
-)
-
 func init() {
-	prometheus.MustRegister(postgresFailed)
+	//register metrics here
 }
 
 type PostgresChecker struct{}
@@ -51,7 +43,6 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 	queryResult, err := connectWithDriver(check.Driver, check.Connection, check.Query)
 	elapsed := time.Since(start)
 	if (err != nil) || (queryResult != check.Result) {
-		postgresFailed.Inc()
 		checkResult := &pkg.CheckResult{
 			Pass:     false,
 			Invalid:  false,
