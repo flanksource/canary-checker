@@ -15,19 +15,10 @@ var (
 		Name: "canary_check_postgres_connectivity_failed",
 		Help: "The total number of postgres connectivity checks failed",
 	})
-
-	queryTime = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "canary_check_postgres_query_time",
-			Help:    "Duration of connection and test query in milliseconds",
-			Buckets: []float64{100, 500, 1000, 5000, 15000, 30000},
-		},
-		[]string{"connection"},
-	)
 )
 
 func init() {
-	prometheus.MustRegister(postgresFailed, queryTime)
+	prometheus.MustRegister(postgresFailed)
 }
 
 type PostgresChecker struct{}
@@ -95,7 +86,6 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 		Metrics:  m,
 	}
 	result = append(result, checkResult)
-	queryTime.WithLabelValues(check.Connection).Observe(float64(elapsed.Milliseconds()))
 	log.Debugf("Metric %f", float64(elapsed.Milliseconds()))
 	return result
 
