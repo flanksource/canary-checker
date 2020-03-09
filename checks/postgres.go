@@ -96,6 +96,17 @@ func connectWithDriver(driver string, connectionSting string, query string) (int
 	return resultValue, nil
 }
 
+func executeSimpleQuery(db *sql.DB, query string) (int, error) {
+	var resultValue int
+	var err error = db.QueryRow(query).Scan(&resultValue)
+	if err != nil {
+		log.Error(err.Error())
+		return 0, err
+	}
+	log.Debugf("Connection test query result of %d", resultValue)
+	return resultValue, nil
+}
+
 // Obfuscate passwords of the form ' password=xxxxx ' from connectionString since
 // connectionStrings are used as metric labels and we don't want to leak passwords
 // Return: the connectionString with the password replaced by '###'
