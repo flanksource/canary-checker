@@ -18,6 +18,7 @@ type Config struct {
 	LDAP          []LDAP          `yaml:"ldap,omitempty"`
 	SSL           []SSL           `yaml:"ssl,omitempty"`
 	ICMP          []ICMP          `yaml:"icmp,omitempty"`
+	Postgres      []Postgres      `yaml:"postgres,omitempty"`
 }
 
 type Checker interface {
@@ -46,7 +47,11 @@ func (c CheckResult) String() string {
 	if c.Pass {
 		return fmt.Sprintf("[%s] %s duration=%d %s %s", console.Greenf("PASS"), c.Endpoint, c.Duration, c.Metrics, c.Message)
 	} else {
-		return fmt.Sprintf("[%s] %s duration=%d %s %s", console.Redf("FAIL"), c.Endpoint, c.Duration, c.Metrics, c.Message)
+		if c.Invalid {
+			return fmt.Sprintf("[%s] <%s> %s duration=%d %s %s", console.Redf("FAIL"), console.Redf("INVALID"), c.Endpoint, c.Duration, c.Metrics, c.Message)
+		} else {
+			return fmt.Sprintf("[%s] <%s> %s duration=%d %s %s", console.Redf("FAIL"), console.Greenf("VALID"), c.Endpoint, c.Duration, c.Metrics, c.Message)
+		}
 	}
 }
 
@@ -131,6 +136,28 @@ type DockerPullCheck struct {
 	ExpectedSize   int64  `yaml:"expectedSize"`
 }
 
+type PostgresCheck struct {
+	Driver     string `yaml:"driver"`
+	Connection string `yaml:"connection"`
+	Query      string `yaml:"query"`
+	Result     int    `yaml:"results"`
+}
+
+// This is used to supply a default value for unsupplied fields
+func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type rawPostgresCheck PostgresCheck
+	raw := rawPostgresCheck{
+		Driver: "postgres",
+		Query:  "SELECT 1",
+		Result: 1,
+	}
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	*c = PostgresCheck(raw)
+	return nil
+}
 type LDAPCheck struct {
 	Host       string `yaml:"host"`
 	Username   string `yaml:"username"`
@@ -185,4 +212,8 @@ type PostgreSQL struct {
 
 type ICMP struct {
 	ICMPCheck `yaml:",inline"`
+}
+
+type Postgres struct {
+	PostgresCheck `yaml:",inline"`
 }
