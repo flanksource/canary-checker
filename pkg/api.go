@@ -131,6 +131,14 @@ type DockerPullCheck struct {
 	ExpectedSize   int64  `yaml:"expectedSize"`
 }
 
+type LDAPCheck struct {
+	Host       string `yaml:"host"`
+	Username   string `yaml:"username"`
+	Password   string `yaml:"password"`
+	BindDN     string `yaml:"bindDN"`
+	UserSearch string `yaml:"userSearch"`
+}
+
 type HTTP struct {
 	HTTPCheck `yaml:",inline"`
 }
@@ -168,7 +176,7 @@ type PodAndIngress struct {
 }
 
 type LDAP struct {
-	Check `yaml:",inline"`
+	LDAPCheck `yaml:",inline"`
 }
 
 type PostgreSQL struct {
