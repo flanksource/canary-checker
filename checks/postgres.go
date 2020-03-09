@@ -2,6 +2,7 @@ package checks
 
 import (
 	"database/sql"
+	"regexp"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg"
@@ -47,7 +48,7 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 			Pass:     false,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
-			Endpoint: check.Connection,
+			Endpoint: obfuscateConnectionStringPassword(check.Connection),
 			Metrics:  []pkg.Metric{},
 		}
 		if err != nil {
@@ -64,7 +65,7 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 		Pass:     true,
 		Invalid:  false,
 		Duration: elapsed.Milliseconds(),
-		Endpoint: check.Connection,
+		Endpoint: obfuscateConnectionStringPassword(check.Connection),
 		Metrics:  []pkg.Metric{},
 	}
 	result = append(result, checkResult)
@@ -93,4 +94,15 @@ func connectWithDriver(driver string, connectionSting string, query string) (int
 	log.Debugf("Connection test query result of %d", resultValue)
 
 	return resultValue, nil
+}
+
+// Obfuscate passwords of the form ' password=xxxxx ' from connectionString since
+// connectionStrings are used as metric labels and we don't want to leak passwords
+// Return: the connectionString with the password replaced by '###'
+func obfuscateConnectionStringPassword(connectionString string) string {
+	//looking for a substring that starts with a space,
+	//'password=', then any non-whitespace characters,
+	//until an ending space
+	re := regexp.MustCompile(`\spassword=\S*\s`)
+	return re.ReplaceAllString(connectionString, " password=### ")
 }
