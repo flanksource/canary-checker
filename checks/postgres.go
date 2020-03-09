@@ -60,21 +60,12 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 		return result
 	}
 
-	m := []pkg.Metric{
-		{
-			Name:   "canary_check_postgres_query_time",
-			Type:   pkg.HistogramType,
-			Labels: map[string]string{"connection": check.Connection},
-			Value:  float64(elapsed.Milliseconds()),
-		},
-	}
-
 	checkResult := &pkg.CheckResult{
 		Pass:     true,
 		Invalid:  false,
 		Duration: elapsed.Milliseconds(),
 		Endpoint: check.Connection,
-		Metrics:  m,
+		Metrics:  []pkg.Metric{},
 	}
 	result = append(result, checkResult)
 	log.Debugf("Metric %f", float64(elapsed.Milliseconds()))
