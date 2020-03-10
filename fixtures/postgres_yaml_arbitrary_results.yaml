@@ -1,0 +1,8 @@
+postgres:
+    - driver: "someDriver"
+      connection: "someConnection"
+      query:  "someQuery"
+      results: 
+          columnA: "valueA"
+          columnB: "valueB"
+          columnC: "valueC"

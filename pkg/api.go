@@ -137,10 +137,11 @@ type DockerPullCheck struct {
 }
 
 type PostgresCheck struct {
-	Driver     string `yaml:"driver"`
-	Connection string `yaml:"connection"`
-	Query      string `yaml:"query"`
-	Result     int    `yaml:"results"`
+	Driver     string          `yaml:"driver"`
+	Connection string          `yaml:"connection"`
+	Query      string          `yaml:"query"`
+	Result     int             `yaml:"result"`
+	Results    PostgresResults `yaml:"results,inline"`
 }
 
 // This is used to supply a default value for unsupplied fields
@@ -149,8 +150,9 @@ func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	raw := rawPostgresCheck{
 		Driver: "postgres",
 		Query:  "SELECT 1",
-		Result: 1,
 	}
+	//TODO: force either `Result` or `Results`
+	//      not both
 	if err := unmarshal(&raw); err != nil {
 		return err
 	}
@@ -158,6 +160,16 @@ func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*c = PostgresCheck(raw)
 	return nil
 }
+
+type PostgresResults struct {
+	Values map[string]string `yaml:"results,omitempty"`
+}
+
+// UnmarshalYAML is used to unmarshal into map[string]string
+func (r *PostgresResults) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return unmarshal(&r.Values)
+}
+
 type LDAPCheck struct {
 	Host       string `yaml:"host"`
 	Username   string `yaml:"username"`
