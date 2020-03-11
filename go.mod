@@ -11,7 +11,9 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/flanksource/commons v1.0.2
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-ldap/ldap/v3 v3.1.7
+	github.com/google/go-cmp v0.3.1
 	github.com/jasonlvhit/gocron v0.0.0-20191228163020-98b59b546dee
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a // indirect
 	github.com/lib/pq v1.3.0
@@ -21,5 +23,6 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/spf13/cobra v0.0.5
+	github.com/stretchr/testify v1.4.0
 	gopkg.in/yaml.v2 v2.2.7
 )
