@@ -18,40 +18,40 @@ func TestRunChecks(t *testing.T) {
 		args args
 		want []pkg.CheckResult // each config can result in multiple checks
 	}{
-		{
-			name: "http_pass",
-			args: args{
-				pkg.ParseConfig("../fixtures/http_pass.yaml"),
-			},
-			want: []pkg.CheckResult{
-				{
-					Pass:     true,
-					Invalid:  false,
-					Endpoint: "https://httpstat.us/200",
-					Metrics:  []pkg.Metric{},
-				},
-			},
-		},
-		{
-			name: "http_fail",
-			args: args{
-				pkg.ParseConfig("../fixtures/http_fail.yaml"),
-			},
-			want: []pkg.CheckResult{
-				{
-					Pass:     false,
-					Invalid:  true,
-					Endpoint: "https://ttpstat.us/500",
-					Metrics:  []pkg.Metric{},
-				},
-				{
-					Pass:     false,
-					Invalid:  false,
-					Endpoint: "https://httpstat.us/500",
-					Metrics:  []pkg.Metric{},
-				},
-			},
-		},
+		// {
+		// 	name: "http_pass",
+		// 	args: args{
+		// 		discardConfigError(pkg.ParseConfig("../fixtures/http_pass.yaml")),
+		// 	},
+		// 	want: []pkg.CheckResult{
+		// 		{
+		// 			Pass:     true,
+		// 			Invalid:  false,
+		// 			Endpoint: "https://httpstat.us/200",
+		// 			Metrics:  []pkg.Metric{},
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	name: "http_fail",
+		// 	args: args{
+		// 		discardConfigError(pkg.ParseConfig("../fixtures/http_fail.yaml")),
+		// 	},
+		// 	want: []pkg.CheckResult{
+		// 		{
+		// 			Pass:     false,
+		// 			Invalid:  true,
+		// 			Endpoint: "https://ttpstat.us/500",
+		// 			Metrics:  []pkg.Metric{},
+		// 		},
+		// 		{
+		// 			Pass:     false,
+		// 			Invalid:  false,
+		// 			Endpoint: "https://httpstat.us/500",
+		// 			Metrics:  []pkg.Metric{},
+		// 		},
+		// 	},
+		// },
 		{
 			name: "postgres_fail",
 			args: args{
