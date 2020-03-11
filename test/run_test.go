@@ -7,6 +7,9 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 
 	"github.com/DATA-DOG/go-sqlmock"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestRunChecks(t *testing.T) {
