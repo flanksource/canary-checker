@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/flanksource/commons/console"
@@ -140,21 +141,23 @@ type PostgresCheck struct {
 	Driver     string          `yaml:"driver"`
 	Connection string          `yaml:"connection"`
 	Query      string          `yaml:"query"`
-	Result     int             `yaml:"result"`
+	Result     *int            `yaml:"result,omitempty"`
 	Results    PostgresResults `yaml:"results,inline"`
 }
 
 // This is used to supply a default value for unsupplied fields
+// and to verify that result specification is valid
 func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type rawPostgresCheck PostgresCheck
 	raw := rawPostgresCheck{
 		Driver: "postgres",
-		Query:  "SELECT 1",
 	}
-	//TODO: force either `Result` or `Results`
-	//      not both
+
 	if err := unmarshal(&raw); err != nil {
 		return err
+	}
+	if (raw.Result != nil) && (raw.Results.Values != nil) {
+		return errors.New("Invalid postgres config: can't specify single AND compound result!")
 	}
 
 	*c = PostgresCheck(raw)

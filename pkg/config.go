@@ -10,17 +10,19 @@ import (
 )
 
 // ParseConfig : Read config file
-func ParseConfig(configfile string) Config {
+func ParseConfig(configfile string) (Config, error) {
 	config := Config{}
 	data, err := ioutil.ReadFile(configfile)
 	if err != nil {
 		log.Printf("yamlFile.Get err   #%v ", err)
+		return Config{}, err
 	}
 	yamlerr := yaml.Unmarshal([]byte(data), &config)
 	if yamlerr != nil {
-		log.Fatalf("error: %v", yamlerr)
+		log.Printf("error: %v", yamlerr)
+		return Config{}, err
 	}
-	return ApplyTemplates(config)
+	return ApplyTemplates(config), nil
 }
 
 func ApplyTemplates(config Config) Config {
