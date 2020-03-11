@@ -1,11 +1,14 @@
 package checks
 
 import (
-	"database/sql"
+	sql "database/sql"
+	"fmt"
+	"reflect"
 	"regexp"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/ghodss/yaml"
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 )
@@ -43,7 +46,7 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 	start := time.Now()
 	queryResult, err := connectWithDriver(check.Driver, check.Connection, check.Query)
 	elapsed := time.Since(start)
-	if (err != nil) || (queryResult != check.Result) {
+	if (err != nil) || (queryResult != *check.Result) {
 		checkResult := &pkg.CheckResult{
 			Pass:     false,
 			Invalid:  false,
@@ -54,7 +57,7 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 		if err != nil {
 			log.Errorf(err.Error())
 		}
-		if queryResult != check.Result {
+		if queryResult != *check.Result {
 			log.Errorf("Query '%s', did not return '%d', but '%d'", check.Query, check.Result, queryResult)
 		}
 		result = append(result, checkResult)
@@ -103,8 +106,74 @@ func executeSimpleQuery(db *sql.DB, query string) (int, error) {
 		log.Error(err.Error())
 		return 0, err
 	}
+
 	log.Debugf("Connection test query result of %d", resultValue)
 	return resultValue, nil
+}
+
+func executeComplexQuery(db *sql.DB, query string) ([]pkg.PostgresResults, error) {
+
+	// an array of JSON objects
+	// the map key is the field name
+	var objects []map[string]interface{}
+
+	var results []pkg.PostgresResults = make([]pkg.PostgresResults, 0)
+
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Error(err.Error())
+		return []pkg.PostgresResults{}, err
+	}
+	log.Debugf("%v", rows)
+
+	for rows.Next() {
+		// figure out what columns were returned
+		// the column names will be the JSON object field keys
+		columns, err := rows.ColumnTypes()
+		if err != nil {
+			return []pkg.PostgresResults{}, err
+		}
+
+		// Scan needs an array of pointers to the values it is setting
+		// This creates the object and sets the values correctly
+		values := make([]interface{}, len(columns))
+		object := map[string]interface{}{}
+		for i, column := range columns {
+			object[column.Name()] = reflect.New(column.ScanType()).Interface()
+			values[i] = object[column.Name()]
+
+		}
+
+		err = rows.Scan(values...)
+		if err != nil {
+			return []pkg.PostgresResults{}, err
+		}
+
+		objects = append(objects, object)
+
+		var result pkg.PostgresResults
+		result.Values = make(map[string]string)
+		for key, value := range object {
+			//var v *interface{} = (*interface{})(reflect.ValueOf(value))
+			switch v := value.(type) {
+			case *interface{}:
+				result.Values[key] = fmt.Sprintf("%v", *v)
+			case *time.Time:
+				result.Values[key] = fmt.Sprintf("%v", v)
+			default:
+				log.Fatalf("I don't know about type %T!\n", v)
+			}
+
+		}
+
+		results = append(results, result)
+
+	}
+
+	yaml, err := yaml.Marshal(objects)
+	log.Info(string(yaml))
+	log.Debugf("Connection test query result of %v", objects)
+	return results, nil
 }
 
 // Obfuscate passwords of the form ' password=xxxxx ' from connectionString since
