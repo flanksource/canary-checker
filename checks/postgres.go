@@ -41,55 +41,77 @@ func (c *PostgresChecker) Run(config pkg.Config) []*pkg.CheckResult {
 // Returns check result and metrics
 func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 
-	var result []*pkg.CheckResult
+	var results []*pkg.CheckResult
+	var elapsed time.Duration
 
 	start := time.Now()
-	queryResult, err := connectWithDriver(check.Driver, check.Connection, check.Query)
-	elapsed := time.Since(start)
-	if (err != nil) || (queryResult != *check.Result) {
+	db, err := connectWithDriver(check.Driver, check.Connection)
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+	defer db.Close()
+
+	//if we have a `result` config we do a simple single result query
+	if check.Result != nil {
+
+		queryResult, err := executeSimpleQuery(db, check.Query)
+		elapsed = time.Since(start)
+		if (err != nil) || (queryResult != *check.Result) {
+			checkResult := &pkg.CheckResult{
+				Pass:     false,
+				Invalid:  false,
+				Duration: elapsed.Milliseconds(),
+				Endpoint: obfuscateConnectionStringPassword(check.Connection),
+				Metrics:  []pkg.Metric{},
+			}
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+			if queryResult != *check.Result {
+				log.Errorf("Query '%s', did not return '%d', but '%d'", check.Query, check.Result, queryResult)
+			}
+			results = append(results, checkResult)
+			return results
+		}
+
 		checkResult := &pkg.CheckResult{
-			Pass:     false,
+			Pass:     true,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
 			Endpoint: obfuscateConnectionStringPassword(check.Connection),
 			Metrics:  []pkg.Metric{},
 		}
-		if err != nil {
-			log.Errorf(err.Error())
-		}
-		if queryResult != *check.Result {
-			log.Errorf("Query '%s', did not return '%d', but '%d'", check.Query, check.Result, queryResult)
-		}
-		result = append(result, checkResult)
-		return result
+		results = append(results, checkResult)
+		log.Debugf("Duration %f", float64(elapsed.Milliseconds()))
+		return results
 	}
 
-	checkResult := &pkg.CheckResult{
-		Pass:     true,
-		Invalid:  false,
-		Duration: elapsed.Milliseconds(),
-		Endpoint: obfuscateConnectionStringPassword(check.Connection),
-		Metrics:  []pkg.Metric{},
-	}
-	result = append(result, checkResult)
-	log.Debugf("Duration %f", float64(elapsed.Milliseconds()))
-	return result
+	// //if we have a `results` config we do a simple single result query
+	// if len(check.Results.Values) >0 {
+	// }
+	return results
 
 }
 
 // Connects to a db using the specified `driver` and `connectionstring`
-// Performs the test query given in `query`.
-// Gives the single row test query result as result.
-func connectWithDriver(driver string, connectionSting string, query string) (int, error) {
+
+func connectWithDriver(driver string, connectionSting string) (*sql.DB, error) {
 	db, err := sql.Open(driver, connectionSting)
 	if err != nil {
 		log.Error(err.Error())
-		return 0, err
+		return nil, err
 	}
+
+	return db, nil
+}
+
+// Performs the test query given in `query`.
+// Gives the single row test query result as result.
+func rest(db *sql.DB, driver string, connectionSting string, query string) (int, error) {
 	defer db.Close()
 
 	var resultValue int
-	err = db.QueryRow(query).Scan(&resultValue)
+	err := db.QueryRow(query).Scan(&resultValue)
 	if err != nil {
 		log.Error(err.Error())
 		return 0, err

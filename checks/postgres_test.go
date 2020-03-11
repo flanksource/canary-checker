@@ -13,6 +13,50 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestConnectWithDriver(t *testing.T) {
+	var connectionTests = []struct {
+		description      string
+		driver           string
+		connectionString string
+		mockDb           bool
+		mockDSN          string
+	}{
+		{
+			description:      "basic sqlmock connection test",
+			driver:           "sqlmock",
+			connectionString: "DSN_BASIC",
+			mockDb:           true,
+			mockDSN:          "DSN_BASIC",
+		},
+	}
+	for _, tt := range connectionTests {
+		t.Run(tt.description, func(t *testing.T) {
+
+			//mock a db using sqlmock if the flag is set
+			if tt.mockDb {
+				_, _, err := sqlmock.NewWithDSN(tt.mockDSN)
+				//TODO: can we use the mock?
+				if err != nil {
+					t.Fatalf("%s: an error '%s' was not expected when opening a stub database connection", tt.description, err)
+				}
+
+			}
+
+			db, err := connectWithDriver(tt.driver, tt.connectionString)
+			if err != nil {
+				t.Error(err.Error())
+			}
+			err = db.Ping()
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+		})
+	}
+
+}
+
+// We need to be able to obfuscate passwords in Postgres connectionStrings
 func TestObfuscatePassword(t *testing.T) {
 	tests := []struct {
 		name             string
@@ -117,25 +161,9 @@ func TestExecuteComplexQuery(t *testing.T) {
 	for _, tt := range queryTests {
 		t.Run(tt.description, func(t *testing.T) {
 
-			for _, rowVals := range tt.values {
-				if len(tt.wantColumns) != len(rowVals) {
-					t.Fatalf("Invalid table test value, columns and values misaligned: cols(%v), values(%v)", tt.wantColumns, rowVals)
-				}
-			}
-
-			// This is the query result we expect
-			rows := sqlmock.NewRows(tt.wantColumns)
-			for _, rowVals := range tt.values {
-				var values []driver.Value = make([]driver.Value, len(rowVals))
-				for col, val := range rowVals {
-
-					values[col] = val
-				}
-				rows.AddRow(values...)
-			}
-
-			// declare our expectation
-			mock.ExpectQuery("^" + strings.ReplaceAll(tt.query, "*", "\\*") + "$").WillReturnRows(rows)
+			// declare our expectation for sql mock
+			expectedRows := MakeSQLMockExpectedResults(t, tt.wantColumns, tt.values)
+			mock.ExpectQuery("^" + strings.ReplaceAll(tt.query, "*", "\\*") + "$").WillReturnRows(expectedRows)
 
 			got, err := executeComplexQuery(db, tt.query)
 
@@ -143,21 +171,7 @@ func TestExecuteComplexQuery(t *testing.T) {
 				t.Errorf("Test scenario '%s' failed with error: %v", tt.description, err)
 			}
 
-			var want []pkg.PostgresResults = make([]pkg.PostgresResults, 0)
-
-			for _, rowVals := range tt.values {
-
-				wantedResultMap := make(map[string]string)
-				for i, col := range tt.wantColumns {
-
-					value := fmt.Sprintf("%v", rowVals[i])
-
-					wantedResultMap[col] = value
-				}
-				wantedResult := pkg.PostgresResults{}
-				wantedResult.Values = wantedResultMap
-				want = append(want, wantedResult)
-			}
+			want := MakeExpectedPostgresResults(tt.wantColumns, tt.values)
 
 			t.Logf("Want:\n%+v", want)
 			t.Logf("Got:\n%+v", got)
@@ -170,6 +184,53 @@ func TestExecuteComplexQuery(t *testing.T) {
 		})
 
 	}
+}
+
+// Test helper function that constructs a sqlmock row
+// for an array of columns strings
+// and an array of rows of generic column values
+//
+func MakeSQLMockExpectedResults(t *testing.T, columns []string, values [][]interface{}) *sqlmock.Rows {
+	for _, rowVals := range values {
+		if len(columns) != len(rowVals) {
+			t.Fatalf("Invalid table test value, columns and values misaligned: cols(%v), values(%v)", columns, rowVals)
+		}
+	}
+
+	// This is the query result we expect
+	rows := sqlmock.NewRows(columns)
+	for _, rowVals := range values {
+		var values []driver.Value = make([]driver.Value, len(rowVals))
+		for col, val := range rowVals {
+
+			values[col] = val
+		}
+		rows.AddRow(values...)
+	}
+	return rows
+}
+
+// Test helper function that constructs an expected PostgresResults slice
+// for an array of columns strings
+// and an array of rows of string column values
+//
+func MakeExpectedPostgresResults(columns []string, values [][]interface{}) []pkg.PostgresResults {
+	var want []pkg.PostgresResults = make([]pkg.PostgresResults, 0)
+
+	for _, rowVals := range values {
+
+		wantedResultMap := make(map[string]string)
+		for i, col := range columns {
+
+			value := fmt.Sprintf("%v", rowVals[i])
+
+			wantedResultMap[col] = value
+		}
+		wantedResult := pkg.PostgresResults{}
+		wantedResult.Values = wantedResultMap
+		want = append(want, wantedResult)
+	}
+	return want
 }
 
 func TestLocalComplexQuery(t *testing.T) {
