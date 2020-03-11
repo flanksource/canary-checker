@@ -55,7 +55,7 @@ func TestRunChecks(t *testing.T) {
 		{
 			name: "postgres_fail",
 			args: args{
-				pkg.ParseConfig("../fixtures/postgres_fail.yaml"),
+				discardConfigError(pkg.ParseConfig("../fixtures/postgres_fail.yaml")),
 			},
 			want: []pkg.CheckResult{
 				{
@@ -116,7 +116,7 @@ func TestPostgresCheckWithDbMock(t *testing.T) {
 	// declare our expectation
 	mock.ExpectQuery("^SELECT 1$").WillReturnRows(rows)
 
-	config := pkg.ParseConfig("../fixtures/postgres_succeed.yaml")
+	config := discardConfigError(pkg.ParseConfig("../fixtures/postgres_succeed.yaml"))
 
 	results := cmd.RunChecks(config)
 
@@ -135,4 +135,48 @@ func TestPostgresCheckWithDbMock(t *testing.T) {
 
 	}
 
+}
+
+// This test is validating a piece of test infrastructure
+//
+func TestPostgresConfigErrorDrop(t *testing.T) {
+	//assignment helper
+	c := func(s int) *int {
+		return &s
+	}
+	var test = struct {
+		description  string
+		yamlFixture  string
+		error        bool
+		errorMessage string
+		wantConfig   pkg.Config
+	}{
+		description:  "we can parse single value result for postgres",
+		yamlFixture:  "../fixtures/postgres_yaml_single_result.yaml",
+		error:        false,
+		errorMessage: "",
+		wantConfig: pkg.Config{
+			Postgres: []pkg.Postgres{
+				{
+					pkg.PostgresCheck{
+						Driver:     "someDriver",
+						Connection: "someConnection",
+						Query:      "someQuery",
+						Result:     c(1),
+					},
+				},
+			},
+		},
+	}
+
+	gotConfig := discardConfigError(pkg.ParseConfig(test.yamlFixture))
+
+	if !cmp.Equal(test.wantConfig, gotConfig, cmpopts.EquateEmpty()) {
+		t.Errorf("Test '%s': want %v, got %v", test.description, test.wantConfig, gotConfig)
+	}
+
+}
+
+func discardConfigError(c pkg.Config, e error) pkg.Config {
+	return c
 }
