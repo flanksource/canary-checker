@@ -21,7 +21,10 @@ var Serve = &cobra.Command{
 	Short: "Start a server to execute checks ",
 	Run: func(cmd *cobra.Command, args []string) {
 		configfile, _ := cmd.Flags().GetString("configfile")
-		config := pkg.ParseConfig(configfile)
+		config, err := pkg.ParseConfig(configfile)
+		if err != nil {
+			log.Fatalf("Error parsing config: %v", err)
+		}
 		httpPort, _ := cmd.Flags().GetInt("httpPort")
 		interval, _ := cmd.Flags().GetUint64("interval")
 

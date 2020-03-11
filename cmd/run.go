@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/spf13/cobra"
 
@@ -14,7 +15,10 @@ var Run = &cobra.Command{
 	Short: "Execute checks and return",
 	Run: func(cmd *cobra.Command, args []string) {
 		configfile, _ := cmd.Flags().GetString("configfile")
-		config := pkg.ParseConfig(configfile)
+		config, err := pkg.ParseConfig(configfile)
+		if err != nil {
+			log.Fatalf("Error parsing config: %v", err)
+		}
 		RunChecks(config)
 	},
 }
