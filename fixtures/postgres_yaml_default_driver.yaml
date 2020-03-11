@@ -1,0 +1,4 @@
+postgres:
+    - connection: "someConnection"
+      query:  "someQuery"
+      result: 1

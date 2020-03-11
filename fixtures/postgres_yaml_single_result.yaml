@@ -1,0 +1,5 @@
+postgres:
+    - driver: "someDriver"
+      connection: "someConnection"
+      query:  "someQuery"
+      result: 1

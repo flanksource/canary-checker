@@ -1,0 +1,12 @@
+# invalid config for failure test!
+#
+postgres:
+    - driver: "someDriver"
+      connection: "someConnection"
+      query:  "someQuery"
+      # result AND results not allowed
+      result: 1
+      results: 
+          columnA: "valueA"
+          columnB: "valueB"
+          columnC: "valueC"
