@@ -63,9 +63,9 @@ func processMetrics(checkType string, results []*pkg.CheckResult) {
 		if log.IsLevelEnabled(log.DebugLevel) {
 			fmt.Println(result)
 		}
-		pkg.OpsCount.WithLabelValues(checkType).Inc()
+		pkg.OpsCount.WithLabelValues(checkType, result.Endpoint).Inc()
 		if result.Pass {
-			pkg.OpsSuccessCount.WithLabelValues(checkType).Inc()
+			pkg.OpsSuccessCount.WithLabelValues(checkType,result.Endpoint).Inc()
 			if result.Duration > 0 {
 				pkg.RequestLatency.WithLabelValues(checkType, result.Endpoint).Observe(float64(result.Duration))
 			}
