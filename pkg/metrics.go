@@ -14,7 +14,7 @@ var (
 			Name: "canary_check_count",
 			Help: "The total number of checks",
 		},
-		[]string{"type"},
+		[]string{"type","endpoint"},
 	)
 
 	OpsSuccessCount = prometheus.NewCounterVec(
@@ -22,7 +22,7 @@ var (
 			Name: "canary_check_success_count",
 			Help: "The total number of successful checks",
 		},
-		[]string{"type"},
+		[]string{"type","endpoint"},
 	)
 
 	OpsFailedCount = prometheus.NewCounterVec(
@@ -30,7 +30,7 @@ var (
 			Name: "canary_check_failed_count",
 			Help: "The total number of failed checks",
 		},
-		[]string{"type"},
+		[]string{"type","endpoint"},
 	)
 
 	RequestLatency = prometheus.NewHistogramVec(

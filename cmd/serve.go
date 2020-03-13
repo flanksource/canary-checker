@@ -79,7 +79,7 @@ func processMetrics(checkType string, results []*pkg.CheckResult) {
 				}
 			}
 		} else {
-			pkg.OpsFailedCount.WithLabelValues(checkType).Inc()
+			pkg.OpsFailedCount.WithLabelValues(checkType, result.Endpoint).Inc()
 		}
 	}
 }
