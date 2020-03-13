@@ -102,13 +102,13 @@ func (c *IcmpChecker) checkICMP(urlObj pkg.URL, packetCount int) (*pkg.ICMPCheck
 	if err != nil {
 		return nil, err
 	}
+	pinger.SetPrivileged(false)
 	pinger.Count = packetCount
 	pinger.Timeout = time.Second * 10
 	pinger.Run()
 	pingerStats := pinger.Statistics()
 	latency := pingerStats.AvgRtt.Milliseconds()
 	packetLoss := pingerStats.PacketLoss
-
 	checkResult := pkg.ICMPCheckResult{
 		Endpoint:   urlObj.Host,
 		Record:     urlObj.IP,
