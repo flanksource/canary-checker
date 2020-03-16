@@ -143,6 +143,20 @@ type PostgresCheck struct {
 	Result     int    `yaml:"results"`
 }
 
+type PodCheck struct {
+	Name            string `yaml:"name"`
+	Namespace       string `yaml:"namespace"`
+	Spec            string `yaml:"spec"`
+	ReadyTimeout    int64  `yaml:"readyTimeout"`
+	HttpTimeout     int64  `yaml:"httpTimeout"`
+	Deadline        int64  `yaml:"deadline"`
+	ExpectedContent string `yaml:"expectedContent"`
+	Port            int32  `yaml:"port"`
+	Path            string `yaml:"path"`
+	IngressName     string `yaml:"ingressName"`
+	IngressHost     string `yaml:"ingressHost"`
+}
+
 // This is used to supply a default value for unsupplied fields
 func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type rawPostgresCheck PostgresCheck
@@ -158,6 +172,7 @@ func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*c = PostgresCheck(raw)
 	return nil
 }
+
 type LDAPCheck struct {
 	Host       string `yaml:"host"`
 	Username   string `yaml:"username"`
@@ -195,7 +210,7 @@ type TCP struct {
 }
 
 type Pod struct {
-	Check `yaml:",inline"`
+	PodCheck `yaml:",inline"`
 }
 
 type PodAndIngress struct {

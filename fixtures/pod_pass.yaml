@@ -1,0 +1,23 @@
+pod:
+  - name: golang
+    namespace: default
+    spec: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: hello-world-golang
+        namespace: default
+        labels:
+          app: hello-world-golang
+      spec:
+        containers:
+          - name: hello
+            image: quay.io/toni0/hello-webserver-golang:latest
+    port: 8080
+    path: /foo/bar
+    ingressName: hello-world-golang
+    ingressHost: "hello-world-golang.127.0.0.1.nip.io"
+    readyTimeout: 3000
+    httpTimeout: 2000
+    deadline: 100000
+    expectedContent: bar

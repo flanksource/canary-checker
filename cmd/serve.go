@@ -33,6 +33,7 @@ var Serve = &cobra.Command{
 			&checks.DockerPullChecker{},
 			&checks.PostgresChecker{},
 			&checks.LdapChecker{},
+			&checks.PodChecker{},
 		}
 
 		gocron.Every(interval).Seconds().Do(func() {
@@ -65,7 +66,7 @@ func processMetrics(checkType string, results []*pkg.CheckResult) {
 		}
 		pkg.OpsCount.WithLabelValues(checkType, result.Endpoint).Inc()
 		if result.Pass {
-			pkg.OpsSuccessCount.WithLabelValues(checkType,result.Endpoint).Inc()
+			pkg.OpsSuccessCount.WithLabelValues(checkType, result.Endpoint).Inc()
 			if result.Duration > 0 {
 				pkg.RequestLatency.WithLabelValues(checkType, result.Endpoint).Observe(float64(result.Duration))
 			}

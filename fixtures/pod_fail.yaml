@@ -1,0 +1,20 @@
+pod:
+  - name: fail
+    namespace: default
+    spec: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: hello-world-fail
+        namespace: default
+        labels:
+          app: hello-world-fail
+      spec:
+        containers:
+          - name: hello
+            image: quay.io/toni0/hello-webserver-golang:2.2
+    port: 8080
+    path: /foo/bar
+    ingressName: hello-world-golang
+    thresholdMillis: 100000
+    expectedContent: OK
