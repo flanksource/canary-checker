@@ -14,7 +14,7 @@ var (
 			Name: "canary_check_count",
 			Help: "The total number of checks",
 		},
-		[]string{"type","endpoint"},
+		[]string{"type", "endpoint"},
 	)
 
 	OpsSuccessCount = prometheus.NewCounterVec(
@@ -22,7 +22,7 @@ var (
 			Name: "canary_check_success_count",
 			Help: "The total number of successful checks",
 		},
-		[]string{"type","endpoint"},
+		[]string{"type", "endpoint"},
 	)
 
 	OpsFailedCount = prometheus.NewCounterVec(
@@ -30,7 +30,7 @@ var (
 			Name: "canary_check_failed_count",
 			Help: "The total number of failed checks",
 		},
-		[]string{"type","endpoint"},
+		[]string{"type", "endpoint"},
 	)
 
 	RequestLatency = prometheus.NewHistogramVec(
@@ -57,8 +57,17 @@ var (
 		},
 		[]string{"type", "metric", "value"},
 	)
+
+	GenericHistogram = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "canary_check_histogram",
+			Help:    "A histogram representing durations",
+			Buckets: []float64{5, 10, 25, 50, 200, 500, 1000, 2500, 5000, 10000, 20000},
+		},
+		[]string{"type", "metric"},
+	)
 )
 
 func init() {
-	prometheus.MustRegister(OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency, GenericGauge, GenericCounter)
+	prometheus.MustRegister(OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency, GenericGauge, GenericCounter, GenericHistogram)
 }

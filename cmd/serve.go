@@ -77,6 +77,8 @@ func processMetrics(checkType string, results []*pkg.CheckResult) {
 					pkg.GenericCounter.WithLabelValues(checkType, m.Name, strconv.Itoa(int(m.Value))).Inc()
 				case pkg.GaugeType:
 					pkg.GenericGauge.WithLabelValues(checkType, m.Name).Set(m.Value)
+				case pkg.HistogramType:
+					pkg.GenericHistogram.WithLabelValues(checkType, m.Name).Observe(m.Value)
 				}
 			}
 		} else {

@@ -34,6 +34,25 @@ const (
 
 type PodChecker struct{}
 
+type watchPod struct {
+	Labels        string
+	Namespace     string
+	Deadline      time.Time
+	ScheduledChan chan bool
+	ReadyChan     chan bool
+	DeletedChan   chan bool
+	ErrorChan     chan error
+}
+
+type ingressHttpResult struct {
+	IngressTime float64
+	StatusOk    bool
+	ContentOk   bool
+	RequestTime float64
+	StatusCode  int
+	Content     string
+}
+
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
 func (c *PodChecker) Run(config pkg.Config) []*pkg.CheckResult {
@@ -53,6 +72,8 @@ func (c *PodChecker) Type() string {
 
 func (c *PodChecker) Check(podCheck pkg.PodCheck) []*pkg.CheckResult {
 	var result []*pkg.CheckResult
+
+	deadline := time.Now().Add(time.Duration(podCheck.Deadline) * time.Millisecond)
 
 	var kubeConfig string
 
@@ -117,14 +138,6 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck) []*pkg.CheckResult {
 		c.Cleanup(client, pod.Name, podCheck.Namespace)
 	}()
 
-	scheduledChan := make(chan bool)
-	readyChan := make(chan bool)
-	deletedChan := make(chan bool)
-	errorChan := make(chan error)
-
-	watchDuration := time.Duration(podCheck.Deadline) * time.Millisecond
-	deadline := time.After(watchDuration)
-
 	if err := c.createServiceAndIngress(client, podCheck, pod); err != nil {
 		result = append(result, &pkg.CheckResult{
 			Pass:     false,
@@ -134,113 +147,114 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck) []*pkg.CheckResult {
 		})
 		return result
 	}
+	watchPod := newWatchPod(labels, podCheck.Namespace, deadline)
 
 	go func() {
-		c.WatchPod(client, labels, podCheck.Namespace, watchDuration, scheduledChan, readyChan, deletedChan, errorChan)
+		watchPod.WatchPod(client)
 	}()
 
-	timer := NewTimer()
+	scheduleTime, err := c.WatchEvent("schedule", watchPod.ScheduledChan, watchPod.ErrorChan, podCheck.ScheduleTimeout, deadline)
+	if err != nil {
+		log.Errorf("Pod %s failed to schedule: %v", pod.Name, err)
+		return result
+	}
 
-loop:
-	for {
-		select {
-		case <-scheduledChan:
-			fmt.Printf("Pod %s was scheduled after: %fms\n", pod.Name, timer.Elapsed())
-			timer = NewTimer()
-		case <-readyChan:
-			fmt.Printf("Pod %s is ready after %fms\n", pod.Name, timer.Elapsed())
-			// Do the http checks here
-			httpCheckResults := c.HttpCheck(client, podCheck, pod)
-			result = append(result, httpCheckResults...)
-			c.Cleanup(client, pod.Name, podCheck.Namespace)
-			timer = NewTimer()
-		case <-deletedChan:
-			fmt.Printf("Pod %s was deleted after %fms\n", pod.Name, timer.Elapsed())
-			break loop
-		case err := <-errorChan:
-			fmt.Printf("Pod %s has errors after %fms: %v\n", pod.Name, timer.Elapsed(), err)
-			return result
-		case <-deadline:
-			fmt.Printf("Pod %s was not ready in %fms\n", podCheck.Deadline)
-			return result
-		}
+	creationTime, err := c.WatchEvent("create", watchPod.ReadyChan, watchPod.ErrorChan, podCheck.ReadyTimeout, deadline)
+	if err != nil {
+		log.Errorf("Pod %s failed to create: %v", pod.Name, err)
+		return result
+	}
+
+	// Do the http checks here
+	ingressResult, err := c.httpCheck(podCheck, deadline)
+	if err != nil {
+		fmt.Printf("Error checking ingress %s: %v", podCheck.IngressName, err)
+		return result
+	}
+
+	cleanupOk := true
+	deleteOk := true
+
+	cleanupErr := c.Cleanup(client, pod.Name, podCheck.Namespace)
+	if cleanupErr != nil {
+		log.Errorf("Error cleaning up for check %s in namespace %s: %v", podCheck.Name, podCheck.Namespace, err)
+		cleanupOk = false
+	}
+
+	deletionTime, deleteErr := c.WatchEvent("delete", watchPod.DeletedChan, watchPod.ErrorChan, podCheck.DeleteTimeout, deadline)
+	if err != nil {
+		log.Errorf("Pod %s failed to delete: %v", pod.Name, err)
+		deleteOk = false
+	}
+
+	message := fmt.Sprintf("pod %s in namespace %s was successfully checked", pod.Name, podCheck.Namespace)
+
+	if !ingressResult.StatusOk {
+		message = fmt.Sprintf("Ingress check %s for ingress %s returned wrong status code %d", podCheck.Name, podCheck.IngressName, ingressResult.StatusCode)
+	} else if !ingressResult.ContentOk {
+		message = fmt.Sprintf("Ingress check %s for ingress %s returned wrong content. Expected %s to contain %s", podCheck.Name, podCheck.IngressName, ingressResult.Content, podCheck.ExpectedContent)
+	} else if !cleanupOk {
+		message = fmt.Sprintf("Failed to cleanup after pod check %s: %v", podCheck.Name, cleanupErr)
+	} else if !deleteOk {
+		message = fmt.Sprintf("Failed to delete pod %s for pod check %s: %v", pod.Name, podCheck.Name, deleteErr)
 	}
 
 	result = append(result, &pkg.CheckResult{
-		Pass:     true,
+		Pass:     ingressResult.StatusOk && ingressResult.ContentOk && cleanupOk && deleteOk,
 		Duration: int64(startTimer.Elapsed()),
 		Endpoint: c.podEndpoint(podCheck),
-		Message:  fmt.Sprintf("pod %s in namespace %s was successfully checked", pod.Name, podCheck.Namespace),
+		Message:  message,
+		Metrics: []pkg.Metric{
+			{
+				Name:   "schedule_time",
+				Type:   pkg.HistogramType,
+				Labels: map[string]string{"podCheck": podCheck.Name},
+				Value:  float64(scheduleTime),
+			},
+			{
+				Name:   "creation_time",
+				Type:   pkg.HistogramType,
+				Labels: map[string]string{"podCheck": podCheck.Name},
+				Value:  float64(creationTime),
+			},
+			{
+				Name:   "delete_time",
+				Type:   pkg.HistogramType,
+				Labels: map[string]string{"podCheck": podCheck.Name},
+				Value:  float64(deletionTime),
+			},
+			{
+				Name:   "ingress_time",
+				Type:   pkg.HistogramType,
+				Labels: map[string]string{"podCheck": podCheck.Name},
+				Value:  float64(ingressResult.IngressTime),
+			},
+			{
+				Name:   "request_time",
+				Type:   pkg.HistogramType,
+				Labels: map[string]string{"podCheck": podCheck.Name},
+				Value:  float64(ingressResult.RequestTime),
+			},
+		},
 	})
 
 	return result
 }
 
-func (c *PodChecker) WatchPod(client *kubernetes.Clientset, labels, namespace string, watchDuration time.Duration, scheduledChan, readyChan, deletedChan chan bool, errorChan chan error) {
-	watcher, err := client.CoreV1().Pods(namespace).Watch(metav1.ListOptions{
-		LabelSelector: labels,
-	})
-	if err != nil {
-		log.Errorf("Cannot create pod event watcher: %v", err)
-		return
-	}
-
-	var scheduled, created bool
+func (c *PodChecker) WatchEvent(eventType string, doneChan chan bool, errChan chan error, timeout int64, deadline time.Time) (float64, error) {
+	softTimeout := time.After(time.Duration(timeout) * time.Millisecond)
+	timer := NewTimer()
 
 	for {
 		select {
-		case e := <-watcher.ResultChan():
-			if e.Object == nil {
-				log.Errorf("Object returned by watcher is nil")
-				return
-			}
-
-			p, ok := e.Object.(*v1.Pod)
-			if !ok {
-				continue
-			}
-
-			log.WithFields(log.Fields{
-				"action":     e.Type,
-				"namespace":  p.Namespace,
-				"name":       p.Name,
-				"phase":      p.Status.Phase,
-				"reason":     p.Status.Reason,
-				"container#": len(p.Status.ContainerStatuses),
-			}).Info("event notified")
-
-			log.Infof("waiting: %v", p.Status.ContainerStatuses)
-
-			switch e.Type {
-			case watch.Modified:
-				switch p.Status.Phase {
-				case v1.PodPending:
-					for _, s := range p.Status.ContainerStatuses {
-						if s.State.Waiting != nil && s.State.Waiting.Reason == "ContainerCreating" {
-							if !scheduled {
-								scheduled = true
-								scheduledChan <- true
-							}
-							break
-						} else if s.State.Waiting != nil && s.State.Waiting.Reason == "ImagePullBackOff" {
-							errorChan <- perrors.Errorf("Failed to run pod %s error: ImagePullBackOff %s", p.Name, s.State.Waiting.Message)
-							return
-						}
-					}
-				case v1.PodRunning:
-					if !created {
-						created = true
-						readyChan <- true
-					}
-				}
-			case watch.Deleted:
-				deletedChan <- true
-				return
-			}
-
-		case <-time.After(watchDuration):
-			log.Errorf("Watch pod expired after %fms", watchDuration.Milliseconds())
-			return
+		case <-doneChan:
+			return timer.Elapsed(), nil
+		case err := <-errChan:
+			return 0, perrors.Wrapf(err, "Received error while trying to %s pod", eventType)
+		case <-softTimeout:
+			return 0, perrors.Errorf("Timeout %dms exceeded while trying to %s pod", timeout, eventType)
+		case <-time.After(time.Until(deadline)):
+			return 0, perrors.Errorf("Deadline exceeded while trying to %s pod", timeout, eventType)
 		}
 	}
 }
@@ -257,40 +271,63 @@ func (c *PodChecker) Cleanup(client *kubernetes.Clientset, name, namespace strin
 	return nil
 }
 
-func (c *PodChecker) HttpCheck(client *kubernetes.Clientset, podCheck pkg.PodCheck, pod *v1.Pod) []*pkg.CheckResult {
-	var result []*pkg.CheckResult
+func (c *PodChecker) httpCheck(podCheck pkg.PodCheck, deadline time.Time) (*ingressHttpResult, error) {
+	var hardDeadline time.Time
+	ingressTimeout := time.Now().Add(time.Duration(podCheck.IngressTimeout) * time.Millisecond)
+	if ingressTimeout.After(deadline) {
+		hardDeadline = deadline
+	} else {
+		hardDeadline = ingressTimeout
+	}
 
 	timer := NewTimer()
+	retryInterval := time.Duration(podCheck.HttpRetryInterval) * time.Millisecond
 
-	url := fmt.Sprintf("http://%s%s", podCheck.IngressHost, podCheck.Path)
-	response, err := c.getHttp(url, podCheck.HttpTimeout)
-	if err != nil {
-		result = append(result, &pkg.CheckResult{
-			Pass:     false,
-			Endpoint: c.podEndpoint(podCheck),
-			Message:  fmt.Sprintf("Failed to get url %s: %v", url, err),
-		})
-		return result
+	for {
+		url := fmt.Sprintf("http://%s%s", podCheck.IngressHost, podCheck.Path)
+		httpTimer := NewTimer()
+		response, responseCode, err := c.getHttp(url, podCheck.HttpTimeout, hardDeadline)
+		if err != nil {
+			log.Debugf("Failed to get http URL %s: %v", url, err)
+			time.Sleep(retryInterval)
+			continue
+		}
+		responseTime := httpTimer.Elapsed()
+
+		found := false
+		for _, c := range podCheck.ExpectedHttpStatuses {
+			if c == responseCode {
+				found = true
+				break
+			}
+		}
+
+		if !found && responseCode == http.StatusServiceUnavailable {
+			log.Debugf("Expected http check for ingress %s to return %v statuses codes, returned %d", podCheck.IngressName, podCheck.ExpectedHttpStatuses, responseCode)
+			time.Sleep(retryInterval)
+			continue
+		} else if !found {
+			result := &ingressHttpResult{
+				IngressTime: timer.Elapsed(),
+				StatusOk:    false,
+				ContentOk:   false,
+				RequestTime: responseTime,
+				StatusCode:  responseCode,
+				Content:     response,
+			}
+			return result, nil
+		}
+
+		result := &ingressHttpResult{
+			IngressTime: timer.Elapsed(),
+			StatusOk:    true,
+			ContentOk:   strings.Contains(response, podCheck.ExpectedContent),
+			RequestTime: responseTime,
+			StatusCode:  responseCode,
+			Content:     response,
+		}
+		return result, nil
 	}
-
-	if strings.Contains(response, podCheck.ExpectedContent) {
-		result = append(result, &pkg.CheckResult{
-			Pass:     true,
-			Duration: int64(timer.Elapsed()),
-			Endpoint: c.podEndpoint(podCheck),
-			Message:  fmt.Sprintf("url %s successfully called and returned expected content", url),
-		})
-	} else {
-		log.Infof("Url %s returned content %s", url, response)
-		result = append(result, &pkg.CheckResult{
-			Pass:     false,
-			Duration: int64(timer.Elapsed()),
-			Endpoint: c.podEndpoint(podCheck),
-			Message:  fmt.Sprintf("url %s did not return expected content", url),
-		})
-	}
-
-	return result
 }
 
 func (c *PodChecker) createServiceAndIngress(client *kubernetes.Clientset, podCheck pkg.PodCheck, pod *v1.Pod) error {
@@ -379,25 +416,33 @@ func (c *PodChecker) newIngress(podCheck pkg.PodCheck, svc string) *v1beta1.Ingr
 	return ingress
 }
 
-func (c *PodChecker) getHttp(url string, timeout int64) (string, error) {
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Millisecond)
+func (c *PodChecker) getHttp(url string, timeout int64, deadline time.Time) (string, int, error) {
+	var hardDeadline time.Time
+	softTimeoutDeadline := time.Now().Add(time.Duration(timeout) * time.Millisecond)
+	if softTimeoutDeadline.After(deadline) {
+		hardDeadline = deadline
+	} else {
+		hardDeadline = softTimeoutDeadline
+	}
+
+	ctx, _ := context.WithDeadline(context.Background(), hardDeadline)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return "", perrors.Wrapf(err, "failed to create http request for url %s", url)
+		return "", 0, perrors.Wrapf(err, "failed to create http request for url %s", url)
 	}
 
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
-		return "", perrors.Wrapf(err, "failed to get url %s", url)
+		return "", 0, perrors.Wrapf(err, "failed to get url %s", url)
 	}
 	defer resp.Body.Close()
 
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", perrors.Wrapf(err, "failed to read body for url %s", url)
+		return "", 0, perrors.Wrapf(err, "failed to read body for url %s", url)
 	}
-	return string(respBytes), nil
+	return string(respBytes), resp.StatusCode, nil
 }
 
 func (c *PodChecker) findPort(pod *v1.Pod) (int32, error) {
@@ -411,4 +456,84 @@ func (c *PodChecker) findPort(pod *v1.Pod) (int32, error) {
 
 func (c *PodChecker) podEndpoint(podCheck pkg.PodCheck) string {
 	return fmt.Sprintf("canary-checker.flanksource.com/pod/%s/%s", podCheck.Namespace, podCheck.Name)
+}
+
+func newWatchPod(labels, namespace string, deadline time.Time) *watchPod {
+	w := &watchPod{
+		Labels:        labels,
+		Namespace:     namespace,
+		Deadline:      deadline,
+		ScheduledChan: make(chan bool),
+		ReadyChan:     make(chan bool),
+		DeletedChan:   make(chan bool),
+		ErrorChan:     make(chan error),
+	}
+	return w
+}
+
+func (w *watchPod) WatchPod(client *kubernetes.Clientset) {
+	watcher, err := client.CoreV1().Pods(w.Namespace).Watch(metav1.ListOptions{
+		LabelSelector: w.Labels,
+	})
+	if err != nil {
+		log.Errorf("Cannot create pod event watcher: %v", err)
+		return
+	}
+
+	var scheduled, created bool
+
+	for {
+		select {
+		case e := <-watcher.ResultChan():
+			if e.Object == nil {
+				log.Errorf("Object returned by watcher is nil")
+				return
+			}
+
+			p, ok := e.Object.(*v1.Pod)
+			if !ok {
+				continue
+			}
+
+			log.WithFields(log.Fields{
+				"action":     e.Type,
+				"namespace":  p.Namespace,
+				"name":       p.Name,
+				"phase":      p.Status.Phase,
+				"reason":     p.Status.Reason,
+				"container#": len(p.Status.ContainerStatuses),
+			}).Debugf("event notified")
+
+			switch e.Type {
+			case watch.Modified:
+				switch p.Status.Phase {
+				case v1.PodPending:
+					for _, s := range p.Status.ContainerStatuses {
+						if s.State.Waiting != nil && s.State.Waiting.Reason == "ContainerCreating" {
+							if !scheduled {
+								scheduled = true
+								w.ScheduledChan <- true
+							}
+							break
+						} else if s.State.Waiting != nil && s.State.Waiting.Reason == "ImagePullBackOff" {
+							w.ErrorChan <- perrors.Errorf("Failed to run pod %s error: ImagePullBackOff %s", p.Name, s.State.Waiting.Message)
+							return
+						}
+					}
+				case v1.PodRunning:
+					if !created {
+						created = true
+						w.ReadyChan <- true
+					}
+				}
+			case watch.Deleted:
+				w.DeletedChan <- true
+				return
+			}
+
+		case <-time.After(time.Until(w.Deadline)):
+			log.Errorf("Watch pod exceeded deadline")
+			return
+		}
+	}
 }
