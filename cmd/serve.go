@@ -4,6 +4,7 @@ import (
 	"fmt"
 	nethttp "net/http"
 	"strconv"
+	"time"
 
 	"github.com/jasonlvhit/gocron"
 	"github.com/pkg/errors"
@@ -33,8 +34,10 @@ var Serve = &cobra.Command{
 			&checks.DockerPullChecker{},
 			&checks.PostgresChecker{},
 			&checks.LdapChecker{},
-			&checks.PodChecker{},
+			checks.NewPodChecker(),
 		}
+
+		config.Interval = time.Duration(interval) * time.Second
 
 		gocron.Every(interval).Seconds().Do(func() {
 			for _, c := range checks {

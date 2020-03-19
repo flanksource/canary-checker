@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -24,15 +23,18 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/util/homedir"
 )
 
 const (
 	podLabelSelector   = "canary-checker.flanksource.com/podName"
+	podCheckSelector   = "canary-checker.flanksource.com/podCheck"
 	podGeneralSelector = "canary-checker.flanksource.com/generated"
 )
 
-type PodChecker struct{}
+type PodChecker struct {
+	mutex chan bool
+	k8s   *kubernetes.Clientset
+}
 
 type watchPod struct {
 	Labels        string
@@ -42,6 +44,8 @@ type watchPod struct {
 	ReadyChan     chan bool
 	DeletedChan   chan bool
 	ErrorChan     chan error
+	k8s           *kubernetes.Clientset
+	PodName       string
 }
 
 type ingressHttpResult struct {
@@ -53,15 +57,68 @@ type ingressHttpResult struct {
 	Content     string
 }
 
+func NewPodChecker() *PodChecker {
+	pc := &PodChecker{
+		mutex: make(chan bool, 1),
+	}
+
+	k8sClient, err := pkg.NewK8sClient()
+	if err != nil {
+		log.Errorf("Failed to create kubernetes config %v", err)
+		return pc
+	}
+
+	pc.k8s = k8sClient
+
+	return pc
+}
+
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
 func (c *PodChecker) Run(config pkg.Config) []*pkg.CheckResult {
 	var checks []*pkg.CheckResult
-	for _, conf := range config.Pod {
-		for _, result := range c.Check(conf.PodCheck) {
-			checks = append(checks, result)
+
+	deadline := time.Now().Add(config.Interval)
+	// Allowed time is required to allow all check goroutines to return results even if deadline was exceeded
+	allowedTime := 100 * time.Millisecond
+	deadlineChan := time.After(config.Interval + allowedTime)
+
+	// Check if running in serve mode.
+	// No two concurrent checks can run at the same time
+	// If we do not aquire the lock during the serve interval we just return
+	if config.Interval != time.Duration(0) {
+		select {
+		case c.mutex <- true: // try locking mutex
+			defer func() {
+				<-c.mutex // unlock mutex
+			}()
+			break
+		case <-deadlineChan:
+			return checks
 		}
 	}
+
+	var checksChan = make(chan []*pkg.CheckResult)
+	var checksCount = 0
+
+	for _, conf := range config.Pod {
+		go func(podCheck pkg.PodCheck) {
+			results := c.Check(podCheck, deadline)
+			checksChan <- results
+		}(conf.PodCheck)
+
+		checksCount += 1
+	}
+
+	for i := 0; i < checksCount; i++ {
+		select {
+		case results := <-checksChan:
+			checks = append(checks, results...)
+		case <-deadlineChan:
+			return checks
+		}
+	}
+
 	return checks
 }
 
@@ -70,12 +127,20 @@ func (c *PodChecker) Type() string {
 	return "pod"
 }
 
-func (c *PodChecker) Check(podCheck pkg.PodCheck) []*pkg.CheckResult {
+func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pkg.CheckResult {
 	var result []*pkg.CheckResult
 
 	deadline := time.Now().Add(time.Duration(podCheck.Deadline) * time.Millisecond)
+	if deadline.After(checkDeadline) {
+		log.Errorf("Pod check %s configured deadline is after check deadline", podCheck.Name)
+		deadline = checkDeadline
+	}
 
-	var kubeConfig string
+	log.Infof("Running pod check %s", podCheck.Name)
+
+	if err := c.Cleanup(podCheck); err != nil {
+		log.Errorf("Failed to cleanup old artifacts for check %s: %v", podCheck.Name, err)
+	}
 
 	if podCheck.Spec == "" {
 		log.Errorf("Pod spec cannot be empty")
@@ -87,26 +152,10 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck) []*pkg.CheckResult {
 		return result
 	}
 
-	if home := homedir.HomeDir(); home != "" {
-		kubeConfig = filepath.Join(home, ".kube", "config")
-	}
-
-	client, err := pkg.NewK8sClient(kubeConfig)
-	if err != nil {
-		log.Errorf("failed to create k8s client: %v", err)
-		result = append(result, &pkg.CheckResult{
-			Pass:     false,
-			Invalid:  true,
-			Endpoint: c.podEndpoint(podCheck),
-			Message:  fmt.Sprintf("Failed to create k8s client: %v", err),
-		})
-
-		return result
-	}
-
 	podUid := utils.RandomString(6)
 	pod := &v1.Pod{}
 	if err := yaml.Unmarshal([]byte(podCheck.Spec), pod); err != nil {
+		log.Errorf("Failed to unmarshall pod spec %s: %v", podCheck.Name, err)
 		result = append(result, &pkg.CheckResult{
 			Pass:     false,
 			Invalid:  true,
@@ -119,10 +168,12 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck) []*pkg.CheckResult {
 	startTimer := NewTimer()
 	pod.Name = fmt.Sprintf("%s-%s", pod.Name, podUid)
 	pod.Labels[podLabelSelector] = pod.Name
+	pod.Labels[podCheckSelector] = c.podCheckSelectorValue(podCheck)
 	pod.Labels[podGeneralSelector] = "true"
 
-	_, err = client.CoreV1().Pods(podCheck.Namespace).Create(pod)
+	_, err := c.k8s.CoreV1().Pods(podCheck.Namespace).Create(pod)
 	if err != nil {
+		log.Errorf("Failed to create pod %s: %v", pod.Name, err)
 		result = append(result, &pkg.CheckResult{
 			Pass:     false,
 			Invalid:  true,
@@ -135,10 +186,11 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck) []*pkg.CheckResult {
 	labels := fmt.Sprintf("%s=%s", podLabelSelector, pod.Name)
 
 	defer func() {
-		c.Cleanup(client, pod.Name, podCheck.Namespace)
+		c.Cleanup(podCheck)
 	}()
 
-	if err := c.createServiceAndIngress(client, podCheck, pod); err != nil {
+	if err := c.createServiceAndIngress(podCheck, pod); err != nil {
+		log.Errorf("Failed to create service %s and ingress %s: %v", pod.Name, podCheck.IngressName, err)
 		result = append(result, &pkg.CheckResult{
 			Pass:     false,
 			Invalid:  true,
@@ -147,10 +199,10 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck) []*pkg.CheckResult {
 		})
 		return result
 	}
-	watchPod := newWatchPod(labels, podCheck.Namespace, deadline)
+	watchPod := newWatchPod(c.k8s, pod.Name, labels, podCheck.Namespace, deadline)
 
 	go func() {
-		watchPod.WatchPod(client)
+		watchPod.WatchPod()
 	}()
 
 	scheduleTime, err := c.WatchEvent("schedule", watchPod.ScheduledChan, watchPod.ErrorChan, podCheck.ScheduleTimeout, deadline)
@@ -175,7 +227,7 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck) []*pkg.CheckResult {
 	cleanupOk := true
 	deleteOk := true
 
-	cleanupErr := c.Cleanup(client, pod.Name, podCheck.Namespace)
+	cleanupErr := c.Cleanup(podCheck)
 	if cleanupErr != nil {
 		log.Errorf("Error cleaning up for check %s in namespace %s: %v", podCheck.Name, podCheck.Namespace, err)
 		cleanupOk = false
@@ -259,14 +311,23 @@ func (c *PodChecker) WatchEvent(eventType string, doneChan chan bool, errChan ch
 	}
 }
 
-func (c *PodChecker) Cleanup(client *kubernetes.Clientset, name, namespace string) error {
-	err := client.CoreV1().Pods(namespace).Delete(name, nil)
+func (c *PodChecker) Cleanup(podCheck pkg.PodCheck) error {
+	listOptions := metav1.ListOptions{LabelSelector: c.podCheckSelector(podCheck)}
+
+	err := c.k8s.CoreV1().Pods(podCheck.Namespace).DeleteCollection(nil, listOptions)
 	if err != nil && !errors.IsNotFound(err) {
-		return perrors.Wrapf(err, "Failed to delete pod %s in namespace %s : %v", name, namespace, err)
+		return perrors.Wrapf(err, "Failed to delete pods for check %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
 	}
-	err = client.CoreV1().Services(namespace).Delete(name, nil)
-	if err != nil && !errors.IsNotFound(err) {
-		return perrors.Wrapf(err, "Failed to delete service %s in namespace %s : %v", name, namespace, err)
+
+	services, err := c.k8s.CoreV1().Services(podCheck.Namespace).List(listOptions)
+	if err != nil {
+		return perrors.Wrapf(err, "Failed to get services for check %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
+	}
+	for _, s := range services.Items {
+		err = c.k8s.CoreV1().Services(podCheck.Namespace).Delete(s.Name, nil)
+		if err != nil && !errors.IsNotFound(err) {
+			return perrors.Wrapf(err, "Failed to delete service %s in namespace %s : %v", s.Name, podCheck.Namespace, err)
+		}
 	}
 	return nil
 }
@@ -330,7 +391,7 @@ func (c *PodChecker) httpCheck(podCheck pkg.PodCheck, deadline time.Time) (*ingr
 	}
 }
 
-func (c *PodChecker) createServiceAndIngress(client *kubernetes.Clientset, podCheck pkg.PodCheck, pod *v1.Pod) error {
+func (c *PodChecker) createServiceAndIngress(podCheck pkg.PodCheck, pod *v1.Pod) error {
 	if podCheck.Port == 0 {
 		return perrors.Errorf("Pod cannot be empty for pod %s in namespace %s", pod.Name, pod.Namespace)
 	}
@@ -343,6 +404,9 @@ func (c *PodChecker) createServiceAndIngress(client *kubernetes.Clientset, podCh
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      pod.Name,
 			Namespace: pod.Namespace,
+			Labels: map[string]string{
+				podCheckSelector: c.podCheckSelectorValue(podCheck),
+			},
 		},
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -359,22 +423,22 @@ func (c *PodChecker) createServiceAndIngress(client *kubernetes.Clientset, podCh
 		},
 	}
 
-	if _, err := client.CoreV1().Services(svc.Namespace).Create(svc); err != nil {
+	if _, err := c.k8s.CoreV1().Services(svc.Namespace).Create(svc); err != nil {
 		return perrors.Wrapf(err, "Failed to create service for pod %s in namespace %s", pod.Name, pod.Namespace)
 	}
 
-	ingress, err := client.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Get(podCheck.IngressName, metav1.GetOptions{})
+	ingress, err := c.k8s.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Get(podCheck.IngressName, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return perrors.Wrapf(err, "Failed to get ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
 	} else if err == nil {
 		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServiceName = svc.Name
 		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServicePort = intstr.FromInt(int(podCheck.Port))
-		if _, err := client.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Update(ingress); err != nil {
+		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Update(ingress); err != nil {
 			return perrors.Wrapf(err, "failed to update ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
 		}
 	} else {
 		ingress := c.newIngress(podCheck, svc.Name)
-		if _, err := client.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Create(ingress); err != nil {
+		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Create(ingress); err != nil {
 			return perrors.Wrapf(err, "failed to create ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
 		}
 	}
@@ -458,7 +522,15 @@ func (c *PodChecker) podEndpoint(podCheck pkg.PodCheck) string {
 	return fmt.Sprintf("canary-checker.flanksource.com/pod/%s/%s", podCheck.Namespace, podCheck.Name)
 }
 
-func newWatchPod(labels, namespace string, deadline time.Time) *watchPod {
+func (c *PodChecker) podCheckSelectorValue(podCheck pkg.PodCheck) string {
+	return fmt.Sprintf("%s.%s", podCheck.Name, podCheck.Namespace)
+}
+
+func (c *PodChecker) podCheckSelector(podCheck pkg.PodCheck) string {
+	return fmt.Sprintf("%s=%s", podCheckSelector, c.podCheckSelectorValue(podCheck))
+}
+
+func newWatchPod(k8s *kubernetes.Clientset, podName, labels, namespace string, deadline time.Time) *watchPod {
 	w := &watchPod{
 		Labels:        labels,
 		Namespace:     namespace,
@@ -467,12 +539,14 @@ func newWatchPod(labels, namespace string, deadline time.Time) *watchPod {
 		ReadyChan:     make(chan bool),
 		DeletedChan:   make(chan bool),
 		ErrorChan:     make(chan error),
+		k8s:           k8s,
+		PodName:       podName,
 	}
 	return w
 }
 
-func (w *watchPod) WatchPod(client *kubernetes.Clientset) {
-	watcher, err := client.CoreV1().Pods(w.Namespace).Watch(metav1.ListOptions{
+func (w *watchPod) WatchPod() {
+	watcher, err := w.k8s.CoreV1().Pods(w.Namespace).Watch(metav1.ListOptions{
 		LabelSelector: w.Labels,
 	})
 	if err != nil {
@@ -532,7 +606,7 @@ func (w *watchPod) WatchPod(client *kubernetes.Clientset) {
 			}
 
 		case <-time.After(time.Until(w.Deadline)):
-			log.Errorf("Watch pod exceeded deadline")
+			log.Errorf("Watch pod %s exceeded deadline", w.PodName)
 			return
 		}
 	}

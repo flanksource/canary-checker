@@ -31,7 +31,7 @@ func RunChecks(config pkg.Config) []*pkg.CheckResult {
 		&checks.PostgresChecker{},
 		&checks.LdapChecker{},
 		&checks.S3BucketChecker{},
-		&checks.PodChecker{},
+		checks.NewPodChecker(),
 	}
 
 	var results []*pkg.CheckResult

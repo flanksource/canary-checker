@@ -22,7 +22,35 @@ pod:
     httpTimeout: 2000
     deleteTimeout: 12000
     ingressTimeout: 5000
-    deadline: 100000
+    deadline: 29000
     httpRetryInterval: 200
     expectedContent: bar
+    expectedHttpStatuses: [200, 201, 202]
+  - name: ruby
+    namespace: default
+    spec: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: hello-world-ruby
+        namespace: default
+        labels:
+          app: hello-world-ruby
+      spec:
+        containers:
+          - name: hello
+            image: quay.io/toni0/hello-webserver-ruby:latest
+            imagePullPolicy: Always
+    port: 8080
+    path: /foo/bar
+    ingressName: hello-world-ruby
+    ingressHost: "hello-world-ruby.127.0.0.1.nip.io"
+    scheduleTimeout: 3000
+    readyTimeout: 12000
+    httpTimeout: 2000
+    deleteTimeout: 12000
+    ingressTimeout: 5000
+    deadline: 30000
+    httpRetryInterval: 200
+    expectedContent: hello, you've hit /foo/bar
     expectedHttpStatuses: [200, 201, 202]

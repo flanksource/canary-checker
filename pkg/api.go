@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/flanksource/commons/console"
 )
@@ -19,6 +20,8 @@ type Config struct {
 	SSL           []SSL           `yaml:"ssl,omitempty"`
 	ICMP          []ICMP          `yaml:"icmp,omitempty"`
 	Postgres      []Postgres      `yaml:"postgres,omitempty"`
+
+	Interval time.Duration `yaml:"-"`
 }
 
 type Checker interface {
