@@ -50,7 +50,7 @@ pod:
     httpTimeout: 2000
     deleteTimeout: 12000
     ingressTimeout: 5000
-    deadline: 30000
+    deadline: 29000
     httpRetryInterval: 200
     expectedContent: hello, you've hit /foo/bar
     expectedHttpStatuses: [200, 201, 202]
