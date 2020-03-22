@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/flanksource/commons/console"
 )
@@ -19,6 +20,8 @@ type Config struct {
 	SSL           []SSL           `yaml:"ssl,omitempty"`
 	ICMP          []ICMP          `yaml:"icmp,omitempty"`
 	Postgres      []Postgres      `yaml:"postgres,omitempty"`
+
+	Interval time.Duration `yaml:"-"`
 }
 
 type Checker interface {
@@ -158,6 +161,26 @@ func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*c = PostgresCheck(raw)
 	return nil
 }
+
+type PodCheck struct {
+	Name                 string `yaml:"name"`
+	Namespace            string `yaml:"namespace"`
+	Spec                 string `yaml:"spec"`
+	ScheduleTimeout      int64  `yaml:"scheduleTimeout"`
+	ReadyTimeout         int64  `yaml:"readyTimeout"`
+	HttpTimeout          int64  `yaml:"httpTimeout"`
+	DeleteTimeout        int64  `yaml:"deleteTimeout"`
+	IngressTimeout       int64  `yaml:"ingressTimeout"`
+	HttpRetryInterval    int64  `yaml:"httpRetryInterval"`
+	Deadline             int64  `yaml:"deadline"`
+	Port                 int32  `yaml:"port"`
+	Path                 string `yaml:"path"`
+	IngressName          string `yaml:"ingressName"`
+	IngressHost          string `yaml:"ingressHost"`
+	ExpectedContent      string `yaml:"expectedContent"`
+	ExpectedHttpStatuses []int  `yaml:"expectedHttpStatuses"`
+}
+
 type LDAPCheck struct {
 	Host       string `yaml:"host"`
 	Username   string `yaml:"username"`
@@ -195,7 +218,7 @@ type TCP struct {
 }
 
 type Pod struct {
-	Check `yaml:",inline"`
+	PodCheck `yaml:",inline"`
 }
 
 type PodAndIngress struct {

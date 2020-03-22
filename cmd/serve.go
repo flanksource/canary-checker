@@ -4,6 +4,7 @@ import (
 	"fmt"
 	nethttp "net/http"
 	"strconv"
+	"time"
 
 	"github.com/jasonlvhit/gocron"
 	"github.com/pkg/errors"
@@ -33,7 +34,10 @@ var Serve = &cobra.Command{
 			&checks.DockerPullChecker{},
 			&checks.PostgresChecker{},
 			&checks.LdapChecker{},
+			checks.NewPodChecker(),
 		}
+
+		config.Interval = time.Duration(interval) * time.Second
 
 		gocron.Every(interval).Seconds().Do(func() {
 			for _, c := range checks {
@@ -65,7 +69,7 @@ func processMetrics(checkType string, results []*pkg.CheckResult) {
 		}
 		pkg.OpsCount.WithLabelValues(checkType, result.Endpoint).Inc()
 		if result.Pass {
-			pkg.OpsSuccessCount.WithLabelValues(checkType,result.Endpoint).Inc()
+			pkg.OpsSuccessCount.WithLabelValues(checkType, result.Endpoint).Inc()
 			if result.Duration > 0 {
 				pkg.RequestLatency.WithLabelValues(checkType, result.Endpoint).Observe(float64(result.Duration))
 			}
@@ -76,6 +80,8 @@ func processMetrics(checkType string, results []*pkg.CheckResult) {
 					pkg.GenericCounter.WithLabelValues(checkType, m.Name, strconv.Itoa(int(m.Value))).Inc()
 				case pkg.GaugeType:
 					pkg.GenericGauge.WithLabelValues(checkType, m.Name).Set(m.Value)
+				case pkg.HistogramType:
+					pkg.GenericHistogram.WithLabelValues(checkType, m.Name).Observe(m.Value)
 				}
 			}
 		} else {
