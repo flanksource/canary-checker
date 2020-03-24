@@ -32,14 +32,12 @@ func (c *LdapChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *LdapChecker) Run(config pkg.Config) []*pkg.CheckResult {
-	var checks []*pkg.CheckResult
+func (c *LdapChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 	for _, conf := range config.LDAP {
 		for _, result := range c.Check(conf.LDAPCheck) {
-			checks = append(checks, result)
+			results <- result
 		}
 	}
-	return checks
 }
 
 // CheckConfig : Check every ldap entry for lookup and auth

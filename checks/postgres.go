@@ -23,14 +23,12 @@ func (c *PostgresChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *PostgresChecker) Run(config pkg.Config) []*pkg.CheckResult {
-	var checks []*pkg.CheckResult
+func (c *PostgresChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 	for _, conf := range config.Postgres {
 		for _, result := range c.Check(conf.PostgresCheck) {
-			checks = append(checks, result)
+			results <- result
 		}
 	}
-	return checks
 }
 
 // CheckConfig : Attempts to connect to a DB using the specified

@@ -53,13 +53,10 @@ func init() {
 
 type DockerPullChecker struct{}
 
-func (c *DockerPullChecker) Run(config pkg.Config) []*pkg.CheckResult {
-	var checks []*pkg.CheckResult
+func (c *DockerPullChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 	for _, conf := range config.DockerPull {
-		result := c.Check(conf.DockerPullCheck)
-		checks = append(checks, result)
+		results <- c.Check(conf.DockerPullCheck)
 	}
-	return checks
 }
 
 // Type: returns checker type
