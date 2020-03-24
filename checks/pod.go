@@ -64,17 +64,16 @@ func NewPodChecker() *PodChecker {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *PodChecker) Run(config pkg.Config) []*pkg.CheckResult {
-	var checks []*pkg.CheckResult
+func (c *PodChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 	for _, conf := range config.Pod {
 		deadline := time.Now().Add(config.Interval)
 		if deadline.Before(time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)) {
 			deadline = time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)
 		}
-		checks = append(checks, c.Check(conf.PodCheck, deadline)...)
+		for _, result := range c.Check(conf.PodCheck, deadline) {
+			results <- result
+		}
 	}
-
-	return checks
 }
 
 // Type: returns checker type
@@ -152,26 +151,20 @@ func diff(times map[v1.PodConditionType]metav1.Time, c1 v1.PodConditionType, c2 
 }
 
 func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pkg.CheckResult {
-
 	if !c.lock.TryAcquire(1) {
-		log.Debugf("Check in progress skipping")
+		log.Trace("Check already in progress, skipping")
 		return nil
 	}
 	defer func() { c.lock.Release(1) }()
 	var result []*pkg.CheckResult
 
 	if err := c.Cleanup(podCheck); err != nil {
-		return unexpectedErrorf(podCheck, err, "Failed to cleanup old artifacts")
+		return unexpectedErrorf(podCheck, err, "failed to cleanup old artifacts")
 	}
 
-	deadline := time.Now().Add(time.Duration(podCheck.Deadline) * time.Millisecond)
-	// if deadline.After(checkDeadline) {
-	// 	log.Errorf("Pod check %s configured deadline is after check deadline", podCheck.Name)
-	// 	deadline = checkDeadline
-	// }
 	startTimer := NewTimer()
 
-	log.Infof("Running pod check %s", podCheck.Name)
+	log.Debugf("Running pod check %s", podCheck.Name)
 	five := int64(5)
 	if _, err := c.k8s.CoreV1().Nodes().List(metav1.ListOptions{TimeoutSeconds: &five}); err != nil {
 		return unexpectedErrorf(podCheck, err, "cannot connect to API server")
@@ -187,7 +180,9 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pk
 	if _, err := pods.Create(pod); err != nil {
 		return unexpectedErrorf(podCheck, err, "unable to create pod")
 	}
-
+	defer func() {
+		c.Cleanup(podCheck)
+	}()
 	pod, err = c.WaitForPod(podCheck.Namespace, pod.Name, time.Millisecond*time.Duration(podCheck.ScheduleTimeout), v1.PodRunning)
 	created := pod.GetCreationTimestamp()
 
@@ -200,43 +195,28 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pk
 	started := diff(conditions, v1.PodScheduled, v1.ContainersReady)
 	running := diff(conditions, v1.ContainersReady, v1.PodReady)
 
-	log.Infof("%s created=%s, scheduled=%d, started=%d, running=%d", pod.Name, created, scheduled, started, running)
-
-	defer func() {
-		c.Cleanup(podCheck)
-	}()
+	log.Debugf("%s created=%s, scheduled=%d, started=%d, running=%d", pod.Name, created, scheduled, started, running)
 
 	if err := c.createServiceAndIngress(podCheck, pod); err != nil {
 		return unexpectedErrorf(podCheck, err, "failed to create ingress")
 	}
 
-	// Do the http checks here
-	ingressResult, err := c.httpCheck(podCheck, deadline)
-	if err != nil {
-		return unexpectedErrorf(podCheck, err, "failed to http get ingress")
-	}
+	deadline := time.Now().Add(time.Duration(podCheck.Deadline) * time.Millisecond)
 
+	ingressTime, requestTime, ingressResult := c.httpCheck(podCheck, deadline)
+
+	deleteOk := true
 	deletion := NewTimer()
 	if err := pods.Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
+		deleteOk = false
 		return unexpectedErrorf(podCheck, err, "failed to delete pod")
-	}
-	deletionTime := deletion.Elapsed()
-	cleanupOk := true
-	deleteOk := true
-
-	message := ""
-
-	if !ingressResult.StatusOk {
-		message = fmt.Sprintf("Ingress check %s for ingress %s returned wrong status code %d", podCheck.Name, podCheck.IngressName, ingressResult.StatusCode)
-	} else if !ingressResult.ContentOk {
-		message = fmt.Sprintf("Ingress check %s for ingress %s returned wrong content. Expected %s to contain %s", podCheck.Name, podCheck.IngressName, ingressResult.Content, podCheck.ExpectedContent)
 	}
 
 	result = append(result, &pkg.CheckResult{
-		Pass:     ingressResult.StatusOk && ingressResult.ContentOk && cleanupOk && deleteOk,
+		Pass:     ingressResult.Pass && deleteOk,
 		Duration: int64(startTimer.Elapsed()),
 		Endpoint: c.podEndpoint(podCheck),
-		Message:  message,
+		Message:  ingressResult.Message,
 		Metrics: []pkg.Metric{
 			{
 				Name:   "schedule_time",
@@ -254,19 +234,19 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pk
 				Name:   "delete_time",
 				Type:   pkg.HistogramType,
 				Labels: map[string]string{"podCheck": podCheck.Name},
-				Value:  float64(deletionTime),
+				Value:  float64(deletion.Elapsed()),
 			},
 			{
 				Name:   "ingress_time",
 				Type:   pkg.HistogramType,
 				Labels: map[string]string{"podCheck": podCheck.Name},
-				Value:  float64(ingressResult.IngressTime),
+				Value:  float64(ingressTime),
 			},
 			{
 				Name:   "request_time",
 				Type:   pkg.HistogramType,
 				Labels: map[string]string{"podCheck": podCheck.Name},
-				Value:  float64(ingressResult.RequestTime),
+				Value:  float64(requestTime),
 			},
 		},
 	})
@@ -295,7 +275,7 @@ func (c *PodChecker) Cleanup(podCheck pkg.PodCheck) error {
 	return nil
 }
 
-func (c *PodChecker) httpCheck(podCheck pkg.PodCheck, deadline time.Time) (*ingressHttpResult, error) {
+func (c *PodChecker) httpCheck(podCheck pkg.PodCheck, deadline time.Time) (ingressTime float64, requestTime float64, result *pkg.CheckResult) {
 	var hardDeadline time.Time
 	ingressTimeout := time.Now().Add(time.Duration(podCheck.IngressTimeout) * time.Millisecond)
 	if ingressTimeout.After(deadline) {
@@ -311,12 +291,24 @@ func (c *PodChecker) httpCheck(podCheck pkg.PodCheck, deadline time.Time) (*ingr
 		url := fmt.Sprintf("http://%s%s", podCheck.IngressHost, podCheck.Path)
 		httpTimer := NewTimer()
 		response, responseCode, err := c.getHttp(url, podCheck.HttpTimeout, hardDeadline)
-		if err != nil {
-			log.Debugf("Failed to get http URL %s: %v", url, err)
+		if err != nil && perrors.Is(err, context.DeadlineExceeded) {
+			if timer.Millis() > podCheck.HttpTimeout && time.Now().Before(hardDeadline) {
+				log.Debugf("[%s] request completed in %s, above threshold of %d", podCheck, httpTimer, podCheck.HttpTimeout)
+				time.Sleep(retryInterval)
+				continue
+			} else if timer.Millis() > podCheck.HttpTimeout && time.Now().After(hardDeadline) {
+				return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HttpTimeout)[0]
+			} else if time.Now().After(hardDeadline) {
+				return timer.Elapsed(), 0, Failf(podCheck, "ingress timeout exceeded %s > %d", timer, podCheck.IngressTimeout)[0]
+			} else {
+				log.Debugf("now=%s deadline=%s", time.Now(), hardDeadline)
+				continue
+			}
+		} else if err != nil {
+			log.Debugf("[%s] failed to get http URL %s: %v", podCheck, url, err)
 			time.Sleep(retryInterval)
 			continue
 		}
-		responseTime := httpTimer.Elapsed()
 
 		found := false
 		for _, c := range podCheck.ExpectedHttpStatuses {
@@ -327,31 +319,21 @@ func (c *PodChecker) httpCheck(podCheck pkg.PodCheck, deadline time.Time) (*ingr
 		}
 
 		if !found && responseCode == http.StatusServiceUnavailable {
-			log.Debugf("Expected http check for ingress %s to return %v statuses codes, returned %d", podCheck.IngressName, podCheck.ExpectedHttpStatuses, responseCode)
+			log.Debugf("[%s] request completed with %d, expected %v, retrying", podCheck, responseCode, podCheck.ExpectedHttpStatuses)
 			time.Sleep(retryInterval)
 			continue
 		} else if !found {
-			result := &ingressHttpResult{
-				IngressTime: timer.Elapsed(),
-				StatusOk:    false,
-				ContentOk:   false,
-				RequestTime: responseTime,
-				StatusCode:  responseCode,
-				Content:     response,
-			}
-			return result, nil
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "status code %d not expected %v ", responseCode, podCheck.ExpectedHttpStatuses)[0]
 		}
-
-		result := &ingressHttpResult{
-			IngressTime: timer.Elapsed(),
-			StatusOk:    true,
-			ContentOk:   strings.Contains(response, podCheck.ExpectedContent),
-			RequestTime: responseTime,
-			StatusCode:  responseCode,
-			Content:     response,
+		if !strings.Contains(response, podCheck.ExpectedContent) {
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "content check failed")[0]
 		}
-		return result, nil
+		if int64(httpTimer.Elapsed()) > podCheck.HttpTimeout {
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HttpTimeout)[0]
+		}
+		return timer.Elapsed(), httpTimer.Elapsed(), Passf(podCheck, "")[0]
 	}
+
 }
 
 func (c *PodChecker) createServiceAndIngress(podCheck pkg.PodCheck, pod *v1.Pod) error {
