@@ -42,18 +42,17 @@ func init() {
 	prometheus.MustRegister(bucketScanObjectCount, bucketScanLastWrite, bucketScanTotalSize)
 }
 
-type S3BucketChecker struct{}
+type S3BucketChecker struct {
+}
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *S3BucketChecker) Run(config pkg.Config) []*pkg.CheckResult {
-	var checks []*pkg.CheckResult
+func (c *S3BucketChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 	for _, conf := range config.S3Bucket {
 		for _, result := range c.Check(conf.S3BucketCheck) {
-			checks = append(checks, result)
+			results <- result
 		}
 	}
-	return checks
 }
 
 // Type: returns checker type
@@ -62,15 +61,8 @@ func (c *S3BucketChecker) Type() string {
 }
 
 func (c *S3BucketChecker) Check(bucket pkg.S3BucketCheck) []*pkg.CheckResult {
-	var result []*pkg.CheckResult
-
 	if _, err := DNSLookup(bucket.Endpoint); err != nil {
-		result = append(result, &pkg.CheckResult{
-			Pass:     false,
-			Message:  fmt.Sprintf("Failed to resolve DNS for %s", bucket.Endpoint),
-			Endpoint: bucket.Bucket,
-		})
-		return result
+		return unexpectedErrorf(bucket, err, "failed to resolve DNS")
 	}
 
 	cfg := aws.NewConfig().
@@ -81,30 +73,21 @@ func (c *S3BucketChecker) Check(bucket pkg.S3BucketCheck) []*pkg.CheckResult {
 		)
 	ssn, err := session.NewSession(cfg)
 	if err != nil {
-		result = append(result, &pkg.CheckResult{
-			Pass:     false,
-			Message:  fmt.Sprintf("Failed to create S3 session for %s: %v", bucket.Bucket, err),
-			Endpoint: bucket.Bucket,
-		})
-		return result
+		return unexpectedErrorf(bucket, err, "failed to create S3 session")
 	}
 	client := s3.New(ssn)
-	//client.Config.S3ForcePathStyle = aws.Bool(true)
+	client.Config.S3ForcePathStyle = aws.Bool(true)
 
 	var marker *string = nil
 
 	var latestObject *s3.Object = nil
-	var regex *regexp.Regexp = regexp.MustCompile("(.*?)")
+	var objects int
+	var totalSize int64
+	var regex *regexp.Regexp
 	if bucket.ObjectPath != "" {
 		re, err := regexp.Compile(bucket.ObjectPath)
 		if err != nil {
-			result = append(result, &pkg.CheckResult{
-				Pass:     false,
-				Invalid:  true,
-				Endpoint: bucket.Bucket,
-				Message:  fmt.Sprintf("Failed to compile regex for listing objects in bucket %s: %v", bucket.Bucket, err),
-			})
-			return result
+			return unexpectedErrorf(bucket, err, "failed to compile regex: %s", bucket.ObjectPath)
 		}
 		regex = re
 	}
@@ -113,28 +96,25 @@ func (c *S3BucketChecker) Check(bucket pkg.S3BucketCheck) []*pkg.CheckResult {
 		req := &s3.ListObjectsInput{
 			Bucket:  aws.String(bucket.Bucket),
 			Marker:  marker,
-			MaxKeys: aws.Int64(100),
+			MaxKeys: aws.Int64(500),
 		}
 		resp, err := client.ListObjects(req)
 		if err != nil {
-			result = append(result, &pkg.CheckResult{
-				Pass:     false,
-				Message:  fmt.Sprintf("Failed to list objects in bucket %s: %v", bucket.Bucket, err),
-				Endpoint: bucket.Bucket,
-			})
-			return result
+			return unexpectedErrorf(bucket, err, "failed to list bucket")
 		}
 
 		for _, obj := range resp.Contents {
-			if regex.Match([]byte(aws.StringValue(obj.Key))) {
-				bucketScanTotalSize.WithLabelValues(bucket.Endpoint, bucket.Bucket).Add(float64(aws.Int64Value(obj.Size)))
-				if latestObject == nil || obj.LastModified.After(aws.TimeValue(latestObject.LastModified)) {
-					latestObject = obj
-				}
+			if regex != nil && !regex.Match([]byte(aws.StringValue(obj.Key))) {
+				continue
 			}
-		}
+			bucketScanTotalSize.WithLabelValues(bucket.Endpoint, bucket.Bucket).Add(float64(aws.Int64Value(obj.Size)))
+			if latestObject == nil || obj.LastModified.After(aws.TimeValue(latestObject.LastModified)) {
+				latestObject = obj
+			}
 
-		bucketScanObjectCount.WithLabelValues(bucket.Endpoint, bucket.Bucket).Add(float64(len(resp.Contents)))
+			objects++
+			totalSize += *obj.Size
+		}
 
 		if resp.IsTruncated != nil && aws.BoolValue(resp.IsTruncated) && len(resp.Contents) > 0 {
 			marker = resp.Contents[len(resp.Contents)-1].Key
@@ -143,44 +123,46 @@ func (c *S3BucketChecker) Check(bucket pkg.S3BucketCheck) []*pkg.CheckResult {
 		}
 	}
 
+	bucketScanObjectCount.WithLabelValues(bucket.Endpoint, bucket.Bucket).Add(float64(objects))
+
+	bucketScanTotalSize.WithLabelValues(bucket.Endpoint, bucket.Bucket).Add(float64(totalSize))
+
 	if latestObject == nil {
-		result = append(result, &pkg.CheckResult{
-			Pass:     false,
-			Endpoint: bucket.Bucket,
-			Message:  fmt.Sprintf("Could not find any matching object in bucket %s", bucket.Bucket),
-		})
-		return result
+		return Failf(bucket, "could not find any matching objects")
 	}
 
 	latestObjectAge := time.Now().Sub(aws.TimeValue(latestObject.LastModified))
 	bucketScanLastWrite.WithLabelValues(bucket.Endpoint, bucket.Bucket).Set(float64(latestObject.LastModified.Unix()))
 
 	if latestObjectAge.Seconds() > float64(bucket.MaxAge) {
-		result = append(result, &pkg.CheckResult{
-			Pass:     false,
-			Message:  fmt.Sprintf("Latest object age for bucket %s is %f seconds required at most %d seconds", bucket.Bucket, latestObjectAge.Seconds(), bucket.MaxAge),
-			Endpoint: bucket.Bucket,
-		})
-		return result
+		return Failf(bucket, "Latest object age is %f seconds required at most %d seconds", latestObjectAge.Seconds(), bucket.MaxAge)
 	}
 
 	latestObjectSize := aws.Int64Value(latestObject.Size)
 
-	if latestObjectSize < bucket.MinSize {
-		result = append(result, &pkg.CheckResult{
-			Pass:     false,
-			Endpoint: bucket.Bucket,
-			Message:  fmt.Sprintf("Latst object size for bucket %s is %d bytes required at least %d bytes", bucket.Bucket, latestObjectSize, bucket.MinSize),
-			Metrics:  nil,
-		})
-		return result
+	if bucket.MinSize > 0 && latestObjectSize < bucket.MinSize {
+		return Failf(bucket, "Latest object is %d bytes required at least %d bytes", latestObjectSize, bucket.MinSize)
 	}
 
-	result = append(result, &pkg.CheckResult{
-		Pass:     true,
-		Message:  fmt.Sprintf("Successfully scaned bucket %s", bucket.Bucket),
-		Endpoint: bucket.Bucket,
-	})
+	return Passf(bucket, fmt.Sprintf("maxAge=%s size=%s objects=%d totalSize=%s", age(latestObjectAge), mb(latestObjectSize), objects, mb(totalSize)))
+}
 
-	return result
+func age(duration time.Duration) string {
+	if duration.Hours() > 24 {
+		return fmt.Sprintf("%.1fd", duration.Hours()/24)
+	} else if duration.Minutes() > 60 {
+		return fmt.Sprintf("%fh", duration.Hours())
+	}
+	return fmt.Sprintf("%.1fm", duration.Minutes())
+}
+
+func mb(bytes int64) string {
+	if bytes > 1024*1024*1024 {
+		return fmt.Sprintf("%dGB", bytes/1024/1024/1024)
+	} else if bytes > 1024*1024 {
+		return fmt.Sprintf("%dMB", bytes/1024/1024)
+	} else if bytes > 1024 {
+		return fmt.Sprintf("%dKB", bytes/1024)
+	}
+	return fmt.Sprintf("%dB", bytes)
 }
