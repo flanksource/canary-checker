@@ -4,8 +4,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"k8s.io/client-go/rest"
-
 	"github.com/pkg/errors"
 	"k8s.io/client-go/util/homedir"
 
@@ -20,9 +18,6 @@ func NewK8sClient() (*kubernetes.Clientset, error) {
 	} else if home := homedir.HomeDir(); home != "" {
 		kubeConfig = filepath.Join(home, ".kube", "config")
 	}
-
-	var config *rest.Config
-	var err error
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
