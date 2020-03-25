@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/flanksource/commons/files"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/util/homedir"
 
@@ -17,6 +18,9 @@ func NewK8sClient() (*kubernetes.Clientset, error) {
 		kubeConfig = os.Getenv("KUBECONFIG")
 	} else if home := homedir.HomeDir(); home != "" {
 		kubeConfig = filepath.Join(home, ".kube", "config")
+		if !files.Exists(kubeConfig) {
+			kubeConfig = ""
+		}
 	}
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
