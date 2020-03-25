@@ -7,6 +7,17 @@ import (
 	"github.com/flanksource/commons/console"
 )
 
+type Endpointer interface {
+	GetEndpoint() string
+}
+type Endpoint struct {
+	String string
+}
+
+func (e Endpoint) GetEndpoint() string {
+	return e.String
+}
+
 type Config struct {
 	HTTP          []HTTP          `yaml:"http,omitempty"`
 	DNS           []DNS           `yaml:"dns,omitempty"`
@@ -89,6 +100,10 @@ type HTTPCheckResult struct {
 	ResponseTime int64
 }
 
+func (check HTTPCheckResult) String() string {
+	return fmt.Sprintf("%s ssl=%d code=%d time=%d", check.Endpoint, check.SSLExpiry, check.ResponseCode, check.ResponseTime)
+}
+
 type ICMPCheck struct {
 	Endpoints           []string `yaml:"endpoints"`
 	ThresholdMillis     float64  `yaml:"thresholdMillis"`
@@ -115,13 +130,17 @@ type S3BucketCheck struct {
 	SecretKey string `yaml:"secretKey"`
 	Region    string `yaml:"region"`
 	Endpoint  string `yaml:"endpoint"`
-	// glob path to restrict matches to a subet
+	// glob path to restrict matches to a subset
 	ObjectPath string `yaml:"objectPath"`
 	ReadWrite  bool   `yaml:"readWrite"`
 	// maximum allowed age of matched objects in seconds
 	MaxAge int64 `yaml:"maxAge"`
 	// min size of of most recent matched object in bytes
 	MinSize int64 `yaml:"minSize"`
+}
+
+func (s3 S3BucketCheck) GetEndpoint() string {
+	return s3.Bucket
 }
 
 type ICMPCheckResult struct {
@@ -179,6 +198,14 @@ type PodCheck struct {
 	IngressHost          string `yaml:"ingressHost"`
 	ExpectedContent      string `yaml:"expectedContent"`
 	ExpectedHttpStatuses []int  `yaml:"expectedHttpStatuses"`
+}
+
+func (p PodCheck) GetEndpoint() string {
+	return p.Name
+}
+
+func (p PodCheck) String() string {
+	return "pod/" + p.Name
 }
 
 type LDAPCheck struct {

@@ -13,6 +13,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	_ "net/http/pprof"
+
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 )
@@ -38,13 +40,22 @@ var Serve = &cobra.Command{
 		}
 
 		config.Interval = time.Duration(interval) * time.Second
+		log.Infof("Running checks every %s", config.Interval)
 
-		gocron.Every(interval).Seconds().Do(func() {
-			for _, c := range checks {
-				results := c.Run(config)
-				processMetrics(c.Type(), results)
-			}
-		})
+		for _, _c := range checks {
+			c := _c
+			var results = make(chan *pkg.CheckResult)
+			gocron.Every(interval).Seconds().From(gocron.NextTick()).Do(func() {
+				go func() {
+					c.Run(config, results)
+				}()
+			})
+			go func() {
+				for result := range results {
+					processMetrics(c.Type(), result)
+				}
+			}()
+		}
 
 		gocron.Start()
 
@@ -62,31 +73,29 @@ var Serve = &cobra.Command{
 
 var counters map[string]prometheus.Counter
 
-func processMetrics(checkType string, results []*pkg.CheckResult) {
-	for _, result := range results {
-		if log.IsLevelEnabled(log.DebugLevel) {
-			fmt.Println(result)
+func processMetrics(checkType string, result *pkg.CheckResult) {
+	if log.IsLevelEnabled(log.InfoLevel) {
+		fmt.Println(result)
+	}
+	pkg.OpsCount.WithLabelValues(checkType, result.Endpoint).Inc()
+	if result.Pass {
+		pkg.OpsSuccessCount.WithLabelValues(checkType, result.Endpoint).Inc()
+		if result.Duration > 0 {
+			pkg.RequestLatency.WithLabelValues(checkType, result.Endpoint).Observe(float64(result.Duration))
 		}
-		pkg.OpsCount.WithLabelValues(checkType, result.Endpoint).Inc()
-		if result.Pass {
-			pkg.OpsSuccessCount.WithLabelValues(checkType, result.Endpoint).Inc()
-			if result.Duration > 0 {
-				pkg.RequestLatency.WithLabelValues(checkType, result.Endpoint).Observe(float64(result.Duration))
-			}
 
-			for _, m := range result.Metrics {
-				switch m.Type {
-				case pkg.CounterType:
-					pkg.GenericCounter.WithLabelValues(checkType, m.Name, strconv.Itoa(int(m.Value))).Inc()
-				case pkg.GaugeType:
-					pkg.GenericGauge.WithLabelValues(checkType, m.Name).Set(m.Value)
-				case pkg.HistogramType:
-					pkg.GenericHistogram.WithLabelValues(checkType, m.Name).Observe(m.Value)
-				}
+		for _, m := range result.Metrics {
+			switch m.Type {
+			case pkg.CounterType:
+				pkg.GenericCounter.WithLabelValues(checkType, m.Name, strconv.Itoa(int(m.Value))).Inc()
+			case pkg.GaugeType:
+				pkg.GenericGauge.WithLabelValues(checkType, m.Name).Set(m.Value)
+			case pkg.HistogramType:
+				pkg.GenericHistogram.WithLabelValues(checkType, m.Name).Observe(m.Value)
 			}
-		} else {
-			pkg.OpsFailedCount.WithLabelValues(checkType, result.Endpoint).Inc()
 		}
+	} else {
+		pkg.OpsFailedCount.WithLabelValues(checkType, result.Endpoint).Inc()
 	}
 }
 

@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -33,14 +32,12 @@ func (c *IcmpChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *IcmpChecker) Run(config pkg.Config) []*pkg.CheckResult {
-	var checks []*pkg.CheckResult
+func (c *IcmpChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 	for _, conf := range config.ICMP {
 		for _, result := range c.Check(conf.ICMPCheck) {
-			checks = append(checks, result)
+			results <- result
 		}
 	}
-	return checks
 }
 
 // CheckConfig : Check every record of DNS name against config information
@@ -51,14 +48,7 @@ func (c *IcmpChecker) Check(check pkg.ICMPCheck) []*pkg.CheckResult {
 		timeOK, packetOK := false, false
 		lookupResult, err := DNSLookup(endpoint)
 		if err != nil {
-			checkResult := &pkg.CheckResult{
-				Pass:     false,
-				Invalid:  true,
-				Message:  fmt.Sprintf("failed to resolve dns for %s: %v", endpoint, err),
-				Endpoint: endpoint,
-				Metrics:  []pkg.Metric{},
-			}
-			result = append(result, checkResult)
+			result = append(result, invalidErrorf(pkg.Endpoint{String: endpoint}, err, "unable to resolve dns")...)
 			continue
 		}
 		for _, urlObj := range lookupResult {
@@ -102,7 +92,10 @@ func (c *IcmpChecker) checkICMP(urlObj pkg.URL, packetCount int) (*pkg.ICMPCheck
 	if err != nil {
 		return nil, err
 	}
-	pinger.SetPrivileged(false)
+	// this requires running as root or with NET_RAW priveleges, this is easier than the alternativer
+	// sysctl -w net.ipv4.ping_group_range="0   2147483647" which doesn't require root, but does require kubelet changes
+	// whitelist the sysctl's for use
+	pinger.SetPrivileged(true)
 	pinger.Count = packetCount
 	pinger.Timeout = time.Second * 10
 	pinger.Run()
