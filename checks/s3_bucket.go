@@ -76,7 +76,7 @@ func (c *S3BucketChecker) Check(bucket pkg.S3BucketCheck) []*pkg.CheckResult {
 		return unexpectedErrorf(bucket, err, "failed to create S3 session")
 	}
 	client := s3.New(ssn)
-	client.Config.S3ForcePathStyle = aws.Bool(true)
+	client.Config.S3ForcePathStyle = aws.Bool(bucket.UsePathStyle)
 
 	var marker *string = nil
 
