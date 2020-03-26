@@ -19,7 +19,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 
-	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg"
 )
 
@@ -72,22 +71,22 @@ func TestE2E(t *testing.T) {
 					Pass:     true,
 					Invalid:  false,
 					Endpoint: "tests-e2e-1",
-					Message:  "Successfully scaned bucket tests-e2e-1",
-					Metrics:  []pkg.Metric{},
+					//Message:  "maxAge=0.0m size=50B objects=2 totalSize=100B",
+					Metrics: []pkg.Metric{},
 				},
 				{
 					Pass:     true,
 					Invalid:  false,
 					Endpoint: "tests-e2e-1",
-					Message:  "Successfully scaned bucket tests-e2e-1",
-					Metrics:  []pkg.Metric{},
+					//Message:  "maxAge=0.0m size=30B objects=1 totalSize=30B",
+					Metrics: []pkg.Metric{},
 				},
 				{
 					Pass:     true,
 					Invalid:  false,
 					Endpoint: "tests-e2e-1",
-					Message:  "Successfully scaned bucket tests-e2e-1",
-					Metrics:  []pkg.Metric{},
+					//Message:  "maxAge=0.0m size=50B objects=2 totalSize=100B",
+					Metrics: []pkg.Metric{},
 				},
 			},
 		},
@@ -101,55 +100,28 @@ func TestE2E(t *testing.T) {
 					Pass:     false,
 					Invalid:  false,
 					Endpoint: "tests-e2e-1",
-					Message:  "Latest object size for bucket tests-e2e-1 is 30 bytes required at least 100 bytes",
+					Message:  "Latest object is 30 bytes required at least 100 bytes",
 					Metrics:  []pkg.Metric{},
 				},
 				{
 					Pass:     false,
 					Invalid:  false,
 					Endpoint: "tests-e2e-1",
-					Message:  "Latest object size for bucket tests-e2e-1 is 50 bytes required at least 100 bytes",
+					Message:  "Latest object is 50 bytes required at least 100 bytes",
 					Metrics:  []pkg.Metric{},
 				},
 				{
 					Pass:     false,
 					Invalid:  false,
 					Endpoint: "tests-e2e-2",
-					Message:  "Could not find any matching object in bucket tests-e2e-2",
+					Message:  "could not find any matching objects",
 					Metrics:  []pkg.Metric{},
 				},
 			},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			checkResults := cmd.RunChecks(tt.args.config)
-
-			for i, res := range checkResults {
-				// check if this result is extra
-				if i > len(tt.want)-1 {
-					t.Errorf("Test %s failed. Found unexpected extra result is %v", tt.name, res)
-				} else {
-					/* Not checking durations we don't want equality*/
-					if res.Invalid != tt.want[i].Invalid ||
-						res.Pass != tt.want[i].Pass ||
-						(tt.want[i].Endpoint != "" && res.Endpoint != tt.want[i].Endpoint) ||
-						(tt.want[i].Message != "" && res.Message != tt.want[i].Message) {
-						t.Errorf("Test %s failed. Expected result is %v, but found %v", tt.name, tt.want, res)
-					}
-
-				}
-			}
-			// check if we have more expected results than were found
-			if len(tt.want) > len(checkResults) {
-				t.Errorf("Test %s failed. Expected %d results, but found %d ", tt.name, len(tt.want), len(checkResults))
-				for i := len(checkResults); i <= len(tt.want)-1; i++ {
-					t.Errorf("Did not find %s %v", tt.name, tt.want[i])
-				}
-			}
-		})
-	}
+	runTests(t, tests)
 }
 
 func prepareS3E2E(fixture S3Fixture) error {
