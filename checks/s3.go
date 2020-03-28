@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/flanksource/commons/utils"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/commons/utils"
 )
 
 var (
@@ -42,15 +42,12 @@ type S3Checker struct{}
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *S3Checker) Run(config pkg.Config) []*pkg.CheckResult {
-	var checks []*pkg.CheckResult
+func (c *S3Checker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 	for _, conf := range config.S3 {
 		for _, result := range c.Check(conf.S3Check) {
-			checks = append(checks, result)
-
+			results <- result
 		}
 	}
-	return checks
 }
 
 // Type: returns checker type

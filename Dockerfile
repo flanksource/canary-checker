@@ -9,4 +9,4 @@ FROM golang:1.13.6
 COPY --from=builder /app/canary-checker /app/
 COPY --from=builder /app/fixtures /app/
 WORKDIR /app
-ENTRYPOINT ["./canary-checker"]
+ENTRYPOINT ["/app/canary-checker"]

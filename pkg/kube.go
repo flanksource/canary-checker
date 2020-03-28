@@ -1,10 +1,10 @@
 package pkg
 
 import (
+	"os"
 	"path/filepath"
 
-	"k8s.io/client-go/rest"
-
+	"github.com/flanksource/commons/files"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/util/homedir"
 
@@ -14,23 +14,18 @@ import (
 
 func NewK8sClient() (*kubernetes.Clientset, error) {
 	var kubeConfig string
-	if home := homedir.HomeDir(); home != "" {
+	if os.Getenv("KUBECONFIG") != "" {
+		kubeConfig = os.Getenv("KUBECONFIG")
+	} else if home := homedir.HomeDir(); home != "" {
 		kubeConfig = filepath.Join(home, ".kube", "config")
+		if !files.Exists(kubeConfig) {
+			kubeConfig = ""
+		}
 	}
 
-	var config *rest.Config
-	var err error
-
-	if kubeConfig != "" {
-		config, err = clientcmd.BuildConfigFromFlags("", kubeConfig)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to create k8s config from kube/config %s", kubeConfig)
-		}
-	} else {
-		config, err = rest.InClusterConfig()
-		if err != nil {
-			return nil, errors.Wrap(err, "Failed to create in cluster k8s config")
-		}
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	if err != nil {
+		return nil, err
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)

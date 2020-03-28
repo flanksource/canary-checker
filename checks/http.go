@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/flanksource/canary-checker/pkg"
 )
@@ -53,14 +52,13 @@ func (c *HttpChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *HttpChecker) Run(config pkg.Config) []*pkg.CheckResult {
-	var checks []*pkg.CheckResult
+func (c *HttpChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 	for _, conf := range config.HTTP {
 		for _, result := range c.Check(conf.HTTPCheck) {
-			checks = append(checks, result)
+			results <- result
 		}
 	}
-	return checks
+
 }
 
 // CheckConfig : Check every record of DNS name against config information
@@ -71,12 +69,12 @@ func (c *HttpChecker) Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 		rcOK, contentOK, timeOK, sslOK := false, false, false, false
 		lookupResult, err := DNSLookup(endpoint)
 		if err != nil {
-			log.Printf("Failed to resolve DNS for %s", endpoint)
 			dnsFailed.Inc()
 			checkResult := &pkg.CheckResult{
 				Pass:     false,
 				Invalid:  true,
 				Endpoint: endpoint,
+				Message:  "Failed to resolve DNS",
 				Metrics:  []pkg.Metric{},
 			}
 			result = append(result, checkResult)
@@ -103,9 +101,23 @@ func (c *HttpChecker) Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 
 			contentOK = check.ResponseContent == "" || strings.Contains(checkResults.Content, check.ResponseContent)
 			timeOK = check.ThresholdMillis >= int(checkResults.ResponseTime)
-			sslOK = check.MaxSSLExpiry <= checkResults.SSLExpiry
+			sslOK = urlObj.Scheme == "http" || check.MaxSSLExpiry <= checkResults.SSLExpiry
 
 			pass := rcOK && contentOK && timeOK && sslOK
+			var msg []string
+
+			if !rcOK {
+				msg = append(msg, fmt.Sprintf("response code invalid %d != %v", checkResults.ResponseCode, check.ResponseCodes))
+			}
+			if !timeOK {
+				msg = append(msg, fmt.Sprintf("threshold exceeeded %d > %d", checkResults.ResponseTime, check.ThresholdMillis))
+			}
+			if !contentOK {
+				msg = append(msg, "content not found")
+			}
+			if !sslOK {
+				msg = append(msg, fmt.Sprintf("SSL certificate expires soon %d > %d", checkResults.SSLExpiry, check.MaxSSLExpiry))
+			}
 			m := []pkg.Metric{
 				{
 					Name: "response_code",
@@ -121,6 +133,7 @@ func (c *HttpChecker) Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 				Duration: checkResults.ResponseTime,
 				Endpoint: endpoint,
 				Invalid:  false,
+				Message:  strings.Join(msg, ","),
 				Metrics:  m,
 			}
 			result = append(result, checkResult)

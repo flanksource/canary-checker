@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/spf13/cobra"
 
@@ -15,14 +16,23 @@ var Run = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		configfile, _ := cmd.Flags().GetString("configfile")
 		config := pkg.ParseConfig(configfile)
-		RunChecks(config)
+		failed := 0
+		for result := range RunChecks(config) {
+			fmt.Println(result)
+			if !result.Pass {
+				failed++
+			}
+		}
+		if failed > 0 {
+			log.Fatalf("%d checks failed", failed)
+		}
 	},
 }
 
 func init() {
 
 }
-func RunChecks(config pkg.Config) []*pkg.CheckResult {
+func RunChecks(config pkg.Config) chan *pkg.CheckResult {
 	var checks = []checks.Checker{
 		&checks.DNSChecker{},
 		&checks.HttpChecker{},
@@ -35,14 +45,14 @@ func RunChecks(config pkg.Config) []*pkg.CheckResult {
 		checks.NewPodChecker(),
 	}
 
-	var results []*pkg.CheckResult
+	var results = make(chan *pkg.CheckResult)
 
-	for _, c := range checks {
-		for _, result := range c.Run(config) {
-			results = append(results, result)
-			fmt.Println(result)
+	go func() {
+		for _, c := range checks {
+			c.Run(config, results)
 		}
-	}
+		close(results)
+	}()
 
 	return results
 }
