@@ -20,12 +20,10 @@ func (c *DNSChecker) Type() string {
 	return "dns"
 }
 
-func (c *DNSChecker) Run(config pkg.Config) []*pkg.CheckResult {
-	var checks []*pkg.CheckResult
+func (c *DNSChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 	for _, conf := range config.DNS {
-		checks = append(checks, c.Check(conf.DNSCheck))
+		results <- c.Check(conf.DNSCheck)
 	}
-	return checks
 }
 
 func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
