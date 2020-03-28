@@ -20,6 +20,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/spf13/cobra v0.0.5
+	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 	gopkg.in/yaml.v2 v2.2.8
 
 	k8s.io/api v0.17.3

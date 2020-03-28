@@ -24,6 +24,7 @@ func init() {
 }
 func RunChecks(config pkg.Config) []*pkg.CheckResult {
 	var checks = []checks.Checker{
+		&checks.DNSChecker{},
 		&checks.HttpChecker{},
 		&checks.IcmpChecker{},
 		&checks.DockerPullChecker{},
