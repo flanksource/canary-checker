@@ -123,9 +123,9 @@ func (c *S3BucketChecker) Check(bucket pkg.S3BucketCheck) []*pkg.CheckResult {
 		}
 	}
 
-	bucketScanObjectCount.WithLabelValues(bucket.Endpoint, bucket.Bucket).Add(float64(objects))
+	bucketScanObjectCount.WithLabelValues(bucket.Endpoint, bucket.Bucket).Set(float64(objects))
 
-	bucketScanTotalSize.WithLabelValues(bucket.Endpoint, bucket.Bucket).Add(float64(totalSize))
+	bucketScanTotalSize.WithLabelValues(bucket.Endpoint, bucket.Bucket).Set(float64(totalSize))
 
 	if latestObject == nil {
 		return Failf(bucket, "could not find any matching objects")
