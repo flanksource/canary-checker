@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	bucketScanObjectCount = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
+	bucketScanObjectCount = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
 			Name: "canary_check_s3_scan_count",
 			Help: "The total number of objects",
 		},
