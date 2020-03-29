@@ -14,6 +14,7 @@ require (
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/jasonlvhit/gocron v0.0.0-20191228163020-98b59b546dee
 	github.com/lib/pq v1.3.0
+	github.com/ncw/swift v1.0.50
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.3.0

@@ -137,6 +137,8 @@ type S3BucketCheck struct {
 	MaxAge int64 `yaml:"maxAge"`
 	// min size of of most recent matched object in bytes
 	MinSize int64 `yaml:"minSize"`
+	// Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY
+	UsePathStyle bool `yaml:"usePathStyle"`
 }
 
 func (s3 S3BucketCheck) GetEndpoint() string {
