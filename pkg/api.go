@@ -150,6 +150,11 @@ type ICMPCheckResult struct {
 	PacketLoss float64
 }
 
+type DNSCheckResult struct {
+	LookupTime   string
+	Records     string
+}
+
 type DockerPullCheck struct {
 	Image          string `yaml:"image"`
 	Username       string `yaml:"username"`
@@ -216,6 +221,17 @@ type LDAPCheck struct {
 	UserSearch string `yaml:"userSearch"`
 }
 
+type DNSCheck struct {
+	Server        string    `yaml:"server"`
+	Port          int       `yaml:"port"`
+	Query         string    `yaml:"query,omitempty"`
+	QueryType     string    `yaml:"querytype"`
+	MinRecords    int       `yaml:"minrecords,omitempty"`
+	ExactReply    []string  `yaml:"exactreply,omitempty"`
+	Timeout       int       `yaml:"timeout"`
+	SrvReply      SrvReply  `yaml:"srvReply,omitempty"`
+}
+
 type HTTP struct {
 	HTTPCheck `yaml:",inline"`
 }
@@ -225,7 +241,7 @@ type SSL struct {
 }
 
 type DNS struct {
-	Check `yaml:",inline"`
+	DNSCheck `yaml:",inline"`
 }
 
 type DockerPull struct {
@@ -266,4 +282,11 @@ type ICMP struct {
 
 type Postgres struct {
 	PostgresCheck `yaml:",inline"`
+}
+
+type SrvReply struct {
+	Target   string `yaml:"target,omitempty"`
+	Port     int    `yaml:"port,omitempty"`
+	Priority int    `yaml:"priority,omitempty"`
+	Weight   int    `yaml:"wight,omitempty"`
 }

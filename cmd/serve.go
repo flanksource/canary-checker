@@ -29,6 +29,7 @@ var Serve = &cobra.Command{
 		interval, _ := cmd.Flags().GetUint64("interval")
 
 		var checks = []checks.Checker{
+			&checks.DNSChecker{},
 			&checks.HttpChecker{},
 			&checks.IcmpChecker{},
 			&checks.S3Checker{},
