@@ -4,18 +4,14 @@ go 1.12
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1
-	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/aws/aws-sdk-go v1.29.5
-	github.com/docker/distribution v2.7.1+incompatible // indirect
+	github.com/chartmuseum/helm-push v0.8.1
 	github.com/docker/docker v1.13.1
-	github.com/docker/go-connections v0.4.0 // indirect
-	github.com/docker/go-units v0.4.0 // indirect
 	github.com/flanksource/commons v1.0.2
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/jasonlvhit/gocron v0.0.0-20191228163020-98b59b546dee
 	github.com/lib/pq v1.3.0
 	github.com/ncw/swift v1.0.50
-	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.3.0
 	github.com/sirupsen/logrus v1.4.2
@@ -24,6 +20,7 @@ require (
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	gopkg.in/yaml.v2 v2.2.8
+	helm.sh/helm/v3 v3.1.2
 	k8s.io/api v0.17.3
 	k8s.io/apimachinery v0.17.3
 	k8s.io/client-go v11.0.0+incompatible
@@ -31,3 +28,5 @@ require (
 )
 
 replace k8s.io/client-go => k8s.io/client-go v0.17.0
+
+replace github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309
