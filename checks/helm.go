@@ -4,16 +4,16 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/flanksource/canary-checker/pkg"
 	pusher "github.com/chartmuseum/helm-push/pkg/chartmuseum"
+	"github.com/flanksource/canary-checker/pkg"
 	log "github.com/sirupsen/logrus"
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/cli"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
-	"os/user"
 	"path"
 	"time"
 )
@@ -45,7 +45,18 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 		pusher.ContextPath(""),
 		pusher.Timeout(60),
 		pusher.CAFile(*config.CaFile),)
-	response, err := client.UploadChartPackage("/Users/rubenharutyunov/Upwork/flanksource/canary_checker/fixtures/test-chart-0.1.0.tgz", false)
+	chartPath, err := createTestChart()
+	if err != nil {
+		return &pkg.CheckResult{
+			Pass:     false,
+			Invalid:  true,
+			Duration: 0,
+			Endpoint: config.Chartmuseum,
+			Message:  fmt.Sprintf("Failed to create test chart: %v", err),
+			Metrics:  getHelmMetrics(config, false),
+		}
+	}
+	response, err := client.UploadChartPackage(*chartPath, false)
 
 	if err != nil {
 		return &pkg.CheckResult{
@@ -72,7 +83,6 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 		}
 	}
 
-	user, err := user.Current()
 	if err != nil {
 		return &pkg.CheckResult{
 			Pass:     false,
@@ -83,26 +93,14 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 			Metrics:  getHelmMetrics(config, false),
 		}
 	}
-	kubeconfigPath := path.Join(user.HomeDir, ".kube/config")
 
-	dir, err := ioutil.TempDir("/tmp", "canary_checker_helm")
-	if err != nil {
-		return &pkg.CheckResult{
-			Pass:     false,
-			Invalid:  true,
-			Duration: 0,
-			Endpoint: config.Chartmuseum,
-			Message:  fmt.Sprintf("Failed to crerate temp directory:%v", err),
-			Metrics:  getHelmMetrics(config, false),
-		}
-	}
-	defer os.RemoveAll(dir)
+	defer os.RemoveAll("./test-chart-0.1.0.tgz")
 
 	iCli := action.NewPull()
-	iCli.DestDir = dir
 	if config.CaFile != nil {
 		iCli.CaFile = *config.CaFile
 	}
+	kubeconfigPath := pkg.GetKubeconfig()
 	iCli.Settings = &cli.EnvSettings{
 		KubeConfig:       kubeconfigPath,
 	}
@@ -153,7 +151,7 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 func cleanUp(chartname string, chartmuseum string, config pkg.HelmCheck) error {
 	caCert, err := ioutil.ReadFile(*config.CaFile)
 	if err != nil {
-		fmt.Errorf("failed to read certificate file: %v", err)
+		return fmt.Errorf("failed to read certificate file: %v", err)
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
@@ -172,7 +170,6 @@ func cleanUp(chartname string, chartmuseum string, config pkg.HelmCheck) error {
 	req, err := http.NewRequest("DELETE", url.String(), nil)
 	req.SetBasicAuth(config.Username, config.Password)
 	if err != nil {
-		fmt.Println(err)
 		return fmt.Errorf("failed to create DELETE request: %v", err)
 	}
 
@@ -204,4 +201,22 @@ func getHelmMetrics(check pkg.HelmCheck, pass bool) []pkg.Metric {
 			Value: value,
 		},
 	}
+}
+
+func createTestChart() (*string, error) {
+	dir, err := ioutil.TempDir("/tmp", "canary_checker_helm_test_chart")
+	if err != nil {
+		return nil, fmt.Errorf("createTestChart: failed to create temp directory: %v", err)
+	}
+	chartDir, err := chartutil.Create("test-chart", dir)
+	if err != nil {
+		return nil, fmt.Errorf("createTestChart: failed to create test chart: %v", err)
+	}
+	packageAction := action.NewPackage()
+	packagePath, err := packageAction.Run(chartDir, make(map[string]interface{}))
+	if err != nil {
+		return nil, fmt.Errorf("createTestChart: failed to package test chart: %v", err)
+	}
+	defer os.RemoveAll(dir)
+	return &packagePath, nil
 }
