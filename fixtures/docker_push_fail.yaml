@@ -1,0 +1,7 @@
+dockerPush:
+  - image: docker.io/flanksource/busybox:1.31.1
+    username: !!env DOCKER_USERNAME
+    password: foobar
+  - image: docker.io/flanksource/busybox:not-found-tag
+    username: !!env DOCKER_USERNAME
+    password: !!env DOCKER_PASSWORD

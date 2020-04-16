@@ -39,6 +39,7 @@ func RunChecks(config pkg.Config) chan *pkg.CheckResult {
 		&checks.HttpChecker{},
 		&checks.IcmpChecker{},
 		&checks.DockerPullChecker{},
+		&checks.DockerPushChecker{},
 		&checks.S3Checker{},
 		&checks.PostgresChecker{},
 		&checks.LdapChecker{},

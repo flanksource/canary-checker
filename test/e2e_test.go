@@ -119,6 +119,43 @@ func TestE2E(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "docker_push_pass",
+			args: args{
+				pkg.ParseConfig("../fixtures/docker_push_pass.yaml"),
+			},
+			want: []pkg.CheckResult{
+				{
+					Pass:     true,
+					Invalid:  false,
+					Endpoint: "docker.io/flanksource/busybox:1.31.1",
+					Message:  "Image docker.io/flanksource/busybox:1.31.1 successfully pushed",
+					Metrics:  []pkg.Metric{},
+				},
+			},
+		},
+		{
+			name: "docker_push_fail",
+			args: args{
+				pkg.ParseConfig("../fixtures/docker_push_fail.yaml"),
+			},
+			want: []pkg.CheckResult{
+				{
+					Pass:     false,
+					Invalid:  false,
+					Endpoint: "docker.io/flanksource/busybox:1.31.1",
+					Message:  "unauthorized: incorrect username or password",
+					Metrics:  []pkg.Metric{},
+				},
+				{
+					Pass:     false,
+					Invalid:  false,
+					Endpoint: "docker.io/flanksource/busybox:not-found-tag",
+					Message:  "tag does not exist: flanksource/busybox:not-found-tag",
+					Metrics:  []pkg.Metric{},
+				},
+			},
+		},
 	}
 
 	runTests(t, tests)
