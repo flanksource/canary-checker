@@ -128,8 +128,8 @@ func TestE2E(t *testing.T) {
 				{
 					Pass:     true,
 					Invalid:  false,
-					Endpoint: "docker.io/flanksource/busybox:1.31.1",
-					Message:  "Image docker.io/flanksource/busybox:1.31.1 successfully pushed",
+					Endpoint: "docker.io/flanksource/busybox:1.30",
+					Message:  "Image docker.io/flanksource/busybox:1.30 successfully pushed",
 					Metrics:  []pkg.Metric{},
 				},
 			},
@@ -143,7 +143,7 @@ func TestE2E(t *testing.T) {
 				{
 					Pass:     false,
 					Invalid:  false,
-					Endpoint: "docker.io/flanksource/busybox:1.31.1",
+					Endpoint: "docker.io/flanksource/busybox:1.30",
 					Message:  "unauthorized: incorrect username or password",
 					Metrics:  []pkg.Metric{},
 				},

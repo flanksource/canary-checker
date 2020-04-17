@@ -4,7 +4,7 @@ s3Bucket:
     accessKey: "minio"
     secretKey: "minio123"
     region: "minio"
-    endpoint: "http://localhost:9000"
+    endpoint: "https://minio.127.0.0.1.nip.io"
     objectPath: "(.*)backup.zip$"
     readWrite: true
     maxAge: 604800 # 7 days
@@ -15,7 +15,7 @@ s3Bucket:
     accessKey: "minio"
     secretKey: "minio123"
     region: "minio"
-    endpoint: "http://localhost:9000"
+    endpoint: "https://minio.127.0.0.1.nip.io"
     objectPath: "mysql\\/backups\\/(.*)\\/mysql.zip$"
     readWrite: true
     maxAge: 604800 # 7 days
@@ -26,7 +26,7 @@ s3Bucket:
     accessKey: "minio"
     secretKey: "minio123"
     region: "minio"
-    endpoint: "http://localhost:9000"
+    endpoint: "https://minio.127.0.0.1.nip.io"
     objectPath: "pg\\/backups\\/(.*)\\/backup.zip$"
     readWrite: true
     maxAge: 604800 # 7 days
