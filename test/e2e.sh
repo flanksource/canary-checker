@@ -1,21 +1,20 @@
 #!/bin/bash
 
-set -e
+set -ex
 
-docker run -d --rm --name minio-canary-checker-e2e -it -p 9000:9000 -e MINIO_ACCESS_KEY=minio -e MINIO_SECRET_KEY=minio123 minio/minio:RELEASE.2019-10-12T01-39-57Z server /data
+export PLATFORM_CLI_VERSION=0.11.1-611-ge9c9629
+export PLATFORM_CLI="./platform-cli -c test/config.yaml"
 
-until curl --fail localhost:9000/minio/health/ready > /dev/null
-do
-  echo "Failed to connect to minio"
-  sleep 2
-done
+curl https://github.com/flanksource/platform-cli/releases/download/$PLATFORM_CLI_VERSION/platform-cli > platform-cli
+chmod +x platform-cli
 
-echo "Minio started"
+docker pull docker.io/library/busybox:1.30
+docker tag docker.io/library/busybox:1.30 docker.io/flanksource/busybox:1.30
 
-function cleanup {
-  docker kill minio-canary-checker-e2e
-}
-trap cleanup EXIT
+$PLATFORM_CLI ca generate --name ingress-ca --cert-path .certs/ingress-ca-crt.pem --private-key-path .certs/ingress-ca-key.pem --password foobar  --expiry 1
+$PLATFORM_CLI ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.pem --private-key-path .certs/sealed-secrets-key.pem --password foobar  --expiry 1
+$PLATFORM_CLI provision kind-cluster
+
+$PLATFORM_CLI deploy stubs
 
 go test ./test
-
