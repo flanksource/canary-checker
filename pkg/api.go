@@ -31,6 +31,7 @@ type Config struct {
 	SSL           []SSL           `yaml:"ssl,omitempty"`
 	ICMP          []ICMP          `yaml:"icmp,omitempty"`
 	Postgres      []Postgres      `yaml:"postgres,omitempty"`
+	Helm 		  []Helm          `yaml:"helm,omitempty"`
 
 	Interval time.Duration `yaml:"-"`
 }
@@ -153,7 +154,7 @@ type ICMPCheckResult struct {
 }
 
 type DNSCheckResult struct {
-	LookupTime   string
+	LookupTime  string
 	Records     string
 }
 
@@ -234,6 +235,14 @@ type DNSCheck struct {
 	SrvReply      SrvReply  `yaml:"srvReply,omitempty"`
 }
 
+type HelmCheck struct {
+	Chartmuseum string  `yaml:"chartmuseum"`
+	Project     string  `yaml:"project,omitempty"`
+	Username    string  `yaml:"username"`
+	Password    string  `yaml:"password"`
+	CaFile      *string `yaml:"cafile,omitempty"`
+}
+
 type HTTP struct {
 	HTTPCheck `yaml:",inline"`
 }
@@ -286,9 +295,14 @@ type Postgres struct {
 	PostgresCheck `yaml:",inline"`
 }
 
+type Helm struct {
+	HelmCheck `yaml:",inline"`
+}
+
 type SrvReply struct {
 	Target   string `yaml:"target,omitempty"`
 	Port     int    `yaml:"port,omitempty"`
 	Priority int    `yaml:"priority,omitempty"`
 	Weight   int    `yaml:"wight,omitempty"`
 }
+

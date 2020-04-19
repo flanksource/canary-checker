@@ -34,6 +34,7 @@ func init() {
 }
 func RunChecks(config pkg.Config) chan *pkg.CheckResult {
 	var checks = []checks.Checker{
+		&checks.HelmChecker{},
 		&checks.DNSChecker{},
 		&checks.HttpChecker{},
 		&checks.IcmpChecker{},

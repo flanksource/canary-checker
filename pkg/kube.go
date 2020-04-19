@@ -13,16 +13,7 @@ import (
 )
 
 func NewK8sClient() (*kubernetes.Clientset, error) {
-	var kubeConfig string
-	if os.Getenv("KUBECONFIG") != "" {
-		kubeConfig = os.Getenv("KUBECONFIG")
-	} else if home := homedir.HomeDir(); home != "" {
-		kubeConfig = filepath.Join(home, ".kube", "config")
-		if !files.Exists(kubeConfig) {
-			kubeConfig = ""
-		}
-	}
-
+	kubeConfig := GetKubeconfig()
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
 		return nil, err
@@ -34,4 +25,17 @@ func NewK8sClient() (*kubernetes.Clientset, error) {
 	}
 
 	return clientset, nil
+}
+
+func GetKubeconfig() string {
+	var kubeConfig string
+	if os.Getenv("KUBECONFIG") != "" {
+		kubeConfig = os.Getenv("KUBECONFIG")
+	} else if home := homedir.HomeDir(); home != "" {
+		kubeConfig = filepath.Join(home, ".kube", "config")
+		if !files.Exists(kubeConfig) {
+			kubeConfig = ""
+		}
+	}
+	return kubeConfig
 }

@@ -55,7 +55,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Duration: elapsed.Milliseconds(),
 			Endpoint: server,
 			Message:  message,
-			Metrics: getMetrics(check, elapsed, result),
+			Metrics:  getDNSMetrics(check, elapsed, result),
 		}
 	}
 	if check.QueryType == "PTR" {
@@ -74,7 +74,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Duration: elapsed.Milliseconds(),
 			Endpoint: server,
 			Message:  message,
-			Metrics:  getMetrics(check, elapsed, result),
+			Metrics:  getDNSMetrics(check, elapsed, result),
 		}
 	}
 
@@ -93,7 +93,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Duration: elapsed.Milliseconds(),
 			Endpoint: server,
 			Message:  message,
-			Metrics:  getMetrics(check, elapsed, []string{result}),
+			Metrics:  getDNSMetrics(check, elapsed, []string{result}),
 		}
 	}
 
@@ -130,7 +130,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Duration: elapsed.Milliseconds(),
 			Endpoint: server,
 			Message:  message,
-			Metrics:  getMetrics(check, elapsed, resultString),
+			Metrics:  getDNSMetrics(check, elapsed, resultString),
 		}
 	}
 
@@ -148,7 +148,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Duration: elapsed.Milliseconds(),
 			Endpoint: server,
 			Message:  message,
-			Metrics:  getMetrics(check, elapsed, result),
+			Metrics:  getDNSMetrics(check, elapsed, result),
 		}
 	}
 
@@ -170,7 +170,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Duration: elapsed.Milliseconds(),
 			Endpoint: server,
 			Message:  message,
-			Metrics:  getMetrics(check, elapsed, resultString),
+			Metrics:  getDNSMetrics(check, elapsed, resultString),
 		}
 	}
 
@@ -223,7 +223,7 @@ func srvInfo(srv string) (service string, proto string, name string, err error) 
 	return strings.ReplaceAll(splited[0], "_", ""), strings.ReplaceAll(splited[1], "_", ""), splited[2], nil
 }
 
-func getMetrics(check pkg.DNSCheck, lookupTime time.Duration, records []string) []pkg.Metric {
+func getDNSMetrics(check pkg.DNSCheck, lookupTime time.Duration, records []string) []pkg.Metric {
 	return []pkg.Metric{
 		{
 			Name: "dns_lookup_time",
