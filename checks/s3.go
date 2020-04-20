@@ -2,8 +2,10 @@ package checks
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -74,6 +76,12 @@ func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
 			WithCredentials(
 				credentials.NewStaticCredentials(check.AccessKey, check.SecretKey, ""),
 			)
+		if check.SkipTLSVerify {
+			tr := &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+			cfg = cfg.WithHTTPClient(&http.Client{Transport: tr})
+		}
 		ssn, err := session.NewSession(cfg)
 		if err != nil {
 			result = append(result, &pkg.CheckResult{

@@ -1,6 +1,6 @@
 name: test
 patches:
-  - ./test/patches/patch1.yaml
+  - ./test/patch1.yaml
 domain: 127.0.0.1.nip.io
 ldap:
   adminGroup: NA1
@@ -17,13 +17,7 @@ ldap:
     password: secret
 kubernetes:
   auditing:
-    policyFile: ./test/fixtures/audit-policy.yaml
-  apiServerExtraArgs:
-    "audit-log-path": /var/log/audit/cluster-audit.log
-    "audit-log-maxsize": 1024
-    "audit-log-maxage": 2
-    "audit-log-maxbackup": 3
-    "audit-log-format": legacy   # default is json
+    policyFile: ""
   version: v1.15.7
   kubeletExtraArgs:
     node-labels: "ingress-ready=true"
@@ -76,7 +70,8 @@ s3:
   region: us-east1
   kmsMasterKey: minio-demo-key:6368616e676520746869732070617373776f726420746f206120736563726574
   usePathStyle: true
-  skipTLSVerify: true
+  e2e:
+    minio: true
 velero:
   bucket: velero
 thanos:
@@ -104,20 +99,20 @@ filebeat:
     scheme: https
 eck:
   version: 1.0.1
-ingressCA:
-  cert: .certs/ingress-ca-crt.pem
-  privateKey: .certs/ingress-ca-key.pem
-  password: foobar
 oauth2Proxy:
   disabled: true
 prometheus:
   persistence:
     capacity: 10Gi
 configmapReloader:
-  disabled: true
+  version: "v0.0.56"
 ca:
-  cert: .certs/ingress-ca-crt.pem
-  privateKey: .certs/ingress-ca-key.pem
+  cert: .certs/root-ca.crt
+  privateKey: .certs/root-ca.key
+  password: foobar
+ingressCA:
+  cert: .certs/ingress-ca.crt
+  privateKey: .certs/ingress-ca.key
   password: foobar
 sealedSecrets:
   disabled: true

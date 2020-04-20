@@ -10,6 +10,7 @@ s3Bucket:
     maxAge: 604800 # 7 days
     minSize: 100
     usePathStyle: true
+    skipTLSVerify: true
   # Check for any pg backup not older than 3 days and min size 20 bytes
   - bucket: tests-e2e-1
     accessKey: "minio"
@@ -21,6 +22,7 @@ s3Bucket:
     maxAge: 259200 # 3 days
     minSize: 100
     usePathStyle: true
+    skipTLSVerify: true
   # Check for any pg backup not older than 3 days and min size 20 bytes
   - bucket: tests-e2e-2
     accessKey: "minio"
@@ -32,3 +34,4 @@ s3Bucket:
     maxAge: 259200 # 3 days
     minSize: 20
     usePathStyle: true
+    skipTLSVerify: true

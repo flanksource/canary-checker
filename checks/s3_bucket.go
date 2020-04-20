@@ -1,7 +1,9 @@
 package checks
 
 import (
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"regexp"
 	"time"
 
@@ -71,6 +73,12 @@ func (c *S3BucketChecker) Check(bucket pkg.S3BucketCheck) []*pkg.CheckResult {
 		WithCredentials(
 			credentials.NewStaticCredentials(bucket.AccessKey, bucket.SecretKey, ""),
 		)
+	if bucket.SkipTLSVerify {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		cfg = cfg.WithHTTPClient(&http.Client{Transport: tr})
+	}
 	ssn, err := session.NewSession(cfg)
 	if err != nil {
 		return unexpectedErrorf(bucket, err, "failed to create S3 session")

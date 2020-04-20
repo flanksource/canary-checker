@@ -2,6 +2,8 @@ package test
 
 import (
 	"bytes"
+	"crypto/tls"
+	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -128,8 +130,8 @@ func TestE2E(t *testing.T) {
 				{
 					Pass:     true,
 					Invalid:  false,
-					Endpoint: "docker.io/flanksource/busybox:1.30",
-					Message:  "Image docker.io/flanksource/busybox:1.30 successfully pushed",
+					Endpoint: "ttl.sh/flanksource-busybox:1.30",
+					Message:  "Image ttl.sh/flanksource-busybox:1.30 successfully pushed",
 					Metrics:  []pkg.Metric{},
 				},
 			},
@@ -150,8 +152,8 @@ func TestE2E(t *testing.T) {
 				{
 					Pass:     false,
 					Invalid:  false,
-					Endpoint: "docker.io/flanksource/busybox:not-found-tag",
-					Message:  "tag does not exist: flanksource/busybox:not-found-tag",
+					Endpoint: "ttl.sh/flanksource-busybox:not-found-tag",
+					Message:  "tag does not exist: ttl.sh/flanksource-busybox:not-found-tag",
 					Metrics:  []pkg.Metric{},
 				},
 			},
@@ -226,13 +228,17 @@ type S3Config struct {
 }
 
 func getS3Client() (*s3.S3, error) {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 	s3Cfg := getS3Credentials()
 	cfg := aws.NewConfig().
 		WithRegion(s3Cfg.Region).
 		WithEndpoint(s3Cfg.Endpoint).
 		WithCredentials(
 			credentials.NewStaticCredentials(s3Cfg.AccessKey, s3Cfg.SecretKey, ""),
-		)
+		).
+		WithHTTPClient(&http.Client{Transport: tr})
 	ssn, err := session.NewSession(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create s3 session")
@@ -247,7 +253,7 @@ func getS3Credentials() S3Config {
 		AccessKey: getEnvOrDefault("S3_ACCESS_KEY", "minio"),
 		SecretKey: getEnvOrDefault("S3_SECRET_KEY", "minio123"),
 		Region:    getEnvOrDefault("S3_REGION", "minio"),
-		Endpoint:  getEnvOrDefault("S3_ENDPOINT", "http://localhost:9000"),
+		Endpoint:  getEnvOrDefault("S3_ENDPOINT", "https://minio.127.0.0.1.nip.io"),
 	}
 	return cfg
 }

@@ -124,6 +124,8 @@ type S3Check struct {
 	AccessKey  string   `yaml:"accessKey"`
 	SecretKey  string   `yaml:"secretKey"`
 	ObjectPath string   `yaml:"objectPath"`
+	// Skip TLS verify when connecting to s3
+	SkipTLSVerify bool `yaml:"skipTLSVerify"`
 }
 
 type S3BucketCheck struct {
@@ -141,6 +143,8 @@ type S3BucketCheck struct {
 	MinSize int64 `yaml:"minSize"`
 	// Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY
 	UsePathStyle bool `yaml:"usePathStyle"`
+	// Skip TLS verify when connecting to s3
+	SkipTLSVerify bool `yaml:"skipTLSVerify"`
 }
 
 func (s3 S3BucketCheck) GetEndpoint() string {

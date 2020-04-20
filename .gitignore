@@ -1,3 +1,6 @@
 .bin/
 .idea/
 .env
+.certs
+.kube
+/platform-cli*
