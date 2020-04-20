@@ -5,6 +5,7 @@ set -ex
 export PLATFORM_CLI_VERSION=0.11.1-623-gff09e24
 export PLATFORM_CLI="./platform-cli -c test/config.yaml"
 export KUBECONFIG=~/.kube/config
+export DOCKER_API_VERSION=1.39
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
   wget -q https://github.com/flanksource/platform-cli/releases/download/$PLATFORM_CLI_VERSION/platform-cli
