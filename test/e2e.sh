@@ -6,10 +6,10 @@ export PLATFORM_CLI_VERSION=0.11.1-623-gff09e24
 export PLATFORM_CLI="./platform-cli -c test/config.yaml"
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
-  wget https://github.com/flanksource/platform-cli/releases/download/$PLATFORM_CLI_VERSION/platform-cli
+  wget -q https://github.com/flanksource/platform-cli/releases/download/$PLATFORM_CLI_VERSION/platform-cli
   chmod +x platform-cli
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-  wget https://github.com/flanksource/platform-cli/releases/download/$PLATFORM_CLI_VERSION/platform-cli_osx
+  wget -q https://github.com/flanksource/platform-cli/releases/download/$PLATFORM_CLI_VERSION/platform-cli_osx
   cp platform-cli_osx platform-cli
   chmod +x platform-cli
 else
