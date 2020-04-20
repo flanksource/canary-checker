@@ -22,6 +22,7 @@ type Config struct {
 	HTTP          []HTTP          `yaml:"http,omitempty"`
 	DNS           []DNS           `yaml:"dns,omitempty"`
 	DockerPull    []DockerPull    `yaml:"docker,omitempty"`
+	DockerPush    []DockerPush    `yaml:"dockerPush,omitempty"`
 	S3            []S3            `yaml:"s3,omitempty"`
 	S3Bucket      []S3Bucket      `yaml:"s3Bucket,omitempty"`
 	TCP           []TCP           `yaml:"tcp,omitempty"`
@@ -31,7 +32,7 @@ type Config struct {
 	SSL           []SSL           `yaml:"ssl,omitempty"`
 	ICMP          []ICMP          `yaml:"icmp,omitempty"`
 	Postgres      []Postgres      `yaml:"postgres,omitempty"`
-	Helm 		  []Helm          `yaml:"helm,omitempty"`
+	Helm          []Helm          `yaml:"helm,omitempty"`
 
 	Interval time.Duration `yaml:"-"`
 }
@@ -123,6 +124,8 @@ type S3Check struct {
 	AccessKey  string   `yaml:"accessKey"`
 	SecretKey  string   `yaml:"secretKey"`
 	ObjectPath string   `yaml:"objectPath"`
+	// Skip TLS verify when connecting to s3
+	SkipTLSVerify bool `yaml:"skipTLSVerify"`
 }
 
 type S3BucketCheck struct {
@@ -140,6 +143,8 @@ type S3BucketCheck struct {
 	MinSize int64 `yaml:"minSize"`
 	// Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY
 	UsePathStyle bool `yaml:"usePathStyle"`
+	// Skip TLS verify when connecting to s3
+	SkipTLSVerify bool `yaml:"skipTLSVerify"`
 }
 
 func (s3 S3BucketCheck) GetEndpoint() string {
@@ -154,8 +159,8 @@ type ICMPCheckResult struct {
 }
 
 type DNSCheckResult struct {
-	LookupTime  string
-	Records     string
+	LookupTime string
+	Records    string
 }
 
 type DockerPullCheck struct {
@@ -164,6 +169,12 @@ type DockerPullCheck struct {
 	Password       string `yaml:"password"`
 	ExpectedDigest string `yaml:"expectedDigest"`
 	ExpectedSize   int64  `yaml:"expectedSize"`
+}
+
+type DockerPushCheck struct {
+	Image    string `yaml:"image"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
 }
 
 type PostgresCheck struct {
@@ -225,14 +236,14 @@ type LDAPCheck struct {
 }
 
 type DNSCheck struct {
-	Server        string    `yaml:"server"`
-	Port          int       `yaml:"port"`
-	Query         string    `yaml:"query,omitempty"`
-	QueryType     string    `yaml:"querytype"`
-	MinRecords    int       `yaml:"minrecords,omitempty"`
-	ExactReply    []string  `yaml:"exactreply,omitempty"`
-	Timeout       int       `yaml:"timeout"`
-	SrvReply      SrvReply  `yaml:"srvReply,omitempty"`
+	Server     string   `yaml:"server"`
+	Port       int      `yaml:"port"`
+	Query      string   `yaml:"query,omitempty"`
+	QueryType  string   `yaml:"querytype"`
+	MinRecords int      `yaml:"minrecords,omitempty"`
+	ExactReply []string `yaml:"exactreply,omitempty"`
+	Timeout    int      `yaml:"timeout"`
+	SrvReply   SrvReply `yaml:"srvReply,omitempty"`
 }
 
 type HelmCheck struct {
@@ -257,6 +268,10 @@ type DNS struct {
 
 type DockerPull struct {
 	DockerPullCheck `yaml:",inline"`
+}
+
+type DockerPush struct {
+	DockerPushCheck `yaml:",inline"`
 }
 
 type S3 struct {
@@ -305,4 +320,3 @@ type SrvReply struct {
 	Priority int    `yaml:"priority,omitempty"`
 	Weight   int    `yaml:"wight,omitempty"`
 }
-

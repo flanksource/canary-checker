@@ -6,3 +6,4 @@ s3:
     secretKey: "****************"
     accessKey: "~~~~~~~~~~~~~~~~"
     objectPath: "path/to/object"
+    skipTLSVerify: true

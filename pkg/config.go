@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"github.com/flanksource/yaml"
 )
 
 // ParseConfig : Read config file

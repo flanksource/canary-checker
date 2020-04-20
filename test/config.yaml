@@ -1,0 +1,120 @@
+name: test
+patches:
+  - ./test/patch1.yaml
+domain: 127.0.0.1.nip.io
+ldap:
+  adminGroup: NA1
+  username: uid=admin,ou=system
+  password: secret
+  port: 10636
+  host: apacheds.ldap
+  userDN: ou=users,dc=example,dc=com
+  groupDN: ou=groups,dc=example,dc=com
+  groupObjectClass: groupOfNames
+  groupNameAttr: DN
+  test:
+    username: test
+    password: secret
+kubernetes:
+  auditing:
+    policyFile: ""
+  version: v1.15.7
+  kubeletExtraArgs:
+    node-labels: "ingress-ready=true"
+    authorization-mode: "AlwaysAllow"
+  masterIP: localhost
+dashboard:
+  accessRestricted:
+    enabled: true
+    groups:
+      - cn=k8s,ou=groups,dc=example,dc=com
+versions:
+  gomplate: v3.5.0
+  konfigadm: v0.3.6
+  jb: v0.1.0
+  jsonnet: 0.14
+  sonobuoy: 0.16.4
+  govc: v0.20.0
+  gojsontoyaml: master
+  kubectl: v1.15.3
+  pgo: 4.2.0
+  helm: v2.13.0
+  velero: v1.2.0
+  expenv: v1.2.0
+  ketall: v1.3.0
+  apacheds: 0.7.0
+podSubnet: 100.200.0.0/16
+serviceSubnet: 100.100.0.0/16
+opa:
+  disabled: true
+calico:
+  ipip: Never
+  vxlan: Never
+  version: v3.8.2
+nodeLocalDNS:
+  disabled: false
+monitoring:
+  version: dfb626837f04756ed5a8805845f51ebd29d342ec
+harbor:
+  replicas: 1
+  bucket: harbor-blobs
+  version: v1.10.0
+postgresOperator:
+  version: v1.3.4.flanksource.1
+s3:
+  endpoint: http://minio.minio.svc:9000
+  externalEndpoint: minio.127.0.0.1.nip.io
+  bucket: harbor
+  access_key: minio
+  secret_key: minio123
+  region: us-east1
+  kmsMasterKey: minio-demo-key:6368616e676520746869732070617373776f726420746f206120736563726574
+  usePathStyle: true
+  e2e:
+    minio: true
+velero:
+  bucket: velero
+thanos:
+  version: v0.10.1
+  mode: client
+  bucket: thanos
+fluentd-operator:
+  version: v1.11.0
+  repository: jvassev/kube-fluentd-operator
+fluentd:
+  version: 1.11.0
+  elasticsearch:
+    url: logs-es-http.eck.svc.cluster.local
+    user: elastic
+    password: elastic
+    port: 9200
+    scheme: https
+filebeat:
+  version: 7.6.0
+  elasticsearch:
+    url: logs-es-http.eck.svc.cluster.local
+    user: filebeat
+    password: filebeat
+    port: 9200
+    scheme: https
+eck:
+  version: 1.0.1
+oauth2Proxy:
+  disabled: true
+prometheus:
+  persistence:
+    capacity: 10Gi
+configmapReloader:
+  version: "v0.0.56"
+ca:
+  cert: .certs/root-ca.crt
+  privateKey: .certs/root-ca.key
+  password: foobar
+ingressCA:
+  cert: .certs/ingress-ca.crt
+  privateKey: .certs/ingress-ca.key
+  password: foobar
+sealedSecrets:
+  disabled: true
+registryCredentials:
+  disabled: true
