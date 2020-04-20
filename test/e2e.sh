@@ -5,9 +5,17 @@ set -ex
 export PLATFORM_CLI_VERSION=0.11.1-623-gff09e24
 export PLATFORM_CLI="./platform-cli -c test/config.yaml"
 
-#wget https://github.com/flanksource/platform-cli/releases/download/$PLATFORM_CLI_VERSION/platform-cli_osx
-cp platform-cli_osx platform-cli
-chmod +x platform-cli
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  wget https://github.com/flanksource/platform-cli/releases/download/$PLATFORM_CLI_VERSION/platform-cli
+  chmod +x platform-cli
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  wget https://github.com/flanksource/platform-cli/releases/download/$PLATFORM_CLI_VERSION/platform-cli_osx
+  cp platform-cli_osx platform-cli
+  chmod +x platform-cli
+else
+  echo "OS $OSTYPE not supported"
+  exit 1
+fi
 
 docker pull docker.io/library/busybox:1.30
 docker tag docker.io/library/busybox:1.30 ttl.sh/flanksource-busybox:1.30
