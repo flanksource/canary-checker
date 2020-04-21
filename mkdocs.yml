@@ -11,10 +11,7 @@ markdown_extensions:
       linenums: true
 nav:
   - Installation: ./installation.md
-  - Checks:
-      - Docker: ./docker.md
-      - HTTP: ./http.md
-      - ICMP: ./icmp.md
-      - S3: ./s3.md
-      - S3 Bucket: ./s3_bucket.md
-      - LDAP: ./ldap.md
+  - CLI:
+      - run: ./cli/canary-checker_run.md
+      - serve: ./cli/canary-checker_serve.md
+  - Checks: ./reference.md

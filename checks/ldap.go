@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"crypto/tls"
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"

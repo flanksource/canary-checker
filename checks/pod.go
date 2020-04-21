@@ -195,7 +195,8 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pk
 	started := diff(conditions, v1.PodScheduled, v1.ContainersReady)
 	running := diff(conditions, v1.ContainersReady, v1.PodReady)
 
-	log.Debugf("%s created=%s, scheduled=%d, started=%d, running=%d", pod.Name, created, scheduled, started, running)
+	log.Debugf("%s created=%s, scheduled=%d, started=%d, running=%d wall=%s", pod.Name, created, scheduled, started, running, startTimer)
+	log.Tracef("%v", conditions)
 
 	if err := c.createServiceAndIngress(podCheck, pod); err != nil {
 		return unexpectedErrorf(podCheck, err, "failed to create ingress")
@@ -257,6 +258,9 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pk
 func (c *PodChecker) Cleanup(podCheck pkg.PodCheck) error {
 	listOptions := metav1.ListOptions{LabelSelector: c.podCheckSelector(podCheck)}
 
+	if c.k8s == nil {
+		return fmt.Errorf("Connection to k8s not established")
+	}
 	err := c.k8s.CoreV1().Pods(podCheck.Namespace).DeleteCollection(nil, listOptions)
 	if err != nil && !errors.IsNotFound(err) {
 		return perrors.Wrapf(err, "Failed to delete pods for check %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
