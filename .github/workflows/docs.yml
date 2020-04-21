@@ -1,0 +1,17 @@
+name: Publish Docs
+on: [push]
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    container:
+      image: flanksource/build-tools
+    steps:
+      - uses: actions/checkout@master
+      - run: make build-api-docs build-docs deploy-docs
+  release:
+    runs-on: ubuntu-latest
+    container:
+      image: flanksource/build-tools
+    steps:
+      - uses: actions/checkout@master
+      - run: ./release.sh
