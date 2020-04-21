@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@master
       - run: make build-api-docs build-docs deploy-docs
         env:
-          NETLIFY_AUTH_TOKEN: ${{ NETLIFY_AUTH_TOKEN}}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN}}
 
 ---
 name: Publish Binary
