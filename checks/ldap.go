@@ -47,7 +47,9 @@ func (c *LdapChecker) Check(check pkg.LDAPCheck) []*pkg.CheckResult {
 
 	endpoint := fmt.Sprintf("%s/%s/%s", check.Host, check.BindDN, check.UserSearch)
 
-	ld, err := ldap.DialURL(check.Host)
+	ld, err := ldap.DialURL(check.Host, ldap.DialWithTLSConfig(&tls.Config{
+		InsecureSkipVerify: check.SkipTLSVerify,
+	}))
 	if err != nil {
 		result = append(result, &pkg.CheckResult{
 			Pass:     false,

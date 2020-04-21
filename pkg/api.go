@@ -228,11 +228,12 @@ func (p PodCheck) String() string {
 }
 
 type LDAPCheck struct {
-	Host       string `yaml:"host"`
-	Username   string `yaml:"username"`
-	Password   string `yaml:"password"`
-	BindDN     string `yaml:"bindDN"`
-	UserSearch string `yaml:"userSearch"`
+	Host          string `yaml:"host"`
+	Username      string `yaml:"username"`
+	Password      string `yaml:"password"`
+	BindDN        string `yaml:"bindDN"`
+	UserSearch    string `yaml:"userSearch"`
+	SkipTLSVerify bool   `yaml:"skipTLSVerify"`
 }
 
 type DNSCheck struct {
