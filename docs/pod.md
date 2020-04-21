@@ -1,1 +1,0 @@
-# Pod spec

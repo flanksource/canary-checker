@@ -19,22 +19,20 @@ func (e Endpoint) GetEndpoint() string {
 }
 
 type Config struct {
-	HTTP          []HTTP          `yaml:"http,omitempty"`
-	DNS           []DNS           `yaml:"dns,omitempty"`
-	DockerPull    []DockerPull    `yaml:"docker,omitempty"`
-	DockerPush    []DockerPush    `yaml:"dockerPush,omitempty"`
-	S3            []S3            `yaml:"s3,omitempty"`
-	S3Bucket      []S3Bucket      `yaml:"s3Bucket,omitempty"`
-	TCP           []TCP           `yaml:"tcp,omitempty"`
-	Pod           []Pod           `yaml:"pod,omitempty"`
-	PodAndIngress []PodAndIngress `yaml:"pod_and_ingress,omitempty"`
-	LDAP          []LDAP          `yaml:"ldap,omitempty"`
-	SSL           []SSL           `yaml:"ssl,omitempty"`
-	ICMP          []ICMP          `yaml:"icmp,omitempty"`
-	Postgres      []Postgres      `yaml:"postgres,omitempty"`
-	Helm          []Helm          `yaml:"helm,omitempty"`
-
-	Interval time.Duration `yaml:"-"`
+	HTTP       []HTTP        `yaml:"http,omitempty"`
+	DNS        []DNS         `yaml:"dns,omitempty"`
+	DockerPull []DockerPull  `yaml:"docker,omitempty"`
+	DockerPush []DockerPush  `yaml:"dockerPush,omitempty"`
+	S3         []S3          `yaml:"s3,omitempty"`
+	S3Bucket   []S3Bucket    `yaml:"s3Bucket,omitempty"`
+	TCP        []TCP         `yaml:"tcp,omitempty"`
+	Pod        []Pod         `yaml:"pod,omitempty"`
+	LDAP       []LDAP        `yaml:"ldap,omitempty"`
+	SSL        []SSL         `yaml:"ssl,omitempty"`
+	ICMP       []ICMP        `yaml:"icmp,omitempty"`
+	Postgres   []Postgres    `yaml:"postgres,omitempty"`
+	Helm       []Helm        `yaml:"helm,omitempty"`
+	Interval   time.Duration `yaml:"-"`
 }
 
 type Checker interface {
@@ -86,11 +84,16 @@ type Check struct {
 }
 
 type HTTPCheck struct {
-	Endpoints       []string `yaml:"endpoints"`
-	ThresholdMillis int      `yaml:"thresholdMillis"`
-	ResponseCodes   []int    `yaml:"responseCodes"`
-	ResponseContent string   `yaml:"responseContent"`
-	MaxSSLExpiry    int      `yaml:"maxSSLExpiry"`
+	// HTTP endpoints to crawl
+	Endpoints []string `yaml:"endpoints"`
+	// Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.
+	ThresholdMillis int `yaml:"thresholdMillis"`
+	// Expected response codes for the HTTP Request.
+	ResponseCodes []int `yaml:"responseCodes"`
+	// Exact response content expected to be returned by the endpoint.
+	ResponseContent string `yaml:"responseContent"`
+	// Maximum number of days until the SSL Certificate expires.
+	MaxSSLExpiry int `yaml:"maxSSLExpiry"`
 }
 
 type HTTPCheckResult struct {
@@ -255,6 +258,31 @@ type HelmCheck struct {
 	CaFile      *string `yaml:"cafile,omitempty"`
 }
 
+/*
+
+```yaml
+http:
+  - endpoints:
+      - https://httpstat.us/200
+      - https://httpstat.us/301
+    thresholdMillis: 3000
+    responseCodes: [201,200,301]
+    responseContent: ""
+    maxSSLExpiry: 60
+  - endpoints:
+      - https://httpstat.us/500
+    thresholdMillis: 3000
+    responseCodes: [500]
+    responseContent: ""
+    maxSSLExpiry: 60
+  - endpoints:
+      - https://httpstat.us/500
+    thresholdMillis: 3000
+    responseCodes: [302]
+    responseContent: ""
+    maxSSLExpiry: 60
+```
+*/
 type HTTP struct {
 	HTTPCheck `yaml:",inline"`
 }
@@ -263,10 +291,39 @@ type SSL struct {
 	Check `yaml:",inline"`
 }
 
+/*
+
+```yaml
+dns:
+  - server: 8.8.8.8
+    port: 53
+    query: "flanksource.com"
+    querytype: "A"
+    minrecords: 1
+    exactreply: ["34.65.228.161"]
+    timeout: 10
+```
+*/
 type DNS struct {
 	DNSCheck `yaml:",inline"`
 }
 
+/*
+# Check docker images
+
+This check will try to pull a Docker image from specified registry, verify it's checksum and size.
+
+```yaml
+
+docker:
+  - image: docker.io/library/busybox:1.31.1
+    username:
+    password:
+    expectedDigest: 6915be4043561d64e0ab0f8f098dc2ac48e077fe23f488ac24b665166898115a
+    expectedSize: 1219782
+```
+
+*/
 type DockerPull struct {
 	DockerPullCheck `yaml:",inline"`
 }
@@ -275,10 +332,49 @@ type DockerPush struct {
 	DockerPushCheck `yaml:",inline"`
 }
 
+/*
+This check will:
+
+* list objects in the bucket to check for Read permissions
+* PUT an object into the bucket for Write permissions
+* download previous uploaded object to check for Get permissions
+
+```yaml
+
+s3:
+  - buckets:
+      - name: "test-bucket"
+        region: "us-east-1"
+        endpoint: "https://test-bucket.s3.us-east-1.amazonaws.com"
+    secretKey: "<access-key>"
+    accessKey: "<secret-key>"
+    objectPath: "path/to/object"
+```
+*/
 type S3 struct {
 	S3Check `yaml:",inline"`
 }
 
+/*
+This check will
+
+- search objects matching the provided object path pattern
+- check that latest object is no older than provided MaxAge value in seconds
+- check that latest object size is not smaller than provided MinSize value in bytes.
+
+```yaml
+s3Bucket:
+  - bucket: foo
+    accessKey: "<access-key>"
+    secretKey: "<secret-key>"
+    region: "us-east-2"
+    endpoint: "https://s3.us-east-2.amazonaws.com"
+    objectPath: "(.*)archive.zip$"
+    readWrite: true
+    maxAge: 5000000
+    minSize: 50000
+```
+*/
 type S3Bucket struct {
 	S3BucketCheck `yaml:",inline"`
 }
@@ -287,26 +383,97 @@ type TCP struct {
 	Check `yaml:",inline"`
 }
 
+/*
+```yaml
+pod:
+  - name: golang
+    namespace: default
+    spec: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: hello-world-golang
+        namespace: default
+        labels:
+          app: hello-world-golang
+      spec:
+        containers:
+          - name: hello
+            image: quay.io/toni0/hello-webserver-golang:latest
+    port: 8080
+    path: /foo/bar
+    ingressName: hello-world-golang
+    ingressHost: "hello-world-golang.127.0.0.1.nip.io"
+    scheduleTimeout: 2000
+    readyTimeout: 5000
+    httpTimeout: 2000
+    deleteTimeout: 12000
+    ingressTimeout: 5000
+    deadline: 29000
+    httpRetryInterval: 200
+    expectedContent: bar
+    expectedHttpStatuses: [200, 201, 202]
+```
+*/
 type Pod struct {
 	PodCheck `yaml:",inline"`
 }
 
-type PodAndIngress struct {
-	Check `yaml:",inline"`
-}
+/*
 
+The LDAP check will:
+
+* bind using provided user/password to the ldap host. Supports ldap/ldaps protocols.
+* search an object type in the provided bind DN.s
+
+```yaml
+
+ldap:
+  - host: ldap://127.0.0.1:10389
+    username: uid=admin,ou=system
+    password: secret
+    bindDN: ou=users,dc=example,dc=com
+    userSearch: "(&(objectClass=organizationalPerson))"
+  - host: ldap://127.0.0.1:10389
+    username: uid=admin,ou=system
+    password: secret
+    bindDN: ou=groups,dc=example,dc=com
+    userSearch: "(&(objectClass=groupOfNames))"
+```
+*/
 type LDAP struct {
 	LDAPCheck `yaml:",inline"`
 }
 
-type PostgreSQL struct {
-	Check `yaml:",inline"`
-}
+/*
+This test will check ICMP packet loss and duration.
 
+```yaml
+
+icmp:
+  - endpoints:
+      - https://google.com
+      - https://yahoo.com
+    thresholdMillis: 400
+    packetLossThreshold: 0.5
+    packetCount: 2
+```
+*/
 type ICMP struct {
 	ICMPCheck `yaml:",inline"`
 }
 
+/*
+This check will try to connect to a specified Postgresql database, run a query against it and verify the results.
+
+```yaml
+
+postgres:
+  - connection: "user=postgres password=mysecretpassword host=192.168.0.103 port=15432 dbname=postgres sslmode=disable"
+    query:  "SELECT 1"
+		results: 1
+```
+*/
 type Postgres struct {
 	PostgresCheck `yaml:",inline"`
 }

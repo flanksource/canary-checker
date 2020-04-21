@@ -46,22 +46,30 @@ func main() {
 		},
 	})
 
-	root.AddCommand(&cobra.Command{
+	docs := &cobra.Command{
 		Use:   "docs",
 		Short: "generate documentation",
+	}
+
+	docs.AddCommand(&cobra.Command{
+		Use:   "cli [PATH]",
+		Short: "generate CLI documentation",
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			err := doc.GenMarkdownTree(root, "docs")
+			err := doc.GenMarkdownTree(root, args[0])
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Println("Documentation generated at: docs")
 		},
 	})
+
+	docs.AddCommand(cmd.APIDocs)
+	root.AddCommand(docs)
 
 	root.PersistentFlags().CountP("loglevel", "v", "Increase logging level")
 	root.PersistentFlags().StringP("configfile", "c", "", "Specify configfile")
 	root.SetUsageTemplate(root.UsageTemplate() + fmt.Sprintf("\nversion: %s\n ", version))
-	root.MarkPersistentFlagRequired("configfile")
+	// root.MarkPersistentFlagRequired("configfile")
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}
