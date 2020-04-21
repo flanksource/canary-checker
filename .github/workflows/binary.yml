@@ -1,12 +1,12 @@
-name: Publish Docs
+name: Publish Binary
 on: [push]
 jobs:
-  docs:
+  release:
     runs-on: ubuntu-latest
     container:
       image: flanksource/build-tools
     steps:
       - uses: actions/checkout@master
-      - run: make build-api-docs build-docs deploy-docs
+      - run: ./release.sh
         env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

@@ -1,9 +1,8 @@
 #!/bin/bash
 set -x
-
-NAME=$(basename $(git remote get-url origin | sed 's/\.git//'))
-GITHUB_USER=$(basename $(dirname $(git remote get-url origin | sed 's/\.git//')))
-GITHUB_USER=${GITHUB_USER##*:}
+cd $GITHUB_WORKSPACE
+GITHUB_USER=$(echo $GITHUB_REPOSITORY | cut -d/ -f1)
+NAME=$(echo $GITHUB_REPOSITORY | cut -d/ -f2)
 TAG=$(git describe --tags --abbrev=0 --exact-match)
 SNAPSHOT=false
 if [[ "$TAG" == "" ]];  then
@@ -30,12 +29,3 @@ echo Uploading $NAME
 github-release upload -R -u $GITHUB_USER -r ${NAME} --tag $TAG -n ${NAME} -f .bin/${NAME}
 echo Uploading ${NAME}_osx
 github-release upload -R -u $GITHUB_USER -r ${NAME} --tag $TAG -n ${NAME}_osx -f .bin/${NAME}_osx
-
-echo Building docker image
-
-docker build -t $GITHUB_USER/$NAME:$TAG --build-arg VERSION="$VERSION" -f Dockerfile .
-
-echo Pushing docker image
-docker login --username $DOCKER_LOGIN --password $DOCKER_PASS
-docker push $GITHUB_USER/$NAME:$TAG
-
