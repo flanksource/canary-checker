@@ -8,6 +8,13 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - run: make build-api-docs build-docs deploy-docs
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ NETLIFY_AUTH_TOKEN}}
+
+---
+name: Publish Binary
+on: [push]
+jobs:
   release:
     runs-on: ubuntu-latest
     container:
@@ -15,3 +22,5 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - run: ./release.sh
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
