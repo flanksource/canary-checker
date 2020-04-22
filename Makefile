@@ -2,8 +2,12 @@
 default: build
 NAME:=canary-checker
 
+ifeq ($(TAG),)
+TAG := $(shell git describe --tags --exclude "*-g*" )
+endif
+
 ifeq ($(VERSION),)
-VERSION := v$(shell git describe --tags --exclude "*-g*" ) built $(shell date)
+VERSION := v$(TAG) built $(shell date)
 endif
 
 .PHONY: setup
