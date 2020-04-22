@@ -2,6 +2,7 @@ name: Publish Binary
 on:
   push:
      tags:
+      - "*"
 jobs:
   release:
     runs-on: ubuntu-latest
