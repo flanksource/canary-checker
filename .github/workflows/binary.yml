@@ -1,6 +1,6 @@
 name: Publish Binary
 on:
-  push:
+  create:
     tags:
       - "*"
 jobs:
@@ -12,5 +12,4 @@ jobs:
       - uses: actions/checkout@master
       - run: ./release.sh
         env:
-          TAG: ${{ github.event.release.tag_name }}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
