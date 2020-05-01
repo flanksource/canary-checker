@@ -96,6 +96,7 @@ func (c Check) GetDescription() string {
 }
 
 type HTTPCheck struct {
+	Description string `yaml:"description"`
 	// HTTP endpoints to crawl
 	Endpoints []string `yaml:"endpoints"`
 	// Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.
@@ -106,6 +107,10 @@ type HTTPCheck struct {
 	ResponseContent string `yaml:"responseContent"`
 	// Maximum number of days until the SSL Certificate expires.
 	MaxSSLExpiry int `yaml:"maxSSLExpiry"`
+}
+
+func (c HTTPCheck) GetDescription() string {
+	return c.Description
 }
 
 type HTTPCheckResult struct {

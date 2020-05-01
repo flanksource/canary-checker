@@ -37,6 +37,7 @@ func main() {
 	if len(commit) > 8 {
 		version = fmt.Sprintf("%v, commit %v, built at %v", version, commit[0:8], date)
 	}
+	log.Infof("Starting %s", version)
 	root.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "Print the version of canary-checker",
