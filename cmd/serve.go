@@ -77,14 +77,20 @@ var Serve = &cobra.Command{
 var counters map[string]prometheus.Counter
 
 func processMetrics(checkType string, result *pkg.CheckResult) {
+	description := ""
+	switch result.Check.(type) {
+	case pkg.Describable:
+		description = result.Check.(pkg.Describable).GetDescription()
+	}
 	if log.IsLevelEnabled(log.InfoLevel) {
 		fmt.Println(result)
 	}
-	pkg.OpsCount.WithLabelValues(checkType, result.Endpoint).Inc()
+	pkg.OpsCount.WithLabelValues(checkType, result.Endpoint, description).Inc()
 	if result.Pass {
-		pkg.OpsSuccessCount.WithLabelValues(checkType, result.Endpoint).Inc()
+		pkg.Guage.WithLabelValues(checkType, description).Set(0)
+		pkg.OpsSuccessCount.WithLabelValues(checkType, result.Endpoint, description).Inc()
 		if result.Duration > 0 {
-			pkg.RequestLatency.WithLabelValues(checkType, result.Endpoint).Observe(float64(result.Duration))
+			pkg.RequestLatency.WithLabelValues(checkType, result.Endpoint, description).Observe(float64(result.Duration))
 		}
 
 		for _, m := range result.Metrics {
@@ -98,7 +104,8 @@ func processMetrics(checkType string, result *pkg.CheckResult) {
 			}
 		}
 	} else {
-		pkg.OpsFailedCount.WithLabelValues(checkType, result.Endpoint).Inc()
+		pkg.Guage.WithLabelValues(checkType, description).Set(1)
+		pkg.OpsFailedCount.WithLabelValues(checkType, result.Endpoint, description).Inc()
 	}
 }
 
