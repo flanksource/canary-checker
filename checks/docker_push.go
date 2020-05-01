@@ -94,6 +94,7 @@ func (c *DockerPushChecker) Check(check pkg.DockerPushCheck) *pkg.CheckResult {
 
 	imagePushTime.WithLabelValues(check.Image).Observe(float64(elapsed.Milliseconds()))
 	return &pkg.CheckResult{
+		Check:    check,
 		Pass:     pushSuccess,
 		Duration: elapsed.Milliseconds(),
 		Message:  message,

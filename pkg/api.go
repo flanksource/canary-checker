@@ -10,12 +10,12 @@ import (
 type Endpointer interface {
 	GetEndpoint() string
 }
+
+type Describable interface {
+	GetDescription() string
+}
 type Endpoint struct {
 	String string
-}
-
-func (e Endpoint) GetEndpoint() string {
-	return e.String
 }
 
 type Config struct {
@@ -49,12 +49,15 @@ type URL struct {
 }
 
 type CheckResult struct {
-	Pass     bool
-	Invalid  bool
-	Duration int64
-	Endpoint string
-	Message  string
-	Metrics  []Metric
+	Pass        bool
+	Invalid     bool
+	Duration    int64
+	Endpoint    string
+	Description string
+	Message     string
+	Metrics     []Metric
+	// Check is the configuration
+	Check interface{}
 }
 
 func (c CheckResult) String() string {
@@ -81,6 +84,15 @@ func (m Metric) String() string {
 }
 
 type Check struct {
+	Description string `yaml:"description"`
+}
+
+func (e Endpoint) GetEndpoint() string {
+	return e.String
+}
+
+func (c Check) GetDescription() string {
+	return c.Description
 }
 
 type HTTPCheck struct {
@@ -97,6 +109,8 @@ type HTTPCheck struct {
 }
 
 type HTTPCheckResult struct {
+	// Check is the configuration
+	Check        interface{}
 	Endpoint     string
 	Record       string
 	ResponseCode int
@@ -110,10 +124,15 @@ func (check HTTPCheckResult) String() string {
 }
 
 type ICMPCheck struct {
+	Description         string   `yaml:"description"`
 	Endpoints           []string `yaml:"endpoints"`
 	ThresholdMillis     float64  `yaml:"thresholdMillis"`
 	PacketLossThreshold float64  `yaml:"packetLossThreshold"`
 	PacketCount         int      `yaml:"packetCount"`
+}
+
+func (c ICMPCheck) GetDescription() string {
+	return c.Description
 }
 
 type Bucket struct {
@@ -123,20 +142,30 @@ type Bucket struct {
 }
 
 type S3Check struct {
-	Buckets    []Bucket `yaml:"buckets"`
-	AccessKey  string   `yaml:"accessKey"`
-	SecretKey  string   `yaml:"secretKey"`
-	ObjectPath string   `yaml:"objectPath"`
+	Description string   `yaml:"description"`
+	Buckets     []Bucket `yaml:"buckets"`
+	AccessKey   string   `yaml:"accessKey"`
+	SecretKey   string   `yaml:"secretKey"`
+	ObjectPath  string   `yaml:"objectPath"`
 	// Skip TLS verify when connecting to s3
 	SkipTLSVerify bool `yaml:"skipTLSVerify"`
 }
 
+func (c S3Check) GetDescription() string {
+	return c.Description
+}
+
+func (c S3BucketCheck) GetDescription() string {
+	return c.Description
+}
+
 type S3BucketCheck struct {
-	Bucket    string `yaml:"bucket"`
-	AccessKey string `yaml:"accessKey"`
-	SecretKey string `yaml:"secretKey"`
-	Region    string `yaml:"region"`
-	Endpoint  string `yaml:"endpoint"`
+	Description string `yaml:"description"`
+	Bucket      string `yaml:"bucket"`
+	AccessKey   string `yaml:"accessKey"`
+	SecretKey   string `yaml:"secretKey"`
+	Region      string `yaml:"region"`
+	Endpoint    string `yaml:"endpoint"`
 	// glob path to restrict matches to a subset
 	ObjectPath string `yaml:"objectPath"`
 	ReadWrite  bool   `yaml:"readWrite"`
@@ -155,18 +184,21 @@ func (s3 S3BucketCheck) GetEndpoint() string {
 }
 
 type ICMPCheckResult struct {
-	Endpoint   string
-	Record     string
-	Latency    float64
-	PacketLoss float64
+	Description string `yaml:"description"`
+	Endpoint    string
+	Record      string
+	Latency     float64
+	PacketLoss  float64
 }
 
 type DNSCheckResult struct {
-	LookupTime string
-	Records    string
+	Description string `yaml:"description"`
+	LookupTime  string
+	Records     string
 }
 
 type DockerPullCheck struct {
+	Description    string `yaml:"description"`
 	Image          string `yaml:"image"`
 	Username       string `yaml:"username"`
 	Password       string `yaml:"password"`
@@ -174,17 +206,31 @@ type DockerPullCheck struct {
 	ExpectedSize   int64  `yaml:"expectedSize"`
 }
 
+func (c DockerPullCheck) GetDescription() string {
+	return c.Description
+}
+
 type DockerPushCheck struct {
-	Image    string `yaml:"image"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	Description string `yaml:"description"`
+	Image       string `yaml:"image"`
+	Username    string `yaml:"username"`
+	Password    string `yaml:"password"`
+}
+
+func (c DockerPushCheck) GetDescription() string {
+	return c.Description
 }
 
 type PostgresCheck struct {
-	Driver     string `yaml:"driver"`
-	Connection string `yaml:"connection"`
-	Query      string `yaml:"query"`
-	Result     int    `yaml:"results"`
+	Description string `yaml:"description"`
+	Driver      string `yaml:"driver"`
+	Connection  string `yaml:"connection"`
+	Query       string `yaml:"query"`
+	Result      int    `yaml:"results"`
+}
+
+func (c PostgresCheck) GetDescription() string {
+	return c.Description
 }
 
 // This is used to supply a default value for unsupplied fields
@@ -204,6 +250,7 @@ func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type PodCheck struct {
+	Description          string `yaml:"description"`
 	Name                 string `yaml:"name"`
 	Namespace            string `yaml:"namespace"`
 	Spec                 string `yaml:"spec"`
@@ -222,6 +269,10 @@ type PodCheck struct {
 	ExpectedHttpStatuses []int  `yaml:"expectedHttpStatuses"`
 }
 
+func (c PodCheck) GetDescription() string {
+	return c.Description
+}
+
 func (p PodCheck) GetEndpoint() string {
 	return p.Name
 }
@@ -231,6 +282,7 @@ func (p PodCheck) String() string {
 }
 
 type LDAPCheck struct {
+	Description   string `yaml:"description"`
 	Host          string `yaml:"host"`
 	Username      string `yaml:"username"`
 	Password      string `yaml:"password"`
@@ -239,23 +291,37 @@ type LDAPCheck struct {
 	SkipTLSVerify bool   `yaml:"skipTLSVerify"`
 }
 
+func (c LDAPCheck) GetDescription() string {
+	return c.Description
+}
+
 type DNSCheck struct {
-	Server     string   `yaml:"server"`
-	Port       int      `yaml:"port"`
-	Query      string   `yaml:"query,omitempty"`
-	QueryType  string   `yaml:"querytype"`
-	MinRecords int      `yaml:"minrecords,omitempty"`
-	ExactReply []string `yaml:"exactreply,omitempty"`
-	Timeout    int      `yaml:"timeout"`
-	SrvReply   SrvReply `yaml:"srvReply,omitempty"`
+	Description string   `yaml:"description"`
+	Server      string   `yaml:"server"`
+	Port        int      `yaml:"port"`
+	Query       string   `yaml:"query,omitempty"`
+	QueryType   string   `yaml:"querytype"`
+	MinRecords  int      `yaml:"minrecords,omitempty"`
+	ExactReply  []string `yaml:"exactreply,omitempty"`
+	Timeout     int      `yaml:"timeout"`
+	SrvReply    SrvReply `yaml:"srvReply,omitempty"`
+}
+
+func (c DNSCheck) GetDescription() string {
+	return c.Description
 }
 
 type HelmCheck struct {
+	Description string  `yaml:"description"`
 	Chartmuseum string  `yaml:"chartmuseum"`
 	Project     string  `yaml:"project,omitempty"`
 	Username    string  `yaml:"username"`
 	Password    string  `yaml:"password"`
 	CaFile      *string `yaml:"cafile,omitempty"`
+}
+
+func (c HelmCheck) GetDescription() string {
+	return c.Description
 }
 
 /*

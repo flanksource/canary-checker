@@ -2,15 +2,16 @@ package checks
 
 import (
 	"fmt"
-	"github.com/flanksource/canary-checker/pkg"
-	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"net"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/flanksource/canary-checker/pkg"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/net/context"
 )
 
 type DNSChecker struct{}
@@ -36,7 +37,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 	}
 	r := net.Resolver{
 		PreferGo: true,
-		Dial: dialer,
+		Dial:     dialer,
 	}
 	if check.QueryType == "A" {
 		result, err := r.LookupHost(ctx, check.Query)
@@ -50,6 +51,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 		pass, message := checkResult(result, check)
 
 		return &pkg.CheckResult{
+			Check:    check,
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
@@ -69,6 +71,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 
 		pass, message := checkResult(result, check)
 		return &pkg.CheckResult{
+			Check:    check,
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
@@ -88,6 +91,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 
 		pass, message := checkResult([]string{result}, check)
 		return &pkg.CheckResult{
+			Check:    check,
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
@@ -128,6 +132,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
+			Check:    check,
 			Endpoint: server,
 			Message:  message,
 			Metrics:  getDNSMetrics(check, elapsed, resultString),
@@ -143,6 +148,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 		elapsed := time.Since(start)
 		pass, message := checkResult(result, check)
 		return &pkg.CheckResult{
+			Check:    check,
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
@@ -165,6 +171,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 		}
 		pass, message := checkResult(resultString, check)
 		return &pkg.CheckResult{
+			Check:    check,
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
@@ -178,11 +185,11 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 }
 
 func getDialer(check pkg.DNSCheck, timeout int) (func(ctx context.Context, network, address string) (net.Conn, error), error) {
-	return func (ctx context.Context, network, address string) (net.Conn, error) {
+	return func(ctx context.Context, network, address string) (net.Conn, error) {
 		d := net.Dialer{
 			Timeout: time.Second * time.Duration(timeout),
 		}
-		return  d.DialContext(ctx, "udp", fmt.Sprintf("%s:%d", check.Server, check.Port))
+		return d.DialContext(ctx, "udp", fmt.Sprintf("%s:%d", check.Server, check.Port))
 	}, nil
 }
 
@@ -228,20 +235,20 @@ func getDNSMetrics(check pkg.DNSCheck, lookupTime time.Duration, records []strin
 		{
 			Name: "dns_lookup_time",
 			Type: pkg.HistogramType,
-			Labels: map [string]string{
-				"dnsCheckQuery": check.Query,
+			Labels: map[string]string{
+				"dnsCheckQuery":  check.Query,
 				"dnsCheckServer": check.Server,
-				"dnsCheckPort": strconv.Itoa(check.Port),
+				"dnsCheckPort":   strconv.Itoa(check.Port),
 			},
 			Value: float64(lookupTime.Milliseconds()),
 		},
 		{
 			Name: "dns_records",
 			Type: pkg.GaugeType,
-			Labels: map [string]string{
-				"dnsCheckQuery": check.Query,
+			Labels: map[string]string{
+				"dnsCheckQuery":  check.Query,
 				"dnsCheckServer": check.Server,
-				"dnsCheckPort": strconv.Itoa(check.Port),
+				"dnsCheckPort":   strconv.Itoa(check.Port),
 			},
 			Value: float64(len(records)),
 		},

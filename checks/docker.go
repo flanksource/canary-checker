@@ -115,6 +115,7 @@ func (c *DockerPullChecker) Check(check pkg.DockerPullCheck) *pkg.CheckResult {
 	size.WithLabelValues(check.Image).Set(float64(inspect.Size))
 	imagePullTime.WithLabelValues(check.Image).Observe(float64(elapsed.Milliseconds()))
 	return &pkg.CheckResult{
+		Check:    check,
 		Pass:     digestVerified && sizeVerified,
 		Invalid:  !(digestVerified && sizeVerified),
 		Duration: elapsed.Milliseconds(),

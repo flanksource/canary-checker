@@ -78,6 +78,7 @@ func (c *LdapChecker) Check(check pkg.LDAPCheck) []*pkg.CheckResult {
 
 	if err != nil {
 		result = append(result, &pkg.CheckResult{
+			Check:    check,
 			Pass:     false,
 			Message:  fmt.Sprintf("Failed to search to LDAP url %s: %v", check.Host, err),
 			Endpoint: endpoint,
@@ -88,6 +89,7 @@ func (c *LdapChecker) Check(check pkg.LDAPCheck) []*pkg.CheckResult {
 	ldapLookupRecordCount.WithLabelValues(check.Host, check.BindDN).Set(float64(len(res.Entries)))
 
 	result = append(result, &pkg.CheckResult{
+		Check:    check,
 		Pass:     true,
 		Endpoint: endpoint,
 		Message:  fmt.Sprintf("LDAP search %s for host %s DN %s successful", check.UserSearch, check.Host, check.BindDN),

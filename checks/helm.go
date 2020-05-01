@@ -4,23 +4,24 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	pusher "github.com/chartmuseum/helm-push/pkg/chartmuseum"
-	"github.com/flanksource/canary-checker/pkg"
-	log "github.com/sirupsen/logrus"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/cli"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
 	"time"
+
+	pusher "github.com/chartmuseum/helm-push/pkg/chartmuseum"
+	"github.com/flanksource/canary-checker/pkg"
+	log "github.com/sirupsen/logrus"
+	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chartutil"
+	"helm.sh/helm/v3/pkg/cli"
 )
 
 type HelmChecker struct{}
 
-type ResultWriter struct {}
+type ResultWriter struct{}
 
 // Type: returns checker type
 func (c *HelmChecker) Type() string {
@@ -38,17 +39,18 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 	var uploadOK, downloadOK bool = true, true
 	chartmuseum := fmt.Sprintf("%s/chartrepo/%s/", config.Chartmuseum, config.Project)
 	log.Trace("Uploading test chart")
-	client, _  := pusher.NewClient(
+	client, _ := pusher.NewClient(
 		pusher.URL(chartmuseum),
 		pusher.Username(config.Username),
 		pusher.Password(config.Password),
 		pusher.ContextPath(""),
 		pusher.Timeout(60),
-		pusher.CAFile(*config.CaFile),)
+		pusher.CAFile(*config.CaFile))
 	chartPath, err := createTestChart()
 	if err != nil {
 		return &pkg.CheckResult{
 			Pass:     false,
+			Check:    config,
 			Invalid:  true,
 			Duration: 0,
 			Endpoint: config.Chartmuseum,
@@ -60,6 +62,7 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 
 	if err != nil {
 		return &pkg.CheckResult{
+			Check:    config,
 			Pass:     false,
 			Invalid:  true,
 			Duration: 0,
@@ -74,6 +77,7 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 	if response.StatusCode != 201 {
 		uploadOK = false
 		return &pkg.CheckResult{
+			Check:    config,
 			Pass:     false,
 			Invalid:  false,
 			Duration: 0,
@@ -85,6 +89,7 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 
 	if err != nil {
 		return &pkg.CheckResult{
+			Check:    config,
 			Pass:     false,
 			Invalid:  true,
 			Duration: 0,
@@ -102,13 +107,14 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 	}
 	kubeconfigPath := pkg.GetKubeconfig()
 	iCli.Settings = &cli.EnvSettings{
-		KubeConfig:       kubeconfigPath,
+		KubeConfig: kubeconfigPath,
 	}
 
 	log.Trace("Pulling test chart")
 	url, err := url.Parse(chartmuseum)
 	if err != nil {
 		return &pkg.CheckResult{
+			Check:    config,
 			Pass:     false,
 			Invalid:  true,
 			Duration: 0,
@@ -123,6 +129,7 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 		log.Trace(err)
 		downloadOK = false
 		return &pkg.CheckResult{
+			Check:    config,
 			Pass:     false,
 			Invalid:  false,
 			Duration: 0,
@@ -139,6 +146,7 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 	}
 	elapsed := time.Since(start)
 	return &pkg.CheckResult{
+		Check:    config,
 		Pass:     uploadOK && downloadOK,
 		Invalid:  false,
 		Duration: elapsed.Milliseconds(),
@@ -158,7 +166,7 @@ func cleanUp(chartname string, chartmuseum string, config pkg.HelmCheck) error {
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				RootCAs:      caCertPool,
+				RootCAs: caCertPool,
 			},
 		},
 	}
@@ -193,9 +201,9 @@ func getHelmMetrics(check pkg.HelmCheck, pass bool) []pkg.Metric {
 		{
 			Name: "helm_check_pass",
 			Type: pkg.GaugeType,
-			Labels: map [string]string{
-				"helmCheckProject": check.Project,
-				"helmCheckUrl": check.Chartmuseum,
+			Labels: map[string]string{
+				"helmCheckProject":  check.Project,
+				"helmCheckUrl":      check.Chartmuseum,
 				"helmCheckUsername": check.Username,
 			},
 			Value: value,

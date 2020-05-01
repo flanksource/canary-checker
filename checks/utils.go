@@ -8,6 +8,7 @@ import (
 
 func unexpectedErrorf(check pkg.Endpointer, err error, msg string, args ...interface{}) []*pkg.CheckResult {
 	return []*pkg.CheckResult{&pkg.CheckResult{
+		Check:    check,
 		Pass:     false,
 		Invalid:  false,
 		Endpoint: check.GetEndpoint(),
@@ -17,6 +18,7 @@ func unexpectedErrorf(check pkg.Endpointer, err error, msg string, args ...inter
 
 func invalidErrorf(check pkg.Endpointer, err error, msg string, args ...interface{}) []*pkg.CheckResult {
 	return []*pkg.CheckResult{&pkg.CheckResult{
+		Check:    check,
 		Pass:     false,
 		Invalid:  true,
 		Endpoint: check.GetEndpoint(),
@@ -26,6 +28,7 @@ func invalidErrorf(check pkg.Endpointer, err error, msg string, args ...interfac
 
 func Failf(check pkg.Endpointer, msg string, args ...interface{}) []*pkg.CheckResult {
 	return []*pkg.CheckResult{&pkg.CheckResult{
+		Check:    check,
 		Pass:     false,
 		Invalid:  false,
 		Endpoint: check.GetEndpoint(),
@@ -35,6 +38,7 @@ func Failf(check pkg.Endpointer, msg string, args ...interface{}) []*pkg.CheckRe
 
 func Passf(check pkg.Endpointer, msg string, args ...interface{}) []*pkg.CheckResult {
 	return []*pkg.CheckResult{&pkg.CheckResult{
+		Check:    check,
 		Pass:     true,
 		Invalid:  false,
 		Endpoint: check.GetEndpoint(),

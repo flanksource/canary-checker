@@ -63,6 +63,7 @@ func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
 
 		if _, err := DNSLookup(bucket.Endpoint); err != nil {
 			result = append(result, &pkg.CheckResult{
+				Check:    check,
 				Pass:     false,
 				Message:  fmt.Sprintf("Failed to resolve DNS for %s", bucket.Endpoint),
 				Endpoint: bucket.Endpoint,
@@ -85,6 +86,7 @@ func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
 		ssn, err := session.NewSession(cfg)
 		if err != nil {
 			result = append(result, &pkg.CheckResult{
+				Check:    check,
 				Pass:     false,
 				Message:  fmt.Sprintf("Failed to create S3 session for %s: %v", bucket.Name, err),
 				Endpoint: bucket.Name,
@@ -132,6 +134,7 @@ func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
 
 		if err != nil {
 			result = append(result, &pkg.CheckResult{
+				Check:    check,
 				Pass:     false,
 				Message:  fmt.Sprintf("Failed to get object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err),
 				Endpoint: bucket.Name,
@@ -141,6 +144,7 @@ func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
 		returnedData, _ := ioutil.ReadAll(obj.Body)
 		if string(returnedData) != data {
 			result = append(result, &pkg.CheckResult{
+				Check:    check,
 				Pass:     false,
 				Message:  fmt.Sprintf("Get object doesn't match %s != %s", data, string(returnedData)),
 				Endpoint: bucket.Name,
@@ -149,6 +153,7 @@ func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
 		}
 
 		checkResult := &pkg.CheckResult{
+			Check:    check,
 			Pass:     true,
 			Invalid:  false,
 			Duration: int64(timer.Elapsed()),

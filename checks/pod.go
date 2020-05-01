@@ -214,6 +214,7 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pk
 	}
 
 	result = append(result, &pkg.CheckResult{
+		Check:    podCheck,
 		Pass:     ingressResult.Pass && deleteOk,
 		Duration: int64(startTimer.Elapsed()),
 		Endpoint: c.podEndpoint(podCheck),

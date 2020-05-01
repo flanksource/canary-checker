@@ -63,6 +63,7 @@ func (c *IcmpChecker) Check(check pkg.ICMPCheck) []*pkg.CheckResult {
 				pass := timeOK && packetOK
 
 				checkResult := &pkg.CheckResult{
+					Check:    check,
 					Pass:     pass,
 					Invalid:  false,
 					Duration: int64(checkResults.Latency),
@@ -74,6 +75,7 @@ func (c *IcmpChecker) Check(check pkg.ICMPCheck) []*pkg.CheckResult {
 
 			} else {
 				checkResult := &pkg.CheckResult{
+					Check:    check,
 					Pass:     false,
 					Invalid:  true,
 					Endpoint: endpoint,

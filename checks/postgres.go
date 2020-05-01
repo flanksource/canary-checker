@@ -60,6 +60,7 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 	}
 
 	checkResult := &pkg.CheckResult{
+		Check:    check,
 		Pass:     true,
 		Invalid:  false,
 		Duration: elapsed.Milliseconds(),

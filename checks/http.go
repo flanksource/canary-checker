@@ -71,6 +71,7 @@ func (c *HttpChecker) Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 		if err != nil {
 			dnsFailed.Inc()
 			checkResult := &pkg.CheckResult{
+				Check:    check,
 				Pass:     false,
 				Invalid:  true,
 				Endpoint: endpoint,
@@ -84,6 +85,7 @@ func (c *HttpChecker) Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 			checkResults, err := c.checkHTTP(urlObj)
 			if err != nil {
 				checkResult := &pkg.CheckResult{
+					Check:    check,
 					Pass:     false,
 					Invalid:  true,
 					Message:  fmt.Sprintf("%s", err),
@@ -129,6 +131,7 @@ func (c *HttpChecker) Check(check pkg.HTTPCheck) []*pkg.CheckResult {
 				},
 			}
 			checkResult := &pkg.CheckResult{
+				Check:    check,
 				Pass:     pass,
 				Duration: checkResults.ResponseTime,
 				Endpoint: endpoint,
