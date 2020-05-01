@@ -96,11 +96,11 @@ func processMetrics(checkType string, result *pkg.CheckResult) {
 		for _, m := range result.Metrics {
 			switch m.Type {
 			case pkg.CounterType:
-				pkg.GenericCounter.WithLabelValues(checkType, m.Name, strconv.Itoa(int(m.Value))).Inc()
+				pkg.GenericCounter.WithLabelValues(checkType, description, m.Name, strconv.Itoa(int(m.Value))).Inc()
 			case pkg.GaugeType:
-				pkg.GenericGauge.WithLabelValues(checkType, m.Name).Set(m.Value)
+				pkg.GenericGauge.WithLabelValues(checkType, description, m.Name).Set(m.Value)
 			case pkg.HistogramType:
-				pkg.GenericHistogram.WithLabelValues(checkType, m.Name).Observe(m.Value)
+				pkg.GenericHistogram.WithLabelValues(checkType, description, m.Name).Observe(m.Value)
 			}
 		}
 	} else {
