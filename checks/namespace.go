@@ -248,9 +248,9 @@ func (c *NamespaceChecker) Cleanup(ns *v1.Namespace) error {
 	return nil
 }
 
-func (c *NamespaceChecker) httpCheck(podCheck pkg.NamespaceCheck, deadline time.Time) (ingressTime float64, requestTime float64, result *pkg.CheckResult) {
+func (c *NamespaceChecker) httpCheck(check pkg.NamespaceCheck, deadline time.Time) (ingressTime float64, requestTime float64, result *pkg.CheckResult) {
 	var hardDeadline time.Time
-	ingressTimeout := time.Now().Add(time.Duration(podCheck.IngressTimeout) * time.Millisecond)
+	ingressTimeout := time.Now().Add(time.Duration(check.IngressTimeout) * time.Millisecond)
 	if ingressTimeout.After(deadline) {
 		hardDeadline = deadline
 	} else {
@@ -258,53 +258,54 @@ func (c *NamespaceChecker) httpCheck(podCheck pkg.NamespaceCheck, deadline time.
 	}
 
 	timer := NewTimer()
-	retryInterval := time.Duration(podCheck.HttpRetryInterval) * time.Millisecond
+	retryInterval := time.Duration(check.HttpRetryInterval) * time.Millisecond
 
 	for {
-		url := fmt.Sprintf("http://%s%s", podCheck.IngressHost, podCheck.Path)
+		url := fmt.Sprintf("http://%s%s", check.IngressHost, check.Path)
+		log.Debugf("Checking url %s", url)
 		httpTimer := NewTimer()
-		response, responseCode, err := c.getHttp(url, podCheck.HttpTimeout, hardDeadline)
+		response, responseCode, err := c.getHttp(url, check.HttpTimeout, hardDeadline)
 		if err != nil && perrors.Is(err, context.DeadlineExceeded) {
-			if timer.Millis() > podCheck.HttpTimeout && time.Now().Before(hardDeadline) {
-				log.Debugf("[%s] request completed in %s, above threshold of %d", podCheck, httpTimer, podCheck.HttpTimeout)
+			if timer.Millis() > check.HttpTimeout && time.Now().Before(hardDeadline) {
+				log.Debugf("[%s] request completed in %s, above threshold of %d", check, httpTimer, check.HttpTimeout)
 				time.Sleep(retryInterval)
 				continue
-			} else if timer.Millis() > podCheck.HttpTimeout && time.Now().After(hardDeadline) {
-				return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HttpTimeout)[0]
+			} else if timer.Millis() > check.HttpTimeout && time.Now().After(hardDeadline) {
+				return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "request timeout exceeded %s > %d", timer, check.HttpTimeout)[0]
 			} else if time.Now().After(hardDeadline) {
-				return timer.Elapsed(), 0, Failf(podCheck, "ingress timeout exceeded %s > %d", timer, podCheck.IngressTimeout)[0]
+				return timer.Elapsed(), 0, Failf(check, "ingress timeout exceeded %s > %d", timer, check.IngressTimeout)[0]
 			} else {
 				log.Debugf("now=%s deadline=%s", time.Now(), hardDeadline)
 				continue
 			}
 		} else if err != nil {
-			log.Debugf("[%s] failed to get http URL %s: %v", podCheck, url, err)
+			log.Debugf("[%s] failed to get http URL %s: %v", check, url, err)
 			time.Sleep(retryInterval)
 			continue
 		}
 
 		found := false
-		for _, c := range podCheck.ExpectedHttpStatuses {
+		for _, c := range check.ExpectedHttpStatuses {
 			if c == responseCode {
 				found = true
 				break
 			}
 		}
 
-		if !found && responseCode == http.StatusServiceUnavailable {
-			log.Debugf("[%s] request completed with %d, expected %v, retrying", podCheck, responseCode, podCheck.ExpectedHttpStatuses)
+		if !found && responseCode == http.StatusServiceUnavailable || responseCode == http.StatusNotFound {
+			log.Debugf("[%s] request completed with %d, expected %v, retrying", check, responseCode, check.ExpectedHttpStatuses)
 			time.Sleep(retryInterval)
 			continue
 		} else if !found {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "status code %d not expected %v ", responseCode, podCheck.ExpectedHttpStatuses)[0]
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "status code %d not expected %v ", responseCode, check.ExpectedHttpStatuses)[0]
 		}
-		if !strings.Contains(response, podCheck.ExpectedContent) {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "content check failed")[0]
+		if !strings.Contains(response, check.ExpectedContent) {
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "content check failed")[0]
 		}
-		if int64(httpTimer.Elapsed()) > podCheck.HttpTimeout {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HttpTimeout)[0]
+		if int64(httpTimer.Elapsed()) >check.HttpTimeout {
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "request timeout exceeded %s > %d", httpTimer, check.HttpTimeout)[0]
 		}
-		return timer.Elapsed(), httpTimer.Elapsed(), Passf(podCheck, "")[0]
+		return timer.Elapsed(), httpTimer.Elapsed(), Passf(check, "")[0]
 	}
 
 }
