@@ -45,6 +45,7 @@ func RunChecks(config pkg.Config) chan *pkg.CheckResult {
 		&checks.LdapChecker{},
 		&checks.S3BucketChecker{},
 		checks.NewPodChecker(),
+		checks.NewNamespaceChecker(),
 	}
 
 	var results = make(chan *pkg.CheckResult)

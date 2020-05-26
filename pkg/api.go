@@ -32,6 +32,7 @@ type Config struct {
 	ICMP       []ICMP        `yaml:"icmp,omitempty"`
 	Postgres   []Postgres    `yaml:"postgres,omitempty"`
 	Helm       []Helm        `yaml:"helm,omitempty"`
+	Namespace  []Namespace   `yaml:"namespace,omitempty"`
 	Interval   time.Duration `yaml:"-"`
 }
 
@@ -300,6 +301,40 @@ func (c LDAPCheck) GetDescription() string {
 	return c.Description
 }
 
+type NamespaceCheck struct {
+	Description          string            `yaml:"description"`
+	CheckName            string            `yaml:"checkName"`
+	NamespaceNamePrefix  string            `yaml:"namespaceNamePrefix"`
+	NamespaceLabels      map[string]string `yaml:"namespaceLabels"`
+	NamespaceAnnotations map[string]string `yaml:"namespaceAnnotations"`
+	PodSpec              string            `yaml:"podSpec"`
+	ScheduleTimeout      int64             `yaml:"scheduleTimeout"`
+	ReadyTimeout         int64             `yaml:"readyTimeout"`
+	HttpTimeout          int64             `yaml:"httpTimeout"`
+	DeleteTimeout        int64             `yaml:"deleteTimeout"`
+	IngressTimeout       int64             `yaml:"ingressTimeout"`
+	HttpRetryInterval    int64             `yaml:"httpRetryInterval"`
+	Deadline             int64             `yaml:"deadline"`
+	Port                 int32             `yaml:"port"`
+	Path                 string            `yaml:"path"`
+	IngressName          string            `yaml:"ingressName"`
+	IngressHost          string            `yaml:"ingressHost"`
+	ExpectedContent      string            `yaml:"expectedContent"`
+	ExpectedHttpStatuses []int             `yaml:"expectedHttpStatuses"`
+}
+
+func (c NamespaceCheck) GetDescription() string {
+	return c.Description
+}
+
+func (p NamespaceCheck) GetEndpoint() string {
+	return p.CheckName
+}
+
+func (p NamespaceCheck) String() string {
+	return "namespace/" + p.CheckName
+}
+
 type DNSCheck struct {
 	Description string   `yaml:"description"`
 	Server      string   `yaml:"server"`
@@ -514,6 +549,26 @@ ldap:
 */
 type LDAP struct {
 	LDAPCheck `yaml:",inline"`
+}
+
+/*
+
+The Namespace check will:
+
+* create a new namespace using the labels/annotations provided
+
+```yaml
+
+namespace:
+  - namePrefix: "test-name-prefix-"
+		labels:
+			team: test
+		annotations:
+			"foo.baz.com/foo": "bar"
+```
+*/
+type Namespace struct {
+	NamespaceCheck `yaml:",inline"`
 }
 
 /*

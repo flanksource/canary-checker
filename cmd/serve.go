@@ -40,6 +40,7 @@ var Serve = &cobra.Command{
 			&checks.PostgresChecker{},
 			&checks.LdapChecker{},
 			checks.NewPodChecker(),
+			checks.NewNamespaceChecker(),
 		}
 
 		config.Interval = time.Duration(interval) * time.Second
