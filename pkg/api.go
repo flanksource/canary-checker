@@ -14,6 +14,11 @@ type Endpointer interface {
 type Describable interface {
 	GetDescription() string
 }
+
+type WithType interface {
+	GetType() string
+}
+
 type Endpoint struct {
 	String string
 }
@@ -114,6 +119,10 @@ func (c HTTPCheck) GetDescription() string {
 	return c.Description
 }
 
+func (c HTTPCheck) GetType() string {
+	return "http"
+}
+
 type HTTPCheckResult struct {
 	// Check is the configuration
 	Check        interface{}
@@ -141,6 +150,10 @@ func (c ICMPCheck) GetDescription() string {
 	return c.Description
 }
 
+func (c ICMPCheck) GetType() string {
+	return "icmp"
+}
+
 type Bucket struct {
 	Name     string `yaml:"name"`
 	Region   string `yaml:"region"`
@@ -161,8 +174,8 @@ func (c S3Check) GetDescription() string {
 	return c.Description
 }
 
-func (c S3BucketCheck) GetDescription() string {
-	return c.Description
+func (c S3Check) GetType() string {
+	return "s3"
 }
 
 type S3BucketCheck struct {
@@ -187,6 +200,14 @@ type S3BucketCheck struct {
 
 func (s3 S3BucketCheck) GetEndpoint() string {
 	return s3.Bucket
+}
+
+func (c S3BucketCheck) GetDescription() string {
+	return c.Description
+}
+
+func (c S3BucketCheck) GetType() string {
+	return "s3Bucket"
 }
 
 type ICMPCheckResult struct {
@@ -216,6 +237,10 @@ func (c DockerPullCheck) GetDescription() string {
 	return c.Description
 }
 
+func (c DockerPullCheck) GetType() string {
+	return "dockerPull"
+}
+
 type DockerPushCheck struct {
 	Description string `yaml:"description"`
 	Image       string `yaml:"image"`
@@ -225,6 +250,10 @@ type DockerPushCheck struct {
 
 func (c DockerPushCheck) GetDescription() string {
 	return c.Description
+}
+
+func (c DockerPushCheck) GetType() string {
+	return "dockerPush"
 }
 
 type PostgresCheck struct {
@@ -237,6 +266,10 @@ type PostgresCheck struct {
 
 func (c PostgresCheck) GetDescription() string {
 	return c.Description
+}
+
+func (c PostgresCheck) GetType() string {
+	return "postgres"
 }
 
 // This is used to supply a default value for unsupplied fields
@@ -287,6 +320,10 @@ func (p PodCheck) String() string {
 	return "pod/" + p.Name
 }
 
+func (c PodCheck) GetType() string {
+	return "pod"
+}
+
 type LDAPCheck struct {
 	Description   string `yaml:"description"`
 	Host          string `yaml:"host"`
@@ -299,6 +336,10 @@ type LDAPCheck struct {
 
 func (c LDAPCheck) GetDescription() string {
 	return c.Description
+}
+
+func (c LDAPCheck) GetType() string {
+	return "ldap"
 }
 
 type NamespaceCheck struct {
@@ -335,6 +376,10 @@ func (p NamespaceCheck) String() string {
 	return "namespace/" + p.CheckName
 }
 
+func (c NamespaceCheck) GetType() string {
+	return "namespace"
+}
+
 type DNSCheck struct {
 	Description string   `yaml:"description"`
 	Server      string   `yaml:"server"`
@@ -351,6 +396,10 @@ func (c DNSCheck) GetDescription() string {
 	return c.Description
 }
 
+func (c DNSCheck) GetType() string {
+	return "dns"
+}
+
 type HelmCheck struct {
 	Description string  `yaml:"description"`
 	Chartmuseum string  `yaml:"chartmuseum"`
@@ -362,6 +411,10 @@ type HelmCheck struct {
 
 func (c HelmCheck) GetDescription() string {
 	return c.Description
+}
+
+func (c HelmCheck) GetType() string {
+	return "helm"
 }
 
 /*

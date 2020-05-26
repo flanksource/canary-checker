@@ -1,0 +1,128 @@
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha256-aAr2Zpq8MZ+YA/D6JtRD3xtrwpEz2IqOS+pWD/7XKIw=" crossorigin="anonymous" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js" integrity="sha256-ngFW3UnAN0Tnm76mDuu7uUtYEcG3G5H1+zioJw3t+68=" crossorigin="anonymous"></script>
+
+  <style>
+    body {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+    }
+
+    h3 {
+      margin-top: 2rem;
+    }
+
+    .row {
+      margin-bottom: 1rem;
+    }
+    .row .row {
+      margin-top: 1rem;
+      margin-bottom: 0;
+    }
+    [class*="col-"] {
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+      background-color: rgba(86, 61, 124, .15);
+      border: 1px solid rgba(86, 61, 124, .2);
+    }
+
+    hr {
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    #last-refreshed {
+      color: #777;
+      font-size: 0.8em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <h1>Canary Checker</h1>
+    <hr>
+
+    <div v-if="error" class="alert alert-danger" role="alert">
+      {{ error }}
+    </div>
+
+    <table v-else id="checks" class="table table-sm">
+      <thead>
+        <th scope="col">Type</th>
+        <th scope="col">Name</th>
+        <th scope="col">Status</th>
+        <th scope="col">Valid</th>
+        <th scope="col">Duration</th>
+      </thead>
+      <template v-for="check in checks">
+        <tr>
+          <td scope="row">{{ check.type }}</td>
+          <td>{{ check.name }}</td>
+          <td>
+            <span v-if="check.status" class="badge badge-success">PASS</span>
+            <span v-else class="badge badge-danger">FAIL</span>
+          </td>
+          <td>
+            <span v-if="check.invalid" class="badge badge-danger">INVALID</span>
+            <span v-else class="badge badge-success">VALID</span>
+          </td>
+          <td>{{ (check.duration / 1000.00) }}s</td>
+        </tr>
+      </template>
+    </table>
+
+    <hr>
+    <div v-if="lastRefreshed" id="last-refreshed">
+      Last refreshed <span>{{ lastRefreshed }}</span>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+      var app = new Vue({
+          el: '#app',
+          data: function () {
+            return {
+                error: "",
+                loading: true,
+                checks: [],
+                lastRefreshed: false,
+            }
+          },
+          created() {
+              this.fetchData()
+              this.timer = setInterval(this.fetchData, 5000) // 20 seconds
+          },
+          methods: {
+              fetchData() {
+                  this.loading = true
+                  this.error = ""
+                  this.checks = []
+
+                  $.ajax({
+                      contentType: "application/json",
+                      dataType: "json",
+                      url: "/api",
+                      method: "Get",
+                      success: response => {
+                          this.loading = false
+                          this.checks = response
+                          this.lastRefreshed = new Date()
+                      },
+                      error: err => {
+                          console.log(err)
+                          if (err.status === 0) {
+                              this.error = "Error loading data from server: failed to connect to server"
+                          } else {
+                              this.error = "Error loading data from server: " + err.responseJSON.error
+                          }
+                      }
+                  });
+              },
+              cancelAutoUpdate () { clearInterval(this.timer) }
+          }
+      })
+  </script>
+</body>
+</html>
