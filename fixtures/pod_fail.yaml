@@ -1,12 +1,12 @@
 pod:
   - name: fail
-    namespace: default
+    namespace: platform-system
     spec: |
       apiVersion: v1
       kind: Pod
       metadata:
         name: hello-world-fail
-        namespace: default
+        namespace: platform-system
         labels:
           app: hello-world-fail
       spec:

@@ -15,7 +15,6 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/utils"
 	perrors "github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
@@ -29,11 +28,13 @@ import (
 type NamespaceChecker struct {
 	lock *semaphore.Weighted
 	k8s  *kubernetes.Clientset
+	ng   *NameGenerator
 }
 
 func NewNamespaceChecker() *NamespaceChecker {
 	nc := &NamespaceChecker{
 		lock: semaphore.NewWeighted(1),
+		ng:   &NameGenerator{NamespacesCount: 10},
 	}
 
 	k8sClient, err := pkg.NewK8sClient()
@@ -72,13 +73,12 @@ func (c *NamespaceChecker) newPod(check pkg.NamespaceCheck, ns *v1.Namespace) (*
 		return nil, fmt.Errorf("Pod spec cannot be empty")
 	}
 
-	podUid := utils.RandomString(6)
 	pod := &v1.Pod{}
 	if err := yaml.Unmarshal([]byte(check.PodSpec), pod); err != nil {
 		return nil, fmt.Errorf("Failed to unmarshall pod spec: %v", err)
 	}
 
-	pod.Name = fmt.Sprintf("%s-%s", pod.Name, podUid)
+	pod.Name = "canary-check-pod"
 	pod.Namespace = ns.Name
 	pod.Labels[podLabelSelector] = pod.Name
 	pod.Labels[podCheckSelector] = c.podCheckSelectorValue(check, ns)
@@ -141,12 +141,12 @@ func (c *NamespaceChecker) Check(check pkg.NamespaceCheck, checkDeadline time.Ti
 		return unexpectedErrorf(check, err, "cannot connect to API server")
 	}
 
-	name := check.NamespaceNamePrefix + utils.RandomString(6)
+	namespaceName := c.ng.NamespaceName(check.NamespaceNamePrefix)
 	namespaces := c.k8s.CoreV1().Namespaces()
 	ns := &v1.Namespace{
 		TypeMeta: metav1.TypeMeta{Kind: "Namespace", APIVersion: "v1"},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
+			Name:        namespaceName,
 			Labels:      check.NamespaceLabels,
 			Annotations: check.NamespaceAnnotations,
 		},
@@ -208,31 +208,31 @@ func (c *NamespaceChecker) Check(check pkg.NamespaceCheck, checkDeadline time.Ti
 			{
 				Name:   "schedule_time",
 				Type:   pkg.HistogramType,
-				Labels: map[string]string{"podCheck": check.CheckName},
+				Labels: map[string]string{"namespaceCheck": check.CheckName},
 				Value:  float64(scheduled),
 			},
 			{
 				Name:   "creation_time",
 				Type:   pkg.HistogramType,
-				Labels: map[string]string{"podCheck": check.CheckName},
+				Labels: map[string]string{"namespaceCheck": check.CheckName},
 				Value:  float64(started),
 			},
 			{
 				Name:   "delete_time",
 				Type:   pkg.HistogramType,
-				Labels: map[string]string{"podCheck": check.CheckName},
+				Labels: map[string]string{"namespaceCheck": check.CheckName},
 				Value:  float64(deletion.Elapsed()),
 			},
 			{
 				Name:   "ingress_time",
 				Type:   pkg.HistogramType,
-				Labels: map[string]string{"podCheck": check.CheckName},
+				Labels: map[string]string{"namespaceCheck": check.CheckName},
 				Value:  float64(ingressTime),
 			},
 			{
 				Name:   "request_time",
 				Type:   pkg.HistogramType,
-				Labels: map[string]string{"podCheck": check.CheckName},
+				Labels: map[string]string{"namespaceCheck": check.CheckName},
 				Value:  float64(requestTime),
 			},
 		},
@@ -302,7 +302,7 @@ func (c *NamespaceChecker) httpCheck(check pkg.NamespaceCheck, deadline time.Tim
 		if !strings.Contains(response, check.ExpectedContent) {
 			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "content check failed")[0]
 		}
-		if int64(httpTimer.Elapsed()) >check.HttpTimeout {
+		if int64(httpTimer.Elapsed()) > check.HttpTimeout {
 			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "request timeout exceeded %s > %d", httpTimer, check.HttpTimeout)[0]
 		}
 		return timer.Elapsed(), httpTimer.Elapsed(), Passf(check, "")[0]
@@ -429,7 +429,7 @@ func (c *NamespaceChecker) getHttp(url string, timeout int64, deadline time.Time
 }
 
 func (c *NamespaceChecker) podEndpoint(check pkg.NamespaceCheck) string {
-	return fmt.Sprintf("pod/%s", check.CheckName)
+	return fmt.Sprintf("namespace/%s", check.CheckName)
 }
 
 func (c *NamespaceChecker) podCheckSelectorValue(check pkg.NamespaceCheck, ns *v1.Namespace) string {

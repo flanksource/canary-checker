@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/utils"
 	perrors "github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
@@ -35,6 +35,9 @@ const (
 type PodChecker struct {
 	lock *semaphore.Weighted
 	k8s  *kubernetes.Clientset
+	ng   *NameGenerator
+
+	latestNodeIndex int
 }
 
 type ingressHttpResult struct {
@@ -49,6 +52,7 @@ type ingressHttpResult struct {
 func NewPodChecker() *PodChecker {
 	pc := &PodChecker{
 		lock: semaphore.NewWeighted(1),
+		ng:   &NameGenerator{PodsCount: 20},
 	}
 
 	k8sClient, err := pkg.NewK8sClient()
@@ -81,22 +85,24 @@ func (c *PodChecker) Type() string {
 	return "pod"
 }
 
-func (c *PodChecker) newPod(podCheck pkg.PodCheck) (*v1.Pod, error) {
+func (c *PodChecker) newPod(podCheck pkg.PodCheck, nodeName string) (*v1.Pod, error) {
 
 	if podCheck.Spec == "" {
 		return nil, fmt.Errorf("Pod spec cannot be empty")
 	}
 
-	podUid := utils.RandomString(6)
 	pod := &v1.Pod{}
 	if err := yaml.Unmarshal([]byte(podCheck.Spec), pod); err != nil {
 		return nil, fmt.Errorf("Failed to unmarshall pod spec: %v", err)
 	}
 
-	pod.Name = fmt.Sprintf("%s-%s", pod.Name, podUid)
+	pod.Name = c.ng.PodName(pod.Name + "-")
 	pod.Labels[podLabelSelector] = pod.Name
 	pod.Labels[podCheckSelector] = c.podCheckSelectorValue(podCheck)
 	pod.Labels[podGeneralSelector] = "true"
+	pod.Spec.NodeSelector = map[string]string{
+		"kubernetes.io/hostname": nodeName,
+	}
 	return pod, nil
 }
 
@@ -166,11 +172,14 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pk
 
 	log.Debugf("Running pod check %s", podCheck.Name)
 	five := int64(5)
-	if _, err := c.k8s.CoreV1().Nodes().List(metav1.ListOptions{TimeoutSeconds: &five}); err != nil {
+	nodes, err := c.k8s.CoreV1().Nodes().List(metav1.ListOptions{TimeoutSeconds: &five})
+	if err != nil {
 		return unexpectedErrorf(podCheck, err, "cannot connect to API server")
 	}
+	nextNode, newIndex := c.nextNode(nodes, c.latestNodeIndex)
+	c.latestNodeIndex = newIndex
 
-	pod, err := c.newPod(podCheck)
+	pod, err := c.newPod(podCheck, nextNode)
 	if err != nil {
 		return invalidErrorf(podCheck, err, "invalid pod spec")
 	}
@@ -195,7 +204,7 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pk
 	started := diff(conditions, v1.PodScheduled, v1.ContainersReady)
 	running := diff(conditions, v1.ContainersReady, v1.PodReady)
 
-	log.Debugf("%s created=%s, scheduled=%d, started=%d, running=%d wall=%s", pod.Name, created, scheduled, started, running, startTimer)
+	log.Debugf("%s created=%s, scheduled=%d, started=%d, running=%d wall=%s nodeName=%s", pod.Name, created, scheduled, started, running, startTimer, nextNode)
 	log.Tracef("%v", conditions)
 
 	if err := c.createServiceAndIngress(podCheck, pod); err != nil {
@@ -505,4 +514,15 @@ func (c *PodChecker) WaitForPod(ns, name string, timeout time.Duration, phases .
 			}
 		}
 	}
+}
+
+func (c *PodChecker) nextNode(nodes *v1.NodeList, lastIndex int) (string, int) {
+	nodeCount := len(nodes.Items)
+	nodeNames := make([]string, nodeCount)
+	for i, n := range nodes.Items {
+		nodeNames[i] = n.Name
+	}
+	sort.Strings(nodeNames)
+	nextIndex := (lastIndex + 1) % nodeCount
+	return nodeNames[nextIndex], nextIndex
 }
