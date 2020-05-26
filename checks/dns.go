@@ -31,7 +31,6 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 	start := time.Now()
 	ctx := context.Background()
 	dialer, err := getDialer(check, check.Timeout)
-	server := fmt.Sprintf("%s:%d", check.Server, check.Port)
 	if err != nil {
 		log.Errorf("Failed to get dialer, %v", err)
 	}
@@ -55,7 +54,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
-			Endpoint: server,
+			Endpoint: fmt.Sprintf("A/%s", check.Query),
 			Message:  message,
 			Metrics:  getDNSMetrics(check, elapsed, result),
 		}
@@ -75,7 +74,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
-			Endpoint: server,
+			Endpoint: fmt.Sprintf("PTR/%s", check.Query),
 			Message:  message,
 			Metrics:  getDNSMetrics(check, elapsed, result),
 		}
@@ -95,7 +94,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
-			Endpoint: server,
+			Endpoint: fmt.Sprintf("CNAME/%s", check.Query),
 			Message:  message,
 			Metrics:  getDNSMetrics(check, elapsed, []string{result}),
 		}
@@ -133,7 +132,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
 			Check:    check,
-			Endpoint: server,
+			Endpoint: fmt.Sprintf("MX/%s", check.Query),
 			Message:  message,
 			Metrics:  getDNSMetrics(check, elapsed, resultString),
 		}
@@ -152,7 +151,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
-			Endpoint: server,
+			Endpoint: fmt.Sprintf("TXT/%s", check.Query),
 			Message:  message,
 			Metrics:  getDNSMetrics(check, elapsed, result),
 		}
@@ -175,7 +174,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
-			Endpoint: server,
+			Endpoint: fmt.Sprintf("NS/%s", check.Query),
 			Message:  message,
 			Metrics:  getDNSMetrics(check, elapsed, resultString),
 		}
