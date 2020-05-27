@@ -7,3 +7,4 @@
 build/
 docs/cli/
 .DS_Store
+/statuspage/static.go

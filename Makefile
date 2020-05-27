@@ -15,11 +15,11 @@ setup:
 	which github-release 2>&1 > /dev/null || go get github.com/aktau/github-release
 
 .PHONY: linux
-linux:
+linux: static
 	GOOS=linux go build -o ./.bin/$(NAME) -ldflags "-X \"main.version=$(VERSION)\""  main.go
 
 .PHONY: darwin
-darwin:
+darwin: static
 	GOOS=darwin go build -o ./.bin/$(NAME)_osx -ldflags "-X \"main.version=$(VERSION)\""  main.go
 
 .PHONY: compress
@@ -56,3 +56,7 @@ deploy-docs:
 	which netlify 2>&1 > /dev/null || sudo npm install -g netlify-cli
 	netlify deploy --site cfe8c6b7-79b7-4a88-9e13-ff792126717f --prod --dir build/docs
 
+.PHONY: static
+static:
+	which esc 2>&1 > /dev/null || go get -u github.com/mjibson/esc
+	cd statuspage && esc -o static.go -pkg statuspage -include "index.html" .

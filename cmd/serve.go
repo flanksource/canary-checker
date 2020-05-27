@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	nethttp "net/http"
 	"sort"
 	"strconv"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/statuspage"
 	"github.com/jasonlvhit/gocron"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -68,7 +68,7 @@ var Serve = &cobra.Command{
 		gocron.Start()
 
 		nethttp.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
-		nethttp.HandleFunc("/", statusPageHandler)
+		nethttp.Handle("/", nethttp.FileServer(statuspage.FS(false)))
 		nethttp.HandleFunc("/api", apiPageHandler)
 
 		addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
@@ -184,20 +184,6 @@ func (s *State) GetChecks() []Check {
 }
 
 var state = &State{Checks: map[string]Check{}}
-
-func statusPageHandler(w nethttp.ResponseWriter, req *nethttp.Request) {
-	if req.URL.Path != "/" {
-		w.WriteHeader(nethttp.StatusNotFound)
-		fmt.Fprintf(w, "{\"error\": \"page not found\", \"checks\": []}")
-		return
-	}
-	body, err := ioutil.ReadFile("index.html")
-	if err != nil {
-		log.Errorf("Failed to read html file: %v", err)
-		fmt.Fprintf(w, "{\"error\": \"internal\", \"checks\": []}")
-	}
-	fmt.Fprintf(w, string(body))
-}
 
 func apiPageHandler(w nethttp.ResponseWriter, req *nethttp.Request) {
 	data := state.GetChecks()
