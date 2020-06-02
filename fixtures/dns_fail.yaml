@@ -1,7 +1,7 @@
 dns:
   - server: 8.8.8.8
     port: 53
-    query: "flanksource.com"
+    query: "1.2.3.4.nip.io"
     querytype: "A"
     minrecords: 1
     exactreply: ["8.8.8.8"]
