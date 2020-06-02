@@ -44,4 +44,5 @@ done
 export DOCKER_USERNAME=test
 export DOCKER_PASSWORD=password
 
+make static
 go test ./test
