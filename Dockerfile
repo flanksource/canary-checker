@@ -3,6 +3,7 @@ WORKDIR /app
 COPY ./ ./
 ARG NAME
 ARG VERSION
+RUN make static
 RUN GOOS=linux GOARCH=amd64 go build -o canary-checker -ldflags "-X \"main.version=$VERSION\""  main.go
 
 FROM golang:1.13.6
