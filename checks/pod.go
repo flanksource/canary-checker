@@ -323,8 +323,8 @@ func (c *PodChecker) httpCheck(podCheck pkg.PodCheck, deadline time.Time) (ingre
 			}
 		}
 
-		if !found && responseCode == http.StatusServiceUnavailable {
-			log.Debugf("[%s] request completed with %d, expected %v, retrying", podCheck, responseCode, podCheck.ExpectedHttpStatuses)
+		if !found && responseCode == http.StatusServiceUnavailable || responseCode == 404 {
+			log.Tracef("[%s] request completed with %d, expected %v, retrying", podCheck, responseCode, podCheck.ExpectedHttpStatuses)
 			time.Sleep(retryInterval)
 			continue
 		} else if !found {
