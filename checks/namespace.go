@@ -86,30 +86,6 @@ func (c *NamespaceChecker) newPod(check pkg.NamespaceCheck, ns *v1.Namespace) (*
 	return pod, nil
 }
 
-func (c *NamespaceChecker) getEventTime(ns *v1.Namespace, pod *v1.Pod, event string) (*metav1.MicroTime, error) {
-	events := c.k8s.CoreV1().Events(ns.Name)
-
-	list, err := events.List(metav1.ListOptions{
-		FieldSelector: "involvedObject.name=" + pod.Name,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, evt := range list.Items {
-		if evt.Reason == event {
-			created := evt.EventTime
-			if created.IsZero() {
-				created = metav1.MicroTime{evt.LastTimestamp.Time}
-			}
-			return &created, nil
-		}
-
-	}
-	return nil, fmt.Errorf("Event not found: %s", event)
-}
-
 func (c *NamespaceChecker) getConditionTimes(ns *v1.Namespace, pod *v1.Pod) (times map[v1.PodConditionType]metav1.Time, err error) {
 	pods := c.k8s.CoreV1().Pods(ns.Name)
 	times = make(map[v1.PodConditionType]metav1.Time)

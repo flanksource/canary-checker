@@ -106,30 +106,6 @@ func (c *PodChecker) newPod(podCheck pkg.PodCheck, nodeName string) (*v1.Pod, er
 	return pod, nil
 }
 
-func (c *PodChecker) getEventTime(podCheck pkg.PodCheck, pod *v1.Pod, event string) (*metav1.MicroTime, error) {
-	events := c.k8s.CoreV1().Events(podCheck.Namespace)
-
-	list, err := events.List(metav1.ListOptions{
-		FieldSelector: "involvedObject.name=" + pod.Name,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, evt := range list.Items {
-		if evt.Reason == event {
-			created := evt.EventTime
-			if created.IsZero() {
-				created = metav1.MicroTime{evt.LastTimestamp.Time}
-			}
-			return &created, nil
-		}
-
-	}
-	return nil, fmt.Errorf("Event not found: %s", event)
-}
-
 func (c *PodChecker) getConditionTimes(podCheck pkg.PodCheck, pod *v1.Pod) (times map[v1.PodConditionType]metav1.Time, err error) {
 	pods := c.k8s.CoreV1().Pods(podCheck.Namespace)
 	times = make(map[v1.PodConditionType]metav1.Time)
@@ -153,7 +129,6 @@ func diff(times map[v1.PodConditionType]metav1.Time, c1 v1.PodConditionType, c2 
 		return t2.Sub(t1.Time).Milliseconds()
 	}
 	return -1
-
 }
 
 func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pkg.CheckResult {
