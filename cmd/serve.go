@@ -135,6 +135,7 @@ type CheckStatus struct {
 	Status  bool     `json:"status"`
 	Invalid bool     `json:"invalid"`
 	Time    JSONTime `json:"time"`
+	Message string   `json:"message"`
 }
 
 type Check struct {
@@ -185,7 +186,14 @@ func (s *State) AddCheck(result *pkg.CheckResult) {
 	check.Duration = int(result.Duration)
 	check.Status = result.Pass
 	check.Invalid = result.Invalid
-	check.Statuses = []CheckStatus{{Status: result.Pass, Invalid: result.Invalid, Time: JSONTime(time.Now())}}
+	check.Statuses = []CheckStatus{
+		{
+			Status:  result.Pass,
+			Invalid: result.Invalid,
+			Time:    JSONTime(time.Now()),
+			Message: result.Message,
+		},
+	}
 
 	key := fmt.Sprintf("%s/%s", check.Type, check.Name)
 	log.Debugf("Set key %s to state", key)

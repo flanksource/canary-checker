@@ -88,8 +88,8 @@
           <td>{{ (check.duration / 1000.00) }}s</td>
           <td>
             <span v-for="checkStatus in check.checkStatuses">
-              <span v-if="checkStatus.status" class="status-pass" v-tooltip:auto.html="checkStatus.time"></span>
-              <span v-else class="status-fail" v-tooltip:auto.html="checkStatus.time"></span>
+              <span v-if="checkStatus.status" class="status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-title="checkStatus.time"></span>
+              <span v-else class="status-fail" v-popover:auto.html="checkStatus.message" v-bind:popover-title="checkStatus.time"></span>
             </span>
           </td>
         </tr>
@@ -115,7 +115,7 @@
           },
           created() {
               this.fetchData()
-              this.timer = setInterval(this.fetchData, 5000) // 20 seconds
+              this.timer = setInterval(this.fetchData, 20000) // 20 seconds
           },
           methods: {
               fetchData() {
@@ -147,8 +147,8 @@
           }
       })
 
-      Vue.directive('tooltip', {
-        bind: function bsTooltipCreate(el, binding) {
+      Vue.directive('popover', {
+        bind: function bsPopoverCreate(el, binding) {
           let trigger = 'hover focus';
           if (binding.modifiers.focus || binding.modifiers.hover || binding.modifiers.click) {
             const t = [];
@@ -157,29 +157,17 @@
             if (binding.modifiers.click) t.push('click');
             trigger = t.join(' ');
           }
-          $(el).tooltip({
-            title: binding.value,
+          console.log(el)
+          $(el).popover({
+            title: $(el).attr("popover-title"),
+            content: binding.value,
             placement: binding.arg,
             trigger: trigger,
             html: binding.modifiers.html
           });
         },
-        update: function bsTooltipUpdate(el, binding) {
-          const $el = $(el);
-          $el.attr('title', binding.value).tooltip('fixTitle');
-
-          const data = $el.data('bs.tooltip');
-          if (binding.modifiers.live) { // update live without flickering (but it doesn't reposition)
-            if (data.$tip) {
-              if (data.options.html) data.$tip.find('.tooltip-inner').html(binding.value);
-              else data.$tip.find('.tooltip-inner').text(binding.value);
-            }
-          } else {
-            if (data.inState.hover || data.inState.focus || data.inState.click) $el.tooltip('show');
-          }
-        },
         unbind(el, binding) {
-          $(el).tooltip('destroy');
+          $(el).popover('dispose');
         },
       });
   </script>
