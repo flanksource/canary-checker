@@ -3,6 +3,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha256-aAr2Zpq8MZ+YA/D6JtRD3xtrwpEz2IqOS+pWD/7XKIw=" crossorigin="anonymous" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js" integrity="sha256-ngFW3UnAN0Tnm76mDuu7uUtYEcG3G5H1+zioJw3t+68=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js" integrity="sha256-Xt8pc4G0CdcRvI0nZ2lRpZ4VHng0EoUDMlGcBSQ9HiQ=" crossorigin="anonymous"></script>
 
   <style>
     body {
@@ -37,6 +38,21 @@
       color: #777;
       font-size: 0.8em;
     }
+
+    span.status-pass {
+      float: left;
+      height: 1em;
+      width: 20px;
+      margin-right: 10px;
+      background-color: green;
+    }
+    span.status-fail {
+      float: left;
+      height: 1em;
+      width: 20px;
+      margin-right: 10px;
+      background-color: red;
+    }
   </style>
 </head>
 <body>
@@ -55,6 +71,7 @@
         <th scope="col">Status</th>
         <th scope="col">Valid</th>
         <th scope="col">Duration</th>
+        <th scope="col">Past runs</th>
       </thead>
       <template v-for="check in checks">
         <tr>
@@ -69,6 +86,12 @@
             <span v-else class="badge badge-success">VALID</span>
           </td>
           <td>{{ (check.duration / 1000.00) }}s</td>
+          <td>
+            <span v-for="checkStatus in check.checkStatuses">
+              <span v-if="checkStatus.status" class="status-pass" v-tooltip:auto.html="checkStatus.time"></span>
+              <span v-else class="status-fail" v-tooltip:auto.html="checkStatus.time"></span>
+            </span>
+          </td>
         </tr>
       </template>
     </table>
@@ -123,6 +146,42 @@
               cancelAutoUpdate () { clearInterval(this.timer) }
           }
       })
+
+      Vue.directive('tooltip', {
+        bind: function bsTooltipCreate(el, binding) {
+          let trigger = 'hover focus';
+          if (binding.modifiers.focus || binding.modifiers.hover || binding.modifiers.click) {
+            const t = [];
+            if (binding.modifiers.focus) t.push('focus');
+            if (binding.modifiers.hover) t.push('hover');
+            if (binding.modifiers.click) t.push('click');
+            trigger = t.join(' ');
+          }
+          $(el).tooltip({
+            title: binding.value,
+            placement: binding.arg,
+            trigger: trigger,
+            html: binding.modifiers.html
+          });
+        },
+        update: function bsTooltipUpdate(el, binding) {
+          const $el = $(el);
+          $el.attr('title', binding.value).tooltip('fixTitle');
+
+          const data = $el.data('bs.tooltip');
+          if (binding.modifiers.live) { // update live without flickering (but it doesn't reposition)
+            if (data.$tip) {
+              if (data.options.html) data.$tip.find('.tooltip-inner').html(binding.value);
+              else data.$tip.find('.tooltip-inner').text(binding.value);
+            }
+          } else {
+            if (data.inState.hover || data.inState.focus || data.inState.click) $el.tooltip('show');
+          }
+        },
+        unbind(el, binding) {
+          $(el).tooltip('destroy');
+        },
+      });
   </script>
 </body>
 </html>
