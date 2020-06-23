@@ -151,7 +151,7 @@ func (c Checks) Len() int {
 	return len(c)
 }
 func (c Checks) Less(i, j int) bool {
-	if c[i].Type == c[j].Name {
+	if c[i].Type == c[j].Type {
 		return c[i].Name < c[j].Name
 	}
 	return c[i].Type < c[j].Type
