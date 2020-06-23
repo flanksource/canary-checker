@@ -98,7 +98,6 @@ func (c *DockerPushChecker) Check(check pkg.DockerPushCheck) *pkg.CheckResult {
 		Pass:     pushSuccess,
 		Duration: elapsed.Milliseconds(),
 		Message:  message,
-		Endpoint: check.Image,
 		Metrics:  []pkg.Metric{},
 	}
 }

@@ -59,107 +59,99 @@ func (c *S3Checker) Type() string {
 
 func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
 	var result []*pkg.CheckResult
-	for _, bucket := range check.Buckets {
+	bucket := check.Bucket
 
-		if _, err := DNSLookup(bucket.Endpoint); err != nil {
-			result = append(result, &pkg.CheckResult{
-				Check:    check,
-				Pass:     false,
-				Message:  fmt.Sprintf("Failed to resolve DNS for %s", bucket.Endpoint),
-				Endpoint: bucket.Endpoint,
-			})
-			continue
-		}
-
-		cfg := aws.NewConfig().
-			WithRegion(bucket.Region).
-			WithEndpoint(bucket.Endpoint).
-			WithCredentials(
-				credentials.NewStaticCredentials(check.AccessKey, check.SecretKey, ""),
-			)
-		if check.SkipTLSVerify {
-			tr := &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			}
-			cfg = cfg.WithHTTPClient(&http.Client{Transport: tr})
-		}
-		ssn, err := session.NewSession(cfg)
-		if err != nil {
-			result = append(result, &pkg.CheckResult{
-				Check:    check,
-				Pass:     false,
-				Message:  fmt.Sprintf("Failed to create S3 session for %s: %v", bucket.Name, err),
-				Endpoint: bucket.Name,
-			})
-			continue
-		}
-		client := s3.New(ssn)
-		yes := true
-		client.Config.S3ForcePathStyle = &yes
-
-		listTimer := NewTimer()
-		_, err = client.ListObjects(&s3.ListObjectsInput{Bucket: &bucket.Name})
-		if err != nil {
-			result = append(result, &pkg.CheckResult{
-				Pass:     false,
-				Message:  fmt.Sprintf("Failed to list objects in bucket %s: %v", bucket.Name, err),
-				Endpoint: bucket.Name,
-			})
-			continue
-		}
-		listHistogram.WithLabelValues(bucket.Endpoint, bucket.Name).Observe(listTimer.Elapsed())
-
-		data := utils.RandomString(16)
-		updateTimer := NewTimer()
-		_, err = client.PutObject(&s3.PutObjectInput{
-			Bucket: &bucket.Name,
-			Key:    &check.ObjectPath,
-			Body:   bytes.NewReader([]byte(data)),
+	if _, err := DNSLookup(bucket.Endpoint); err != nil {
+		result = append(result, &pkg.CheckResult{
+			Check:   check,
+			Pass:    false,
+			Message: fmt.Sprintf("Failed to resolve DNS for %s", bucket.Endpoint),
 		})
-		if err != nil {
-			result = append(result, &pkg.CheckResult{
-				Pass:     false,
-				Message:  fmt.Sprintf("Failed to put object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err),
-				Endpoint: bucket.Name,
-			})
-			continue
-		}
-		updateHistogram.WithLabelValues(bucket.Endpoint, bucket.Name).Observe(updateTimer.Elapsed())
-
-		timer := NewTimer()
-		obj, err := client.GetObject(&s3.GetObjectInput{
-			Bucket: &bucket.Name,
-			Key:    &check.ObjectPath,
-		})
-
-		if err != nil {
-			result = append(result, &pkg.CheckResult{
-				Check:    check,
-				Pass:     false,
-				Message:  fmt.Sprintf("Failed to get object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err),
-				Endpoint: bucket.Name,
-			})
-			continue
-		}
-		returnedData, _ := ioutil.ReadAll(obj.Body)
-		if string(returnedData) != data {
-			result = append(result, &pkg.CheckResult{
-				Check:    check,
-				Pass:     false,
-				Message:  fmt.Sprintf("Get object doesn't match %s != %s", data, string(returnedData)),
-				Endpoint: bucket.Name,
-			})
-			continue
-		}
-
-		checkResult := &pkg.CheckResult{
-			Check:    check,
-			Pass:     true,
-			Invalid:  false,
-			Duration: int64(timer.Elapsed()),
-			Endpoint: bucket.Endpoint,
-		}
-		result = append(result, checkResult)
+		return result
 	}
+
+	cfg := aws.NewConfig().
+		WithRegion(bucket.Region).
+		WithEndpoint(bucket.Endpoint).
+		WithCredentials(
+			credentials.NewStaticCredentials(check.AccessKey, check.SecretKey, ""),
+		)
+	if check.SkipTLSVerify {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		cfg = cfg.WithHTTPClient(&http.Client{Transport: tr})
+	}
+	ssn, err := session.NewSession(cfg)
+	if err != nil {
+		result = append(result, &pkg.CheckResult{
+			Check:   check,
+			Pass:    false,
+			Message: fmt.Sprintf("Failed to create S3 session for %s: %v", bucket.Name, err),
+		})
+		return result
+	}
+	client := s3.New(ssn)
+	yes := true
+	client.Config.S3ForcePathStyle = &yes
+
+	listTimer := NewTimer()
+	_, err = client.ListObjects(&s3.ListObjectsInput{Bucket: &bucket.Name})
+	if err != nil {
+		result = append(result, &pkg.CheckResult{
+			Pass:    false,
+			Message: fmt.Sprintf("Failed to list objects in bucket %s: %v", bucket.Name, err),
+		})
+		return result
+	}
+	listHistogram.WithLabelValues(bucket.Endpoint, bucket.Name).Observe(listTimer.Elapsed())
+
+	data := utils.RandomString(16)
+	updateTimer := NewTimer()
+	_, err = client.PutObject(&s3.PutObjectInput{
+		Bucket: &bucket.Name,
+		Key:    &check.ObjectPath,
+		Body:   bytes.NewReader([]byte(data)),
+	})
+	if err != nil {
+		result = append(result, &pkg.CheckResult{
+			Pass:    false,
+			Message: fmt.Sprintf("Failed to put object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err),
+		})
+		return result
+	}
+	updateHistogram.WithLabelValues(bucket.Endpoint, bucket.Name).Observe(updateTimer.Elapsed())
+
+	timer := NewTimer()
+	obj, err := client.GetObject(&s3.GetObjectInput{
+		Bucket: &bucket.Name,
+		Key:    &check.ObjectPath,
+	})
+
+	if err != nil {
+		result = append(result, &pkg.CheckResult{
+			Check:   check,
+			Pass:    false,
+			Message: fmt.Sprintf("Failed to get object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err),
+		})
+		return result
+	}
+	returnedData, _ := ioutil.ReadAll(obj.Body)
+	if string(returnedData) != data {
+		result = append(result, &pkg.CheckResult{
+			Check:   check,
+			Pass:    false,
+			Message: fmt.Sprintf("Get object doesn't match %s != %s", data, string(returnedData)),
+		})
+		return result
+	}
+
+	checkResult := &pkg.CheckResult{
+		Check:    check,
+		Pass:     true,
+		Invalid:  false,
+		Duration: int64(timer.Elapsed()),
+	}
+	result = append(result, checkResult)
 	return result
 }

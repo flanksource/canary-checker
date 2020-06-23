@@ -201,7 +201,6 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pk
 		Check:    podCheck,
 		Pass:     ingressResult.Pass && deleteOk,
 		Duration: int64(startTimer.Elapsed()),
-		Endpoint: c.podEndpoint(podCheck),
 		Message:  ingressResult.Message,
 		Metrics: []pkg.Metric{
 			{
@@ -450,10 +449,6 @@ func (c *PodChecker) findPort(pod *v1.Pod) (int32, error) {
 		}
 	}
 	return 0, perrors.Errorf("Failed to find any port for pod %s", pod.Name)
-}
-
-func (c *PodChecker) podEndpoint(podCheck pkg.PodCheck) string {
-	return fmt.Sprintf("pod/%s", podCheck.Name)
 }
 
 func (c *PodChecker) podCheckSelectorValue(podCheck pkg.PodCheck) string {

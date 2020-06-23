@@ -53,7 +53,6 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 			Check:    config,
 			Invalid:  true,
 			Duration: 0,
-			Endpoint: config.Chartmuseum,
 			Message:  fmt.Sprintf("Failed to create test chart: %v", err),
 			Metrics:  getHelmMetrics(config, false),
 		}
@@ -66,7 +65,6 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 			Pass:     false,
 			Invalid:  true,
 			Duration: 0,
-			Endpoint: config.Chartmuseum,
 			Message:  fmt.Sprintf("Failed to check: %v", err),
 			Metrics:  getHelmMetrics(config, false),
 		}
@@ -81,7 +79,6 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 			Pass:     false,
 			Invalid:  false,
 			Duration: 0,
-			Endpoint: config.Chartmuseum,
 			Message:  "Failed to push test chart",
 			Metrics:  getHelmMetrics(config, false),
 		}
@@ -93,7 +90,6 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 			Pass:     false,
 			Invalid:  true,
 			Duration: 0,
-			Endpoint: config.Chartmuseum,
 			Message:  fmt.Sprintf("Failed to get user: %v", err),
 			Metrics:  getHelmMetrics(config, false),
 		}
@@ -118,7 +114,6 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 			Pass:     false,
 			Invalid:  true,
 			Duration: 0,
-			Endpoint: config.Chartmuseum,
 			Message:  fmt.Sprintf("Failed to parse chartmuseum url: %v", err),
 			Metrics:  getHelmMetrics(config, false),
 		}
@@ -133,7 +128,6 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 			Pass:     false,
 			Invalid:  false,
 			Duration: 0,
-			Endpoint: config.Chartmuseum,
 			Message:  "Failed to pull test chart",
 			Metrics:  getHelmMetrics(config, false),
 		}
@@ -150,7 +144,6 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 		Pass:     uploadOK && downloadOK,
 		Invalid:  false,
 		Duration: elapsed.Milliseconds(),
-		Endpoint: config.Chartmuseum,
 		Message:  "Successful push and pull",
 		Metrics:  getHelmMetrics(config, uploadOK && downloadOK),
 	}

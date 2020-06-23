@@ -119,7 +119,6 @@ func (c *DockerPullChecker) Check(check pkg.DockerPullCheck) *pkg.CheckResult {
 		Pass:     digestVerified && sizeVerified,
 		Invalid:  !(digestVerified && sizeVerified),
 		Duration: elapsed.Milliseconds(),
-		Endpoint: check.Image,
 		Metrics:  m,
 	}
 }

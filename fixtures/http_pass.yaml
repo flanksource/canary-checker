@@ -1,6 +1,5 @@
 http:
-  - endpoints:
-      - https://httpstat.us/200
+  - endpoint: https://httpstat.us/200
     thresholdMillis: 3000
     responseCodes: [201,200,301]
     responseContent: ""

@@ -1,6 +1,8 @@
 package checks
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -44,45 +46,54 @@ func (c *IcmpChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 // Returns check result and metrics
 func (c *IcmpChecker) Check(check pkg.ICMPCheck) []*pkg.CheckResult {
 	var result []*pkg.CheckResult
-	for _, endpoint := range check.Endpoints {
-		timeOK, packetOK := false, false
-		lookupResult, err := DNSLookup(endpoint)
-		if err != nil {
-			result = append(result, invalidErrorf(pkg.Endpoint{String: endpoint}, err, "unable to resolve dns")...)
-			continue
-		}
-		for _, urlObj := range lookupResult {
-			checkResults, err := c.checkICMP(urlObj, check.PacketCount)
-			if err == nil {
-				if check.ThresholdMillis >= checkResults.Latency {
-					timeOK = true
-				}
-				if check.PacketLossThreshold >= checkResults.PacketLoss {
-					packetOK = true
-				}
-				pass := timeOK && packetOK
-
-				checkResult := &pkg.CheckResult{
-					Check:    check,
-					Pass:     pass,
-					Invalid:  false,
-					Duration: int64(checkResults.Latency),
-					Endpoint: endpoint,
-				}
-				result = append(result, checkResult)
-
-				packetLoss.WithLabelValues(endpoint, urlObj.IP).Set(float64(checkResults.PacketLoss))
-
-			} else {
-				checkResult := &pkg.CheckResult{
-					Check:    check,
-					Pass:     false,
-					Invalid:  true,
-					Endpoint: endpoint,
-					Duration: int64(checkResults.Latency),
-				}
-				result = append(result, checkResult)
+	endpoint := check.Endpoint
+	timeOK, packetOK := false, false
+	lookupResult, err := DNSLookup(endpoint)
+	if err != nil {
+		result = append(result, invalidErrorf(check, err, "unable to resolve dns")...)
+		return result
+	}
+	for _, urlObj := range lookupResult {
+		checkResults, err := c.checkICMP(urlObj, check.PacketCount)
+		if err == nil {
+			if check.ThresholdMillis >= checkResults.Latency {
+				timeOK = true
 			}
+			if check.PacketLossThreshold >= checkResults.PacketLoss {
+				packetOK = true
+			}
+			msg := []string{}
+			if !timeOK {
+				msg = append(msg, "DNS Timeout")
+			}
+			if !packetOK {
+				msg = append(msg, "Packet Invalid")
+			}
+			pass := timeOK && packetOK
+			if pass {
+				msg = append(msg, "Succesffully checked")
+			}
+
+			checkResult := &pkg.CheckResult{
+				Check:    check,
+				Pass:     pass,
+				Invalid:  false,
+				Duration: int64(checkResults.Latency),
+				Message:  strings.Join(msg, ", "),
+			}
+			result = append(result, checkResult)
+
+			packetLoss.WithLabelValues(endpoint, urlObj.IP).Set(float64(checkResults.PacketLoss))
+
+		} else {
+			checkResult := &pkg.CheckResult{
+				Check:    check,
+				Pass:     false,
+				Invalid:  true,
+				Duration: int64(checkResults.Latency),
+				Message:  fmt.Sprintf("Failed to check icmp: %v", err),
+			}
+			result = append(result, checkResult)
 		}
 	}
 	return result
