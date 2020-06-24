@@ -96,6 +96,8 @@ func (c *PodChecker) newPod(podCheck pkg.PodCheck, nodeName string) (*v1.Pod, er
 		return nil, fmt.Errorf("Failed to unmarshall pod spec: %v", err)
 	}
 
+	var podPriority int32 = -1
+
 	pod.Name = c.ng.PodName(pod.Name + "-")
 	pod.Labels[podLabelSelector] = pod.Name
 	pod.Labels[podCheckSelector] = c.podCheckSelectorValue(podCheck)
@@ -103,6 +105,7 @@ func (c *PodChecker) newPod(podCheck pkg.PodCheck, nodeName string) (*v1.Pod, er
 	pod.Spec.NodeSelector = map[string]string{
 		"kubernetes.io/hostname": nodeName,
 	}
+	pod.Spec.Priority = &podPriority
 	return pod, nil
 }
 

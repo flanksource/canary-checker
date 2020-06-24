@@ -78,11 +78,14 @@ func (c *NamespaceChecker) newPod(check pkg.NamespaceCheck, ns *v1.Namespace) (*
 		return nil, fmt.Errorf("Failed to unmarshall pod spec: %v", err)
 	}
 
+	var podPriority int32 = -1
+
 	pod.Name = "canary-check-pod"
 	pod.Namespace = ns.Name
 	pod.Labels[podLabelSelector] = pod.Name
 	pod.Labels[podCheckSelector] = c.podCheckSelectorValue(check, ns)
 	pod.Labels[podGeneralSelector] = "true"
+	pod.Spec.Priority = &podPriority
 	return pod, nil
 }
 
