@@ -90,28 +90,16 @@
       <thead>
         <th scope="col">Type</th>
         <th scope="col">Name</th>
-        <th scope="col">Status</th>
-        <th scope="col">Valid</th>
-        <th scope="col">Duration</th>
-        <th scope="col">Past runs</th>
+        <th v-for="serverName in servers" scope="col">{{ serverName }}</th>
       </thead>
       <template v-for="check in checks">
         <tr>
           <td scope="row">{{ check.type }}</td>
           <td>{{ check.name }}</td>
-          <td>
-            <span v-if="check.status" class="badge badge-success">PASS</span>
-            <span v-else class="badge badge-danger">FAIL</span>
-          </td>
-          <td>
-            <span v-if="check.invalid" class="badge badge-danger">INVALID</span>
-            <span v-else class="badge badge-success">VALID</span>
-          </td>
-          <td>{{ (check.duration / 1000.00) }}s</td>
-          <td>
-            <div v-for="checkStatus in check.checkStatuses" class="check-status-container">
-              <div v-if="checkStatus.status" class="check-status check-status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-title="checkStatus.time"></div>
-              <div v-else class="check-status check-status-fail" v-popover:auto.html="checkStatus.message" v-bind:popover-title="checkStatus.time"></div>
+          <td v-for="serverName in servers">
+            <div v-for="checkStatus in check.checkStatuses[serverName]" class="check-status-container">
+              <div v-if="checkStatus.status" class="check-status check-status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration"  v-bind:popover-title="checkStatus.time"></div>
+              <div v-else class="check-status check-status-fail" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration" v-bind:popover-title="checkStatus.time"></div>
             </div>
           </td>
         </tr>
@@ -132,6 +120,7 @@
                 error: "",
                 loading: true,
                 checks: [],
+                servers: [],
                 lastRefreshed: false,
                 disableReload: false,
             }
@@ -149,11 +138,14 @@
                   $.ajax({
                       contentType: "application/json",
                       dataType: "json",
-                      url: "/api",
+                      url: "/api/aggregate",
                       method: "Get",
                       success: response => {
                           this.loading = false
-                          this.checks = response
+                          this.checks = response.checks
+                          this.servers = response.servers
+                          console.log(this.checks)
+                          console.log(this.servers)
                           this.lastRefreshed = new Date()
                       },
                       error: err => {
@@ -193,10 +185,13 @@
           let dateTime = new Date($(el).attr("popover-title") + " UTC");
           let t = new timeago()
           let title = t.simple(date.format(dateTime, 'YYYY-MM-DD HH:mm:ss', false), 'en_US')
+          let duration = $(el).attr("popover-duration")
+
+          let content = `${binding.value} <div class="duration">Duration: ${duration / 1000}s</div>`
 
           $(el).popover({
             title: title,
-            content: binding.value,
+            content: content,
             placement: binding.arg,
             trigger: trigger,
             html: binding.modifiers.html

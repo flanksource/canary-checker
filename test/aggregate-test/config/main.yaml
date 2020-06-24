@@ -1,0 +1,51 @@
+dns:
+ - server: 8.8.8.8
+   port: 53
+   query: "flanksource.com"
+   querytype: "A"
+   minrecords: 1
+   exactreply: ["8.8.8.8"]
+   timeout: 10
+ - server: 8.8.8.8
+   port: 53
+   query: "1.2.3.4.nip.io"
+   querytype: "A"
+   minrecords: 1
+   exactreply: ["1.2.3.4"]
+   timeout: 10
+# docker:
+#  - image: docker.io/library/busybox:1.31.1
+#    username:
+#    password:
+#    expectedDigest: 6915be4043561d64e0ab0f8f098dc2ac48e077fe23f488ac24b665166898115a
+#    expectedSize: 1219782
+#  - image: docker.io/library/busybox:random
+#    username:
+#    password:
+#    expectedDigest: abcdef123
+#    expectedSize: 200
+http:
+ - endpoint: https://httpstat.us/200
+   thresholdMillis: 3000
+   responseCodes: [201,200,301]
+   responseContent: ""
+   maxSSLExpiry: 7
+ - endpoint: https://ttpstat.us/500
+   thresholdMillis: 3000
+   responseCodes: [201,200,301]
+   responseContent: ""
+   maxSSLExpiry: 60
+   endpoint: https://httpstat.us/500
+   thresholdMillis: 3000
+   responseCodes: [201,200,301]
+   responseContent: ""
+   maxSSLExpiry: 60
+icmp:
+ - endpoint: https://github.com
+   thresholdMillis: 400
+   packetLossThreshold: 0.5
+   packetCount: 2
+ - endpoint: https://google.com
+   thresholdMillis: 600
+   packetLossThreshold: 0.01
+   packetCount: 2
