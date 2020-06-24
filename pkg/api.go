@@ -306,6 +306,7 @@ type PodCheck struct {
 	IngressHost          string `yaml:"ingressHost"`
 	ExpectedContent      string `yaml:"expectedContent"`
 	ExpectedHttpStatuses []int  `yaml:"expectedHttpStatuses"`
+	PriorityClass        string `yaml:"priorityClass"`
 }
 
 func (c PodCheck) GetDescription() string {
@@ -362,6 +363,7 @@ type NamespaceCheck struct {
 	IngressHost          string            `yaml:"ingressHost"`
 	ExpectedContent      string            `yaml:"expectedContent"`
 	ExpectedHttpStatuses []int             `yaml:"expectedHttpStatuses"`
+	PriorityClass        string            `yaml:"priorityClass"`
 }
 
 func (c NamespaceCheck) GetDescription() string {

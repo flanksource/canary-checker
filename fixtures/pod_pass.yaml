@@ -26,6 +26,7 @@ pod:
     httpRetryInterval: 200
     expectedContent: bar
     expectedHttpStatuses: [200, 201, 202]
+    priorityClass: canary
   - name: ruby
     namespace: platform-system
     spec: |
@@ -54,3 +55,4 @@ pod:
     httpRetryInterval: 200
     expectedContent: hello, you've hit /foo/bar
     expectedHttpStatuses: [200, 201, 202]
+    priorityClass: canary
