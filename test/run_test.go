@@ -19,152 +19,149 @@ type test struct {
 }
 
 func TestRunChecks(t *testing.T) {
+	httpPassConfig := pkg.ParseConfig("../fixtures/http_pass.yaml")
+	httpFailConfig := pkg.ParseConfig("../fixtures/http_fail.yaml")
+	postgresFailConfig := pkg.ParseConfig("../fixtures/postgres_fail.yaml")
+	dnsFailConfig := pkg.ParseConfig("../fixtures/dns_fail.yaml")
+	dnsPassConfig := pkg.ParseConfig("../fixtures/dns_pass.yaml")
+
 	tests := []test{
 		{
 			name: "http_pass",
-			args: args{
-				pkg.ParseConfig("../fixtures/http_pass.yaml"),
-			},
+			args: args{httpPassConfig},
 			want: []pkg.CheckResult{
 				{
-					Pass:     true,
-					Invalid:  false,
-					Endpoint: "https://httpstat.us/200",
-					Metrics:  []pkg.Metric{},
+					Check:   httpPassConfig.HTTP[0].HTTPCheck,
+					Pass:    true,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
 				},
 			},
 		},
 		{
 			name: "http_fail",
-			args: args{
-				pkg.ParseConfig("../fixtures/http_fail.yaml"),
-			},
+			args: args{httpFailConfig},
 			want: []pkg.CheckResult{
 				{
-					Pass:     false,
-					Invalid:  true,
-					Endpoint: "https://ttpstat.us/500",
-					Metrics:  []pkg.Metric{},
+					Check:   httpFailConfig.HTTP[0].HTTPCheck,
+					Pass:    false,
+					Invalid: true,
+					Metrics: []pkg.Metric{},
+					Message: "Failed to resolve DNS",
 				},
 				{
-					Pass:     false,
-					Invalid:  false,
-					Endpoint: "https://httpstat.us/500",
-					Metrics:  []pkg.Metric{},
+					Check:   httpFailConfig.HTTP[1].HTTPCheck,
+					Pass:    false,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
 				},
 			},
 		},
 		{
 			name: "postgres_fail",
-			args: args{
-				pkg.ParseConfig("../fixtures/postgres_fail.yaml"),
-			},
+			args: args{postgresFailConfig},
 			want: []pkg.CheckResult{
 				{
-					Pass:     false,
-					Invalid:  false,
-					Endpoint: "user=pqgotest dbname=pqgotest sslmode=verify-full",
-					Metrics:  []pkg.Metric{},
+					Check:   postgresFailConfig.Postgres[0].PostgresCheck,
+					Pass:    false,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
 				},
 			},
 		},
 		{
 			name: "dns_fail",
-			args: args{
-				pkg.ParseConfig("../fixtures/dns_fail.yaml"),
-			},
+			args: args{dnsFailConfig},
 			want: []pkg.CheckResult{
 				{
-					Pass:     false,
-					Invalid:  false,
-					Endpoint: "A/1.2.3.4.nip.io",
-					Metrics:  []pkg.Metric{},
-					Message:  "Check failed: A 1.2.3.4.nip.io on 8.8.8.8. Got [1.2.3.4], expected [8.8.8.8]",
+					Check:   dnsFailConfig.DNS[0].DNSCheck,
+					Pass:    false,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
+					Message: "Check failed: A 1.2.3.4.nip.io on 8.8.8.8. Got [1.2.3.4], expected [8.8.8.8]",
 				},
 				{
-					Pass:     false,
-					Invalid:  false,
-					Endpoint: "PTR/8.8.8.8",
-					Metrics:  []pkg.Metric{},
-					Message:  "Check failed: PTR 8.8.8.8 on 8.8.8.8. Records count is less then minrecords",
+					Check:   dnsFailConfig.DNS[1].DNSCheck,
+					Pass:    false,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
+					Message: "Check failed: PTR 8.8.8.8 on 8.8.8.8. Records count is less then minrecords",
 				},
 				{
-					Pass:     false,
-					Invalid:  false,
-					Endpoint: "CNAME/dns.google",
-					Metrics:  []pkg.Metric{},
-					Message:  "Check failed: CNAME dns.google on 8.8.8.8. Got [dns.google.], expected [wrong.google.]",
+					Check:   dnsFailConfig.DNS[2].DNSCheck,
+					Pass:    false,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
+					Message: "Check failed: CNAME dns.google on 8.8.8.8. Got [dns.google.], expected [wrong.google.]",
 				},
 				{
-					Pass:     false,
-					Invalid:  false,
-					Endpoint: "MX/flanksource.com",
-					Metrics:  []pkg.Metric{},
-					Message:  "Check failed: MX flanksource.com on 8.8.8.8. Got [alt1.aspmx.l.google.com. 5 alt2.aspmx.l.google.com. 5 aspmx.l.google.com. 1 aspmx2.googlemail.com. 10 aspmx3.googlemail.com. 10], expected [alt1.aspmx.l.google.com. 5 alt2.aspmx.l.google.com. 5 aspmx.l.google.com. 1]",
+					Check:   dnsFailConfig.DNS[3].DNSCheck,
+					Pass:    false,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
+					Message: "Check failed: MX flanksource.com on 8.8.8.8. Got [alt1.aspmx.l.google.com. 5 alt2.aspmx.l.google.com. 5 aspmx.l.google.com. 1 aspmx2.googlemail.com. 10 aspmx3.googlemail.com. 10], expected [alt1.aspmx.l.google.com. 5 alt2.aspmx.l.google.com. 5 aspmx.l.google.com. 1]",
 				},
 				{
-					Pass:     false,
-					Invalid:  false,
-					Endpoint: "TXT/flanksource.com",
-					Metrics:  []pkg.Metric{},
-					Message:  "Check failed: TXT flanksource.com on 8.8.8.8. Records count is less then minrecords",
+					Check:   dnsFailConfig.DNS[4].DNSCheck,
+					Pass:    false,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
+					Message: "Check failed: TXT flanksource.com on 8.8.8.8. Records count is less then minrecords",
 				},
 				{
-					Pass:     false,
-					Invalid:  false,
-					Endpoint: "NS/flanksource.com",
-					Metrics:  []pkg.Metric{},
-					Message:  "Check failed: NS flanksource.com on 8.8.8.8. Got [ns-1450.awsdns-53.org. ns-1896.awsdns-45.co.uk. ns-908.awsdns-49.net. ns-91.awsdns-11.com.], expected [ns-91.awsdns-11.com.]",
+					Check:   dnsFailConfig.DNS[5].DNSCheck,
+					Pass:    false,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
+					Message: "Check failed: NS flanksource.com on 8.8.8.8. Got [ns-1450.awsdns-53.org. ns-1896.awsdns-45.co.uk. ns-908.awsdns-49.net. ns-91.awsdns-11.com.], expected [ns-91.awsdns-11.com.]",
 				},
 			},
 		},
 		{
 			name: "dns_pass",
-			args: args{
-				pkg.ParseConfig("../fixtures/dns_pass.yaml"),
-			},
+			args: args{dnsPassConfig},
 			want: []pkg.CheckResult{
 				{
-					Pass:     true,
-					Invalid:  false,
-					Endpoint: "A/1.2.3.4.nip.io",
-					Metrics:  []pkg.Metric{},
-					Message:  "Successful check on 8.8.8.8. Got [1.2.3.4]",
+					Check:   dnsPassConfig.DNS[0].DNSCheck,
+					Pass:    true,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
+					Message: "Successful check on 8.8.8.8. Got [1.2.3.4]",
 				},
 				{
-					Pass:     true,
-					Invalid:  false,
-					Endpoint: "PTR/8.8.8.8",
-					Metrics:  []pkg.Metric{},
-					Message:  "Successful check on 8.8.8.8. Got [dns.google.]",
+					Check:   dnsPassConfig.DNS[1].DNSCheck,
+					Pass:    true,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
+					Message: "Successful check on 8.8.8.8. Got [dns.google.]",
 				},
 				{
-					Pass:     true,
-					Invalid:  false,
-					Endpoint: "CNAME/dns.google",
-					Metrics:  []pkg.Metric{},
-					Message:  "Successful check on 8.8.8.8. Got [dns.google.]",
+					Check:   dnsPassConfig.DNS[2].DNSCheck,
+					Pass:    true,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
+					Message: "Successful check on 8.8.8.8. Got [dns.google.]",
 				},
 				{
-					Pass:     true,
-					Invalid:  false,
-					Endpoint: "MX/flanksource.com",
-					Metrics:  []pkg.Metric{},
-					Message:  "Successful check on 8.8.8.8. Got [alt1.aspmx.l.google.com. 5 alt2.aspmx.l.google.com. 5 aspmx.l.google.com. 1 aspmx2.googlemail.com. 10 aspmx3.googlemail.com. 10]",
+					Check:   dnsPassConfig.DNS[3].DNSCheck,
+					Pass:    true,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
+					Message: "Successful check on 8.8.8.8. Got [alt1.aspmx.l.google.com. 5 alt2.aspmx.l.google.com. 5 aspmx.l.google.com. 1 aspmx2.googlemail.com. 10 aspmx3.googlemail.com. 10]",
 				},
 				{
-					Pass:     true,
-					Invalid:  false,
-					Endpoint: "TXT/flanksource.com",
-					Metrics:  []pkg.Metric{},
-					Message:  "Successful check on 8.8.8.8. Got [google-site-verification=IIE1aJuvqseLUKSXSIhu2O2lgdU_d8csfJjjIQVc-q0]",
+					Check:   dnsPassConfig.DNS[4].DNSCheck,
+					Pass:    true,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
+					Message: "Successful check on 8.8.8.8. Got [google-site-verification=IIE1aJuvqseLUKSXSIhu2O2lgdU_d8csfJjjIQVc-q0]",
 				},
 				{
-					Pass:     true,
-					Invalid:  false,
-					Endpoint: "NS/flanksource.com",
-					Metrics:  []pkg.Metric{},
-					Message:  "Successful check on 8.8.8.8. Got [ns-1450.awsdns-53.org. ns-1896.awsdns-45.co.uk. ns-908.awsdns-49.net. ns-91.awsdns-11.com.]",
+					Check:   dnsPassConfig.DNS[5].DNSCheck,
+					Pass:    true,
+					Invalid: false,
+					Metrics: []pkg.Metric{},
+					Message: "Successful check on 8.8.8.8. Got [ns-1450.awsdns-53.org. ns-1896.awsdns-45.co.uk. ns-908.awsdns-49.net. ns-91.awsdns-11.com.]",
 				},
 			},
 		},
@@ -228,7 +225,6 @@ func runTests(t *testing.T, tests []test) {
 					/* Not checking durations we don't want equality*/
 					if res.Invalid != tt.want[i].Invalid ||
 						res.Pass != tt.want[i].Pass ||
-						(tt.want[i].Endpoint != "" && res.Endpoint != tt.want[i].Endpoint) ||
 						(tt.want[i].Message != "" && res.Message != tt.want[i].Message) {
 						t.Errorf("Test %s failed. Expected result is %v, but found %v", tt.name, tt.want, res)
 					}
