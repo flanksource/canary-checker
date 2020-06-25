@@ -86,30 +86,6 @@ func (c *NamespaceChecker) newPod(check pkg.NamespaceCheck, ns *v1.Namespace) (*
 	return pod, nil
 }
 
-func (c *NamespaceChecker) getEventTime(ns *v1.Namespace, pod *v1.Pod, event string) (*metav1.MicroTime, error) {
-	events := c.k8s.CoreV1().Events(ns.Name)
-
-	list, err := events.List(metav1.ListOptions{
-		FieldSelector: "involvedObject.name=" + pod.Name,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, evt := range list.Items {
-		if evt.Reason == event {
-			created := evt.EventTime
-			if created.IsZero() {
-				created = metav1.MicroTime{evt.LastTimestamp.Time}
-			}
-			return &created, nil
-		}
-
-	}
-	return nil, fmt.Errorf("Event not found: %s", event)
-}
-
 func (c *NamespaceChecker) getConditionTimes(ns *v1.Namespace, pod *v1.Pod) (times map[v1.PodConditionType]metav1.Time, err error) {
 	pods := c.k8s.CoreV1().Pods(ns.Name)
 	times = make(map[v1.PodConditionType]metav1.Time)
@@ -202,7 +178,6 @@ func (c *NamespaceChecker) Check(check pkg.NamespaceCheck, checkDeadline time.Ti
 		Check:    check,
 		Pass:     ingressResult.Pass && deleteOk,
 		Duration: int64(startTimer.Elapsed()),
-		Endpoint: c.podEndpoint(check),
 		Message:  ingressResult.Message,
 		Metrics: []pkg.Metric{
 			{
@@ -426,10 +401,6 @@ func (c *NamespaceChecker) getHttp(url string, timeout int64, deadline time.Time
 		return "", 0, perrors.Wrapf(err, "failed to read body for url %s", url)
 	}
 	return string(respBytes), resp.StatusCode, nil
-}
-
-func (c *NamespaceChecker) podEndpoint(check pkg.NamespaceCheck) string {
-	return fmt.Sprintf("namespace/%s", check.CheckName)
 }
 
 func (c *NamespaceChecker) podCheckSelectorValue(check pkg.NamespaceCheck, ns *v1.Namespace) string {

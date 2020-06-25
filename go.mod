@@ -9,8 +9,8 @@ require (
 	github.com/docker/docker v1.13.1
 	github.com/flanksource/commons v1.0.2
 	github.com/flanksource/yaml v0.0.0-20200322131016-b7b2608b8702
+	github.com/go-co-op/gocron v0.2.0
 	github.com/go-ldap/ldap/v3 v3.1.7
-	github.com/jasonlvhit/gocron v0.0.0-20191228163020-98b59b546dee
 	github.com/lib/pq v1.3.0
 	github.com/ncw/swift v1.0.50
 	github.com/pkg/errors v0.9.1
@@ -18,7 +18,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/spf13/cobra v0.0.5
-	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
+	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	helm.sh/helm/v3 v3.1.2
 	k8s.io/api v0.17.3

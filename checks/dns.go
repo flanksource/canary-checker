@@ -54,7 +54,6 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
-			Endpoint: fmt.Sprintf("A/%s", check.Query),
 			Message:  message,
 			Metrics:  getDNSMetrics(check, elapsed, result),
 		}
@@ -74,7 +73,6 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
-			Endpoint: fmt.Sprintf("PTR/%s", check.Query),
 			Message:  message,
 			Metrics:  getDNSMetrics(check, elapsed, result),
 		}
@@ -94,7 +92,6 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
-			Endpoint: fmt.Sprintf("CNAME/%s", check.Query),
 			Message:  message,
 			Metrics:  getDNSMetrics(check, elapsed, []string{result}),
 		}
@@ -132,7 +129,6 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
 			Check:    check,
-			Endpoint: fmt.Sprintf("MX/%s", check.Query),
 			Message:  message,
 			Metrics:  getDNSMetrics(check, elapsed, resultString),
 		}
@@ -151,7 +147,6 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
-			Endpoint: fmt.Sprintf("TXT/%s", check.Query),
 			Message:  message,
 			Metrics:  getDNSMetrics(check, elapsed, result),
 		}
@@ -159,11 +154,17 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 
 	if check.QueryType == "NS" {
 		result, err := r.LookupNS(ctx, check.Query)
+		elapsed := time.Since(start)
 		if err != nil {
 			log.Errorf("Failed to lookup: %v", err)
-			return &pkg.CheckResult{}
+			return &pkg.CheckResult{
+				Check:    check,
+				Pass:     false,
+				Invalid:  false,
+				Duration: elapsed.Milliseconds(),
+				Message:  err.Error(),
+			}
 		}
-		elapsed := time.Since(start)
 		var resultString []string
 		for _, reply := range result {
 			resultString = append(resultString, reply.Host)
@@ -174,7 +175,6 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Pass:     pass,
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
-			Endpoint: fmt.Sprintf("NS/%s", check.Query),
 			Message:  message,
 			Metrics:  getDNSMetrics(check, elapsed, resultString),
 		}

@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/flanksource/commons/console"
@@ -54,26 +55,31 @@ type URL struct {
 	Path   string
 }
 
+type GenericCheck interface {
+	Endpointer
+	Describable
+	WithType
+}
+
 type CheckResult struct {
 	Pass        bool
 	Invalid     bool
 	Duration    int64
-	Endpoint    string
 	Description string
 	Message     string
 	Metrics     []Metric
 	// Check is the configuration
-	Check interface{}
+	Check GenericCheck
 }
 
 func (c CheckResult) String() string {
 	if c.Pass {
-		return fmt.Sprintf("[%s] %s duration=%d %s %s", console.Greenf("PASS"), c.Endpoint, c.Duration, c.Metrics, c.Message)
+		return fmt.Sprintf("[%s] <%s> [%s] %s duration=%d %s %s", console.Greenf("PASS"), console.Greenf("VALID"), c.Check.GetType(), c.Check.GetEndpoint(), c.Duration, c.Metrics, c.Message)
 	} else {
 		if c.Invalid {
-			return fmt.Sprintf("[%s] <%s> %s duration=%d %s %s", console.Redf("FAIL"), console.Redf("INVALID"), c.Endpoint, c.Duration, c.Metrics, c.Message)
+			return fmt.Sprintf("[%s] <%s> [%s] %s duration=%d %s %s", console.Redf("FAIL"), console.Redf("INVALID"), c.Check.GetType(), c.Check.GetEndpoint(), c.Duration, c.Metrics, c.Message)
 		} else {
-			return fmt.Sprintf("[%s] <%s> %s duration=%d %s %s", console.Redf("FAIL"), console.Greenf("VALID"), c.Endpoint, c.Duration, c.Metrics, c.Message)
+			return fmt.Sprintf("[%s] <%s> [%s] %s duration=%d %s %s", console.Redf("FAIL"), console.Greenf("VALID"), c.Check.GetType(), c.Check.GetEndpoint(), c.Duration, c.Metrics, c.Message)
 		}
 	}
 }
@@ -103,8 +109,8 @@ func (c Check) GetDescription() string {
 
 type HTTPCheck struct {
 	Description string `yaml:"description"`
-	// HTTP endpoints to crawl
-	Endpoints []string `yaml:"endpoints"`
+	// HTTP endpoint to crawl
+	Endpoint string `yaml:"endpoint"`
 	// Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.
 	ThresholdMillis int `yaml:"thresholdMillis"`
 	// Expected response codes for the HTTP Request.
@@ -113,6 +119,10 @@ type HTTPCheck struct {
 	ResponseContent string `yaml:"responseContent"`
 	// Maximum number of days until the SSL Certificate expires.
 	MaxSSLExpiry int `yaml:"maxSSLExpiry"`
+}
+
+func (c HTTPCheck) GetEndpoint() string {
+	return c.Endpoint
 }
 
 func (c HTTPCheck) GetDescription() string {
@@ -139,11 +149,15 @@ func (check HTTPCheckResult) String() string {
 }
 
 type ICMPCheck struct {
-	Description         string   `yaml:"description"`
-	Endpoints           []string `yaml:"endpoints"`
-	ThresholdMillis     float64  `yaml:"thresholdMillis"`
-	PacketLossThreshold float64  `yaml:"packetLossThreshold"`
-	PacketCount         int      `yaml:"packetCount"`
+	Description         string  `yaml:"description"`
+	Endpoint            string  `yaml:"endpoint"`
+	ThresholdMillis     float64 `yaml:"thresholdMillis"`
+	PacketLossThreshold float64 `yaml:"packetLossThreshold"`
+	PacketCount         int     `yaml:"packetCount"`
+}
+
+func (c ICMPCheck) GetEndpoint() string {
+	return c.Endpoint
 }
 
 func (c ICMPCheck) GetDescription() string {
@@ -161,13 +175,17 @@ type Bucket struct {
 }
 
 type S3Check struct {
-	Description string   `yaml:"description"`
-	Buckets     []Bucket `yaml:"buckets"`
-	AccessKey   string   `yaml:"accessKey"`
-	SecretKey   string   `yaml:"secretKey"`
-	ObjectPath  string   `yaml:"objectPath"`
+	Description string `yaml:"description"`
+	Bucket      Bucket `yaml:"bucket"`
+	AccessKey   string `yaml:"accessKey"`
+	SecretKey   string `yaml:"secretKey"`
+	ObjectPath  string `yaml:"objectPath"`
 	// Skip TLS verify when connecting to s3
 	SkipTLSVerify bool `yaml:"skipTLSVerify"`
+}
+
+func (c S3Check) GetEndpoint() string {
+	return fmt.Sprintf("%s/%s", c.Bucket.Endpoint, c.Bucket.Name)
 }
 
 func (c S3Check) GetDescription() string {
@@ -199,7 +217,7 @@ type S3BucketCheck struct {
 }
 
 func (s3 S3BucketCheck) GetEndpoint() string {
-	return s3.Bucket
+	return fmt.Sprintf("%s/%s", s3.Endpoint, s3.Bucket)
 }
 
 func (c S3BucketCheck) GetDescription() string {
@@ -233,6 +251,10 @@ type DockerPullCheck struct {
 	ExpectedSize   int64  `yaml:"expectedSize"`
 }
 
+func (c DockerPullCheck) GetEndpoint() string {
+	return c.Image
+}
+
 func (c DockerPullCheck) GetDescription() string {
 	return c.Description
 }
@@ -246,6 +268,10 @@ type DockerPushCheck struct {
 	Image       string `yaml:"image"`
 	Username    string `yaml:"username"`
 	Password    string `yaml:"password"`
+}
+
+func (c DockerPushCheck) GetEndpoint() string {
+	return c.Image
 }
 
 func (c DockerPushCheck) GetDescription() string {
@@ -262,6 +288,17 @@ type PostgresCheck struct {
 	Connection  string `yaml:"connection"`
 	Query       string `yaml:"query"`
 	Result      int    `yaml:"results"`
+}
+
+// Obfuscate passwords of the form ' password=xxxxx ' from connectionString since
+// connectionStrings are used as metric labels and we don't want to leak passwords
+// Return: the Connection string with the password replaced by '###'
+func (c PostgresCheck) GetEndpoint() string {
+	//looking for a substring that starts with a space,
+	//'password=', then any non-whitespace characters,
+	//until an ending space
+	re := regexp.MustCompile(`\spassword=\S*\s`)
+	return re.ReplaceAllString(c.Connection, " password=### ")
 }
 
 func (c PostgresCheck) GetDescription() string {
@@ -334,6 +371,10 @@ type LDAPCheck struct {
 	SkipTLSVerify bool   `yaml:"skipTLSVerify"`
 }
 
+func (c LDAPCheck) GetEndpoint() string {
+	return fmt.Sprintf("%s/%s/%s", c.Host, c.BindDN, c.UserSearch)
+}
+
 func (c LDAPCheck) GetDescription() string {
 	return c.Description
 }
@@ -392,6 +433,10 @@ type DNSCheck struct {
 	SrvReply    SrvReply `yaml:"srvReply,omitempty"`
 }
 
+func (c DNSCheck) GetEndpoint() string {
+	return fmt.Sprintf("%s/%s@%s:%d", c.QueryType, c.Query, c.Server, c.Port)
+}
+
 func (c DNSCheck) GetDescription() string {
 	return c.Description
 }
@@ -407,6 +452,10 @@ type HelmCheck struct {
 	Username    string  `yaml:"username"`
 	Password    string  `yaml:"password"`
 	CaFile      *string `yaml:"cafile,omitempty"`
+}
+
+func (c HelmCheck) GetEndpoint() string {
+	return fmt.Sprintf("%s/%s", c.Chartmuseum, c.Project)
 }
 
 func (c HelmCheck) GetDescription() string {

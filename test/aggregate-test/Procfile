@@ -1,0 +1,3 @@
+main: ../../.bin/canary-checker_osx serve --httpPort=8080 -c config/main.yaml  --interval=10  --maxStatusCheckCount 10 --aggregateServers=http://localhost:8081,http://localhost:8082 --name=servermain
+server1: ../../.bin/canary-checker_osx serve --httpPort=8081 -c config/server1.yaml  --interval=10  --maxStatusCheckCount 5 --name=server1
+server2: ../../.bin/canary-checker_osx serve --httpPort=8082 -c config/server2.yaml  --interval=10  --maxStatusCheckCount 8 --name=server2

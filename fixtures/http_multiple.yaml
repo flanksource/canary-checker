@@ -1,27 +1,30 @@
 http:
-  - endpoints:
-      - https://httpstat.us/200
-      - https://httpstat.us/301
+  - endpoint: https://httpstat.us/200
     thresholdMillis: 3000
     responseCodes: [201,200,301]
     responseContent: ""
     maxSSLExpiry: 7
-  - endpoints:
-      - https://httpstat.us/500
+  - endpoints: https://httpstat.us/301
+    thresholdMillis: 3000
+    responseCodes: [201,200,301]
+    responseContent: ""
+    maxSSLExpiry: 7
+  - endpoint: https://httpstat.us/500
     thresholdMillis: 3000
     responseCodes: [500]
     responseContent: ""
     maxSSLExpiry: 7
-  - endpoints:
-      - https://httpstat.us/500
+  - endpoint: https://httpstat.us/500
     thresholdMillis: 3000
     responseCodes: [302]
     responseContent: ""
     maxSSLExpiry: 7
 icmp:
-  - endpoints:
-      - https://google.com
-      - https://yahoo.com
+  - endpoint: https://google.com
+    thresholdMillis: 400
+    packetLossThreshold: 0.5
+    packetCount: 2
+  - endpoint: https://yahoo.com
     thresholdMillis: 400
     packetLossThreshold: 0.5
     packetCount: 2
