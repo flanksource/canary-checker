@@ -83,6 +83,9 @@ func (c *NamespaceChecker) newPod(check pkg.NamespaceCheck, ns *v1.Namespace) (*
 	pod.Labels[podLabelSelector] = pod.Name
 	pod.Labels[podCheckSelector] = c.podCheckSelectorValue(check, ns)
 	pod.Labels[podGeneralSelector] = "true"
+	if check.PriorityClass != "" {
+		pod.Spec.PriorityClassName = check.PriorityClass
+	}
 	return pod, nil
 }
 

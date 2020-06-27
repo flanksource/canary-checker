@@ -103,6 +103,9 @@ func (c *PodChecker) newPod(podCheck pkg.PodCheck, nodeName string) (*v1.Pod, er
 	pod.Spec.NodeSelector = map[string]string{
 		"kubernetes.io/hostname": nodeName,
 	}
+	if podCheck.PriorityClass != "" {
+		pod.Spec.PriorityClassName = podCheck.PriorityClass
+	}
 	return pod, nil
 }
 
