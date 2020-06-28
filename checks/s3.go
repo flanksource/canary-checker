@@ -3,7 +3,6 @@ package checks
 import (
 	"bytes"
 	"crypto/tls"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -58,16 +57,10 @@ func (c *S3Checker) Type() string {
 }
 
 func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
-	var result []*pkg.CheckResult
 	bucket := check.Bucket
 
 	if _, err := DNSLookup(bucket.Endpoint); err != nil {
-		result = append(result, &pkg.CheckResult{
-			Check:   check,
-			Pass:    false,
-			Message: fmt.Sprintf("Failed to resolve DNS for %s", bucket.Endpoint),
-		})
-		return result
+		return Failf(check, "Failed to resolve DNS for %s", bucket.Endpoint)
 	}
 
 	cfg := aws.NewConfig().
@@ -84,12 +77,7 @@ func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
 	}
 	ssn, err := session.NewSession(cfg)
 	if err != nil {
-		result = append(result, &pkg.CheckResult{
-			Check:   check,
-			Pass:    false,
-			Message: fmt.Sprintf("Failed to create S3 session for %s: %v", bucket.Name, err),
-		})
-		return result
+		return Failf(check, "Failed to create S3 session for %s: %v", bucket.Name, err)
 	}
 	client := s3.New(ssn)
 	yes := true
@@ -98,11 +86,7 @@ func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
 	listTimer := NewTimer()
 	_, err = client.ListObjects(&s3.ListObjectsInput{Bucket: &bucket.Name})
 	if err != nil {
-		result = append(result, &pkg.CheckResult{
-			Pass:    false,
-			Message: fmt.Sprintf("Failed to list objects in bucket %s: %v", bucket.Name, err),
-		})
-		return result
+		return Failf(check, "Failed to list objects in bucket %s: %v", bucket.Name, err)
 	}
 	listHistogram.WithLabelValues(bucket.Endpoint, bucket.Name).Observe(listTimer.Elapsed())
 
@@ -114,11 +98,7 @@ func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
 		Body:   bytes.NewReader([]byte(data)),
 	})
 	if err != nil {
-		result = append(result, &pkg.CheckResult{
-			Pass:    false,
-			Message: fmt.Sprintf("Failed to put object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err),
-		})
-		return result
+		return Failf(check, "Failed to put object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err)
 	}
 	updateHistogram.WithLabelValues(bucket.Endpoint, bucket.Name).Observe(updateTimer.Elapsed())
 
@@ -129,29 +109,19 @@ func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
 	})
 
 	if err != nil {
-		result = append(result, &pkg.CheckResult{
-			Check:   check,
-			Pass:    false,
-			Message: fmt.Sprintf("Failed to get object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err),
-		})
-		return result
+		return Failf(check, "Failed to get object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err)
 	}
 	returnedData, _ := ioutil.ReadAll(obj.Body)
 	if string(returnedData) != data {
-		result = append(result, &pkg.CheckResult{
-			Check:   check,
-			Pass:    false,
-			Message: fmt.Sprintf("Get object doesn't match %s != %s", data, string(returnedData)),
-		})
-		return result
+		return Failf(check, "Get object doesn't match %s != %s", data, string(returnedData))
 	}
 
-	checkResult := &pkg.CheckResult{
-		Check:    check,
-		Pass:     true,
-		Invalid:  false,
-		Duration: int64(timer.Elapsed()),
+	return []*pkg.CheckResult{
+		&pkg.CheckResult{
+			Check:    check,
+			Pass:     true,
+			Invalid:  false,
+			Duration: int64(timer.Elapsed()),
+		},
 	}
-	result = append(result, checkResult)
-	return result
 }
