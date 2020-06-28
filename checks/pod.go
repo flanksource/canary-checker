@@ -74,7 +74,8 @@ func (c *PodChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 		if deadline.Before(time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)) {
 			deadline = time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)
 		}
-		for _, result := range c.Check(conf.PodCheck, deadline) {
+		result := c.Check(conf.PodCheck, deadline)
+		if result != nil {
 			results <- result
 		}
 	}
@@ -133,13 +134,12 @@ func diff(times map[v1.PodConditionType]metav1.Time, c1 v1.PodConditionType, c2 
 	return -1
 }
 
-func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pkg.CheckResult {
+func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) *pkg.CheckResult {
 	if !c.lock.TryAcquire(1) {
 		log.Trace("Check already in progress, skipping")
 		return nil
 	}
 	defer func() { c.lock.Release(1) }()
-	var result []*pkg.CheckResult
 
 	if err := c.Cleanup(podCheck); err != nil {
 		return unexpectedErrorf(podCheck, err, "failed to cleanup old artifacts")
@@ -210,7 +210,7 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pk
 		return unexpectedErrorf(podCheck, err, "failed to delete pod")
 	}
 
-	result = append(result, &pkg.CheckResult{
+	return &pkg.CheckResult{
 		Check:    podCheck,
 		Pass:     ingressResult.Pass && deleteOk,
 		Duration: int64(startTimer.Elapsed()),
@@ -247,9 +247,7 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pk
 				Value:  float64(requestTime),
 			},
 		},
-	})
-
-	return result
+	}
 }
 
 func (c *PodChecker) Cleanup(podCheck pkg.PodCheck) error {
@@ -298,9 +296,9 @@ func (c *PodChecker) httpCheck(podCheck pkg.PodCheck, deadline time.Time) (ingre
 				time.Sleep(retryInterval)
 				continue
 			} else if timer.Millis() > podCheck.HttpTimeout && time.Now().After(hardDeadline) {
-				return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HttpTimeout)[0]
+				return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HttpTimeout)
 			} else if time.Now().After(hardDeadline) {
-				return timer.Elapsed(), 0, Failf(podCheck, "ingress timeout exceeded %s > %d", timer, podCheck.IngressTimeout)[0]
+				return timer.Elapsed(), 0, Failf(podCheck, "ingress timeout exceeded %s > %d", timer, podCheck.IngressTimeout)
 			} else {
 				log.Debugf("now=%s deadline=%s", time.Now(), hardDeadline)
 				continue
@@ -324,15 +322,15 @@ func (c *PodChecker) httpCheck(podCheck pkg.PodCheck, deadline time.Time) (ingre
 			time.Sleep(retryInterval)
 			continue
 		} else if !found {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "status code %d not expected %v ", responseCode, podCheck.ExpectedHttpStatuses)[0]
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "status code %d not expected %v ", responseCode, podCheck.ExpectedHttpStatuses)
 		}
 		if !strings.Contains(response, podCheck.ExpectedContent) {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "content check failed")[0]
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "content check failed")
 		}
 		if int64(httpTimer.Elapsed()) > podCheck.HttpTimeout {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HttpTimeout)[0]
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HttpTimeout)
 		}
-		return timer.Elapsed(), httpTimer.Elapsed(), Passf(podCheck, "")[0]
+		return timer.Elapsed(), httpTimer.Elapsed(), Passf(podCheck, "")
 	}
 }
 

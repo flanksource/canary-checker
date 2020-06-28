@@ -17,11 +17,6 @@ import (
 )
 
 var (
-	dnsFailed = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "canary_check_http_dns_failed",
-		Help: "The total number of dns requests failed",
-	})
-
 	responseStatus = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "canary_check_http_response_status",
@@ -40,7 +35,7 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(dnsFailed, responseStatus, sslExpiration)
+	prometheus.MustRegister(responseStatus, sslExpiration)
 }
 
 type HttpChecker struct{}
@@ -54,99 +49,66 @@ func (c *HttpChecker) Type() string {
 // Returns check result and metrics
 func (c *HttpChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 	for _, conf := range config.HTTP {
-		for _, result := range c.Check(conf.HTTPCheck) {
-			results <- result
-		}
+		results <- c.Check(conf.HTTPCheck)
 	}
 
 }
 
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
-func (c *HttpChecker) Check(check pkg.HTTPCheck) []*pkg.CheckResult {
-	var result []*pkg.CheckResult
+func (c *HttpChecker) Check(check pkg.HTTPCheck) *pkg.CheckResult {
 	endpoint := check.Endpoint
-	rcOK, contentOK, timeOK, sslOK := false, false, false, false
 	lookupResult, err := DNSLookup(endpoint)
 	if err != nil {
-		dnsFailed.Inc()
-		checkResult := &pkg.CheckResult{
-			Check:   check,
-			Pass:    false,
-			Invalid: true,
-			Message: "Failed to resolve DNS",
-			Metrics: []pkg.Metric{},
-		}
-		result = append(result, checkResult)
-		return result
+		return Failf(check, "failed to resolve DNS")
 	}
 	for _, urlObj := range lookupResult {
 		checkResults, err := c.checkHTTP(urlObj)
 		if err != nil {
-			checkResult := &pkg.CheckResult{
-				Check:   check,
-				Pass:    false,
-				Invalid: true,
-				Message: fmt.Sprintf("%s", err),
-				Metrics: []pkg.Metric{},
-			}
-			result = append(result, checkResult)
-			continue
+			return invalidErrorf(check, err, "")
 		}
+		rcOK := false
 		for _, rc := range check.ResponseCodes {
 			if rc == checkResults.ResponseCode {
 				rcOK = true
 			}
 		}
 
-		contentOK = check.ResponseContent == "" || strings.Contains(checkResults.Content, check.ResponseContent)
-		timeOK = check.ThresholdMillis >= int(checkResults.ResponseTime)
-		sslOK = urlObj.Scheme == "http" || check.MaxSSLExpiry <= checkResults.SSLExpiry
-
-		pass := rcOK && contentOK && timeOK && sslOK
-		var msg []string
-
 		if !rcOK {
-			msg = append(msg, fmt.Sprintf("response code invalid %d != %v", checkResults.ResponseCode, check.ResponseCodes))
+			return Failf(check, "response code invalid %d != %v", checkResults.ResponseCode, check.ResponseCodes)
 		}
-		if !timeOK {
-			msg = append(msg, fmt.Sprintf("threshold exceeeded %d > %d", checkResults.ResponseTime, check.ThresholdMillis))
+
+		if check.ThresholdMillis < int(checkResults.ResponseTime) {
+			return Failf(check, "threshold exceeeded %d > %d", checkResults.ResponseTime, check.ThresholdMillis)
 		}
-		if !contentOK {
-			msg = append(msg, "content not found")
+		if check.ResponseContent != "" && !strings.Contains(checkResults.Content, check.ResponseContent) {
+			return Failf(check, "content not found")
 		}
-		if !sslOK {
-			msg = append(msg, fmt.Sprintf("SSL certificate expires soon %d > %d", checkResults.SSLExpiry, check.MaxSSLExpiry))
+		if urlObj.Scheme == "https" && check.MaxSSLExpiry > checkResults.SSLExpiry {
+			return Failf(check, "SSL certificate expires soon %d > %d", checkResults.SSLExpiry, check.MaxSSLExpiry)
 		}
-		if len(msg) == 0 {
-			msg = append(msg, "Successfully checked")
-		}
-		m := []pkg.Metric{
-			{
-				Name: "response_code",
-				Type: pkg.CounterType,
-				Labels: map[string]string{
-					"code":     strconv.Itoa(checkResults.ResponseCode),
-					"endpoint": endpoint,
-				},
-			},
-		}
-		checkResult := &pkg.CheckResult{
-			Check:    check,
-			Pass:     pass,
-			Duration: checkResults.ResponseTime,
-			Invalid:  false,
-			Message:  strings.Join(msg, ","),
-			Metrics:  m,
-		}
-		result = append(result, checkResult)
 
 		responseStatus.WithLabelValues(strconv.Itoa(checkResults.ResponseCode), statusCodeToClass(checkResults.ResponseCode), endpoint).Inc()
 		sslExpiration.WithLabelValues(endpoint).Set(float64(checkResults.SSLExpiry))
 
+		return &pkg.CheckResult{
+			Check:    check,
+			Pass:     true,
+			Duration: checkResults.ResponseTime,
+			Invalid:  false,
+			Metrics: []pkg.Metric{
+				{
+					Name: "response_code",
+					Type: pkg.CounterType,
+					Labels: map[string]string{
+						"code":     strconv.Itoa(checkResults.ResponseCode),
+						"endpoint": endpoint,
+					},
+				},
+			},
+		}
 	}
-
-	return result
+	return Failf(check, "No DNS results found")
 }
 
 func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*pkg.HTTPCheckResult, error) {

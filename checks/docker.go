@@ -11,18 +11,12 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/flanksource/canary-checker/pkg"
 )
 
 var (
 	dockerClient *client.Client
-
-	imagePullFailed = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "canary_check_docker_pull_failed",
-		Help: "The total number of docker image pull failed",
-	})
 
 	size = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -48,7 +42,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	prometheus.MustRegister(imagePullFailed, size, imagePullTime)
+	prometheus.MustRegister(size, imagePullTime)
 }
 
 type DockerPullChecker struct{}
@@ -79,8 +73,7 @@ func (c *DockerPullChecker) Check(check pkg.DockerPullCheck) *pkg.CheckResult {
 	out, err := dockerClient.ImagePull(ctx, check.Image, types.ImagePullOptions{RegistryAuth: authStr})
 	elapsed := time.Since(start)
 	if err != nil {
-		log.Printf("Failed to pull image: %s", err)
-		imagePullFailed.Inc()
+		return Failf(check, "Failed to pull image: %s", err)
 	} else {
 		buf := new(bytes.Buffer)
 		defer out.Close()

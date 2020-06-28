@@ -51,9 +51,7 @@ type S3BucketChecker struct {
 // Returns check result and metrics
 func (c *S3BucketChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 	for _, conf := range config.S3Bucket {
-		for _, result := range c.Check(conf.S3BucketCheck) {
-			results <- result
-		}
+		results <- c.Check(conf.S3BucketCheck)
 	}
 }
 
@@ -62,7 +60,7 @@ func (c *S3BucketChecker) Type() string {
 	return "s3_bucket"
 }
 
-func (c *S3BucketChecker) Check(bucket pkg.S3BucketCheck) []*pkg.CheckResult {
+func (c *S3BucketChecker) Check(bucket pkg.S3BucketCheck) *pkg.CheckResult {
 	if _, err := DNSLookup(bucket.Endpoint); err != nil {
 		return unexpectedErrorf(bucket, err, "failed to resolve DNS")
 	}

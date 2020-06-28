@@ -45,9 +45,7 @@ type S3Checker struct{}
 // Returns check result and metrics
 func (c *S3Checker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 	for _, conf := range config.S3 {
-		for _, result := range c.Check(conf.S3Check) {
-			results <- result
-		}
+		results <- c.Check(conf.S3Check)
 	}
 }
 
@@ -56,7 +54,7 @@ func (c *S3Checker) Type() string {
 	return "s3"
 }
 
-func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
+func (c *S3Checker) Check(check pkg.S3Check) *pkg.CheckResult {
 	bucket := check.Bucket
 
 	if _, err := DNSLookup(bucket.Endpoint); err != nil {
@@ -116,12 +114,10 @@ func (c *S3Checker) Check(check pkg.S3Check) []*pkg.CheckResult {
 		return Failf(check, "Get object doesn't match %s != %s", data, string(returnedData))
 	}
 
-	return []*pkg.CheckResult{
-		&pkg.CheckResult{
-			Check:    check,
-			Pass:     true,
-			Invalid:  false,
-			Duration: int64(timer.Elapsed()),
-		},
+	return &pkg.CheckResult{
+		Check:    check,
+		Pass:     true,
+		Invalid:  false,
+		Duration: int64(timer.Elapsed()),
 	}
 }

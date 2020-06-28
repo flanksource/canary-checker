@@ -56,9 +56,8 @@ func (c *NamespaceChecker) Run(config pkg.Config, results chan *pkg.CheckResult)
 		if deadline.Before(time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)) {
 			deadline = time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)
 		}
-		for _, result := range c.Check(conf.NamespaceCheck, deadline) {
-			results <- result
-		}
+		results <- c.Check(conf.NamespaceCheck, deadline)
+
 	}
 }
 
@@ -104,14 +103,12 @@ func (c *NamespaceChecker) getConditionTimes(ns *v1.Namespace, pod *v1.Pod) (tim
 	return times, nil
 }
 
-func (c *NamespaceChecker) Check(check pkg.NamespaceCheck, checkDeadline time.Time) []*pkg.CheckResult {
+func (c *NamespaceChecker) Check(check pkg.NamespaceCheck, checkDeadline time.Time) *pkg.CheckResult {
 	if !c.lock.TryAcquire(1) {
 		log.Trace("Check already in progress, skipping")
 		return nil
 	}
 	defer func() { c.lock.Release(1) }()
-	var result []*pkg.CheckResult
-
 	startTimer := NewTimer()
 
 	log.Debugf("Running namespace check %s", check.CheckName)
@@ -177,7 +174,7 @@ func (c *NamespaceChecker) Check(check pkg.NamespaceCheck, checkDeadline time.Ti
 		return unexpectedErrorf(check, err, "failed to delete pod")
 	}
 
-	result = append(result, &pkg.CheckResult{
+	return &pkg.CheckResult{
 		Check:    check,
 		Pass:     ingressResult.Pass && deleteOk,
 		Duration: int64(startTimer.Elapsed()),
@@ -214,9 +211,7 @@ func (c *NamespaceChecker) Check(check pkg.NamespaceCheck, checkDeadline time.Ti
 				Value:  float64(requestTime),
 			},
 		},
-	})
-
-	return result
+	}
 }
 
 func (c *NamespaceChecker) Cleanup(ns *v1.Namespace) error {
@@ -249,9 +244,9 @@ func (c *NamespaceChecker) httpCheck(check pkg.NamespaceCheck, deadline time.Tim
 				time.Sleep(retryInterval)
 				continue
 			} else if timer.Millis() > check.HttpTimeout && time.Now().After(hardDeadline) {
-				return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "request timeout exceeded %s > %d", timer, check.HttpTimeout)[0]
+				return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "request timeout exceeded %s > %d", timer, check.HttpTimeout)
 			} else if time.Now().After(hardDeadline) {
-				return timer.Elapsed(), 0, Failf(check, "ingress timeout exceeded %s > %d", timer, check.IngressTimeout)[0]
+				return timer.Elapsed(), 0, Failf(check, "ingress timeout exceeded %s > %d", timer, check.IngressTimeout)
 			} else {
 				log.Debugf("now=%s deadline=%s", time.Now(), hardDeadline)
 				continue
@@ -275,15 +270,15 @@ func (c *NamespaceChecker) httpCheck(check pkg.NamespaceCheck, deadline time.Tim
 			time.Sleep(retryInterval)
 			continue
 		} else if !found {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "status code %d not expected %v ", responseCode, check.ExpectedHttpStatuses)[0]
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "status code %d not expected %v ", responseCode, check.ExpectedHttpStatuses)
 		}
 		if !strings.Contains(response, check.ExpectedContent) {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "content check failed")[0]
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "content check failed")
 		}
 		if int64(httpTimer.Elapsed()) > check.HttpTimeout {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "request timeout exceeded %s > %d", httpTimer, check.HttpTimeout)[0]
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "request timeout exceeded %s > %d", httpTimer, check.HttpTimeout)
 		}
-		return timer.Elapsed(), httpTimer.Elapsed(), Passf(check, "")[0]
+		return timer.Elapsed(), httpTimer.Elapsed(), Passf(check, "")
 	}
 
 }

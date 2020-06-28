@@ -32,7 +32,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 	ctx := context.Background()
 	dialer, err := getDialer(check, check.Timeout)
 	if err != nil {
-		log.Errorf("Failed to get dialer, %v", err)
+		return Failf(check, "Failed to get dialer, %v", err)
 	}
 	r := net.Resolver{
 		PreferGo: true,
@@ -41,8 +41,8 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 	if check.QueryType == "A" {
 		result, err := r.LookupHost(ctx, check.Query)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
-			return &pkg.CheckResult{}
+			return Failf(check, "Failed to lookup: %v", err)
+
 		}
 
 		elapsed := time.Since(start)
@@ -61,8 +61,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 	if check.QueryType == "PTR" {
 		result, err := r.LookupAddr(ctx, check.Query)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
-			return &pkg.CheckResult{}
+			return Failf(check, "Failed to lookup: %v", err)
 		}
 
 		elapsed := time.Since(start)
@@ -81,8 +80,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 	if check.QueryType == "CNAME" {
 		result, err := r.LookupCNAME(ctx, check.Query)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
-			return &pkg.CheckResult{}
+			return Failf(check, "Failed to lookup: %v", err)
 		}
 		elapsed := time.Since(start)
 
@@ -100,13 +98,11 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 	if check.QueryType == "SRV" {
 		service, proto, name, err := srvInfo(check.Query)
 		if err != nil {
-			log.Errorf("Wrong SRV query %s", check.Query)
+			return Failf(check, "Wrong SRV query %s", check.Query)
 		}
 		cname, addr, err := r.LookupSRV(ctx, service, proto, name)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
-			return &pkg.CheckResult{}
-			// TODO implement SRV checks
+			return Failf(check, "Failed to lookup: %v", err)
 		}
 		fmt.Println(cname, addr)
 		return &pkg.CheckResult{}
@@ -115,8 +111,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 	if check.QueryType == "MX" {
 		result, err := r.LookupMX(ctx, check.Query)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
-			return &pkg.CheckResult{}
+			return Failf(check, "Failed to lookup: %v", err)
 		}
 		elapsed := time.Since(start)
 		var resultString []string
@@ -137,8 +132,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 	if check.QueryType == "TXT" {
 		result, err := r.LookupTXT(ctx, check.Query)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
-			return &pkg.CheckResult{}
+			return Failf(check, "Failed to lookup: %v", err)
 		}
 		elapsed := time.Since(start)
 		pass, message := checkResult(result, check)
@@ -156,7 +150,7 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 		result, err := r.LookupNS(ctx, check.Query)
 		elapsed := time.Since(start)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
+			// log.Errorf("Failed to lookup: %v", err)
 			return &pkg.CheckResult{
 				Check:    check,
 				Pass:     false,

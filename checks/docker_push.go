@@ -5,34 +5,12 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 )
-
-var (
-	imagePushFailed = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "canary_check_docker_push_failed",
-		Help: "The total number of docker image push failed",
-	})
-	imagePushTime = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "canary_check_image_push_time",
-			Help:    "Image push time",
-			Buckets: []float64{100, 500, 1000, 5000, 15000, 30000},
-		},
-		[]string{"image"},
-	)
-)
-
-func init() {
-	prometheus.MustRegister(imagePushFailed, imagePushTime)
-}
 
 type DockerPushChecker struct{}
 
@@ -51,8 +29,6 @@ func (c *DockerPushChecker) Type() string {
 // Returns check result and metrics
 func (c *DockerPushChecker) Check(check pkg.DockerPushCheck) *pkg.CheckResult {
 	start := time.Now()
-	pushSuccess := true
-	message := ""
 	ctx := context.Background()
 	authConfig := types.AuthConfig{
 		Username: check.Username,
@@ -61,12 +37,8 @@ func (c *DockerPushChecker) Check(check pkg.DockerPushCheck) *pkg.CheckResult {
 	encodedJSON, _ := json.Marshal(authConfig)
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 	out, err := dockerClient.ImagePush(ctx, check.Image, types.ImagePushOptions{RegistryAuth: authStr})
-	elapsed := time.Since(start)
 	if err != nil {
-		log.Printf("Failed to push image: %s", err)
-		imagePushFailed.Inc()
-		pushSuccess = false
-		message = fmt.Sprintf("Failed to push image: %s", err)
+		return Failf(check, "Failed to push image: %s", err)
 	}
 
 	buf := new(bytes.Buffer)
@@ -79,25 +51,15 @@ func (c *DockerPushChecker) Check(check pkg.DockerPushCheck) *pkg.CheckResult {
 			Error  string `json:"error"`
 		}{}
 		err = json.Unmarshal([]byte(line), &decodedResponse)
-		log.Debugf("docker push output: %s", line)
 		if decodedResponse.Error != "" {
-			imagePullFailed.Inc()
-			pushSuccess = false
-			message = decodedResponse.Error
-			break
+			return Failf(check, "Failed to push %v", decodedResponse.Error)
 		}
 	}
 
-	if pushSuccess {
-		message = fmt.Sprintf("Image %s successfully pushed", check.Image)
-	}
-
-	imagePushTime.WithLabelValues(check.Image).Observe(float64(elapsed.Milliseconds()))
 	return &pkg.CheckResult{
 		Check:    check,
-		Pass:     pushSuccess,
-		Duration: elapsed.Milliseconds(),
-		Message:  message,
+		Pass:     true,
+		Duration: time.Since(start).Milliseconds(),
 		Metrics:  []pkg.Metric{},
 	}
 }
