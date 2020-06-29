@@ -271,7 +271,7 @@ type LDAPCheck struct {
 }
 
 func (c LDAPCheck) GetEndpoint() string {
-	return fmt.Sprintf("%s/%s/%s", c.Host, c.BindDN, c.UserSearch)
+	return c.Host
 }
 
 func (c LDAPCheck) GetDescription() string {

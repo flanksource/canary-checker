@@ -2,7 +2,6 @@ package checks
 
 import (
 	"crypto/tls"
-	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -35,34 +34,22 @@ func (c *LdapChecker) Type() string {
 // Returns check result and metrics
 func (c *LdapChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
 	for _, conf := range config.LDAP {
-		for _, result := range c.Check(conf.LDAPCheck) {
-			results <- result
-		}
+		results <- c.Check(conf.LDAPCheck)
 	}
 }
 
 // CheckConfig : Check every ldap entry for lookup and auth
 // Returns check result and metrics
-func (c *LdapChecker) Check(check pkg.LDAPCheck) []*pkg.CheckResult {
-	var result []*pkg.CheckResult
-
+func (c *LdapChecker) Check(check pkg.LDAPCheck) *pkg.CheckResult {
 	ld, err := ldap.DialURL(check.Host, ldap.DialWithTLSConfig(&tls.Config{
 		InsecureSkipVerify: check.SkipTLSVerify,
 	}))
 	if err != nil {
-		result = append(result, &pkg.CheckResult{
-			Pass:    false,
-			Message: fmt.Sprintf("Failed to connect to LDAP url %s: %v", check.Host, err),
-		})
-		return result
+		return Failf(check, "Failed to connect %v", err)
 	}
 
 	if err := ld.Bind(check.Username, check.Password); err != nil {
-		result = append(result, &pkg.CheckResult{
-			Pass:    false,
-			Message: fmt.Sprintf("Failed to bind using credentials given to LDAP url %s: %v", check.Host, err),
-		})
-		return result
+		return Failf(check, "Failed to bind using credentials %v", err)
 	}
 
 	req := &ldap.SearchRequest{
@@ -73,22 +60,14 @@ func (c *LdapChecker) Check(check pkg.LDAPCheck) []*pkg.CheckResult {
 	res, err := ld.Search(req)
 
 	if err != nil {
-		result = append(result, &pkg.CheckResult{
-			Check:   check,
-			Pass:    false,
-			Message: fmt.Sprintf("Failed to search to LDAP url %s: %v", check.Host, err),
-		})
-		return result
+		return Failf(check, "Failed to search %v", check.Host, err)
 	}
 
 	ldapLookupRecordCount.WithLabelValues(check.Host, check.BindDN).Set(float64(len(res.Entries)))
 
-	result = append(result, &pkg.CheckResult{
+	return &pkg.CheckResult{
 		Check:    check,
 		Pass:     true,
-		Message:  fmt.Sprintf("LDAP search %s for host %s DN %s successful", check.UserSearch, check.Host, check.BindDN),
 		Duration: int64(timer.Elapsed()),
-	})
-
-	return result
+	}
 }
