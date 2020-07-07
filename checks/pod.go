@@ -122,7 +122,6 @@ func (c *PodChecker) getConditionTimes(podCheck pkg.PodCheck, pod *v1.Pod) (time
 		}
 	}
 	return times, nil
-
 }
 
 func diff(times map[v1.PodConditionType]metav1.Time, c1 v1.PodConditionType, c2 v1.PodConditionType) int64 {
@@ -193,6 +192,17 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pk
 
 	ingressTime, requestTime, ingressResult := c.httpCheck(podCheck, deadline)
 
+	message := ingressResult.Message
+
+	if !ingressResult.Pass {
+		podFailMessage, err := c.podFailMessage(podCheck, pod)
+		if err != nil {
+			log.Errorf("failed to get pod fail message: %v", err)
+		} else if podFailMessage != "" {
+			message = message + " " + podFailMessage
+		}
+	}
+
 	deleteOk := true
 	deletion := NewTimer()
 	if err := pods.Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
@@ -204,7 +214,7 @@ func (c *PodChecker) Check(podCheck pkg.PodCheck, checkDeadline time.Time) []*pk
 		Check:    podCheck,
 		Pass:     ingressResult.Pass && deleteOk,
 		Duration: int64(startTimer.Elapsed()),
-		Message:  ingressResult.Message,
+		Message:  message,
 		Metrics: []pkg.Metric{
 			{
 				Name:   "schedule_time",
@@ -324,7 +334,6 @@ func (c *PodChecker) httpCheck(podCheck pkg.PodCheck, deadline time.Time) (ingre
 		}
 		return timer.Elapsed(), httpTimer.Elapsed(), Passf(podCheck, "")[0]
 	}
-
 }
 
 func (c *PodChecker) createServiceAndIngress(podCheck pkg.PodCheck, pod *v1.Pod) error {
@@ -460,6 +469,24 @@ func (c *PodChecker) podCheckSelectorValue(podCheck pkg.PodCheck) string {
 
 func (c *PodChecker) podCheckSelector(podCheck pkg.PodCheck) string {
 	return fmt.Sprintf("%s=%s", podCheckSelector, c.podCheckSelectorValue(podCheck))
+}
+
+func (c *PodChecker) podFailMessage(podCheck pkg.PodCheck, pod *v1.Pod) (string, error) {
+	pods := c.k8s.CoreV1().Pods(pod.Namespace)
+	p, err := pods.Get(pod.Name, metav1.GetOptions{})
+	if err != nil {
+		return "", perrors.Wrapf(err, "failed to get pod %s in namespace %s", pod.Name, pod.Namespace)
+	}
+	if p.Status.Phase != v1.PodRunning {
+		msg := []string{}
+		for _, cs := range p.Status.ContainerStatuses {
+			if !cs.Ready && cs.State.Waiting != nil {
+				msg = append(msg, fmt.Sprintf("[container=%s message=%s reason=%s]", cs.Name, cs.State.Waiting.Message, cs.State.Waiting.Reason))
+			}
+		}
+		return fmt.Sprintf("podPhase=%s %s", p.Status.Phase, strings.Join(msg, " ")), nil
+	}
+	return "", nil
 }
 
 // WaitForPod waits for a pod to be in the specified phase, or returns an

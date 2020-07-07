@@ -13,6 +13,16 @@ pod:
         containers:
           - name: hello
             image: quay.io/toni0/hello-webserver-golang:2.2
+            # image: quay.io/toni0/hello-webserver-golang:latest
+            # env:
+            #   # Define the environment variable
+            #   - name: SPECIAL_LEVEL_KEY
+            #     valueFrom:
+            #       configMapKeyRef:
+            #         # The ConfigMap containing the value you want to assign to SPECIAL_LEVEL_KEY
+            #         name: special-config
+            #         # Specify the key associated with the value
+            #         key: special.how
     port: 8080
     path: /foo/bar
     ingressName: hello-world-golang
