@@ -4,12 +4,13 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg"
 )
 
 type args struct {
-	config pkg.Config
+	config v1.CanarySpec
 }
 
 type test struct {
@@ -31,7 +32,7 @@ func TestRunChecks(t *testing.T) {
 			args: args{httpPassConfig},
 			want: []pkg.CheckResult{
 				{
-					Check:   httpPassConfig.HTTP[0].HTTPCheck,
+					Check:   httpPassConfig.HTTP[0],
 					Pass:    true,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
@@ -43,14 +44,14 @@ func TestRunChecks(t *testing.T) {
 			args: args{httpFailConfig},
 			want: []pkg.CheckResult{
 				{
-					Check:   httpFailConfig.HTTP[0].HTTPCheck,
+					Check:   httpFailConfig.HTTP[0],
 					Pass:    false,
 					Invalid: true,
 					Metrics: []pkg.Metric{},
 					Message: "Failed to resolve DNS",
 				},
 				{
-					Check:   httpFailConfig.HTTP[1].HTTPCheck,
+					Check:   httpFailConfig.HTTP[1],
 					Pass:    false,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
@@ -62,7 +63,7 @@ func TestRunChecks(t *testing.T) {
 			args: args{postgresFailConfig},
 			want: []pkg.CheckResult{
 				{
-					Check:   postgresFailConfig.Postgres[0].PostgresCheck,
+					Check:   postgresFailConfig.Postgres[0],
 					Pass:    false,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
@@ -74,42 +75,42 @@ func TestRunChecks(t *testing.T) {
 			args: args{dnsFailConfig},
 			want: []pkg.CheckResult{
 				{
-					Check:   dnsFailConfig.DNS[0].DNSCheck,
+					Check:   dnsFailConfig.DNS[0],
 					Pass:    false,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
 					Message: "Check failed: A 1.2.3.4.nip.io on 8.8.8.8. Got [1.2.3.4], expected [8.8.8.8]",
 				},
 				{
-					Check:   dnsFailConfig.DNS[1].DNSCheck,
+					Check:   dnsFailConfig.DNS[1],
 					Pass:    false,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
 					Message: "Check failed: PTR 8.8.8.8 on 8.8.8.8. Records count is less then minrecords",
 				},
 				{
-					Check:   dnsFailConfig.DNS[2].DNSCheck,
+					Check:   dnsFailConfig.DNS[2],
 					Pass:    false,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
 					Message: "Check failed: CNAME dns.google on 8.8.8.8. Got [dns.google.], expected [wrong.google.]",
 				},
 				{
-					Check:   dnsFailConfig.DNS[3].DNSCheck,
+					Check:   dnsFailConfig.DNS[3],
 					Pass:    false,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
 					Message: "Check failed: MX flanksource.com on 8.8.8.8. Got [alt1.aspmx.l.google.com. 5 alt2.aspmx.l.google.com. 5 aspmx.l.google.com. 1 aspmx2.googlemail.com. 10 aspmx3.googlemail.com. 10], expected [alt1.aspmx.l.google.com. 5 alt2.aspmx.l.google.com. 5 aspmx.l.google.com. 1]",
 				},
 				{
-					Check:   dnsFailConfig.DNS[4].DNSCheck,
+					Check:   dnsFailConfig.DNS[4],
 					Pass:    false,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
 					Message: "Check failed: TXT flanksource.com on 8.8.8.8. Records count is less then minrecords",
 				},
 				{
-					Check:   dnsFailConfig.DNS[5].DNSCheck,
+					Check:   dnsFailConfig.DNS[5],
 					Pass:    false,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
@@ -122,42 +123,42 @@ func TestRunChecks(t *testing.T) {
 			args: args{dnsPassConfig},
 			want: []pkg.CheckResult{
 				{
-					Check:   dnsPassConfig.DNS[0].DNSCheck,
+					Check:   dnsPassConfig.DNS[0],
 					Pass:    true,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
 					Message: "Successful check on 8.8.8.8. Got [1.2.3.4]",
 				},
 				{
-					Check:   dnsPassConfig.DNS[1].DNSCheck,
+					Check:   dnsPassConfig.DNS[1],
 					Pass:    true,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
 					Message: "Successful check on 8.8.8.8. Got [dns.google.]",
 				},
 				{
-					Check:   dnsPassConfig.DNS[2].DNSCheck,
+					Check:   dnsPassConfig.DNS[2],
 					Pass:    true,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
 					Message: "Successful check on 8.8.8.8. Got [dns.google.]",
 				},
 				{
-					Check:   dnsPassConfig.DNS[3].DNSCheck,
+					Check:   dnsPassConfig.DNS[3],
 					Pass:    true,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
 					Message: "Successful check on 8.8.8.8. Got [alt1.aspmx.l.google.com. 5 alt2.aspmx.l.google.com. 5 aspmx.l.google.com. 1 aspmx2.googlemail.com. 10 aspmx3.googlemail.com. 10]",
 				},
 				{
-					Check:   dnsPassConfig.DNS[4].DNSCheck,
+					Check:   dnsPassConfig.DNS[4],
 					Pass:    true,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
 					Message: "Successful check on 8.8.8.8. Got [google-site-verification=IIE1aJuvqseLUKSXSIhu2O2lgdU_d8csfJjjIQVc-q0]",
 				},
 				{
-					Check:   dnsPassConfig.DNS[5].DNSCheck,
+					Check:   dnsPassConfig.DNS[5],
 					Pass:    true,
 					Invalid: false,
 					Metrics: []pkg.Metric{},
@@ -189,7 +190,7 @@ func TestPostgresCheckWithDbMock(t *testing.T) {
 
 	results := cmd.RunChecks(config)
 	foundResults := make([]*pkg.CheckResult, 0)
-	for result := range results {
+	for _, result := range results {
 		foundResults = append(foundResults, result)
 	}
 
@@ -217,7 +218,7 @@ func runTests(t *testing.T, tests []test) {
 
 			foundResults := make([]*pkg.CheckResult, 0)
 
-			for res := range checkResults {
+			for _, res := range checkResults {
 				// check if this result is extra
 				if i > len(tt.want)-1 {
 					t.Errorf("Test %s failed. Found unexpected extra result is %v", tt.name, res)

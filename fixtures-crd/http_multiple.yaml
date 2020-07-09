@@ -1,0 +1,36 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-miltple
+spec:
+  interval: 30
+  http:
+    - endpoint: https://httpstat.us/200
+      thresholdMillis: 3000
+      responseCodes: [201, 200, 301]
+      responseContent: ""
+      maxSSLExpiry: 7
+    - endpoint: https://httpstat.us/301
+      thresholdMillis: 3000
+      responseCodes: [201, 200, 301]
+      responseContent: ""
+      maxSSLExpiry: 7
+    - endpoint: https://httpstat.us/500
+      thresholdMillis: 3000
+      responseCodes: [500]
+      responseContent: ""
+      maxSSLExpiry: 7
+    - endpoint: https://httpstat.us/500
+      thresholdMillis: 3000
+      responseCodes: [302]
+      responseContent: ""
+      maxSSLExpiry: 7
+  icmp:
+    - endpoint: https://google.com
+      thresholdMillis: 400
+      packetLossThreshold: 5
+      packetCount: 2
+    - endpoint: https://yahoo.com
+      thresholdMillis: 400
+      packetLossThreshold: 5
+      packetCount: 2

@@ -1,0 +1,11 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: postgres-succeed
+spec:
+  interval: 30
+  postgres:
+    - driver: "sqlmock"
+      connection: "sqlmock_db_0"
+      query: "SELECT 1"
+      results: 1

@@ -1,0 +1,10 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: docker-push0-pass
+spec:
+  interval: 30
+  dockerPush:
+    - image: ttl.sh/flanksource-busybox:1.30
+      username: $DOCKER_USERNAME
+      password: $DOCKER_PASSWORD

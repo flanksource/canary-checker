@@ -61,6 +61,12 @@ type CanaryStatus struct {
 	// If set, this represents the .metadata.generation that the status was set for
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`
+
+	// Availibility over a rolling 1h period
+	Uptime1H string `json:"uptime1h,omitempty"`
+
+	// Average latency in milliseconds to complete all checks
+	Latency1H int64 `json:"latency1h,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -69,6 +75,8 @@ type CanaryStatus struct {
 // +kubebuilder:printcolumn:name="Interval",type=string,JSONPath=`.spec.interval`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
 // +kubebuilder:printcolumn:name="Message",type=string,JSONPath=`.status.message`
+// +kubebuilder:printcolumn:name="Uptime 1H",type=string,JSONPath=`.status.uptime1h`
+// +kubebuilder:printcolumn:name="Latency 1H",type=string,JSONPath=`.status.latency1h`
 // +kubebuilder:printcolumn:name="Last Transitioned",type=date,JSONPath=`.status.lastTransitionedTime`
 // +kubebuilder:printcolumn:name="Last Check",type=date,JSONPath=`.status.lastCheck`
 // +kubebuilder:subresource:status

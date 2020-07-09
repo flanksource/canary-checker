@@ -1,59 +1,66 @@
 package pkg
 
 import (
+	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
+	"reflect"
 	"strings"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/commons/logger"
+	"github.com/mitchellh/reflectwalk"
 	"gopkg.in/flanksource/yaml.v3"
 )
 
 // ParseConfig : Read config file
-func ParseConfig(configfile string) Config {
-	config := Config{}
+func ParseConfig(configfile string) v1.CanarySpec {
+	config := v1.CanarySpec{}
 	data, err := ioutil.ReadFile(configfile)
 	if err != nil {
-		log.Printf("yamlFile.Get err   #%v ", err)
+		logger.Infof("yamlFile.Get err   #%v ", err)
 	}
 	yamlerr := yaml.Unmarshal([]byte(data), &config)
 	if yamlerr != nil {
-		log.Fatalf("error: %v", yamlerr)
+		logger.Fatalf("error: %v", yamlerr)
 	}
 	return ApplyTemplates(config)
 }
 
-func ApplyTemplates(config Config) Config {
-	buckets := []S3{}
-	for _, s3 := range config.S3 {
-		s3.AccessKey = template(s3.AccessKey)
-		s3.SecretKey = template(s3.SecretKey)
-		buckets = append(buckets, s3)
-	}
-	config.S3 = buckets
-	s3Buckets := []S3Bucket{}
-	for _, bucket := range config.S3Bucket {
-		bucket.AccessKey = template(bucket.AccessKey)
-		bucket.SecretKey = template(bucket.SecretKey)
-		s3Buckets = append(s3Buckets, bucket)
-	}
-	config.S3Bucket = s3Buckets
-	ldap := []LDAP{}
-	for _, item := range config.LDAP {
-		item.Password = template(item.Password)
-		item.Username = template(item.Username)
-		ldap = append(ldap, item)
-	}
-	config.LDAP = ldap
-	return config
+type StructTemplater struct {
+	Values map[string]string
 }
 
-func template(val string) string {
+// this func is required to fulfil the reflectwalk.StructWalker interface
+func (w StructTemplater) Struct(reflect.Value) error {
+	return nil
+}
+
+func (w StructTemplater) StructField(f reflect.StructField, v reflect.Value) error {
+	if v.CanSet() && v.Kind() == reflect.String {
+		v.SetString(w.Template(v.String()))
+	}
+	return nil
+}
+
+func (w StructTemplater) Template(val string) string {
 	if strings.HasPrefix(val, "$") {
-		env := os.Getenv(val[1:])
+		key := strings.TrimRight(strings.TrimLeft(val[1:], "("), ")")
+		env := w.Values[key]
 		if env != "" {
 			return env
 		}
 	}
 	return val
+}
+
+func ApplyTemplates(config v1.CanarySpec) v1.CanarySpec {
+	var values = make(map[string]string)
+	for _, environ := range os.Environ() {
+		values[strings.Split(environ, "=")[0]] = strings.Split(environ, "=")[1]
+	}
+	if err := reflectwalk.Walk(&config, StructTemplater{Values: values}); err != nil {
+		fmt.Println(err)
+	}
+	return config
 }

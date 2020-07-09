@@ -1,0 +1,17 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: ldap-pass
+spec:
+  interval: 30
+  ldap:
+    - host: ldap://127.0.0.1:10389
+      username: uid=admin,ou=system
+      password: secret
+      bindDN: ou=users,dc=example,dc=com
+      userSearch: "(&(objectClass=organizationalPerson))"
+    - host: ldap://127.0.0.1:10389
+      username: uid=admin,ou=system
+      password: secret
+      bindDN: ou=groups,dc=example,dc=com
+      userSearch: "(&(objectClass=groupOfNames))"
