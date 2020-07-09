@@ -31,24 +31,8 @@ var Serve = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		configfile, _ := cmd.Flags().GetString("configfile")
 		config := pkg.ParseConfig(configfile)
-		httpPort, _ := cmd.Flags().GetInt("httpPort")
-		interval, _ := cmd.Flags().GetUint64("interval")
-		dev, _ := cmd.Flags().GetBool("dev")
 
-		var checks = []checks.Checker{
-			&checks.HelmChecker{},
-			&checks.DNSChecker{},
-			&checks.HttpChecker{},
-			&checks.IcmpChecker{},
-			&checks.S3Checker{},
-			&checks.S3BucketChecker{},
-			&checks.DockerPullChecker{},
-			&checks.DockerPushChecker{},
-			&checks.PostgresChecker{},
-			&checks.LdapChecker{},
-			checks.NewPodChecker(),
-			checks.NewNamespaceChecker(),
-		}
+		interval, _ := cmd.Flags().GetInt64("interval")
 
 		config.Interval = time.Duration(interval) * time.Second
 		log.Infof("Running checks every %s", config.Interval)

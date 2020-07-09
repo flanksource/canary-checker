@@ -32,30 +32,13 @@ var Run = &cobra.Command{
 func init() {
 
 }
-func RunChecks(config pkg.Config) chan *pkg.CheckResult {
-	var checks = []checks.Checker{
-		&checks.HelmChecker{},
-		&checks.DNSChecker{},
-		&checks.HttpChecker{},
-		&checks.IcmpChecker{},
-		&checks.DockerPullChecker{},
-		&checks.DockerPushChecker{},
-		&checks.S3Checker{},
-		&checks.PostgresChecker{},
-		&checks.LdapChecker{},
-		&checks.S3BucketChecker{},
-		checks.NewPodChecker(),
-		checks.NewNamespaceChecker(),
-	}
+func RunChecks(config v1.CanarySpec) []*pkg.CheckResult {
 
-	var results = make(chan *pkg.CheckResult)
+	var results []*pkg.CheckResult
 
-	go func() {
-		for _, c := range checks {
-			c.Run(config, results)
+	for _, c := range checks.All {
+		results = append(results, c.Run(config)...)
 		}
-		close(results)
-	}()
 
 	return results
 }
