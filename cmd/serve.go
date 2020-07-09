@@ -64,6 +64,7 @@ var Serve = &cobra.Command{
 				}()
 			})
 			go func() {
+						cache.AddCheck("", result)
 						metrics.Record("", "", result)
 				}
 			}()
