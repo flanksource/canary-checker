@@ -21,10 +21,10 @@ import (
 var Servers []string
 
 type AggregateCheck struct {
-	Type string `json:"type"`
-	Name string `json:"name"`
-
-	Statuses map[string][]pkg.CheckStatus `json:"checkStatuses"`
+	Type        string                       `json:"type"`
+	Name        string                       `json:"name"`
+	Description string                       `json:"description"`
+	Statuses    map[string][]pkg.CheckStatus `json:"checkStatuses"`
 }
 
 type AggregateChecks []AggregateCheck
@@ -76,8 +76,9 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 	for _, c := range data {
 		id := c.ToString()
 		aggregateData[id] = &AggregateCheck{
-			Name: c.Name,
-			Type: c.Type,
+			Name:        c.Name,
+			Type:        c.Type,
+			Description: c.Description,
 			Statuses: map[string][]pkg.CheckStatus{
 				api.ServerName: c.Statuses,
 			},
