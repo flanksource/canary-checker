@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	nethttp "net/http"
-	"strconv"
 	"time"
 
 	_ "net/http/pprof"
@@ -18,10 +17,8 @@ import (
 	"github.com/flanksource/canary-checker/statuspage"
 	"github.com/flanksource/commons/logger"
 	"github.com/go-co-op/gocron"
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -34,42 +31,45 @@ var Serve = &cobra.Command{
 
 		interval, _ := cmd.Flags().GetInt64("interval")
 
-		config.Interval = time.Duration(interval) * time.Second
-		log.Infof("Running checks every %s", config.Interval)
+		config.Interval = interval
+		logger.Infof("Running checks every %d seconds", config.Interval)
 
 		scheduler := gocron.NewScheduler(time.UTC)
 
-		for _, _c := range checks {
+		for _, _c := range checks.All {
 			c := _c
-			var results = make(chan *pkg.CheckResult)
-			scheduler.Every(interval).Seconds().StartImmediately().Do(func() {
+			scheduler.Every(uint64(interval)).Seconds().StartImmediately().Do(func() {
 				go func() {
-					c.Run(config, results)
-				}()
-			})
-			go func() {
+					for _, result := range c.Run(config) {
 						cache.AddCheck("", result)
 						metrics.Record("", "", result)
-				}
-			}()
+					}
+				}()
+			})
 		}
 
 		scheduler.StartAsync()
+		serve(cmd)
+	},
+}
 
-		nethttp.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
-		if dev {
-			nethttp.HandleFunc("/", devRootPageHandler)
-		} else {
-			nethttp.Handle("/", nethttp.FileServer(statuspage.FS(false)))
-		}
-		nethttp.HandleFunc("/api", api.Handler)
-		nethttp.HandleFunc("/api/aggregate", aggregate.Handler)
+func serve(cmd *cobra.Command) {
+	httpPort, _ := cmd.Flags().GetInt("httpPort")
+	dev, _ := cmd.Flags().GetBool("dev")
+	nethttp.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
+	if dev {
+		nethttp.HandleFunc("/", devRootPageHandler)
+	} else {
+		nethttp.Handle("/", nethttp.FileServer(statuspage.FS(false)))
+	}
+	nethttp.HandleFunc("/api", api.Handler)
+	nethttp.HandleFunc("/api/aggregate", aggregate.Handler)
 
-		addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
-		log.Infof("Starting health dashboard at http://%s", addr)
-		log.Infof("Metrics dashboard can be accessed at http://%s/metrics", addr)
+	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
+	logger.Infof("Starting health dashboard at http://%s", addr)
+	logger.Infof("Metrics dashboard can be accessed at http://%s/metrics", addr)
 
-		if err := nethttp.ListenAndServe(addr, nil); err != nil {
+	if err := nethttp.ListenAndServe(addr, nil); err != nil {
 		logger.Fatalf("failed to start server: %v", err)
 	}
 }
@@ -82,13 +82,14 @@ func devRootPageHandler(w nethttp.ResponseWriter, req *nethttp.Request) {
 	}
 	body, err := ioutil.ReadFile("statuspage/index.html")
 	if err != nil {
-		log.Errorf("Failed to read html file: %v", err)
+		logger.Errorf("Failed to read html file: %v", err)
 		fmt.Fprintf(w, "{\"error\": \"internal\", \"checks\": []}")
 	}
 	fmt.Fprintf(w, string(body))
 }
 
 func init() {
+	Serve.Flags().StringP("configfile", "c", "", "Specify configfile")
 	Serve.Flags().Int("httpPort", 8080, "Port to expose a health dashboard ")
 	Serve.Flags().Uint64("interval", 30, "Default interval (in seconds) to run checks on")
 	Serve.Flags().Int("failureThreshold", 2, "Default Number of consecutive failures required to fail a check")

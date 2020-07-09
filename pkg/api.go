@@ -5,7 +5,9 @@ import (
 	"strings"
 	"time"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/console"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Endpointer interface {
@@ -53,7 +55,7 @@ type CheckStatus struct {
 type Check struct {
 	Type        string        `json:"type"`
 	Name        string        `json:"name"`
-	Description string        `yaml:"description"`
+	Description string        `json:"description"`
 	Statuses    []CheckStatus `json:"checkStatuses"`
 }
 
@@ -81,21 +83,21 @@ func (c Check) GetDescription() string {
 }
 
 type Config struct {
-	HTTP       []HTTP        `yaml:"http,omitempty"`
-	DNS        []DNS         `yaml:"dns,omitempty"`
-	DockerPull []DockerPull  `yaml:"docker,omitempty"`
-	DockerPush []DockerPush  `yaml:"dockerPush,omitempty"`
-	S3         []S3          `yaml:"s3,omitempty"`
-	S3Bucket   []S3Bucket    `yaml:"s3Bucket,omitempty"`
-	TCP        []TCP         `yaml:"tcp,omitempty"`
-	Pod        []Pod         `yaml:"pod,omitempty"`
-	LDAP       []LDAP        `yaml:"ldap,omitempty"`
-	SSL        []SSL         `yaml:"ssl,omitempty"`
-	ICMP       []ICMP        `yaml:"icmp,omitempty"`
-	Postgres   []Postgres    `yaml:"postgres,omitempty"`
-	Helm       []Helm        `yaml:"helm,omitempty"`
-	Namespace  []Namespace   `yaml:"namespace,omitempty"`
-	Interval   time.Duration `yaml:"-"`
+	HTTP       []v1.HTTPCheck       `yaml:"http,omitempty" json:"http,omitempty"`
+	DNS        []v1.DNSCheck        `yaml:"dns,omitempty" json:"dns,omitempty"`
+	DockerPull []v1.DockerPullCheck `yaml:"docker,omitempty" json:"docker,omitempty"`
+	DockerPush []v1.DockerPushCheck `yaml:"dockerPush,omitempty" json:"dockerPush,omitempty"`
+	S3         []v1.S3Check         `yaml:"s3,omitempty" json:"s3,omitempty"`
+	S3Bucket   []v1.S3BucketCheck   `yaml:"s3Bucket,omitempty" json:"s3Bucket,omitempty"`
+	TCP        []v1.TCPCheck        `yaml:"tcp,omitempty" json:"tcp,omitempty"`
+	Pod        []v1.PodCheck        `yaml:"pod,omitempty" json:"pod,omitempty"`
+	LDAP       []v1.LDAPCheck       `yaml:"ldap,omitempty" json:"ldap,omitempty"`
+	SSL        []v1.SSLCheck        `yaml:"ssl,omitempty" json:"ssl,omitempty"`
+	ICMP       []v1.ICMPCheck       `yaml:"icmp,omitempty" json:"icmp,omitempty"`
+	Postgres   []v1.PostgresCheck   `yaml:"postgres,omitempty" json:"postgres,omitempty"`
+	Helm       []v1.HelmCheck       `yaml:"helm,omitempty" json:"helm,omitempty"`
+	Namespace  []v1.NamespaceCheck  `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Interval   metav1.Duration      `yaml:"-" json:"interval,omitempty"`
 }
 
 type Checker interface {

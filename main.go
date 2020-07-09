@@ -17,6 +17,7 @@ var (
 )
 
 func main() {
+
 	var root = &cobra.Command{
 		Use: "canary-checker",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
@@ -26,6 +27,7 @@ func main() {
 	}
 
 	logger.BindFlags(root.PersistentFlags())
+	root.AddCommand(cmd.Run, cmd.Serve, cmd.Operator)
 
 	if len(commit) > 8 {
 		version = fmt.Sprintf("%v, commit %v, built at %v", version, commit[0:8], date)
