@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/prometheus/client_golang/prometheus"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/utils"
 )
@@ -43,10 +44,12 @@ type S3Checker struct{}
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *S3Checker) Run(config pkg.Config, results chan *pkg.CheckResult) {
+func (c *S3Checker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
 	for _, conf := range config.S3 {
-		results <- c.Check(conf.S3Check)
+		results = append(results, c.Check(conf))
 	}
+	return results
 }
 
 // Type: returns checker type
@@ -54,7 +57,7 @@ func (c *S3Checker) Type() string {
 	return "s3"
 }
 
-func (c *S3Checker) Check(check pkg.S3Check) *pkg.CheckResult {
+func (c *S3Checker) Check(check v1.S3Check) *pkg.CheckResult {
 	bucket := check.Bucket
 
 	if _, err := DNSLookup(bucket.Endpoint); err != nil {

@@ -6,6 +6,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sparrc/go-ping"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 )
 
@@ -32,15 +33,17 @@ func (c *IcmpChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *IcmpChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
+func (c *IcmpChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
 	for _, conf := range config.ICMP {
-		results <- c.Check(conf.ICMPCheck)
+		results = append(results, c.Check(conf))
 	}
+	return results
 }
 
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
-func (c *IcmpChecker) Check(check pkg.ICMPCheck) *pkg.CheckResult {
+func (c *IcmpChecker) Check(check v1.ICMPCheck) *pkg.CheckResult {
 	endpoint := check.Endpoint
 
 	lookupResult, err := DNSLookup(endpoint)
@@ -58,10 +61,10 @@ func (c *IcmpChecker) Check(check pkg.ICMPCheck) *pkg.CheckResult {
 		latency := float64(pingerStats.AvgRtt.Milliseconds())
 		loss := pingerStats.PacketLoss
 
-		if check.ThresholdMillis < latency {
+		if check.ThresholdMillis < int64(latency) {
 			return Failf(check, "timeout after %d ", latency)
 		}
-		if check.PacketLossThreshold < loss {
+		if check.PacketLossThreshold < int64(loss*100) {
 			return Failf(check, "packet loss of %d > than threshold of %d", loss, check.PacketLossThreshold)
 		}
 

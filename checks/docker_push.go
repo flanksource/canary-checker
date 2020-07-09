@@ -9,15 +9,18 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 )
 
 type DockerPushChecker struct{}
 
-func (c *DockerPushChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
+func (c *DockerPushChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
 	for _, conf := range config.DockerPush {
-		results <- c.Check(conf.DockerPushCheck)
+		results = append(results, c.Check(conf))
 	}
+	return results
 }
 
 // Type: returns checker type
@@ -27,7 +30,7 @@ func (c *DockerPushChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *DockerPushChecker) Check(check pkg.DockerPushCheck) *pkg.CheckResult {
+func (c *DockerPushChecker) Check(check v1.DockerPushCheck) *pkg.CheckResult {
 	start := time.Now()
 	ctx := context.Background()
 	authConfig := types.AuthConfig{

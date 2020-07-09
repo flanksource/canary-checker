@@ -13,7 +13,9 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/metrics"
 )
 
 var (
@@ -47,16 +49,18 @@ func (c *HttpChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *HttpChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
+func (c *HttpChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
 	for _, conf := range config.HTTP {
-		results <- c.Check(conf.HTTPCheck)
+		results = append(results, c.Check(conf))
 	}
+	return results
 
 }
 
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
-func (c *HttpChecker) Check(check pkg.HTTPCheck) *pkg.CheckResult {
+func (c *HttpChecker) Check(check v1.HTTPCheck) *pkg.CheckResult {
 	endpoint := check.Endpoint
 	lookupResult, err := DNSLookup(endpoint)
 	if err != nil {
@@ -99,7 +103,7 @@ func (c *HttpChecker) Check(check pkg.HTTPCheck) *pkg.CheckResult {
 			Metrics: []pkg.Metric{
 				{
 					Name: "response_code",
-					Type: pkg.CounterType,
+					Type: metrics.CounterType,
 					Labels: map[string]string{
 						"code":     strconv.Itoa(checkResults.ResponseCode),
 						"endpoint": endpoint,
@@ -111,7 +115,7 @@ func (c *HttpChecker) Check(check pkg.HTTPCheck) *pkg.CheckResult {
 	return Failf(check, "No DNS results found")
 }
 
-func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*pkg.HTTPCheckResult, error) {
+func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*HTTPCheckResult, error) {
 	var exp time.Time
 	start := time.Now()
 	var urlString string
@@ -164,7 +168,7 @@ func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*pkg.HTTPCheckResult, error) {
 
 	defer resp.Body.Close()
 	elapsed := time.Since(start)
-	checkResult := pkg.HTTPCheckResult{
+	checkResult := HTTPCheckResult{
 		Endpoint:     urlObj.Host,
 		Record:       urlObj.IP,
 		ResponseCode: resp.StatusCode,
@@ -220,4 +224,19 @@ func statusCodeToClass(statusCode int) string {
 	} else {
 		return "unknown"
 	}
+}
+
+type HTTPCheckResult struct {
+	// Check is the configuration
+	Check        interface{}
+	Endpoint     string
+	Record       string
+	ResponseCode int
+	SSLExpiry    int
+	Content      string
+	ResponseTime int64
+}
+
+func (check HTTPCheckResult) String() string {
+	return fmt.Sprintf("%s ssl=%d code=%d time=%d", check.Endpoint, check.SSLExpiry, check.ResponseCode, check.ResponseTime)
 }

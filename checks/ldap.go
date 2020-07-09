@@ -3,25 +3,10 @@ package checks
 import (
 	"crypto/tls"
 
-	"github.com/prometheus/client_golang/prometheus"
-
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	ldap "github.com/go-ldap/ldap/v3"
 )
-
-var (
-	ldapLookupRecordCount = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "canary_check_ldap_record_count",
-			Help: "LDAP Record Count",
-		},
-		[]string{"endpoint", "bindDN"},
-	)
-)
-
-func init() {
-	prometheus.MustRegister(ldapLookupRecordCount)
-}
 
 type LdapChecker struct{}
 
@@ -32,15 +17,17 @@ func (c *LdapChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *LdapChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
+func (c *LdapChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
 	for _, conf := range config.LDAP {
-		results <- c.Check(conf.LDAPCheck)
+		results = append(results, c.Check(conf))
 	}
+	return results
 }
 
 // CheckConfig : Check every ldap entry for lookup and auth
 // Returns check result and metrics
-func (c *LdapChecker) Check(check pkg.LDAPCheck) *pkg.CheckResult {
+func (c *LdapChecker) Check(check v1.LDAPCheck) *pkg.CheckResult {
 	ld, err := ldap.DialURL(check.Host, ldap.DialWithTLSConfig(&tls.Config{
 		InsecureSkipVerify: check.SkipTLSVerify,
 	}))
@@ -49,7 +36,7 @@ func (c *LdapChecker) Check(check pkg.LDAPCheck) *pkg.CheckResult {
 	}
 
 	if err := ld.Bind(check.Username, check.Password); err != nil {
-		return Failf(check, "Failed to bind using credentials %v", err)
+		return Failf(check, "Failed to bind using %s %v", check.Username, err)
 	}
 
 	req := &ldap.SearchRequest{
@@ -63,7 +50,9 @@ func (c *LdapChecker) Check(check pkg.LDAPCheck) *pkg.CheckResult {
 		return Failf(check, "Failed to search %v", check.Host, err)
 	}
 
-	ldapLookupRecordCount.WithLabelValues(check.Host, check.BindDN).Set(float64(len(res.Entries)))
+	if len(res.Entries) == 0 {
+		return Failf(check, "no results returned")
+	}
 
 	return &pkg.CheckResult{
 		Check:    check,

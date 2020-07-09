@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 )
 
@@ -49,10 +50,12 @@ type S3BucketChecker struct {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *S3BucketChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
+func (c *S3BucketChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
 	for _, conf := range config.S3Bucket {
-		results <- c.Check(conf.S3BucketCheck)
+		results = append(results, c.Check(conf))
 	}
+	return results
 }
 
 // Type: returns checker type
@@ -60,7 +63,7 @@ func (c *S3BucketChecker) Type() string {
 	return "s3_bucket"
 }
 
-func (c *S3BucketChecker) Check(bucket pkg.S3BucketCheck) *pkg.CheckResult {
+func (c *S3BucketChecker) Check(bucket v1.S3BucketCheck) *pkg.CheckResult {
 	if _, err := DNSLookup(bucket.Endpoint); err != nil {
 		return unexpectedErrorf(bucket, err, "failed to resolve DNS")
 	}

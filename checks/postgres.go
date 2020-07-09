@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"time"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/commons/logger"
 	_ "github.com/lib/pq"
-	log "github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -22,19 +23,18 @@ func (c *PostgresChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *PostgresChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
+func (c *PostgresChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
 	for _, conf := range config.Postgres {
-		for _, result := range c.Check(conf.PostgresCheck) {
-			results <- result
-		}
+		results = append(results, c.Check(conf)...)
 	}
+	return results
 }
 
 // CheckConfig : Attempts to connect to a DB using the specified
 //               driver and connection string
 // Returns check result and metrics
-func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
-
+func (c *PostgresChecker) Check(check v1.PostgresCheck) []*pkg.CheckResult {
 	var result []*pkg.CheckResult
 
 	start := time.Now()
@@ -48,10 +48,10 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 			Metrics:  []pkg.Metric{},
 		}
 		if err != nil {
-			log.Errorf(err.Error())
+			logger.Errorf(err.Error())
 		}
 		if queryResult != check.Result {
-			log.Errorf("Query '%s', did not return '%d', but '%d'", check.Query, check.Result, queryResult)
+			logger.Errorf("Query '%s', did not return '%d', but '%d'", check.Query, check.Result, queryResult)
 		}
 		result = append(result, checkResult)
 		return result
@@ -65,7 +65,7 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 		Metrics:  []pkg.Metric{},
 	}
 	result = append(result, checkResult)
-	log.Debugf("Duration %f", float64(elapsed.Milliseconds()))
+	logger.Debugf("Duration %f", float64(elapsed.Milliseconds()))
 	return result
 
 }
@@ -76,7 +76,7 @@ func (c *PostgresChecker) Check(check pkg.PostgresCheck) []*pkg.CheckResult {
 func connectWithDriver(driver string, connectionSting string, query string) (int, error) {
 	db, err := sql.Open(driver, connectionSting)
 	if err != nil {
-		log.Error(err.Error())
+		logger.Errorf(err.Error())
 		return 0, err
 	}
 	defer db.Close()
@@ -84,10 +84,10 @@ func connectWithDriver(driver string, connectionSting string, query string) (int
 	var resultValue int
 	err = db.QueryRow(query).Scan(&resultValue)
 	if err != nil {
-		log.Error(err.Error())
+		logger.Errorf(err.Error())
 		return 0, err
 	}
-	log.Debugf("Connection test query result of %d", resultValue)
+	logger.Debugf("Connection test query result of %d", resultValue)
 
 	return resultValue, nil
 }

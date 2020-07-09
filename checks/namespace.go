@@ -14,9 +14,11 @@ import (
 
 	"sigs.k8s.io/yaml"
 
+	canaryv1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/metrics"
+	"github.com/flanksource/commons/logger"
 	perrors "github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,7 +41,7 @@ func NewNamespaceChecker() *NamespaceChecker {
 
 	k8sClient, err := pkg.NewK8sClient()
 	if err != nil {
-		log.Errorf("Failed to create kubernetes config %v", err)
+		logger.Errorf("Failed to create kubernetes config %v", err)
 		return nc
 	}
 
@@ -50,15 +52,17 @@ func NewNamespaceChecker() *NamespaceChecker {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *NamespaceChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
+func (c *NamespaceChecker) Run(config canaryv1.CanarySpec) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
 	for _, conf := range config.Namespace {
-		deadline := time.Now().Add(config.Interval)
+		deadline := time.Now().Add(time.Duration(config.Interval) * time.Second)
 		if deadline.Before(time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)) {
 			deadline = time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)
 		}
-		results <- c.Check(conf.NamespaceCheck, deadline)
+		results = append(results, c.Check(conf, deadline))
 
 	}
+	return results
 }
 
 // Type: returns checker type
@@ -66,7 +70,7 @@ func (c *NamespaceChecker) Type() string {
 	return "pod"
 }
 
-func (c *NamespaceChecker) newPod(check pkg.NamespaceCheck, ns *v1.Namespace) (*v1.Pod, error) {
+func (c *NamespaceChecker) newPod(check canaryv1.NamespaceCheck, ns *v1.Namespace) (*v1.Pod, error) {
 
 	if check.PodSpec == "" {
 		return nil, fmt.Errorf("Pod spec cannot be empty")
@@ -103,15 +107,15 @@ func (c *NamespaceChecker) getConditionTimes(ns *v1.Namespace, pod *v1.Pod) (tim
 	return times, nil
 }
 
-func (c *NamespaceChecker) Check(check pkg.NamespaceCheck, checkDeadline time.Time) *pkg.CheckResult {
+func (c *NamespaceChecker) Check(check canaryv1.NamespaceCheck, checkDeadline time.Time) *pkg.CheckResult {
 	if !c.lock.TryAcquire(1) {
-		log.Trace("Check already in progress, skipping")
+		logger.Tracef("Check already in progress, skipping")
 		return nil
 	}
 	defer func() { c.lock.Release(1) }()
 	startTimer := NewTimer()
 
-	log.Debugf("Running namespace check %s", check.CheckName)
+	logger.Debugf("Running namespace check %s", check.CheckName)
 	five := int64(5)
 	if _, err := c.k8s.CoreV1().Nodes().List(metav1.ListOptions{TimeoutSeconds: &five}); err != nil {
 		return unexpectedErrorf(check, err, "cannot connect to API server")
@@ -156,8 +160,8 @@ func (c *NamespaceChecker) Check(check pkg.NamespaceCheck, checkDeadline time.Ti
 	started := diff(conditions, v1.PodScheduled, v1.ContainersReady)
 	running := diff(conditions, v1.ContainersReady, v1.PodReady)
 
-	log.Debugf("%s created=%s, scheduled=%d, started=%d, running=%d wall=%s", pod.Name, created, scheduled, started, running, startTimer)
-	log.Tracef("%v", conditions)
+	logger.Debugf("%s created=%s, scheduled=%d, started=%d, running=%d wall=%s", pod.Name, created, scheduled, started, running, startTimer)
+	logger.Tracef("%v", conditions)
 
 	if err := c.createServiceAndIngress(check, ns, pod); err != nil {
 		return unexpectedErrorf(check, err, "failed to create ingress")
@@ -182,31 +186,31 @@ func (c *NamespaceChecker) Check(check pkg.NamespaceCheck, checkDeadline time.Ti
 		Metrics: []pkg.Metric{
 			{
 				Name:   "schedule_time",
-				Type:   pkg.HistogramType,
+				Type:   metrics.HistogramType,
 				Labels: map[string]string{"namespaceCheck": check.CheckName},
 				Value:  float64(scheduled),
 			},
 			{
 				Name:   "creation_time",
-				Type:   pkg.HistogramType,
+				Type:   metrics.HistogramType,
 				Labels: map[string]string{"namespaceCheck": check.CheckName},
 				Value:  float64(started),
 			},
 			{
 				Name:   "delete_time",
-				Type:   pkg.HistogramType,
+				Type:   metrics.HistogramType,
 				Labels: map[string]string{"namespaceCheck": check.CheckName},
 				Value:  float64(deletion.Elapsed()),
 			},
 			{
 				Name:   "ingress_time",
-				Type:   pkg.HistogramType,
+				Type:   metrics.HistogramType,
 				Labels: map[string]string{"namespaceCheck": check.CheckName},
 				Value:  float64(ingressTime),
 			},
 			{
 				Name:   "request_time",
-				Type:   pkg.HistogramType,
+				Type:   metrics.HistogramType,
 				Labels: map[string]string{"namespaceCheck": check.CheckName},
 				Value:  float64(requestTime),
 			},
@@ -221,7 +225,7 @@ func (c *NamespaceChecker) Cleanup(ns *v1.Namespace) error {
 	return nil
 }
 
-func (c *NamespaceChecker) httpCheck(check pkg.NamespaceCheck, deadline time.Time) (ingressTime float64, requestTime float64, result *pkg.CheckResult) {
+func (c *NamespaceChecker) httpCheck(check canaryv1.NamespaceCheck, deadline time.Time) (ingressTime float64, requestTime float64, result *pkg.CheckResult) {
 	var hardDeadline time.Time
 	ingressTimeout := time.Now().Add(time.Duration(check.IngressTimeout) * time.Millisecond)
 	if ingressTimeout.After(deadline) {
@@ -235,12 +239,12 @@ func (c *NamespaceChecker) httpCheck(check pkg.NamespaceCheck, deadline time.Tim
 
 	for {
 		url := fmt.Sprintf("http://%s%s", check.IngressHost, check.Path)
-		log.Debugf("Checking url %s", url)
+		logger.Debugf("Checking url %s", url)
 		httpTimer := NewTimer()
 		response, responseCode, err := c.getHttp(url, check.HttpTimeout, hardDeadline)
 		if err != nil && perrors.Is(err, context.DeadlineExceeded) {
 			if timer.Millis() > check.HttpTimeout && time.Now().Before(hardDeadline) {
-				log.Debugf("[%s] request completed in %s, above threshold of %d", check, httpTimer, check.HttpTimeout)
+				logger.Debugf("[%s] request completed in %s, above threshold of %d", check, httpTimer, check.HttpTimeout)
 				time.Sleep(retryInterval)
 				continue
 			} else if timer.Millis() > check.HttpTimeout && time.Now().After(hardDeadline) {
@@ -248,25 +252,25 @@ func (c *NamespaceChecker) httpCheck(check pkg.NamespaceCheck, deadline time.Tim
 			} else if time.Now().After(hardDeadline) {
 				return timer.Elapsed(), 0, Failf(check, "ingress timeout exceeded %s > %d", timer, check.IngressTimeout)
 			} else {
-				log.Debugf("now=%s deadline=%s", time.Now(), hardDeadline)
+				logger.Debugf("now=%s deadline=%s", time.Now(), hardDeadline)
 				continue
 			}
 		} else if err != nil {
-			log.Debugf("[%s] failed to get http URL %s: %v", check, url, err)
+			logger.Debugf("[%s] failed to get http URL %s: %v", check, url, err)
 			time.Sleep(retryInterval)
 			continue
 		}
 
 		found := false
 		for _, c := range check.ExpectedHttpStatuses {
-			if c == responseCode {
+			if c == int64(responseCode) {
 				found = true
 				break
 			}
 		}
 
 		if !found && responseCode == http.StatusServiceUnavailable || responseCode == http.StatusNotFound {
-			log.Debugf("[%s] request completed with %d, expected %v, retrying", check, responseCode, check.ExpectedHttpStatuses)
+			logger.Debugf("[%s] request completed with %d, expected %v, retrying", check, responseCode, check.ExpectedHttpStatuses)
 			time.Sleep(retryInterval)
 			continue
 		} else if !found {
@@ -283,7 +287,7 @@ func (c *NamespaceChecker) httpCheck(check pkg.NamespaceCheck, deadline time.Tim
 
 }
 
-func (c *NamespaceChecker) createServiceAndIngress(check pkg.NamespaceCheck, ns *v1.Namespace, pod *v1.Pod) error {
+func (c *NamespaceChecker) createServiceAndIngress(check canaryv1.NamespaceCheck, ns *v1.Namespace, pod *v1.Pod) error {
 	if check.Port == 0 {
 		return perrors.Errorf("Pod cannot be empty for pod %s in namespace %s", pod.Name, ns.Name)
 	}
@@ -305,7 +309,7 @@ func (c *NamespaceChecker) createServiceAndIngress(check pkg.NamespaceCheck, ns 
 				{
 					Name:       "check",
 					Protocol:   v1.ProtocolTCP,
-					Port:       check.Port,
+					Port:       int32(check.Port),
 					TargetPort: intstr.FromInt(int(check.Port)),
 				},
 			},
@@ -338,7 +342,7 @@ func (c *NamespaceChecker) createServiceAndIngress(check pkg.NamespaceCheck, ns 
 	return nil
 }
 
-func (c *NamespaceChecker) newIngress(check pkg.NamespaceCheck, ns *v1.Namespace, svc string) *v1beta1.Ingress {
+func (c *NamespaceChecker) newIngress(check canaryv1.NamespaceCheck, ns *v1.Namespace, svc string) *v1beta1.Ingress {
 	ingress := &v1beta1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Ingress",
@@ -401,11 +405,11 @@ func (c *NamespaceChecker) getHttp(url string, timeout int64, deadline time.Time
 	return string(respBytes), resp.StatusCode, nil
 }
 
-func (c *NamespaceChecker) podCheckSelectorValue(check pkg.NamespaceCheck, ns *v1.Namespace) string {
+func (c *NamespaceChecker) podCheckSelectorValue(check canaryv1.NamespaceCheck, ns *v1.Namespace) string {
 	return fmt.Sprintf("%s.%s", check.CheckName, ns.Name)
 }
 
-func (c *NamespaceChecker) podCheckSelector(check pkg.NamespaceCheck, ns *v1.Namespace) string {
+func (c *NamespaceChecker) podCheckSelector(check canaryv1.NamespaceCheck, ns *v1.Namespace) string {
 	return fmt.Sprintf("%s=%s", podCheckSelector, c.podCheckSelectorValue(check, ns))
 }
 

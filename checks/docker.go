@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"io"
 	"strings"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/prometheus/client_golang/prometheus"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 )
 
@@ -47,10 +49,12 @@ func init() {
 
 type DockerPullChecker struct{}
 
-func (c *DockerPullChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
+func (c *DockerPullChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
 	for _, conf := range config.DockerPull {
-		results <- c.Check(conf.DockerPullCheck)
+		results = append(results, c.Check(conf))
 	}
+	return results
 }
 
 // Type: returns checker type
@@ -58,12 +62,26 @@ func (c *DockerPullChecker) Type() string {
 	return "docker-pull"
 }
 
+func getDigestFromOutput(out io.ReadCloser) string {
+	buf := new(bytes.Buffer)
+	defer out.Close()
+	_, _ = buf.ReadFrom(out)
+	for _, line := range strings.Split(buf.String(), "\n") {
+		var status = make(map[string]string)
+		_ = json.Unmarshal([]byte(line), &status)
+
+		if strings.HasPrefix(status["status"], "Digest:") {
+			return status["status"][len("Digest: "):]
+		}
+	}
+	return ""
+}
+
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *DockerPullChecker) Check(check pkg.DockerPullCheck) *pkg.CheckResult {
+func (c *DockerPullChecker) Check(check v1.DockerPullCheck) *pkg.CheckResult {
 	start := time.Now()
 	ctx := context.Background()
-	digestVerified, sizeVerified := false, false
 	authConfig := types.AuthConfig{
 		Username: check.Username,
 		Password: check.Password,
@@ -75,43 +93,20 @@ func (c *DockerPullChecker) Check(check pkg.DockerPullCheck) *pkg.CheckResult {
 	if err != nil {
 		return Failf(check, "Failed to pull image: %s", err)
 	} else {
-		buf := new(bytes.Buffer)
-		defer out.Close()
-		_, _ = buf.ReadFrom(out)
-		if strings.Contains(buf.String(), check.ExpectedDigest) {
-			digestVerified = true
+		digest := getDigestFromOutput(out)
+		if digest != check.ExpectedDigest {
+			return Failf(check, "digests do not match %s != %s", digest, check.ExpectedDigest)
 		}
 	}
 
 	inspect, _, _ := dockerClient.ImageInspectWithRaw(ctx, check.Image)
-	if inspect.Size == check.ExpectedSize {
-		sizeVerified = true
-	}
-	m := []pkg.Metric{
-		{
-			Name: "pull_time", Type: pkg.HistogramType,
-			Labels: map[string]string{"image": check.Image},
-			Value:  float64(elapsed.Milliseconds()),
-		},
-		{
-			Name: "totalLayers", Type: pkg.GaugeType,
-			Labels: map[string]string{"image": check.Image},
-			Value:  float64(len(inspect.RootFS.Layers)),
-		},
-		{
-			Name: "size", Type: pkg.GaugeType,
-			Labels: map[string]string{"image": check.Image},
-			Value:  float64(inspect.Size),
-		},
+	if check.ExpectedSize > 0 && inspect.Size != check.ExpectedSize {
+		return Failf(check, "size does not match: %d != %d", inspect.Size, check.ExpectedSize)
 	}
 
-	size.WithLabelValues(check.Image).Set(float64(inspect.Size))
-	imagePullTime.WithLabelValues(check.Image).Observe(float64(elapsed.Milliseconds()))
 	return &pkg.CheckResult{
 		Check:    check,
-		Pass:     digestVerified && sizeVerified,
-		Invalid:  !(digestVerified && sizeVerified),
+		Pass:     true,
 		Duration: elapsed.Milliseconds(),
-		Metrics:  m,
 	}
 }
