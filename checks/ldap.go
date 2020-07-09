@@ -40,9 +40,11 @@ func (c *LdapChecker) Check(check v1.LDAPCheck) *pkg.CheckResult {
 	}
 
 	req := &ldap.SearchRequest{
+		Scope:  ldap.ScopeWholeSubtree,
 		BaseDN: check.BindDN,
 		Filter: check.UserSearch,
 	}
+
 	timer := NewTimer()
 	res, err := ld.Search(req)
 
