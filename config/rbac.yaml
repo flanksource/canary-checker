@@ -37,11 +37,26 @@ rules:
       - get
       - patch
       - update
+  # for creating and destroying pods during the pod canary test
   - apiGroups:
       - ""
     resources:
       - pods
       - namespaces
+      - services
+    verbs:
+      - "*"
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - "extensions"
+    resources:
+      - ingresses
     verbs:
       - "*"
   # for reading configuration from canaries
