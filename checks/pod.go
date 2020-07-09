@@ -206,16 +206,14 @@ func (c *PodChecker) Check(podCheck canaryv1.PodCheck, checkDeadline time.Time) 
 		}
 	}
 
-	deleteOk := true
 	deletion := NewTimer()
 	if err := pods.Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
-		deleteOk = false
 		return unexpectedErrorf(podCheck, err, "failed to delete pod")
 	}
 
 	return &pkg.CheckResult{
 		Check:    podCheck,
-		Pass:     ingressResult.Pass && deleteOk,
+		Pass:     ingressResult.Pass,
 		Duration: int64(startTimer.Elapsed()),
 		Message:  message,
 		Metrics: []pkg.Metric{
@@ -291,6 +289,9 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 
 	for {
 		url := fmt.Sprintf("http://%s%s", podCheck.IngressHost, podCheck.Path)
+		if _, err := http.NewRequest("GET", url, nil); err != nil {
+			return 0, 0, Failf(podCheck, "invalid url: %v", err)
+		}
 		httpTimer := NewTimer()
 		response, responseCode, err := c.getHttp(url, podCheck.HttpTimeout, hardDeadline)
 		if err != nil && perrors.Is(err, context.DeadlineExceeded) {
@@ -321,7 +322,6 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 		}
 
 		if !found && responseCode == http.StatusServiceUnavailable || responseCode == 404 {
-			// logger.Tracef("[%s] request completed with %d, expected %v, retrying", podCheck, responseCode, podCheck.ExpectedHttpStatuses)
 			time.Sleep(retryInterval)
 			continue
 		} else if !found {
