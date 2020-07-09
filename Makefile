@@ -1,9 +1,10 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= flanksource/canary-checker:latest
+IMG ?= flanksource/canary-checker:$(TAG)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=false"
+CRD_OPTIONS ?= ""
 NAME=canary-checker
+TAG=$(shell git describe --tags  --long)$(shell date +"%H%M%S")
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -20,7 +21,7 @@ test: generate fmt vet manifests
 
 # Build manager binary
 manager: generate fmt vet
-	go build -o bin/manager main.go
+	go build -o bin/canary-checker main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
@@ -28,20 +29,24 @@ run: generate fmt vet manifests
 
 # Install CRDs into a cluster
 install-crd: manifests
-	kubectl kustomize config/crd | kubectl apply -f -
+	kubectl apply -f config/crd.yaml
+
+
+kind-install: docker-build
+	kind load docker-image --name=kind-kind ${IMG}
 
 # Uninstall CRDs from a cluster
 uninstall: manifests
-	kustomize build config/crd | kubectl delete -f -
+	kubectl delete -f config/crd.yaml
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests
-	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default | kubectl apply -f -
+	cd config && kustomize edit set image controller=${IMG}
+	kubectl kustomize config | kubectl apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) crd:trivialVersions=false paths="./..." output:stdout > config/crd.yaml
 
 # Run go fmt against code
 fmt:
@@ -56,7 +61,7 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
-docker-build: test
+docker-build:
 	docker build . -t ${IMG}
 
 # Push the docker image
