@@ -140,6 +140,8 @@ func (c CheckResult) String() string {
 	}
 }
 
+type MetricType string
+
 type Metric struct {
 	Name   string
 	Type   MetricType

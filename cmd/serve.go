@@ -14,6 +14,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/aggregate"
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
+	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/statuspage"
 	"github.com/flanksource/commons/logger"
 	"github.com/go-co-op/gocron"
@@ -63,9 +64,7 @@ var Serve = &cobra.Command{
 				}()
 			})
 			go func() {
-				for result := range results {
-					cache.AddCheck(result)
-					processMetrics(c.Type(), result)
+						metrics.Record("", "", result)
 				}
 			}()
 		}
@@ -86,44 +85,7 @@ var Serve = &cobra.Command{
 		log.Infof("Metrics dashboard can be accessed at http://%s/metrics", addr)
 
 		if err := nethttp.ListenAndServe(addr, nil); err != nil {
-			log.Fatal(errors.Wrap(err, "failed to start server"))
-		}
-	},
-}
-
-var counters map[string]prometheus.Counter
-
-func processMetrics(checkType string, result *pkg.CheckResult) {
-	if result == nil || result.Check == nil {
-		logger.Warnf("%s returned a nil result", checkType)
-		return
-	}
-	description := result.Check.GetDescription()
-	endpoint := result.Check.GetEndpoint()
-	if log.IsLevelEnabled(log.InfoLevel) {
-		fmt.Println(result)
-	}
-	pkg.OpsCount.WithLabelValues(checkType, endpoint, description).Inc()
-	if result.Pass {
-		pkg.Guage.WithLabelValues(checkType, description).Set(0)
-		pkg.OpsSuccessCount.WithLabelValues(checkType, endpoint, description).Inc()
-		if result.Duration > 0 {
-			pkg.RequestLatency.WithLabelValues(checkType, endpoint, description).Observe(float64(result.Duration))
-		}
-
-		for _, m := range result.Metrics {
-			switch m.Type {
-			case pkg.CounterType:
-				pkg.GenericCounter.WithLabelValues(checkType, description, m.Name, strconv.Itoa(int(m.Value))).Inc()
-			case pkg.GaugeType:
-				pkg.GenericGauge.WithLabelValues(checkType, description, m.Name).Set(m.Value)
-			case pkg.HistogramType:
-				pkg.GenericHistogram.WithLabelValues(checkType, description, m.Name).Observe(m.Value)
-			}
-		}
-	} else {
-		pkg.Guage.WithLabelValues(checkType, description).Set(1)
-		pkg.OpsFailedCount.WithLabelValues(checkType, endpoint, description).Inc()
+		logger.Fatalf("failed to start server: %v", err)
 	}
 }
 
