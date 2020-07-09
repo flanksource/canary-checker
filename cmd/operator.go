@@ -25,12 +25,16 @@ var Operator = &cobra.Command{
 }
 var enableLeaderElection, dev bool
 var httpPort, metricsPort, webhookPort int
+var includeNamespace, includeCheck string
 
 func init() {
 	Operator.Flags().IntVar(&httpPort, "httpPort", 8080, "Port to expose a health dashboard ")
 	Operator.Flags().IntVar(&metricsPort, "metricsPort", 8081, "Port to expose a health dashboard ")
 	Operator.Flags().IntVar(&webhookPort, "webhookPort", 8082, "Port for webhooks ")
 	Operator.Flags().BoolVar(&dev, "dev", false, "Run in development mode")
+	Operator.Flags().StringVar(&includeNamespace, "include-namespace", "", "Watch only specified namespaces, otherwise watch all")
+	Operator.Flags().StringVar(&includeCheck, "include-check", "", "Run matching canaries - useful for debugging")
+
 	Operator.Flags().BoolVar(&enableLeaderElection, "enable-leader-election", false, "Enabling this will ensure there is only one active controller manager")
 	Operator.Flags().IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
 	Operator.Flags().StringSliceVar(&aggregate.Servers, "aggregateServers", []string{}, "Aggregate check results from multiple servers in the status page")
@@ -74,9 +78,11 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	reconciler := &controllers.CanaryReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("canary"),
-		Scheme: mgr.GetScheme(),
+		IncludeCheck:     includeCheck,
+		IncludeNamespace: includeNamespace,
+		Client:           mgr.GetClient(),
+		Log:              ctrl.Log.WithName("controllers").WithName("canary"),
+		Scheme:           mgr.GetScheme(),
 	}
 
 	if err = reconciler.SetupWithManager(mgr); err != nil {

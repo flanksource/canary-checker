@@ -45,6 +45,7 @@ import (
 
 // CanaryReconciler reconciles a Canary object
 type CanaryReconciler struct {
+	IncludeNamespace, IncludeCheck string
 	client.Client
 	Kubernetes kubernetes.Interface
 	Log        logr.Logger
@@ -177,6 +178,15 @@ var observed = sync.Map{}
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries/status,verbs=get;update;patch
 func (r *CanaryReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	if r.IncludeNamespace != "" && r.IncludeNamespace != req.Namespace {
+		r.Log.V(2).Info("namespace not included, skipping")
+		return ctrl.Result{}, nil
+	}
+	if r.IncludeCheck != "" && r.IncludeCheck != req.Name {
+		r.Log.V(2).Info("check not included, skipping")
+		return ctrl.Result{}, nil
+	}
+
 	ctx := context.Background()
 	logger := r.Log.WithValues("canary", req.NamespacedName)
 
