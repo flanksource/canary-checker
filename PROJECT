@@ -1,0 +1,7 @@
+domain: flanksource.com
+repo: github.com/flanksource/canary-checker
+resources:
+- group: canaries
+  kind: Canary
+  version: v1
+version: "2"

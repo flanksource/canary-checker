@@ -12,8 +12,9 @@ import (
 	"time"
 
 	pusher "github.com/chartmuseum/helm-push/pkg/chartmuseum"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	log "github.com/sirupsen/logrus"
+	"github.com/flanksource/commons/logger"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/cli"
@@ -28,17 +29,19 @@ func (c *HelmChecker) Type() string {
 	return "helm"
 }
 
-func (c *HelmChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
+func (c *HelmChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
 	for _, conf := range config.Helm {
-		results <- c.Check(conf.HelmCheck)
+		results = append(results, c.Check(conf))
 	}
+	return results
 }
 
-func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
+func (c *HelmChecker) Check(config v1.HelmCheck) *pkg.CheckResult {
 	start := time.Now()
 	var uploadOK, downloadOK bool = true, true
 	chartmuseum := fmt.Sprintf("%s/chartrepo/%s/", config.Chartmuseum, config.Project)
-	log.Trace("Uploading test chart")
+	logger.Tracef("Uploading test chart")
 	client, _ := pusher.NewClient(
 		pusher.URL(chartmuseum),
 		pusher.Username(config.Username),
@@ -54,7 +57,6 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 			Invalid:  true,
 			Duration: 0,
 			Message:  fmt.Sprintf("Failed to create test chart: %v", err),
-			Metrics:  getHelmMetrics(config, false),
 		}
 	}
 	response, err := client.UploadChartPackage(*chartPath, false)
@@ -66,11 +68,8 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 			Invalid:  true,
 			Duration: 0,
 			Message:  fmt.Sprintf("Failed to check: %v", err),
-			Metrics:  getHelmMetrics(config, false),
 		}
 	}
-	log.Trace(response)
-	log.Trace(response.Request)
 
 	if response.StatusCode != 201 {
 		uploadOK = false
@@ -80,7 +79,6 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 			Invalid:  false,
 			Duration: 0,
 			Message:  "Failed to push test chart",
-			Metrics:  getHelmMetrics(config, false),
 		}
 	}
 
@@ -91,7 +89,6 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 			Invalid:  true,
 			Duration: 0,
 			Message:  fmt.Sprintf("Failed to get user: %v", err),
-			Metrics:  getHelmMetrics(config, false),
 		}
 	}
 
@@ -106,7 +103,7 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 		KubeConfig: kubeconfigPath,
 	}
 
-	log.Trace("Pulling test chart")
+	logger.Tracef("Pulling test chart")
 	url, err := url.Parse(chartmuseum)
 	if err != nil {
 		return &pkg.CheckResult{
@@ -115,28 +112,24 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 			Invalid:  true,
 			Duration: 0,
 			Message:  fmt.Sprintf("Failed to parse chartmuseum url: %v", err),
-			Metrics:  getHelmMetrics(config, false),
 		}
 	}
 	url.Path = path.Join(url.Path, "charts/test-chart-0.1.0.tgz")
 	_, err = iCli.Run(url.String())
 	if err != nil {
-		log.Trace(err)
 		downloadOK = false
 		return &pkg.CheckResult{
 			Check:    config,
 			Pass:     false,
 			Invalid:  false,
 			Duration: 0,
-			Message:  "Failed to pull test chart",
-			Metrics:  getHelmMetrics(config, false),
 		}
 	}
 
 	defer cleanUp("test-chart", chartmuseum, config)
 
 	if err != nil {
-		log.Warnf("Failed to perform cleanup: %v", err)
+		logger.Warnf("Failed to perform cleanup: %v", err)
 	}
 	elapsed := time.Since(start)
 	return &pkg.CheckResult{
@@ -144,12 +137,10 @@ func (c *HelmChecker) Check(config pkg.HelmCheck) *pkg.CheckResult {
 		Pass:     uploadOK && downloadOK,
 		Invalid:  false,
 		Duration: elapsed.Milliseconds(),
-		Message:  "Successful push and pull",
-		Metrics:  getHelmMetrics(config, uploadOK && downloadOK),
 	}
 }
 
-func cleanUp(chartname string, chartmuseum string, config pkg.HelmCheck) error {
+func cleanUp(chartname string, chartmuseum string, config v1.HelmCheck) error {
 	caCert, err := ioutil.ReadFile(*config.CaFile)
 	if err != nil {
 		return fmt.Errorf("failed to read certificate file: %v", err)
@@ -183,25 +174,6 @@ func cleanUp(chartname string, chartmuseum string, config pkg.HelmCheck) error {
 		return fmt.Errorf("failed to delete test chart. Error code: %d", resp.StatusCode)
 	}
 	return nil
-}
-
-func getHelmMetrics(check pkg.HelmCheck, pass bool) []pkg.Metric {
-	var value float64 = 0
-	if pass {
-		value = 1
-	}
-	return []pkg.Metric{
-		{
-			Name: "helm_check_pass",
-			Type: pkg.GaugeType,
-			Labels: map[string]string{
-				"helmCheckProject":  check.Project,
-				"helmCheckUrl":      check.Chartmuseum,
-				"helmCheckUsername": check.Username,
-			},
-			Value: value,
-		},
-	}
 }
 
 func createTestChart() (*string, error) {

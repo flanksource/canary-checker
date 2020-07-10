@@ -5,12 +5,11 @@ import (
 	"net"
 	"reflect"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 )
 
@@ -21,18 +20,20 @@ func (c *DNSChecker) Type() string {
 	return "dns"
 }
 
-func (c *DNSChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
+func (c *DNSChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
 	for _, conf := range config.DNS {
-		results <- c.Check(conf.DNSCheck)
+		results = append(results, c.Check(conf))
 	}
+	return results
 }
 
-func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
+func (c *DNSChecker) Check(check v1.DNSCheck) *pkg.CheckResult {
 	start := time.Now()
 	ctx := context.Background()
 	dialer, err := getDialer(check, check.Timeout)
 	if err != nil {
-		log.Errorf("Failed to get dialer, %v", err)
+		return Failf(check, "Failed to get dialer, %v", err)
 	}
 	r := net.Resolver{
 		PreferGo: true,
@@ -41,8 +42,8 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 	if check.QueryType == "A" {
 		result, err := r.LookupHost(ctx, check.Query)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
-			return &pkg.CheckResult{}
+			return Failf(check, "Failed to lookup: %v", err)
+
 		}
 
 		elapsed := time.Since(start)
@@ -55,14 +56,12 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
 			Message:  message,
-			Metrics:  getDNSMetrics(check, elapsed, result),
 		}
 	}
 	if check.QueryType == "PTR" {
 		result, err := r.LookupAddr(ctx, check.Query)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
-			return &pkg.CheckResult{}
+			return Failf(check, "Failed to lookup: %v", err)
 		}
 
 		elapsed := time.Since(start)
@@ -74,15 +73,13 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
 			Message:  message,
-			Metrics:  getDNSMetrics(check, elapsed, result),
 		}
 	}
 
 	if check.QueryType == "CNAME" {
 		result, err := r.LookupCNAME(ctx, check.Query)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
-			return &pkg.CheckResult{}
+			return Failf(check, "Failed to lookup: %v", err)
 		}
 		elapsed := time.Since(start)
 
@@ -93,30 +90,25 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
 			Message:  message,
-			Metrics:  getDNSMetrics(check, elapsed, []string{result}),
 		}
 	}
 
 	if check.QueryType == "SRV" {
 		service, proto, name, err := srvInfo(check.Query)
 		if err != nil {
-			log.Errorf("Wrong SRV query %s", check.Query)
+			return Failf(check, "Wrong SRV query %s", check.Query)
 		}
 		cname, addr, err := r.LookupSRV(ctx, service, proto, name)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
-			return &pkg.CheckResult{}
-			// TODO implement SRV checks
+			return Failf(check, "Failed to lookup: %v", err)
 		}
-		fmt.Println(cname, addr)
-		return &pkg.CheckResult{}
+		return Passf(check, "got: %s %s", cname, addr)
 	}
 
 	if check.QueryType == "MX" {
 		result, err := r.LookupMX(ctx, check.Query)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
-			return &pkg.CheckResult{}
+			return Failf(check, "Failed to lookup: %v", err)
 		}
 		elapsed := time.Since(start)
 		var resultString []string
@@ -130,15 +122,13 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Duration: elapsed.Milliseconds(),
 			Check:    check,
 			Message:  message,
-			Metrics:  getDNSMetrics(check, elapsed, resultString),
 		}
 	}
 
 	if check.QueryType == "TXT" {
 		result, err := r.LookupTXT(ctx, check.Query)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
-			return &pkg.CheckResult{}
+			return Failf(check, "Failed to lookup: %v", err)
 		}
 		elapsed := time.Since(start)
 		pass, message := checkResult(result, check)
@@ -148,7 +138,6 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
 			Message:  message,
-			Metrics:  getDNSMetrics(check, elapsed, result),
 		}
 	}
 
@@ -156,7 +145,6 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 		result, err := r.LookupNS(ctx, check.Query)
 		elapsed := time.Since(start)
 		if err != nil {
-			log.Errorf("Failed to lookup: %v", err)
 			return &pkg.CheckResult{
 				Check:    check,
 				Pass:     false,
@@ -176,14 +164,13 @@ func (c *DNSChecker) Check(check pkg.DNSCheck) *pkg.CheckResult {
 			Invalid:  false,
 			Duration: elapsed.Milliseconds(),
 			Message:  message,
-			Metrics:  getDNSMetrics(check, elapsed, resultString),
 		}
 	}
 
-	return &pkg.CheckResult{}
+	return Failf(check, "unknown query type: %s", check.QueryType)
 }
 
-func getDialer(check pkg.DNSCheck, timeout int) (func(ctx context.Context, network, address string) (net.Conn, error), error) {
+func getDialer(check v1.DNSCheck, timeout int) (func(ctx context.Context, network, address string) (net.Conn, error), error) {
 	return func(ctx context.Context, network, address string) (net.Conn, error) {
 		d := net.Dialer{
 			Timeout: time.Second * time.Duration(timeout),
@@ -192,14 +179,14 @@ func getDialer(check pkg.DNSCheck, timeout int) (func(ctx context.Context, netwo
 	}, nil
 }
 
-func checkResult(got []string, check pkg.DNSCheck) (result bool, message string) {
+func checkResult(got []string, check v1.DNSCheck) (result bool, message string) {
 	expected := check.ExactReply
 	count := len(got)
 	var pass = true
 	var errMessage string
 	if count < check.MinRecords {
 		pass = false
-		errMessage = "Records count is less then minrecords"
+		errMessage = fmt.Sprintf("returned %d results, expecting %d", count, check.MinRecords)
 	}
 
 	if len(check.ExactReply) != 0 {
@@ -210,13 +197,11 @@ func checkResult(got []string, check pkg.DNSCheck) (result bool, message string)
 			errMessage = fmt.Sprintf("Got %s, expected %s", got, check.ExactReply)
 		}
 	}
-	log.Tracef("DNS Result: %s", got)
-	log.Tracef("Expected Result %s", check.ExactReply)
 
 	if pass {
-		message = fmt.Sprintf("Successful check on %s. Got %v", check.Server, got)
+		message = fmt.Sprintf("got %v", got)
 	} else {
-		message = fmt.Sprintf("Check failed: %s %s on %s. %s", check.QueryType, check.Query, check.Server, errMessage)
+		message = fmt.Sprintf("%s %s on %s: %s", check.QueryType, check.Query, check.Server, errMessage)
 	}
 	return pass, message
 }
@@ -227,29 +212,4 @@ func srvInfo(srv string) (service string, proto string, name string, err error) 
 		return "", "", "", fmt.Errorf("srvInfo: wrong srv string")
 	}
 	return strings.ReplaceAll(splited[0], "_", ""), strings.ReplaceAll(splited[1], "_", ""), splited[2], nil
-}
-
-func getDNSMetrics(check pkg.DNSCheck, lookupTime time.Duration, records []string) []pkg.Metric {
-	return []pkg.Metric{
-		{
-			Name: "dns_lookup_time",
-			Type: pkg.HistogramType,
-			Labels: map[string]string{
-				"dnsCheckQuery":  check.Query,
-				"dnsCheckServer": check.Server,
-				"dnsCheckPort":   strconv.Itoa(check.Port),
-			},
-			Value: float64(lookupTime.Milliseconds()),
-		},
-		{
-			Name: "dns_records",
-			Type: pkg.GaugeType,
-			Labels: map[string]string{
-				"dnsCheckQuery":  check.Query,
-				"dnsCheckServer": check.Server,
-				"dnsCheckPort":   strconv.Itoa(check.Port),
-			},
-			Value: float64(len(records)),
-		},
-	}
 }

@@ -2,27 +2,11 @@ package checks
 
 import (
 	"crypto/tls"
-	"fmt"
 
-	"github.com/prometheus/client_golang/prometheus"
-
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	ldap "github.com/go-ldap/ldap/v3"
 )
-
-var (
-	ldapLookupRecordCount = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "canary_check_ldap_record_count",
-			Help: "LDAP Record Count",
-		},
-		[]string{"endpoint", "bindDN"},
-	)
-)
-
-func init() {
-	prometheus.MustRegister(ldapLookupRecordCount)
-}
 
 type LdapChecker struct{}
 
@@ -33,62 +17,48 @@ func (c *LdapChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *LdapChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
+func (c *LdapChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
 	for _, conf := range config.LDAP {
-		for _, result := range c.Check(conf.LDAPCheck) {
-			results <- result
-		}
+		results = append(results, c.Check(conf))
 	}
+	return results
 }
 
 // CheckConfig : Check every ldap entry for lookup and auth
 // Returns check result and metrics
-func (c *LdapChecker) Check(check pkg.LDAPCheck) []*pkg.CheckResult {
-	var result []*pkg.CheckResult
-
+func (c *LdapChecker) Check(check v1.LDAPCheck) *pkg.CheckResult {
 	ld, err := ldap.DialURL(check.Host, ldap.DialWithTLSConfig(&tls.Config{
 		InsecureSkipVerify: check.SkipTLSVerify,
 	}))
 	if err != nil {
-		result = append(result, &pkg.CheckResult{
-			Pass:    false,
-			Message: fmt.Sprintf("Failed to connect to LDAP url %s: %v", check.Host, err),
-		})
-		return result
+		return Failf(check, "Failed to connect %v", err)
 	}
 
 	if err := ld.Bind(check.Username, check.Password); err != nil {
-		result = append(result, &pkg.CheckResult{
-			Pass:    false,
-			Message: fmt.Sprintf("Failed to bind using credentials given to LDAP url %s: %v", check.Host, err),
-		})
-		return result
+		return Failf(check, "Failed to bind using %s %v", check.Username, err)
 	}
 
 	req := &ldap.SearchRequest{
+		Scope:  ldap.ScopeWholeSubtree,
 		BaseDN: check.BindDN,
 		Filter: check.UserSearch,
 	}
+
 	timer := NewTimer()
 	res, err := ld.Search(req)
 
 	if err != nil {
-		result = append(result, &pkg.CheckResult{
-			Check:   check,
-			Pass:    false,
-			Message: fmt.Sprintf("Failed to search to LDAP url %s: %v", check.Host, err),
-		})
-		return result
+		return Failf(check, "Failed to search %v", check.Host, err)
 	}
 
-	ldapLookupRecordCount.WithLabelValues(check.Host, check.BindDN).Set(float64(len(res.Entries)))
+	if len(res.Entries) == 0 {
+		return Failf(check, "no results returned")
+	}
 
-	result = append(result, &pkg.CheckResult{
+	return &pkg.CheckResult{
 		Check:    check,
 		Pass:     true,
-		Message:  fmt.Sprintf("LDAP search %s for host %s DN %s successful", check.UserSearch, check.Host, check.BindDN),
 		Duration: int64(timer.Elapsed()),
-	})
-
-	return result
+	}
 }

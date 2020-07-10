@@ -8,6 +8,9 @@
   <script src="https://cdn.jsdelivr.net/npm/date-and-time/date-and-time.min.js"></script>
 
   <style>
+
+
+
     body {
       padding-top: 2rem;
       padding-bottom: 2rem;
@@ -88,14 +91,13 @@
 
     <table v-else id="checks" class="table table-sm">
       <thead>
-        <th scope="col">Type</th>
         <th scope="col">Name</th>
         <th v-for="serverName in servers" scope="col">{{ serverName }}</th>
       </thead>
       <template v-for="check in checks">
         <tr>
-          <td scope="row">{{ check.type }}</td>
-          <td>{{ check.name }}</td>
+
+          <td scope="row"> <img :src="check.type + '.svg'" height="20px" :title="check.type"></i> <span class="badge badge-secondary">{{ check.name }}</span> {{ check.description}}</td>
           <td v-for="serverName in servers">
             <div v-for="checkStatus in check.checkStatuses[serverName]" class="check-status-container">
               <div v-if="checkStatus.status" class="check-status check-status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration"  v-bind:popover-title="checkStatus.time"></div>
@@ -157,15 +159,15 @@
                       }
                   });
               },
-              pauseAutoUpdate () { 
+              pauseAutoUpdate () {
                 this.disableReload = true
                 console.log("Auto update paused")
-                clearInterval(this.timer) 
+                clearInterval(this.timer)
               },
               resumeAutoUpdate() {
                 this.disableReload = false
                 console.log("Auto update resumed")
-                this.timer = setInterval(this.fetchData, 20000) // 20 seconds 
+                this.timer = setInterval(this.fetchData, 20000) // 20 seconds
               }
           }
       })

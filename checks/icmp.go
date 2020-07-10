@@ -1,13 +1,12 @@
 package checks
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sparrc/go-ping"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 )
 
@@ -34,72 +33,55 @@ func (c *IcmpChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *IcmpChecker) Run(config pkg.Config, results chan *pkg.CheckResult) {
+func (c *IcmpChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
 	for _, conf := range config.ICMP {
-		for _, result := range c.Check(conf.ICMPCheck) {
-			results <- result
-		}
+		results = append(results, c.Check(conf))
 	}
+	return results
 }
 
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
-func (c *IcmpChecker) Check(check pkg.ICMPCheck) []*pkg.CheckResult {
-	var result []*pkg.CheckResult
+func (c *IcmpChecker) Check(check v1.ICMPCheck) *pkg.CheckResult {
 	endpoint := check.Endpoint
-	timeOK, packetOK := false, false
+
 	lookupResult, err := DNSLookup(endpoint)
 	if err != nil {
-		result = append(result, invalidErrorf(check, err, "unable to resolve dns")...)
-		return result
+		return invalidErrorf(check, err, "unable to resolve dns")
 	}
 	for _, urlObj := range lookupResult {
-		checkResults, err := c.checkICMP(urlObj, check.PacketCount)
-		if err == nil {
-			if check.ThresholdMillis >= checkResults.Latency {
-				timeOK = true
-			}
-			if check.PacketLossThreshold >= checkResults.PacketLoss {
-				packetOK = true
-			}
-			msg := []string{}
-			if !timeOK {
-				msg = append(msg, "DNS Timeout")
-			}
-			if !packetOK {
-				msg = append(msg, "Packet Invalid")
-			}
-			pass := timeOK && packetOK
-			if pass {
-				msg = append(msg, "Succesffully checked")
-			}
+		pingerStats, err := c.checkICMP(urlObj, check.PacketCount)
+		if err != nil {
+			return Failf(check, "Failed to check icmp: %v", err)
+		}
+		if pingerStats.PacketsSent == 0 {
+			return Failf(check, "Failed to check icmp, no packets sent")
+		}
+		latency := float64(pingerStats.AvgRtt.Milliseconds())
+		loss := pingerStats.PacketLoss
 
-			checkResult := &pkg.CheckResult{
-				Check:    check,
-				Pass:     pass,
-				Invalid:  false,
-				Duration: int64(checkResults.Latency),
-				Message:  strings.Join(msg, ", "),
-			}
-			result = append(result, checkResult)
+		if check.ThresholdMillis < int64(latency) {
+			return Failf(check, "timeout after %d ", latency)
+		}
+		if check.PacketLossThreshold < int64(loss*100) {
+			return Failf(check, "packet loss of %d > than threshold of %d", loss, check.PacketLossThreshold)
+		}
 
-			packetLoss.WithLabelValues(endpoint, urlObj.IP).Set(float64(checkResults.PacketLoss))
+		packetLoss.WithLabelValues(endpoint, urlObj.IP).Set(loss)
 
-		} else {
-			checkResult := &pkg.CheckResult{
-				Check:    check,
-				Pass:     false,
-				Invalid:  true,
-				Duration: int64(checkResults.Latency),
-				Message:  fmt.Sprintf("Failed to check icmp: %v", err),
-			}
-			result = append(result, checkResult)
+		return &pkg.CheckResult{
+			Pass:     true,
+			Check:    check,
+			Duration: int64(latency),
 		}
 	}
-	return result
+
+	return Failf(check, "No results found")
+
 }
 
-func (c *IcmpChecker) checkICMP(urlObj pkg.URL, packetCount int) (*pkg.ICMPCheckResult, error) {
+func (c *IcmpChecker) checkICMP(urlObj pkg.URL, packetCount int) (*ping.Statistics, error) {
 	ip := urlObj.IP
 	pinger, err := ping.NewPinger(ip)
 	if err != nil {
@@ -112,14 +94,5 @@ func (c *IcmpChecker) checkICMP(urlObj pkg.URL, packetCount int) (*pkg.ICMPCheck
 	pinger.Count = packetCount
 	pinger.Timeout = time.Second * 10
 	pinger.Run()
-	pingerStats := pinger.Statistics()
-	latency := pingerStats.AvgRtt.Milliseconds()
-	packetLoss := pingerStats.PacketLoss
-	checkResult := pkg.ICMPCheckResult{
-		Endpoint:   urlObj.Host,
-		Record:     urlObj.IP,
-		Latency:    float64(latency),
-		PacketLoss: packetLoss,
-	}
-	return &checkResult, nil
+	return pinger.Statistics(), nil
 }

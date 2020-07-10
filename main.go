@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/flanksource/canary-checker/cmd"
-	log "github.com/sirupsen/logrus"
+	"github.com/flanksource/commons/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 )
@@ -17,27 +17,22 @@ var (
 )
 
 func main() {
+
 	var root = &cobra.Command{
 		Use: "canary-checker",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			level, _ := cmd.Flags().GetCount("loglevel")
-			switch {
-			case level > 1:
-				log.SetLevel(log.TraceLevel)
-			case level > 0:
-				log.SetLevel(log.DebugLevel)
-			default:
-				log.SetLevel(log.InfoLevel)
-			}
+			logger.UseZap(cmd.Flags())
+			logger.Infof("Starting %s", version)
 		},
 	}
 
-	root.AddCommand(cmd.Run, cmd.Serve)
+	logger.BindFlags(root.PersistentFlags())
+	root.AddCommand(cmd.Run, cmd.Serve, cmd.Operator)
 
 	if len(commit) > 8 {
 		version = fmt.Sprintf("%v, commit %v, built at %v", version, commit[0:8], date)
 	}
-	log.Infof("Starting %s", version)
+
 	root.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "Print the version of canary-checker",
@@ -59,18 +54,14 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			err := doc.GenMarkdownTree(root, args[0])
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatalf("error creating docs", err)
 			}
 		},
 	})
 
 	docs.AddCommand(cmd.APIDocs)
 	root.AddCommand(docs)
-
-	root.PersistentFlags().CountP("loglevel", "v", "Increase logging level")
-	root.PersistentFlags().StringP("configfile", "c", "", "Specify configfile")
 	root.SetUsageTemplate(root.UsageTemplate() + fmt.Sprintf("\nversion: %s\n ", version))
-	// root.MarkPersistentFlagRequired("configfile")
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}

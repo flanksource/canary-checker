@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    control-plane: canary-checker
+  name: system
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: system
+  name: sa
+  labels:
+    control-plane: canary-checker
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller
+  namespace: system
+  labels:
+    control-plane: canary-checker
+spec:
+  selector:
+    matchLabels:
+      control-plane: canary-checker
+  replicas: 1
+
+  template:
+    metadata:
+      labels:
+        control-plane: canary-checker
+    spec:
+      serviceAccountName: sa
+      volumes:
+        - name: dockersock
+          hostPath:
+            path: /var/run/docker.sock
+      containers:
+        - name: canary-checker
+          # we need elevated privileges to run ICMP checks
+          securityContext:
+            privileged: true
+            allowPrivilegeEscalation: true
+            runAsUser: 0
+            capabilities:
+              add:
+                - CAP_NET_RAW
+          image: flanksource/canary-checker:v0.11.2
+          env:
+            - name: DOCKER_API_VERSION
+              value: "1.39"
+          # docker mounts required for docker checks
+          volumeMounts:
+            - name: dockersock
+              mountPath: "/var/run/docker.sock"
+          command:
+            - /app/canary-checker
+          args:
+            - operator
+            - -v
+            - --httpPort
+            - "8080"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 200Mi
+            limits:
+              memory: 512Mi
+      terminationGracePeriodSeconds: 10
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: priority
+value: -1
+globalDefault: false
+description: "This priority class should be used for canary pods only."
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc
+  namespace: system
+  labels:
+    control-plane: canary-checker
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    control-plane: canary-checker
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: monitor
+  namespace: platform-system
+  labels:
+    control-plane: canary-checker
+spec:
+  jobLabel: canary-checker
+  namespaceSelector:
+    matchNames:
+      - system
+  endpoints:
+    - port: metrics
+      interval: 30s
+  selector:
+    matchLabels:
+      control-plane: canary-checker

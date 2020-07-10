@@ -8,7 +8,9 @@
 <img src="https://img.shields.io/github/license/flanksource/canary-checker.svg?style=flat-square"/>
 <a href="https://canary-checker.docs.flanksource.com"> <img src="https://img.shields.io/badge/☰-Docs-lightgrey.svg"/> </a>
 </p>
+
 ---
+
 * **http** - query a HTTP url and verify response code and content
 * **dns** - query a DNS server and verify results
 * **docker** - pull a docker image and verify size and digest

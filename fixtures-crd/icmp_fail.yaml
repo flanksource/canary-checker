@@ -1,0 +1,11 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: icmp-fail
+spec:
+  interval: 30
+  icmp:
+    - endpoint: https://github.com
+      thresholdMillis: 400
+      packetLossThreshold: 5
+      packetCount: 2

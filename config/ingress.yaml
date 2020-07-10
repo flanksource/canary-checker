@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: canary-checker
+  namespace: platform-system
+  annotations:
+    kubernetes.io/tls-acme: "true"
+spec:
+  tls:
+    - hosts:
+        - canaries.{{.domain}}
+      secretName: canary-tls
+  rules:
+    - host: canaries.{{.domain}}
+      http:
+        paths:
+          - backend:
+              serviceName: canary-checker
+              servicePort: 8080

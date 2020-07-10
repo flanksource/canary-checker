@@ -8,10 +8,9 @@ import (
 	"testing"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/ncw/swift"
 
+	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/utils"
 
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -190,7 +189,7 @@ func prepareS3E2E(fixture S3Fixture) error {
 func cleanupS3E2E(fixture S3Fixture) {
 	client, err := getS3Client()
 	if err != nil {
-		log.Errorf("failed to create s3 client: %v", err)
+		logger.Errorf("failed to create s3 client: %v", err)
 		return
 	}
 
@@ -200,13 +199,13 @@ func cleanupS3E2E(fixture S3Fixture) {
 			Key:    aws.String(file.Filename),
 		})
 		if err != nil {
-			log.Errorf("failed to delete object %s in bucket %s: %v", file.Filename, file.Bucket, err)
+			logger.Errorf("failed to delete object %s in bucket %s: %v", file.Filename, file.Bucket, err)
 		}
 	}
 
 	for _, bucket := range fixture.CreateBuckets {
 		if _, err := client.DeleteBucket(&s3.DeleteBucketInput{Bucket: aws.String(bucket)}); err != nil {
-			log.Errorf("failed to delete bucket %s: %v", bucket, err)
+			logger.Errorf("failed to delete bucket %s: %v", bucket, err)
 		}
 	}
 }

@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/spf13/cobra"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/commons/logger"
 )
 
 var Run = &cobra.Command{
@@ -17,45 +18,28 @@ var Run = &cobra.Command{
 		configfile, _ := cmd.Flags().GetString("configfile")
 		config := pkg.ParseConfig(configfile)
 		failed := 0
-		for result := range RunChecks(config) {
+		for _, result := range RunChecks(config) {
 			fmt.Println(result)
 			if !result.Pass {
 				failed++
 			}
 		}
 		if failed > 0 {
-			log.Fatalf("%d checks failed", failed)
+			logger.Fatalf("%d checks failed", failed)
 		}
 	},
 }
 
 func init() {
-
+	Run.Flags().StringP("configfile", "c", "", "Specify configfile")
 }
-func RunChecks(config pkg.Config) chan *pkg.CheckResult {
-	var checks = []checks.Checker{
-		&checks.HelmChecker{},
-		&checks.DNSChecker{},
-		&checks.HttpChecker{},
-		&checks.IcmpChecker{},
-		&checks.DockerPullChecker{},
-		&checks.DockerPushChecker{},
-		&checks.S3Checker{},
-		&checks.PostgresChecker{},
-		&checks.LdapChecker{},
-		&checks.S3BucketChecker{},
-		checks.NewPodChecker(),
-		checks.NewNamespaceChecker(),
+func RunChecks(config v1.CanarySpec) []*pkg.CheckResult {
+
+	var results []*pkg.CheckResult
+
+	for _, c := range checks.All {
+		results = append(results, c.Run(config)...)
 	}
-
-	var results = make(chan *pkg.CheckResult)
-
-	go func() {
-		for _, c := range checks {
-			c.Run(config, results)
-		}
-		close(results)
-	}()
 
 	return results
 }
