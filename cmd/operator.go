@@ -5,6 +5,7 @@ import (
 	"os"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/aggregate"
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
@@ -72,10 +73,15 @@ func run(cmd *cobra.Command, args []string) {
 		LeaderElection:     enableLeaderElection,
 		LeaderElectionID:   "bc88107d.flanksource.com",
 	})
+
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
+
+	clusterName := pkg.GetClusterName(mgr.GetConfig())
+	logger.Sugar().Infof("Using cluster name: %s", clusterName)
+	api.ServerName = clusterName
 
 	reconciler := &controllers.CanaryReconciler{
 		IncludeCheck:     includeCheck,

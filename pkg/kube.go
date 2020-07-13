@@ -19,7 +19,10 @@ import (
 
 	"github.com/flanksource/commons/files"
 	"github.com/pkg/errors"
+	"gopkg.in/flanksource/yaml.v3"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/homedir"
 
 	"k8s.io/client-go/tools/clientcmd"
@@ -38,6 +41,23 @@ func NewK8sClient() (*kubernetes.Clientset, error) {
 	}
 
 	return clientset, nil
+}
+
+func GetClusterName(config *rest.Config) string {
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return ""
+	}
+	kubeadmConfig, err := clientset.CoreV1().ConfigMaps("kube-system").Get("kubeadm-config", metav1.GetOptions{})
+	if err != nil {
+		return ""
+	}
+	clusterConfiguration := make(map[string]interface{})
+
+	if err := yaml.Unmarshal([]byte(kubeadmConfig.Data["ClusterConfiguration"]), &clusterConfiguration); err != nil {
+		return ""
+	}
+	return clusterConfiguration["clusterName"].(string)
 }
 
 func GetKubeconfig() string {
