@@ -62,3 +62,11 @@ http:
     maxSSLExpiry: 7
 ```
 
+--- 
+### Dev/Local build
+
+After checkout requires composing static files into FS handler  
+Please run from the project root
+```shell script
+make static
+```
