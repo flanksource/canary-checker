@@ -37,12 +37,12 @@ func (t *TCPChecker) Check(c v1.TCPCheck) *pkg.CheckResult {
 	timeout := time.Millisecond * time.Duration(c.ThresholdMillis)
 	conn, err := net.DialTimeout("tcp", net.JoinHostPort(addr, port), timeout)
 	if err != nil {
-		return Failf(c, "Connection error: "+err.Error())
+		return Failf(c, "Connection error: %s", err.Error())
 	}
 	if conn != nil {
 		defer conn.Close()
 	}
-	return Passf(c, "Successfully opened: "+net.JoinHostPort(addr, port))
+	return Passf(c, "Successfully opened: %s", net.JoinHostPort(addr, port))
 }
 
 func extractAddrAndPort(e string) (string, string, error) {
