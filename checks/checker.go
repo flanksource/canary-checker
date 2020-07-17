@@ -23,4 +23,5 @@ var All = []Checker{
 	&LdapChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
+	NewTCPChecker(),
 }

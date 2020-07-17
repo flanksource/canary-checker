@@ -39,18 +39,30 @@ func (c HTTPCheck) GetType() string {
 	return "http"
 }
 
+type TCPCheck struct {
+	Description     string `yaml:"description" json:"description,omitempty"`
+	Endpoint        string `yaml:"endpoint" json:"endpoint,omitempty"`
+	ThresholdMillis int64  `yaml:"thresholdMillis" json:"thresholdMillis,omitempty"`
+}
+
+func (t TCPCheck) GetEndpoint() string {
+	return t.Endpoint
+}
+
+func (t TCPCheck) GetDescription() string {
+	return t.Description
+}
+
+func (t TCPCheck) GetType() string {
+	return "tcp"
+}
+
 type ICMPCheck struct {
 	Description         string `yaml:"description" json:"description,omitempty"`
 	Endpoint            string `yaml:"endpoint" json:"endpoint,omitempty"`
 	ThresholdMillis     int64  `yaml:"thresholdMillis" json:"thresholdMillis,omitempty"`
 	PacketLossThreshold int64  `yaml:"packetLossThreshold" json:"packetLossThreshold,omitempty"`
 	PacketCount         int    `yaml:"packetCount" json:"packetCount,omitempty"`
-}
-
-type TCPCheck struct {
-	Description     string `yaml:"description" json:"description,omitempty"`
-	Endpoint        string `yaml:"endpoint" json:"endpoint,omitempty"`
-	ThresholdMillis int64  `yaml:"thresholdMillis" json:"thresholdMillis,omitempty"`
 }
 
 func (c ICMPCheck) GetEndpoint() string {
