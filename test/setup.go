@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"net/http"
 	"os"
-	"testing"
 	"time"
 
 	"github.com/ncw/swift"
@@ -19,139 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-
-	"github.com/flanksource/canary-checker/pkg"
 )
-
-var (
-	s3Fixtures = S3Fixture{
-		CreateBuckets: []string{
-			"tests-e2e-1",
-			"tests-e2e-2",
-		},
-		Files: []S3FixtureFile{
-			{
-				Bucket:      "tests-e2e-1",
-				Filename:    "/pg/backups/date1/backup.zip",
-				Size:        50,
-				Age:         30 * 24 * time.Hour, // 30 days
-				ContentType: "application/zip",
-			},
-			{
-				Bucket:      "tests-e2e-1",
-				Filename:    "/pg/backups/date2/backup.zip",
-				Size:        50,
-				Age:         7 * 24 * time.Hour, // 7 days
-				ContentType: "application/zip",
-			},
-			{
-				Bucket:      "tests-e2e-1",
-				Filename:    "/mysql/backups/date1/mysql.zip",
-				Size:        30,
-				Age:         7*24*time.Hour - 10*time.Minute, // 30 days
-				ContentType: "application/zip",
-			},
-		},
-	}
-)
-
-func TestE2E(t *testing.T) {
-	if err := prepareS3E2E(s3Fixtures); err != nil {
-		t.Errorf("s3 prepare failed: %v", err)
-	}
-	defer cleanupS3E2E(s3Fixtures)
-
-	tests := []test{
-		{
-			name: "s3_bucket_pass",
-			args: args{
-				pkg.ParseConfig("../fixtures/s3_bucket_pass.yaml"),
-			},
-			want: []pkg.CheckResult{
-				{
-					Pass:    true,
-					Invalid: false,
-					//Message:  "maxAge=0.0m size=50B objects=2 totalSize=100B",
-					Metrics: []pkg.Metric{},
-				},
-				{
-					Pass:    true,
-					Invalid: false,
-					//Message:  "maxAge=0.0m size=30B objects=1 totalSize=30B",
-					Metrics: []pkg.Metric{},
-				},
-				{
-					Pass:    true,
-					Invalid: false,
-					//Message:  "maxAge=0.0m size=50B objects=2 totalSize=100B",
-					Metrics: []pkg.Metric{},
-				},
-			},
-		},
-		{
-			name: "s3_bucket_fail",
-			args: args{
-				pkg.ParseConfig("../fixtures/s3_bucket_fail.yaml"),
-			},
-			want: []pkg.CheckResult{
-				{
-					Pass:    false,
-					Invalid: false,
-					Message: "Latest object is 30 bytes required at least 100 bytes",
-					Metrics: []pkg.Metric{},
-				},
-				{
-					Pass:    false,
-					Invalid: false,
-					Message: "Latest object is 50 bytes required at least 100 bytes",
-					Metrics: []pkg.Metric{},
-				},
-				{
-					Pass:    false,
-					Invalid: false,
-					Message: "could not find any matching objects",
-					Metrics: []pkg.Metric{},
-				},
-			},
-		},
-		{
-			name: "docker_push_pass",
-			args: args{
-				pkg.ParseConfig("../fixtures/docker_push_pass.yaml"),
-			},
-			want: []pkg.CheckResult{
-				{
-					Pass:    true,
-					Invalid: false,
-					Message: "Image ttl.sh/flanksource-busybox:1.30 successfully pushed",
-					Metrics: []pkg.Metric{},
-				},
-			},
-		},
-		{
-			name: "docker_push_fail",
-			args: args{
-				pkg.ParseConfig("../fixtures/docker_push_fail.yaml"),
-			},
-			want: []pkg.CheckResult{
-				{
-					Pass:    false,
-					Invalid: false,
-					Message: "unauthorized: incorrect username or password",
-					Metrics: []pkg.Metric{},
-				},
-				{
-					Pass:    false,
-					Invalid: false,
-					Message: "tag does not exist: ttl.sh/flanksource-busybox:not-found-tag",
-					Metrics: []pkg.Metric{},
-				},
-			},
-		},
-	}
-
-	runTests(t, tests)
-}
 
 func prepareS3E2E(fixture S3Fixture) error {
 	client, err := getS3Client()

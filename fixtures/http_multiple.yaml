@@ -4,7 +4,7 @@ http:
     responseCodes: [201, 200, 301]
     responseContent: ""
     maxSSLExpiry: 1
-  - endpoints: https://httpstat.us/301
+  - endpoint: https://httpstat.us/301
     thresholdMillis: 3000
     responseCodes: [201, 200, 301]
     responseContent: ""
@@ -14,17 +14,12 @@ http:
     responseCodes: [500]
     responseContent: ""
     maxSSLExpiry: 7
-  - endpoint: https://httpstat.us/500
-    thresholdMillis: 3000
-    responseCodes: [302]
-    responseContent: ""
-    maxSSLExpiry: 7
 icmp:
   - endpoint: https://google.com
     thresholdMillis: 400
-    packetLossThreshold: 0.5
+    packetLossThreshold: 1
     packetCount: 2
   - endpoint: https://yahoo.com
     thresholdMillis: 400
-    packetLossThreshold: 0.5
+    packetLossThreshold: 1
     packetCount: 2

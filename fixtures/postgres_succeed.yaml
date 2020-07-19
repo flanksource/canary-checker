@@ -1,5 +1,4 @@
 postgres:
-  - driver: "sqlmock"
-    connection: "sqlmock_db_0"
-    query:  "SELECT 1"
+  - connection: "postgres://postgresadmin:admin123@127.0.0.1:32432/postgres?sslmode=disable"
+    query: "SELECT 1"
     results: 1
