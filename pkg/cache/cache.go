@@ -1,12 +1,13 @@
 package cache
 
 import (
-	"fmt"
 	"sort"
 	"sync"
 	"time"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/commons/logger"
 )
 
@@ -21,30 +22,55 @@ var Cache = &cache{
 	Checks: make(map[string]pkg.Check),
 }
 
-func AddCheck(name string, result *pkg.CheckResult) *pkg.Check {
-	return Cache.AddCheck(name, result)
+func AddCheck(check v1.Canary, result *pkg.CheckResult) *pkg.Check {
+	return Cache.AddCheck(check, result)
+}
+
+func RemoveCheck(checks v1.Canary) {
+	Cache.RemoveCheck(checks)
 }
 
 func GetChecks() pkg.Checks {
 	return Cache.GetChecks()
 }
 
-func (c *cache) AddCheck(name string, result *pkg.CheckResult) *pkg.Check {
+func (c *cache) RemoveCheck(checks v1.Canary) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	for _, check := range checks.Spec.GetAllChecks() {
+		key := checks.GetKey(check)
+		logger.Errorf("removing %s", key)
+		delete(c.Checks, key)
+	}
+}
+
+func (c *cache) InitCheck(checks v1.Canary) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	// initialize all checks so that they appear on the dashboard as pending
+	for _, check := range checks.Spec.GetAllChecks() {
+		key := checks.GetKey(check)
+		c.Checks[key] = pkg.Check{
+			Type:        check.GetType(),
+			Name:        checks.ID(),
+			Description: check.GetDescription(),
+		}
+	}
+}
+
+func (c *cache) AddCheck(checks v1.Canary, result *pkg.CheckResult) *pkg.Check {
 	if result == nil || result.Check == nil {
-		logger.Warnf("result with no check found: %+v", result)
+		logger.Warnf("result with no check found: %+v", checks.ID())
 		return nil
 	}
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
-	description := result.Check.GetDescription()
-	if description == "" {
-		description = result.Check.GetEndpoint()
-	}
 	check := pkg.Check{
+		Key:         checks.GetKey(result.Check),
 		Type:        result.Check.GetType(),
-		Name:        name,
-		Description: description,
+		Name:        checks.ID(),
+		Description: checks.GetDescription(result.Check),
 		Statuses: []pkg.CheckStatus{
 			{
 				Status:   result.Pass,
@@ -56,8 +82,7 @@ func (c *cache) AddCheck(name string, result *pkg.CheckResult) *pkg.Check {
 		},
 	}
 
-	key := fmt.Sprintf("%s/%s", check.Type, check.Name)
-	lastCheck, found := c.Checks[key]
+	lastCheck, found := c.Checks[check.Key]
 	if found {
 		check.Statuses = append(check.Statuses, lastCheck.Statuses...)
 		if len(check.Statuses) > Size {
@@ -65,18 +90,20 @@ func (c *cache) AddCheck(name string, result *pkg.CheckResult) *pkg.Check {
 		}
 	} else {
 	}
-	c.Checks[key] = check
+	c.Checks[check.Key] = check
 	return &lastCheck
 }
 
 func (s *cache) GetChecks() pkg.Checks {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
-
 	result := pkg.Checks{}
 
-	for _, m := range s.Checks {
-		result = append(result, m)
+	for _, check := range s.Checks {
+		uptime, latency := metrics.GetMetrics(check.Key)
+		check.Uptime = uptime
+		check.Latency = latency.String()
+		result = append(result, check)
 	}
 
 	sort.Sort(&result)
