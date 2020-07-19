@@ -49,11 +49,17 @@ func (c *DockerPushChecker) Check(check v1.DockerPushCheck) *pkg.CheckResult {
 	_, _ = buf.ReadFrom(out)
 	lines := strings.Split(buf.String(), "\n")
 	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
 		decodedResponse := struct {
 			Status string `json:"status"`
 			Error  string `json:"error"`
 		}{}
 		err = json.Unmarshal([]byte(line), &decodedResponse)
+		if err != nil {
+			return Failf(check, "Invalid response: %v: %s", err, line)
+		}
 		if decodedResponse.Error != "" {
 			return Failf(check, "Failed to push %v", decodedResponse.Error)
 		}

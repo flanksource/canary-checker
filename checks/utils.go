@@ -3,11 +3,13 @@ package checks
 import (
 	"fmt"
 	"sync"
+	"time"
 
+	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/canary-checker/pkg"
 )
 
-func unexpectedErrorf(check pkg.GenericCheck, err error, msg string, args ...interface{}) *pkg.CheckResult {
+func unexpectedErrorf(check external.Check, err error, msg string, args ...interface{}) *pkg.CheckResult {
 	return &pkg.CheckResult{
 		Check:   check,
 		Pass:    false,
@@ -16,7 +18,7 @@ func unexpectedErrorf(check pkg.GenericCheck, err error, msg string, args ...int
 	}
 }
 
-func invalidErrorf(check pkg.GenericCheck, err error, msg string, args ...interface{}) *pkg.CheckResult {
+func invalidErrorf(check external.Check, err error, msg string, args ...interface{}) *pkg.CheckResult {
 	return &pkg.CheckResult{
 		Check:   check,
 		Pass:    false,
@@ -25,7 +27,7 @@ func invalidErrorf(check pkg.GenericCheck, err error, msg string, args ...interf
 	}
 }
 
-func Failf(check pkg.GenericCheck, msg string, args ...interface{}) *pkg.CheckResult {
+func Failf(check external.Check, msg string, args ...interface{}) *pkg.CheckResult {
 	return &pkg.CheckResult{
 		Check:   check,
 		Pass:    false,
@@ -34,7 +36,16 @@ func Failf(check pkg.GenericCheck, msg string, args ...interface{}) *pkg.CheckRe
 	}
 }
 
-func Passf(check pkg.GenericCheck, msg string, args ...interface{}) *pkg.CheckResult {
+func Success(check external.Check, start time.Time) *pkg.CheckResult {
+	return &pkg.CheckResult{
+		Check:    check,
+		Pass:     true,
+		Invalid:  false,
+		Duration: time.Since(start).Milliseconds(),
+	}
+}
+
+func Passf(check external.Check, msg string, args ...interface{}) *pkg.CheckResult {
 	return &pkg.CheckResult{
 		Check:   check,
 		Pass:    true,

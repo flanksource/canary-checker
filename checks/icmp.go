@@ -58,14 +58,14 @@ func (c *IcmpChecker) Check(check v1.ICMPCheck) *pkg.CheckResult {
 		if pingerStats.PacketsSent == 0 {
 			return Failf(check, "Failed to check icmp, no packets sent")
 		}
-		latency := float64(pingerStats.AvgRtt.Milliseconds())
+		latency := int64(pingerStats.AvgRtt.Milliseconds())
 		loss := pingerStats.PacketLoss
 
-		if check.ThresholdMillis < int64(latency) {
+		if check.ThresholdMillis < latency {
 			return Failf(check, "timeout after %d ", latency)
 		}
 		if check.PacketLossThreshold < int64(loss*100) {
-			return Failf(check, "packet loss of %d > than threshold of %d", loss, check.PacketLossThreshold)
+			return Failf(check, "packet loss of %fs> than threshold of %d", loss, check.PacketLossThreshold)
 		}
 
 		packetLoss.WithLabelValues(endpoint, urlObj.IP).Set(loss)
@@ -73,7 +73,7 @@ func (c *IcmpChecker) Check(check v1.ICMPCheck) *pkg.CheckResult {
 		return &pkg.CheckResult{
 			Pass:     true,
 			Check:    check,
-			Duration: int64(latency),
+			Duration: latency,
 		}
 	}
 

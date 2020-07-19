@@ -8,6 +8,7 @@ import (
 
 	_ "net/http/pprof"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/aggregate"
@@ -36,13 +37,14 @@ var Serve = &cobra.Command{
 
 		scheduler := gocron.NewScheduler(time.UTC)
 
+		canary := v1.Canary{}
 		for _, _c := range checks.All {
 			c := _c
 			scheduler.Every(uint64(interval)).Seconds().StartImmediately().Do(func() {
 				go func() {
 					for _, result := range c.Run(config) {
-						cache.AddCheck("", result)
-						metrics.Record("", "", result)
+						cache.AddCheck(canary, result)
+						metrics.Record(canary, result)
 					}
 				}()
 			})
