@@ -41,6 +41,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // CanaryReconciler reconciles a Canary object
@@ -53,6 +54,110 @@ type CanaryReconciler struct {
 	Events     record.EventRecorder
 	Cron       *cron.Cron
 	Done       chan *pkg.CheckResult
+}
+
+// track the canaries that have already been scheduled
+var observed = sync.Map{}
+
+const FinalizerName = "canary.canaries.flanksource.com"
+
+// +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries/status,verbs=get;update;patch
+func (r *CanaryReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	if r.IncludeNamespace != "" && r.IncludeNamespace != req.Namespace {
+		r.Log.V(2).Info("namespace not included, skipping")
+		return ctrl.Result{}, nil
+	}
+	if r.IncludeCheck != "" && r.IncludeCheck != req.Name {
+		r.Log.V(2).Info("check not included, skipping")
+		return ctrl.Result{}, nil
+	}
+
+	ctx := context.Background()
+	logger := r.Log.WithValues("canary", req.NamespacedName)
+
+	check := &v1.Canary{}
+	err := r.Get(ctx, req.NamespacedName, check)
+
+	if !check.DeletionTimestamp.IsZero() {
+		logger.Info("removing")
+		cache.RemoveCheck(*check)
+		metrics.RemoveCheck(*check)
+		controllerutil.RemoveFinalizer(check, FinalizerName)
+		if err := r.Update(ctx, check); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	} else if errors.IsNotFound(err) {
+		return ctrl.Result{}, nil
+	} else if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	defer r.Patch(check)
+	// Add finalizer first if not exist to avoid the race condition between init and delete
+	if !controllerutil.ContainsFinalizer(check, FinalizerName) {
+		logger.Info("adding finalizer", "finalizers", check.GetFinalizers())
+		if err := controllerutil.AddFinalizerWithError(check, FinalizerName); err != nil {
+			return ctrl.Result{}, err
+		}
+		logger.Info("added finalizer", "finalizers", check.GetFinalizers())
+		if err := r.Update(ctx, check); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
+	_, run := observed.Load(req.NamespacedName)
+	if run && check.Status.ObservedGeneration == check.Generation {
+		logger.V(2).Info("check already up to date")
+		return ctrl.Result{}, nil
+	}
+
+	observed.Store(req.NamespacedName, true)
+	cache.Cache.InitCheck(*check)
+	for _, entry := range r.Cron.Entries() {
+		if entry.Job.(CanaryJob).GetNamespacedName() == req.NamespacedName {
+			logger.V(2).Info("unscheduled", "id", entry.ID)
+			r.Cron.Remove(entry.ID)
+			break
+		}
+	}
+
+	if check.Spec.Interval > 0 {
+		job := CanaryJob{Client: *r, Check: *check, Logger: logger}
+		if !run {
+			// check each job on startup
+			go job.Run()
+		}
+		id, err := r.Cron.AddJob(fmt.Sprintf("@every %ds", check.Spec.Interval), job)
+		if err != nil {
+			logger.Error(err, "failed to schedule job", "schedule", check.Spec.Interval)
+		} else {
+			logger.Info("scheduled", "id", id, "next", r.Cron.Entry(id).Next)
+		}
+	}
+
+	check.Status.ObservedGeneration = check.Generation
+
+	return ctrl.Result{}, nil
+}
+
+func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.Events = mgr.GetEventRecorderFor("canary-checker")
+
+	r.Cron = cron.New(cron.WithChain(
+		cron.SkipIfStillRunning(r.Log),
+	))
+	r.Cron.Start()
+	clientset, err := kubernetes.NewForConfig(mgr.GetConfig())
+	if err != nil {
+		return err
+	}
+	r.Kubernetes = clientset
+
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&canariesv1.Canary{}).
+		Complete(r)
 }
 
 func (r *CanaryReconciler) Report(key types.NamespacedName, results []*pkg.CheckResult) {
@@ -88,12 +193,12 @@ func (r *CanaryReconciler) Report(key types.NamespacedName, results []*pkg.Check
 	} else {
 		check.Status.Status = &v1.Failed
 	}
-	r.Patch(check)
+	r.Patch(&check)
 }
 
-func (r *CanaryReconciler) Patch(canary v1.Canary) {
+func (r *CanaryReconciler) Patch(canary *v1.Canary) {
 	r.Log.V(1).Info("patching", "canary", canary.Name, "namespace", canary.Namespace, "status", canary.Status.Status)
-	if err := r.Status().Update(context.TODO(), &canary, &client.UpdateOptions{}); err != nil {
+	if err := r.Status().Update(context.TODO(), canary, &client.UpdateOptions{}); err != nil {
 		r.Log.Error(err, "failed to patch", "canary", canary.Name)
 	}
 }
@@ -145,88 +250,4 @@ func LoadSecrets(client CanaryReconciler, canary v1.Canary) (v1.CanarySpec, erro
 	}
 	return *val, nil
 
-}
-
-// track the canaries that have already been scheduled
-var observed = sync.Map{}
-
-// +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries/status,verbs=get;update;patch
-func (r *CanaryReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	if r.IncludeNamespace != "" && r.IncludeNamespace != req.Namespace {
-		r.Log.V(2).Info("namespace not included, skipping")
-		return ctrl.Result{}, nil
-	}
-	if r.IncludeCheck != "" && r.IncludeCheck != req.Name {
-		r.Log.V(2).Info("check not included, skipping")
-		return ctrl.Result{}, nil
-	}
-
-	ctx := context.Background()
-	logger := r.Log.WithValues("canary", req.NamespacedName)
-
-	check := v1.Canary{}
-	err := r.Get(ctx, req.NamespacedName, &check)
-
-	if errors.IsNotFound(err) || !check.DeletionTimestamp.IsZero() {
-		logger.Info("removing")
-		cache.RemoveCheck(check)
-		metrics.RemoveCheck(check)
-		return ctrl.Result{}, nil
-	} else if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	_, run := observed.Load(req.NamespacedName)
-	if run && check.Status.ObservedGeneration == check.Generation {
-		logger.V(2).Info("check already up to date")
-		return ctrl.Result{}, nil
-	}
-
-	observed.Store(req.NamespacedName, true)
-	cache.Cache.InitCheck(check)
-	for _, entry := range r.Cron.Entries() {
-		if entry.Job.(CanaryJob).GetNamespacedName() == req.NamespacedName {
-			logger.V(2).Info("unscheduled", "id", entry.ID)
-			r.Cron.Remove(entry.ID)
-			break
-		}
-	}
-
-	if check.Spec.Interval > 0 {
-		job := CanaryJob{Client: *r, Check: check, Logger: logger}
-		if !run {
-			// check each job on startup
-			go job.Run()
-		}
-		id, err := r.Cron.AddJob(fmt.Sprintf("@every %ds", check.Spec.Interval), job)
-		if err != nil {
-			logger.Error(err, "failed to schedule job", "schedule", check.Spec.Interval)
-		} else {
-			logger.Info("scheduled", "id", id, "next", r.Cron.Entry(id).Next)
-		}
-	}
-
-	check.Status.ObservedGeneration = check.Generation
-	r.Patch(check)
-
-	return ctrl.Result{}, nil
-}
-
-func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.Events = mgr.GetEventRecorderFor("canary-checker")
-
-	r.Cron = cron.New(cron.WithChain(
-		cron.SkipIfStillRunning(r.Log),
-	))
-	r.Cron.Start()
-	clientset, err := kubernetes.NewForConfig(mgr.GetConfig())
-	if err != nil {
-		return err
-	}
-	r.Kubernetes = clientset
-
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&canariesv1.Canary{}).
-		Complete(r)
 }

@@ -105,6 +105,9 @@ func GetMetrics(key string) (rollingUptime string, rollingLatency time.Duration)
 	fail := failed[key]
 	pass := passed[key]
 	latency := latencies[key]
+	if fail == nil || pass == nil || latency == nil {
+		return "", time.Millisecond * 0
+	}
 	failCount := fail.Reduce(rolling.Sum)
 	passCount := pass.Reduce(rolling.Sum)
 	uptime := fmt.Sprintf("%.0f/%.0f (%0.f%%)", passCount, failCount+passCount, 100*(1-(failCount/(passCount+failCount))))
