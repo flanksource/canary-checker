@@ -2,7 +2,7 @@
 
 set -ex
 
-export PLATFORM_CLI_VERSION=0.17.7
+export PLATFORM_CLI_VERSION=v0.17.7
 export PLATFORM_CLI="./platform-cli -c test/config.yaml"
 export KUBECONFIG=~/.kube/config
 export DOCKER_API_VERSION=1.39
