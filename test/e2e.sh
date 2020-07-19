@@ -38,6 +38,14 @@ $PLATFORM_CLI test stubs --wait=480
 export DOCKER_USERNAME=test
 export DOCKER_PASSWORD=password
 
+for port in 30636 30389 32432
+do
+  while ! nc -z 127.0.0.1 $port
+  do
+    sleep 5
+  done
+done
+
 make static
 cd test
 go test ./... -v -c
