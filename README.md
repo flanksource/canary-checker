@@ -68,15 +68,3 @@ spec:
       responseContent: ""
       maxSSLExpiry: 7
 ```
-<<<<<<< Updated upstream
-
---- 
-### Dev/Local build
-
-After checkout requires composing static files into FS handler  
-Please run from the project root
-```shell script
-make static
-```
-=======
->>>>>>> Stashed changes
