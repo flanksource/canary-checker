@@ -38,13 +38,13 @@ $PLATFORM_CLI test stubs --wait=480
 export DOCKER_USERNAME=test
 export DOCKER_PASSWORD=password
 
-for port in 30636 30389 32432
-do
-  while ! nc -z 127.0.0.1 $port
-  do
-    sleep 5
-  done
-done
+docker run --rm alioygur/wait-for -it
+curl -L https://github.com/atkrad/wait4x/releases/download/v0.3.0/wait4x-linux-amd64 -o /usr/local/bin/wait4x
+chmod +x /usr/local/bin/wait4x
+
+wait4x tcp 127.0.0.1:30636 -t 120s -i 5s || true
+wait4x tcp 127.0.0.1:30389 || true
+wait4x tcp 127.0.0.1:32432 || true
 
 make static
 cd test
