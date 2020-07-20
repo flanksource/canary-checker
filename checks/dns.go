@@ -63,10 +63,10 @@ func (c *DNSChecker) Check(check v1.DNSCheck) *pkg.CheckResult {
 	select {
 	case res := <-resultCh:
 		return res
-	case <-time.After(time.Millisecond * time.Duration(check.Timeout)):
+	case <-time.After(time.Millisecond * time.Duration(check.ThresholdMillis)):
 		return Failf(check, fmt.Sprintf(
 			"%s %s on [%s:%d]\ntimed out with threshold: %d ms",
-			check.QueryType, check.Query, check.Server, check.Port, check.Timeout))
+			check.QueryType, check.Query, check.Server, check.Port, check.ThresholdMillis))
 	}
 }
 
@@ -207,7 +207,7 @@ func checkNS(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh c
 func getDialer(check v1.DNSCheck, timeout int) (func(ctx context.Context, network, address string) (net.Conn, error), error) {
 	return func(ctx context.Context, network, address string) (net.Conn, error) {
 		d := net.Dialer{
-			Timeout: time.Millisecond * time.Duration(timeout),
+			Timeout: time.Second * time.Duration(timeout),
 		}
 		return d.DialContext(ctx, "udp", fmt.Sprintf("%s:%d", check.Server, check.Port))
 	}, nil
