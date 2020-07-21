@@ -2,7 +2,7 @@
 
 set -ex
 
-export PLATFORM_CLI_VERSION=v0.17.7
+export PLATFORM_CLI_VERSION=v0.17.9
 export PLATFORM_CLI="./platform-cli -c test/config.yaml"
 export KUBECONFIG=~/.kube/config
 export DOCKER_API_VERSION=1.39
@@ -32,8 +32,8 @@ $PLATFORM_CLI provision kind-cluster
 
 
 $PLATFORM_CLI deploy phases --base --stubs --calico
-$PLATFORM_CLI apply test/setup.yml
 $PLATFORM_CLI test stubs --wait=480
+$PLATFORM_CLI apply test/setup.yml
 
 export DOCKER_USERNAME=test
 export DOCKER_PASSWORD=password
