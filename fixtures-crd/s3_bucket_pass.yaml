@@ -11,7 +11,7 @@ spec:
       accessKey: "minio"
       secretKey: "minio123"
       region: "minio"
-      endpoint: "https://minio.127.0.0.1.nip.io"
+      endpoint: "https://minio.minio"
       objectPath: "(.*)backup.zip$"
       readWrite: true
       maxAge: 604800 # 7 days
@@ -23,7 +23,7 @@ spec:
       accessKey: "minio"
       secretKey: "minio123"
       region: "minio"
-      endpoint: "https://minio.127.0.0.1.nip.io"
+      endpoint: "https://minio.minio"
       objectPath: "mysql\\/backups\\/(.*)\\/mysql.zip$"
       readWrite: true
       maxAge: 604800 # 7 days
@@ -35,7 +35,7 @@ spec:
       accessKey: "minio"
       secretKey: "minio123"
       region: "minio"
-      endpoint: "https://minio.127.0.0.1.nip.io"
+      endpoint: "https://minio.minio"
       objectPath: "pg\\/backups\\/(.*)\\/backup.zip$"
       readWrite: true
       maxAge: 604800 # 7 days

@@ -10,63 +10,61 @@
 </p>
 
 ---
+## Features
 
-* **http** - query a HTTP url and verify response code and content
-* **dns** - query a DNS server and verify results
-* **docker** - pull a docker image and verify size and digest
-* **dockerPush** - push a docker image
-* **helm** - push and pull a helm chart
-* **s3** - List, Put, and Get an object in an S3 bucket
-* **s3Bucket** - query the contents on a bucket for freshness and size, useful for verifying backups have been created
-* **tcp** - connect to a TCP port
-* **pod** - schedule a pod in kubernetes cluster
-* **pod_and_ingress** - schedule a pod in kubernetes cluster and verify it is accessible via an ingress
-* **ldap** - query a ldap server for an object
-* **ssl** - check ssl certificate expiry
-* **icmp** - ping an IP and verify latency and packet loss threshold
-* **postgres** - query a postgres database for a result
+* Built-in UI/Dashboard with multi-cluster aggregation
+* CRD based configuration and status reporting
+* Prometheus Integration
+* Runnable as a CLI for once-off checks or as a standalone server outside kubernetes
+* Built-in check types
+  * **http** - query a HTTP url and verify response code and content
+  * **dns** - query a DNS server and verify results
+  * **docker** - pull a docker image and verify size and digest
+  * **dockerPush** - push a docker image
+  * **helm** - push and pull a helm chart
+  * **s3** - List, Put, and Get an object in an S3 bucket
+  * **s3Bucket** - query the contents on a bucket for freshness and size, useful for verifying backups have been created
+  * **tcp** - connect to a TCP port
+  * **pod** - schedule a pod in kubernetes cluster
+  * **namespace** - create and namespace and then run the pod check
+  * **ldap** - query a ldap server for an object
+  * **ssl** - check ssl certificate expiry
+  * **icmp** - ping an IP and verify latency and packet loss threshold
+  * **postgres** - query a postgres database for a result
 
+## Getting Started
 
-
-### Getting Started
-
-
+```bash
+# install the operator using kustomize
+kustomize build github.com/flanksource/canary-checker//config | kubectl apply -f -
+# deploy a sample canary
+kubectl apply -f https://raw.githubusercontent.com/flanksource/canary-checker/master/fixtures-crd/http_pass.yaml
+# check the results of the canary
+kubectl get canary
 ```
-Usage:
-
-	canary-checker serve [flags]
-
-Flags:
-
-      --failureThreshold int   Default Number of consecutive failures required to fail a check (default 2)
-      --httpPort int           Port to expose a health dashboard  (default 8080)
-      --interval uint          Default interval (in seconds) to run checks on (default 30)
-
-Global Flags:
-
-  -c, --configfile string   Specify configfile
-  -v, --loglevel count      Increase logging level
+`sample output`
+```
+NAMESPACE         NAME   INTERVAL   STATUS   MESSAGE   UPTIME 1H      LATENCY 1H   LAST TRANSITIONED   LAST CHECK
+platform-system   dns    30         Passed             0/2 (0%)                                        6s
+platform-system   lan    30         Passed             12/12 (100%)   1033         139m                6s
+platform-system   ldap   30         Passed             5/5 (100%)     323                              1s
+platform-system   pod    120        Passed             1/2 (50%)      10904        45m                 24s
+platform-system   s3     30         Passed             5/5 (100%)     1091         5m35s               5s
 ```
 
-
-
-The config file is YAML formatted:
+`http_pass.yaml`
 
 ```yaml
-http:
-  - endpoints:
-      - https://httpstat.us/200
-    thresholdMillis: 3000
-    responseCodes: [201,200,301]
-    responseContent: ""
-    maxSSLExpiry: 7
-```
-
---- 
-### Dev/Local build
-
-After checkout requires composing static files into FS handler  
-Please run from the project root
-```shell script
-make static
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-pass
+spec:
+  interval: 30
+  http:
+    - endpoint: https://httpstat.us/200
+      thresholdMillis: 3000
+      responseCodes: [201, 200, 301]
+      responseContent: ""
+      maxSSLExpiry: 7
 ```

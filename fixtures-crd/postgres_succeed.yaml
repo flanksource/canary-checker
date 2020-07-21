@@ -5,7 +5,6 @@ metadata:
 spec:
   interval: 30
   postgres:
-    - driver: "sqlmock"
-      connection: "sqlmock_db_0"
+    - connection: "postgres://postgresadmin:admin123@postgres.platform-system:32432/postgres?sslmode=disable"
       query: "SELECT 1"
       results: 1

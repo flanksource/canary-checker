@@ -8,3 +8,6 @@ build/
 docs/cli/
 .DS_Store
 /statuspage/static.go
+cover.out
+test.test
+*.tgz

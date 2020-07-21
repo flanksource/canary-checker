@@ -1,3 +1,4 @@
+
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -8,27 +9,27 @@ metadata:
   name: canaries.canaries.flanksource.com
 spec:
   additionalPrinterColumns:
-    - JSONPath: .spec.interval
-      name: Interval
-      type: string
-    - JSONPath: .status.status
-      name: Status
-      type: string
-    - JSONPath: .status.message
-      name: Message
-      type: string
-    - JSONPath: .status.uptime1h
-      name: Uptime 1H
-      type: string
-    - JSONPath: .status.latency1h
-      name: Latency 1H
-      type: string
-    - JSONPath: .status.lastTransitionedTime
-      name: Last Transitioned
-      type: date
-    - JSONPath: .status.lastCheck
-      name: Last Check
-      type: date
+  - JSONPath: .spec.interval
+    name: Interval
+    type: string
+  - JSONPath: .status.status
+    name: Status
+    type: string
+  - JSONPath: .status.message
+    name: Message
+    type: string
+  - JSONPath: .status.uptime1h
+    name: Uptime 1H
+    type: string
+  - JSONPath: .status.latency1h
+    name: Latency 1H
+    type: string
+  - JSONPath: .status.lastTransitionedTime
+    name: Last Transitioned
+    type: date
+  - JSONPath: .status.lastCheck
+    name: Last Check
+    type: date
   group: canaries.flanksource.com
   names:
     kind: Canary
@@ -43,16 +44,14 @@ spec:
       description: Canary is the Schema for the canaries API
       properties:
         apiVersion:
-          description:
-            "APIVersion defines the versioned schema of this representation
+          description: 'APIVersion defines the versioned schema of this representation
             of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
-          description:
-            "Kind is a string value representing the REST resource this
+          description: 'Kind is a string value representing the REST resource this
             object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
@@ -124,57 +123,49 @@ spec:
                         description: The key to select.
                         type: string
                       name:
-                        description:
-                          "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?"
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
                         type: string
                       optional:
-                        description:
-                          Specify whether the ConfigMap or its key must
+                        description: Specify whether the ConfigMap or its key must
                           be defined
                         type: boolean
                     required:
-                      - key
+                    - key
                     type: object
                   fieldRef:
-                    description:
-                      "Selects a field of the pod: supports metadata.name,
+                    description: 'Selects a field of the pod: supports metadata.name,
                       metadata.namespace, metadata.labels, metadata.annotations, spec.nodeName,
-                      spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs."
+                      spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.'
                     properties:
                       apiVersion:
-                        description:
-                          Version of the schema the FieldPath is written
+                        description: Version of the schema the FieldPath is written
                           in terms of, defaults to "v1".
                         type: string
                       fieldPath:
-                        description:
-                          Path of the field to select in the specified
+                        description: Path of the field to select in the specified
                           API version.
                         type: string
                     required:
-                      - fieldPath
+                    - fieldPath
                     type: object
                   secretKeyRef:
                     description: Selects a key of a secret in the pod's namespace
                     properties:
                       key:
-                        description:
-                          The key of the secret to select from.  Must be
+                        description: The key of the secret to select from.  Must be
                           a valid secret key.
                         type: string
                       name:
-                        description:
-                          "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?"
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
                         type: string
                       optional:
-                        description:
-                          Specify whether the Secret or its key must be
+                        description: Specify whether the Secret or its key must be
                           defined
                         type: boolean
                     required:
-                      - key
+                    - key
                     type: object
                   value:
                     type: string
@@ -206,8 +197,7 @@ spec:
                     description: HTTP endpoint to crawl
                     type: string
                   maxSSLExpiry:
-                    description:
-                      Maximum number of days until the SSL Certificate
+                    description: Maximum number of days until the SSL Certificate
                       expires.
                     type: integer
                   responseCodes:
@@ -216,13 +206,11 @@ spec:
                       type: integer
                     type: array
                   responseContent:
-                    description:
-                      Exact response content expected to be returned by
+                    description: Exact response content expected to be returned by
                       the endpoint.
                     type: string
                   thresholdMillis:
-                    description:
-                      Maximum duration in milliseconds for the HTTP request.
+                    description: Maximum duration in milliseconds for the HTTP request.
                       It will fail the check if it takes longer.
                     type: integer
                 type: object
@@ -449,9 +437,8 @@ spec:
                     description: Skip TLS verify when connecting to s3
                     type: boolean
                   usePathStyle:
-                    description:
-                      "Use path style path: http://s3.amazonaws.com/BUCKET/KEY
-                      instead of http://BUCKET.s3.amazonaws.com/KEY"
+                    description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY
+                      instead of http://BUCKET.s3.amazonaws.com/KEY'
                     type: boolean
                 type: object
               type: array
@@ -464,8 +451,7 @@ spec:
                     description: HTTP endpoint to crawl
                     type: string
                   maxSSLExpiry:
-                    description:
-                      Maximum number of days until the SSL Certificate
+                    description: Maximum number of days until the SSL Certificate
                       expires.
                     type: integer
                 type: object
@@ -493,14 +479,12 @@ spec:
               format: date-time
               type: string
             latency1h:
-              description: Average latency in milliseconds to complete all checks
-              format: int64
-              type: integer
+              description: Average latency to complete all checks
+              type: string
             message:
               type: string
             observedGeneration:
-              description:
-                If set, this represents the .metadata.generation that the
+              description: If set, this represents the .metadata.generation that the
                 status was set for
               format: int64
               type: integer
@@ -513,9 +497,9 @@ spec:
       type: object
   version: v1
   versions:
-    - name: v1
-      served: true
-      storage: true
+  - name: v1
+    served: true
+    storage: true
 status:
   acceptedNames:
     kind: ""

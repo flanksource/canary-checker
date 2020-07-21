@@ -65,11 +65,15 @@
     button.pause-resume-reload {
       float: right;
     }
+
+    [v-cloak] {
+     display: none;
+}
   </style>
 </head>
 <body>
   <div class="container" id="app">
-    <button v-if="disableReload" v-on:click="resumeAutoUpdate" type="button" class="btn btn-danger pause-resume-reload">
+    <button v-if="disableReload" v-on:click="resumeAutoUpdate" type="button" class="btn btn-danger pause-resume-reload" v-cloak>
       <svg class="bi bi-play" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
         <path fill-rule="evenodd" d="M10.804 8L5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/>
       </svg>
@@ -85,11 +89,11 @@
     <h1>Canary Checker</h1>
     <hr>
 
-    <div v-if="error" class="alert alert-danger" role="alert">
+    <div v-if="error" class="alert alert-danger" role="alert" v-cloak>
       {{ error }}
     </div>
 
-    <table v-else id="checks" class="table table-sm">
+    <table v-else id="checks" class="table table-sm" v-cloak>
       <thead>
         <th scope="col">Name</th>
         <th v-for="serverName in servers" scope="col">{{ serverName }}</th>
@@ -97,8 +101,9 @@
       <template v-for="check in checks">
         <tr>
 
-          <td scope="row"> <img :src="check.type + '.svg'" height="20px" :title="check.type"></i> <span class="badge badge-secondary">{{ check.name }}</span> {{ check.description}}</td>
+          <td scope="row"> <img :src="check.type + '.svg'" height="20px" :title="check.type"></i> <span class="badge badge-secondary" >{{ check.name }}</span> {{ check.description}}</td>
           <td v-for="serverName in servers">
+            {{check.latency}} {{check.uptime}}
             <div v-for="checkStatus in check.checkStatuses[serverName]" class="check-status-container">
               <div v-if="checkStatus.status" class="check-status check-status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration"  v-bind:popover-title="checkStatus.time"></div>
               <div v-else class="check-status check-status-fail" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration" v-bind:popover-title="checkStatus.time"></div>
@@ -109,7 +114,7 @@
     </table>
 
     <hr>
-    <div v-if="lastRefreshed" id="last-refreshed">
+    <div v-if="lastRefreshed" id="last-refreshed" v-cloak>
       Last refreshed <span>{{ lastRefreshed }}</span>
     </div>
   </div>

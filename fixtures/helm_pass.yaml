@@ -1,6 +1,6 @@
-helm:
-  - chartmuseum: https://harbor.blue.lab.flanksource.com
-    project: library
-    username: admin
-    password: ""
-    cafile: ""
+# helm:
+#   - chartmuseum: https://harbor.blue.lab.flanksource.com
+#     project: library
+#     username: admin
+#     password: ""
+#     cafile: ""

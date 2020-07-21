@@ -5,22 +5,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/console"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-type Endpointer interface {
-	GetEndpoint() string
-}
-
-type Describable interface {
-	GetDescription() string
-}
-
-type WithType interface {
-	GetType() string
-}
 
 type Endpoint struct {
 	String string
@@ -53,9 +42,12 @@ type CheckStatus struct {
 }
 
 type Check struct {
+	Key         string
 	Type        string        `json:"type"`
 	Name        string        `json:"name"`
 	Description string        `json:"description"`
+	Uptime      string        `json:"uptime"`
+	Latency     string        `json:"latency"`
 	Statuses    []CheckStatus `json:"checkStatuses"`
 }
 
@@ -65,17 +57,15 @@ func (c Checks) Len() int {
 	return len(c)
 }
 func (c Checks) Less(i, j int) bool {
-	if c[i].Type == c[j].Type {
-		return c[i].Name < c[j].Name
-	}
-	return c[i].Type < c[j].Type
+	return c[i].ToString() < c[j].ToString()
 }
+
 func (c Checks) Swap(i, j int) {
 	c[i], c[j] = c[j], c[i]
 }
 
 func (c Check) ToString() string {
-	return fmt.Sprintf("%s;%s", c.Type, c.Name)
+	return fmt.Sprintf("%s-%s-%s", c.Name, c.Type, c.Description)
 }
 
 func (c Check) GetDescription() string {
@@ -113,12 +103,6 @@ type URL struct {
 	Path   string
 }
 
-type GenericCheck interface {
-	Endpointer
-	Describable
-	WithType
-}
-
 type CheckResult struct {
 	Pass        bool
 	Invalid     bool
@@ -127,18 +111,28 @@ type CheckResult struct {
 	Message     string
 	Metrics     []Metric
 	// Check is the configuration
-	Check GenericCheck
+	Check external.Check
+}
+
+func (c CheckResult) GetDescription() string {
+	if c.Check.GetDescription() != "" {
+		return c.Check.GetDescription()
+	}
+	return c.Check.GetEndpoint()
 }
 
 func (c CheckResult) String() string {
+	checkType := ""
+	endpoint := ""
+	if c.Check != nil {
+		checkType = c.Check.GetType()
+		endpoint = c.Check.GetEndpoint()
+	}
 	if c.Pass {
-		return fmt.Sprintf("[%s] <%s> [%s] %s duration=%d %s %s", console.Greenf("PASS"), console.Greenf("VALID"), c.Check.GetType(), c.Check.GetEndpoint(), c.Duration, c.Metrics, c.Message)
+		return fmt.Sprintf("[%s] [%s] %s duration=%d %s %s", console.Greenf("PASS"), checkType, endpoint, c.Duration, c.Metrics, c.Message)
 	} else {
-		if c.Invalid {
-			return fmt.Sprintf("[%s] <%s> [%s] %s duration=%d %s %s", console.Redf("FAIL"), console.Redf("INVALID"), c.Check.GetType(), c.Check.GetEndpoint(), c.Duration, c.Metrics, c.Message)
-		} else {
-			return fmt.Sprintf("[%s] <%s> [%s] %s duration=%d %s %s", console.Redf("FAIL"), console.Greenf("VALID"), c.Check.GetType(), c.Check.GetEndpoint(), c.Duration, c.Metrics, c.Message)
-		}
+		return fmt.Sprintf("[%s] [%s] %s duration=%d %s %s", console.Redf("FAIL"), checkType, endpoint, c.Duration, c.Metrics, c.Message)
+
 	}
 }
 

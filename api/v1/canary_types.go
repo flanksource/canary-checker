@@ -17,6 +17,9 @@ limitations under the License.
 package v1
 
 import (
+	"fmt"
+
+	"github.com/flanksource/canary-checker/api/external"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -37,7 +40,66 @@ type CanarySpec struct {
 	Postgres   []PostgresCheck      `yaml:"postgres,omitempty" json:"postgres,omitempty"`
 	Helm       []HelmCheck          `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace  []NamespaceCheck     `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-	Interval   int64                `json:"interval,omitempty"`
+	Interval   int64                `yaml:"interval,omitempty" json:"interval,omitempty"`
+}
+
+func (spec CanarySpec) GetAllChecks() []external.Check {
+	var checks []external.Check
+	for _, check := range spec.HTTP {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.DNS {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.DockerPull {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.DockerPush {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.S3 {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.S3Bucket {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.TCP {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.Pod {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.LDAP {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.SSL {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.Postgres {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.ICMP {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.Helm {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.Namespace {
+		checks = append(checks, check)
+	}
+
+	return checks
+}
+
+func (c Canary) GetKey(check external.Check) string {
+	return fmt.Sprintf("%s/%s:%s", c.ID(), check.GetType(), c.GetDescription(check))
+}
+
+func (c Canary) GetDescription(check external.Check) string {
+	if check.GetDescription() != "" {
+		return check.GetDescription()
+	}
+	return check.GetEndpoint()
 }
 
 type CanaryStatusCondition string
@@ -65,8 +127,8 @@ type CanaryStatus struct {
 	// Availibility over a rolling 1h period
 	Uptime1H string `json:"uptime1h,omitempty"`
 
-	// Average latency in milliseconds to complete all checks
-	Latency1H int64 `json:"latency1h,omitempty"`
+	// Average latency to complete all checks
+	Latency1H string `json:"latency1h,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -86,6 +148,10 @@ type Canary struct {
 
 	Spec   CanarySpec   `json:"spec,omitempty"`
 	Status CanaryStatus `json:"status,omitempty"`
+}
+
+func (c Canary) ID() string {
+	return fmt.Sprintf("%s/%s", c.Namespace, c.Name)
 }
 
 // +kubebuilder:object:root=true

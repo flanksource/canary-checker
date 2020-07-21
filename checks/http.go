@@ -64,7 +64,7 @@ func (c *HttpChecker) Check(check v1.HTTPCheck) *pkg.CheckResult {
 	endpoint := check.Endpoint
 	lookupResult, err := DNSLookup(endpoint)
 	if err != nil {
-		return Failf(check, "failed to resolve DNS")
+		return Failf(check, "failed to resolve DNS for ", endpoint)
 	}
 	for _, urlObj := range lookupResult {
 		checkResults, err := c.checkHTTP(urlObj)

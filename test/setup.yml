@@ -1,0 +1,75 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apacheds
+  namespace: ldap
+spec:
+  type: NodePort
+  ports:
+    - name: ldap
+      port: 10389
+      protocol: TCP
+      nodePort: 30389
+    - name: ldaps
+      port: 10636
+      protocol: TCP
+      nodePort: 30636
+  selector:
+    app: apacheds
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: canary
+value: -1
+globalDefault: false
+description: "This priority class should be used for canary pods only."
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: platform-system
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: platform-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:10.4
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: postgresdb
+            - name: POSTGRES_USER
+              value: postgresadmin
+            - name: POSTGRES_PASSWORD
+              value: admin123
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: platform-system
+spec:
+  type: NodePort
+  ports:
+    - name: psql
+      port: 5432
+      protocol: TCP
+      nodePort: 32432
+  selector:
+    app: postgres

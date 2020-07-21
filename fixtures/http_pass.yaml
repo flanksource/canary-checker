@@ -1,6 +1,6 @@
 http:
   - endpoint: https://httpstat.us/200
     thresholdMillis: 3000
-    responseCodes: [201,200,301]
+    responseCodes: [201, 200, 301]
     responseContent: ""
-    maxSSLExpiry: 7
+    maxSSLExpiry: 1

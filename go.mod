@@ -3,7 +3,7 @@ module github.com/flanksource/canary-checker
 go 1.13
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.4.1
+	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/aws/aws-sdk-go v1.29.25
 	github.com/chartmuseum/helm-push v0.8.1
 	github.com/docker/docker v1.13.1

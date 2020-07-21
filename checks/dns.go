@@ -102,7 +102,7 @@ func (c *DNSChecker) Check(check v1.DNSCheck) *pkg.CheckResult {
 		if err != nil {
 			return Failf(check, "Failed to lookup: %v", err)
 		}
-		return Passf(check, "got: %s %s", cname, addr)
+		return Passf(check, "got: %s %v", cname, addr)
 	}
 
 	if check.QueryType == "MX" {
