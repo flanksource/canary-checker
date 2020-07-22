@@ -7,20 +7,20 @@ dns:
     exactreply: ["1.2.3.4"]
     timeout: 1
     thresholdMillis: 1
+#  - server: 8.8.8.8
+#    port: 53
+#    query: "8.8.8.8"
+#    querytype: "PTR"
+#    minrecords: 1
+#    exactreply: ["dns.google."]
+#    timeout: 1
+#    thresholdMillis: 1
   - server: 8.8.8.8
     port: 53
-    query: "8.8.8.8"
-    querytype: "PTR"
-    minrecords: 1
-    exactreply: ["dns.google."]
-    timeout: 1
-    thresholdMillis: 1
-  - server: 8.8.8.8
-    port: 53
-    query: "dns.google"
+    query: "flanksource.com"
     querytype: "CNAME"
     minrecords: 1
-    exactreply: ["dns.google."]
+    exactreply: ["flanksource.com."]
     timeout: 1
     thresholdMillis: 1
   - server: 8.8.8.8
