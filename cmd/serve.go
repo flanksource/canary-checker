@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	nethttp "net/http"
-	"time"
-
 	_ "net/http/pprof"
+	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"

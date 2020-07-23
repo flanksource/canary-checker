@@ -331,14 +331,15 @@ func (c NamespaceCheck) GetType() string {
 }
 
 type DNSCheck struct {
-	Description string   `yaml:"description" json:"description,omitempty"`
-	Server      string   `yaml:"server" json:"server,omitempty"`
-	Port        int      `yaml:"port" json:"port,omitempty"`
-	Query       string   `yaml:"query,omitempty" json:"query,omitempty"`
-	QueryType   string   `yaml:"querytype" json:"querytype,omitempty"`
-	MinRecords  int      `yaml:"minrecords,omitempty" json:"minrecords,omitempty"`
-	ExactReply  []string `yaml:"exactreply,omitempty" json:"exactreply,omitempty"`
-	Timeout     int      `yaml:"timeout" json:"timeout,omitempty"`
+	Description     string   `yaml:"description" json:"description,omitempty"`
+	Server          string   `yaml:"server" json:"server,omitempty"`
+	Port            int      `yaml:"port" json:"port,omitempty"`
+	Query           string   `yaml:"query,omitempty" json:"query,omitempty"`
+	QueryType       string   `yaml:"querytype" json:"querytype,omitempty"`
+	MinRecords      int      `yaml:"minrecords,omitempty" json:"minrecords,omitempty"`
+	ExactReply      []string `yaml:"exactreply,omitempty" json:"exactreply,omitempty"`
+	Timeout         int      `yaml:"timeout" json:"timeout,omitempty"`
+	ThresholdMillis int      `yaml:"thresholdMillis" json:"thresholdMillis,omitempty"`
 	// SrvReply    SrvReply `yaml:"srvReply,omitempty" json:"srvReply,omitempty"`
 }
 
