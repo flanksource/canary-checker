@@ -12,6 +12,7 @@ import (
 	"time"
 
 	pusher "github.com/chartmuseum/helm-push/pkg/chartmuseum"
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
@@ -37,7 +38,8 @@ func (c *HelmChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 	return results
 }
 
-func (c *HelmChecker) Check(config v1.HelmCheck) *pkg.CheckResult {
+func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
+	config := extConfig.(v1.HelmCheck)
 	start := time.Now()
 	var uploadOK, downloadOK bool = true, true
 	chartmuseum := fmt.Sprintf("%s/chartrepo/%s/", config.Chartmuseum, config.Project)

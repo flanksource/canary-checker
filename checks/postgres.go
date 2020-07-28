@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	_ "github.com/lib/pq"
@@ -34,7 +35,8 @@ func (c *PostgresChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 // CheckConfig : Attempts to connect to a DB using the specified
 //               driver and connection string
 // Returns check result and metrics
-func (c *PostgresChecker) Check(check v1.PostgresCheck) *pkg.CheckResult {
+func (c *PostgresChecker) Check(extConfig external.Check) *pkg.CheckResult {
+	check := extConfig.(v1.PostgresCheck)
 	start := time.Now()
 	queryResult, err := connectWithDriver(check.Driver, check.Connection, check.Query)
 	if err != nil {

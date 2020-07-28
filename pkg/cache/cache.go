@@ -71,6 +71,7 @@ func (c *cache) AddCheck(checks v1.Canary, result *pkg.CheckResult) *pkg.Check {
 		Type:        result.Check.GetType(),
 		Name:        checks.ID(),
 		Description: checks.GetDescription(result.Check),
+		CheckConf:   result.Check,
 		Statuses: []pkg.CheckStatus{
 			{
 				Status:   result.Pass,

@@ -3,6 +3,7 @@ package checks
 import (
 	"crypto/tls"
 
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	ldap "github.com/go-ldap/ldap/v3"
@@ -27,7 +28,8 @@ func (c *LdapChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 
 // CheckConfig : Check every ldap entry for lookup and auth
 // Returns check result and metrics
-func (c *LdapChecker) Check(check v1.LDAPCheck) *pkg.CheckResult {
+func (c *LdapChecker) Check(extConfig external.Check) *pkg.CheckResult {
+	check := extConfig.(v1.LDAPCheck)
 	ld, err := ldap.DialURL(check.Host, ldap.DialWithTLSConfig(&tls.Config{
 		InsecureSkipVerify: check.SkipTLSVerify,
 	}))

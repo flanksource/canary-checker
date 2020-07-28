@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/external"
 	"k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -72,11 +73,12 @@ func NewPodChecker() *PodChecker {
 func (c *PodChecker) Run(config canaryv1.CanarySpec) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
 	for _, conf := range config.Pod {
-		deadline := time.Now().Add(time.Duration(config.Interval) * time.Second)
-		if deadline.Before(time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)) {
-			deadline = time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)
-		}
-		result := c.Check(conf, deadline)
+		// Unused deadline ?
+		//deadline := time.Now().Add(time.Duration(config.Interval) * time.Second)
+		//if deadline.Before(time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)) {
+		//	deadline = time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)
+		//}
+		result := c.Check(conf)
 		if result != nil {
 			results = append(results, result)
 		}
@@ -137,7 +139,8 @@ func diff(times map[v1.PodConditionType]metav1.Time, c1 v1.PodConditionType, c2 
 	return -1
 }
 
-func (c *PodChecker) Check(podCheck canaryv1.PodCheck, checkDeadline time.Time) *pkg.CheckResult {
+func (c *PodChecker) Check(extConfig external.Check) *pkg.CheckResult {
+	podCheck := extConfig.(canaryv1.PodCheck)
 	if !c.lock.TryAcquire(1) {
 		logger.Tracef("Check already in progress, skipping")
 		return nil

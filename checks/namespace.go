@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/external"
 	"k8s.io/api/extensions/v1beta1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -55,11 +56,12 @@ func NewNamespaceChecker() *NamespaceChecker {
 func (c *NamespaceChecker) Run(config canaryv1.CanarySpec) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
 	for _, conf := range config.Namespace {
-		deadline := time.Now().Add(time.Duration(config.Interval) * time.Second)
-		if deadline.Before(time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)) {
-			deadline = time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)
-		}
-		results = append(results, c.Check(conf, deadline))
+		// Unused deadline ?
+		//deadline := time.Now().Add(time.Duration(config.Interval) * time.Second)
+		//if deadline.Before(time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)) {
+		//	deadline = time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)
+		//}
+		results = append(results, c.Check(conf))
 
 	}
 	return results
@@ -107,7 +109,9 @@ func (c *NamespaceChecker) getConditionTimes(ns *v1.Namespace, pod *v1.Pod) (tim
 	return times, nil
 }
 
-func (c *NamespaceChecker) Check(check canaryv1.NamespaceCheck, checkDeadline time.Time) *pkg.CheckResult {
+func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
+	check := extConfig.(canaryv1.NamespaceCheck)
+
 	if !c.lock.TryAcquire(1) {
 		logger.Tracef("Check already in progress, skipping")
 		return nil

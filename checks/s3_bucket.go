@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -63,7 +64,8 @@ func (c *S3BucketChecker) Type() string {
 	return "s3_bucket"
 }
 
-func (c *S3BucketChecker) Check(bucket v1.S3BucketCheck) *pkg.CheckResult {
+func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
+	bucket := extConfig.(v1.S3BucketCheck)
 	if _, err := DNSLookup(bucket.Endpoint); err != nil {
 		return unexpectedErrorf(bucket, err, "failed to resolve DNS")
 	}

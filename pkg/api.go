@@ -49,6 +49,8 @@ type Check struct {
 	Uptime      string        `json:"uptime"`
 	Latency     string        `json:"latency"`
 	Statuses    []CheckStatus `json:"checkStatuses"`
+	// CheckConf is the configuration
+	CheckConf external.Check `json:"-"`
 }
 
 type Checks []Check

@@ -3,6 +3,7 @@ package checks
 import (
 	"time"
 
+	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sparrc/go-ping"
 
@@ -43,7 +44,8 @@ func (c *IcmpChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
-func (c *IcmpChecker) Check(check v1.ICMPCheck) *pkg.CheckResult {
+func (c *IcmpChecker) Check(extConfig external.Check) *pkg.CheckResult {
+	check := extConfig.(v1.ICMPCheck)
 	endpoint := check.Endpoint
 
 	lookupResult, err := DNSLookup(endpoint)

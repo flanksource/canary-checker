@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -60,7 +61,8 @@ func (c *HttpChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
-func (c *HttpChecker) Check(check v1.HTTPCheck) *pkg.CheckResult {
+func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
+	check := extConfig.(v1.HTTPCheck)
 	endpoint := check.Endpoint
 	lookupResult, err := DNSLookup(endpoint)
 	if err != nil {

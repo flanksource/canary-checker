@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 )
@@ -30,7 +31,8 @@ func (c *DockerPushChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *DockerPushChecker) Check(check v1.DockerPushCheck) *pkg.CheckResult {
+func (c *DockerPushChecker) Check(extConfig external.Check) *pkg.CheckResult {
+	check := extConfig.(v1.DockerPushCheck)
 	start := time.Now()
 	ctx := context.Background()
 	authConfig := types.AuthConfig{
