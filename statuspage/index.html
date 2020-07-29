@@ -115,7 +115,7 @@
           <td v-for="serverName in servers" class="align-middle border-right">
             <section v-if="check.checkStatuses[serverName]">
               <button class="btn btn-secondary btn-xs" @click="triggerSingle(serverName, check.key)">Trigger</button>
-              <span class="right">{{check.latency}} {{check.uptime}}</span>
+              <span class="right">{{check.health[serverName].latency}} {{check.health[serverName].uptime}}</span>
               <br />
               <div v-for="checkStatus in check.checkStatuses[serverName]" class="check-status-container">
                 <div v-if="checkStatus.status" class="check-status check-status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration"  v-bind:popover-title="checkStatus.time"></div>

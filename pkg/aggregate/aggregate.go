@@ -25,9 +25,13 @@ type AggregateCheck struct {
 	Type        string                       `json:"type"`
 	Name        string                       `json:"name"`
 	Description string                       `json:"description"`
-	Latency     string                       `json:"latency"`
-	Uptime      string                       `json:"uptime"`
+	Health      map[string]CheckHealth       `json:"health"`
 	Statuses    map[string][]pkg.CheckStatus `json:"checkStatuses"`
+}
+
+type CheckHealth struct {
+	Latency string `json:"latency"`
+	Uptime  string `json:"uptime"`
 }
 
 type AggregateChecks []AggregateCheck
@@ -84,8 +88,9 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 			Name:        c.Name,
 			Type:        c.Type,
 			Description: c.Description,
-			Latency:     c.Latency,
-			Uptime:      c.Uptime,
+			Health: map[string]CheckHealth{
+				localServerId: {c.Latency, c.Uptime},
+			},
 			Statuses: map[string][]pkg.CheckStatus{
 				localServerId: c.Statuses,
 			},
@@ -106,15 +111,17 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 		for _, c := range apiResponse.Checks {
 			ac, found := aggregateData[c.Key]
 			if found {
+				ac.Health[serverId] = CheckHealth{c.Latency, c.Uptime}
 				ac.Statuses[serverId] = c.Statuses
 			} else {
 				aggregateData[c.Key] = &AggregateCheck{
 					Key:         c.Key,
 					Name:        c.Name,
 					Type:        c.Type,
-					Latency:     c.Latency,
-					Uptime:      c.Uptime,
 					Description: c.Description,
+					Health: map[string]CheckHealth{
+						serverId: {c.Latency, c.Uptime},
+					},
 					Statuses: map[string][]pkg.CheckStatus{
 						serverId: c.Statuses,
 					},

@@ -29,7 +29,6 @@ var Serve = &cobra.Command{
 		config := pkg.ParseConfig(configfile)
 
 		interval, _ := cmd.Flags().GetUint64("interval")
-		fmt.Printf("%+v\n", cmd.Flags())
 
 		config.Interval = interval
 		logger.Infof("Running checks every %d seconds", config.Interval)
@@ -39,7 +38,7 @@ var Serve = &cobra.Command{
 		canary := v1.Canary{}
 		for _, _c := range checks.All {
 			c := _c
-			scheduler.Every(uint64(interval)).Seconds().StartImmediately().Do(func() {
+			scheduler.Every(interval).Seconds().StartImmediately().Do(func() {
 				go func() {
 					for _, result := range c.Run(config) {
 						cache.AddCheck(canary, result)
