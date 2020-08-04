@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	nethttp "net/http"
 	_ "net/http/pprof"
 	"time"
@@ -29,7 +28,7 @@ var Serve = &cobra.Command{
 		configfile, _ := cmd.Flags().GetString("configfile")
 		config := pkg.ParseConfig(configfile)
 
-		interval, _ := cmd.Flags().GetInt64("interval")
+		interval, _ := cmd.Flags().GetUint64("interval")
 
 		config.Interval = interval
 		logger.Infof("Running checks every %d seconds", config.Interval)
@@ -39,7 +38,7 @@ var Serve = &cobra.Command{
 		canary := v1.Canary{}
 		for _, _c := range checks.All {
 			c := _c
-			scheduler.Every(uint64(interval)).Seconds().StartImmediately().Do(func() {
+			scheduler.Every(interval).Seconds().StartImmediately().Do(func() {
 				go func() {
 					for _, result := range c.Run(config) {
 						cache.AddCheck(canary, result)
@@ -58,12 +57,15 @@ func serve(cmd *cobra.Command) {
 	httpPort, _ := cmd.Flags().GetInt("httpPort")
 	dev, _ := cmd.Flags().GetBool("dev")
 	nethttp.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
+	var staticRoot nethttp.FileSystem
 	if dev {
-		nethttp.HandleFunc("/", devRootPageHandler)
+		staticRoot = nethttp.Dir("./statuspage")
 	} else {
-		nethttp.Handle("/", nethttp.FileServer(statuspage.FS(false)))
+		staticRoot = statuspage.FS(false)
 	}
+	nethttp.Handle("/", nethttp.FileServer(staticRoot))
 	nethttp.HandleFunc("/api", api.Handler)
+	nethttp.HandleFunc("/api/triggerCheck", api.TriggerCheckHandler)
 	nethttp.HandleFunc("/api/aggregate", aggregate.Handler)
 
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
@@ -73,20 +75,6 @@ func serve(cmd *cobra.Command) {
 	if err := nethttp.ListenAndServe(addr, nil); err != nil {
 		logger.Fatalf("failed to start server: %v", err)
 	}
-}
-
-func devRootPageHandler(w nethttp.ResponseWriter, req *nethttp.Request) {
-	if req.URL.Path != "/" {
-		w.WriteHeader(nethttp.StatusNotFound)
-		fmt.Fprintf(w, "{\"error\": \"page not found\", \"checks\": []}")
-		return
-	}
-	body, err := ioutil.ReadFile("statuspage/index.html")
-	if err != nil {
-		logger.Errorf("Failed to read html file: %v", err)
-		fmt.Fprintf(w, "{\"error\": \"internal\", \"checks\": []}")
-	}
-	fmt.Fprintf(w, string(body))
 }
 
 func init() {

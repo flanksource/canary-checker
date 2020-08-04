@@ -39,6 +39,10 @@
       margin-bottom: 2rem;
     }
 
+    tr:last-child {
+      border-bottom: 1px solid rgba(86, 61, 124, .2);
+    }
+
     #last-refreshed {
       color: #777;
       font-size: 0.8em;
@@ -46,13 +50,13 @@
 
     div.check-status-container {
       display: inline-block;
+      vertical-align: middle;
     }
 
     div.check-status {
       height: 1em;
       width: 20px;
-      margin-right: 0.5em;
-      margin-bottom: 0.5em
+      margin: 0.5rem 0.25rem;
     }
 
     div.check-status.check-status-pass {
@@ -62,8 +66,15 @@
       background-color:#dc3545;
     }
 
-    button.pause-resume-reload {
+    .right {
       float: right;
+    }
+
+    .btn-group-xs > .btn, .btn-xs {
+      padding: .25rem .4rem;
+      font-size: .875rem;
+      line-height: .75;
+      border-radius: .2rem;
     }
 
     [v-cloak] {
@@ -73,13 +84,13 @@
 </head>
 <body>
   <div class="container" id="app">
-    <button v-if="disableReload" v-on:click="resumeAutoUpdate" type="button" class="btn btn-danger pause-resume-reload" v-cloak>
+    <button v-if="disableReload" v-on:click="resumeAutoUpdate" type="button" class="btn btn-danger right" v-cloak>
       <svg class="bi bi-play" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
         <path fill-rule="evenodd" d="M10.804 8L5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/>
       </svg>
       Resume auto update
     </button>
-    <button v-else=type="button" v-on:click="pauseAutoUpdate" type="button" class="btn btn-primary pause-resume-reload">
+    <button v-else=type="button" v-on:click="pauseAutoUpdate" type="button" class="btn btn-primary right">
       <svg class="bi bi-pause-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
         <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
       </svg>
@@ -96,24 +107,26 @@
     <table v-else id="checks" class="table table-sm" v-cloak>
       <thead>
         <th scope="col">Name</th>
-        <th v-for="serverName in servers" scope="col">{{ serverName }}</th>
+        <th v-for="serverName in servers" scope="col" class="border-right">{{ serverName }}</th>
       </thead>
       <template v-for="check in checks">
         <tr>
-
-          <td scope="row"> <img :src="check.type + '.svg'" height="20px" :title="check.type"></i> <span class="badge badge-secondary" >{{ check.name }}</span> {{ check.description}}</td>
-          <td v-for="serverName in servers">
-            {{check.latency}} {{check.uptime}}
-            <div v-for="checkStatus in check.checkStatuses[serverName]" class="check-status-container">
-              <div v-if="checkStatus.status" class="check-status check-status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration"  v-bind:popover-title="checkStatus.time"></div>
-              <div v-else class="check-status check-status-fail" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration" v-bind:popover-title="checkStatus.time"></div>
-            </div>
+          <td scope="row" class="align-middle"> <img :src="check.type + '.svg'" height="20px" :title="check.type"></i> <span class="badge badge-secondary" >{{ check.name }}</span> {{ check.description}}</td>
+          <td v-for="serverName in servers" class="align-middle border-right">
+            <section v-if="check.checkStatuses[serverName]">
+              <button class="btn btn-secondary btn-xs" @click="triggerSingle(serverName, check.key)">Trigger</button>
+              <span class="right">{{check.health[serverName].latency}} {{check.health[serverName].uptime}}</span>
+              <br />
+              <div v-for="checkStatus in check.checkStatuses[serverName]" class="check-status-container">
+                <div v-if="checkStatus.status" class="check-status check-status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration"  v-bind:popover-title="checkStatus.time"></div>
+                <div v-else class="check-status check-status-fail" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration" v-bind:popover-title="checkStatus.time"></div>
+              </div>
+            </section>
           </td>
         </tr>
       </template>
     </table>
 
-    <hr>
     <div v-if="lastRefreshed" id="last-refreshed" v-cloak>
       Last refreshed <span>{{ lastRefreshed }}</span>
     </div>
@@ -173,6 +186,28 @@
                 this.disableReload = false
                 console.log("Auto update resumed")
                 this.timer = setInterval(this.fetchData, 20000) // 20 seconds
+              },
+              triggerSingle(server, key) {
+                $.ajax({
+                  contentType: "application/json",
+                  dataType: "json",
+                  url: "/api/triggerCheck",
+                  method: "POST",
+                  data: JSON.stringify({
+                    key,
+                    server
+                  }),
+                  success: response => {
+                    this.fetchData()
+                  },
+                  error: err => {
+                    if (err.status === 0) {
+                      this.error = "Error loading data from server: failed to connect to server"
+                    } else {
+                      this.error = "Error loading data from server: " + err.error
+                    }
+                  }
+                });
               }
           }
       })

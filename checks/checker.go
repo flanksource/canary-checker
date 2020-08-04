@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 )
@@ -8,6 +9,7 @@ import (
 type Checker interface {
 	Run(config v1.CanarySpec) []*pkg.CheckResult
 	Type() string
+	Check(extConfig external.Check) *pkg.CheckResult
 }
 
 var All = []Checker{

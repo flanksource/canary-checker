@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -57,7 +58,8 @@ func (c *S3Checker) Type() string {
 	return "s3"
 }
 
-func (c *S3Checker) Check(check v1.S3Check) *pkg.CheckResult {
+func (c *S3Checker) Check(extConfig external.Check) *pkg.CheckResult {
+	check := extConfig.(v1.S3Check)
 	bucket := check.Bucket
 
 	if _, err := DNSLookup(bucket.Endpoint); err != nil {

@@ -34,6 +34,8 @@
 
 ## Getting Started
 
+Requires `Prometheus Operator` running on the cluster
+
 ```bash
 # install the operator using kustomize
 kustomize build github.com/flanksource/canary-checker//config | kubectl apply -f -

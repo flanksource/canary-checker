@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"golang.org/x/net/context"
@@ -28,7 +29,8 @@ func (c *DNSChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 	return results
 }
 
-func (c *DNSChecker) Check(check v1.DNSCheck) *pkg.CheckResult {
+func (c *DNSChecker) Check(extConfig external.Check) *pkg.CheckResult {
+	check := extConfig.(v1.DNSCheck)
 	ctx := context.Background()
 	dialer, err := getDialer(check, check.Timeout)
 	if err != nil {

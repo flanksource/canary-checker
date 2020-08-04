@@ -40,7 +40,7 @@ type CanarySpec struct {
 	Postgres   []PostgresCheck      `yaml:"postgres,omitempty" json:"postgres,omitempty"`
 	Helm       []HelmCheck          `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace  []NamespaceCheck     `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-	Interval   int64                `yaml:"interval,omitempty" json:"interval,omitempty"`
+	Interval   uint64               `yaml:"interval,omitempty" json:"interval,omitempty"`
 }
 
 func (spec CanarySpec) GetAllChecks() []external.Check {

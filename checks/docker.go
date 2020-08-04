@@ -11,6 +11,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -79,7 +80,8 @@ func getDigestFromOutput(out io.ReadCloser) string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *DockerPullChecker) Check(check v1.DockerPullCheck) *pkg.CheckResult {
+func (c *DockerPullChecker) Check(extConfig external.Check) *pkg.CheckResult {
+	check := extConfig.(v1.DockerPullCheck)
 	start := time.Now()
 	ctx := context.Background()
 	authConfig := types.AuthConfig{

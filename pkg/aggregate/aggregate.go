@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"sort"
-
 	nethttp "net/http"
+	"sort"
 
 	"github.com/flanksource/commons/logger"
 
@@ -21,10 +20,18 @@ import (
 var Servers []string
 
 type AggregateCheck struct {
+	ServerURL   string                       `json:"serverURL"`
+	Key         string                       `json:"key"`
 	Type        string                       `json:"type"`
 	Name        string                       `json:"name"`
 	Description string                       `json:"description"`
+	Health      map[string]CheckHealth       `json:"health"`
 	Statuses    map[string][]pkg.CheckStatus `json:"checkStatuses"`
+}
+
+type CheckHealth struct {
+	Latency string `json:"latency"`
+	Uptime  string `json:"uptime"`
 }
 
 type AggregateChecks []AggregateCheck
@@ -34,7 +41,7 @@ func (c AggregateChecks) Len() int {
 }
 func (c AggregateChecks) Less(i, j int) bool {
 	if c[i].Type == c[j].Type {
-		return c[i].Name < c[j].Name
+		return c[i].Key < c[j].Key
 	}
 	return c[i].Type < c[j].Type
 }
@@ -73,14 +80,19 @@ func getChecksFromServer(server string) (*api.Response, error) {
 func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 	aggregateData := map[string]*AggregateCheck{}
 	data := cache.GetChecks()
+
+	localServerId := fmt.Sprintf("%s@local", api.ServerName)
 	for _, c := range data {
-		id := c.ToString()
-		aggregateData[id] = &AggregateCheck{
+		aggregateData[c.Key] = &AggregateCheck{
+			Key:         c.Key,
 			Name:        c.Name,
 			Type:        c.Type,
 			Description: c.Description,
+			Health: map[string]CheckHealth{
+				localServerId: {c.Latency, c.Uptime},
+			},
 			Statuses: map[string][]pkg.CheckStatus{
-				api.ServerName: c.Statuses,
+				localServerId: c.Statuses,
 			},
 		}
 	}
@@ -93,20 +105,25 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 			logger.Errorf("Failed to get checks from server %s: %v", serverURL, err)
 			continue
 		}
-
-		servers = append(servers, apiResponse.ServerName)
+		serverId := fmt.Sprintf("%s@%s", apiResponse.ServerName, serverURL)
+		servers = append(servers, serverId)
 
 		for _, c := range apiResponse.Checks {
-			id := c.ToString()
-			ac, found := aggregateData[id]
+			ac, found := aggregateData[c.Key]
 			if found {
-				ac.Statuses[apiResponse.ServerName] = c.Statuses
+				ac.Health[serverId] = CheckHealth{c.Latency, c.Uptime}
+				ac.Statuses[serverId] = c.Statuses
 			} else {
-				aggregateData[id] = &AggregateCheck{
-					Name: c.Name,
-					Type: c.Type,
+				aggregateData[c.Key] = &AggregateCheck{
+					Key:         c.Key,
+					Name:        c.Name,
+					Type:        c.Type,
+					Description: c.Description,
+					Health: map[string]CheckHealth{
+						serverId: {c.Latency, c.Uptime},
+					},
 					Statuses: map[string][]pkg.CheckStatus{
-						apiResponse.ServerName: c.Statuses,
+						serverId: c.Statuses,
 					},
 				}
 			}
@@ -114,7 +131,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 	}
 
 	sort.Strings(servers)
-	allServers := []string{api.ServerName}
+	allServers := []string{localServerId}
 	allServers = append(allServers, servers...)
 
 	aggregateList := AggregateChecks{}
@@ -133,5 +150,5 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 		fmt.Fprintf(w, "{\"error\": \"internal\", \"checks\": []}")
 		return
 	}
-	fmt.Fprintf(w, string(jsonData))
+	w.Write(jsonData)
 }

@@ -12,6 +12,7 @@ spec:
       minrecords: 1
       exactreply: ["1.2.3.4"]
       timeout: 10
+      thresholdMillis: 1000
     - server: 8.8.8.8
       port: 53
       query: "8.8.8.8"
@@ -19,6 +20,7 @@ spec:
       minrecords: 1
       exactreply: ["dns.google."]
       timeout: 10
+      thresholdMillis: 1000
     - server: 8.8.8.8
       port: 53
       query: "dns.google"
@@ -26,6 +28,7 @@ spec:
       minrecords: 1
       exactreply: ["dns.google."]
       timeout: 10
+      thresholdMillis: 1000
     - server: 8.8.8.8
       port: 53
       query: "flanksource.com"
@@ -38,6 +41,7 @@ spec:
         - "aspmx3.googlemail.com. 10"
         - "aspmx2.googlemail.com. 10"
       timeout: 10
+      thresholdMillis: 1000
     - server: 8.8.8.8
       port: 53
       query: "flanksource.com"
@@ -46,6 +50,7 @@ spec:
       exactreply:
         ["google-site-verification=IIE1aJuvqseLUKSXSIhu2O2lgdU_d8csfJjjIQVc-q0"]
       timeout: 10
+      thresholdMillis: 1000
     - server: 8.8.8.8
       port: 53
       query: "flanksource.com"
@@ -57,6 +62,7 @@ spec:
         - "ns-1450.awsdns-53.org."
         - "ns-1896.awsdns-45.co.uk."
       timeout: 10
+      thresholdMillis: 1000
   #  - server: 8.8.8.8
   #    port: 53
   #    querytype: "SRV"
