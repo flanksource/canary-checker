@@ -73,11 +73,6 @@ func NewPodChecker() *PodChecker {
 func (c *PodChecker) Run(config canaryv1.CanarySpec) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
 	for _, conf := range config.Pod {
-		// Unused deadline ?
-		//deadline := time.Now().Add(time.Duration(config.Interval) * time.Second)
-		//if deadline.Before(time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)) {
-		//	deadline = time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)
-		//}
 		result := c.Check(conf)
 		if result != nil {
 			results = append(results, result)

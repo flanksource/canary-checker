@@ -56,13 +56,7 @@ func NewNamespaceChecker() *NamespaceChecker {
 func (c *NamespaceChecker) Run(config canaryv1.CanarySpec) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
 	for _, conf := range config.Namespace {
-		// Unused deadline ?
-		//deadline := time.Now().Add(time.Duration(config.Interval) * time.Second)
-		//if deadline.Before(time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)) {
-		//	deadline = time.Now().Add(time.Duration(conf.Deadline) * time.Millisecond)
-		//}
 		results = append(results, c.Check(conf))
-
 	}
 	return results
 }
