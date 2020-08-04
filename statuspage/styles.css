@@ -1,0 +1,71 @@
+body {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+h3 {
+    margin-top: 2rem;
+}
+
+.row {
+    margin-bottom: 1rem;
+}
+.row .row {
+    margin-top: 1rem;
+    margin-bottom: 0;
+}
+[class*="col-"] {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    background-color: rgba(86, 61, 124, .15);
+    border: 1px solid rgba(86, 61, 124, .2);
+}
+
+hr {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+tr:last-child {
+    border-bottom: 1px solid rgba(86, 61, 124, .2);
+}
+
+#last-refreshed {
+    color: #777;
+    font-size: 0.8em;
+}
+
+div.check-status-container {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+div.check-status {
+    height: 1em;
+    width: 20px;
+    margin: 0.5rem 0.25rem;
+}
+
+div.check-status.check-status-pass {
+    background-color: #28a745;
+}
+div.check-status.check-status-fail {
+    background-color:#dc3545;
+}
+
+.right {
+    float: right;
+}
+
+.btn-group-xs > .btn, .btn-xs {
+    padding: .25rem .4rem;
+    font-size: .875rem;
+    line-height: .75;
+    border-radius: .2rem;
+}
+
+[v-cloak] {
+    display: none;
+}
+
+.material-icons.md-18 { font-size: 18px }
