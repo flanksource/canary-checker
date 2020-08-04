@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"strings"
 
-	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
@@ -108,10 +107,9 @@ func TriggerCheckHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		canary := v1.Canary{}
-		result := checker.Check(check.CheckConf)
-		cache.AddCheck(canary, result)
-		metrics.Record(canary, result)
+		result := checker.Check(*check.CheckConf)
+		cache.AddCheck(*check.CheckCanary, result)
+		metrics.Record(*check.CheckCanary, result)
 	} else {
 		td.CheckServer = fmt.Sprintf("%s@local", serverName)
 		_, err := triggerCheckOnServer(serverURL, td)

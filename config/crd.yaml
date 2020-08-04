@@ -79,6 +79,8 @@ spec:
                     type: string
                   timeout:
                     type: integer
+                  thresholdMillis:
+                    type: integer
                 type: object
               type: array
             docker:

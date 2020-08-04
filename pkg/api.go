@@ -50,7 +50,8 @@ type Check struct {
 	Latency     string        `json:"latency"`
 	Statuses    []CheckStatus `json:"checkStatuses"`
 	// CheckConf is the configuration
-	CheckConf external.Check `json:"-"`
+	CheckConf   *external.Check `json:"-"`
+	CheckCanary *v1.Canary      `json:"-"`
 }
 
 type Checks []Check
