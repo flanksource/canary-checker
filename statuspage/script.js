@@ -6,7 +6,8 @@ var app = new Vue({
     this.$store.dispatch('resumeAutoUpdate')
   },
   computed: {
-    ...Vuex.mapState(['error','servers','lastRefreshed','checks','disableReload'])
+    ...Vuex.mapState(['error','servers','lastRefreshed','checks','disableReload']),
+    ...Vuex.mapGetters(['serversByNames','groupedChecks'])
   },
   methods: {
     ...Vuex.mapActions(['pauseAutoUpdate', 'resumeAutoUpdate'])
@@ -53,12 +54,12 @@ Vue.component('check-row', {
         <span class="badge badge-secondary">{{ check.name }}</span> 
         <span>{{ check.description }}</span>
       </td>
-      <td v-for="serverName in servers" :key="serverName" class="align-middle border-right">
-        <section v-if="check.checkStatuses[serverName]">
-          <button class="btn btn-secondary btn-xs" @click="triggerSingle(serverName, check.key)">Trigger</button>
-          <span class="right">{{check.health[serverName].latency}} {{check.health[serverName].uptime}}</span>
+      <td v-for="(server, serverName) in serversByNames" :key="server" class="align-middle border-right">
+        <section v-if="check.checkStatuses[server]">
+          <button class="btn btn-secondary btn-xs" @click="triggerSingle(server, check.key)">Trigger</button>
+          <div class="right health">{{check.health[server].latency}} {{check.health[server].uptime}}</div>
           <br />
-          <div v-for="checkStatus in check.checkStatuses[serverName]" :key="checkStatus.time" class="check-status-container">
+          <div v-for="checkStatus in check.checkStatuses[server]" :key="checkStatus.time" class="check-status-container">
             <div v-if="checkStatus.status" class="check-status check-status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration"  v-bind:popover-title="checkStatus.time"></div>
             <div v-else class="check-status check-status-fail" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration" v-bind:popover-title="checkStatus.time"></div>
           </div>
@@ -73,7 +74,8 @@ Vue.component('check-row', {
     }
   },
   computed: {
-    ...Vuex.mapState(['servers'])
+    ...Vuex.mapState(['servers']),
+    ...Vuex.mapGetters(['serversByNames'])
   },
   methods: {
     triggerSingle(server, key) {

@@ -31,8 +31,10 @@
     <table id="checks" class="table table-sm" v-cloak>
       <thead>
         <th scope="col">Name</th>
-        <th v-for="serverName in servers" :key="serverName" scope="col" class="border-right">{{ serverName }}</th>
+        <th v-for="(server, serverName) in serversByNames" :key="server" scope="col" class="border-right">{{ serverName }}</th>
       </thead>
+      <tbody>
+      </tbody>
       <template v-for="check in checks" :key="check.key">
         <check-row :check="check" />
       </template>
@@ -47,6 +49,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js" integrity="sha256-ngFW3UnAN0Tnm76mDuu7uUtYEcG3G5H1+zioJw3t+68=" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vuex/3.5.1/vuex.min.js" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js" integrity="sha256-Xt8pc4G0CdcRvI0nZ2lRpZ4VHng0EoUDMlGcBSQ9HiQ=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.19/lodash.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/timeago-simple@1.2.4/index.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/date-and-time/date-and-time.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios@0.19.2/dist/axios.min.js"></script>

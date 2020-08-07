@@ -69,3 +69,8 @@ div.check-status.check-status-fail {
 }
 
 .material-icons.md-18 { font-size: 18px }
+
+.health {
+    font-size: 0.9rem;
+    width: 140px;
+}

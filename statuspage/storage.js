@@ -36,7 +36,6 @@ const store = new Vuex.Store({
   },
   actions: {
     fetchData({commit}) {
-      console.log('fetch')
       commit('SET_LOADING', true)
       return axios
         .get('/api/aggregate')
@@ -64,6 +63,18 @@ const store = new Vuex.Store({
     resumeAutoUpdate({dispatch, commit}) {
       commit('SET_DISABLE_RELOAD', false)
       commit('SET_RELOAD_TIMER', setInterval(() => { dispatch('fetchData') }, 20000)) // 20 seconds
+    }
+  },
+  getters: {
+    serversByNames: state => {
+      return _.fromPairs(state.servers.map(server => [server.split('@')[0], server]))
+    },
+    groupedChecks: state => {
+      const byName = _.groupBy(state.checks, 'name')
+      for (const [name, checks] of Object.entries(byName)) {
+        byName[name] = _.groupBy(checks, 'type')
+      }
+      return byName
     }
   }
 })
