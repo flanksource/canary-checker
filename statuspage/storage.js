@@ -63,7 +63,32 @@ const store = new Vuex.Store({
     resumeAutoUpdate({dispatch, commit}) {
       commit('SET_DISABLE_RELOAD', false)
       commit('SET_RELOAD_TIMER', setInterval(() => { dispatch('fetchData') }, 20000)) // 20 seconds
-    }
+    },
+    triggerSingleCheck({commit, dispatch}, {server, check}) {
+      return axios
+        .post('/api/triggerCheck', { server, checkKey: check.key })
+        .then(() => {
+          dispatch('fetchData')
+        })
+        .catch((err) => {
+          commit('SET_ERROR', "Trigger error: " + err.response.data)
+        })
+    },
+    triggerCheckOnAllServers({state, commit, dispatch}, {check}) {
+      let results = []
+      for (const server of state.servers) {
+        if (check.checkStatuses[server]) {
+          results.push(axios.post('/api/triggerCheck', { server, checkKey: check.key }))
+        }
+      }
+      return Promise.all(results)
+        .catch((err) => {
+          commit('SET_ERROR', "Trigger error: " + err.response.data)
+        })
+        .finally(() => {
+          dispatch('fetchData')
+        })
+    },
   },
   getters: {
     serversByNames: state => {

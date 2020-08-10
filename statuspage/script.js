@@ -10,7 +10,10 @@ var app = new Vue({
     ...Vuex.mapGetters(['serversByNames','groupedChecks'])
   },
   methods: {
-    ...Vuex.mapActions(['pauseAutoUpdate', 'resumeAutoUpdate'])
+    ...Vuex.mapActions(['pauseAutoUpdate', 'resumeAutoUpdate']),
+    triggerCheck(check, eve) {
+      this.$store.dispatch('triggerCheckOnAllServers', { check })
+    }
   }
 })
 
@@ -98,12 +101,6 @@ Vue.component('check-row', {
 Vue.component('check-tds', {
   template: `
     <section class="check-section">
-      <div class="check-section-header">
-        <button class="btn btn-info btn-xs" @click="triggerSingle" title="Trigger single check on the server">
-          <i class="material-icons md-12 align-middle">send</i>
-        </button>
-        <div class="float-right health text-right"><div>{{check.health[server].latency}}</div> {{check.health[server].uptime}}</div>
-      </div>
       <div v-for="checkStatus in check.checkStatuses[this.server]" :key="checkStatus.time" class="check-status-container">
         <div v-if="checkStatus.status" class="check-status check-status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration"  v-bind:popover-title="checkStatus.time"></div>
         <div v-else class="check-status check-status-fail" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration" v-bind:popover-title="checkStatus.time"></div>
@@ -126,14 +123,7 @@ Vue.component('check-tds', {
   },
   methods: {
     triggerSingle() {
-      axios
-        .post('/api/triggerCheck', { server: this.server, checkKey: this.check.key })
-        .then(() => {
-          this.$store.dispatch('fetchData')
-        })
-        .catch((err) => {
-          this.$store.commit('SET_ERROR', "Trigger error: " + err.response.data)
-        })
+      this.$store.dispatch('triggerSingleCheck', { server: this.server, check: this.check })
     }
   }
 })

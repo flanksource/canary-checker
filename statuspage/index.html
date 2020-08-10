@@ -45,7 +45,10 @@
               <span class="badge badge-secondary">{{ name }}</span>
             </td>
             <td class="align-middle">
-              <span>{{ check.description }}</span>
+              <span class="float-left w-75 pr-5">{{ check.description }}</span>
+              <button class="btn btn-info btn-xs float-right" @click="triggerCheck(check)" title="Trigger the check on every server">
+                <i class="material-icons md-12 align-middle">send</i>
+              </button>
             </td>
             <td v-for="(server, serverName) in serversByNames" :key="server" class="align-top border-right border-left">
               <check-tds v-if="check.checkStatuses[server]" :check="check" :server="server"></check-tds>
