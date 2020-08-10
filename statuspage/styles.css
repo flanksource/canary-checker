@@ -74,7 +74,7 @@ div.check-status.check-status-fail {
 }
 
 .check-section {
-    width: 9rem;
+    min-width: 9rem;
 }
 
 .check-section-header {
