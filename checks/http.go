@@ -17,6 +17,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/metrics"
+	"github.com/flanksource/commons/logger"
 )
 
 var (
@@ -160,6 +161,7 @@ func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*HTTPCheckResult, error) {
 		return nil, err
 	}
 	content := string(res)
+	logger.Tracef("GET %s => %s", urlString, content)
 	sslExpireDays := int(exp.Sub(start).Hours() / 24.0)
 	var sslExpiryDaysRounded int
 	if sslExpireDays <= 0 {
@@ -199,12 +201,16 @@ func DNSLookup(endpoint string) ([]pkg.URL, error) {
 			continue
 		}
 		port, _ := strconv.Atoi(parsedURL.Port())
+		path := parsedURL.Path
+		if parsedURL.RawQuery != "" {
+			path += "?" + parsedURL.RawQuery
+		}
 		urlObj := pkg.URL{
 			IP:     ip.String(),
 			Port:   port,
 			Host:   parsedURL.Hostname(),
 			Scheme: parsedURL.Scheme,
-			Path:   parsedURL.Path,
+			Path:   path,
 		}
 		result = append(result, urlObj)
 	}
