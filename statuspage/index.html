@@ -12,11 +12,11 @@
 </head>
 <body>
   <div class="container" id="app">
-    <button v-if="disableReload" v-on:click="resumeAutoUpdate" type="button" class="btn btn-danger right" v-cloak>
+    <button v-if="disableReload" v-on:click="resumeAutoUpdate" type="button" class="btn btn-danger float-right" v-cloak>
       <i class="material-icons md-18 align-middle">play_arrow</i>
       <span class="align-middle">Resume auto update</span>
     </button>
-    <button v-else=type="button" v-on:click="pauseAutoUpdate" type="button" class="btn btn-primary right">
+    <button v-else=type="button" v-on:click="pauseAutoUpdate" type="button" class="btn btn-primary float-right">
       <i class="material-icons md-18 align-middle">pause</i>
       <span class="align-middle">Pause auto update</span>
     </button>
@@ -30,13 +30,28 @@
 
     <table id="checks" class="table table-sm" v-cloak>
       <thead>
-        <th scope="col">Name</th>
-        <th v-for="(server, serverName) in serversByNames" :key="server" scope="col" class="border-right">{{ serverName }}</th>
+        <th class="border-right">Type</th>
+        <th class="border-right">NS/Name</th>
+        <th class="border-right">Name</th>
+        <th v-for="(server, serverName) in serversByNames" :key="server" class="border-right">{{ serverName }}</th>
       </thead>
-      <tbody>
-      </tbody>
-      <template v-for="check in checks" :key="check.key">
-        <check-row :check="check" />
+      <template v-for="(typed, name) in groupedChecks" :key="name">
+        <tbody v-for="(checks, type) in typed" :key="type" class="border-bottom border-secondary">
+          <tr v-for="(check, idx) in checks" :key="check.key">
+            <td v-if="idx === 0" class="align-middle border-right" :rowspan="checks.length">
+              <img :src="'images/' + type + '.svg'" height="20px" :title="type"></i>
+            </td>
+            <td v-if="idx === 0" class="align-middle border-right" :rowspan="checks.length">
+              <span class="badge badge-secondary">{{ name }}</span>
+            </td>
+            <td class="align-middle">
+              <span>{{ check.description }}</span>
+            </td>
+            <td v-for="(server, serverName) in serversByNames" :key="server" class="align-top border-right border-left">
+              <check-tds v-if="check.checkStatuses[server]" :check="check" :server="server"></check-tds>
+            </td>
+          </tr>
+        </tbody>
       </template>
     </table>
 

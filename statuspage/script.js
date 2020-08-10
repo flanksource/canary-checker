@@ -46,7 +46,11 @@ Vue.directive('popover', {
   },
 });
 
+
+// Deprecated component
 Vue.component('check-row', {
+  name: 'check-row',
+
   template: `
     <tr>
       <td scope="row" class="align-middle"> 
@@ -57,7 +61,7 @@ Vue.component('check-row', {
       <td v-for="(server, serverName) in serversByNames" :key="server" class="align-middle border-right">
         <section v-if="check.checkStatuses[server]">
           <button class="btn btn-secondary btn-xs" @click="triggerSingle(server, check.key)">Trigger</button>
-          <div class="right health">{{check.health[server].latency}} {{check.health[server].uptime}}</div>
+          <div class="float-right health">{{check.health[server].latency}} {{check.health[server].uptime}}</div>
           <br />
           <div v-for="checkStatus in check.checkStatuses[server]" :key="checkStatus.time" class="check-status-container">
             <div v-if="checkStatus.status" class="check-status check-status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration"  v-bind:popover-title="checkStatus.time"></div>
@@ -78,9 +82,52 @@ Vue.component('check-row', {
     ...Vuex.mapGetters(['serversByNames'])
   },
   methods: {
-    triggerSingle(server, key) {
+    triggerSingle(server, checkKey) {
       axios
-        .post('/api/triggerCheck', { server, key })
+        .post('/api/triggerCheck', { server, checkKey })
+        .then(() => {
+          this.$store.dispatch('fetchData')
+        })
+        .catch((err) => {
+          this.$store.commit('SET_ERROR', "Trigger error: " + err.response.data)
+        })
+    }
+  }
+})
+
+Vue.component('check-tds', {
+  template: `
+    <section class="check-section">
+      <div class="check-section-header">
+        <button class="btn btn-info btn-xs" @click="triggerSingle" title="Trigger single check on the server">
+          <i class="material-icons md-12 align-middle">send</i>
+        </button>
+        <div class="float-right health text-right"><div>{{check.health[server].latency}}</div> {{check.health[server].uptime}}</div>
+      </div>
+      <div v-for="checkStatus in check.checkStatuses[this.server]" :key="checkStatus.time" class="check-status-container">
+        <div v-if="checkStatus.status" class="check-status check-status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration"  v-bind:popover-title="checkStatus.time"></div>
+        <div v-else class="check-status check-status-fail" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration" v-bind:popover-title="checkStatus.time"></div>
+      </div>
+    </section>
+  `,
+  props: {
+    check: {
+      type: Object,
+      required: true,
+    },
+    server: {
+      type: String,
+      required: true,
+    }
+  },
+  computed: {
+    ...Vuex.mapState(['servers']),
+    ...Vuex.mapGetters(['serversByNames'])
+  },
+  methods: {
+    triggerSingle() {
+      axios
+        .post('/api/triggerCheck', { server: this.server, checkKey: this.check.key })
         .then(() => {
           this.$store.dispatch('fetchData')
         })

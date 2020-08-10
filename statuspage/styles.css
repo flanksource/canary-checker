@@ -26,10 +26,6 @@ hr {
     margin-bottom: 2rem;
 }
 
-tr:last-child {
-    border-bottom: 1px solid rgba(86, 61, 124, .2);
-}
-
 #last-refreshed {
     color: #777;
     font-size: 0.8em;
@@ -53,10 +49,6 @@ div.check-status.check-status-fail {
     background-color:#dc3545;
 }
 
-.right {
-    float: right;
-}
-
 .btn-group-xs > .btn, .btn-xs {
     padding: .25rem .4rem;
     font-size: .875rem;
@@ -69,8 +61,22 @@ div.check-status.check-status-fail {
 }
 
 .material-icons.md-18 { font-size: 18px }
+.material-icons.md-12 { font-size: 12px }
 
 .health {
-    font-size: 0.9rem;
-    width: 140px;
+    font-size: 0.75rem;
+    line-height: 0.75rem;
+    width: 6rem;
+}
+
+.group-section {
+    width: 150px
+}
+
+.check-section {
+    width: 9rem;
+}
+
+.check-section-header {
+    height: 1.5rem;
 }
