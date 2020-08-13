@@ -38,7 +38,7 @@ div.check-status-container {
 
 div.check-status {
     height: 1em;
-    width: 20px;
+    width: 1.3rem;
     margin: 0.5rem 0.25rem;
 }
 
@@ -79,4 +79,29 @@ div.check-status.check-status-fail {
 
 .check-section-header {
     height: 1.5rem;
+}
+
+.slide-enter {
+    opacity: 0;
+}
+
+.slide-enter-active {
+    transition: all 0.5s ease-out;
+}
+
+.slide-leave-active {
+    transition: opacity 0.1s ease-out;
+}
+
+.slide-leave {
+    opacity: 0;
+}
+
+.slide-move {
+    transition: all .3s ease-in;
+}
+
+.check-button {
+    transition: all 0.4s linear;
+    transition-property: color, background-color, border-color
 }

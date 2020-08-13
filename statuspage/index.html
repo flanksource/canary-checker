@@ -28,7 +28,7 @@
       {{ error }}
     </div>
 
-    <table id="checks" class="table table-sm" v-cloak>
+    <table id="checks" class="table table-sm table-fixed text-nowrap" v-cloak>
       <thead>
         <th class="border-right">Type</th>
         <th class="border-right">NS/Name</th>
@@ -44,13 +44,13 @@
             <td v-if="idx === 0" class="align-middle border-right" :rowspan="checks.length">
               <span class="badge badge-secondary">{{ name }}</span>
             </td>
-            <td class="align-middle">
+            <td class="align-middle w-25">
               <span class="float-left w-75 pr-5">{{ check.description }}</span>
-              <button class="btn btn-info btn-xs float-right" @click="triggerCheck(check)" title="Trigger the check on every server">
+              <button class="btn btn-info btn-xs float-right check-button" @click="triggerCheck(check, $event)" title="Trigger the check on every server">
                 <i class="material-icons md-12 align-middle">send</i>
               </button>
             </td>
-            <td v-for="(server, serverName) in serversByNames" :key="server" class="align-top border-right border-left">
+            <td v-for="(server, serverName) in serversByNames" :key="server" class="align-top border-right border-left w-25">
               <check-tds v-if="check.checkStatuses[server]" :check="check" :server="server"></check-tds>
             </td>
           </tr>

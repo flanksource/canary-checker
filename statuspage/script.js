@@ -11,8 +11,11 @@ var app = new Vue({
   },
   methods: {
     ...Vuex.mapActions(['pauseAutoUpdate', 'resumeAutoUpdate']),
-    triggerCheck(check, eve) {
-      this.$store.dispatch('triggerCheckOnAllServers', { check })
+    async triggerCheck(check, event) {
+      const btn = event.currentTarget
+      btn.classList.toggle("btn-light")
+      await this.$store.dispatch('triggerCheckOnAllServers', {check})
+      btn.classList.toggle("btn-light")
     }
   }
 })
@@ -100,12 +103,12 @@ Vue.component('check-row', {
 
 Vue.component('check-tds', {
   template: `
-    <section class="check-section">
+    <transition-group name="slide" tag="section" class="check-section" :style="{width: 1.8 * check.checkStatuses[this.server].length + 'rem'}" mode="out-in">
       <div v-for="checkStatus in check.checkStatuses[this.server]" :key="checkStatus.time" class="check-status-container">
         <div v-if="checkStatus.status" class="check-status check-status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration"  v-bind:popover-title="checkStatus.time"></div>
         <div v-else class="check-status check-status-fail" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration" v-bind:popover-title="checkStatus.time"></div>
       </div>
-    </section>
+    </transition-group>
   `,
   props: {
     check: {
