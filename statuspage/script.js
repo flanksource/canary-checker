@@ -103,7 +103,7 @@ Vue.component('check-row', {
 
 Vue.component('check-tds', {
   template: `
-    <transition-group name="slide" tag="section" class="check-section" :style="{width: 1.8 * check.checkStatuses[this.server].length + 'rem'}" mode="out-in">
+    <transition-group name="slide" tag="section" class="check-section" :style="{width: 1.4 * check.checkStatuses[this.server].length + 'rem'}" mode="out-in">
       <div v-for="checkStatus in check.checkStatuses[this.server]" :key="checkStatus.time" class="check-status-container">
         <div class="check-status" 
           :class="[checkStatus.status ? 'check-status-pass' : 'check-status-fail']" 

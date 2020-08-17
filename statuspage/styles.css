@@ -37,9 +37,10 @@ div.check-status-container {
 }
 
 div.check-status {
-    height: 1em;
-    width: 1.3rem;
-    margin: 0.5rem 0.25rem;
+    height: 0.8em;
+    width: 1rem;
+    margin: 0.4rem 0.2rem;
+    border-radius: 0.15rem;
 }
 
 div.check-status.check-status-pass {
@@ -74,7 +75,7 @@ div.check-status.check-status-fail {
 }
 
 .check-section {
-    min-width: 9rem;
+    min-width: 7rem;
 }
 
 .check-section-header {
@@ -90,7 +91,7 @@ div.check-status.check-status-fail {
 }
 
 .slide-leave-active {
-    transition: opacity 0.1s ease-out;
+    transition: opacity 300ms ease-out;
 }
 
 .slide-leave {
@@ -98,7 +99,7 @@ div.check-status.check-status-fail {
 }
 
 .slide-move {
-    transition: all .3s ease-in;
+    transition: all 250ms ease-in;
 }
 
 .check-button {
