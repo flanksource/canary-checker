@@ -18,8 +18,12 @@ const store = new Vuex.Store({
     SET_CHECKS(state, checks) {
       for (let check of checks) {
         for (let [server, checkStatuses] of Object.entries(check.checkStatuses)) {
-          for (let checkStatus of checkStatuses) {
-            checkStatus.key = window.btoa(check.key + server + checkStatus.time)
+          if (checkStatuses) {
+            for (let checkStatus of checkStatuses) {
+              checkStatus.key = window.btoa(check.key + server + checkStatus.time)
+            }
+          } else {
+            check.checkStatuses = []
           }
         }
       }
