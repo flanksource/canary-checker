@@ -32,8 +32,10 @@ Vue.component('checkStatus', {
     <template v-slot:default>
         <div>{{checkStatus.message}}</div>
         <div class="duration">Duration: {{checkStatus.duration / 1000}}s <br/>{{dateTime}}</div>
+        <hr/>
+        <div class="left health">Avg latency: {{health.latency}}</br>Uptime: {{health.uptime}}</div>
         <button class="btn btn-info btn-xs float-right check-button mb-2" @click="triggerCheck" title="Trigger the check on every server">
-          <i class="material-icons md-18 align-middle">loop</i>
+          <i class="material-icons md-14 align-middle">loop</i>
         </button>
     </template>
   </b-popover>
@@ -47,6 +49,10 @@ Vue.component('checkStatus', {
   },
   props: {
     checkStatus: {
+      type: Object,
+      required: true
+    },
+    health: {
       type: Object,
       required: true
     }
@@ -69,7 +75,11 @@ Vue.component('check-tds', {
   template: `
     <transition-group name="slide" tag="section" class="check-section" :style="{width: 1.4 * check.checkStatuses[this.server].length + 'rem'}" mode="out-in">
       <div v-for="checkStatus in check.checkStatuses[this.server]" :key="checkStatus.key" class="check-status-container">
-        <check-status :checkStatus="checkStatus" @triggerCheck="triggerCheck"></check-status>
+        <check-status 
+            :checkStatus="checkStatus" 
+            :health="check.health[server]"
+            @triggerCheck="triggerCheck"
+            ></check-status>
       </div>
     </transition-group>
   `,

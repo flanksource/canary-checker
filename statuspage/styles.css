@@ -11,6 +11,10 @@ h3 {
     margin-top: 0rem;
 }
 
+.popover-body > hr {
+    margin: 0.4rem 0;
+}
+
 .row {
     margin-bottom: 1rem;
 }
@@ -66,12 +70,14 @@ div.check-status.check-status-fail {
 }
 
 .material-icons.md-18 { font-size: 18px }
+.material-icons.md-14 { font-size: 14px }
 .material-icons.md-12 { font-size: 12px }
 
 .health {
+    display: inline-block;
     font-size: 0.75rem;
     line-height: 0.75rem;
-    width: 6rem;
+    width: 11rem;
 }
 
 .group-section {
