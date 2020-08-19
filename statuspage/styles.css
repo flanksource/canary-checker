@@ -73,6 +73,10 @@ div.check-status.check-status-fail {
 .material-icons.md-14 { font-size: 14px }
 .material-icons.md-12 { font-size: 12px }
 
+.w-10 {
+    width: 10%!important;
+}
+
 .health {
     display: inline-block;
     font-size: 0.75rem;
