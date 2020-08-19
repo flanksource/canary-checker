@@ -1,100 +1,27 @@
-<html>
+<!doctype html>
+<html lang="en" >
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>CanaryChecker</title>
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha256-aAr2Zpq8MZ+YA/D6JtRD3xtrwpEz2IqOS+pWD/7XKIw=" crossorigin="anonymous" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js" integrity="sha256-ngFW3UnAN0Tnm76mDuu7uUtYEcG3G5H1+zioJw3t+68=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js" integrity="sha256-Xt8pc4G0CdcRvI0nZ2lRpZ4VHng0EoUDMlGcBSQ9HiQ=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/timeago-simple@1.2.4/index.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/date-and-time/date-and-time.min.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" crossorigin="anonymous">
+  <link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css" />
 
-  <style>
+  <link rel="stylesheet" href="./styles.css">
 
-
-
-    body {
-      padding-top: 2rem;
-      padding-bottom: 2rem;
-    }
-
-    h3 {
-      margin-top: 2rem;
-    }
-
-    .row {
-      margin-bottom: 1rem;
-    }
-    .row .row {
-      margin-top: 1rem;
-      margin-bottom: 0;
-    }
-    [class*="col-"] {
-      padding-top: 1rem;
-      padding-bottom: 1rem;
-      background-color: rgba(86, 61, 124, .15);
-      border: 1px solid rgba(86, 61, 124, .2);
-    }
-
-    hr {
-      margin-top: 2rem;
-      margin-bottom: 2rem;
-    }
-
-    tr:last-child {
-      border-bottom: 1px solid rgba(86, 61, 124, .2);
-    }
-
-    #last-refreshed {
-      color: #777;
-      font-size: 0.8em;
-    }
-
-    div.check-status-container {
-      display: inline-block;
-      vertical-align: middle;
-    }
-
-    div.check-status {
-      height: 1em;
-      width: 20px;
-      margin: 0.5rem 0.25rem;
-    }
-
-    div.check-status.check-status-pass {
-      background-color: #28a745;
-    }
-    div.check-status.check-status-fail {
-      background-color:#dc3545;
-    }
-
-    .right {
-      float: right;
-    }
-
-    .btn-group-xs > .btn, .btn-xs {
-      padding: .25rem .4rem;
-      font-size: .875rem;
-      line-height: .75;
-      border-radius: .2rem;
-    }
-
-    [v-cloak] {
-     display: none;
-}
-  </style>
 </head>
 <body>
-  <div class="container" id="app">
-    <button v-if="disableReload" v-on:click="resumeAutoUpdate" type="button" class="btn btn-danger right" v-cloak>
-      <svg class="bi bi-play" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" d="M10.804 8L5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/>
-      </svg>
-      Resume auto update
+  <div class="ml-4 mr-4" id="app">
+    <button v-if="disableReload" v-on:click="resumeAutoUpdate" type="button" class="btn btn-danger float-right" v-cloak>
+      <i class="material-icons md-18 align-middle">play_arrow</i>
+      <span class="align-middle">Resume auto update</span>
     </button>
-    <button v-else=type="button" v-on:click="pauseAutoUpdate" type="button" class="btn btn-primary right">
-      <svg class="bi bi-pause-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
-      </svg>
-      Pause auto update
+    <button v-else=type="button" v-on:click="pauseAutoUpdate" type="button" class="btn btn-primary float-right">
+      <i class="material-icons md-18 align-middle">pause</i>
+      <span class="align-middle">Pause auto update</span>
     </button>
 
     <h1>Canary Checker</h1>
@@ -104,26 +31,33 @@
       {{ error }}
     </div>
 
-    <table v-else id="checks" class="table table-sm" v-cloak>
+    <table id="checks" class="table table-sm table-fixed text-nowrap" v-cloak>
       <thead>
-        <th scope="col">Name</th>
-        <th v-for="serverName in servers" scope="col" class="border-right">{{ serverName }}</th>
+        <th class="border-right">Type</th>
+        <th class="border-right">NS/Name</th>
+        <th class="border-right">Name</th>
+        <th v-for="(server, serverName) in serversByNames" :key="server" class="border-right">{{ serverName }}</th>
       </thead>
-      <template v-for="check in checks">
-        <tr>
-          <td scope="row" class="align-middle"> <img :src="check.type + '.svg'" height="20px" :title="check.type"></i> <span class="badge badge-secondary" >{{ check.name }}</span> {{ check.description}}</td>
-          <td v-for="serverName in servers" class="align-middle border-right">
-            <section v-if="check.checkStatuses[serverName]">
-              <button class="btn btn-secondary btn-xs" @click="triggerSingle(serverName, check.key)">Trigger</button>
-              <span class="right">{{check.health[serverName].latency}} {{check.health[serverName].uptime}}</span>
-              <br />
-              <div v-for="checkStatus in check.checkStatuses[serverName]" class="check-status-container">
-                <div v-if="checkStatus.status" class="check-status check-status-pass" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration"  v-bind:popover-title="checkStatus.time"></div>
-                <div v-else class="check-status check-status-fail" v-popover:auto.html="checkStatus.message" v-bind:popover-duration="checkStatus.duration" v-bind:popover-title="checkStatus.time"></div>
-              </div>
-            </section>
-          </td>
-        </tr>
+      <template v-for="(typed, name) in groupedChecks" :key="name">
+        <tbody v-for="(checks, type) in typed" :key="type" class="border-bottom border-secondary">
+          <tr v-for="(check, idx) in checks" :key="check.key">
+            <td v-if="idx === 0" class="align-middle border-right" :rowspan="checks.length">
+              <img :src="'images/' + type + '.svg'" height="20px" :title="type"></i>
+            </td>
+            <td v-if="idx === 0" class="align-middle border-right" :rowspan="checks.length">
+              <span class="badge badge-secondary">{{ name }}</span>
+            </td>
+            <td class="align-middle w-25">
+              <span class="float-left w-75 pr-5">{{ check.description }}</span>
+              <button class="btn btn-info btn-xs float-right check-button" @click="triggerCheck(check, $event)" title="Trigger the check on every server">
+                <i class="material-icons md-12 align-middle">send</i>
+              </button>
+            </td>
+            <td v-for="(server, serverName) in serversByNames" :key="server" class="align-top border-right border-left">
+              <check-tds v-if="check.checkStatuses[server]" :check="check" :server="server"></check-tds>
+            </td>
+          </tr>
+        </tbody>
       </template>
     </table>
 
@@ -132,117 +66,20 @@
     </div>
   </div>
 
-  <script type="text/javascript">
-      var app = new Vue({
-          el: '#app',
-          data: function () {
-            return {
-                error: "",
-                loading: true,
-                checks: [],
-                servers: [],
-                lastRefreshed: false,
-                disableReload: false,
-            }
-          },
-          created() {
-              this.fetchData()
-              this.resumeAutoUpdate()
-          },
-          methods: {
-              fetchData() {
-                  this.loading = true
-                  this.error = ""
-                  this.checks = []
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js" integrity="sha256-ngFW3UnAN0Tnm76mDuu7uUtYEcG3G5H1+zioJw3t+68=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vuex/3.5.1/vuex.min.js" integrity="sha384-LiIJNOpyvdXELIx0yBiazgrvDGSE2p8aHU27i55lTzWC42cNiFqDNWIlU8ocTyWI" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap-vue@2.16.0/dist/bootstrap-vue.min.js" integrity="sha384-iNMMf+OLfWO1G82kncGheAQCpRnIsdvAu0AsZppSF3Ko7rOWgpQCMpjRtY5pcb/v" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap-vue@2.16.0/dist/bootstrap-vue-icons.min.js" integrity="sha384-KEBJyknlulstznStNTfYSRz6B33YLxetOws32dK1wFad9uXOVrC6qXAtiM+xsfH0" crossorigin="anonymous"></script>
 
-                  $.ajax({
-                      contentType: "application/json",
-                      dataType: "json",
-                      url: "/api/aggregate",
-                      method: "Get",
-                      success: response => {
-                          this.loading = false
-                          this.checks = response.checks
-                          this.servers = response.servers
-                          console.log(this.checks)
-                          console.log(this.servers)
-                          this.lastRefreshed = new Date()
-                      },
-                      error: err => {
-                          if (err.status === 0) {
-                              this.error = "Error loading data from server: failed to connect to server"
-                          } else {
-                              this.error = "Error loading data from server: " + err.responseJSON.error
-                          }
-                      }
-                  });
-              },
-              pauseAutoUpdate () {
-                this.disableReload = true
-                console.log("Auto update paused")
-                clearInterval(this.timer)
-              },
-              resumeAutoUpdate() {
-                this.disableReload = false
-                console.log("Auto update resumed")
-                this.timer = setInterval(this.fetchData, 20000) // 20 seconds
-              },
-              triggerSingle(server, key) {
-                $.ajax({
-                  contentType: "application/json",
-                  dataType: "json",
-                  url: "/api/triggerCheck",
-                  method: "POST",
-                  data: JSON.stringify({
-                    key,
-                    server
-                  }),
-                  success: response => {
-                    this.fetchData()
-                  },
-                  error: err => {
-                    if (err.status === 0) {
-                      this.error = "Error loading data from server: failed to connect to server"
-                    } else {
-                      this.error = "Error loading data from server: " + err.error
-                    }
-                  }
-                });
-              }
-          }
-      })
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.bundle.min.js" integrity="sha256-Xt8pc4G0CdcRvI0nZ2lRpZ4VHng0EoUDMlGcBSQ9HiQ=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.19/lodash.min.js" integrity="sha384-cDoY3x6UZAwTo6Hcrpt7XZFIDBRjzGKs+vBAx+TA2u19a+Z4MxCiFJ2kc+deGRdp" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@0.19.2/dist/axios.min.js" integrity="sha384-3zW4Ss6nBzDaj/vvjP2Qwu5xaWAzOgTSccYj0DfBO/5tDzQksJa+tWrYMlYPM00u" crossorigin="anonymous"></script>
 
-      Vue.directive('popover', {
-        bind: function bsPopoverCreate(el, binding) {
-          let trigger = 'hover focus';
-          if (binding.modifiers.focus || binding.modifiers.hover || binding.modifiers.click) {
-            const t = [];
-            if (binding.modifiers.focus) t.push('focus');
-            if (binding.modifiers.hover) t.push('hover');
-            if (binding.modifiers.click) t.push('click');
-            trigger = t.join(' ');
-          }
-          // Time comes as UTC from server, timeago expects local time
-          // We convert from UTC to Local date
-          let dateTime = new Date($(el).attr("popover-title") + " UTC");
-          let t = new timeago()
-          let title = t.simple(date.format(dateTime, 'YYYY-MM-DD HH:mm:ss', false), 'en_US')
-          let duration = $(el).attr("popover-duration")
+  <script src="https://cdn.jsdelivr.net/npm/timeago-simple@1.2.4/index.js" integrity="sha384-sDyFZEqgqAdEnbKtHQZC+ZgQ7LhVw/n1QP9dTSnROviQWnwNcbrJhgVMMAsTiEWh" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/date-and-time/date-and-time.min.js" integrity="sha384-X8jTRWus7L1ihlxKLSh8HcYSmmTSPPc2jgX1+0JI82gha5XancNzIeIt+LMUczVi" crossorigin="anonymous"></script>
 
-          let content = `${binding.value} <div class="duration">Duration: ${duration / 1000}s</div>`
-
-          $(el).popover({
-            title: title,
-            content: content,
-            placement: binding.arg,
-            trigger: trigger,
-            html: binding.modifiers.html
-          });
-        },
-        unbind(el, binding) {
-          $(el).popover('dispose');
-        },
-      });
-  </script>
+  <script type="text/javascript" src="./storage.js"></script>
+  <script type="text/javascript" src="./script.js"></script>
 </body>
 </html>

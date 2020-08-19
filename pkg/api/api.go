@@ -64,7 +64,7 @@ func triggerCheckOnServer(serverUrl string, triggerData TriggerData) (*api.Respo
 }
 
 type TriggerData struct {
-	CheckKey    string `json:"key"`
+	CheckKey    string `json:"checkKey"`
 	CheckServer string `json:"server"`
 }
 
