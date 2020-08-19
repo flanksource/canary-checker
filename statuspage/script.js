@@ -27,6 +27,7 @@ Vue.component('checkStatus', {
       :target="checkStatus.key" 
       triggers="hover" 
       placement="auto"
+      :delay="{ show: 50, hide: 350 }"
       @show="onShow">
     <template v-slot:title>{{elapsed}}</template>
     <template v-slot:default>

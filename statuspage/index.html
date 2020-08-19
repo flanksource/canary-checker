@@ -53,7 +53,7 @@
                 <i class="material-icons md-12 align-middle">send</i>
               </button>
             </td>
-            <td v-for="(server, serverName) in serversByNames" :key="server" class="align-top border-right border-left w-25">
+            <td v-for="(server, serverName) in serversByNames" :key="server" class="align-top border-right border-left">
               <check-tds v-if="check.checkStatuses[server]" :check="check" :server="server"></check-tds>
             </td>
           </tr>
