@@ -5,9 +5,20 @@ var app = new Vue({
     this.$store.dispatch('fetchData')
     this.$store.dispatch('resumeAutoUpdate')
   },
+  data() {
+    return {
+      descLimit: 41,
+      nsLimit: 31
+    }
+  },
   computed: {
     ...Vuex.mapState(['error','servers','lastRefreshed','checks','disableReload']),
-    ...Vuex.mapGetters(['serversByNames','groupedChecks'])
+    ...Vuex.mapGetters(['serversByNames','groupedChecks']),
+    shortHand() {
+      return (txt, limit) => {
+        return txt.slice(0, limit) + (txt.length > limit ? "..." : "");
+      }
+    }
   },
   methods: {
     ...Vuex.mapActions(['pauseAutoUpdate', 'resumeAutoUpdate']),
@@ -35,7 +46,7 @@ Vue.component('checkStatus', {
         <div class="duration">Duration: {{checkStatus.duration / 1000}}s <br/>{{dateTime}}</div>
         <hr/>
         <div class="left health">Avg latency: {{health.latency}}</br>Uptime: {{health.uptime}}</div>
-        <button class="btn btn-info btn-xs float-right check-button mb-2" @click="triggerCheck" title="Trigger the check on every server">
+        <button class="btn btn-info btn-xs float-right check-button mb-2" @click="triggerCheck" title="Trigger the check on particular server">
           <i class="material-icons md-14 align-middle">loop</i>
         </button>
     </template>
@@ -60,9 +71,10 @@ Vue.component('checkStatus', {
   },
   methods: {
     onShow() {
-      this.dateTime = new Date( this.checkStatus.time + " UTC");
+      const dateTime = new Date( this.checkStatus.time + " UTC");
       let t = new timeago()
-      this.elapsed = t.simple(date.format(this.dateTime, 'YYYY-MM-DD HH:mm:ss', false), 'en_US')
+      this.elapsed = t.simple(date.format(dateTime, 'YYYY-MM-DD HH:mm:ss', false), 'en_US')
+      this.dateTime = moment(dateTime).format()
     },
     triggerCheck() {
       this.$root.$emit('bv::hide::popover')
