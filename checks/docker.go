@@ -60,7 +60,7 @@ func (c *DockerPullChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 
 // Type: returns checker type
 func (c *DockerPullChecker) Type() string {
-	return "docker-pull"
+	return "dockerPull"
 }
 
 func getDigestFromOutput(out io.ReadCloser) string {

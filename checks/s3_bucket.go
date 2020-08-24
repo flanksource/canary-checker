@@ -61,7 +61,7 @@ func (c *S3BucketChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 
 // Type: returns checker type
 func (c *S3BucketChecker) Type() string {
-	return "s3_bucket"
+	return "s3Bucket"
 }
 
 func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {

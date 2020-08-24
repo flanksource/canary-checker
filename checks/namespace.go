@@ -63,7 +63,7 @@ func (c *NamespaceChecker) Run(config canaryv1.CanarySpec) []*pkg.CheckResult {
 
 // Type: returns checker type
 func (c *NamespaceChecker) Type() string {
-	return "pod"
+	return "namespace"
 }
 
 func (c *NamespaceChecker) newPod(check canaryv1.NamespaceCheck, ns *v1.Namespace) (*v1.Pod, error) {

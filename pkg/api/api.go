@@ -107,7 +107,7 @@ func TriggerCheckHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		result := checker.Check(*check.CheckConf)
+		result := checker.Check(check.CheckConf)
 		cache.AddCheck(*check.CheckCanary, result)
 		metrics.Record(*check.CheckCanary, result)
 	} else {
