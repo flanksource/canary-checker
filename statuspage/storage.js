@@ -121,6 +121,14 @@ const store = new Vuex.Store({
               mergedChecks[description] = [check]
             }
           }
+
+          for (const [title, merged] of Object.entries(mergedChecks)) {
+            if (title.startsWith('multiple') && merged.length === 1) {
+              mergedChecks[merged[0].description] = merged
+              delete(mergedChecks[title])
+            }
+          }
+
           groupedType[type] = mergedChecks
         }
         byName[name] = groupedType
