@@ -18,14 +18,20 @@ var app = new Vue({
       return (txt, limit) => {
         return txt.slice(0, limit) + (txt.length > limit ? "..." : "");
       }
+    },
+    calcTooltipId() {
+      return (mergedDesc, name, type) => {
+        return window.btoa(mergedDesc + name + type)
+      }
     }
   },
   methods: {
     ...Vuex.mapActions(['pauseAutoUpdate', 'resumeAutoUpdate']),
-    async triggerCheck(check, event) {
+    async triggerMerged(checks, event) {
       const btn = event.currentTarget
       btn.classList.toggle("btn-light")
-      await this.$store.dispatch('triggerCheckOnAllServers', {check})
+      await this.$store.dispatch('triggerMergedChecks', checks)
+      await this.$store.dispatch('fetchData')
       btn.classList.toggle("btn-light")
     }
   }
@@ -40,7 +46,7 @@ Vue.component('checkStatus', {
       placement="auto"
       :delay="{ show: 50, hide: 350 }"
       @show="onShow">
-    <template v-slot:title>{{elapsed}}</template>
+    <template v-slot:title><div class="description">{{description}}</div><div>{{elapsed}}</div></template>
     <template v-slot:default>
         <div>{{checkStatus.message}}</div>
         <div class="duration">Duration: {{checkStatus.duration / 1000}}s <br/>{{dateTime}}</div>
@@ -67,6 +73,10 @@ Vue.component('checkStatus', {
     health: {
       type: Object,
       required: true
+    },
+    description: {
+      type: String,
+      required: true
     }
   },
   methods: {
@@ -84,6 +94,8 @@ Vue.component('checkStatus', {
   }
 })
 
+
+//deprecated component
 Vue.component('check-tds', {
   template: `
     <transition-group name="slide" tag="section" class="check-section" :style="{width: 1.4 * check.checkStatuses[this.server].length + 'rem'}" mode="out-in">
@@ -113,6 +125,58 @@ Vue.component('check-tds', {
   methods: {
     triggerCheck() {
       this.$store.dispatch('triggerSingleCheck', { server: this.server, check: this.check })
+    }
+  }
+})
+
+Vue.component('checkSetTds', {
+  template: `
+    <transition-group name="slide" tag="section" class="check-section" :style="{width: 1.4 * statusesSet.length + 'rem'}" mode="out-in">
+      <div v-for="statusData in statusesSet" :key="statusData.checkStatus.key" class="check-status-container">
+        <check-status 
+            :checkStatus="statusData.checkStatus"
+            :description="statusData.check.description"
+            :health="statusData.check.health[server]"
+            @triggerCheck="triggerCheck(statusData.check)"
+            ></check-status>
+      </div>
+    </transition-group>
+  `,
+  props: {
+    checkSet: {
+      type: Array,
+      required: true,
+    },
+    server: {
+      type: String,
+      required: true,
+    }
+  },
+  computed: {
+    ...Vuex.mapState(['servers']),
+    ...Vuex.mapGetters(['serversByNames']),
+    statusesSet() {
+      let statusesSet = []
+      for (const check of this.checkSet) {
+        if (check.checkStatuses[this.server]) {
+          for (const checkStatus of check.checkStatuses[this.server]) {
+            statusesSet.push({check, checkStatus})
+          }
+        }
+      }
+
+      const sorted = _.sortBy(statusesSet, function(statusData) {
+        return new Date( statusData.checkStatus.time + " UTC");
+      }).reverse();
+
+      const chunked = _.chunk(sorted, this.checkSet.length * 2)
+
+      return this.checkSet.length === 1 ? sorted : chunked[0]
+    }
+  },
+  methods: {
+    triggerCheck(check) {
+      this.$store.dispatch('triggerSingleCheck', { server: this.server, check })
     }
   }
 })
