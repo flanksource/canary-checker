@@ -157,8 +157,10 @@ Vue.component('checkSetTds', {
     ...Vuex.mapGetters(['serversByNames']),
     statusesSet() {
       let statusesSet = []
+      let serverRelatedCount = 0
       for (const check of this.checkSet) {
         if (check.checkStatuses[this.server]) {
+          serverRelatedCount += 1
           for (const checkStatus of check.checkStatuses[this.server]) {
             statusesSet.push({check, checkStatus})
           }
@@ -169,7 +171,7 @@ Vue.component('checkSetTds', {
         return new Date( statusData.checkStatus.time + " UTC");
       }).reverse();
 
-      const chunked = _.chunk(sorted, this.checkSet.length * 2)
+      const chunked = _.chunk(sorted, serverRelatedCount * 2)
 
       return this.checkSet.length === 1 ? sorted : chunked[0]
     }
