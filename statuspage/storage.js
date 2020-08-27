@@ -85,7 +85,7 @@ const store = new Vuex.Store({
           commit('SET_ERROR', "Trigger error: " + err.response.data)
         })
     },
-    triggerCheckOnAllServers({state, commit, dispatch}, {check}) {
+    triggerCheckOnAllServers({state, commit, dispatch}, check) {
       let results = []
       for (const server of state.servers) {
         if (check.checkStatuses[server]) {
@@ -96,10 +96,12 @@ const store = new Vuex.Store({
         .catch((err) => {
           commit('SET_ERROR', "Trigger error: " + err.response.data)
         })
-        .finally(() => {
-          dispatch('fetchData')
-        })
     },
+    async triggerMergedChecks({dispatch}, checks) {
+      for (const check of checks) {
+        await dispatch('triggerCheckOnAllServers', check)
+      }
+    }
   },
   getters: {
     serversByNames: state => {
@@ -108,7 +110,28 @@ const store = new Vuex.Store({
     groupedChecks: state => {
       const byName = _.groupBy(state.checks, 'name')
       for (const [name, checks] of Object.entries(byName)) {
-        byName[name] = _.groupBy(checks, 'type')
+        let groupedType = _.groupBy(checks, 'type')
+        for (const [type, checks] of Object.entries(groupedType)) {
+          let mergedChecks = {}
+          for (const check of checks) {
+            let description = check.description === check.endpoint ? 'multiple' : check.description
+            if (_.has(mergedChecks, description)) {
+              mergedChecks[description].push(check)
+            } else {
+              mergedChecks[description] = [check]
+            }
+          }
+
+          for (const [title, merged] of Object.entries(mergedChecks)) {
+            if (title.startsWith('multiple') && merged.length === 1) {
+              mergedChecks[merged[0].description] = merged
+              delete(mergedChecks[title])
+            }
+          }
+
+          groupedType[type] = mergedChecks
+        }
+        byName[name] = groupedType
       }
       return byName
     }

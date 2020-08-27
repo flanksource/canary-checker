@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"github.com/flanksource/canary-checker/api/external"
 	"regexp"
 )
 
@@ -625,4 +626,21 @@ type SrvReply struct {
 	Port     int    `yaml:"port,omitempty"`
 	Priority int    `yaml:"priority,omitempty"`
 	Weight   int    `yaml:"wight,omitempty"`
+}
+
+var AllChecks = []external.Check{
+	HTTPCheck{},
+	SSLCheck{},
+	TCPCheck{},
+	ICMPCheck{},
+	S3Check{},
+	S3BucketCheck{},
+	DockerPullCheck{},
+	DockerPushCheck{},
+	PostgresCheck{},
+	PodCheck{},
+	LDAPCheck{},
+	NamespaceCheck{},
+	DNSCheck{},
+	HelmCheck{},
 }

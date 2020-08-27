@@ -25,6 +25,7 @@ type AggregateCheck struct {
 	Type        string                       `json:"type"`
 	Name        string                       `json:"name"`
 	Description string                       `json:"description"`
+	Endpoint    string                       `json:"endpoint"`
 	Health      map[string]CheckHealth       `json:"health"`
 	Statuses    map[string][]pkg.CheckStatus `json:"checkStatuses"`
 }
@@ -82,12 +83,16 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 	data := cache.GetChecks()
 
 	localServerId := fmt.Sprintf("%s@local", api.ServerName)
+	var aggregateDataKey string
 	for _, c := range data {
-		aggregateData[c.Key] = &AggregateCheck{
+		aggregateDataKey = c.Key + c.Description
+		aggregateData[aggregateDataKey] = &AggregateCheck{
 			Key:         c.Key,
 			Name:        c.Name,
 			Type:        c.Type,
 			Description: c.Description,
+			Endpoint:    c.CheckConf.GetEndpoint(),
+			ServerURL:   "local",
 			Health: map[string]CheckHealth{
 				localServerId: {c.Latency, c.Uptime},
 			},
@@ -109,16 +114,19 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 		servers = append(servers, serverId)
 
 		for _, c := range apiResponse.Checks {
-			ac, found := aggregateData[c.Key]
+			aggregateDataKey = c.Key + c.Description
+			ac, found := aggregateData[aggregateDataKey]
 			if found {
 				ac.Health[serverId] = CheckHealth{c.Latency, c.Uptime}
 				ac.Statuses[serverId] = c.Statuses
 			} else {
-				aggregateData[c.Key] = &AggregateCheck{
+				aggregateData[aggregateDataKey] = &AggregateCheck{
 					Key:         c.Key,
 					Name:        c.Name,
 					Type:        c.Type,
 					Description: c.Description,
+					Endpoint:    c.CheckConf.GetEndpoint(),
+					ServerURL:   serverURL,
 					Health: map[string]CheckHealth{
 						serverId: {c.Latency, c.Uptime},
 					},

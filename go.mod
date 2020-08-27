@@ -14,6 +14,7 @@ require (
 	github.com/go-logr/zapr v0.1.0
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/lib/pq v1.3.0
+	github.com/mitchellh/mapstructure v1.3.3
 	github.com/mitchellh/reflectwalk v1.0.1
 	github.com/ncw/swift v1.0.50
 	github.com/onsi/ginkgo v1.12.1

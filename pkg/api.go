@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -8,6 +9,8 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/console"
+	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -48,10 +51,10 @@ type Check struct {
 	Description string        `json:"description"`
 	Uptime      string        `json:"uptime"`
 	Latency     string        `json:"latency"`
-	Statuses    []CheckStatus `json:"checkStatuses"`
+	Statuses    []CheckStatus `json:"checkStatuses" mapstructure:"-"`
 	// CheckConf is the configuration
-	CheckConf   *external.Check `json:"-"`
-	CheckCanary *v1.Canary      `json:"-"`
+	CheckConf   external.Check `json:"checkConf" mapstructure:"-"`
+	CheckCanary *v1.Canary     `json:"-"`
 }
 
 type Checks []Check
@@ -73,6 +76,51 @@ func (c Check) ToString() string {
 
 func (c Check) GetDescription() string {
 	return c.Description
+}
+
+func (c *Check) UnmarshalJSON(data []byte) error {
+	// Unmarshalling checkStatuses because of custom JSONTime
+	var objmap map[string]json.RawMessage
+	if err := json.Unmarshal(data, &objmap); err != nil {
+		return errors.Wrapf(err, "unmarshal map[string]json.RawMessage error")
+	}
+
+	var statuses []CheckStatus
+	if err := json.Unmarshal(objmap["checkStatuses"], &statuses); err != nil {
+		return errors.Wrapf(err, "unmarshal statuses error")
+	}
+
+	// Unmarshalling to interface to getting proper CheckConf type
+	var m map[string]interface{}
+	if err := json.Unmarshal(data, &m); err != nil {
+		return errors.Wrapf(err, "unmarshal map[string]interface{} error")
+	}
+
+	checkType := fmt.Sprintf("%v", m["type"])
+
+	var checkConf external.Check
+	for _, _c := range v1.AllChecks {
+		c := _c
+		if c.GetType() == checkType {
+			checkConf = c
+		}
+	}
+	if checkConf == nil {
+		return fmt.Errorf("external check type not found %s", checkType)
+	}
+
+	if err := mapstructure.Decode(m["checkConf"], &checkConf); err != nil {
+		return errors.Wrapf(err, "external check mapstructure err")
+	}
+
+	// Decode rest of check fields
+	if err := mapstructure.Decode(m, c); err != nil {
+		return errors.Wrapf(err, "check mapstructure err")
+	}
+
+	c.CheckConf = checkConf
+	c.Statuses = statuses
+	return nil
 }
 
 type Config struct {

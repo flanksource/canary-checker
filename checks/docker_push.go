@@ -26,7 +26,7 @@ func (c *DockerPushChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 
 // Type: returns checker type
 func (c *DockerPushChecker) Type() string {
-	return "docker-push"
+	return "dockerPush"
 }
 
 // Run: Check every entry from config according to Checker interface

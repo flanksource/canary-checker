@@ -7,6 +7,7 @@ dns:
     exactreply: ["1.2.3.4"]
     timeout: 1
     thresholdMillis: 1
+    description: "A DNS timeout fail"
 #  - server: 8.8.8.8
 #    port: 53
 #    query: "8.8.8.8"

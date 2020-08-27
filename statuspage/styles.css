@@ -15,6 +15,14 @@ h3 {
     margin: 0.4rem 0;
 }
 
+.popover-header > .description {
+    font-size: 0.75rem;
+}
+
+.tooltip-inner > .description {
+    font-size: 0.6rem;
+}
+
 .row {
     margin-bottom: 1rem;
 }
