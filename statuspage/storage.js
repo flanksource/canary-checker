@@ -114,7 +114,7 @@ const store = new Vuex.Store({
         for (const [type, checks] of Object.entries(groupedType)) {
           let mergedChecks = {}
           for (const check of checks) {
-            let description = check.description === check.endpoint ? 'multiple-' + check.type : check.description
+            let description = check.description === check.endpoint ? 'multiple' : check.description
             if (_.has(mergedChecks, description)) {
               mergedChecks[description].push(check)
             } else {

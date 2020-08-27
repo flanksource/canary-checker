@@ -49,7 +49,9 @@
               <b-tooltip v-if="name.length > nsLimit" :target="name" triggers="hover" variant="secondary">{{name}}</b-tooltip>
             </td>
             <td class="align-middle w-25">
-              <span class="float-left w-75 pr-5" :id="calcTooltipId(mergedDesc, name, type)" >{{ shortHand(mergedDesc, descLimit) }}</span>
+              <span class="float-left w-75 pr-5" :id="calcTooltipId(mergedDesc, name, type)" :class="{'font-italic': mergedDesc.startsWith('multiple')}">
+                {{ shortHand(mergedDesc, descLimit) }}
+              </span>
               <b-tooltip :disabled="mergedDesc.length <= descLimit" :target="calcTooltipId(mergedDesc, name, type)" triggers="hover" variant="secondary"><div class="description">{{mergedDesc}}</div></b-tooltip>
               <b-tooltip :disabled="!mergedDesc.startsWith('multiple')" :target="calcTooltipId(mergedDesc, name, type)" triggers="hover" variant="secondary">
                 <div v-for="check in checkSet" :key="check.key" class="description">{{check.description}}</div>
