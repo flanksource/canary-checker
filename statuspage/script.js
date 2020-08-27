@@ -43,7 +43,7 @@ Vue.component('checkStatus', {
     <b-popover 
       :target="checkStatus.key" 
       triggers="hover" 
-      placement="auto"
+      placement="top"
       :delay="{ show: 50, hide: 350 }"
       @show="onShow">
     <template v-slot:title><div class="description">{{description}}</div><div>{{elapsed}}</div></template>
