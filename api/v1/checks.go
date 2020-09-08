@@ -2,8 +2,9 @@ package v1
 
 import (
 	"fmt"
-	"github.com/flanksource/canary-checker/api/external"
 	"regexp"
+
+	"github.com/flanksource/canary-checker/api/external"
 )
 
 type HTTPCheck struct {
@@ -188,6 +189,46 @@ func (c DockerPushCheck) GetDescription() string {
 
 func (c DockerPushCheck) GetType() string {
 	return "dockerPush"
+}
+
+type ContainerdPullCheck struct {
+	Description    string `yaml:"description" json:"description,omitempty"`
+	Image          string `yaml:"image" json:"image,omitempty"`
+	Username       string `yaml:"username" json:"username,omitempty"`
+	Password       string `yaml:"password" json:"password,omitempty"`
+	ExpectedDigest string `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
+	ExpectedSize   int64  `yaml:"expectedSize" json:"expectedSize,omitempty"`
+}
+
+func (c ContainerdPullCheck) GetEndpoint() string {
+	return c.Image
+}
+
+func (c ContainerdPullCheck) GetDescription() string {
+	return c.Description
+}
+
+func (c ContainerdPullCheck) GetType() string {
+	return "containerdPull"
+}
+
+type ContainerdPushCheck struct {
+	Description string `yaml:"description" json:"description,omitempty"`
+	Image       string `yaml:"image" json:"image,omitempty"`
+	Username    string `yaml:"username" json:"username,omitempty"`
+	Password    string `yaml:"password" json:"password,omitempty"`
+}
+
+func (c ContainerdPushCheck) GetEndpoint() string {
+	return c.Image
+}
+
+func (c ContainerdPushCheck) GetDescription() string {
+	return c.Description
+}
+
+func (c ContainerdPushCheck) GetType() string {
+	return "containerdPush"
 }
 
 type PostgresCheck struct {

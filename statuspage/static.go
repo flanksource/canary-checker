@@ -213,7 +213,7 @@ var _escData = map[string]*_escFile{
 		name:    "dns.svg",
 		local:   "images/dns.svg",
 		size:    3762,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/2xXTW8cNwy9+1cIAwRogYSWSH1QjtcBOkBPzq299JbGm/Uijtfwbmynv74gKWnGaS+L
 FWck8es9vrn88PLtzj1tH4/7w/1mCuAnt73/fLjZ3+82059//P6Opw9XZ5fHp517+XZ3f9xMt6fTw8X5
@@ -248,7 +248,7 @@ mxb5SKpnh7jUWxb9KdBvxIeANstpTIhF0BJDtfk4r6Sv9IdhTRWy2YaUUBGd2qXXJrEtNBXsIsIj2ym1
 		name:    "dockerPull.svg",
 		local:   "images/dockerPull.svg",
 		size:    6593,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/7xYS29dtxHe51cQFwjQAvGInAcfjuUAPUBXN7t2051rK7IQRTIkxXL664uZ4fAcocq2
 gGHqzuGQ855v+O6nb7/dpq9XD48393eXpwL5lK7uPt5/urm7vjz98x9/f9NPP73/7t3j1+v07bfbu8fL
@@ -297,7 +297,7 @@ co+WvFuD1/Pm0c2HWrts/Gdus5p3ca3/PX69fv/dfwMAAP//fk0A3sEZAAA=
 		name:    "dockerPush.svg",
 		local:   "images/dockerPush.svg",
 		size:    6193,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/7xYy24dR87e5ykKBwjw/0BMVfFSF8dygGlgVie7mc3sPLYiC1EkQ1IsZ55+QLJY3QLk
 7QCCqpunLixePn7sd798++M2fb16eLy5v7s8FcindHX38f7Tzd315emf//j7m3765f0P7x6/Xqdvf9ze
@@ -345,7 +345,7 @@ kaFfMRgAAA==
 		name:    "helm.svg",
 		local:   "images/helm.svg",
 		size:    33832,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/7y717K0yJIm+iplNZecGbTq0zVmQaITlST6Dq215umPrb92TXdb711zd65YiwwXn4f7
 Fx4B/Pt6lL9dfTesf/xebdv0bzB8nuf/OvH/NS4ljCEIAq9H+fufQ/7t6uqh/WcDUZZl4V+//v7bUecn
@@ -754,7 +754,7 @@ fF/s6nq/ZeHcy/EIce1eVVX9r//1f8H/+/+Gt++QTv3Ph7P63/9PAAAA///66FDvKIQAAA==
 		name:    "http.svg",
 		local:   "images/http.svg",
 		size:    1909,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/2xUS28bNxC++1cQCxhogWTEeZAcOpYD1EBPyq299ObairSIIhnSRnL664shqd012oug
 Wc7j++bx3X9++75z5/Xx1B/2yw7Bd269fz689PvNsvvzj98/avf54eb+dN64t++7/WnZbYfh9W6xuFwu
@@ -778,7 +778,7 @@ LP+Zbbd4uLlfbOzndN483PwbAAD//xDwGr11BwAA
 		name:    "https.svg",
 		local:   "images/https.svg",
 		size:    1910,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/4RVTW8cOQ79K43eK/VaJEWJytoGvLn0YfcUoA+5LGraTjqAnQRpo51gMP99QKkSBJiM
 BwWzXkmy+Pjx2Ffny/vNh7vr7X+Xb/df/s/bzd3ytKSPy+P9urbh7ebr48PH8/X29PT0+dVu9/z8jGfF
@@ -803,7 +803,7 @@ QjLPjEsqhBQSw6AUKjHfDNWIwcGP41PaRG16HQUZC5wjKNMAI6D1O0V1xiROMWpGReLX8ubPAAAA//8E
 		name:    "icmp.svg",
 		local:   "images/icmp.svg",
 		size:    1612,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/3xVT28ctw/9Kov5Xam3oiRSVH62ATeXPTSnAD74UkzHjsfAOgmyxjpB0e9eUBoHPaTG
 Ak9vJA7/PJGzF6fzw+7x7nL6ff5x/+0PnnZ38/McPs9P99vejqfd96fj59PltD4/f32337+8vOAl48u3
@@ -826,7 +826,7 @@ s9f4+tBgXSz/D7j6JwAA///VULzZTAYAAA==
 		name:    "ldap.svg",
 		local:   "images/ldap.svg",
 		size:    1758,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/3xVT08cyQ/9KqP+Xe035SrXH+cHSFkuc9ickDhwWfU2hEEakiiDhkSr/e4rVzVsDixC
 cnuq3Pbz83Nzdjzdbx5uz6ff55933/+QaXM7P838ZX68W882Mm1+PB6+HM+n/dPTtw/b7fPzM54Tvn6/
@@ -850,7 +850,7 @@ f6WLfwIAAP//ml1mTt4GAAA=
 		name:    "namespace.svg",
 		local:   "images/namespace.svg",
 		size:    5078,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/6xXW2/juPV/z6fgX/Oyi79E835RrCzaHSywwPalu0WBfVMk2mZHEl2Kjp359AUpyY4z
 iTMFqjzEPOd3Dg/PlVz/dOo78GT8aN1QZRiiDJihca0dtlX2jz9+KVQGxlAPbd25wVTZ4LKfHu7W/1cU
@@ -893,7 +893,7 @@ AAA=
 		name:    "pod.svg",
 		local:   "images/pod.svg",
 		size:    5917,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/+xXS4/juPG/96fQX3PZwV+iWXxTbfci2cECC2wu2Q0CzE0t0TYxengp2u6eTx+Qkux2
 j9s9G+SW2AebVb8qFeut5Y9PbZMcjBts361SQDhNTFf1te02q/Qfv/+cqzQZfNnVZdN3ZpV2ffrjw93y
@@ -937,7 +937,7 @@ OGwe7v4VAAD//+n07XsdFwAA
 		name:    "postgres.svg",
 		local:   "images/postgres.svg",
 		size:    4310,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/3xXzY4eN5J8FaL3SqbyP8mF5cP21brufaZsqQX0jI2RIBl6+kFkfTasi4FGf6wqFpkZ
 GRHJ+uHTlw/j93+9/vvT26eXz59/+983b75+/UpfjX79z4c3ysxvPn358DS+fPzl6//9+vvbJx48fA/f
@@ -981,7 +981,7 @@ JII+2icReD/6ZGCqblh8tzQP8kLMEdIk3SQJIUWRBSjC+FzCQA9iXySCUgV022Am3A32E0EGjUNSxQFJ
 		name:    "s3.svg",
 		local:   "images/s3.svg",
 		size:    597,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/zyS3arbMBCEX2VQ723trixLJc5Fr62HKJzjH0ib0Jg46OnLKpbBLGN25tsB+/J8zXj/
 uf19DmbZtsfPtt33vdmluf+bW7bWts/XbPBav/df9/dgLCxcgAsG+/q1LYNx4fE2WL7XedmOt+vl8Xtb
@@ -996,7 +996,7 @@ zsNgIZST2kZt8bnQlwMnP9R0UDpJDauSnPwJL+y69YVMDtKNFAtaM04ZobBFcqJOv8VRzZVCjs5qXU4k
 		name:    "s3Bucket.svg",
 		local:   "images/s3Bucket.svg",
 		size:    1091,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/2yTz3LbRgyHXwWzPu9PWGD/ekzPpL704Jw8k3siUZYaWvSINuXo6Tu7lJqk7UkfsFgB
 /EDeTfMzfbwMh6kzu7e319vV6nQ64aQYj88rYebVND+bpeT2Y9gfvv9foSulrNqpoXnfn/4YPzrDxJQD
@@ -1016,7 +1016,7 @@ gRTZZgh7yvWhG04V62saW5Ja0iryhX5J5sVUjPbn9fOL9/CBErLEXd2KGzJCCNYFKDWkiuf/bnq1fEoV
 		name:    "ssl.svg",
 		local:   "images/ssl.svg",
 		size:    2579,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/3SWS2tbSROG9/4VzYHA90FSqktfHcuBOTArZTezmZ3HVmQRRTKSYjnz64eqPpc2aCBE
 Oq/6VFe9VU+37768/di51/XxtD3slx0Bdm69fzw8bfebZffnH79/yt2X+5u70+vGvf3Y7U/L7vl8frld
@@ -1043,7 +1043,7 @@ OXSL+5u7xUb/O71u7m/+DQAA///7hNpGEwoAAA==
 		name:    "www.svg",
 		local:   "images/www.svg",
 		size:    9154,
-		modtime: 1598514042,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/2xZUW8dN859z68YXKDA9wGtPBJ5qJk0ToE1sE/Zt92Xfes2rmPUtQPbTdL99QtSvDNn
 agPGvaYuxTk6FEWR8+6nb7/fTV+uH59uH+4vT7XMp+n6/peHj7f3N5enf/3z7z8sp5/ev3n39OVm+vb7
@@ -1097,7 +1097,7 @@ RgRGhA2RZ43l8EbblkgYC73RHuWHf798o93jbfQoP7ZX1D6orK5pQ9nwpu6PDBz5RjsQ7a+obZnUaKIL
 		name:    "index.html",
 		local:   "index.html",
 		size:    6442,
-		modtime: 1598518260,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/8RZ21LjutK+n6fQcv1VzFSwnTgHAhXzTyAcAiRMDkwgN7sUS7GV2JKRZCeBmnffJdsJ
 5hBgrZlVey6C1Za6+/u61Wp5Gn8h5shViIEnA//wS0P9AT6krq1hqgElwRAdfgGgEWAJgeNBLrC0tZvh
@@ -1145,7 +1145,7 @@ BZAqGQAA
 		name:    "script.js",
 		local:   "script.js",
 		size:    5275,
-		modtime: 1598519777,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/9RYX2/bOBJ/96cY6BaQvJHlZLf7orXcdhvgesD2DmjSAkUQ7NLS2OKFInXkyKkR+Lsf
 KEoK5ThpU1wP2DeanH8czu83I2+ZBlbXkIHEW/jYYHQ3AUCRQvg3VtdhPAEwpDTaRa6RERbRFKwQAJXc
@@ -1182,7 +1182,7 @@ PAK6Q/f/usEcNpX/BgAA//8NyUY+mxQAAA==
 		name:    "static.go",
 		local:   "static.go",
 		size:    0,
-		modtime: 1598519997,
+		modtime: 1599567447,
 		compressed: `
 H4sIAAAAAAAC/wEAAP//AAAAAAAAAAA=
 `,
@@ -1192,7 +1192,7 @@ H4sIAAAAAAAC/wEAAP//AAAAAAAAAAA=
 		name:    "storage.js",
 		local:   "storage.js",
 		size:    4338,
-		modtime: 1598518260,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/8RXS4/bNhC++1cMcogoxNC6ORpQ2s2u2yzy2MDepgfDMLjSWFZDPUBS2RiG/3tBUpRI
 +bFJe+jFsDjDb17fjEZfGoySqtzkWZTiN1lVTEAMkjc4UqJGIPnS4PdwNEqqUkgQsuIIMZT4BEoQLdQB
@@ -1223,7 +1223,7 @@ qYxoBLWmcSn+yuWW9BkN4eXLFjpiWGZyq2vwyzNJMg/LySoaRGkEg6spMpTo+WmiWoU/lg6HnprKvaWb
 		name:    "styles.css",
 		local:   "styles.css",
 		size:    1926,
-		modtime: 1598518260,
+		modtime: 1599228143,
 		compressed: `
 H4sIAAAAAAAC/4yU3W7qOBDH7/MU3qKVtitsJSkpKNX2RapeTGyXjHBsyzaUbsW7H+UT8kHPuUEi/s3f
 M/MfT2HEF/mOCCHEghCo9zQYm5PUyepl9LkwIZiqP7lEUfnUBVbg9qhv4y5RxKyx5iQdeSWLYDwFaZPK

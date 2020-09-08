@@ -25,22 +25,24 @@ import (
 
 // CanarySpec defines the desired state of Canary
 type CanarySpec struct {
-	Env        map[string]VarSource `yaml:"env,omitempty" json:"env,omitempty"`
-	HTTP       []HTTPCheck          `yaml:"http,omitempty" json:"http,omitempty"`
-	DNS        []DNSCheck           `yaml:"dns,omitempty" json:"dns,omitempty"`
-	DockerPull []DockerPullCheck    `yaml:"docker,omitempty" json:"docker,omitempty"`
-	DockerPush []DockerPushCheck    `yaml:"dockerPush,omitempty" json:"dockerPush,omitempty"`
-	S3         []S3Check            `yaml:"s3,omitempty" json:"s3,omitempty"`
-	S3Bucket   []S3BucketCheck      `yaml:"s3Bucket,omitempty" json:"s3Bucket,omitempty"`
-	TCP        []TCPCheck           `yaml:"tcp,omitempty" json:"tcp,omitempty"`
-	Pod        []PodCheck           `yaml:"pod,omitempty" json:"pod,omitempty"`
-	LDAP       []LDAPCheck          `yaml:"ldap,omitempty" json:"ldap,omitempty"`
-	SSL        []SSLCheck           `yaml:"ssl,omitempty" json:"ssl,omitempty"`
-	ICMP       []ICMPCheck          `yaml:"icmp,omitempty" json:"icmp,omitempty"`
-	Postgres   []PostgresCheck      `yaml:"postgres,omitempty" json:"postgres,omitempty"`
-	Helm       []HelmCheck          `yaml:"helm,omitempty" json:"helm,omitempty"`
-	Namespace  []NamespaceCheck     `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-	Interval   uint64               `yaml:"interval,omitempty" json:"interval,omitempty"`
+	Env            map[string]VarSource  `yaml:"env,omitempty" json:"env,omitempty"`
+	HTTP           []HTTPCheck           `yaml:"http,omitempty" json:"http,omitempty"`
+	DNS            []DNSCheck            `yaml:"dns,omitempty" json:"dns,omitempty"`
+	DockerPull     []DockerPullCheck     `yaml:"docker,omitempty" json:"docker,omitempty"`
+	DockerPush     []DockerPushCheck     `yaml:"dockerPush,omitempty" json:"dockerPush,omitempty"`
+	ContainerdPull []ContainerdPullCheck `yaml:"containerdPull,omitempty" json:"containerdPull,omitempty"`
+	ContainerdPush []ContainerdPushCheck `yaml:"containerdPush,omitempty" json:"containerdPush,omitempty"`
+	S3             []S3Check             `yaml:"s3,omitempty" json:"s3,omitempty"`
+	S3Bucket       []S3BucketCheck       `yaml:"s3Bucket,omitempty" json:"s3Bucket,omitempty"`
+	TCP            []TCPCheck            `yaml:"tcp,omitempty" json:"tcp,omitempty"`
+	Pod            []PodCheck            `yaml:"pod,omitempty" json:"pod,omitempty"`
+	LDAP           []LDAPCheck           `yaml:"ldap,omitempty" json:"ldap,omitempty"`
+	SSL            []SSLCheck            `yaml:"ssl,omitempty" json:"ssl,omitempty"`
+	ICMP           []ICMPCheck           `yaml:"icmp,omitempty" json:"icmp,omitempty"`
+	Postgres       []PostgresCheck       `yaml:"postgres,omitempty" json:"postgres,omitempty"`
+	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
+	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Interval       uint64                `yaml:"interval,omitempty" json:"interval,omitempty"`
 }
 
 func (spec CanarySpec) GetAllChecks() []external.Check {

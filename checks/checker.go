@@ -21,6 +21,7 @@ var All = []Checker{
 	&S3BucketChecker{},
 	&DockerPullChecker{},
 	&DockerPushChecker{},
+	&ContainerdPullChecker{},
 	&PostgresChecker{},
 	&LdapChecker{},
 	NewPodChecker(),
