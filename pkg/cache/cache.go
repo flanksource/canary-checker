@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/metrics"
@@ -14,12 +15,18 @@ import (
 var Size = 5
 
 type cache struct {
-	Checks map[string]pkg.Check
-	mtx    sync.Mutex
+	Checks       map[string]pkg.Check
+	CheckConfigs map[string]external.Check
+	mtx          sync.Mutex
 }
 
 var Cache = &cache{
-	Checks: make(map[string]pkg.Check),
+	Checks:       make(map[string]pkg.Check),
+	CheckConfigs: make(map[string]external.Check),
+}
+
+func GetConfig(key string) external.Check {
+	return Cache.CheckConfigs[key]
 }
 
 func AddCheck(check v1.Canary, result *pkg.CheckResult) *pkg.Check {
@@ -41,6 +48,7 @@ func (c *cache) RemoveCheck(checks v1.Canary) {
 		key := checks.GetKey(check)
 		logger.Errorf("removing %s", key)
 		delete(c.Checks, key)
+		delete(c.CheckConfigs, key)
 	}
 }
 
@@ -54,7 +62,9 @@ func (c *cache) InitCheck(checks v1.Canary) {
 			Type:        check.GetType(),
 			Name:        checks.ID(),
 			Description: check.GetDescription(),
+			Endpoint:    check.GetEndpoint(),
 		}
+		c.CheckConfigs[key] = check
 	}
 }
 
@@ -71,7 +81,7 @@ func (c *cache) AddCheck(checks v1.Canary, result *pkg.CheckResult) *pkg.Check {
 		Type:        result.Check.GetType(),
 		Name:        checks.ID(),
 		Description: checks.GetDescription(result.Check),
-		CheckConf:   result.Check,
+		Endpoint:    result.Check.GetEndpoint(),
 		CheckCanary: &checks,
 		Statuses: []pkg.CheckStatus{
 			{

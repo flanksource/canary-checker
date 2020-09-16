@@ -91,7 +91,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 			Name:        c.Name,
 			Type:        c.Type,
 			Description: c.Description,
-			Endpoint:    c.CheckConf.GetEndpoint(),
+			Endpoint:    c.Endpoint,
 			ServerURL:   "local",
 			Health: map[string]CheckHealth{
 				localServerId: {c.Latency, c.Uptime},
@@ -125,7 +125,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 					Name:        c.Name,
 					Type:        c.Type,
 					Description: c.Description,
-					Endpoint:    c.CheckConf.GetEndpoint(),
+					Endpoint:    c.Endpoint,
 					ServerURL:   serverURL,
 					Health: map[string]CheckHealth{
 						serverId: {c.Latency, c.Uptime},
