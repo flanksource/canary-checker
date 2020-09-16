@@ -146,34 +146,14 @@ func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	bucketScanLastWrite.WithLabelValues(bucket.Endpoint, bucket.Bucket).Set(float64(latestObject.LastModified.Unix()))
 
 	if latestObjectAge.Seconds() > float64(bucket.MaxAge) {
-		return Failf(bucket, "Latest object age is %f seconds required at most %d seconds", latestObjectAge.Seconds(), bucket.MaxAge)
+		return Failf(bucket, "Latest object age is %s required at most %s", age(latestObjectAge), age(time.Second*time.Duration(bucket.MaxAge)))
 	}
 
 	latestObjectSize := aws.Int64Value(latestObject.Size)
 
 	if bucket.MinSize > 0 && latestObjectSize < bucket.MinSize {
-		return Failf(bucket, "Latest object is %d bytes required at least %d bytes", latestObjectSize, bucket.MinSize)
+		return Failf(bucket, "Latest object is %s required at least %s", mb(latestObjectSize), mb(bucket.MinSize))
 	}
 
 	return Passf(bucket, fmt.Sprintf("maxAge=%s size=%s objects=%d totalSize=%s", age(latestObjectAge), mb(latestObjectSize), objects, mb(totalSize)))
-}
-
-func age(duration time.Duration) string {
-	if duration.Hours() > 24 {
-		return fmt.Sprintf("%.1fd", duration.Hours()/24)
-	} else if duration.Minutes() > 60 {
-		return fmt.Sprintf("%fh", duration.Hours())
-	}
-	return fmt.Sprintf("%.1fm", duration.Minutes())
-}
-
-func mb(bytes int64) string {
-	if bytes > 1024*1024*1024 {
-		return fmt.Sprintf("%dGB", bytes/1024/1024/1024)
-	} else if bytes > 1024*1024 {
-		return fmt.Sprintf("%dMB", bytes/1024/1024)
-	} else if bytes > 1024 {
-		return fmt.Sprintf("%dKB", bytes/1024)
-	}
-	return fmt.Sprintf("%dB", bytes)
 }

@@ -77,3 +77,23 @@ func (n *NameGenerator) PodName(prefix string) string {
 	n.podIndex = (n.PodsCount + 1) % n.PodsCount
 	return name
 }
+
+func age(duration time.Duration) string {
+	if duration.Hours() > 24 {
+		return fmt.Sprintf("%.1fd", duration.Hours()/24)
+	} else if duration.Minutes() > 60 {
+		return fmt.Sprintf("%.1fh", duration.Hours())
+	}
+	return fmt.Sprintf("%.1fm", duration.Minutes())
+}
+
+func mb(bytes int64) string {
+	if bytes > 1024*1024*1024 {
+		return fmt.Sprintf("%dGB", bytes/1024/1024/1024)
+	} else if bytes > 1024*1024 {
+		return fmt.Sprintf("%dMB", bytes/1024/1024)
+	} else if bytes > 1024 {
+		return fmt.Sprintf("%dKB", bytes/1024)
+	}
+	return fmt.Sprintf("%dB", bytes)
+}
