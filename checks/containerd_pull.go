@@ -16,24 +16,19 @@ import (
 
 var (
 	containerdSocket = "/run/containerd/containerd.sock"
-	containerdClient *containerd.Client
 )
 
 func init() {
-	var err error
 	socket := os.Getenv("CONTAINER_RUNTIME_ENDPOINT")
 	if socket != "" {
 		containerdSocket = socket
-	}
-	containerdClient, err = containerd.New(containerdSocket)
-	if err != nil {
-		panic(err)
 	}
 }
 
 type ContainerdPullChecker struct{}
 
 func (c *ContainerdPullChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+
 	var results []*pkg.CheckResult
 	for _, conf := range config.ContainerdPull {
 		results = append(results, c.Check(conf))
@@ -51,6 +46,11 @@ func (c *ContainerdPullChecker) Type() string {
 func (c *ContainerdPullChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.ContainerdPullCheck)
 	start := time.Now()
+
+	containerdClient, err := containerd.New(containerdSocket)
+	if err != nil {
+		return Failf(check, err.Error())
+	}
 
 	ctx := namespaces.WithNamespace(context.Background(), "default")
 
