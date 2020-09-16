@@ -17,7 +17,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/metrics"
-	"github.com/flanksource/commons/logger"
 )
 
 var (
@@ -67,7 +66,7 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	endpoint := check.Endpoint
 	lookupResult, err := DNSLookup(endpoint)
 	if err != nil {
-		return Failf(check, "failed to resolve DNS for ", endpoint)
+		return Failf(check, "failed to resolve DNS for %s", endpoint)
 	}
 	for _, urlObj := range lookupResult {
 		checkResults, err := c.checkHTTP(urlObj)
@@ -161,7 +160,7 @@ func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*HTTPCheckResult, error) {
 		return nil, err
 	}
 	content := string(res)
-	logger.Tracef("GET %s => %s", urlString, content)
+	// logger.Tracef("GET %s => %s", urlString, content)
 	sslExpireDays := int(exp.Sub(start).Hours() / 24.0)
 	var sslExpiryDaysRounded int
 	if sslExpireDays <= 0 {
