@@ -67,7 +67,9 @@ func printAPIDocs(paths []string) {
 	types = ParseDocumentationFrom(paths)
 
 	for _, item := range first {
-		fmt.Println(types[item].String())
+		if _, ok := types[item]; ok {
+			fmt.Println(types[item].String())
+		}
 		delete(types, item)
 	}
 
