@@ -30,7 +30,7 @@ type CanarySpec struct {
 	DNS            []DNSCheck            `yaml:"dns,omitempty" json:"dns,omitempty"`
 	DockerPull     []DockerPullCheck     `yaml:"docker,omitempty" json:"docker,omitempty"`
 	DockerPush     []DockerPushCheck     `yaml:"dockerPush,omitempty" json:"dockerPush,omitempty"`
-	ContainerdPull []ContainerdPullCheck `yaml:"containerdPull,omitempty" json:"containerdPull,omitempty"`
+	ContainerdPull []ContainerdPullCheck `yaml:"containerd,omitempty" json:"containerd,omitempty"`
 	ContainerdPush []ContainerdPushCheck `yaml:"containerdPush,omitempty" json:"containerdPush,omitempty"`
 	S3             []S3Check             `yaml:"s3,omitempty" json:"s3,omitempty"`
 	S3Bucket       []S3BucketCheck       `yaml:"s3Bucket,omitempty" json:"s3Bucket,omitempty"`
@@ -57,6 +57,12 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.DockerPush {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.ContainerdPull {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.ContainerdPush {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.S3 {

@@ -241,7 +241,7 @@ type PostgresCheck struct {
 
 // Obfuscate passwords of the form ' password=xxxxx ' from connectionString since
 // connectionStrings are used as metric labels and we don't want to leak passwords
-// Return: the Connection string with the password replaced by '###'
+// Returns the Connection string with the password replaced by '###'
 func (c PostgresCheck) GetEndpoint() string {
 	//looking for a substring that starts with a space,
 	//'password=', then any non-whitespace characters,
@@ -678,6 +678,8 @@ var AllChecks = []external.Check{
 	S3BucketCheck{},
 	DockerPullCheck{},
 	DockerPushCheck{},
+	ContainerdPullCheck{},
+	ContainerdPushCheck{},
 	PostgresCheck{},
 	PodCheck{},
 	LDAPCheck{},
