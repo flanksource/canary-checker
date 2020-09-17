@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -110,7 +111,13 @@ func GetMetrics(key string) (rollingUptime string, rollingLatency time.Duration)
 	}
 	failCount := fail.Reduce(rolling.Sum)
 	passCount := pass.Reduce(rolling.Sum)
-	uptime := fmt.Sprintf("%.0f/%.0f (%0.f%%)", passCount, failCount+passCount, 100*(1-(failCount/(passCount+failCount))))
+	percentage := 100.0 * (1 - (failCount / (passCount + failCount)))
+	var uptime string
+	if percentage == (math.Round(percentage)) {
+		uptime = fmt.Sprintf("%.0f/%.0f (%0.f%%)", passCount, failCount+passCount, percentage)
+	} else {
+		uptime = fmt.Sprintf("%.0f/%.0f (%0.1f%%)", passCount, failCount+passCount, percentage)
+	}
 	return uptime, time.Duration(latency.Reduce(rolling.Percentile(95))) * time.Millisecond
 }
 
@@ -176,6 +183,12 @@ func Record(check v1.Canary, result *pkg.CheckResult) (rollingUptime string, rol
 	}
 	failCount := fail.Reduce(rolling.Sum)
 	passCount := pass.Reduce(rolling.Sum)
-	uptime := fmt.Sprintf("%.0f/%.0f (%0.f%%)", passCount, failCount+passCount, 100*(1-(failCount/(passCount+failCount))))
+	percentage := 100.0 * (1 - (failCount / (passCount + failCount)))
+	var uptime string
+	if percentage == (math.Round(percentage)) {
+		uptime = fmt.Sprintf("%.0f/%.0f (%0.f%%)", passCount, failCount+passCount, percentage)
+	} else {
+		uptime = fmt.Sprintf("%.0f/%.0f (%0.1f%%)", passCount, failCount+passCount, percentage)
+	}
 	return uptime, time.Duration(latency.Reduce(rolling.Percentile(95))) * time.Millisecond
 }
