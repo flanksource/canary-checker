@@ -28,7 +28,6 @@ func init() {
 type ContainerdPullChecker struct{}
 
 func (c *ContainerdPullChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
-
 	var results []*pkg.CheckResult
 	for _, conf := range config.ContainerdPull {
 		results = append(results, c.Check(conf))
