@@ -63,9 +63,13 @@ func serve(cmd *cobra.Command) {
 	} else {
 		staticRoot = statuspage.FS(false)
 	}
+
+	prometheusHost, _ := cmd.Flags().GetString("prometheus")
+
 	nethttp.Handle("/", nethttp.FileServer(staticRoot))
 	nethttp.HandleFunc("/api", api.Handler)
 	nethttp.HandleFunc("/api/triggerCheck", api.TriggerCheckHandler)
+	nethttp.HandleFunc("/api/prometheus/graph", api.PrometheusGraphHandler(prometheusHost))
 	nethttp.HandleFunc("/api/aggregate", aggregate.Handler)
 
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
@@ -83,6 +87,7 @@ func init() {
 	Serve.Flags().Uint64("interval", 30, "Default interval (in seconds) to run checks on")
 	Serve.Flags().Int("failureThreshold", 2, "Default Number of consecutive failures required to fail a check")
 	Serve.Flags().Bool("dev", false, "Run in development mode")
+	Serve.Flags().String("prometheus", "http://localhost:8080", "Prometheus address")
 	Serve.Flags().IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
 	Serve.Flags().StringSliceVar(&aggregate.Servers, "aggregateServers", []string{}, "Aggregate check results from multiple servers in the status page")
 	Serve.Flags().StringVar(&api.ServerName, "name", "local", "Server name shown in aggregate dashboard")

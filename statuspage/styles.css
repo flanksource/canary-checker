@@ -128,3 +128,7 @@ div.check-status.check-status-fail {
     transition: all 0.4s linear;
     transition-property: color, background-color, border-color
 }
+
+.prometheus-popover {
+    max-width: 1200px;
+}
