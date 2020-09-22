@@ -177,21 +177,21 @@ func PrometheusGraphHandler(prometheusHost string) func(http.ResponseWriter, *ht
 
 		v1api := v1.NewAPI(client)
 
-		canarySuccessCount, err := getCanarySuccess(v1api, "http", "https://httpstat.us/301", timeframe)
+		canarySuccessCount, err := getCanarySuccess(v1api, pg.CheckType, pg.CheckKey, timeframe)
 		if err != nil {
 			log.Errorf("Failed to get canary success count: %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)
 			return
 		}
 
-		canaryFailedCount, err := getCanaryFailed(v1api, "http", "https://httpstat.us/301", timeframe)
+		canaryFailedCount, err := getCanaryFailed(v1api, pg.CheckType, pg.CheckKey, timeframe)
 		if err != nil {
 			log.Errorf("Failed to get canary success count: %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)
 			return
 		}
 
-		canaryLatency, err := getCanaryLatency(v1api, "http", "https://httpstat.us/301", timeframe)
+		canaryLatency, err := getCanaryLatency(v1api, pg.CheckType, pg.CheckKey, timeframe)
 		if err != nil {
 			log.Errorf("Failed to get canary success count: %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)
