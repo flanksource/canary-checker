@@ -246,7 +246,7 @@ func getMetric(prometheusClient v1.API, metric string, timeframe time.Duration) 
 	if len(warnings) > 0 {
 		log.Infof("Warnings: %v", warnings)
 	}
-	log.Infof("Result:\n%v\n", result)
+	log.Debug("Result:\n%v\n", result)
 
 	// ensure matrix result
 	matrix, ok := result.(model.Matrix)

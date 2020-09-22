@@ -10,12 +10,6 @@ const store = new Vuex.Store({
     lastRefreshed: null,
     disableReload: true,
     reloadTimer: null,
-    successLabels: [],
-    successValues: [],
-    failedLabels: [],
-    failedValues: [],
-    latencyLabels: [],
-    latencyValues: [],
   },
   mutations: {
     SET_SERVERS(state, servers) {
@@ -34,14 +28,6 @@ const store = new Vuex.Store({
         }
       }
       state.checks = checks
-    },
-    SET_TIMESERIES(state, data) {
-      state.successLabels = data.success.map(x => x.time)
-      state.successValues = data.success.map(x => parseInt(x.value, 10))
-      state.failedLabels = data.failed.map(x => x.time)
-      state.failedValues = data.failed.map(x => parseInt(x.value, 10))
-      state.latencyLabels = data.latency.map(x => x.time)
-      state.latencyValues = data.latency.map(x => parseInt(x.value, 10))
     },
     SET_LOADING(state, loading) {
       state.loading = loading
@@ -88,24 +74,6 @@ const store = new Vuex.Store({
     resumeAutoUpdate({dispatch, commit}) {
       commit('SET_DISABLE_RELOAD', false)
       commit('SET_RELOAD_TIMER', setInterval(() => { dispatch('fetchData') }, 20000)) // 20 seconds
-    },
-    fetchPrometheusData({commit, dispatch}, {timeframe, checkType, checkKey}) {
-      commit('SET_LOADING', true)
-      return axios
-        .post('/api/prometheus/graph', { checkType: checkType, checkKey: checkKey, timeframe: timeframe})
-        .then((response) => {
-          commit('SET_TIMESERIES', response.data)
-        })
-        .catch((err) => {
-          if (err.response.status === 0) {
-            commit('SET_ERROR', "Error loading data from server: failed to connect to server")
-          } else {
-            commit('SET_ERROR', "Error loading data from server: " + err.response.data)
-          }
-        })
-        .finally(() => {
-          commit('SET_LOADING', false)
-        })
     },
     triggerSingleCheck({commit, dispatch}, {server, checkType, checkKey}) {
       return axios

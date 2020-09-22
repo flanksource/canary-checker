@@ -203,10 +203,14 @@ Vue.component('check-prometheus', {
         <button v-for="ts in timeSelector" type="button" :class="btnClass(ts.value)" v-on:click="setSelector(ts.value)">{{ ts.name }}</button>
       </div>
 
-      <line-chart name="Success" v-bind:series-labels="successLabels" v-bind:series-data="successValues"></line-chart>
-      <line-chart name="Failed" v-bind:series-labels="failedLabels" v-bind:series-data="failedValues"></line-chart>
-      <line-chart name="Latency" v-bind:series-labels="latencyLabels" v-bind:series-data="latencyValues"></line-chart>
-      <span v-bind:value="show()"></span>
+      <line-chart name="Success" field="success" :check-type="checkType" :check-key="checkKey" :time-selector="currentSelector" :key="currentSelector" :styles="chartStyle"></line-chart>
+      <hr/>
+
+      <line-chart name="Failed" field="failed" :check-type="checkType" :check-key="checkKey" :time-selector="currentSelector" :key="currentSelector" :styles="chartStyle"></line-chart>
+      <hr/>
+
+      <line-chart name="Latency" field="latency" :check-type="checkType" :check-key="checkKey" :time-selector="currentSelector" :key="currentSelector" :styles="chartStyle"></line-chart>
+      <hr/>
 
     </template>
     </b-popover>
@@ -215,9 +219,14 @@ Vue.component('check-prometheus', {
     return {
       elapsed: null,
       dateTime: null,
-      timeseries: [],
       timeSelector: [],
       currentSelector: 3600,
+      successLabels: [],
+      successValues: [],
+      failedLabels: [],
+      failedValues: [],
+      latencyLabels: [],
+      latencyValues: [],
     }
   },
   props: {
@@ -235,7 +244,11 @@ Vue.component('check-prometheus', {
     }
   },
   computed: {
-    ...Vuex.mapState(['successLabels', 'successValues', 'failedLabels', 'failedValues', 'latencyLabels', 'latencyValues'])
+    chartStyle() {
+      return {
+        width: `750px`,
+      }
+    }
   },
   methods: {
     btnClass(value) {
@@ -244,13 +257,10 @@ Vue.component('check-prometheus', {
       }
       return "btn btn-secondary"
     },
-    setSelector(value) {
+    async setSelector(value) {
       this.currentSelector = value
-      this.fetchData()
     },
     onShow() {
-      this.timeseries = [],
-      this.currentSelector = 3600,
       this.timeSelector = [
         {name: "1H", value: 3600},
         {name: "3H", value: 3600 * 3},
@@ -260,16 +270,7 @@ Vue.component('check-prometheus', {
         {name: "3D", value: 3600 * 24 * 3},
         {name: "1W", value: 3600 * 24 * 7},
       ]
-      this.fetchData()
     },
-    fetchData() {
-      this.$store.dispatch('fetchPrometheusData', { timeframe: this.currentSelector, checkKey: this.checkKey, checkType: this.checkType })
-    },
-    show() {
-      console.log(this.successLabels)
-      console.log(this.successValues)
-      "aaa"
-    }
   }
 })
 
@@ -277,13 +278,34 @@ Vue.component('line-chart', {
   extends: VueChartJs.Line,
   mixins: [VueChartJs.mixins],
   props: ['options'],
-  mounted() {
-    this.fillData()
-    this.renderChart(this.datacollection, this.options)
+  async created() {
+    await this.fetchData(this.timeSelector)
   },
   data() {
     return {
-      datacollection: null
+      seriesLabels: [],
+      seriesValues: [],
+      datacollection: null,
+      options: {
+        maintainAspectRatio: false,
+        scales: {
+          yAxes: [{
+              id: 'Value',
+              type: 'linear',
+              offset: true,
+              ticks: {
+                min: 0,
+              },
+          }],
+          xAxes: [{
+            id: 'Time',
+            ticks: {
+              maxRotation: 0,
+              autoSkipPadding: 30,
+            },
+          }]
+        },
+      },
     }
   },
   props: {
@@ -291,29 +313,66 @@ Vue.component('line-chart', {
       type: String,
       required: true,
     },
-    seriesLabels: {
-      type: Array,
+    checkKey: {
+      type: String,
       required: true,
     },
-    seriesData: {
-      type: Array,
-      require: true,
+    checkType: {
+      type: String,
+      required: true,
+    },
+    field: {
+      type: String,
+      required: true,
+    },
+    timeSelector: {
+      type: Number,
+      required: true
     }
   },
   methods: {
     fillData () {
-      console.log("labels", this.seriesLabels)
-      console.log("data", this.seriesData)
       this.datacollection = {
         labels: this.seriesLabels,
         datasets: [
           {
+            fill: false,
+            cubicInterpolationMode: 'monotone',
             label: this.name,
             backgroundColor: '#f87979',
             data: this.seriesData,
           }
         ]
       }
+    },
+    fetchData() {
+      axios
+        .post('/api/prometheus/graph', { checkType: this.checkType, checkKey: this.checkKey, timeframe: this.timeSelector})
+        .then((response) => {
+          data = response.data[this.field]
+          this.seriesLabels = data.map(x => this.formatLabel(x.time))
+          this.seriesData = data.map(x => this.formatValue(x.value))
+          this.fillData()
+          this.renderChart(this.datacollection, this.options)
+        })
+        .catch((err) => {
+          if (err.response === undefined) {
+            console.log("Error: " + err)
+          } else if (err.response.status === 0) {
+            console.log("Error loading data from server: failed to connect to sercer")
+          } else {
+            console.log("Error loading data from server: failed: " + err.response.data)
+          }
+        })
+    },
+    formatLabel(label) {
+      if (this.currentSelector > (3600 * 24)) {
+        return moment(label * 1000).format("D/M HH:mm")
+      }
+      return moment(label * 1000).format("HH:mm")
+    },
+    formatValue(value) {
+      return Math.round(parseFloat(value, 10))
     },
   }
 })

@@ -130,5 +130,6 @@ div.check-status.check-status-fail {
 }
 
 .prometheus-popover {
-    max-width: 1200px;
+    max-width: 80%;
+    width: 80%;
 }
