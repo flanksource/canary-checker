@@ -217,7 +217,7 @@ Vue.component('check-prometheus', {
       size='lg'
       @show="onShow"
       custom-class="prometheus-popover">
-    <template v-slot:modal-title><div class="description">Prometheus Graph</div></template>
+    <template v-slot:modal-title><div class="description">Prometheus Graph <span class="badge badge-danger">{{ checkType }}</span> <span class="badge badge-secondary">{{ checkKey }}</span></div></template>
       <div class="btn-group" role="group" aria-label="Timeframe">
         <button v-for="ts in timeSelector" type="button" :class="btnClass(ts.value)" v-on:click="setSelector(ts.value)">{{ ts.name }}</button>
       </div>
