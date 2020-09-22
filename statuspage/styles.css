@@ -129,6 +129,10 @@ div.check-status.check-status-fail {
     transition-property: color, background-color, border-color
 }
 
+.check-button.prometheus-graph {
+    margin-right: 10px;
+}
+
 .prometheus-popover {
     max-width: 80%;
     width: 80%;

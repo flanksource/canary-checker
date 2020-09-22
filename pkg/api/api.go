@@ -136,9 +136,10 @@ func TriggerCheckHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 type PrometheusGraphData struct {
-	CheckType string `json:"checkType"`
-	CheckKey  string `json:"checkKey"`
-	Timeframe int    `json:"timeframe"`
+	CheckType  string `json:"checkType"`
+	CheckKey   string `json:"checkKey"`
+	CanaryName string `json:"canaryName"`
+	Timeframe  int    `json:"timeframe"`
 }
 
 type Timeseries struct {
@@ -177,21 +178,21 @@ func PrometheusGraphHandler(prometheusHost string) func(http.ResponseWriter, *ht
 
 		v1api := v1.NewAPI(client)
 
-		canarySuccessCount, err := getCanarySuccess(v1api, pg.CheckType, pg.CheckKey, timeframe)
+		canarySuccessCount, err := getCanarySuccess(v1api, pg.CheckType, pg.CheckKey, pg.CanaryName, timeframe)
 		if err != nil {
 			log.Errorf("Failed to get canary success count: %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)
 			return
 		}
 
-		canaryFailedCount, err := getCanaryFailed(v1api, pg.CheckType, pg.CheckKey, timeframe)
+		canaryFailedCount, err := getCanaryFailed(v1api, pg.CheckType, pg.CheckKey, pg.CanaryName, timeframe)
 		if err != nil {
 			log.Errorf("Failed to get canary success count: %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)
 			return
 		}
 
-		canaryLatency, err := getCanaryLatency(v1api, pg.CheckType, pg.CheckKey, timeframe)
+		canaryLatency, err := getCanaryLatency(v1api, pg.CheckType, pg.CheckKey, pg.CanaryName, timeframe)
 		if err != nil {
 			log.Errorf("Failed to get canary success count: %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)
@@ -215,18 +216,19 @@ func PrometheusGraphHandler(prometheusHost string) func(http.ResponseWriter, *ht
 	}
 }
 
-func getCanarySuccess(prometheusClient v1.API, checkType, exportedEndpoint string, timeframe time.Duration) ([]Timeseries, error) {
-	metric := fmt.Sprintf("increase(canary_check_success_count{exported_endpoint=\"%s\", type=\"%s\"}[5m])", exportedEndpoint, checkType)
+func getCanarySuccess(prometheusClient v1.API, checkType, exportedEndpoint, checkName string, timeframe time.Duration) ([]Timeseries, error) {
+	metric := fmt.Sprintf("increase(canary_check_success_count{exported_endpoint=\"%s\", type=\"%s\", name=\"%s\"}[5m])", exportedEndpoint, checkType, checkName)
 	return getMetric(prometheusClient, metric, timeframe)
 }
 
-func getCanaryFailed(prometheusClient v1.API, checkType, exportedEndpoint string, timeframe time.Duration) ([]Timeseries, error) {
-	metric := fmt.Sprintf("increase(canary_check_failed_count{exported_endpoint=\"%s\", type=\"%s\"}[5m])", exportedEndpoint, checkType)
+func getCanaryFailed(prometheusClient v1.API, checkType, exportedEndpoint, checkName string, timeframe time.Duration) ([]Timeseries, error) {
+	metric := fmt.Sprintf("increase(canary_check_failed_count{exported_endpoint=\"%s\", type=\"%s\", name=\"%s\"}[5m])", exportedEndpoint, checkType, checkName)
 	return getMetric(prometheusClient, metric, timeframe)
 }
 
-func getCanaryLatency(prometheusClient v1.API, checkType, exportedEndpoint string, timeframe time.Duration) ([]Timeseries, error) {
-	return getMetric(prometheusClient, "sum without(pod,instance)(rate(canary_check_duration_sum{exported_endpoint=\"https://httpstat.us/500\"}[5m]) / rate(canary_check_duration_count{exported_endpoint=\"https://httpstat.us/500\"}[5m]))", timeframe)
+func getCanaryLatency(prometheusClient v1.API, checkType, exportedEndpoint, checkName string, timeframe time.Duration) ([]Timeseries, error) {
+	metric := fmt.Sprintf("sum without(pod,instance)(rate(canary_check_duration_sum{exported_endpoint=\"%s\", type=\"%s\", name=\"%s\"}[5m]) / rate(canary_check_duration_count{exported_endpoint=\"%s\", type=\"%s\", name=\"%s\"}[5m]))", exportedEndpoint, checkType, checkName, exportedEndpoint, checkType, checkName)
+	return getMetric(prometheusClient, metric, timeframe)
 }
 
 func getMetric(prometheusClient v1.API, metric string, timeframe time.Duration) ([]Timeseries, error) {
@@ -246,6 +248,7 @@ func getMetric(prometheusClient v1.API, metric string, timeframe time.Duration) 
 	if len(warnings) > 0 {
 		log.Infof("Warnings: %v", warnings)
 	}
+	log.Infof("Query: %s", metric)
 	log.Debug("Result:\n%v\n", result)
 
 	// ensure matrix result

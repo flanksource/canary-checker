@@ -24,11 +24,6 @@ var app = new Vue({
         return window.btoa(mergedDesc + name + type)
       }
     },
-    calcPrometheusId() {
-      return (tableTd, mergedDesc, name, type) => {
-        return window.btoa("prometheus-" + tableTd + mergedDesc + name + type)
-      }
-    }
   },
   methods: {
     ...Vuex.mapActions(['pauseAutoUpdate', 'resumeAutoUpdate']),
@@ -57,11 +52,17 @@ Vue.component('checkStatus', {
         <div class="duration">Duration: {{checkStatus.duration / 1000}}s <br/>{{dateTime}}</div>
         <hr/>
         <div class="left health">Avg latency: {{health.latency}}</br>Uptime: {{health.uptime}}</div>
+
         <button class="btn btn-info btn-xs float-right check-button mb-2" @click="triggerCheck" title="Trigger the check on particular server">
           <i class="material-icons md-14 align-middle">loop</i>
         </button>
+
+        <button class="btn btn-warning btn-xs float-right check-button mb-2 prometheus-graph" v-b-modal="modalName(checkStatus.key)" title="Open Prometheus graph">
+          <i class="material-icons md-14 align-middle">bar_chart</i>
+        </button>
     </template>
-  </b-popover>
+    </b-popover>
+    <check-prometheus :check-type="checkType" :check-key="endpoint" :canary-name="canaryName" :target-id="modalName(checkStatus.key)"></check-prometheus>
   </div>
   `,
   data() {
@@ -82,6 +83,18 @@ Vue.component('checkStatus', {
     description: {
       type: String,
       required: true
+    },
+    checkType: {
+      type: String,
+      required: true
+    },
+    canaryName: {
+      type: String,
+      required: true,
+    },
+    endpoint: {
+      type: String,
+      required: true
     }
   },
   methods: {
@@ -95,6 +108,9 @@ Vue.component('checkStatus', {
       this.$root.$emit('bv::hide::popover')
       // this.$refs.popover.$emit('close')
       this.$emit('triggerCheck')
+    },
+    modalName(key) {
+      return "prometheus-modal-" + key
     }
   }
 })
@@ -108,6 +124,9 @@ Vue.component('check-tds', {
         <check-status 
             :checkStatus="checkStatus" 
             :health="check.health[server]"
+            :check-type="check.type"
+            :canary-name="check.canaryName"
+            :endpoint="check.endpoint"
             @triggerCheck="triggerCheck"
             ></check-status>
       </div>
@@ -142,6 +161,9 @@ Vue.component('checkSetTds', {
             :checkStatus="statusData.checkStatus"
             :description="statusData.check.description"
             :health="statusData.check.health[server]"
+            :check-type="statusData.check.type"
+            :canary-name="statusData.check.canaryName"
+            :endpoint="statusData.check.endpoint"
             @triggerCheck="triggerCheck(statusData.check)"
             ></check-status>
       </div>
@@ -190,30 +212,26 @@ Vue.component('checkSetTds', {
 
 Vue.component('check-prometheus', {
   template: `
-    <b-popover
-      :target="targetId" 
-      triggers="hover" 
-      placement="top"
-      :delay="{ show: 50, hide: 350 }"
-      custom-class="prometheus-popover"
-      @show="onShow">
-    <template v-slot:title><div class="description">Prometheus Graph</div></template>
-    <template v-slot:default>
+    <b-modal
+      :id="targetId"
+      size='lg'
+      @show="onShow"
+      custom-class="prometheus-popover">
+    <template v-slot:modal-title><div class="description">Prometheus Graph</div></template>
       <div class="btn-group" role="group" aria-label="Timeframe">
         <button v-for="ts in timeSelector" type="button" :class="btnClass(ts.value)" v-on:click="setSelector(ts.value)">{{ ts.name }}</button>
       </div>
 
-      <line-chart name="Success" field="success" :check-type="checkType" :check-key="checkKey" :time-selector="currentSelector" :key="currentSelector" :styles="chartStyle"></line-chart>
+      <line-chart name="Success" field="success" :check-type="checkType" :check-key="checkKey" :canary-name="canaryName" :time-selector="currentSelector" :key="currentSelector" :styles="chartStyle"></line-chart>
       <hr/>
 
-      <line-chart name="Failed" field="failed" :check-type="checkType" :check-key="checkKey" :time-selector="currentSelector" :key="currentSelector" :styles="chartStyle"></line-chart>
+      <line-chart name="Failed" field="failed" :check-type="checkType" :check-key="checkKey" :canary-name="canaryName" :time-selector="currentSelector" :key="currentSelector" :styles="chartStyle"></line-chart>
       <hr/>
 
-      <line-chart name="Latency" field="latency" :check-type="checkType" :check-key="checkKey" :time-selector="currentSelector" :key="currentSelector" :styles="chartStyle"></line-chart>
+      <line-chart name="Latency" field="latency" :check-type="checkType" :check-key="checkKey" :canary-name="canaryName" :time-selector="currentSelector" :key="currentSelector" :styles="chartStyle"></line-chart>
       <hr/>
 
-    </template>
-    </b-popover>
+    </b-modal>
   `,
   data() {
     return {
@@ -238,6 +256,10 @@ Vue.component('check-prometheus', {
       type: String,
       required: true,
     },
+    canaryName: {
+      type: String,
+      required: true,
+    },
     targetId: {
       type: String,
       required: true,
@@ -253,14 +275,15 @@ Vue.component('check-prometheus', {
   methods: {
     btnClass(value) {
       if (value == this.currentSelector) {
-        return "btn btn-primary"
+        return "btn btn-danger"
       }
-      return "btn btn-secondary"
+      return "btn"
     },
-    async setSelector(value) {
+    setSelector(value) {
       this.currentSelector = value
     },
     onShow() {
+      console.log(this.targetId)
       this.timeSelector = [
         {name: "1H", value: 3600},
         {name: "3H", value: 3600 * 3},
@@ -321,6 +344,10 @@ Vue.component('line-chart', {
       type: String,
       required: true,
     },
+    canaryName: {
+      type: String,
+      required: true,
+    },
     field: {
       type: String,
       required: true,
@@ -336,6 +363,7 @@ Vue.component('line-chart', {
         labels: this.seriesLabels,
         datasets: [
           {
+            borderColor: "#dc3545",
             fill: false,
             cubicInterpolationMode: 'monotone',
             label: this.name,
@@ -347,7 +375,7 @@ Vue.component('line-chart', {
     },
     fetchData() {
       axios
-        .post('/api/prometheus/graph', { checkType: this.checkType, checkKey: this.checkKey, timeframe: this.timeSelector})
+        .post('/api/prometheus/graph', { checkType: this.checkType, canaryName: this.canaryName, checkKey: this.checkKey, timeframe: this.timeSelector})
         .then((response) => {
           data = response.data[this.field]
           this.seriesLabels = data.map(x => this.formatLabel(x.time))

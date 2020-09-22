@@ -19,6 +19,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var Serve = &cobra.Command{
@@ -35,7 +36,14 @@ var Serve = &cobra.Command{
 
 		scheduler := gocron.NewScheduler(time.UTC)
 
-		canary := v1.Canary{}
+		canaryName, _ := cmd.Flags().GetString("canary-name")
+		canaryNamespace, _ := cmd.Flags().GetString("canary-namespace")
+		canary := v1.Canary{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      canaryName,
+				Namespace: canaryNamespace,
+			},
+		}
 		for _, _c := range checks.All {
 			c := _c
 			scheduler.Every(interval).Seconds().StartImmediately().Do(func() {
@@ -91,4 +99,7 @@ func init() {
 	Serve.Flags().IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
 	Serve.Flags().StringSliceVar(&aggregate.Servers, "aggregateServers", []string{}, "Aggregate check results from multiple servers in the status page")
 	Serve.Flags().StringVar(&api.ServerName, "name", "local", "Server name shown in aggregate dashboard")
+
+	Serve.Flags().String("canary-name", "", "Canary name")
+	Serve.Flags().String("canary-namespace", "", "Canary namespace")
 }

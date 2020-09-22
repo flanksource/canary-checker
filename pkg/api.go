@@ -45,6 +45,7 @@ type Check struct {
 	Key         string        `json:"key"`
 	Type        string        `json:"type"`
 	Name        string        `json:"name"`
+	CanaryName  string        `json:"canaryName"`
 	Description string        `json:"description"`
 	Endpoint    string        `json:"endpoint"`
 	Uptime      string        `json:"uptime"`

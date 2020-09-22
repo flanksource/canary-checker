@@ -48,8 +48,7 @@
               <span class="badge badge-secondary" :id="name">{{ shortHand(name, nsLimit) }}</span>
               <b-tooltip v-if="name.length > nsLimit" :target="name" triggers="hover" variant="secondary">{{name}}</b-tooltip>
             </td>
-            <td class="align-middle w-25" :id="calcPrometheusId('desc', mergedDesc, name, type)">
-              <check-prometheus :check-type="type", :check-key="mergedDesc" :target-id="calcPrometheusId('desc', mergedDesc, name, type)"></check-prometheus>
+            <td class="align-middle w-25">
               <span class="float-left w-75 pr-5" :id="calcTooltipId(mergedDesc, name, type)" :class="{'font-italic': mergedDesc.startsWith('multiple')}">
                 {{ shortHand(mergedDesc, descLimit) }}
               </span>
