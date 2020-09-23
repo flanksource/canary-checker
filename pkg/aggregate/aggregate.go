@@ -24,6 +24,7 @@ type AggregateCheck struct {
 	Key         string                       `json:"key"`
 	Type        string                       `json:"type"`
 	Name        string                       `json:"name"`
+	CanaryName  string                       `json:"canaryName"`
 	Description string                       `json:"description"`
 	Endpoint    string                       `json:"endpoint"`
 	Health      map[string]CheckHealth       `json:"health"`
@@ -89,6 +90,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 		aggregateData[aggregateDataKey] = &AggregateCheck{
 			Key:         c.Key,
 			Name:        c.Name,
+			CanaryName:  c.CanaryName,
 			Type:        c.Type,
 			Description: c.Description,
 			Endpoint:    c.Endpoint,
@@ -123,6 +125,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 				aggregateData[aggregateDataKey] = &AggregateCheck{
 					Key:         c.Key,
 					Name:        c.Name,
+					CanaryName:  c.CanaryName,
 					Type:        c.Type,
 					Description: c.Description,
 					Endpoint:    c.Endpoint,

@@ -75,9 +75,9 @@ const store = new Vuex.Store({
       commit('SET_DISABLE_RELOAD', false)
       commit('SET_RELOAD_TIMER', setInterval(() => { dispatch('fetchData') }, 20000)) // 20 seconds
     },
-    triggerSingleCheck({commit, dispatch}, {server, check}) {
+    triggerSingleCheck({commit, dispatch}, {server, checkType, checkKey}) {
       return axios
-        .post('/api/triggerCheck', { server, checkKey: check.key })
+        .post('/api/triggerCheck', { server, checkKey, checkType })
         .then(() => {
           dispatch('fetchData')
         })

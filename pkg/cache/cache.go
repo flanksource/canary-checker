@@ -61,6 +61,7 @@ func (c *cache) InitCheck(checks v1.Canary) {
 		c.Checks[key] = pkg.Check{
 			Type:        check.GetType(),
 			Name:        checks.ID(),
+			CanaryName:  checks.Name,
 			Description: check.GetDescription(),
 			Endpoint:    check.GetEndpoint(),
 		}
@@ -80,6 +81,7 @@ func (c *cache) AddCheck(checks v1.Canary, result *pkg.CheckResult) *pkg.Check {
 		Key:         checks.GetKey(result.Check),
 		Type:        result.Check.GetType(),
 		Name:        checks.ID(),
+		CanaryName:  checks.Name,
 		Description: checks.GetDescription(result.Check),
 		Endpoint:    result.Check.GetEndpoint(),
 		CheckCanary: &checks,
