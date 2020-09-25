@@ -4,7 +4,14 @@ metadata:
   labels:
     control-plane: canary-checker
   name: system
-
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: canary
+value: -1
+globalDefault: false
+description: "This priority class should be used for canary pods only."
 ---
 apiVersion: v1
 kind: ServiceAccount

@@ -8,6 +8,12 @@ VERSION="$TAG built $(date)"
 
 make static linux darwin compress
 
-github-release release -u $GITHUB_USER -r ${NAME} --tag $TAG
+
+github-release release -u $GITHUB_USER -r ${NAME} --tag $TAG || echo Release already created
 github-release upload -R -u $GITHUB_USER -r ${NAME} --tag $TAG -n ${NAME} -f .bin/${NAME}
 github-release upload -R -u $GITHUB_USER -r ${NAME} --tag $TAG -n ${NAME}_osx -f .bin/${NAME}_osx
+
+cd config
+kustomize edit set image canary-checker:$TAG
+kustomize build  > release.yaml
+github-release upload -R -u $GITHUB_USER -r ${NAME} --tag $TAG -n release.yaml -f release.yaml
