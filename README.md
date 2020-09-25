@@ -48,7 +48,7 @@ Requires `Prometheus Operator` running on the cluster
 
 ```bash
 # install the operator
-kubectl apply -f https://github.com/flanksource/canary-checker/releases/download/v0.13.0/release.yaml
+kubectl apply -f https://github.com/flanksource/canary-checker/releases/download/v0.13.5/release.yaml
 # deploy a sample canary
 kubectl apply -f https://raw.githubusercontent.com/flanksource/canary-checker/master/fixtures-crd/http_pass.yaml
 # check the results of the canary

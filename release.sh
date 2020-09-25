@@ -17,7 +17,7 @@ cd config
 
 curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
 
-./kustomize edit set image canary-checker:$TAG
+./kustomize edit set image flanksource/canary-checker:$TAG
 ./kustomize build  > release.yaml
 
 github-release upload -R -u $GITHUB_USER -r ${NAME} --tag $TAG -n release.yaml -f release.yaml
