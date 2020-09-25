@@ -1,6 +1,6 @@
 
 
-<h1 align="center"> <img src="docs/canary-checker.svg" height="80px"></img>Canary Checker</h1>
+<h1 align="center"> <img src="docs/canary-checker.svg" height="64px"></img>Canary Checker</h1>
   <p align="center">Kubernetes operator for executing synthetic tests</p>
 <p align="center">
 <a href="https://github.com/flanksource/canary-checker/actions"><img src="https://github.com/flanksource/canary-checker/workflows/Test/badge.svg"></a>
@@ -11,7 +11,28 @@
 
 
 ---
-[TOC]
+<!--ts-->
+  * [Features](#features)
+  * [Getting Started](#getting-started)
+  * [Comparisons](#comparisons)
+  * [Check Types](#check-types)
+      * [DNS - Query a DNS server](#dns---query-a-dns-server)
+      * [Containerd Pull - Pull an image using containerd](#containerd-pull---pull-an-image-using-containerd)
+      * [Docker Pull - Pull an image using docker](#docker-pull---pull-an-image-using-docker)
+      * [Docker Push - Create and push a docker image](#docker-push---create-and-push-a-docker-image)
+      * [HTTP - Query a HTTP endpoint](#http---query-a-http-endpoint)
+      * [Helm - Build and push a helm chart](#helm---build-and-push-a-helm-chart)
+      * [ICMP - Ping a destination and check for packet loss](#icmp---ping-a-destination-and-check-for-packet-loss)
+      * [LDAP - Query a ldap(s) server](#ldap---query-a-ldaps-server)
+      * [Namespace - Create a new kubernetes namespace and pod](#namespace---create-a-new-kubernetes-namespace-and-pod)
+      * [Pod - Create a new pod and verify reachability](#pod---create-a-new-pod-and-verify-reachability)
+      * [Postgres - Query a Postgresql DB using SQL](#postgres---query-a-postgresql-db-using-sql)
+      * [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
+      * [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
+      * [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
+      * [TCP](#tcp)
+
+<!--te-->
 
 ## Features
 
@@ -155,7 +176,7 @@ docker:
 | password |  | string | Yes |
 
 
-### HTTP - Query a HTTP endpoint 
+### HTTP - Query a HTTP endpoint
 
 ```yaml
 http:
