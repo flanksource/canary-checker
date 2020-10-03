@@ -39,8 +39,7 @@ var app = new Vue({
 
 Vue.component('checkStatus', {
   template: `
-  <div  :id="checkStatus.key">
-  
+  <div class="check-status" :class="[checkStatus.status ? 'check-status-pass' : 'check-status-fail']" :id="checkStatus.key">
     <b-popover 
       :target="checkStatus.key" 
       triggers="hover" 
@@ -426,8 +425,6 @@ Vue.component('status-strip', {
     
           >
 
-         <!-- <rect height="100" :width="barWidth" :style=" {fill: color}"/> -->
-  <!--        <rect v-for="(check, index) in checkSet" :id="{check-index}" :key="{check-index}" :x="barSet[index].x"  :y="barSet[index].y" :width="barSet[index].width" :height="barSet[index].height" :style="{ fill:barSet[index].color;stroke-width:3;stroke:rgb(0,0,0)}" />-->
           <rect v-for="(bar, index) in barSet"  
               :height="barMaxHeight" :width="barWidth" 
               :x="barSet[index].x"  
