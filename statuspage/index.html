@@ -31,6 +31,8 @@
       {{ error }}
     </div>
 
+
+
     <table id="checks" class="table table-sm table-fixed text-nowrap" v-cloak>
       <thead>
         <th class="border-right">Type</th>
@@ -65,7 +67,15 @@
               </button>
             </td>
             <td v-for="(server, serverName) in serversByNames" :key="server" class="align-top border-right border-left">
-              <check-set-tds :check-set="checkSet" :server="server"></check-set-tds>
+              <div>
+
+                <check-set-tds :check-set="checkSet" :server="server"></check-set-tds>
+                <status-strip  :check-set="checkSet" :server="server"
+                               color="#28a745" error-color="#dc3545"
+                               width="200"
+                               :bar-width="20" :bar-spacing="5" :barMaxHeight="20" />
+
+              </div>
             </td>
           </tr>
         </tbody>

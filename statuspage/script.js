@@ -8,7 +8,7 @@ var app = new Vue({
   data() {
     return {
       descLimit: 41,
-      nsLimit: 31
+      nsLimit: 31,
     }
   },
   computed: {
@@ -39,7 +39,8 @@ var app = new Vue({
 
 Vue.component('checkStatus', {
   template: `
-  <div class="check-status" :class="[checkStatus.status ? 'check-status-pass' : 'check-status-fail']" :id="checkStatus.key">
+  <div  :id="checkStatus.key">
+  
     <b-popover 
       :target="checkStatus.key" 
       triggers="hover" 
@@ -116,42 +117,42 @@ Vue.component('checkStatus', {
 })
 
 
-//deprecated component
-Vue.component('check-tds', {
-  template: `
-    <transition-group name="slide" tag="section" class="check-section" :style="{width: 1.4 * check.checkStatuses[this.server].length + 'rem'}" mode="out-in">
-      <div v-for="checkStatus in check.checkStatuses[this.server]" :key="checkStatus.key" class="check-status-container">
-        <check-status 
-            :checkStatus="checkStatus" 
-            :health="check.health[server]"
-            :check-type="check.type"
-            :canary-name="check.canaryName"
-            :endpoint="check.endpoint"
-            @triggerCheck="triggerCheck"
-            ></check-status>
-      </div>
-    </transition-group>
-  `,
-  props: {
-    check: {
-      type: Object,
-      required: true,
-    },
-    server: {
-      type: String,
-      required: true,
-    }
-  },
-  computed: {
-    ...Vuex.mapState(['servers']),
-    ...Vuex.mapGetters(['serversByNames']),
-  },
-  methods: {
-    triggerCheck() {
-      this.$store.dispatch('triggerSingleCheck', { server: this.server, check: this.check })
-    }
-  }
-})
+// //deprecated component
+// Vue.component('check-tds', {
+//   template: `
+//     <transition-group name="slide" tag="section" class="check-section" :style="{width: 1.4 * check.checkStatuses[this.server].length + 'rem'}" mode="out-in">
+//       <div v-for="checkStatus in check.checkStatuses[this.server]" :key="checkStatus.key" class="check-status-container">
+//         <check-status
+//             :checkStatus="checkStatus"
+//             :health="check.health[server]"
+//             :check-type="check.type"
+//             :canary-name="check.canaryName"
+//             :endpoint="check.endpoint"
+//             @triggerCheck="triggerCheck"
+//             ></check-status>
+//       </div>
+//     </transition-group>
+//   `,
+//   props: {
+//     check: {
+//       type: Object,
+//       required: true,
+//     },
+//     server: {
+//       type: String,
+//       required: true,
+//     }
+//   },
+//   computed: {
+//     ...Vuex.mapState(['servers']),
+//     ...Vuex.mapGetters(['serversByNames']),
+//   },
+//   methods: {
+//     triggerCheck() {
+//       this.$store.dispatch('triggerSingleCheck', { server: this.server, check: this.check })
+//     }
+//   }
+// })
 
 Vue.component('checkSetTds', {
   template: `
@@ -401,6 +402,196 @@ Vue.component('line-chart', {
     },
     formatValue(value) {
       return Math.round(parseFloat(value, 10))
+    },
+  }
+})
+
+Vue.component('check-time', {
+  props: ['time'],
+  template: '<div style="font-size: xx-small;">{{ time }}</div>'
+})
+
+Vue.component('status-strip', {
+  template: `
+    <div class="working" style="float: left;">
+      <check-time class="time-left" :time="latest"/>
+
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style="text-wrap: normal;"
+            baseProfile="tiny"
+            version="1.2"
+            :width="fullWidth"
+            :height="barMaxHeight"
+    
+          >
+
+         <!-- <rect height="100" :width="barWidth" :style=" {fill: color}"/> -->
+  <!--        <rect v-for="(check, index) in checkSet" :id="{check-index}" :key="{check-index}" :x="barSet[index].x"  :y="barSet[index].y" :width="barSet[index].width" :height="barSet[index].height" :style="{ fill:barSet[index].color;stroke-width:3;stroke:rgb(0,0,0)}" />-->
+          <rect v-for="(bar, index) in barSet"  
+              :height="barMaxHeight" :width="barWidth" 
+              :x="barSet[index].x"  
+              :style=" {fill: 'none'}"/>
+          <rect v-for="(bar, index) in barSet"  
+              :height="barSet[index].height" :width="barWidth" 
+              :x="barSet[index].x" :y="barSet[index].y" 
+              :style=" {fill: barSet[index].color}"/>
+  
+         </svg>
+      <check-time class="time-right" :time="earliest"/>
+            <div v-for="statusData in statusesSet" :key="statusData.checkStatus.key" class="check-status-container">
+        <check-status 
+            :checkStatus="statusData.checkStatus"
+            :description="statusData.check.description"
+            :health="statusData.check.health[server]"
+            :check-type="statusData.check.type"
+            :canary-name="statusData.check.canaryName"
+            :endpoint="statusData.check.endpoint"
+            @triggerCheck="triggerCheck(statusData.check)"
+            ></check-status>
+      </div>
+
+    </div>`,
+  props: {
+    checkSet: {
+      type: Array,
+      required: true,
+    },
+    server: {
+      type: String,
+      required: true,
+    },
+    color: {
+      type: String,
+      default: 'green',
+      required: false,
+    },
+    errorColor: {
+      type: String,
+      default: 'red',
+      required: false,
+    },
+    barWidth: {
+      type: Number,
+      default: 200,
+      required: false,
+    },
+    zoominess: {
+      type: Number,
+      default: 0,
+      required: false,
+    },
+    strokeWidth: {
+      type: Number,
+      default: 5,
+      required: false,
+    },
+    width: {
+      type: Number,
+      default: 50,
+      required: false,
+    },
+    barMaxHeight: {
+      type: Number,
+      default: 20,
+      required: false,
+    },
+
+    barSpacing: {
+      type: Number,
+      default: 50,
+      required: false,
+    },
+  },
+  computed: {
+
+    statusesSet() {
+      let statusesSet = []
+      let serverRelatedCount = 0
+      for (const check of this.checkSet) {
+        if (check.checkStatuses[this.server]) {
+          serverRelatedCount += 1
+          for (const checkStatus of check.checkStatuses[this.server]) {
+            statusesSet.push({check, checkStatus})
+          }
+        }
+      }
+
+      const sorted = _.sortBy(statusesSet, function (statusData) {
+        return new Date(statusData.checkStatus.time + " UTC");
+      }).reverse();
+
+      const chunked = _.chunk(sorted, serverRelatedCount * 2)
+
+      return this.checkSet.length === 1 ? sorted : chunked[0]
+    },
+    fullWidth() {
+      return (this.barWidth + this.barSpacing) * this.statusesSet.length
+    },
+    barSet() {
+      let barSet = []
+
+
+      let maxDelay = this.statusesSet[0].checkStatus.duration
+      let minDelay = this.statusesSet[0].checkStatus.duration
+      for (const statusData of this.statusesSet) {
+        if (!statusData.checkStatus.status) {
+          continue
+        }
+        if (statusData.checkStatus.duration > maxDelay) {
+          maxDelay = statusData.checkStatus.duration
+        }
+        if (statusData.checkStatus.duration < minDelay) {
+          minDelay = statusData.checkStatus.duration
+        }
+      }
+      console.info(`minDelay ${minDelay}`)
+      console.info(`maxDelay ${maxDelay}`)
+      console.info("-------------------------------")
+
+      let i = 0
+      for (const statusData of this.statusesSet) {
+        offsetDuration = statusData.checkStatus.duration - minDelay
+        scaledDuration = offsetDuration / (maxDelay - minDelay) * this.barMaxHeight
+        if (scaledDuration == 0) {
+          scaledDuration = 0.5
+        }
+        console.info(`statusData.checkStatus.duration ${statusData.checkStatus.duration}, offsetDuration ${offsetDuration}, $scaledDuration ${scaledDuration}`)
+
+        let bar = {
+          "color": statusData.checkStatus.status ? this.color : this.errorColor,
+          "width": this.barWidth,
+          "height": statusData.checkStatus.status ? scaledDuration : this.barMaxHeight,
+          "x": (this.barWidth + this.barSpacing) * i,
+          "y": (this.barMaxHeight - scaledDuration)
+        }
+        barSet.push(bar);
+        i++
+      }
+      console.info("================================")
+      return barSet;
+    },
+    latest() {
+      var latestSoFar = null;
+      for (const statusData of this.statusesSet) {
+        const checkDate = new Date(statusData.checkStatus.time + " UTC");
+        if (latestSoFar === null || checkDate > latestSoFar) {
+          latestSoFar = checkDate
+        }
+      }
+      let t = new timeago()
+      return t.simple(latestSoFar)
+    },
+    earliest() {
+      var earliestSoFar = null;
+      for (const statusData of this.statusesSet) {
+        const checkDate = new Date(statusData.checkStatus.time + " UTC");
+        if (earliestSoFar === null || checkDate < earliestSoFar) {
+          earliestSoFar = checkDate
+        }
+      }
+      let t = new timeago()
+      return t.simple(earliestSoFar)
     },
   }
 })

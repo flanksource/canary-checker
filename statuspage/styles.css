@@ -47,6 +47,18 @@ hr {
     font-size: 0.8em;
 }
 
+div.time-left {
+    display: inline-block;
+    vertical-align: middle;
+
+}
+
+div.time-right {
+    display: inline-block;
+    vertical-align: middle;
+
+}
+
 div.check-status-container {
     display: inline-block;
     vertical-align: middle;
