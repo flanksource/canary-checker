@@ -49,7 +49,7 @@ const store = new Vuex.Store({
     fetchData({commit}) {
       commit('SET_LOADING', true)
       return axios
-        .get('/api/aggregate')
+        .get('http://localhost:8084/api/aggregate')
         .then((response) => {
           commit('SET_CHECKS', response.data.checks)
           commit('SET_SERVERS', response.data.servers)
@@ -73,7 +73,7 @@ const store = new Vuex.Store({
     },
     resumeAutoUpdate({dispatch, commit}) {
       commit('SET_DISABLE_RELOAD', false)
-      commit('SET_RELOAD_TIMER', setInterval(() => { dispatch('fetchData') }, 20000)) // 20 seconds
+      commit('SET_RELOAD_TIMER', setInterval(() => { dispatch('fetchData') }, 5000)) // 20 seconds
     },
     triggerSingleCheck({commit, dispatch}, {server, checkType, checkKey}) {
       return axios

@@ -52,11 +52,9 @@ Vue.component('checkStatus', {
         <div class="duration">Duration: {{checkStatus.duration / 1000}}s <br/>{{dateTime}}</div>
         <hr/>
         <div class="left health">Avg latency: {{health.latency}}</br>Uptime: {{health.uptime}}</div>
-
         <button class="btn btn-info btn-xs float-right check-button mb-2" @click="triggerCheck" title="Trigger the check on particular server">
           <i class="material-icons md-14 align-middle">loop</i>
         </button>
-
         <button class="btn btn-warning btn-xs float-right check-button mb-2 prometheus-graph" v-b-modal="modalName(checkStatus.key)" title="Open Prometheus graph">
           <i class="material-icons md-14 align-middle">bar_chart</i>
         </button>
@@ -410,44 +408,123 @@ Vue.component('check-time', {
   template: '<div style="font-size: xx-small;">{{ time }}</div>'
 })
 
+Vue.component('bar-popover', {
+  template: `
+   <b-popover 
+        :target="target"  
+        triggers="hover" 
+        placement="top"
+        :delay="{ show: 50, hide: 350 }" 
+        @show="onShow">
+        <template v-slot:title>
+            <div class="description">{{description}}</div><div>{{elapsed}}</div>
+        </template>
+        <template v-slot:default>
+          <div>{{message}}</div>
+          <div class="duration">Duration: {{duration / 1000}}s <br/>{{dateTime}}</div>
+          <hr/>
+          <div class="left health">Avg latency: {{health.latency}}</br>Uptime: {{health.uptime}}</div>
+          <button class="btn btn-info btn-xs float-right check-button mb-2" @click="triggerCheck" title="Trigger the check on particular server">
+            <i class="material-icons md-14 align-middle">loop</i>
+          </button>
+          <button class="btn btn-warning btn-xs float-right check-button mb-2 prometheus-graph" v-b-modal="modalName(checkStatusKey)" title="Open Prometheus graph">
+             <i class="material-icons md-14 align-middle">bar_chart</i>
+          </button>
+        </template>
+<!--                <div>{{elapsed}}</div>-->
+    </b-popover>`,
+  data() {
+    return {
+      elapsed: null,
+      dateTime: null
+    }
+  },
+  props: {
+    target: {
+      type: String,
+      required: true
+      },
+    checkStatusKey: {
+      type: String,
+      required: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    message: {
+      type: String,
+      required: true
+    },
+    time: {
+      type: Object,
+      required: true
+    },
+    duration: {
+      type: Number,
+      required: true
+    },
+    health: {
+      type: Object,
+      required: true
+    },
+    },
+  methods: {
+    onShow() {
+      const dateTime = new Date(this.time + " UTC");
+      let t = new timeago()
+      this.elapsed = t.simple(date.format(dateTime, 'YYYY-MM-DD HH:mm:ss', false), 'en_US')
+      this.dateTime = moment(dateTime).format()
+    },
+    triggerCheck() {
+      this.$root.$emit('bv::hide::popover')
+      // this.$refs.popover.$emit('close')
+      this.$emit('triggerCheck')
+    },
+    modalName(key) {
+      return "prometheus-modal-" + key
+    }
+  }
+})
+
+// A graphical strip representing status info
 Vue.component('status-strip', {
   template: `
-    <div class="working" style="float: left;">
-      <check-time class="time-left" :time="latest"/>
-
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style="text-wrap: normal;"
-            baseProfile="tiny"
-            version="1.2"
-            :width="fullWidth"
-            :height="barMaxHeight"
-    
-          >
-
-          <rect v-for="(bar, index) in barSet"  
+    <div class="status-strip" >
+        <check-time class="time-left" :time="latest"/>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          style="text-wrap: normal;"
+          baseProfile="tiny"
+          version="1.2"
+          :width="fullWidth"
+          :height="barMaxHeight">
+          <g  
+            v-for="(bar, index) in barSet" 
+            :id="'bar-'+barSet[index].key">
+            <!-- This rect is not for visual effect,-->
+            <!-- but makes the following actual     -->
+            <!-- data bar easier to select when it  -->
+            <!-- is narrow.                         -->
+            <rect  
               :height="barMaxHeight" :width="barWidth" 
               :x="barSet[index].x"  
-              :style=" {fill: 'none'}"/>
-          <rect v-for="(bar, index) in barSet"  
+              :style=" {fill: 'white'}"/>
+            <rect                   
               :height="barSet[index].height" :width="barWidth" 
               :x="barSet[index].x" :y="barSet[index].y" 
               :style=" {fill: barSet[index].color}"/>
-  
-         </svg>
-      <check-time class="time-right" :time="earliest"/>
-            <div v-for="statusData in statusesSet" :key="statusData.checkStatus.key" class="check-status-container">
-        <check-status 
-            :checkStatus="statusData.checkStatus"
-            :description="statusData.check.description"
-            :health="statusData.check.health[server]"
-            :check-type="statusData.check.type"
-            :canary-name="statusData.check.canaryName"
-            :endpoint="statusData.check.endpoint"
-            @triggerCheck="triggerCheck(statusData.check)"
-            ></check-status>
-      </div>
-
+          </g>
+        </svg>
+        <check-time class="time-right" :time="earliest"/>
+        <bar-popover 
+        v-for="bar in barSet" 
+          :target="'bar-'+bar.key"  
+          :checkStatusKey="bar.key"
+          :description="bar.description"
+          :time="bar.time" :duration="bar.duration"
+          :message="bar.message"
+          :health="bar.health"/>
     </div>`,
   props: {
     checkSet: {
@@ -473,14 +550,14 @@ Vue.component('status-strip', {
       default: 200,
       required: false,
     },
+    // When variances are small they are hard to
+    // see: a zoominess of 0 does no zooming,
+    //      a zoominess of 1 shows only the
+    //      variances by chopping off the
+    //      common minimum value.
     zoominess: {
       type: Number,
       default: 0,
-      required: false,
-    },
-    strokeWidth: {
-      type: Number,
-      default: 5,
       required: false,
     },
     width: {
@@ -493,7 +570,6 @@ Vue.component('status-strip', {
       default: 20,
       required: false,
     },
-
     barSpacing: {
       type: Number,
       default: 50,
@@ -501,7 +577,6 @@ Vue.component('status-strip', {
     },
   },
   computed: {
-
     statusesSet() {
       let statusesSet = []
       let serverRelatedCount = 0
@@ -527,45 +602,48 @@ Vue.component('status-strip', {
     },
     barSet() {
       let barSet = []
-
-
-      let maxDelay = this.statusesSet[0].checkStatus.duration
-      let minDelay = this.statusesSet[0].checkStatus.duration
+      let maxDelay = null
+      let minDelay = null
       for (const statusData of this.statusesSet) {
         if (!statusData.checkStatus.status) {
           continue
         }
-        if (statusData.checkStatus.duration > maxDelay) {
+        if (maxDelay === null || statusData.checkStatus.duration > maxDelay) {
           maxDelay = statusData.checkStatus.duration
         }
-        if (statusData.checkStatus.duration < minDelay) {
+        if (minDelay === null || statusData.checkStatus.duration < minDelay) {
           minDelay = statusData.checkStatus.duration
         }
       }
-      console.info(`minDelay ${minDelay}`)
-      console.info(`maxDelay ${maxDelay}`)
-      console.info("-------------------------------")
 
       let i = 0
       for (const statusData of this.statusesSet) {
-        offsetDuration = statusData.checkStatus.duration - minDelay
-        scaledDuration = offsetDuration / (maxDelay - minDelay) * this.barMaxHeight
-        if (scaledDuration == 0) {
-          scaledDuration = 0.5
+        offsetDuration = statusData.checkStatus.duration - minDelay * this.zoominess
+        scaledDuration = offsetDuration / (maxDelay - minDelay* this.zoominess)
+        normalizedDuration = scaledDuration* this.barMaxHeight
+        if (normalizedDuration == 0) {
+          // show at least a sliver for the minimum value
+          normalizedDuration = 0.5
         }
-        console.info(`statusData.checkStatus.duration ${statusData.checkStatus.duration}, offsetDuration ${offsetDuration}, $scaledDuration ${scaledDuration}`)
-
+        scaledDuration = scaledDuration * maxDelay
         let bar = {
-          "color": statusData.checkStatus.status ? this.color : this.errorColor,
+          "key": statusData.checkStatus.key,
           "width": this.barWidth,
-          "height": statusData.checkStatus.status ? scaledDuration : this.barMaxHeight,
+          "height": statusData.checkStatus.status ? normalizedDuration : this.barMaxHeight,
           "x": (this.barWidth + this.barSpacing) * i,
-          "y": (this.barMaxHeight - scaledDuration)
+          "y": (this.barMaxHeight - normalizedDuration),
+          "checkStatus": statusData.checkStatus,
+          "description": statusData.check.description,
+          "message": statusData.checkStatus.message,
+          "health": statusData.check.health[this.server],
+          "duration": statusData.checkStatus.duration,
+          "scaledDuration": scaledDuration,
+          "time": statusData.checkStatus.time,
+          "color": statusData.checkStatus.status ? this.color : this.errorColor,
         }
         barSet.push(bar);
         i++
       }
-      console.info("================================")
       return barSet;
     },
     latest() {
