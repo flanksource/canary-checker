@@ -403,90 +403,6 @@ Vue.component('line-chart', {
   }
 })
 
-Vue.component('check-time', {
-  props: ['time'],
-  template: '<div style="font-size: xx-small;">{{ time }}</div>'
-})
-
-Vue.component('bar-popover', {
-  template: `
-   <b-popover 
-        :target="target"  
-        triggers="hover" 
-        placement="top"
-        :delay="{ show: 50, hide: 350 }" 
-        @show="onShow">
-        <template v-slot:title>
-            <div class="description">{{description}}</div><div>{{elapsed}}</div>
-        </template>
-        <template v-slot:default>
-          <div>{{message}}</div>
-          <div class="duration">Duration: {{duration / 1000}}s <br/>{{dateTime}}</div>
-          <hr/>
-          <div class="left health">Avg latency: {{health.latency}}</br>Uptime: {{health.uptime}}</div>
-          <button class="btn btn-info btn-xs float-right check-button mb-2" @click="triggerCheck" title="Trigger the check on particular server">
-            <i class="material-icons md-14 align-middle">loop</i>
-          </button>
-          <button class="btn btn-warning btn-xs float-right check-button mb-2 prometheus-graph" v-b-modal="modalName(checkStatusKey)" title="Open Prometheus graph">
-             <i class="material-icons md-14 align-middle">bar_chart</i>
-          </button>
-        </template>
-<!--                <div>{{elapsed}}</div>-->
-    </b-popover>`,
-  data() {
-    return {
-      elapsed: null,
-      dateTime: null
-    }
-  },
-  props: {
-    target: {
-      type: String,
-      required: true
-      },
-    checkStatusKey: {
-      type: String,
-      required: true
-    },
-    description: {
-      type: String,
-      required: true
-    },
-    message: {
-      type: String,
-      required: true
-    },
-    time: {
-      type: Object,
-      required: true
-    },
-    duration: {
-      type: Number,
-      required: true
-    },
-    health: {
-      type: Object,
-      required: true
-    },
-    },
-  methods: {
-    onShow() {
-      const dateTime = new Date(this.time + " UTC");
-      let t = new timeago()
-      this.elapsed = t.simple(date.format(dateTime, 'YYYY-MM-DD HH:mm:ss', false), 'en_US')
-      this.dateTime = moment(dateTime).format()
-    },
-    triggerCheck() {
-      this.$root.$emit('bv::hide::popover')
-      // this.$refs.popover.$emit('close')
-      this.$emit('triggerCheck')
-    },
-    modalName(key) {
-      return "prometheus-modal-" + key
-    }
-  }
-})
-
 // A graphical strip representing status info
 Vue.component('status-strip', {
   template: `
@@ -668,5 +584,93 @@ Vue.component('status-strip', {
       let t = new timeago()
       return t.simple(earliestSoFar)
     },
+  }
+})
+
+// A small textual display that serves as book-end
+// for check info
+Vue.component('check-time', {
+  props: ['time'],
+  template: '<div style="font-size: xx-small;">{{ time }}</div>'
+})
+
+// This component encapsulates a pop-over displayed
+// when hovering of a check infographic
+Vue.component('bar-popover', {
+  template: `
+   <b-popover 
+        :target="target"  
+        triggers="hover" 
+        placement="top"
+        :delay="{ show: 50, hide: 350 }" 
+        @show="onShow">
+        <template v-slot:title>
+            <div class="description">{{description}}</div><div>{{elapsed}}</div>
+        </template>
+        <template v-slot:default>
+          <div>{{message}}</div>
+          <div class="duration">Duration: {{duration / 1000}}s <br/>{{dateTime}}</div>
+          <hr/>
+          <div class="left health">Avg latency: {{health.latency}}</br>Uptime: {{health.uptime}}</div>
+          <button class="btn btn-info btn-xs float-right check-button mb-2" @click="triggerCheck" title="Trigger the check on particular server">
+            <i class="material-icons md-14 align-middle">loop</i>
+          </button>
+          <button class="btn btn-warning btn-xs float-right check-button mb-2 prometheus-graph" v-b-modal="modalName(checkStatusKey)" title="Open Prometheus graph">
+             <i class="material-icons md-14 align-middle">bar_chart</i>
+          </button>
+        </template>
+<!--                <div>{{elapsed}}</div>-->
+    </b-popover>`,
+  data() {
+    return {
+      elapsed: null,
+      dateTime: null
+    }
+  },
+  props: {
+    target: {
+      type: String,
+      required: true
+    },
+    checkStatusKey: {
+      type: String,
+      required: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    message: {
+      type: String,
+      required: true
+    },
+    time: {
+      type: Object,
+      required: true
+    },
+    duration: {
+      type: Number,
+      required: true
+    },
+    health: {
+      type: Object,
+      required: true
+    },
+  },
+  methods: {
+    onShow() {
+      const dateTime = new Date(this.time + " UTC");
+      let t = new timeago()
+      this.elapsed = t.simple(date.format(dateTime, 'YYYY-MM-DD HH:mm:ss', false), 'en_US')
+      this.dateTime = moment(dateTime).format()
+    },
+    triggerCheck() {
+      this.$root.$emit('bv::hide::popover')
+      // this.$refs.popover.$emit('close')
+      this.$emit('triggerCheck')
+    },
+    modalName(key) {
+      return "prometheus-modal-" + key
+    }
   }
 })
