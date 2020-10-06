@@ -348,6 +348,8 @@ Vue.component('status-strip', {
     },
     barSet() {
       let barSet = []
+      //first find the minimum and maximum durations (skipping non-durations)
+      //to be able to scale the data to fit in the allocated height
       let maxDuration = null
       let minDuration = null
       for (const statusData of this.statusesSet) {
@@ -364,6 +366,7 @@ Vue.component('status-strip', {
 
       let i = 0
       for (const statusData of this.statusesSet) {
+        //scale the duration based on the minimum, maximum and zoominess
         if (statusData.checkStatus.status) {
           offsetDuration = statusData.checkStatus.duration - minDuration * this.zoominess
           scaledDuration = offsetDuration / (maxDuration - minDuration * this.zoominess)
@@ -376,6 +379,7 @@ Vue.component('status-strip', {
           // for an invalid sample we show a full bar
           normalizedDuration = this.barMaxHeight
         }
+
         let bar = {
           "key": statusData.checkStatus.key,
           "width": this.barWidth,
