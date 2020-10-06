@@ -236,7 +236,7 @@ Vue.component('line-chart', {
 Vue.component('status-strip', {
   template: `
     <div class="status-strip" >
-        <check-time class="time-left" :time="latest"/>
+        <check-time class="time-bookend" :time="latest"/>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           style="text-wrap: normal;"
@@ -261,7 +261,7 @@ Vue.component('status-strip', {
               :style=" {fill: barSet[index].color}"/>
           </g>
         </svg>
-        <check-time class="time-right" :time="earliest"/>
+        <check-time :time="earliest"/>
         <bar-popover 
           v-for="bar in barSet" 
           :target="'bar-'+bar.key"  
@@ -436,7 +436,7 @@ Vue.component('status-strip', {
 // for check info
 Vue.component('check-time', {
   props: ['time'],
-  template: '<div style="font-size: xx-small;">{{ time }}</div>'
+  template: `<div class="time-bookend" >{{ time }}</div>`
 })
 
 // This component encapsulates a pop-over displayed

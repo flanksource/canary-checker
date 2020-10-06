@@ -47,16 +47,10 @@ hr {
     font-size: 0.8em;
 }
 
-div.time-left {
+div.time-bookend {
     display: inline-block;
     vertical-align: middle;
-
-}
-
-div.time-right {
-    display: inline-block;
-    vertical-align: middle;
-
+    font-size: xx-small;
 }
 
 div.check-status-container {
