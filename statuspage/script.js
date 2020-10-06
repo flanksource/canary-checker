@@ -37,177 +37,6 @@ var app = new Vue({
   }
 })
 
-Vue.component('checkStatus', {
-  template: `
-  <div class="check-status" :class="[checkStatus.status ? 'check-status-pass' : 'check-status-fail']" :id="checkStatus.key">
-    <b-popover 
-      :target="checkStatus.key" 
-      triggers="hover" 
-      placement="top"
-      :delay="{ show: 50, hide: 350 }"
-      @show="onShow">
-    <template v-slot:title><div class="description">{{description}}</div><div>{{elapsed}}</div></template>
-    <template v-slot:default>
-        <div>{{checkStatus.message}}</div>
-        <div class="duration">Duration: {{checkStatus.duration / 1000}}s <br/>{{dateTime}}</div>
-        <hr/>
-        <div class="left health">Avg latency: {{health.latency}}</br>Uptime: {{health.uptime}}</div>
-        <button class="btn btn-info btn-xs float-right check-button mb-2" @click="triggerCheck" title="Trigger the check on particular server">
-          <i class="material-icons md-14 align-middle">loop</i>
-        </button>
-        <button class="btn btn-warning btn-xs float-right check-button mb-2 prometheus-graph" v-b-modal="modalName(checkStatus.key)" title="Open Prometheus graph">
-          <i class="material-icons md-14 align-middle">bar_chart</i>
-        </button>
-    </template>
-    </b-popover>
-    <check-prometheus :check-type="checkType" :check-key="endpoint" :canary-name="canaryName" :target-id="modalName(checkStatus.key)"></check-prometheus>
-  </div>
-  `,
-  data() {
-    return {
-      elapsed: null,
-      dateTime: null
-    }
-  },
-  props: {
-    checkStatus: {
-      type: Object,
-      required: true
-    },
-    health: {
-      type: Object,
-      required: true
-    },
-    description: {
-      type: String,
-      required: true
-    },
-    checkType: {
-      type: String,
-      required: true
-    },
-    canaryName: {
-      type: String,
-      required: true,
-    },
-    endpoint: {
-      type: String,
-      required: true
-    }
-  },
-  methods: {
-    onShow() {
-      const dateTime = new Date( this.checkStatus.time + " UTC");
-      let t = new timeago()
-      this.elapsed = t.simple(date.format(dateTime, 'YYYY-MM-DD HH:mm:ss', false), 'en_US')
-      this.dateTime = moment(dateTime).format()
-    },
-    triggerCheck() {
-      this.$root.$emit('bv::hide::popover')
-      // this.$refs.popover.$emit('close')
-      this.$emit('triggerCheck')
-    },
-    modalName(key) {
-      return "prometheus-modal-" + key
-    }
-  }
-})
-
-
-// //deprecated component
-// Vue.component('check-tds', {
-//   template: `
-//     <transition-group name="slide" tag="section" class="check-section" :style="{width: 1.4 * check.checkStatuses[this.server].length + 'rem'}" mode="out-in">
-//       <div v-for="checkStatus in check.checkStatuses[this.server]" :key="checkStatus.key" class="check-status-container">
-//         <check-status
-//             :checkStatus="checkStatus"
-//             :health="check.health[server]"
-//             :check-type="check.type"
-//             :canary-name="check.canaryName"
-//             :endpoint="check.endpoint"
-//             @triggerCheck="triggerCheck"
-//             ></check-status>
-//       </div>
-//     </transition-group>
-//   `,
-//   props: {
-//     check: {
-//       type: Object,
-//       required: true,
-//     },
-//     server: {
-//       type: String,
-//       required: true,
-//     }
-//   },
-//   computed: {
-//     ...Vuex.mapState(['servers']),
-//     ...Vuex.mapGetters(['serversByNames']),
-//   },
-//   methods: {
-//     triggerCheck() {
-//       this.$store.dispatch('triggerSingleCheck', { server: this.server, check: this.check })
-//     }
-//   }
-// })
-
-Vue.component('checkSetTds', {
-  template: `
-    <transition-group name="slide" tag="section" class="check-section" :style="{width: 1.4 * statusesSet.length + 'rem'}" mode="out-in">
-      <div v-for="statusData in statusesSet" :key="statusData.checkStatus.key" class="check-status-container">
-        <check-status 
-            :checkStatus="statusData.checkStatus"
-            :description="statusData.check.description"
-            :health="statusData.check.health[server]"
-            :check-type="statusData.check.type"
-            :canary-name="statusData.check.canaryName"
-            :endpoint="statusData.check.endpoint"
-            @triggerCheck="triggerCheck(statusData.check)"
-            ></check-status>
-      </div>
-    </transition-group>
-  `,
-  props: {
-    checkSet: {
-      type: Array,
-      required: true,
-    },
-    server: {
-      type: String,
-      required: true,
-    }
-  },
-  computed: {
-    ...Vuex.mapState(['servers']),
-    ...Vuex.mapGetters(['serversByNames']),
-    statusesSet() {
-      let statusesSet = []
-      let serverRelatedCount = 0
-      for (const check of this.checkSet) {
-        if (check.checkStatuses[this.server]) {
-          serverRelatedCount += 1
-          for (const checkStatus of check.checkStatuses[this.server]) {
-            statusesSet.push({check, checkStatus})
-          }
-        }
-      }
-
-      const sorted = _.sortBy(statusesSet, function(statusData) {
-        return new Date( statusData.checkStatus.time + " UTC");
-      }).reverse();
-
-      const chunked = _.chunk(sorted, serverRelatedCount * 2)
-
-      return this.checkSet.length === 1 ? sorted : chunked[0]
-    }
-  },
-  methods: {
-    triggerCheck(check) {
-      this.$store.dispatch('triggerSingleCheck', { server: this.server, check })
-    }
-  }
-})
-
 Vue.component('check-prometheus', {
   template: `
     <b-modal
@@ -476,11 +305,6 @@ Vue.component('status-strip', {
       default: 0,
       required: false,
     },
-    width: {
-      type: Number,
-      default: 50,
-      required: false,
-    },
     barMaxHeight: {
       type: Number,
       default: 20,
@@ -553,7 +377,6 @@ Vue.component('status-strip', {
           "message": statusData.checkStatus.message,
           "health": statusData.check.health[this.server],
           "duration": statusData.checkStatus.duration,
-          "scaledDuration": scaledDuration,
           "time": statusData.checkStatus.time,
           "color": statusData.checkStatus.status ? this.color : this.errorColor,
         }
@@ -619,7 +442,6 @@ Vue.component('bar-popover', {
              <i class="material-icons md-14 align-middle">bar_chart</i>
           </button>
         </template>
-<!--                <div>{{elapsed}}</div>-->
     </b-popover>`,
   data() {
     return {
