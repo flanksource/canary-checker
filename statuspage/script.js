@@ -348,25 +348,25 @@ Vue.component('status-strip', {
     },
     barSet() {
       let barSet = []
-      let maxDelay = null
-      let minDelay = null
+      let maxDuration = null
+      let minDuration = null
       for (const statusData of this.statusesSet) {
         if (!statusData.checkStatus.status) {
           continue
         }
-        if (maxDelay === null || statusData.checkStatus.duration > maxDelay) {
-          maxDelay = statusData.checkStatus.duration
+        if (maxDuration === null || statusData.checkStatus.duration > maxDuration) {
+          maxDuration = statusData.checkStatus.duration
         }
-        if (minDelay === null || statusData.checkStatus.duration < minDelay) {
-          minDelay = statusData.checkStatus.duration
+        if (minDuration === null || statusData.checkStatus.duration < minDuration) {
+          minDuration = statusData.checkStatus.duration
         }
       }
 
       let i = 0
       for (const statusData of this.statusesSet) {
         if (statusData.checkStatus.status) {
-          offsetDuration = statusData.checkStatus.duration - minDelay * this.zoominess
-          scaledDuration = offsetDuration / (maxDelay - minDelay * this.zoominess)
+          offsetDuration = statusData.checkStatus.duration - minDuration * this.zoominess
+          scaledDuration = offsetDuration / (maxDuration - minDuration * this.zoominess)
           normalizedDuration = scaledDuration * this.barMaxHeight
           if (normalizedDuration < 0.5) {
             // show at least a sliver for the minimum value
