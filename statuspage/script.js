@@ -263,13 +263,19 @@ Vue.component('status-strip', {
         </svg>
         <check-time class="time-right" :time="earliest"/>
         <bar-popover 
-        v-for="bar in barSet" 
+          v-for="bar in barSet" 
           :target="'bar-'+bar.key"  
           :checkStatusKey="bar.key"
           :description="bar.description"
           :time="bar.time" :duration="bar.duration"
           :message="bar.message"
           :health="bar.health"/>
+        <check-prometheus
+            v-for="bar in barSet"
+            :checkType="bar.checkType"
+            :check-key="bar.endpoint"
+            :canary-name="bar.canaryName"
+            :target-id="modalName(bar.key)"></check-prometheus>
     </div>`,
   props: {
     checkSet: {
@@ -358,27 +364,34 @@ Vue.component('status-strip', {
 
       let i = 0
       for (const statusData of this.statusesSet) {
-        offsetDuration = statusData.checkStatus.duration - minDelay * this.zoominess
-        scaledDuration = offsetDuration / (maxDelay - minDelay* this.zoominess)
-        normalizedDuration = scaledDuration* this.barMaxHeight
-        if (normalizedDuration == 0) {
-          // show at least a sliver for the minimum value
-          normalizedDuration = 0.5
+        if (statusData.checkStatus.status) {
+          offsetDuration = statusData.checkStatus.duration - minDelay * this.zoominess
+          scaledDuration = offsetDuration / (maxDelay - minDelay * this.zoominess)
+          normalizedDuration = scaledDuration * this.barMaxHeight
+          if (normalizedDuration < 0.5) {
+            // show at least a sliver for the minimum value
+            normalizedDuration = 0.5
+          }
+        } else {
+          // for an invalid sample we show a full bar
+          normalizedDuration = this.barMaxHeight
         }
-        scaledDuration = scaledDuration * maxDelay
         let bar = {
           "key": statusData.checkStatus.key,
           "width": this.barWidth,
           "height": statusData.checkStatus.status ? normalizedDuration : this.barMaxHeight,
           "x": (this.barWidth + this.barSpacing) * i,
           "y": (this.barMaxHeight - normalizedDuration),
+          "color": statusData.checkStatus.status ? this.color : this.errorColor,
           "checkStatus": statusData.checkStatus,
           "description": statusData.check.description,
           "message": statusData.checkStatus.message,
           "health": statusData.check.health[this.server],
           "duration": statusData.checkStatus.duration,
           "time": statusData.checkStatus.time,
-          "color": statusData.checkStatus.status ? this.color : this.errorColor,
+          "checkType": statusData.check.type,
+          "endpoint": statusData.check.endpoint,
+          "canaryName": statusData.check.canaryName,
         }
         barSet.push(bar);
         i++
@@ -407,6 +420,11 @@ Vue.component('status-strip', {
       let t = new timeago()
       return t.simple(earliestSoFar)
     },
+  },
+  methods: {
+    modalName(key) {
+      return "prometheus-modal-" + key
+    }
   }
 })
 
