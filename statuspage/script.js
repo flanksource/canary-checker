@@ -385,7 +385,7 @@ Vue.component('status-strip', {
           "width": this.barWidth,
           "height": statusData.checkStatus.status ? normalizedDuration : this.barMaxHeight,
           "x": (this.barWidth + this.barSpacing) * i,
-          "y": (this.barMaxHeight - normalizedDuration),
+          "y": statusData.checkStatus.status ? (this.barMaxHeight - normalizedDuration) : 0,
           "color": statusData.checkStatus.status ? this.color : this.errorColor,
           "checkStatus": statusData.checkStatus,
           "description": statusData.check.description,
@@ -505,7 +505,7 @@ Vue.component('bar-popover', {
     onShow() {
       const dateTime = new Date(this.time + " UTC");
       let t = new timeago()
-      this.elapsed = t.simple(date.format(dateTime, 'YYYY-MM-DD HH:mm:ss', false), 'en_US')
+      this.elapsed = t.ago(date.format(dateTime, 'YYYY-MM-DD HH:mm:ss', false), 'en_US')
       this.dateTime = moment(dateTime).format()
     },
     triggerCheck() {
