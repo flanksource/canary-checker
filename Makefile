@@ -108,10 +108,14 @@ deploy-docs:
 	which netlify 2>&1 > /dev/null || sudo npm install -g netlify-cli
 	netlify deploy --site cfe8c6b7-79b7-4a88-9e13-ff792126717f --prod --dir build/docs
 
+.PHONY: vue-dist
+vue-dist:
+	cd statuspage && npm run build
+
 .PHONY: static
-static:
+static: vue-dist
 	which esc 2>&1 > /dev/null || go get -u github.com/mjibson/esc
-	cd statuspage && esc -o static.go -pkg statuspage .
+	cd statuspage/dist && esc -o ../static.go -pkg statuspage .
 
 .PHONY: build
 build:

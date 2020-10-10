@@ -67,7 +67,7 @@ func serve(cmd *cobra.Command) {
 	nethttp.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
 	var staticRoot nethttp.FileSystem
 	if dev {
-		staticRoot = nethttp.Dir("./statuspage")
+		staticRoot = nethttp.Dir("./statuspage/dist")
 	} else {
 		staticRoot = statuspage.FS(false)
 	}
