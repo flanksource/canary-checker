@@ -248,7 +248,7 @@ Vue.component('status-strip', {
             v-for="(bar, index) in barSet" 
             :id="'bar-'+barSet[index].key">
             <!-- This rect is not for visual effect,-->
-            <!-- but makes the following actual     -->
+            <!-- but makes the following, actual    -->
             <!-- data bar easier to select when it  -->
             <!-- is narrow.                         -->
             <rect  
