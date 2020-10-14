@@ -1,7 +1,7 @@
 Vue.config.devtools = true
 Vue.use(Vuex)
 
-const store = new Vuex.Store({
+export default new Vuex.Store({
   state: {
     error: null,
     loading: true,
@@ -49,7 +49,7 @@ const store = new Vuex.Store({
     fetchData({commit}) {
       commit('SET_LOADING', true)
       return axios
-        .get('/api/aggregate')
+        .get('http://localhost:8084/api/aggregate')
         .then((response) => {
           commit('SET_CHECKS', response.data.checks)
           commit('SET_SERVERS', response.data.servers)
