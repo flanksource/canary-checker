@@ -1,27 +1,29 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import { BootstrapVue, IconsPlugin, BIconPause, BIconPlay } from 'bootstrap-vue'
+import { BootstrapVue } from 'bootstrap-vue'
+import VueLodash from 'vue-lodash'
+import lodash from 'lodash'
 
 
-Vue.use(BootstrapVue)
-Vue.use(IconsPlugin)
-Vue.component('BIconPause', BIconPause )
-Vue.component('BIconPlay', BIconPlay )
 
-
-import PauseIcon from 'vue-material-design-icons/Menu.vue';
+import PauseIcon from 'vue-material-design-icons/Pause.vue';
+import PlayIcon from 'vue-material-design-icons/Play.vue';
+import SendIcon from 'vue-material-design-icons/Send.vue';
 
 Vue.component('pause-icon', PauseIcon);
+Vue.component('play-icon', PlayIcon)
+Vue.component('send-icon', SendIcon);
 
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
-import 'bootstrap-vue/dist/bootstrap-vue-icons.css'
 
 import store from './store'
 import App from './App.vue'
 
 Vue.use(Vuex)
 Vue.use(store)
+Vue.use(BootstrapVue)
+Vue.use(VueLodash, {  lodash: lodash })
 
 
 Vue.config.productionTip = false

@@ -1,14 +1,11 @@
 <template>
   <div class="ml-4 mr-4" id="app">
     <button v-if="disableReload" v-on:click="resumeAutoUpdate" type="button" class="btn btn-danger float-right" v-cloak>
-      <i class="material-icons md-18 align-middle">play_arrow</i>
-      <b-icon-play class="align-middle" style="font-size: 18px;font-weight: bold; "></b-icon-play>
-      <PauseIcon/>
+      <play-icon class="material-icons align-middle md-18 align-middle" style="font-size: 18px;font-weight: bold; "/>
       <span class="align-middle">Resume auto update</span>
     </button>
     <button v-else type="button" v-on:click="pauseAutoUpdate"  class="btn btn-primary float-right">
-      <i class="material-icons md-18 align-middle">pause</i>
-      <b-icon-pause class="align-middle" style="font-size: 18px;font-weight: bold; "></b-icon-pause>
+      <pause-icon class="material-icons md-18 align-middle" style="font-size: 18px;font-weight: bold; "/>
       <span class="align-middle">Pause auto update</span>
     </button>
 
@@ -37,25 +34,26 @@
             <span class="badge badge-secondary" :id="name">{{ shortHand(name, nsLimit) }}</span>
             <b-tooltip v-if="name.length > nsLimit" :target="name" triggers="hover" variant="secondary">{{name}}</b-tooltip>
           </td>
-<!--          <td class="align-middle w-25">-->
-<!--              <span class="float-left w-75 pr-5" :id="calcTooltipId(mergedDesc, name, type)" :class="{'font-italic': mergedDesc.startsWith('multiple')}">-->
-<!--                {{ shortHand(mergedDesc, descLimit) }}-->
-<!--              </span>-->
-<!--            <b-tooltip :disabled="mergedDesc.length <= descLimit" :target="calcTooltipId(mergedDesc, name, type)" triggers="hover" variant="secondary"><div class="description">{{mergedDesc}}</div></b-tooltip>-->
-<!--            <b-tooltip-->
-<!--                    :disabled="!mergedDesc.startsWith('multiple')"-->
-<!--                    :target="calcTooltipId(mergedDesc, name, type)"-->
-<!--                    triggers="hover"-->
-<!--                    variant="secondary">-->
-<!--              <div v-for="check in checkSet" :key="check.key" class="description">{{check.description}}</div>-->
-<!--            </b-tooltip>-->
-<!--            <button class="btn btn-info btn-xs float-right check-button" @click="triggerMerged(checkSet, $event)" title="Trigger the check on every server">-->
+          <td class="align-middle w-25">
+              <span class="float-left w-75 pr-5" :id="calcTooltipId(mergedDesc, name, type)" :class="{'font-italic': mergedDesc.startsWith('multiple')}">
+                {{ shortHand(mergedDesc, descLimit) }}
+              </span>
+            <b-tooltip :disabled="mergedDesc.length <= descLimit" :target="calcTooltipId(mergedDesc, name, type)" triggers="hover" variant="secondary"><div class="description">{{mergedDesc}}</div></b-tooltip>
+            <b-tooltip
+                    :disabled="!mergedDesc.startsWith('multiple')"
+                    :target="calcTooltipId(mergedDesc, name, type)"
+                    triggers="hover"
+                    variant="secondary">
+              <div v-for="check in checkSet" :key="check.key" class="description">{{check.description}}</div>
+            </b-tooltip>
+            <button class="btn btn-info btn-xs float-right check-button" @click="triggerMerged(checkSet, $event)" title="Trigger the check on every server">
 <!--              <i class="material-icons md-12 align-middle">send</i>-->
-<!--            </button>-->
-<!--          </td>-->
-<!--          <td v-for="(server, serverName) in serversByNames" :key="server" class="align-top border-right border-left">-->
-<!--            <check-set-tds :check-set="checkSet" :server="server"></check-set-tds>-->
-<!--          </td>-->
+              <send-icon class="material-icons md-12 align-middle">send</send-icon>
+            </button>
+          </td>
+          <td v-for="server in serversByNames" :key="server" class="align-top border-right border-left">
+            <check-set-tds :check-set="checkSet" :server="server"></check-set-tds>
+          </td>
         </tr>
         </tbody>
       </template>
@@ -72,12 +70,13 @@
 
 // import HelloWorld from './components/HelloWorld.vue'
     import store from './store'
+    import CheckSetTds from './components/CheckSetTds.vue'
 
 export default {
   name: 'App',
-  // components: {
-  //   HelloWorld
-  // },
+  components: {
+      CheckSetTds
+  },
   store: store,
   created() {
     this.$store.dispatch('fetchData')
