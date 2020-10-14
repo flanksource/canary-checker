@@ -1,7 +1,7 @@
 Vue.config.devtools = true
 Vue.use(Vuex)
 
-export default new Vuex.Store({
+const store = new Vuex.Store({
   state: {
     error: null,
     loading: true,
@@ -56,6 +56,9 @@ export default new Vuex.Store({
           commit('SET_LAST_REFRESHED', new Date())
         })
         .catch((err) => {
+          if (typeof err.response === 'undefined') {
+            commit('SET_ERROR', "Error: "+ err.message);
+          }
           if (err.response.status === 0) {
             commit('SET_ERROR', "Error loading data from server: failed to connect to server")
           } else {
@@ -73,7 +76,8 @@ export default new Vuex.Store({
     },
     resumeAutoUpdate({dispatch, commit}) {
       commit('SET_DISABLE_RELOAD', false)
-      commit('SET_RELOAD_TIMER', setInterval(() => { dispatch('fetchData') }, 20000)) // 20 seconds
+      // TODO: setting of check duration
+      commit('SET_RELOAD_TIMER', setInterval(() => { dispatch('fetchData') }, 5000)) // 20 seconds
     },
     triggerSingleCheck({commit, dispatch}, {server, checkType, checkKey}) {
       return axios
