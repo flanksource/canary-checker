@@ -60,6 +60,7 @@ export default new Vuex.Store({
                     commit('SET_CHECKS', response.data.checks)
                     commit('SET_SERVERS', response.data.servers)
                     commit('SET_LAST_REFRESHED', new Date())
+                    commit('SET_ERROR', null)
                 })
                 .catch((err) => {
                     if (typeof err.response === 'undefined') {

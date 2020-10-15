@@ -69,5 +69,7 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-/*todo: anything here? */
+  .check-section {
+    min-width: 7rem;
+  }
 </style>

@@ -14,11 +14,11 @@
         <div class="left health">Avg latency: {{health.latency}}<br/>Uptime: {{health.uptime}}</div>
 
         <button class="btn btn-info btn-xs float-right check-button mb-2" @click="triggerCheck" title="Trigger the check on particular server">
-          <i class="material-icons md-14 align-middle">loop</i>
+          <sync-icon class="material-icons md-14 align-middle" />
         </button>
 
         <button class="btn btn-warning btn-xs float-right check-button mb-2 prometheus-graph" v-b-modal="modalName(checkStatus.key)" title="Open Prometheus graph">
-          <i class="material-icons md-14 align-middle">bar_chart</i>
+          <chart-bar-icon class="material-icons md-14 align-middle" />
         </button>
       </template>
     </b-popover>
@@ -92,5 +92,34 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-/*todo: anything here? */
+  div.check-status {
+    height: 0.8em;
+    width: 1rem;
+    margin: 0.4rem 0.2rem;
+    border-radius: 0.15rem;
+  }
+
+  div.check-status.check-status-pass {
+    background-color: #28a745;
+  }
+
+  div.check-status.check-status-fail {
+    background-color: #dc3545;
+  }
+
+  .health {
+    display: inline-block;
+    font-size: 0.75rem;
+    line-height: 0.75rem;
+    width: 11rem;
+  }
+
+  .check-button.prometheus-graph {
+    margin-right: 10px;
+  }
+
+  .prometheus-popover {
+    max-width: 80%;
+    width: 80%;
+  }
 </style>
