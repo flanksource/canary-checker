@@ -80,7 +80,6 @@ func getChecksFromServer(server string) (*api.Response, error) {
 }
 
 func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
-	enableCors(&w)
 	aggregateData := map[string]*AggregateCheck{}
 	data := cache.GetChecks()
 
@@ -165,7 +164,3 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 	w.Write(jsonData)
 }
 
-// TODO: debugging code
-func enableCors(w *nethttp.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-}

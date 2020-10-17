@@ -55,7 +55,7 @@ export default new Vuex.Store({
         fetchData({commit}) {
             commit('SET_LOADING', true)
             return Axios
-                .get('http://localhost:8084/api/aggregate')
+                .get('http://localhost:8080/api/aggregate')
                 .then((response) => {
                     commit('SET_CHECKS', response.data.checks)
                     commit('SET_SERVERS', response.data.servers)
