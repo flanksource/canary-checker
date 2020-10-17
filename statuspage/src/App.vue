@@ -52,8 +52,16 @@
                             <send-icon class="material-icons md-12 align-middle">send</send-icon>
                         </button>
                     </td>
-                    <td :key="server" class="align-top border-right border-left" v-for="server in serversByNames">
-                        <check-set-tds :check-set="checkSet" :server="server"></check-set-tds>
+<!--                    <td :key="server" class="align-top border-right border-left" v-for="server in serversByNames">-->
+<!--                        <check-set-tds :check-set="checkSet" :server="server"></check-set-tds>-->
+<!--                    </td>-->
+                    <td v-for="server in serversByNames" :key="server" class="align-top border-right border-left">
+                        <div>
+                            <status-strip  :check-set="checkSet" :server="server"
+                                           color="#28a745" error-color="#dc3545"
+                                           :bar-width="20" :bar-spacing="5" :barMaxHeight="20"
+                                           :zoominess="0.85"/>
+                        </div>
                     </td>
                 </tr>
                 </tbody>
@@ -72,14 +80,15 @@
     import store from './store'
     import AutoUpdateSettings from './components/AutoUpdateSettings.vue'
     import ErrorPanel from './components/ErrorPanel.vue'
-    import CheckSetTds from './components/CheckSetTds.vue'
+    import StatusStrip from './components/StatusStrip.vue'
+
 
     export default {
         name: 'App',
         components: {
             AutoUpdateSettings,
             ErrorPanel,
-            CheckSetTds
+            StatusStrip,
         },
         store: store,
         created() {

@@ -9,8 +9,11 @@
                     class="badge badge-secondary">{{ checkKey }}</span></div>
         </template>
         <div aria-label="Timeframe" class="btn-group" role="group">
-            <button :class="btnClass(ts.value)" :key="ts.id" type="button"
-                    v-for="ts in timeSelector" v-on:click="setSelector(ts.value) ">{{ ts.name }}
+            <button :class="btnClass(ts.value)"
+                    type="button"
+                    v-for="ts in timeSelector"
+                    :key="targetId+'-'+ts"
+                    v-on:click="setSelector(ts.value)">{{ ts.name }}
             </button>
         </div>
 

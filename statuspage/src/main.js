@@ -32,7 +32,11 @@ import 'vue-material-design-icons/styles.css';
 import App from './App.vue'
 import store from './store'
 
+import _ from 'lodash'
+
 Vue.config.productionTip = false
+
+Vue.prototype.$_ = _
 
 new Vue({
     el: '#app',
