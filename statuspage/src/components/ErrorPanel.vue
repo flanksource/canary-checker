@@ -10,8 +10,8 @@
         name: 'ErrorPanel',
         props: {
             error: {
-                type: Object,
-                required: true
+                required: true,
+                validator: prop => typeof prop === 'object' || prop === null
             },
         },
     }
