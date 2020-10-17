@@ -110,7 +110,7 @@ deploy-docs:
 
 .PHONY: vue-dist
 vue-dist:
-	cd statuspage && npm run build
+	cd statuspage && npm install && npm run build
 
 .PHONY: static
 static: vue-dist
