@@ -30,8 +30,8 @@
  // import Vuex from 'vuex'
  import CheckPrometheus from './CheckPrometheus.vue'
  import date from 'date-and-time';
- import timeago from 'date-and-time';
- import moment from 'date-and-time';
+ import moment from 'moment';
+ import timeago from 'timeago-simple'
 
   export default {
     name: 'CheckStatus',
@@ -73,9 +73,8 @@
   methods: {
     onShow() {
       const dateTime = new Date( this.checkStatus.time + " UTC");
-      let t = new timeago()
-      this.elapsed = t.simple(date.format(dateTime, 'YYYY-MM-DD HH:mm:ss', false), 'en_US')
-      this.dateTime = moment(dateTime).format()
+      this.elapsed = timeago.simple(date.format(dateTime, 'YYYY-MM-DD HH:mm:ss', false), 'en_US')
+      this.dateTime =  this.moment(dateTime).format()
     },
     triggerCheck() {
       this.$root.$emit('bv::hide::popover')
@@ -84,7 +83,12 @@
     },
     modalName(key) {
       return "prometheus-modal-" + key
-    }
+    },
+    // make moment() accessible in component
+    // see https://stackoverflow.com/a/34310642
+    moment: function () {
+      return moment();
+    },
   }
 
 }
