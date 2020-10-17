@@ -36,5 +36,12 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-
+    /*Fixes ugly bottom-aligned pause icon*/
+    .pause-icon .material-design-icon__svg {
+        bottom: unset;
+    }
+    /*Fixes ugly bottom-aligned play icon*/
+    .play-icon .material-design-icon__svg {
+        bottom: unset;
+    }
 </style>
