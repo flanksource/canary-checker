@@ -3,7 +3,9 @@
 <!--</template>-->
 
 <script>
-    import {mixins, Line} from 'VueChartJs'
+    import {mixins, Line} from 'vue-chartjs'
+    import axios from 'axios'
+    import moment from 'moment';
 
     export default {
         name: "LineChart",
@@ -86,7 +88,7 @@
                 axios
                     .post('/api/prometheus/graph', { checkType: this.checkType, canaryName: this.canaryName, checkKey: this.checkKey, timeframe: this.timeSelector})
                     .then((response) => {
-                        data = response.data[this.field]
+                        var data = response.data[this.field]
                         this.seriesLabels = data.map(x => this.formatLabel(x.time))
                         this.seriesData = data.map(x => this.formatValue(x.value))
                         this.fillData()
@@ -104,12 +106,17 @@
             },
             formatLabel(label) {
                 if (this.currentSelector > (3600 * 24)) {
-                    return moment(label * 1000).format("D/M HH:mm")
+                    return this.moment(label * 1000).format("D/M HH:mm")
                 }
-                return moment(label * 1000).format("HH:mm")
+                return this.moment(label * 1000).format("HH:mm")
             },
             formatValue(value) {
                 return Math.round(parseFloat(value, 10))
+            },
+            // make moment() accessible in component
+            // see https://stackoverflow.com/a/34310642
+            moment: function () {
+                return moment();
             },
         }
     }

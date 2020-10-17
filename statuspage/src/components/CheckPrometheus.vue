@@ -35,8 +35,13 @@
 </template>
 
 <script>
+    import LineChart from "./LineChart";
+
     export default {
         name: 'CheckPrometheus',
+        components: {
+            LineChart,
+        },
         data() {
             return {
                 elapsed: null,
