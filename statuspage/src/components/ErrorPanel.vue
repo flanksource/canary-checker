@@ -11,7 +11,7 @@
         props: {
             error: {
                 required: true,
-                validator: prop => typeof prop === 'object' || prop === null
+                validator: prop => typeof prop === 'string' || prop === null
             },
         },
     }

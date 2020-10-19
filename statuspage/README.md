@@ -2,6 +2,11 @@
 
 The Vue project for the canary-checker front-end.
 
+> **Requirements:**
+> * node,
+> * npm
+ 
+
 ## Rebuild and Package Front-End
 
 To rebuild and pakage into main canary checker application:
@@ -15,10 +20,7 @@ make vue-dist
 
 For local development, in the `statuspage` directory:
 
-> **Requirements:**
-> * node,
-> * npm
- 
+
 ### Initialize:
 
 Let npm download all required libraries:
@@ -32,6 +34,14 @@ npm install
 Run a local node front-end server that compiles and hot-reloads for development:
 ```
 npm run serve
+```
+
+Run a local canary-checker back-end:
+
+```bash
+# in the repo root
+make build
+./.bin/canary-checker serve -c fixtures/gui_test.yaml --interval=5 --dev=true
 ```
 
 ### Do a manual distribution rebuild

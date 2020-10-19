@@ -12,21 +12,21 @@
             <button :class="btnClass(ts.value)"
                     type="button"
                     v-for="ts in timeSelector"
-                    :key="targetId+'-'+ts"
+                    :key="keyButton(targetId,ts)"
                     v-on:click="setSelector(ts.value)">{{ ts.name }}
             </button>
         </div>
 
-        <line-chart :canary-name="canaryName" :check-key="checkKey" :check-type="checkType" :key="currentSelector"
+        <line-chart :canary-name="canaryName" :check-key="checkKey" :check-type="checkType" :key="keySuccess(currentSelector)"
                     :styles="chartStyle" :time-selector="currentSelector" field="success"
                     name="Success"></line-chart>
         <hr/>
 
-        <line-chart :canary-name="canaryName" :check-key="checkKey" :check-type="checkType" :key="currentSelector" :styles="chartStyle"
+        <line-chart :canary-name="canaryName" :check-key="checkKey" :check-type="checkType" :key="keyFailed(currentSelector)" :styles="chartStyle"
                     :time-selector="currentSelector" field="failed" name="Failed"></line-chart>
         <hr/>
 
-        <line-chart :canary-name="canaryName" :check-key="checkKey" :check-type="checkType" :key="currentSelector"
+        <line-chart :canary-name="canaryName" :check-key="checkKey" :check-type="checkType" :key="keyLatency(currentSelector)"
                     :styles="chartStyle" :time-selector="currentSelector" field="latency"
                     name="Latency"></line-chart>
         <hr/>
@@ -90,6 +90,19 @@
             },
             setSelector(value) {
                 this.currentSelector = value
+            },
+            keyButton(targetId,ts) {
+                console.log(targetId+'-'+ts.name)
+                return targetId+'-'+ts.name
+            },
+            keySuccess(cs) {
+                return "success-" + cs
+            },
+            keyFailed(cs) {
+                return "failed-" + cs
+            },
+            keyLatency(cs) {
+                return "latency-" + cs
             },
             onShow() {
                 console.log(this.targetId)
