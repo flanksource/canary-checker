@@ -16,5 +16,6 @@
         display: inline-block;
         vertical-align: middle;
         font-size: xx-small;
+        padding: 0.5em 1em;
     }
 </style>
