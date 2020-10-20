@@ -1,6 +1,6 @@
-# Prerequisites
+# Optional Prerequisites
 
-The Canary Checker leans heavily on Prometheous integration.  This guide explains how to install the dependencies. 
+Canary Checker can integrate with Prometheous and ships with a few defined promethues service monitors. While not strictly required this guide explains how to install the optional dependencies. 
 
 ## A Kubernetes Cluster
 
@@ -18,10 +18,7 @@ kubectl get --raw /metrics
 
 
 ## Prometheus Operator
-
-The Prometheus Operator is required for Canary Checker. 
-
-
+ 
 You can install the operator by cloning the [Prometheus Operator](https://github.com/prometheus-operator/kube-prometheus) repository with: 
 
 ```

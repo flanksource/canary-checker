@@ -11,8 +11,17 @@
 
 ## Documentation
 
-Canary Checker is a multi-tenant synthetic monitoring system native to Kubernetes.  To learn more, please see the [official documentation](https://canary-checker.docs.flanksource.com).
+Canary Checker is a Kubernetes native multi-tenant synthetic monitoring system.  To learn more, please see the [official documentation](https://canary-checker.docs.flanksource.com).
 
+## Features
+
+* Built-in UI/Dashboard with multi-cluster aggregation
+* CRD based configuration and status reporting
+* Prometheus Integration
+* Runnable as a CLI for once-off checks or as a standalone server outside kubernetes
+* Many built-in check types
+
+![dashboard](docs/images/ui01.png)
 
 ---
 <!--ts-->
