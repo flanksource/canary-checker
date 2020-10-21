@@ -1,4 +1,4 @@
-FROM golang:1.13.6 as builder
+FROM flanksource/build-tools:v0.10.7 as builder
 WORKDIR /app
 COPY ./ ./
 ARG NAME
