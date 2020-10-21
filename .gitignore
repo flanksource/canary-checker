@@ -7,7 +7,7 @@
 build/
 docs/cli/
 .DS_Store
-/statuspage/static.go
+statuspage/static.go
 cover.out
 test.test
 *.tgz
