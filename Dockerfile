@@ -3,7 +3,7 @@ WORKDIR /app
 COPY ./ ./
 RUN make vue-dist
 
-FROM golang:1.13.6
+FROM golang:1.13.6 as builder
 WORKDIR /app
 COPY ./ ./
 ARG NAME
@@ -17,5 +17,5 @@ RUN GOOS=linux GOARCH=amd64 go build -o canary-checker -ldflags "-X \"main.versi
 
 FROM ubuntu:bionic
 WORKDIR /app
-ADD /.bin/canary-checker /app
+COPY --from=builder /app/canary-checker /app
 ENTRYPOINT ["/app/canary-checker"]
