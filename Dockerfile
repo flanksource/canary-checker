@@ -9,7 +9,7 @@ COPY ./ ./
 ARG NAME
 ARG VERSION
 RUN go get -u github.com/mjibson/esc
-COPY --from=node /app/statuspage/dist /app/statuspage/
+COPY --from=node /app/statuspage/dist /app/statuspage/dist
 WORKDIR /app/statuspage/dist
 RUN	 esc -o ../static.go -pkg statuspage .
 WORKDIR /app
