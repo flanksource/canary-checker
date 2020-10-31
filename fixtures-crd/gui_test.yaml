@@ -1,0 +1,138 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: gui-test
+spec:
+  interval: 5
+  http:
+    - endpoint: https://google.com
+      thresholdMillis: 10000
+      responseCodes: [201, 200, 301]
+      responseContent: ""
+      maxSSLExpiry: 1
+  namespace:
+    - checkName: check
+      labels:
+        foo: bar
+      namespaceNamePrefix: "test-foo-"
+      podSpec: |
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: test-namespace
+          namespace: default
+          labels:
+            app: hello-world-golang
+        spec:
+          containers:
+            - name: hello
+              image: quay.io/toni0/hello-webserver-golang:latest
+      port: 8080
+      path: /foo/bar
+      ingressName: test-namespace-pod
+      ingressHost: "test-namespace-pod.127.0.0.1.nip.io"
+      scheduleTimeout: 2000
+      readyTimeout: 5000
+      httpTimeout: 7000
+      deleteTimeout: 12000
+      ingressTimeout: 10000
+      deadline: 29000
+      httpRetryInterval: 200
+      expectedContent: bar
+      expectedHttpStatuses: [200, 201, 202]
+  dns:
+    - server: 8.8.8.8
+      port: 53
+      query: "1.2.3.4.nip.io"
+      querytype: "A"
+      minrecords: 1
+      exactreply: ["1.2.3.4"]
+      timeout: 10
+      thresholdMillis: 1000
+    - server: 8.8.8.8
+      port: 53
+      query: "8.8.8.8"
+      querytype: "PTR"
+      minrecords: 1
+      exactreply: ["dns.google."]
+      timeout: 10
+      thresholdMillis: 1000
+    - server: 8.8.8.8
+      port: 53
+      query: "dns.google"
+      querytype: "CNAME"
+      minrecords: 1
+      exactreply: ["dns.google."]
+      timeout: 10
+      thresholdMillis: 1000
+    - server: 8.8.8.8
+      port: 53
+      query: "flanksource.com"
+      querytype: "MX"
+      minrecords: 1
+      exactreply:
+        - "aspmx.l.google.com. 1"
+        - "alt1.aspmx.l.google.com. 5"
+        - "alt2.aspmx.l.google.com. 5"
+        - "aspmx3.googlemail.com. 10"
+        - "aspmx2.googlemail.com. 10"
+      timeout: 10
+      thresholdMillis: 1000
+    - server: 8.8.8.8
+      port: 53
+      query: "flanksource.com"
+      querytype: "TXT"
+      minrecords: 1
+      exactreply: ["google-site-verification=IIE1aJuvqseLUKSXSIhu2O2lgdU_d8csfJjjIQVc-q0"]
+      timeout: 10
+      thresholdMillis: 1000
+    - server: 8.8.8.8
+      port: 53
+      query: "flanksource.com"
+      querytype: "NS"
+      minrecords: 1
+      exactreply:
+        - "ns-91.awsdns-11.com."
+        - "ns-908.awsdns-49.net."
+        - "ns-1450.awsdns-53.org."
+        - "ns-1896.awsdns-45.co.uk."
+      timeout: 10
+      thresholdMillis: 1000
+  pod:
+    - name: fail
+      namespace: platform-system
+      spec: |
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: hello-world-fail
+          namespace: platform-system
+          labels:
+            app: hello-world-fail
+        spec:
+          containers:
+            - name: hello
+              image: quay.io/toni0/hello-webserver-golang:2.2
+              # image: quay.io/toni0/hello-webserver-golang:latest
+              # env:
+              #   # Define the environment variable
+              #   - name: SPECIAL_LEVEL_KEY
+              #     valueFrom:
+              #       configMapKeyRef:
+              #         # The ConfigMap containing the value you want to assign to SPECIAL_LEVEL_KEY
+              #         name: special-config
+              #         # Specify the key associated with the value
+              #         key: special.how
+      port: 8080
+      path: /foo/bar
+      ingressName: hello-world-golang
+      ingressHost: "hello-world-golang.127.0.0.1.nip.io"
+      scheduleTimeout: 2000
+      readyTimeout: 5000
+      httpTimeout: 2000
+      deleteTimeout: 12000
+      ingressTimeout: 5000
+      deadline: 100000
+      httpRetryInterval: 200
+      expectedContent: bar
+      expectedHttpStatuses: [200, 201, 202]

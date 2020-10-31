@@ -17,53 +17,12 @@
             <th :key="server" class="border-right" v-for="(server, serverName) in serversByNames">{{ serverName }}</th>
             </thead>
             <template v-for="(typed, name) in groupedChecks">
+                <!-- DELETE               <p :key="typed">{{name}}<br/> {{typed}} </p>-->
                 <tbody :key="type" class="border-bottom border-secondary" v-for="(mergedChecks, type) in typed">
-                <tr :key="mergedDesc" v-for="(checkSet, mergedDesc, idx) in mergedChecks">
-                    <td :rowspan="Object.keys(mergedChecks).length" class="align-middle border-right" v-if="idx === 0">
-                        <img :src="'images/' + type + '.svg'" :title="type" height="20px">
-                    </td>
-                    <td :rowspan="Object.keys(mergedChecks).length" class="align-middle border-right w-10"
-                        v-if="idx === 0">
-                        <span :id="name" class="badge badge-secondary">{{ shortHand(name, nsLimit) }}</span>
-                        <b-tooltip :target="name" triggers="hover" v-if="name.length > nsLimit" variant="secondary">
-                            {{name}}
-                        </b-tooltip>
-                    </td>
-                    <td class="align-middle w-25">
-              <span :class="{'font-italic': mergedDesc.startsWith('multiple')}" :id="calcTooltipId(mergedDesc, name, type)"
-                    class="float-left w-75 pr-5">
-                {{ shortHand(mergedDesc, descLimit) }}
-              </span>
-                        <b-tooltip :disabled="mergedDesc.length <= descLimit"
-                                   :target="calcTooltipId(mergedDesc, name, type)" triggers="hover" variant="secondary">
-                            <div class="description">{{mergedDesc}}</div>
-                        </b-tooltip>
-                        <b-tooltip
-                                :disabled="!mergedDesc.startsWith('multiple')"
-                                :target="calcTooltipId(mergedDesc, name, type)"
-                                triggers="hover"
-                                variant="secondary">
-                            <div :key="check.key" class="description" v-for="check in checkSet">{{check.description}}
-                            </div>
-                        </b-tooltip>
-                        <button @click="triggerMerged(checkSet, $event)"
-                                class="btn btn-info btn-xs float-right check-button" title="Trigger the check on every server">
-                            <!--              <i class="material-icons md-12 align-middle">send</i>-->
-                            <send-icon class="material-icons md-12 align-middle">send</send-icon>
-                        </button>
-                    </td>
-<!--                    <td :key="server" class="align-top border-right border-left" v-for="server in serversByNames">-->
-<!--                        <check-set-tds :check-set="checkSet" :server="server"></check-set-tds>-->
-<!--                    </td>-->
-                    <td v-for="server in serversByNames" :key="server" class="align-top border-right border-left">
-                        <div>
-                            <status-strip  :check-set="checkSet" :server="server"
-                                           color="#28a745" error-color="#dc3545"
-                                           :bar-width="20" :bar-spacing="5" :barMaxHeight="20"
-                                           :zoominess="0.85"/>
-                        </div>
-                    </td>
-                </tr>
+                <!-- DELETE                   <p> {{ type }}<br/>{{mergedChecks}}</p>-->
+                <template v-for="(checkSet, mergedDesc) in mergedChecks">
+                    <check :key="mergedDesc" :type="type" :name="name" :mergedDesc="mergedDesc"  :checkSet="checkSet" />
+                </template>
                 </tbody>
             </template>
         </table>
@@ -80,7 +39,8 @@
     import store from './store'
     import AutoUpdateSettings from './components/AutoUpdateSettings.vue'
     import ErrorPanel from './components/ErrorPanel.vue'
-    import StatusStrip from './components/StatusStrip.vue'
+    import Check from "./components/Check";
+
 
 
     export default {
@@ -88,7 +48,7 @@
         components: {
             AutoUpdateSettings,
             ErrorPanel,
-            StatusStrip,
+            Check,
         },
         store: store,
         created() {
@@ -117,14 +77,7 @@
         },
         methods: {
             ...Vuex.mapActions(['pauseAutoUpdate', 'resumeAutoUpdate']),
-            async triggerMerged(checks, event) {
-                const btn = event.currentTarget
-                btn.classList.toggle("btn-light")
-                await this.$store.dispatch('triggerMergedChecks', checks)
-                await this.$store.dispatch('fetchData')
-                btn.classList.toggle("btn-light")
-            }
-        }
+     }
     }
 </script>
 
