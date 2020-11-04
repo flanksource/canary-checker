@@ -1,5 +1,5 @@
 <template>
-    <tr :key="mergedDesc" >
+    <tr  >
         <!-- DELETE  <p> {{ idx }} {{mergedDesc}}<br/>{{checkSet}}</p>-->
         <td  class="align-middle border-right" >
             <img :src="'images/' + type + '.svg'" :title="type" height="20px">

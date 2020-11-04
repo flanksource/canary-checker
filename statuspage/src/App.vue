@@ -16,15 +16,19 @@
             <th class="border-right">Description</th>
             <th :key="server" class="border-right" v-for="(server, serverName) in serversByNames">{{ serverName }}</th>
             </thead>
-            <template v-for="(typed, name) in groupedChecks">
-                <!-- DELETE               <p :key="typed">{{name}}<br/> {{typed}} </p>-->
-                <tbody :key="type" class="border-bottom border-secondary" v-for="(mergedChecks, type) in typed">
-                <!-- DELETE                   <p> {{ type }}<br/>{{mergedChecks}}</p>-->
-                <template v-for="(checkSet, mergedDesc) in mergedChecks">
-                    <check :key="mergedDesc" :type="type" :name="name" :mergedDesc="mergedDesc"  :checkSet="checkSet" />
+            <tbody  class="border-bottom border-secondary" >
+                <template v-for="(typed, name) in groupedChecks">
+                    <!-- DELETE               <p :key="typed">{{name}}<br/> {{typed}} </p>-->
+                    <template v-for="(mergedChecks, type) in typed">
+                    <!-- DELETE                   <p> {{ type }}<br/>{{mergedChecks}}</p>-->
+                      <template v-for="(checkSet, mergedDesc) in mergedChecks">
+<!--                          <p :key="type+'-'+name+'-'+mergedDesc"> {{ type }}<br/>{{ name }}<br/>{{mergedDesc}}<br/></p>-->
+<!--                          <pre :key="'json-'+type+'-'+name+'-'+mergedDesc">{{ JSON.stringify(checkSet, null, '\t') }}</pre>-->
+                        <check :key="type+'-'+name+'-'+mergedDesc" :type="type" :name="name" :mergedDesc="mergedDesc"  :checkSet="checkSet" />
+                      </template>
+                    </template>
                 </template>
-                </tbody>
-            </template>
+            </tbody>
         </table>
 
         <div id="last-refreshed" v-cloak v-if="lastRefreshed">

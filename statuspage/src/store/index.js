@@ -53,6 +53,7 @@ export default new Vuex.Store({
     },
     actions: {
         fetchData({commit}) {
+            console.log("fetchdata start")
             commit('SET_LOADING', true)
             return Axios
                 .get('/api/aggregate')
@@ -60,6 +61,8 @@ export default new Vuex.Store({
                     commit('SET_CHECKS', response.data.checks)
                     commit('SET_SERVERS', response.data.servers)
                     commit('SET_LAST_REFRESHED', new Date())
+                    console.log(JSON.stringify(response.data.checks, null, '\t'))
+                    console.log("fetchdata done")
                 })
                 .catch((err) => {
                     if (typeof err.response === 'undefined') {
@@ -143,6 +146,7 @@ export default new Vuex.Store({
                 }
                 byName[name] = groupedType
             }
+            //console.log(JSON.stringify(byName, null, '\t'))
             return byName
         }
     }
