@@ -1,12 +1,11 @@
 <template>
-    <tr class="border-bottom-0 border-top-0"  >
-        <!-- DELETE  <p> {{ idx }} {{mergedDesc}}<br/>{{checkSet}}</p>-->
+    <tr class="border-bottom-0 border-top-0">
         <td class=" w-5 border-top-0 border-bottom-0"></td>
-        <td  class="align-middle  border-top-0 border-bottom-0" >
+        <td class="align-middle  border-top-0 border-bottom-0">
             <img :src="'images/' + type + '.svg'" :title="type" height="20px">
         </td>
-        <td  class="align-middle border-left border-right" >
-            <span :id="name" >{{ shortHand(name, nsLimit) }}</span>
+        <td class="align-middle border-left border-right">
+            <span :id="name">{{ shortHand(name, nsLimit) }}</span>
             <b-tooltip :target="name" triggers="hover" v-if="name.length > nsLimit" variant="secondary">
                 {{name}}
             </b-tooltip>
@@ -32,13 +31,9 @@
             <button @click="triggerMerged(checkSet, $event)"
                     class="btn btn-info btn-xs float-right check-button"
                     title="Trigger the check on every server">
-                <!--              <i class="material-icons md-12 align-middle">send</i>-->
                 <send-icon class="material-icons md-12 align-middle">send</send-icon>
             </button>
         </td>
-        <!--                    <td :key="server" class="align-top border-right border-left" v-for="server in serversByNames">-->
-        <!--                        <check-set-tds :check-set="checkSet" :server="server"></check-set-tds>-->
-        <!--                    </td>-->
         <td :key="server" class="align-top border-right border-left" v-for="server in serversByNames">
             <div>
                 <status-strip :bar-spacing="5" :bar-width="20"
@@ -122,29 +117,13 @@
     }
 
     .popover > h3 {
-        margin-top: 0rem;
+        margin-top: 0;
     }
 
     .popover-body > hr {
         margin: 0.4rem 0;
     }
 
-    .popover-header > .description {
-        font-size: 0.75rem;
-    }
-
-    .tooltip-inner > .description {
-        font-size: 0.6rem;
-    }
-
-    .row {
-        margin-bottom: 1rem;
-    }
-
-    .row .row {
-        margin-top: 1rem;
-        margin-bottom: 0;
-    }
 
     [class*="col-"] {
         padding-top: 1rem;
@@ -158,17 +137,6 @@
         margin-bottom: 2rem;
     }
 
-    #last-refreshed {
-        color: #777;
-        font-size: 0.8em;
-    }
-
-    div.check-status-container {
-        display: inline-block;
-        vertical-align: middle;
-    }
-
-
     .btn-group-xs > .btn, .btn-xs {
         padding: .25rem .4rem;
         font-size: .875rem;
@@ -180,50 +148,9 @@
         display: none;
     }
 
-    .material-icons.md-18 {
-        font-size: 18px
-    }
-
-    .material-icons.md-14 {
-        font-size: 14px
-    }
 
     .material-icons.md-12 {
         font-size: 12px
-    }
-
-    .w-10 {
-        width: 10% !important;
-    }
-
-
-    .group-section {
-        width: 150px
-    }
-
-
-    .check-section-header {
-        height: 1.5rem;
-    }
-
-    .slide-enter {
-        opacity: 0;
-    }
-
-    .slide-enter-active {
-        transition: all 0.5s ease-out;
-    }
-
-    .slide-leave-active {
-        transition: opacity 300ms ease-out;
-    }
-
-    .slide-leave {
-        opacity: 0;
-    }
-
-    .slide-move {
-        transition: all 250ms ease-in;
     }
 
     .check-button {

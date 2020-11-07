@@ -11,6 +11,7 @@
 
         <table class="table table-fixed table-sm text-nowrap w-auto" id="checks" v-cloak>
             <thead class="border-0">
+            <tr class="border-0">
                 <th class="min border-0 ">NS</th>
                 <th class="min  border-0">Type</th>
                 <th class="min border-0">Name</th>
@@ -18,23 +19,24 @@
                 <th :key="server" class="min  border-0" v-for="(server, serverName) in serversByNames">{{ serverName }}</th>
                 <!--  this invisible borderless "spacer" column fills the rest of the widths-->
                 <td class="border-0"></td>
+            </tr>
             </thead>
 
-                <template v-for="(typed, name) in groupedChecks">
-                    <tbody :key="name" class="border-bottom border-top-0"  >
+            <template v-for="(typed, name) in groupedChecks">
+                <tbody :key="name" class="border-bottom border-top-0">
                     <tr :key="name" class="pt-6 namespace border-top-0 border-bottom-0">
-                        <td class="border-0 namespace" colspan="4"><span class="badge badge-secondary">{{name.split('/')[0]}}</span></td></tr>
-                    <!-- DELETE               <p :key="typed">{{name}}<br/> {{typed}} </p>-->
+                        <td class="border-0 namespace" colspan="4">
+                            <span class="badge badge-secondary">{{name.split('/')[0]}}</span>
+                        </td>
+                    </tr>
                     <template v-for="(mergedChecks, type) in typed">
-                    <!-- DELETE                   <p> {{ type }}<br/>{{mergedChecks}}</p>-->
-                      <template v-for="(checkSet, mergedDesc) in mergedChecks">
-<!--                          <p :key="type+'-'+name+'-'+mergedDesc"> {{ type }}<br/>{{ name }}<br/>{{mergedDesc}}<br/></p>-->
-<!--                          <pre :key="'json-'+type+'-'+name+'-'+mergedDesc">{{ JSON.stringify(checkSet, null, '\t') }}</pre>-->
-                        <check :key="type+'-'+name+'-'+mergedDesc" :type="type" :name="name.split('/')[1]" :mergedDesc="mergedDesc"  :checkSet="checkSet" />
-                      </template>
+                        <template v-for="(checkSet, mergedDesc) in mergedChecks">
+                            <check :checkSet="checkSet" :key="type+'-'+name+'-'+mergedDesc" :mergedDesc="mergedDesc"
+                                   :name="name.split('/')[1]" :type="type"/>
+                        </template>
                     </template>
-                    </tbody>
-                </template>
+                </tbody>
+            </template>
 
         </table>
 
@@ -51,7 +53,6 @@
     import AutoUpdateSettings from './components/AutoUpdateSettings.vue'
     import ErrorPanel from './components/ErrorPanel.vue'
     import Check from "./components/Check";
-
 
 
     export default {
@@ -88,7 +89,7 @@
         },
         methods: {
             ...Vuex.mapActions(['pauseAutoUpdate', 'resumeAutoUpdate']),
-     }
+        }
     }
 </script>
 
@@ -103,28 +104,11 @@
     }
 
     .popover > h3 {
-        margin-top: 0rem;
+        margin-top: 0;
     }
 
     .popover-body > hr {
         margin: 0.4rem 0;
-    }
-
-    .popover-header > .description {
-        font-size: 0.75rem;
-    }
-
-    .tooltip-inner > .description {
-        font-size: 0.6rem;
-    }
-
-    .row {
-        margin-bottom: 1rem;
-    }
-
-    .row .row {
-        margin-top: 1rem;
-        margin-bottom: 0;
     }
 
     [class*="col-"] {
@@ -144,39 +128,9 @@
         font-size: 0.8em;
     }
 
-    div.check-status-container {
-        display: inline-block;
-        vertical-align: middle;
-    }
-
-
-    .btn-group-xs > .btn, .btn-xs {
-        padding: .25rem .4rem;
-        font-size: .875rem;
-        line-height: .75;
-        border-radius: .2rem;
-    }
-
     [v-cloak] {
         display: none;
     }
-
-    .material-icons.md-18 {
-        font-size: 18px
-    }
-
-    .material-icons.md-14 {
-        font-size: 14px
-    }
-
-    .material-icons.md-12 {
-        font-size: 12px
-    }
-
-    .w-10 {
-        width: 10% !important;
-    }
-
 
     /*These 'min'-classed columns should take minimal width based on content*/
     th.min {
@@ -188,46 +142,9 @@
     tr.namespace {
         height: 2.5rem;
     }
+
     td.namespace {
         vertical-align: bottom;
     }
-
-
-
-
-    .group-section {
-        width: 150px
-    }
-
-
-    .check-section-header {
-        height: 1.5rem;
-    }
-
-    .slide-enter {
-        opacity: 0;
-    }
-
-    .slide-enter-active {
-        transition: all 0.5s ease-out;
-    }
-
-    .slide-leave-active {
-        transition: opacity 300ms ease-out;
-    }
-
-    .slide-leave {
-        opacity: 0;
-    }
-
-    .slide-move {
-        transition: all 250ms ease-in;
-    }
-
-    .check-button {
-        transition: all 0.4s linear;
-        transition-property: color, background-color, border-color
-    }
-
 
 </style>
