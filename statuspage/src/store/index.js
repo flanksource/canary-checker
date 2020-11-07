@@ -82,8 +82,7 @@ export default new Vuex.Store({
         },
         resumeAutoUpdate({dispatch, commit}) {
             commit('SET_DISABLE_RELOAD', false)
-            //TODO: revert to 20
-            commit('SET_RELOAD_TIMER', setInterval(() => { dispatch('fetchData') }, 5000)) // 20 seconds
+            commit('SET_RELOAD_TIMER', setInterval(() => { dispatch('fetchData') }, 20000)) // 20 seconds
         },
         triggerSingleCheck({commit, dispatch}, {server, checkType, checkKey}) {
             return Axios
