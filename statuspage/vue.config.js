@@ -9,8 +9,8 @@ module.exports = {
             },
         }
     },
-    // configureWebpack: {
-    //     //nicer debugging in browser dev tools
-    //     devtool: 'source-map'
-    // }
+    configureWebpack: {
+        //nicer debugging in browser dev tools
+        devtool: 'source-map'
+    }
 }
