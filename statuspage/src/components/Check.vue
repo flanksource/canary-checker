@@ -1,16 +1,17 @@
 <template>
-    <tr  >
+    <tr class="border-bottom-0 border-top-0"  >
         <!-- DELETE  <p> {{ idx }} {{mergedDesc}}<br/>{{checkSet}}</p>-->
-        <td  class="align-middle border-right" >
+        <td class=" w-5 border-top-0 border-bottom-0"></td>
+        <td  class="align-middle  border-top-0 border-bottom-0" >
             <img :src="'images/' + type + '.svg'" :title="type" height="20px">
         </td>
-        <td  class="align-middle border-right w-10">
-            <span :id="name" class="badge badge-secondary">{{ shortHand(name, nsLimit) }}</span>
+        <td  class="align-middle border-left border-right" >
+            <span :id="name" >{{ shortHand(name, nsLimit) }}</span>
             <b-tooltip :target="name" triggers="hover" v-if="name.length > nsLimit" variant="secondary">
                 {{name}}
             </b-tooltip>
         </td>
-        <td class="align-middle w-25">
+        <td class="align-middle">
                               <span :class="{'font-italic': mergedDesc.startsWith('multiple')}"
                                     :id="calcTooltipId(mergedDesc, name, type)"
                                     class="float-left w-75 pr-5">

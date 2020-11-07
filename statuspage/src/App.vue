@@ -9,26 +9,33 @@
 
         <error-panel :error="error"/>
 
-        <table class="table table-sm table-fixed text-nowrap" id="checks" v-cloak>
-            <thead>
-            <th class="border-right">Type</th>
-            <th class="border-right">NS/Name</th>
-            <th class="border-right">Description</th>
-            <th :key="server" class="border-right" v-for="(server, serverName) in serversByNames">{{ serverName }}</th>
+        <table class="table table-fixed table-sm text-nowrap w-auto" id="checks" v-cloak>
+            <thead class="border-0">
+                <th class="min border-0 ">NS</th>
+                <th class="min  border-0">Type</th>
+                <th class="min border-0">Name</th>
+                <th class="min border-0 ">Description</th>
+                <th :key="server" class="min  border-0" v-for="(server, serverName) in serversByNames">{{ serverName }}</th>
+                <!--  this invisible borderless "spacer" column fills the rest of the widths-->
+                <td class="border-0"></td>
             </thead>
-            <tbody  class="border-bottom border-secondary" >
+
                 <template v-for="(typed, name) in groupedChecks">
+                    <tbody :key="name" class="border-bottom border-top-0"  >
+                    <tr :key="name" class="pt-6 namespace border-top-0 border-bottom-0">
+                        <td class="border-0 namespace" colspan="4"><span class="badge badge-secondary">{{name.split('/')[0]}}</span></td></tr>
                     <!-- DELETE               <p :key="typed">{{name}}<br/> {{typed}} </p>-->
                     <template v-for="(mergedChecks, type) in typed">
                     <!-- DELETE                   <p> {{ type }}<br/>{{mergedChecks}}</p>-->
                       <template v-for="(checkSet, mergedDesc) in mergedChecks">
 <!--                          <p :key="type+'-'+name+'-'+mergedDesc"> {{ type }}<br/>{{ name }}<br/>{{mergedDesc}}<br/></p>-->
 <!--                          <pre :key="'json-'+type+'-'+name+'-'+mergedDesc">{{ JSON.stringify(checkSet, null, '\t') }}</pre>-->
-                        <check :key="type+'-'+name+'-'+mergedDesc" :type="type" :name="name" :mergedDesc="mergedDesc"  :checkSet="checkSet" />
+                        <check :key="type+'-'+name+'-'+mergedDesc" :type="type" :name="name.split('/')[1]" :mergedDesc="mergedDesc"  :checkSet="checkSet" />
                       </template>
                     </template>
+                    </tbody>
                 </template>
-            </tbody>
+
         </table>
 
         <div id="last-refreshed" v-cloak v-if="lastRefreshed">
@@ -169,6 +176,23 @@
     .w-10 {
         width: 10% !important;
     }
+
+
+    /*These 'min'-classed columns should take minimal width based on content*/
+    th.min {
+        width: 1%;
+        white-space: nowrap;
+    }
+
+    /*The 'namespace'-classed rows should have a bit of extra vertical seperation space*/
+    tr.namespace {
+        height: 2.5rem;
+    }
+    td.namespace {
+        vertical-align: bottom;
+    }
+
+
 
 
     .group-section {
