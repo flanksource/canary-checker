@@ -24,6 +24,7 @@
 
             <template v-for="(typed, name) in groupedChecks">
                 <tbody :key="name" class="border-bottom border-top-0">
+                    <!-- Namespace Header for this grouped check-->
                     <tr :key="name" class="pt-6 namespace border-top-0 border-bottom-0">
                         <td class="border-0 namespace" colspan="4">
                             <span class="badge badge-secondary">{{name.split('/')[0]}}</span>
