@@ -113,7 +113,7 @@ vue-dist:
 	cd statuspage && npm install && npm run build
 
 .PHONY: static
-static:
+static: vue-dist
 	which esc 2>&1 > /dev/null || go get -u github.com/mjibson/esc
 	cd statuspage/dist && esc -o ../static.go -pkg statuspage .
 
