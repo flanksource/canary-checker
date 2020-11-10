@@ -1,6 +1,7 @@
 <template>
     <div class="status-strip" >
-        <check-time :time="latest"/>
+        <check-time :time="latest" v-if="showLatest"/>
+        <check-time time="   " v-else/>
         <svg
                 xmlns="http://www.w3.org/2000/svg"
                 style="text-wrap: normal;"
@@ -184,6 +185,15 @@
                 return barSet;
             },
             latest() {
+                var ta = this.timeago();
+                return ta.ago(this.latestSoFar, true).padStart(4," ")
+            },
+            showLatest() {
+                var now = new Date();
+                console.log(Math.abs(now-this.latestSoFar))
+                return Math.abs(now-this.latestSoFar)>120000
+            },
+            latestSoFar() {
                 var latestSoFar = null;
                 for (const statusData of this.statusesSet) {
                     const checkDate = new Date(statusData.checkStatus.time + " UTC");
@@ -191,8 +201,7 @@
                         latestSoFar = checkDate
                     }
                 }
-                var ta = this.timeago();
-                return ta.ago(latestSoFar, true)
+                return latestSoFar
             },
             earliest() {
                 var earliestSoFar = null;
@@ -203,7 +212,7 @@
                     }
                 }
                 var ta = this.timeago();
-                return ta.ago(earliestSoFar, true)
+                return ta.ago(earliestSoFar, true).padStart(3," ")
             },
         },
         methods: {
