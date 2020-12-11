@@ -155,12 +155,17 @@
                 for (const statusData of this.statusesSet) {
                     //scale the duration based on the minimum, maximum and zoominess
                     if (statusData.checkStatus.status) {
-                        const offsetDuration = statusData.checkStatus.duration - minDuration * this.zoominess
-                        const scaledDuration = offsetDuration / (maxDuration - minDuration * this.zoominess)
-                        var normalizedDuration = scaledDuration * this.barMaxHeight
-                        if (normalizedDuration < 0.5) {
-                            // show at least a sliver for the minimum value
-                            normalizedDuration = 0.5
+                        if (statusData.checkStatus.duration != 0) {
+                            const offsetDuration = statusData.checkStatus.duration - minDuration * this.zoominess
+                            const scaledDuration = offsetDuration / (maxDuration - minDuration * this.zoominess)
+                            var normalizedDuration = scaledDuration * this.barMaxHeight
+                            if (normalizedDuration < 0.5) {
+                                // show at least a sliver for the minimum value
+                                normalizedDuration = 0.5
+                            }
+                        } else {
+                            // for a zero duration sample we show a full bar
+                            normalizedDuration = this.barMaxHeight
                         }
                     } else {
                         // for an invalid sample we show a full bar
