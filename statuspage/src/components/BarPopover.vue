@@ -5,7 +5,7 @@
             :target="target"
             triggers="hover"
             placement="top"
-            :delay="{ show: 50, hide: 350 }"
+            :delay="{ show: 100, hide: 100 }"
             @show="onShow">
         <template v-slot:title>
             <div class="description">{{description}}</div><div>{{elapsed}}</div>
