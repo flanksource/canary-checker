@@ -71,11 +71,11 @@ func serve(cmd *cobra.Command) {
 	if dev {
 		staticRoot = nethttp.Dir("./statuspage/dist")
 		allowedCors = fmt.Sprintf("http://localhost:%d", devGuiHttpPort)
-		logger.Infof("Starting in local development mode");
-		logger.Infof("Allowing access from a GUI on %s", allowedCors);
+		logger.Infof("Starting in local development mode")
+		logger.Infof("Allowing access from a GUI on %s", allowedCors)
 		logger.Infof("   (it can be started with:")
-		logger.Infof("    npm run serve -- --port %d ", devGuiHttpPort )
-		logger.Infof("   )" )
+		logger.Infof("    npm run serve -- --port %d ", devGuiHttpPort)
+		logger.Infof("   )")
 	} else {
 		staticRoot = statuspage.FS(false)
 		allowedCors = ""
@@ -86,22 +86,19 @@ func serve(cmd *cobra.Command) {
 	prometheusHost, _ := cmd.Flags().GetString("prometheus")
 
 	nethttp.Handle("/", nethttp.FileServer(staticRoot))
-	nethttp.HandleFunc("/api", simpleCors(api.Handler,allowedCors))
+	nethttp.HandleFunc("/api", simpleCors(api.Handler, allowedCors))
 	nethttp.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))
-	nethttp.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler(prometheusHost),allowedCors))
+	nethttp.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler(prometheusHost), allowedCors))
 	nethttp.HandleFunc("/api/aggregate", simpleCors(aggregate.Handler, allowedCors))
 
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
 	logger.Infof("Starting health dashboard at http://%s", addr)
 	logger.Infof("Metrics dashboard can be accessed at http://%s/metrics", addr)
 
-
 	if err := nethttp.ListenAndServe(addr, nil); err != nil {
 		logger.Fatalf("failed to start server: %v", err)
 	}
 }
-
-
 
 // simpleCors is minimal middleware for injecting an Access-Control-Allow-Origin header value.
 // If an empty allowedOrigin is specified, then no header is added.

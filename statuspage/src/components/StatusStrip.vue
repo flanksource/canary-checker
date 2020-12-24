@@ -1,48 +1,54 @@
 <template>
     <div class="status-strip" >
-        <check-time :time="latest"/>
-        <svg
-                xmlns="http://www.w3.org/2000/svg"
-                style="text-wrap: normal;"
-                baseProfile="tiny"
-                version="1.2"
-                :width="fullWidth"
-                :height="barMaxHeight">
-            <g
-                    v-for="(bar, index) in barSet"
-                    :id="'bar-'+barSet[index].key"
-                    :key="keyBar(barSet[index].key)">
-                <!-- This rect is not for visual effect,-->
-                <!-- but makes the following, actual    -->
-                <!-- data bar easier to select when it  -->
-                <!-- is narrow.                         -->
-                <rect
-                        :height="barMaxHeight" :width="barWidth"
-                        :x="barSet[index].x"
-                        :style=" {fill: 'white'}"/>
-                <rect
-                        :height="barSet[index].height" :width="barWidth"
-                        :x="barSet[index].x" :y="barSet[index].y"
-                        :style=" {fill: barSet[index].color}"/>
-            </g>
-        </svg>
-        <check-time :time="earliest"/>
-        <bar-popover
-                v-for="bar in barSet"
-                :key="keyPopover(bar.key)"
-                :target="'bar-'+bar.key"
-                :checkStatusKey="bar.key"
-                :description="bar.description"
-                :time="bar.time" :duration="bar.duration"
-                :message="bar.message"
-                :health="bar.health"/>
-        <check-prometheus
-                v-for="bar in barSet"
-                :key="keyCheck(bar.key)"
-                :checkType="bar.checkType"
-                :check-key="bar.endpoint"
-                :canary-name="bar.canaryName"
-                :target-id="modalName(bar.key)"></check-prometheus>
+        <template v-if="barSet.length<1">
+            <pre class="nodata">   no data</pre>
+        </template>
+        <template v-else>
+            <check-time :time="latest" v-if="showLatest"/>
+            <check-time time="   " v-else/>
+            <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    style="text-wrap: normal;"
+                    baseProfile="tiny"
+                    version="1.2"
+                    :width="fullWidth"
+                    :height="barMaxHeight">
+                <g
+                        v-for="(bar, index) in barSet"
+                        :id="'bar-'+barSet[index].key"
+                        :key="keyBar(barSet[index].key)">
+                    <!-- This rect is not for visual effect,-->
+                    <!-- but makes the following, actual    -->
+                    <!-- data bar easier to select when it  -->
+                    <!-- is narrow.                         -->
+                    <rect
+                            :height="barMaxHeight" :width="barWidth"
+                            :x="barSet[index].x"
+                            :style=" {fill: 'white'}"/>
+                    <rect
+                            :height="barSet[index].height" :width="barWidth"
+                            :x="barSet[index].x" :y="barSet[index].y"
+                            :style=" {fill: barSet[index].color}"/>
+                </g>
+            </svg>
+            <check-time :time="earliest"/>
+            <bar-popover
+                    v-for="bar in barSet"
+                    :key="keyPopover(bar.key)"
+                    :target="'bar-'+bar.key"
+                    :checkStatusKey="bar.key"
+                    :description="bar.description"
+                    :time="bar.time" :duration="bar.duration"
+                    :message="bar.message"
+                    :health="bar.health"/>
+            <check-prometheus
+                    v-for="bar in barSet"
+                    :key="keyCheck(bar.key)"
+                    :checkType="bar.checkType"
+                    :check-key="bar.endpoint"
+                    :canary-name="bar.canaryName"
+                    :target-id="modalName(bar.key)"></check-prometheus>
+        </template>
     </div>
 </template>
 
@@ -149,12 +155,17 @@
                 for (const statusData of this.statusesSet) {
                     //scale the duration based on the minimum, maximum and zoominess
                     if (statusData.checkStatus.status) {
-                        const offsetDuration = statusData.checkStatus.duration - minDuration * this.zoominess
-                        const scaledDuration = offsetDuration / (maxDuration - minDuration * this.zoominess)
-                        var normalizedDuration = scaledDuration * this.barMaxHeight
-                        if (normalizedDuration < 0.5) {
-                            // show at least a sliver for the minimum value
-                            normalizedDuration = 0.5
+                        if (statusData.checkStatus.duration != 0) {
+                            const offsetDuration = statusData.checkStatus.duration - minDuration * this.zoominess
+                            const scaledDuration = offsetDuration / (maxDuration - minDuration * this.zoominess)
+                            var normalizedDuration = scaledDuration * this.barMaxHeight
+                            if (normalizedDuration < 0.5) {
+                                // show at least a sliver for the minimum value
+                                normalizedDuration = 0.5
+                            }
+                        } else {
+                            // for a zero duration sample we show a full bar
+                            normalizedDuration = this.barMaxHeight
                         }
                     } else {
                         // for an invalid sample we show a full bar
@@ -184,6 +195,14 @@
                 return barSet;
             },
             latest() {
+                var ta = this.timeago();
+                return ta.ago(this.latestSoFar, true).padStart(3," ")
+            },
+            showLatest() {
+                var now = new Date();
+                return Math.abs(now-this.latestSoFar)>120000
+            },
+            latestSoFar() {
                 var latestSoFar = null;
                 for (const statusData of this.statusesSet) {
                     const checkDate = new Date(statusData.checkStatus.time + " UTC");
@@ -191,8 +210,7 @@
                         latestSoFar = checkDate
                     }
                 }
-                var ta = this.timeago();
-                return ta.ago(latestSoFar, true)
+                return latestSoFar
             },
             earliest() {
                 var earliestSoFar = null;
@@ -203,7 +221,7 @@
                     }
                 }
                 var ta = this.timeago();
-                return ta.ago(earliestSoFar, true)
+                return ta.ago(earliestSoFar, true).padStart(3," ")
             },
         },
         methods: {
@@ -280,6 +298,14 @@
 </script>
 
 <style scoped>
-
+    pre.nodata{
+        display: inline-block;
+        vertical-align: middle;
+        font-size: xx-small;
+        font-weight: bold;
+        padding: 0.5em 1em;
+        font-family: "Courier New", Courier, monospace;
+        margin-bottom: 0;
+    }
 </style>
 

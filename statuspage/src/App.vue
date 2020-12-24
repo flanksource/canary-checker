@@ -44,7 +44,11 @@
         <div id="last-refreshed" v-cloak v-if="lastRefreshed">
             Last refreshed <span>{{ lastRefreshed }}</span>
         </div>
+        <div id="never-refreshed"  v-else>
+            No data received yet
+        </div>
     </div>
+
 </template>
 
 <script>

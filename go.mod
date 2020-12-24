@@ -40,6 +40,7 @@ require (
 	k8s.io/apimachinery v0.17.7
 	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/controller-runtime v0.5.7
+	sigs.k8s.io/controller-tools v0.2.5 // indirect
 	sigs.k8s.io/yaml v1.1.0
 )
 
