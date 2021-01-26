@@ -9,8 +9,10 @@ import (
 
 type HTTPCheck struct {
 	Description string `yaml:"description" json:"description,omitempty"`
-	// HTTP endpoint to crawl
+	// HTTP endpoint to check.  Mutually exclusive with Namespace
 	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty"`
+	// Namespace to crawl for TLS endpoints.  Mutually exclusive with Endpoint
+	Namespace string `yaml:"namespace" json:"namespace,omitempty"`
 	// Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.
 	ThresholdMillis int `yaml:"thresholdMillis" json:"thresholdMillis,omitempty"`
 	// Expected response codes for the HTTP Request.
