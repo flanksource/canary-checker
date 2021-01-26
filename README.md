@@ -22,7 +22,7 @@
       * [Containerd Pull - Pull an image using containerd](#containerd-pull---pull-an-image-using-containerd)
       * [Docker Pull - Pull an image using docker](#docker-pull---pull-an-image-using-docker)
       * [Docker Push - Create and push a docker image](#docker-push---create-and-push-a-docker-image)
-      * [HTTP - Query a HTTP endpoint](#http---query-a-http-endpoint)
+      * [HTTP - Query an HTTP endpoint or Namespace](#http---query-an-http-endpoint-or-namespace)
       * [Helm - Build and push a helm chart](#helm---build-and-push-a-helm-chart)
       * [ICMP - Ping a destination and check for packet loss](#icmp---ping-a-destination-and-check-for-packet-loss)
       * [LDAP - Query a ldap(s) server](#ldap---query-a-ldaps-server)
@@ -187,7 +187,7 @@ docker:
 | password |  | string | Yes |
 
 
-### HTTP - Query a HTTP endpoint
+### HTTP - Query an HTTP endpoint or Namespace
 
 ```yaml
 http:
@@ -206,17 +206,25 @@ http:
     responseCodes: [302]
     responseContent: ""
     maxSSLExpiry: 60
+  - namespace: k8s-https-namespace
+    thresholdMillis: 3000
+    responseCodes: [200]
+    responseContent: ""
+    maxSSLExpiry: 60
+    
 ```
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | description |  | string | Yes |
-| endpoint | HTTP endpoint to crawl | string | Yes |
+| endpoint | HTTP endpoint to monitor | string | Yes <sup>*</sup> |
+| namespace | Kubernetes namespace to monitor | string | Yes <sup>*</sup> |
 | thresholdMillis | Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer. | int | Yes |
 | responseCodes | Expected response codes for the HTTP Request. | []int | Yes |
 | responseContent | Exact response content expected to be returned by the endpoint. | string | Yes |
 | maxSSLExpiry | Maximum number of days until the SSL Certificate expires. | int | Yes |
 
+<sup>*</sup> One of either endpoint or namespace must be specified, but not both
 
 ### Helm - Build and push a helm chart
 

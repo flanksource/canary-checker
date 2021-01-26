@@ -67,9 +67,13 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	endpoint := check.Endpoint
 	namespace := check.Namespace
 
+	if namespace == "*" {
+		namespace = ""
+	}
+
 	if endpoint == "" && namespace == "" {
 		return Failf(check, "One of Namespace or Endpoint must be specified")
-	} else if endpoint != nil && namespace != nil {
+	} else if endpoint != "" && namespace != "" {
 		return Failf(check, "Namespace and Endpoint are mutually exclusive, only one may be specified")
 	}
 	var lookupResult []pkg.URL
@@ -95,7 +99,7 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 
 			for _, endPoint := range endPoints.Subsets {
 				for _, port := range service.Spec.Ports {
-					if port.Port % 1000 == 443 || port.Port == 8080 || port.TargetPort % 1000 == 443 || port.TargetPort == 8080 {
+					if port.Port % 1000 == 443 || port.TargetPort.IntVal % 1000 == 443  {
 						for _, address := range endPoint.Addresses {
 							lookupResult = append(lookupResult, pkg.URL{
 								IP:     address.IP,
