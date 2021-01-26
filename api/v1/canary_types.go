@@ -37,7 +37,6 @@ type CanarySpec struct {
 	TCP            []TCPCheck            `yaml:"tcp,omitempty" json:"tcp,omitempty"`
 	Pod            []PodCheck            `yaml:"pod,omitempty" json:"pod,omitempty"`
 	LDAP           []LDAPCheck           `yaml:"ldap,omitempty" json:"ldap,omitempty"`
-	SSL            []SSLCheck            `yaml:"ssl,omitempty" json:"ssl,omitempty"`
 	ICMP           []ICMPCheck           `yaml:"icmp,omitempty" json:"icmp,omitempty"`
 	Postgres       []PostgresCheck       `yaml:"postgres,omitempty" json:"postgres,omitempty"`
 	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
@@ -78,9 +77,6 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.LDAP {
-		checks = append(checks, check)
-	}
-	for _, check := range spec.SSL {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Postgres {
