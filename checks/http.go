@@ -67,14 +67,13 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	endpoint := check.Endpoint
 	namespace := check.Namespace
 
-	if namespace == "*" {
-		namespace = ""
-	}
-
 	if endpoint == "" && namespace == "" {
 		return Failf(check, "One of Namespace or Endpoint must be specified")
 	} else if endpoint != "" && namespace != "" {
 		return Failf(check, "Namespace and Endpoint are mutually exclusive, only one may be specified")
+	}
+	if namespace == "*" {
+		namespace =  metav1.NamespaceAll
 	}
 	var lookupResult []pkg.URL
 	if endpoint != "" {

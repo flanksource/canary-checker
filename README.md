@@ -224,7 +224,7 @@ http:
 | responseContent | Exact response content expected to be returned by the endpoint. | string | Yes |
 | maxSSLExpiry | Maximum number of days until the SSL Certificate expires. | int | Yes |
 
-<sup>*</sup> One of either endpoint or namespace must be specified, but not both
+<sup>*</sup> One of either endpoint or namespace must be specified, but not both.  Specify a namespace of `"*"` to crawl all namespaces.
 
 ### Helm - Build and push a helm chart
 
