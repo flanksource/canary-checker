@@ -102,7 +102,7 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 						for _, address := range endPoint.Addresses {
 							lookupResult = append(lookupResult, pkg.URL{
 								IP:     address.IP,
-								Port:   int(port.TargetPort),
+								Port:   int(port.TargetPort.IntVal),
 								Host:   address.Hostname,
 								Scheme: "https",
 							})
