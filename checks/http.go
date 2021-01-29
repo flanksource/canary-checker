@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net"
 	"net/http"
 	"net/url"
@@ -64,9 +65,52 @@ func (c *HttpChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.HTTPCheck)
 	endpoint := check.Endpoint
-	lookupResult, err := DNSLookup(endpoint)
-	if err != nil {
-		return Failf(check, "failed to resolve DNS for %s", endpoint)
+	namespace := check.Namespace
+
+	if endpoint == "" && namespace == "" {
+		return Failf(check, "One of Namespace or Endpoint must be specified")
+	} else if endpoint != "" && namespace != "" {
+		return Failf(check, "Namespace and Endpoint are mutually exclusive, only one may be specified")
+	}
+	if namespace == "*" {
+		namespace =  metav1.NamespaceAll
+	}
+	var lookupResult []pkg.URL
+	if endpoint != "" {
+		lookupResult, err := DNSLookup(endpoint)
+		if err != nil {
+			return Failf(check, "failed to resolve DNS for %s", endpoint)
+		}
+	} else {
+		k8sClient, err := pkg.NewK8sClient()
+		if err != nil {
+			return Failf(check, fmt.Sprintf("Unable to connect to k8s: %v", err))
+		}
+		serviceList, err := k8sClient.CoreV1().Services(namespace).List(metav1.ListOptions{})
+		if err != nil {
+			return Failf(check, fmt.Sprintf("failed to obtain service list for namespace %v: %v", namespace, err))
+		}
+		for _, service := range serviceList.Items {
+			endPoints, err := k8sClient.CoreV1().Endpoints(namespace).Get(service.Name, metav1.GetOptions{})
+			if err != nil {
+				return Failf(check, fmt.Sprintf("Failed to obtain endpoints for service %v: %v", service.Name, err))
+			}
+
+			for _, endPoint := range endPoints.Subsets {
+				for _, port := range service.Spec.Ports {
+					if port.Port % 1000 == 443 || port.TargetPort.IntVal % 1000 == 443  {
+						for _, address := range endPoint.Addresses {
+							lookupResult = append(lookupResult, pkg.URL{
+								IP:     address.IP,
+								Port:   int(port.TargetPort.IntVal),
+								Host:   address.Hostname,
+								Scheme: "https",
+							})
+						}
+					}
+				}
+			}
+		}
 	}
 	for _, urlObj := range lookupResult {
 		checkResults, err := c.checkHTTP(urlObj)

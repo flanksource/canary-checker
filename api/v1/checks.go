@@ -9,8 +9,10 @@ import (
 
 type HTTPCheck struct {
 	Description string `yaml:"description" json:"description,omitempty"`
-	// HTTP endpoint to crawl
+	// HTTP endpoint to check.  Mutually exclusive with Namespace
 	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty"`
+	// Namespace to crawl for TLS endpoints.  Mutually exclusive with Endpoint
+	Namespace string `yaml:"namespace" json:"namespace,omitempty"`
 	// Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.
 	ThresholdMillis int `yaml:"thresholdMillis" json:"thresholdMillis,omitempty"`
 	// Expected response codes for the HTTP Request.
@@ -31,26 +33,6 @@ func (c HTTPCheck) GetDescription() string {
 
 func (c HTTPCheck) GetType() string {
 	return "http"
-}
-
-type SSLCheck struct {
-	Description string `yaml:"description" json:"description,omitempty"`
-	// HTTP endpoint to crawl
-	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty"`
-	// Maximum number of days until the SSL Certificate expires.
-	MaxSSLExpiry int `yaml:"maxSSLExpiry" json:"maxSSLExpiry,omitempty"`
-}
-
-func (c SSLCheck) GetEndpoint() string {
-	return c.Endpoint
-}
-
-func (c SSLCheck) GetDescription() string {
-	return c.Description
-}
-
-func (c SSLCheck) GetType() string {
-	return "ssl"
 }
 
 type TCPCheck struct {
@@ -447,10 +429,6 @@ type HTTP struct {
 	HTTPCheck `yaml:",inline" json:"inline"`
 }
 
-type SSL struct {
-	SSLCheck `yaml:",inline" json:"inline"`
-}
-
 /*
 
 ```yaml
@@ -671,7 +649,6 @@ type SrvReply struct {
 
 var AllChecks = []external.Check{
 	HTTPCheck{},
-	SSLCheck{},
 	TCPCheck{},
 	ICMPCheck{},
 	S3Check{},

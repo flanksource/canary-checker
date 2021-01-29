@@ -88,7 +88,6 @@ type Config struct {
 	TCP            []v1.TCPCheck            `yaml:"tcp,omitempty" json:"tcp,omitempty"`
 	Pod            []v1.PodCheck            `yaml:"pod,omitempty" json:"pod,omitempty"`
 	LDAP           []v1.LDAPCheck           `yaml:"ldap,omitempty" json:"ldap,omitempty"`
-	SSL            []v1.SSLCheck            `yaml:"ssl,omitempty" json:"ssl,omitempty"`
 	ICMP           []v1.ICMPCheck           `yaml:"icmp,omitempty" json:"icmp,omitempty"`
 	Postgres       []v1.PostgresCheck       `yaml:"postgres,omitempty" json:"postgres,omitempty"`
 	Helm           []v1.HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
