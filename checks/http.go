@@ -77,7 +77,8 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 	var lookupResult []pkg.URL
 	if endpoint != "" {
-		lookupResult, err := DNSLookup(endpoint)
+		var err error
+		lookupResult, err = DNSLookup(endpoint)
 		if err != nil {
 			return Failf(check, "failed to resolve DNS for %s", endpoint)
 		}
