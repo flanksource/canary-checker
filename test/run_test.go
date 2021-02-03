@@ -88,7 +88,8 @@ func runFixture(t *testing.T, name string) {
 		for _, res := range checkResults {
 
 			if res == nil {
-				t.Errorf("Result in %v returned nil", name)
+				t.Errorf("Result in %v returned nil\nFull result:\n %+v", name, checkResults)
+
 			} else if strings.Contains(name, "fail") && res.Pass {
 				t.Errorf("Expected test to fail, but it passed: %s", res)
 

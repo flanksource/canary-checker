@@ -20,6 +20,7 @@ require (
 	github.com/lib/pq v1.3.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/mitchellh/reflectwalk v1.0.1
+	github.com/mjibson/esc v0.2.0 // indirect
 	github.com/ncw/swift v1.0.50
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
@@ -32,8 +33,11 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/spf13/cobra v0.0.5
-	golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7
-	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
+	golang.org/x/mod v0.4.1 // indirect
+	golang.org/x/net v0.0.0-20201021035429-f5854403a974
+	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
+	golang.org/x/tools v0.1.0 // indirect
 	gopkg.in/flanksource/yaml.v3 v3.1.1
 	helm.sh/helm/v3 v3.1.2
 	k8s.io/api v0.17.7

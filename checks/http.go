@@ -73,7 +73,7 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		return Failf(check, "Namespace and Endpoint are mutually exclusive, only one may be specified")
 	}
 	if namespace == "*" {
-		namespace =  metav1.NamespaceAll
+		namespace = metav1.NamespaceAll
 	}
 	var lookupResult []pkg.URL
 	if endpoint != "" {
@@ -99,7 +99,7 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 
 			for _, endPoint := range endPoints.Subsets {
 				for _, port := range service.Spec.Ports {
-					if port.Port % 1000 == 443 || port.TargetPort.IntVal % 1000 == 443  {
+					if port.Port%1000 == 443 || port.TargetPort.IntVal%1000 == 443 {
 						for _, address := range endPoint.Addresses {
 							lookupResult = append(lookupResult, pkg.URL{
 								IP:     address.IP,
