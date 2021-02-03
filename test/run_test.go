@@ -85,15 +85,18 @@ func runFixture(t *testing.T, name string) {
 	config := pkg.ParseConfig(fmt.Sprintf("../fixtures/%s", name))
 	t.Run(name, func(t *testing.T) {
 		checkResults := cmd.RunChecks(config)
+		var tempbuf []*pkg.CheckResult
+		tempbuf = append(tempbuf, &pkg.CheckResult{})
 		for _, res := range checkResults {
-
 			if res == nil {
-				t.Errorf("Result in %v returned nil\nFull result:\n %+v", name, checkResults)
+				t.Errorf("Result in %v returned nil\nResult so far:\n %+v", name, tempbuf)
 
 			} else if strings.Contains(name, "fail") && res.Pass {
+				tempbuf = append(tempbuf, res)
 				t.Errorf("Expected test to fail, but it passed: %s", res)
 
 			} else if !strings.Contains(name, "fail") && !res.Pass {
+				tempbuf = append(tempbuf, res)
 				t.Errorf("Expected test to pass but it failed %s", res)
 			}
 		}
