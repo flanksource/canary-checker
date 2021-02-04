@@ -14,12 +14,14 @@ limitations under the License.
 package pkg
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/flanksource/commons/files"
 	"github.com/pkg/errors"
 	"gopkg.in/flanksource/yaml.v3"
+	"github.com/flanksource/kommons"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -30,12 +32,15 @@ import (
 
 func NewK8sClient() (*kubernetes.Clientset, error) {
 	kubeConfig := GetKubeconfig()
-	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	configBytes, err := ioutil.ReadFile(kubeConfig)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Could not read kubernetes config")
 	}
-
-	clientset, err := kubernetes.NewForConfig(config)
+	Client, err := kommons.NewClientFromBytes(configBytes)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create kommons wrapper")
+	}
+	clientset, err := Client.GetClientset()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create k8s client")
 	}
