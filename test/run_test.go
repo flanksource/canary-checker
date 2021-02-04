@@ -84,6 +84,7 @@ func TestRunChecks(t *testing.T) {
 func runFixture(t *testing.T, name string) {
 	config := pkg.ParseConfig(fmt.Sprintf("../fixtures/%s", name))
 	t.Run(name, func(t *testing.T) {
+		fmt.Printf("In file %v\n", name)
 		checkResults := cmd.RunChecks(config)
 		var tempbuf []*pkg.CheckResult
 		tempbuf = append(tempbuf, &pkg.CheckResult{})

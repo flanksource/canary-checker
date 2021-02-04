@@ -47,6 +47,6 @@ chmod +x ./wait4x
 
 make static
 cd test
-go test ./... -v -c
+go test -p 1 ./... -v -c
 # ICMP requires privelages so we run the tests with sudo
 sudo DOCKER_API_VERSION=1.39 ./test.test  -test.v
