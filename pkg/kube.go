@@ -14,20 +14,19 @@ limitations under the License.
 package pkg
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/flanksource/commons/files"
+	"github.com/flanksource/kommons"
 	"github.com/pkg/errors"
 	"gopkg.in/flanksource/yaml.v3"
-	"github.com/flanksource/kommons"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/homedir"
-
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 func NewK8sClient() (*kubernetes.Clientset, error) {
@@ -53,7 +52,7 @@ func GetClusterName(config *rest.Config) string {
 	if err != nil {
 		return ""
 	}
-	kubeadmConfig, err := clientset.CoreV1().ConfigMaps("kube-system").Get("kubeadm-config", metav1.GetOptions{})
+	kubeadmConfig, err := clientset.CoreV1().ConfigMaps("kube-system").Get(context.TODO(), "kubeadm-config", metav1.GetOptions{})
 	if err != nil {
 		return ""
 	}

@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -31,7 +32,7 @@ type VarSource struct {
 
 // getSecretRefValue returns the value of a secret in the supplied namespace
 func getSecretRefValue(client kubernetes.Interface, namespace string, secretSelector *corev1.SecretKeySelector) (string, error) {
-	secret, err := client.CoreV1().Secrets(namespace).Get(secretSelector.Name, metav1.GetOptions{})
+	secret, err := client.CoreV1().Secrets(namespace).Get(context.TODO(), secretSelector.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -46,7 +47,7 @@ func getSecretRefValue(client kubernetes.Interface, namespace string, secretSele
 // getConfigMapRefValue returns the value of a configmap in the supplied namespace
 func getConfigMapRefValue(client kubernetes.Interface, namespace string, configMapSelector *corev1.ConfigMapKeySelector) (string, error) {
 
-	configMap, err := client.CoreV1().ConfigMaps(namespace).Get(configMapSelector.Name, metav1.GetOptions{})
+	configMap, err := client.CoreV1().ConfigMaps(namespace).Get(context.TODO(), configMapSelector.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}

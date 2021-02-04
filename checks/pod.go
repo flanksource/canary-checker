@@ -113,7 +113,7 @@ func (c *PodChecker) newPod(podCheck canaryv1.PodCheck, nodeName string) (*v1.Po
 func (c *PodChecker) getConditionTimes(podCheck canaryv1.PodCheck, pod *v1.Pod) (times map[v1.PodConditionType]metav1.Time, err error) {
 	pods := c.k8s.CoreV1().Pods(podCheck.Namespace)
 	times = make(map[v1.PodConditionType]metav1.Time)
-	pod, err = pods.Get(pod.Name, metav1.GetOptions{})
+	pod, err = pods.Get(context.TODO(), pod.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (c *PodChecker) Check(extConfig external.Check) *pkg.CheckResult {
 
 	logger.Debugf("Running pod check %s", podCheck.Name)
 	five := int64(5)
-	nodes, err := c.k8s.CoreV1().Nodes().List(metav1.ListOptions{TimeoutSeconds: &five})
+	nodes, err := c.k8s.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{TimeoutSeconds: &five})
 	if err != nil {
 		return unexpectedErrorf(podCheck, err, "cannot connect to API server")
 	}
@@ -164,7 +164,7 @@ func (c *PodChecker) Check(extConfig external.Check) *pkg.CheckResult {
 
 	pods := c.k8s.CoreV1().Pods(podCheck.Namespace)
 
-	if _, err := pods.Create(pod); err != nil {
+	if _, err := pods.Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
 		return unexpectedErrorf(podCheck, err, "unable to create pod")
 	}
 	defer func() {
@@ -205,7 +205,7 @@ func (c *PodChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 
 	deletion := NewTimer()
-	if err := pods.Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
+	if err := pods.Delete(context.TODO(), pod.Name, metav1.DeleteOptions{}); err != nil {
 		return unexpectedErrorf(podCheck, err, "failed to delete pod")
 	}
 
@@ -255,17 +255,17 @@ func (c *PodChecker) Cleanup(podCheck canaryv1.PodCheck) error {
 	if c.k8s == nil {
 		return fmt.Errorf("Connection to k8s not established")
 	}
-	err := c.k8s.CoreV1().Pods(podCheck.Namespace).DeleteCollection(nil, listOptions)
+	err := c.k8s.CoreV1().Pods(podCheck.Namespace).DeleteCollection(context.TODO(), metav1.DeleteOptions{}, listOptions)
 	if err != nil && !errors.IsNotFound(err) {
 		return perrors.Wrapf(err, "Failed to delete pods for check %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
 	}
 
-	services, err := c.k8s.CoreV1().Services(podCheck.Namespace).List(listOptions)
+	services, err := c.k8s.CoreV1().Services(podCheck.Namespace).List(context.TODO(), listOptions)
 	if err != nil {
 		return perrors.Wrapf(err, "Failed to get services for check %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
 	}
 	for _, s := range services.Items {
-		err = c.k8s.CoreV1().Services(podCheck.Namespace).Delete(s.Name, nil)
+		err = c.k8s.CoreV1().Services(podCheck.Namespace).Delete(context.TODO(), s.Name, metav1.DeleteOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			return perrors.Wrapf(err, "Failed to delete service %s in namespace %s : %v", s.Name, podCheck.Namespace, err)
 		}
@@ -367,22 +367,22 @@ func (c *PodChecker) createServiceAndIngress(podCheck canaryv1.PodCheck, pod *v1
 		},
 	}
 
-	if _, err := c.k8s.CoreV1().Services(svc.Namespace).Create(svc); err != nil {
+	if _, err := c.k8s.CoreV1().Services(svc.Namespace).Create(context.TODO(), svc, metav1.CreateOptions{}); err != nil {
 		return perrors.Wrapf(err, "Failed to create service for pod %s in namespace %s", pod.Name, pod.Namespace)
 	}
 
-	ingress, err := c.k8s.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Get(podCheck.IngressName, metav1.GetOptions{})
+	ingress, err := c.k8s.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Get(context.TODO(), podCheck.IngressName, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return perrors.Wrapf(err, "Failed to get ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
 	} else if err == nil {
 		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServiceName = svc.Name
 		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServicePort = intstr.FromInt(int(podCheck.Port))
-		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Update(ingress); err != nil {
+		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Update(context.TODO(), ingress, metav1.UpdateOptions{}); err != nil {
 			return perrors.Wrapf(err, "failed to update ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
 		}
 	} else {
 		ingress := c.newIngress(podCheck, svc.Name)
-		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Create(ingress); err != nil {
+		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Create(context.TODO(), ingress, metav1.CreateOptions{}); err != nil {
 			return perrors.Wrapf(err, "failed to create ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
 		}
 	}
@@ -472,7 +472,7 @@ func (c *PodChecker) podCheckSelector(podCheck canaryv1.PodCheck) string {
 
 func (c *PodChecker) podFailMessage(podCheck canaryv1.PodCheck, pod *v1.Pod) (string, error) {
 	pods := c.k8s.CoreV1().Pods(pod.Namespace)
-	p, err := pods.Get(pod.Name, metav1.GetOptions{})
+	p, err := pods.Get(context.TODO(), pod.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", perrors.Wrapf(err, "failed to get pod %s in namespace %s", pod.Name, pod.Namespace)
 	}
@@ -494,7 +494,7 @@ func (c *PodChecker) WaitForPod(ns, name string, timeout time.Duration, phases .
 	pods := c.k8s.CoreV1().Pods(ns)
 	start := time.Now()
 	for {
-		pod, err := pods.Get(name, metav1.GetOptions{})
+		pod, err := pods.Get(context.TODO(), name, metav1.GetOptions{})
 		if start.Add(timeout).Before(time.Now()) {
 			return pod, fmt.Errorf("Timeout exceeded waiting for %s is %s, error: %v", name, pod.Status.Phase, err)
 		}

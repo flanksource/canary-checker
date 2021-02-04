@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
@@ -87,12 +88,12 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		if err != nil {
 			return Failf(check, fmt.Sprintf("Unable to connect to k8s: %v", err))
 		}
-		serviceList, err := k8sClient.CoreV1().Services(namespace).List(metav1.ListOptions{})
+		serviceList, err := k8sClient.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return Failf(check, fmt.Sprintf("failed to obtain service list for namespace %v: %v", namespace, err))
 		}
 		for _, service := range serviceList.Items {
-			endPoints, err := k8sClient.CoreV1().Endpoints(namespace).Get(service.Name, metav1.GetOptions{})
+			endPoints, err := k8sClient.CoreV1().Endpoints(namespace).Get(context.TODO(), service.Name, metav1.GetOptions{})
 			if err != nil {
 				return Failf(check, fmt.Sprintf("Failed to obtain endpoints for service %v: %v", service.Name, err))
 			}
