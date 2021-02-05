@@ -40,11 +40,7 @@ func RunChecks(config v1.CanarySpec) []*pkg.CheckResult {
 	for _, c := range checks.All {
 		fmt.Printf("# Checking %v\n", c.Type())
 		result := c.Run(config)
-		if result == nil {
-			fmt.Println("## Null pointer returned")
-		} else {
-			results = append(results, result...)
-		}
+		results = append(results, result...)
 	}
 
 	return results

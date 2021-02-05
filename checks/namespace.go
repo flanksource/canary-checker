@@ -3,7 +3,6 @@ package checks
 import (
 	"context"
 	"fmt"
-	"github.com/kr/pretty"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -126,8 +125,6 @@ func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
 
 	logger.Debugf("Running namespace check %s", check.CheckName)
 	five := int64(5)
-	pretty.Println(c)
-	pretty.Println(c.k8s)
 	if _, err := c.k8s.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{TimeoutSeconds: &five}); err != nil {
 		return unexpectedErrorf(check, err, "cannot connect to API server")
 	}

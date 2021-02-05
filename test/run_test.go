@@ -68,8 +68,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestRunChecks(t *testing.T) {
-	fmt.Println("start of test")
-	fmt.Println(os.Getenv("KUBECONFIG"))
 	files, _ := ioutil.ReadDir("../fixtures")
 	wg := sync.WaitGroup{}
 	for _, fixture := range files {
@@ -86,7 +84,6 @@ func TestRunChecks(t *testing.T) {
 func runFixture(t *testing.T, name string) {
 	config := pkg.ParseConfig(fmt.Sprintf("../fixtures/%s", name))
 	t.Run(name, func(t *testing.T) {
-		fmt.Printf("In file %v\n", name)
 		checkResults := cmd.RunChecks(config)
 		for _, res := range checkResults {
 			if res == nil {

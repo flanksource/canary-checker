@@ -67,17 +67,12 @@ func GetClusterName(config *rest.Config) string {
 
 func GetKubeconfig() string {
 	var kubeConfig string
-	fmt.Printf("KUBECONFIG: \"%v\"\n", os.Getenv("KUBECONFIG"))
 	if os.Getenv("KUBECONFIG") != "" {
 		kubeConfig = os.Getenv("KUBECONFIG")
 	} else if home := homedir.HomeDir(); home != "" {
 		kubeConfig = filepath.Join(home, ".kube", "config")
-		fmt.Printf("Checking file %v...", kubeConfig)
 		if !files.Exists(kubeConfig) {
-			fmt.Println("failed")
 			kubeConfig = ""
-		} else {
-			fmt.Println("found")
 		}
 	}
 	return kubeConfig
