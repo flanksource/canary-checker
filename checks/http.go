@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/kr/pretty"
 	"io/ioutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net"
@@ -55,6 +56,8 @@ func (c *HttpChecker) Type() string {
 func (c *HttpChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
 	for _, conf := range config.HTTP {
+		fmt.Println("## HTTP Config:")
+		pretty.Print(conf)
 		results = append(results, c.Check(conf))
 	}
 	return results

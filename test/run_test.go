@@ -86,18 +86,14 @@ func runFixture(t *testing.T, name string) {
 	t.Run(name, func(t *testing.T) {
 		fmt.Printf("In file %v\n", name)
 		checkResults := cmd.RunChecks(config)
-		var tempbuf []*pkg.CheckResult
-		tempbuf = append(tempbuf, &pkg.CheckResult{})
 		for _, res := range checkResults {
 			if res == nil {
-				t.Errorf("Result in %v returned nil\nResult so far:\n %+v", name, tempbuf)
+				t.Errorf("Result in %v returned nil:\n", name)
 
 			} else if strings.Contains(name, "fail") && res.Pass {
-				tempbuf = append(tempbuf, res)
 				t.Errorf("Expected test to fail, but it passed: %s", res)
 
 			} else if !strings.Contains(name, "fail") && !res.Pass {
-				tempbuf = append(tempbuf, res)
 				t.Errorf("Expected test to pass but it failed %s", res)
 			}
 		}
