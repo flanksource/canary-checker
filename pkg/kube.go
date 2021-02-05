@@ -67,7 +67,7 @@ func GetClusterName(config *rest.Config) string {
 
 func GetKubeconfig() string {
 	var kubeConfig string
-	fmt.Printf("KUBECONFIG: %v\n", os.Getenv("KUBECONFIG"))
+	fmt.Printf("KUBECONFIG: \"%v\"\n", os.Getenv("KUBECONFIG"))
 	if os.Getenv("KUBECONFIG") != "" {
 		kubeConfig = os.Getenv("KUBECONFIG")
 	} else if home := homedir.HomeDir(); home != "" {
