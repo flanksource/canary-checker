@@ -15,8 +15,8 @@ package pkg
 
 import (
 	"context"
-	"fmt"
-	"io/ioutil"
+	"github.com/flanksource/commons/logger"
+	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"path/filepath"
 
@@ -32,14 +32,12 @@ import (
 
 func NewK8sClient() (*kubernetes.Clientset, error) {
 	kubeConfig := GetKubeconfig()
-	configBytes, err := ioutil.ReadFile(kubeConfig)
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "Could not read kubernetes config")
+		return nil, errors.Wrap(err, "Failed to generate rest config")
 	}
-	Client, err := kommons.NewClientFromBytes(configBytes)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to create kommons wrapper")
-	}
+
+	Client := kommons.NewClient(config, logger.StandardLogger())
 	clientset, err := Client.GetClientset()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create k8s client")
