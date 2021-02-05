@@ -6,6 +6,7 @@ export PLATFORM_CLI_VERSION=v0.17.9
 export PLATFORM_CLI="./platform-cli -c test/config.yaml"
 export KUBECONFIG=~/.kube/config
 export DOCKER_API_VERSION=1.39
+TESTHOME=$HOME
 
 
 if which karina 2>&1 > /dev/null; then
@@ -49,4 +50,4 @@ make static
 cd test
 go test -p 1 ./... -v -c
 # ICMP requires privelages so we run the tests with sudo
-sudo DOCKER_API_VERSION=1.39 ./test.test  -test.v
+sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG ./test.test  -test.v
