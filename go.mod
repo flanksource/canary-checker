@@ -44,6 +44,7 @@ require (
 	k8s.io/api v0.20.2
 	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v11.0.0+incompatible
+	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/controller-runtime v0.5.7
 	sigs.k8s.io/controller-tools v0.2.5 // indirect
 	sigs.k8s.io/yaml v1.2.0
@@ -56,5 +57,5 @@ replace (
 	k8s.io/api => k8s.io/api v0.19.4
 	k8s.io/client-go => k8s.io/client-go v0.19.4
 	k8s.io/kubectl => k8s.io/kubectl v0.19.4
-	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.8.1
+	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.7.2
 )
