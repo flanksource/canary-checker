@@ -18,6 +18,7 @@ require (
 	github.com/go-logr/zapr v0.2.0
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/hashicorp/vault/api v1.0.4
+	github.com/kr/pretty v0.2.0
 	github.com/lib/pq v1.9.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/mitchellh/reflectwalk v1.0.1

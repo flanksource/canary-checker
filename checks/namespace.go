@@ -59,7 +59,7 @@ func (c *NamespaceChecker) Run(config canaryv1.CanarySpec) []*pkg.CheckResult {
 		if c.k8s == nil {
 			k8sClient, err := pkg.NewK8sClient()
 			if err != nil {
-				results = append(results, unexpectedErrorf(config.Namespace[0],err,"Could not initialise k8s client"))
+				results = append(results, unexpectedErrorf(config.Namespace[0], err, "Could not initialise k8s client"))
 				return results
 			}
 			c.k8s = k8sClient

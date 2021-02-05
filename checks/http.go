@@ -56,8 +56,9 @@ func (c *HttpChecker) Type() string {
 func (c *HttpChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
 	for _, conf := range config.HTTP {
-		fmt.Println("## HTTP Config:")
+		fmt.Println("HTTP Config:")
 		pretty.Print(conf)
+		fmt.Println("")
 		results = append(results, c.Check(conf))
 	}
 	return results
