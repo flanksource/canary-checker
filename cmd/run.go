@@ -38,7 +38,12 @@ func RunChecks(config v1.CanarySpec) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
 
 	for _, c := range checks.All {
-		results = append(results, c.Run(config)...)
+		result := c.Run(config)
+		for _, r := range result {
+			if r != nil {
+				results = append(results, r)
+			}
+		}
 	}
 
 	return results

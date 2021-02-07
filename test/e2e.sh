@@ -49,4 +49,4 @@ make static
 cd test
 go test ./... -v -c
 # ICMP requires privelages so we run the tests with sudo
-sudo DOCKER_API_VERSION=1.39 ./test.test  -test.v
+sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG ./test.test  -test.v

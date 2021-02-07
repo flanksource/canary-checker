@@ -63,7 +63,7 @@ const FinalizerName = "canary.canaries.flanksource.com"
 
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries/status,verbs=get;update;patch
-func (r *CanaryReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *CanaryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	if r.IncludeNamespace != "" && r.IncludeNamespace != req.Namespace {
 		r.Log.V(2).Info("namespace not included, skipping")
 		return ctrl.Result{}, nil
@@ -73,7 +73,6 @@ func (r *CanaryReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
-	ctx := context.Background()
 	logger := r.Log.WithValues("canary", req.NamespacedName)
 
 	check := &v1.Canary{}
@@ -98,9 +97,7 @@ func (r *CanaryReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// Add finalizer first if not exist to avoid the race condition between init and delete
 	if !controllerutil.ContainsFinalizer(check, FinalizerName) {
 		logger.Info("adding finalizer", "finalizers", check.GetFinalizers())
-		if err := controllerutil.AddFinalizerWithError(check, FinalizerName); err != nil {
-			return ctrl.Result{}, err
-		}
+		controllerutil.AddFinalizer(check, FinalizerName)
 		logger.Info("added finalizer", "finalizers", check.GetFinalizers())
 		if err := r.Update(ctx, check); err != nil {
 			return ctrl.Result{}, err

@@ -14,28 +14,31 @@ limitations under the License.
 package pkg
 
 import (
+	"context"
+	"github.com/flanksource/commons/logger"
+	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"path/filepath"
 
 	"github.com/flanksource/commons/files"
+	"github.com/flanksource/kommons"
 	"github.com/pkg/errors"
 	"gopkg.in/flanksource/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/homedir"
-
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 func NewK8sClient() (*kubernetes.Clientset, error) {
 	kubeConfig := GetKubeconfig()
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to generate rest config")
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
+	Client := kommons.NewClient(config, logger.StandardLogger())
+	clientset, err := Client.GetClientset()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create k8s client")
 	}
@@ -48,7 +51,7 @@ func GetClusterName(config *rest.Config) string {
 	if err != nil {
 		return ""
 	}
-	kubeadmConfig, err := clientset.CoreV1().ConfigMaps("kube-system").Get("kubeadm-config", metav1.GetOptions{})
+	kubeadmConfig, err := clientset.CoreV1().ConfigMaps("kube-system").Get(context.TODO(), "kubeadm-config", metav1.GetOptions{})
 	if err != nil {
 		return ""
 	}

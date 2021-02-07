@@ -55,8 +55,18 @@ func NewNamespaceChecker() *NamespaceChecker {
 // Returns check result and metrics
 func (c *NamespaceChecker) Run(config canaryv1.CanarySpec) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.Namespace {
-		results = append(results, c.Check(conf))
+	if len(config.Namespace) > 0 {
+		if c.k8s == nil {
+			k8sClient, err := pkg.NewK8sClient()
+			if err != nil {
+				results = append(results, unexpectedErrorf(config.Namespace[0], err, "Could not initialise k8s client"))
+				return results
+			}
+			c.k8s = k8sClient
+		}
+		for _, conf := range config.Namespace {
+			results = append(results, c.Check(conf))
+		}
 	}
 	return results
 }
@@ -91,7 +101,7 @@ func (c *NamespaceChecker) newPod(check canaryv1.NamespaceCheck, ns *v1.Namespac
 func (c *NamespaceChecker) getConditionTimes(ns *v1.Namespace, pod *v1.Pod) (times map[v1.PodConditionType]metav1.Time, err error) {
 	pods := c.k8s.CoreV1().Pods(ns.Name)
 	times = make(map[v1.PodConditionType]metav1.Time)
-	pod, err = pods.Get(pod.Name, metav1.GetOptions{})
+	pod, err = pods.Get(context.TODO(), pod.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +125,7 @@ func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
 
 	logger.Debugf("Running namespace check %s", check.CheckName)
 	five := int64(5)
-	if _, err := c.k8s.CoreV1().Nodes().List(metav1.ListOptions{TimeoutSeconds: &five}); err != nil {
+	if _, err := c.k8s.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{TimeoutSeconds: &five}); err != nil {
 		return unexpectedErrorf(check, err, "cannot connect to API server")
 	}
 
@@ -129,7 +139,7 @@ func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
 			Annotations: check.NamespaceAnnotations,
 		},
 	}
-	if _, err := namespaces.Create(ns); err != nil {
+	if _, err := namespaces.Create(context.TODO(), ns, metav1.CreateOptions{}); err != nil {
 		return unexpectedErrorf(check, err, "unable to create namespace")
 	}
 	defer func() {
@@ -143,7 +153,7 @@ func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
 
 	pods := c.k8s.CoreV1().Pods(ns.Name)
 
-	if _, err := pods.Create(pod); err != nil {
+	if _, err := pods.Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
 		return unexpectedErrorf(check, err, "unable to create pod")
 	}
 	pod, err = c.WaitForPod(ns.Name, pod.Name, time.Millisecond*time.Duration(check.ScheduleTimeout), v1.PodRunning)
@@ -171,7 +181,7 @@ func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
 
 	deleteOk := true
 	deletion := NewTimer()
-	if err := pods.Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
+	if err := pods.Delete(context.TODO(), pod.Name, metav1.DeleteOptions{}); err != nil {
 		deleteOk = false
 		return unexpectedErrorf(check, err, "failed to delete pod")
 	}
@@ -217,7 +227,7 @@ func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
 }
 
 func (c *NamespaceChecker) Cleanup(ns *v1.Namespace) error {
-	if err := c.k8s.CoreV1().Namespaces().Delete(ns.Name, nil); err != nil {
+	if err := c.k8s.CoreV1().Namespaces().Delete(context.TODO(), ns.Name, metav1.DeleteOptions{}); err != nil {
 		return perrors.Wrapf(err, "Failed to delete namespace %s", ns.Name)
 	}
 	return nil
@@ -317,22 +327,22 @@ func (c *NamespaceChecker) createServiceAndIngress(check canaryv1.NamespaceCheck
 		},
 	}
 
-	if _, err := c.k8s.CoreV1().Services(svc.Namespace).Create(svc); err != nil {
+	if _, err := c.k8s.CoreV1().Services(svc.Namespace).Create(context.TODO(), svc, metav1.CreateOptions{}); err != nil {
 		return perrors.Wrapf(err, "Failed to create service for pod %s in namespace %s", pod.Name, pod.Namespace)
 	}
 
-	ingress, err := c.k8s.ExtensionsV1beta1().Ingresses(ns.Name).Get(check.IngressName, metav1.GetOptions{})
+	ingress, err := c.k8s.ExtensionsV1beta1().Ingresses(ns.Name).Get(context.TODO(), check.IngressName, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return perrors.Wrapf(err, "Failed to get ingress %s in namespace %s", check.IngressName, ns.Name)
 	} else if err == nil {
 		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServiceName = svc.Name
 		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServicePort = intstr.FromInt(int(check.Port))
-		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(ns.Name).Update(ingress); err != nil {
+		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(ns.Name).Update(context.TODO(), ingress, metav1.UpdateOptions{}); err != nil {
 			return perrors.Wrapf(err, "failed to update ingress %s in namespace %s", check.IngressName, ns.Name)
 		}
 	} else {
 		ingress := c.newIngress(check, ns, svc.Name)
-		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(ns.Name).Create(ingress); err != nil {
+		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(ns.Name).Create(context.TODO(), ingress, metav1.CreateOptions{}); err != nil {
 			return perrors.Wrapf(err, "failed to create ingress %s in namespace %s", check.IngressName, ns.Name)
 		}
 	}
@@ -417,7 +427,7 @@ func (c *NamespaceChecker) WaitForPod(ns, name string, timeout time.Duration, ph
 	pods := c.k8s.CoreV1().Pods(ns)
 	start := time.Now()
 	for {
-		pod, err := pods.Get(name, metav1.GetOptions{})
+		pod, err := pods.Get(context.TODO(), name, metav1.GetOptions{})
 		if start.Add(timeout).Before(time.Now()) {
 			return pod, fmt.Errorf("Timeout exceeded waiting for %s is %s, error: %v", name, pod.Status.Phase, err)
 		}
