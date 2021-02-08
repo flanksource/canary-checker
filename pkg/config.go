@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -9,6 +10,7 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/kommons/ktemplate"
 	"github.com/mitchellh/reflectwalk"
 	"gopkg.in/flanksource/yaml.v3"
 )
@@ -20,11 +22,16 @@ func ParseConfig(configfile string) v1.CanarySpec {
 	if err != nil {
 		logger.Infof("yamlFile.Get err   #%v ", err)
 	}
-	yamlerr := yaml.Unmarshal([]byte(data), &config)
+	envVar := GetEnvMap()
+	parsed, err := ApplyGomplate(string(data), envVar)
+	if err != nil {
+		logger.Infof("Gomplate parsing err   #%v ", err)
+	}
+	yamlerr := yaml.Unmarshal([]byte(parsed), &config)
 	if yamlerr != nil {
 		logger.Fatalf("error: %v", yamlerr)
 	}
-	return ApplyTemplates(config)
+	return ApplyTemplates(config, envVar)
 }
 
 type StructTemplater struct {
@@ -54,13 +61,26 @@ func (w StructTemplater) Template(val string) string {
 	return val
 }
 
-func ApplyTemplates(config v1.CanarySpec) v1.CanarySpec {
+func GetEnvMap() map[string]string {
 	var values = make(map[string]string)
 	for _, environ := range os.Environ() {
 		values[strings.Split(environ, "=")[0]] = strings.Split(environ, "=")[1]
 	}
+	return values
+}
+
+func ApplyTemplates(config v1.CanarySpec, values map[string]string) v1.CanarySpec {
 	if err := reflectwalk.Walk(&config, StructTemplater{Values: values}); err != nil {
 		fmt.Println(err)
 	}
 	return config
+}
+
+func ApplyGomplate(rawInput string, values map[string]string) (string, error) {
+	k8sClient, err := NewK8sClient()
+	if err != nil {
+		return rawInput, errors.Wrap(err, "Failed to generate new k8s client")
+	}
+	fns := ktemplate.NewFunctions(k8sClient)
+	return fns.Template(rawInput, values)
 }
