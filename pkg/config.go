@@ -8,9 +8,9 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/kommons/ktemplate"
 	"github.com/mitchellh/reflectwalk"
 	"gopkg.in/flanksource/yaml.v3"
-	"github.com/flanksource/kommons/ktemplate"
 )
 
 // ParseConfig : Read config file

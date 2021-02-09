@@ -246,7 +246,7 @@ func LoadSecrets(client CanaryReconciler, canary v1.Canary) (v1.CanarySpec, erro
 	if err != nil {
 		logger.Warnf("Could not create k8s client for templating: %v", err)
 	}
-	err := reflectwalk.Walk(val, ktemplate.StructTemplater{
+	err = reflectwalk.Walk(val, ktemplate.StructTemplater{
 		Values:    values,
 		Clientset: k8sclient,
 	})
