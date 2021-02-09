@@ -2,10 +2,8 @@ package pkg
 
 import (
 	"fmt"
-	"go.opencensus.io/resource/resourcekeys"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"strings"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
