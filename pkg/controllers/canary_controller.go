@@ -19,6 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/kommons/ktemplate"
 	"sync"
 	"time"
 
@@ -28,7 +30,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/metrics"
-	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/go-logr/logr"
 	"github.com/mitchellh/reflectwalk"
 	"github.com/robfig/cron/v3"
@@ -241,10 +242,14 @@ func LoadSecrets(client CanaryReconciler, canary v1.Canary) (v1.CanarySpec, erro
 	}
 
 	var val *v1.CanarySpec = &canary.Spec
-
-	if err := reflectwalk.Walk(val, utils.StructTemplater{Values: values}); err != nil {
-		return canary.Spec, err
+	k8sclient, err := pkg.NewK8sClient()
+	if err != nil {
+		logger.Warnf("Could not create k8s client for templating: %v", err)
 	}
-	return *val, nil
+	err := reflectwalk.Walk(val, ktemplate.StructTemplater{
+		Values:    values,
+		Clientset: k8sclient,
+	})
+	return *val, err
 
 }
