@@ -3,42 +3,43 @@
 
         <auto-update-settings/>
 
-        <h1>Canary Checker</h1>
-
         <hr>
 
         <error-panel :error="error"/>
 
-        <table class="table table-fixed table-sm text-nowrap w-auto" id="checks" v-cloak>
-            <thead class="border-0">
-            <tr class="border-0">
-                <th class="min border-0 ">NS</th>
-                <th class="min  border-0">Type</th>
-                <th class="min border-0">Name</th>
-                <th class="min border-0 ">Description</th>
-                <th :key="server" class="min  border-0" v-for="(server, serverName) in serversByNames">{{ serverName }}</th>
-                <!--  this invisible borderless "spacer" column fills the rest of the widths-->
-                <td class="border-0"></td>
-            </tr>
+        <table class="table table-sm table-fixed text-nowrap" id="checks" v-cloak>
+            <thead>
+            <th class="border-right">Description</th>
+            <th :key="server" class="border-right" v-for="(server, serverName) in serversByNames">{{ serverName }}</th>
             </thead>
+           <tbody>
+            <template v-for="(checksByName, namespace) in groupedChecks">
 
-            <template v-for="(typed, name) in groupedChecks">
-                <tbody :key="name" class="border-bottom border-top-0">
-                    <!-- Namespace Header for this grouped check-->
-                    <tr :key="name" class="pt-6 namespace border-top-0 border-bottom-0">
-                        <td class="border-0 namespace" colspan="4">
-                            <span class="badge badge-secondary">{{name.split('/')[0]}}</span>
+                <tr :key="namespace">
+                    <td :colspan="servers.length+1">
+                          <span class="badge badge-secondary">{{ shortHand(namespace, nsLimit) }}</span>
+                    </td>
+                </tr>
+
+                <template v-for="(check) in checksByName" >
+                    <tr :key="checkKey(check)" >
+                        <td>
+                                <img :src="'images/' + check.type + '.svg'" :title="check.type " height="20px">  {{ shortHand(check.name, 60)}}
+                        </td>
+
+                        <td v-for="server in serversByNames" :key="server" class="align-top border-right border-left">
+                            <div>
+                              <status-strip  :checks="check.items" :server="server"
+                                          color="#28a745" error-color="#dc3545"
+                                           :bar-width="20" :bar-spacing="5" :barMaxHeight="20"
+                                           :zoominess="0.85"/>
+                            </div>
                         </td>
                     </tr>
-                    <template v-for="(mergedChecks, type) in typed">
-                        <template v-for="(checkSet, mergedDesc) in mergedChecks">
-                            <check :checkSet="checkSet" :key="type+'-'+name+'-'+mergedDesc" :mergedDesc="mergedDesc"
-                                   :name="name.split('/')[1]" :type="type"/>
-                        </template>
-                    </template>
-                </tbody>
-            </template>
+                </template>
 
+            </template>
+            </tbody>
         </table>
 
         <div id="last-refreshed" v-cloak v-if="lastRefreshed">
@@ -52,104 +53,198 @@
 </template>
 
 <script>
-    import Vuex from 'vuex'
+import Vuex from "vuex";
 
-    import store from './store'
-    import AutoUpdateSettings from './components/AutoUpdateSettings.vue'
-    import ErrorPanel from './components/ErrorPanel.vue'
-    import Check from "./components/Check";
+import store from "./store";
+import AutoUpdateSettings from "./components/AutoUpdateSettings.vue";
+import ErrorPanel from "./components/ErrorPanel.vue";
+import StatusStrip from "./components/StatusStrip.vue";
 
+export default {
+  name: "App",
+  components: {
+    AutoUpdateSettings,
+    ErrorPanel,
+    StatusStrip,
+  },
+  store: store,
+  created() {
+    this.$store.dispatch("fetchData");
+    this.$store.dispatch("resumeAutoUpdate");
+  },
+  data() {
+    return {
+      descLimit: 60,
+      nsLimit: 31,
+    };
+  },
+  computed: {
+    ...Vuex.mapState([
+      "error",
+      "servers",
+      "lastRefreshed",
+      "checks",
+      "disableReload",
+    ]),
+    ...Vuex.mapGetters(["serversByNames", "groupedChecks"]),
 
-    export default {
-        name: 'App',
-        components: {
-            AutoUpdateSettings,
-            ErrorPanel,
-            Check,
-        },
-        store: store,
-        created() {
-            this.$store.dispatch('fetchData')
-            this.$store.dispatch('resumeAutoUpdate')
-        },
-        data() {
-            return {
-                descLimit: 41,
-                nsLimit: 31
-            }
-        },
-        computed: {
-            ...Vuex.mapState(['error', 'servers', 'lastRefreshed', 'checks', 'disableReload']),
-            ...Vuex.mapGetters(['serversByNames', 'groupedChecks']),
-            shortHand() {
-                return (txt, limit) => {
-                    return txt.slice(0, limit) + (txt.length > limit ? "..." : "");
-                }
-            },
-            calcTooltipId() {
-                return (mergedDesc, name, type) => {
-                    return window.btoa(mergedDesc + name + type)
-                }
-            },
-        },
-        methods: {
-            ...Vuex.mapActions(['pauseAutoUpdate', 'resumeAutoUpdate']),
+    shortHand() {
+      return (txt, limit) => {
+        return txt.slice(0, limit) + (txt.length > limit ? "..." : "");
+      };
+    },
+
+    checkName() {
+      return (check) => {
+        let name = check.description
+        if (name == null || name == "") {
+          name = check.name
         }
-    }
+        return name + " (" + check.name + "," + check.endpoint + ")"
+      }
+    },
+
+    checkKey() {
+      return (check) => {
+        let id = check.key + check.id + check.description + check.name + check.namespace + check.endpoint + check.ServerURL
+        return id
+      }
+    },
+
+    calcTooltipId() {
+      return (mergedDesc, name, type) => {
+        return window.btoa(mergedDesc + name + type);
+      };
+    },
+  },
+  methods: {
+    ...Vuex.mapActions(["pauseAutoUpdate", "resumeAutoUpdate"]),
+    async triggerMerged(checks, event) {
+      const btn = event.currentTarget;
+      btn.classList.toggle("btn-light");
+      await this.$store.dispatch("triggerMergedChecks", checks);
+      await this.$store.dispatch("fetchData");
+      btn.classList.toggle("btn-light");
+    },
+  },
+};
 </script>
 
 <style>
-    body {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
+body {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
 
-    h3 {
-        margin-top: 2rem;
-    }
+h3 {
+  margin-top: 2rem;
+}
 
-    .popover > h3 {
-        margin-top: 0;
-    }
+.popover > h3 {
+  margin-top: 0rem;
+}
 
-    .popover-body > hr {
-        margin: 0.4rem 0;
-    }
+.popover-body > hr {
+  margin: 0.4rem 0;
+}
 
-    [class*="col-"] {
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-        background-color: rgba(86, 61, 124, .15);
-        border: 1px solid rgba(86, 61, 124, .2);
-    }
+.popover-header > .description {
+  font-size: 0.75rem;
+}
 
-    hr {
-        margin-top: 2rem;
-        margin-bottom: 2rem;
-    }
+.tooltip-inner > .description {
+  font-size: 0.6rem;
+}
 
-    #last-refreshed {
-        color: #777;
-        font-size: 0.8em;
-    }
+.row {
+  margin-bottom: 1rem;
+}
 
-    [v-cloak] {
-        display: none;
-    }
+.row .row {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
 
-    /*These 'min'-classed columns should take minimal width based on content*/
-    th.min {
-        width: 1%;
-        white-space: nowrap;
-    }
+[class*="col-"] {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  background-color: rgba(86, 61, 124, 0.15);
+  border: 1px solid rgba(86, 61, 124, 0.2);
+}
 
-    /*The 'namespace'-classed rows should have a bit of extra vertical seperation space*/
-    tr.namespace {
-        height: 2.5rem;
-    }
+hr {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
 
-    td.namespace {
-        vertical-align: bottom;
-    }
+#last-refreshed {
+  color: #777;
+  font-size: 0.8em;
+}
 
+div.check-status-container {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.btn-group-xs > .btn,
+.btn-xs {
+  padding: 0.25rem 0.4rem;
+  font-size: 0.875rem;
+  line-height: 0.75;
+  border-radius: 0.2rem;
+}
+
+[v-cloak] {
+  display: none;
+}
+
+.material-icons.md-18 {
+  font-size: 18px;
+}
+
+.material-icons.md-14 {
+  font-size: 14px;
+}
+
+.material-icons.md-12 {
+  font-size: 12px;
+}
+
+.w-10 {
+  width: 10% !important;
+}
+
+.group-section {
+  width: 150px;
+}
+
+.check-section-header {
+  height: 1.5rem;
+}
+
+.slide-enter {
+  opacity: 0;
+}
+
+.slide-enter-active {
+  transition: all 0.5s ease-out;
+}
+
+.slide-leave-active {
+  transition: opacity 300ms ease-out;
+}
+
+.slide-leave {
+  opacity: 0;
+}
+
+.slide-move {
+  transition: all 250ms ease-in;
+}
+
+.check-button {
+  transition: all 0.4s linear;
+  transition-property: color, background-color, border-color;
+}
 </style>

@@ -1,74 +1,67 @@
 <template>
     <div class="status-strip" >
-        <template v-if="barSet.length<1">
-            <pre class="nodata">   no data</pre>
-        </template>
-        <template v-else>
-            <check-time :time="latest" v-if="showLatest"/>
-            <check-time time="   " v-else/>
-            <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    style="text-wrap: normal;"
-                    baseProfile="tiny"
-                    version="1.2"
-                    :width="fullWidth"
-                    :height="barMaxHeight">
-                <g
-                        v-for="(bar, index) in barSet"
-                        :id="'bar-'+barSet[index].key"
-                        :key="keyBar(barSet[index].key)">
-                    <!-- This rect is not for visual effect,-->
-                    <!-- but makes the following, actual    -->
-                    <!-- data bar easier to select when it  -->
-                    <!-- is narrow.                         -->
-                    <rect
-                            :height="barMaxHeight" :width="barWidth"
-                            :x="barSet[index].x"
-                            :style=" {fill: 'white'}"/>
-                    <rect
-                            :height="barSet[index].height" :width="barWidth"
-                            :x="barSet[index].x" :y="barSet[index].y"
-                            :style=" {fill: barSet[index].color}"/>
-                </g>
-            </svg>
-            <check-time :time="earliest"/>
-            <bar-popover
-                    v-for="bar in barSet"
-                    :key="keyPopover(bar.key)"
-                    :target="'bar-'+bar.key"
-                    :checkStatusKey="bar.key"
-                    :description="bar.description"
-                    :time="bar.time" :duration="bar.duration"
-                    :message="bar.message"
-                    :health="bar.health"/>
-            <check-prometheus
-                    v-for="bar in barSet"
-                    :key="keyCheck(bar.key)"
-                    :checkType="bar.checkType"
-                    :check-key="bar.endpoint"
-                    :canary-name="bar.canaryName"
-                    :target-id="modalName(bar.key)"></check-prometheus>
-        </template>
+        <div class="time-bookend" >{{latest}}</div>
+        <svg
+                xmlns="http://www.w3.org/2000/svg"
+                style="text-wrap: normal;"
+                baseProfile="tiny"
+                version="1.2"
+                :width="fullWidth"
+                :height="barMaxHeight">
+            <g
+                    v-for="(bar, index) in barSet"
+                    :id="'bar-'+barSet[index].key"
+                    :key="keyBar(barSet[index].key)">
+                <!-- This rect is not for visual effect,-->
+                <!-- but makes the following, actual    -->
+                <!-- data bar easier to select when it  -->
+                <!-- is narrow.                         -->
+                <rect
+                        :height="barMaxHeight" :width="barWidth"
+                        :x="barSet[index].x"
+                        :style=" {fill: 'white'}"/>
+                <rect
+                        :height="barSet[index].height" :width="barWidth"
+                        :x="barSet[index].x" :y="barSet[index].y"
+                        :style=" {fill: barSet[index].color}"/>
+            </g>
+        </svg>
+       <div class="time-bookend right" >{{earliest}}</div>
+        <bar-popover
+                v-for="bar in barSet"
+                :key="keyPopover(bar.key)"
+                :target="'bar-'+bar.key"
+                :checkStatusKey="bar.key"
+                :description="bar.description"
+                :time="bar.time" :duration="bar.duration"
+                :message="bar.message"
+                :health="bar.health"/>
+        <check-prometheus
+                v-for="bar in barSet"
+                :key="keyCheck(bar.key)"
+                :checkType="bar.checkType"
+                :check-key="bar.endpoint"
+                :canary-name="bar.canaryName"
+                :target-id="modalName(bar.key)"></check-prometheus>
     </div>
 </template>
 
 <script>
-    import CheckTime from './CheckTime'
     import BarPopover from "./BarPopover";
     import CheckPrometheus from "./CheckPrometheus";
 
     export default {
         name: "StatusStrip",
         components: {
-            CheckTime,
             BarPopover,
             CheckPrometheus,
         },
         props: {
-            checkSet: {
+            checks: {
                 type: Array,
                 required: true,
             },
+
             server: {
                 type: String,
                 required: true,
@@ -110,28 +103,22 @@
             },
         },
         computed: {
-            statusesSet() {
-                let statusesSet = []
-                let serverRelatedCount = 0
-                for (const check of this.checkSet) {
-                    if (check.checkStatuses[this.server]) {
-                        serverRelatedCount += 1
-                        for (const checkStatus of check.checkStatuses[this.server]) {
-                            statusesSet.push({check, checkStatus})
-                        }
+            check() {
+                return this.checks[0]
+            },
+
+            statii() {
+                let statii = []
+
+                for (const check of this.checks) {
+                    if (check.checkStatuses[this.server] != null) {
+                        statii.push(...check.checkStatuses[this.server])
                     }
                 }
-
-                const sorted = this.$_.sortBy(statusesSet, function (statusData) {
-                    return new Date(statusData.checkStatus.time + " UTC");
-                }).reverse();
-
-                const chunked = this.$_.chunk(sorted, serverRelatedCount * 2)
-
-                return this.checkSet.length === 1 ? sorted : chunked[0]
+                return statii
             },
             fullWidth() {
-                return (this.barWidth + this.barSpacing) * this.statusesSet.length
+                return (this.barWidth + this.barSpacing) * this.statii.length
             },
             barSet() {
                 let barSet = []
@@ -139,55 +126,50 @@
                 //to be able to scale the data to fit in the allocated height
                 let maxDuration = null
                 let minDuration = null
-                for (const statusData of this.statusesSet) {
-                    if (!statusData.checkStatus.status) {
+                for (const statusData of this.statii) {
+                    if (!statusData.status) {
                         continue
                     }
-                    if (maxDuration === null || statusData.checkStatus.duration > maxDuration) {
-                        maxDuration = statusData.checkStatus.duration
+                    if (maxDuration === null || statusData.duration > maxDuration) {
+                        maxDuration = statusData.duration
                     }
-                    if (minDuration === null || statusData.checkStatus.duration < minDuration) {
-                        minDuration = statusData.checkStatus.duration
+                    if (minDuration === null || statusData.duration < minDuration) {
+                        minDuration = statusData.duration
                     }
                 }
 
                 let i = 0
-                for (const statusData of this.statusesSet) {
+                for (const statusData of this.statii) {
+                    // default to  a full bar
+                    normalizedDuration = this.barMaxHeight
                     //scale the duration based on the minimum, maximum and zoominess
-                    if (statusData.checkStatus.status) {
-                        if (statusData.checkStatus.duration != 0) {
-                            const offsetDuration = statusData.checkStatus.duration - minDuration * this.zoominess
-                            const scaledDuration = offsetDuration / (maxDuration - minDuration * this.zoominess)
+                    if (statusData.status) {
+                        const offsetDuration = statusData.duration - minDuration * this.zoominess
+                        const scaledDuration = offsetDuration / (maxDuration - minDuration * this.zoominess)
+                        if (scaledDuration > 0) {
                             var normalizedDuration = scaledDuration * this.barMaxHeight
-                            if (normalizedDuration < 0.5) {
-                                // show at least a sliver for the minimum value
-                                normalizedDuration = 0.5
-                            }
-                        } else {
-                            // for a zero duration sample we show a full bar
-                            normalizedDuration = this.barMaxHeight
                         }
-                    } else {
-                        // for an invalid sample we show a full bar
-                        normalizedDuration = this.barMaxHeight
+                        if (normalizedDuration < 0.5) {
+                            // show at least a sliver for the minimum value
+                            normalizedDuration = 0.5
+                        }
                     }
-
                     let bar = {
-                        "key": statusData.checkStatus.key,
+                        "key": statusData.key,
                         "width": this.barWidth,
-                        "height": statusData.checkStatus.status ? normalizedDuration : this.barMaxHeight,
+                        "height": statusData.status ? normalizedDuration : this.barMaxHeight,
                         "x": (this.barWidth + this.barSpacing) * i,
-                        "y": statusData.checkStatus.status ? (this.barMaxHeight - normalizedDuration) : 0,
-                        "color": statusData.checkStatus.status ? this.color : this.errorColor,
-                        "checkStatus": statusData.checkStatus,
-                        "description": statusData.check.description,
-                        "message": statusData.checkStatus.message,
-                        "health": statusData.check.health[this.server],
-                        "duration": statusData.checkStatus.duration,
-                        "time": statusData.checkStatus.time,
-                        "checkType": statusData.check.type,
-                        "endpoint": statusData.check.endpoint,
-                        "canaryName": statusData.check.canaryName,
+                        "y": statusData.status ? (this.barMaxHeight - normalizedDuration) : 0,
+                        "color": statusData.status ? this.color : this.errorColor,
+                        "checkStatus": statusData,
+                        "description": this.check.description,
+                        "message": statusData.message,
+                        "health": this.check.health[this.server],
+                        "duration": statusData.duration,
+                        "time": statusData.time,
+                        "checkType": this.check.type,
+                        "endpoint": this.check.endpoint,
+                        "canaryName": this.check.canaryName,
                     }
                     barSet.push(bar);
                     i++
@@ -204,24 +186,38 @@
             },
             latestSoFar() {
                 var latestSoFar = null;
-                for (const statusData of this.statusesSet) {
-                    const checkDate = new Date(statusData.checkStatus.time + " UTC");
+                for (const statusData of this.statii) {
+                    const checkDate = new Date(statusData.time + " UTC");
                     if (latestSoFar === null || checkDate > latestSoFar) {
                         latestSoFar = checkDate
                     }
                 }
-                return latestSoFar
+                if (latestSoFar == null) {
+                    return ""
+                }
+                if ((Date.now() - new Date(latestSoFar).getTime()) < 61 * 1000) {
+                    return ""
+                }
+
+                return this.timeago().ago(latestSoFar, true)
             },
             earliest() {
                 var earliestSoFar = null;
-                for (const statusData of this.statusesSet) {
-                    const checkDate = new Date(statusData.checkStatus.time + " UTC");
+                for (const statusData of this.statii) {
+                    const checkDate = new Date(statusData.time + " UTC");
                     if (earliestSoFar === null || checkDate < earliestSoFar) {
                         earliestSoFar = checkDate
                     }
                 }
-                var ta = this.timeago();
-                return ta.ago(earliestSoFar, true).padStart(3," ")
+                if (earliestSoFar == null) {
+                    return ""
+                }
+
+                  if ((Date.now() - new Date(earliestSoFar).getTime()) < 601 * 1000) {
+                    return ""
+                }
+
+                return this.timeago().ago(earliestSoFar, true)
             },
         },
         methods: {
@@ -306,6 +302,18 @@
         padding: 0.5em 1em;
         font-family: "Courier New", Courier, monospace;
         margin-bottom: 0;
+    }
+    div.time-bookend {
+        display: inline-block;
+        vertical-align: middle;
+        font-size: xx-small;
+        padding: 0.5em 1em;
+    }
+    div.time-bookend-right {
+        float: right;
+        vertical-align: middle;
+        font-size: xx-small;
+        padding: 0.5em 1em;
     }
 </style>
 
