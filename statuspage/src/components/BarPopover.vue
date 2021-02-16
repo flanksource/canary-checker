@@ -5,7 +5,7 @@
             :target="target"
             triggers="hover"
             placement="top"
-            :delay="{ show: 100, hide: 100 }"
+            :delay="{ show: 150, hide: 0 }"
             @show="onShow">
         <template v-slot:title>
             <div class="description">{{description}}</div><div>{{elapsed}}</div>
@@ -14,7 +14,7 @@
             <div>{{message}}</div>
             <div class="duration">Duration: {{duration / 1000}}s <br/>{{dateTime}}</div>
             <hr/>
-            <div class="left health">Avg latency: {{health.latency}}<br/>Uptime: {{health.uptime}}</div>
+            <div class="left health" v-if="health != null" >Avg latency: {{health.latency}}<br/>Uptime: {{health.uptime}}</div>
             <button class="btn btn-info btn-xs float-right check-button mb-2" @click="triggerCheck" title="Trigger the check on particular server">
                 <sync-icon class="material-icons md-14 align-middle" />
             </button>
@@ -67,7 +67,7 @@
             },
             health: {
                 type: Object,
-                required: true
+                required: false
             },
         },
         methods: {

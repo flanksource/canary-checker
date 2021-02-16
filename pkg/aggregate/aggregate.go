@@ -24,6 +24,7 @@ type AggregateCheck struct {
 	Key         string                       `json:"key"`
 	Type        string                       `json:"type"`
 	Name        string                       `json:"name"`
+	Namespace   string                       `json:"namespace"`
 	CanaryName  string                       `json:"canaryName"`
 	Description string                       `json:"description"`
 	Endpoint    string                       `json:"endpoint"`
@@ -84,12 +85,11 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 	data := cache.GetChecks()
 
 	localServerId := fmt.Sprintf("%s@local", api.ServerName)
-	var aggregateDataKey string
 	for _, c := range data {
-		aggregateDataKey = c.Key + c.Description
-		aggregateData[aggregateDataKey] = &AggregateCheck{
+		aggregateData[c.ID()] = &AggregateCheck{
 			Key:         c.Key,
-			Name:        c.Name,
+			Name:        c.GetName(),
+			Namespace:   c.GetNamespace(),
 			CanaryName:  c.CanaryName,
 			Type:        c.Type,
 			Description: c.Description,
@@ -116,15 +116,15 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 		servers = append(servers, serverId)
 
 		for _, c := range apiResponse.Checks {
-			aggregateDataKey = c.Key + c.Description
-			ac, found := aggregateData[aggregateDataKey]
+			ac, found := aggregateData[c.ID()]
 			if found {
 				ac.Health[serverId] = CheckHealth{c.Latency, c.Uptime}
 				ac.Statuses[serverId] = c.Statuses
 			} else {
-				aggregateData[aggregateDataKey] = &AggregateCheck{
+				aggregateData[c.ID()] = &AggregateCheck{
 					Key:         c.Key,
-					Name:        c.Name,
+					Name:        c.GetName(),
+					Namespace:   c.GetNamespace(),
 					CanaryName:  c.CanaryName,
 					Type:        c.Type,
 					Description: c.Description,

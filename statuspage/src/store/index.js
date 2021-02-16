@@ -26,7 +26,7 @@ export default new Vuex.Store({
                 for (let [server, checkStatuses] of Object.entries(check.checkStatuses)) {
                     if (checkStatuses) {
                         for (let checkStatus of checkStatuses) {
-                            checkStatus.key = window.btoa(check.key + server + checkStatus.time)
+                            checkStatus.key = window.btoa(check.key + server + checkStatus.time + check)
                         }
                     } else {
                         check.checkStatuses = []
@@ -52,7 +52,7 @@ export default new Vuex.Store({
         }
     },
     actions: {
-        fetchData({commit}) {
+        fetchData({ commit }) {
             commit('SET_LOADING', true)
             return Axios
                 .get('/api/aggregate')
@@ -63,7 +63,7 @@ export default new Vuex.Store({
                 })
                 .catch((err) => {
                     if (typeof err.response === 'undefined') {
-                        commit('SET_ERROR', "Error: "+ err.message);
+                        commit('SET_ERROR', "Error: " + err.message);
                     }
                     if (err.response.status === 0) {
                         commit('SET_ERROR', "Error loading data from server: failed to connect to server")
@@ -75,38 +75,38 @@ export default new Vuex.Store({
                     commit('SET_LOADING', false)
                 })
         },
-        pauseAutoUpdate ({state, commit}) {
+        pauseAutoUpdate({ state, commit }) {
             commit('SET_DISABLE_RELOAD', true)
             clearInterval(state.reloadTimer)
             commit('SET_RELOAD_TIMER', null)
         },
-        resumeAutoUpdate({dispatch, commit}) {
+        resumeAutoUpdate({ dispatch, commit }) {
             commit('SET_DISABLE_RELOAD', false)
             commit('SET_RELOAD_TIMER', setInterval(() => { dispatch('fetchData') }, 20000)) // 20 seconds
         },
-        triggerSingleCheck({commit, dispatch}, {server, checkType, checkKey}) {
-            return Axios
-                .post('/api/triggerCheck', { server, checkKey, checkType })
-                .then(() => {
-                    dispatch('fetchData')
-                })
-                .catch((err) => {
-                    commit('SET_ERROR', "Trigger error: " + err.response.data)
-                })
+        async triggerSingleCheck({ commit, dispatch }, { server, checkType, checkKey }) {
+            try {
+                await Axios
+                    .post('/api/triggerCheck', { server, checkKey, checkType })
+                dispatch('fetchData')
+            } catch (err) {
+                commit('SET_ERROR', "Trigger error: " + err.response.data)
+            }
         },
-        triggerCheckOnAllServers({state, commit/*, dispatch*/}, check) {
+        async triggerCheckOnAllServers({ state, commit/*, dispatch*/ }, check) {
             let results = []
             for (const server of state.servers) {
                 if (check.checkStatuses[server]) {
                     results.push(Axios.post('/api/triggerCheck', { server, checkKey: check.key }))
                 }
             }
-            return Promise.all(results)
-                .catch((err) => {
-                    commit('SET_ERROR', "Trigger error: " + err.response.data)
-                })
+            try {
+                return Promise.all(results)
+            } catch (err) {
+                commit('SET_ERROR', "Trigger error: " + err.response.data)
+            }
         },
-        async triggerMergedChecks({dispatch}, checks) {
+        async triggerMergedChecks({ dispatch }, checks) {
             for (const check of checks) {
                 await dispatch('triggerCheckOnAllServers', check)
             }
@@ -116,33 +116,28 @@ export default new Vuex.Store({
         serversByNames: state => {
             return Lodash.fromPairs(state.servers.map(server => [server.split('@')[0], server]))
         },
+
+
         groupedChecks: state => {
-            const byName = Lodash.groupBy(state.checks, 'name')
-            for (const [name, checks] of Object.entries(byName)) {
-                let groupedType = Lodash.groupBy(checks, 'type')
-                for (const [type, checks] of Object.entries(groupedType)) {
-                    let mergedChecks = {}
-                    for (const check of checks) {
-                        let description = check.description === check.endpoint ? 'multiple' : check.description
-                        if (Lodash.has(mergedChecks, description)) {
-                            mergedChecks[description].push(check)
-                        } else {
-                            mergedChecks[description] = [check]
-                        }
-                    }
+            let group = {}
 
-                    for (const [title, merged] of Object.entries(mergedChecks)) {
-                        if (title.startsWith('multiple') && merged.length === 1) {
-                            mergedChecks[merged[0].description] = merged
-                            delete(mergedChecks[title])
-                        }
-                    }
-
-                    groupedType[type] = mergedChecks
+            for (const check of state.checks) {
+                let groupBy = check.name + check.type + check.description
+                if (group[check.namespace] == null) {
+                    group[check.namespace] = {}
                 }
-                byName[name] = groupedType
+
+                if (group[check.namespace][groupBy] == null) {
+                    group[check.namespace][groupBy] = {
+                        type: check.type,
+                        name: check.description ? check.description : check.name,
+                        items: []
+                    }
+                }
+
+                group[check.namespace][groupBy].items.push(check)
             }
-            return byName
+            return group
         }
     }
 })

@@ -55,6 +55,27 @@ type Check struct {
 	CheckCanary *v1.Canary    `json:"-"`
 }
 
+func (c Check) ID() string {
+	return c.Key + c.Endpoint + c.Description
+}
+
+func (c Check) GetNamespace() string {
+	if c.Namespace != "" {
+		return c.Namespace
+	}
+	return strings.Split(c.Name, "/")[0]
+}
+
+func (c Check) GetName() string {
+
+	parts := strings.Split(c.Name, "/")
+	if len(parts) == 1 {
+		return parts[0]
+	}
+	return parts[1]
+
+}
+
 type Checks []Check
 
 func (c Checks) Len() int {
