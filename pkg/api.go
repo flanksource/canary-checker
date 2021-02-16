@@ -18,7 +18,7 @@ type Endpoint struct {
 type JSONTime time.Time
 
 func (t JSONTime) MarshalJSON() ([]byte, error) {
-	stamp := fmt.Sprintf("\"%s\"", time.Time(t).Format("2006-01-02 15:04:05.001"))
+	stamp := fmt.Sprintf("\"%s\"", time.Time(t).Format("2006-01-02 15:04:05"))
 	return []byte(stamp), nil
 }
 
@@ -28,7 +28,7 @@ func (t *JSONTime) UnmarshalJSON(b []byte) error {
 		*t = JSONTime(time.Time{})
 		return nil
 	}
-	x, err := time.Parse("2006-01-02 15:04:05.001", s)
+	x, err := time.Parse("2006-01-02 15:04:05", s)
 	*t = JSONTime(x)
 	return err
 }
