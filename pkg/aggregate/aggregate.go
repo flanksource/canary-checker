@@ -84,7 +84,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 	aggregateData := map[string]*AggregateCheck{}
 	data := cache.GetChecks()
 
-	localServerId := fmt.Sprintf("%s@local", api.ServerName)
+	localServerId := api.ServerNames
 	for _, c := range data {
 		aggregateData[c.ID()] = &AggregateCheck{
 			Key:         c.Key,
