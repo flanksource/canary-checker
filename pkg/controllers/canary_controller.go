@@ -19,10 +19,11 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/kommons/ktemplate"
 	"sync"
 	"time"
+
+	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/kommons/ktemplate"
 
 	canariesv1 "github.com/flanksource/canary-checker/api/v1"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -213,7 +214,7 @@ func (c CanaryJob) GetNamespacedName() types.NamespacedName {
 
 func (c CanaryJob) Run() {
 
-	spec, err := LoadSecrets(c.Client, c.Check)
+	spec, err := c.LoadSecrets()
 	if err != nil {
 		c.Error(err, "Failed to load secrets")
 		return
@@ -227,21 +228,21 @@ func (c CanaryJob) Run() {
 
 	c.Client.Report(c.GetNamespacedName(), results)
 
-	c.V(2).Info("Ending")
+	c.V(3).Info("Ending")
 }
 
-func LoadSecrets(client CanaryReconciler, canary v1.Canary) (v1.CanarySpec, error) {
+func (c CanaryJob) LoadSecrets() (v1.CanarySpec, error) {
 	var values = make(map[string]string)
 
-	for key, source := range canary.Spec.Env {
-		val, err := v1.GetEnvVarRefValue(client.Kubernetes, canary.Namespace, &source, &canary)
+	for key, source := range c.Check.Spec.Env {
+		val, err := v1.GetEnvVarRefValue(c.Client.Kubernetes, c.Check.Namespace, &source, &c.Check)
 		if err != nil {
-			return canary.Spec, err
+			return c.Check.Spec, err
 		}
 		values[key] = val
 	}
 
-	var val *v1.CanarySpec = &canary.Spec
+	var val *v1.CanarySpec = &c.Check.Spec
 	k8sclient, err := pkg.NewK8sClient()
 	if err != nil {
 		logger.Warnf("Could not create k8s client for templating: %v", err)
