@@ -1,6 +1,6 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= flanksource/canary-checker:$(TAG)
+IMG ?= docker.io/flanksource/canary-checker:$(TAG)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= ""
 NAME=canary-checker
@@ -68,6 +68,19 @@ generate: controller-gen
 # Build the docker image
 docker-build:
 	docker build . -t ${IMG}
+
+
+
+# Build the docker image
+docker-dev: static linux
+	docker build ./ -f ./Dockerfile.dev -t ${IMG}
+
+
+docker-push-%:
+	docker build ./ -f ./Dockerfile.dev -t ${IMG}
+	docker tag $(IMG) $*/$(IMG)
+	docker push  $*/$(IMG)
+	kubectl set image deployment/$(NAME) $(NAME)=$*/$(IMG)
 
 # Push the docker image
 docker-push:

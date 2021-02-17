@@ -1,0 +1,9 @@
+FROM ubuntu:20.04
+WORKDIR /app
+RUN apt-get update && \
+  apt-get install -y ca-certificates && \
+  rm -Rf /var/lib/apt/lists/*  && \
+  rm -Rf /usr/share/doc && rm -Rf /usr/share/man  && \
+  apt-get clean
+COPY  ./.bin/canary-checker  /app
+ENTRYPOINT ["/app/canary-checker"]
