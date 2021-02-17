@@ -59,10 +59,14 @@ func connectWithDriver(driver string, connectionSting string, query string) (int
 	}
 	defer db.Close()
 
-	var resultValue int
-	err = db.QueryRow(query).Scan(&resultValue)
+	var count int
+	rows, err := db.Query(query)
 	if err != nil {
 		return 0, fmt.Errorf("failed to query db: %s", err.Error())
 	}
-	return resultValue, nil
+	for rows.Next() {
+		count++
+	}
+
+	return count, nil
 }
