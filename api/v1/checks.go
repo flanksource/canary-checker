@@ -218,7 +218,8 @@ type PostgresCheck struct {
 	Driver      string `yaml:"driver" json:"driver,omitempty"`
 	Connection  string `yaml:"connection" json:"connection,omitempty"`
 	Query       string `yaml:"query" json:"query,omitempty"`
-	Result      int    `yaml:"results" json:"result,omitempty"`
+	// Number rows to check for
+	Result int `yaml:"results" json:"results,omitempty"`
 }
 
 // Obfuscate passwords of the form ' password=xxxxx ' from connectionString since
