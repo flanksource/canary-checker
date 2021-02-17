@@ -113,8 +113,12 @@ export default new Vuex.Store({
         }
     },
     getters: {
-        serversByNames: state => {
-            return Lodash.fromPairs(state.servers.map(server => [server.split('@')[0], server]))
+        orderedServers: state => {
+            let servers = Lodash.uniqBy(Lodash.orderBy(
+                state.servers.map(server => { return { label: server.split('@')[0], value: server } }), ["label"], ["asc"]),
+                server => server.label
+            )
+            return servers
         },
 
 
@@ -130,6 +134,7 @@ export default new Vuex.Store({
                 if (group[check.namespace][groupBy] == null) {
                     group[check.namespace][groupBy] = {
                         type: check.type,
+                        namespace: check.namespace,
                         name: check.description ? check.description : check.name,
                         items: []
                     }
@@ -137,7 +142,20 @@ export default new Vuex.Store({
 
                 group[check.namespace][groupBy].items.push(check)
             }
-            return group
+
+            let ordered = []
+
+            for (let ns in group) {
+                let items = []
+                for (let groupBy in group[ns]) {
+                    items.push(group[ns][groupBy])
+                }
+                ordered.push({
+                    namespace: ns,
+                    items: Lodash.orderBy(items, ["name"], ["asc"]),
+                })
+            }
+            return ordered
         }
     }
 })

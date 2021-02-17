@@ -121,45 +121,33 @@
                 return (this.barWidth + this.barSpacing) * this.statii.length
             },
             barSet() {
+                const scaling = [10,100,1000,10000,60000]
+                let chosenScale = 10
                 let barSet = []
-                //first find the minimum and maximum durations (skipping non-durations)
-                //to be able to scale the data to fit in the allocated height
-                let maxDuration = null
-                let minDuration = null
+
+
                 for (const statusData of this.statii) {
-                    if (!statusData.status) {
-                        continue
-                    }
-                    if (maxDuration === null || statusData.duration > maxDuration) {
-                        maxDuration = statusData.duration
-                    }
-                    if (minDuration === null || statusData.duration < minDuration) {
-                        minDuration = statusData.duration
+                    for (let scale = 0; scale < scaling.length - 1; scale++) {
+                        if (statusData.duration >= scaling[scale]) {
+                            chosenScale = scaling[scale + 1]
+                        }
                     }
                 }
 
                 let i = 0
                 for (const statusData of this.statii) {
-                    // default to  a full bar
-                    normalizedDuration = this.barMaxHeight
-                    //scale the duration based on the minimum, maximum and zoominess
-                    if (statusData.status) {
-                        const offsetDuration = statusData.duration - minDuration * this.zoominess
-                        const scaledDuration = offsetDuration / (maxDuration - minDuration * this.zoominess)
-                        if (scaledDuration > 0) {
-                            var normalizedDuration = scaledDuration * this.barMaxHeight
-                        }
-                        if (normalizedDuration < 0.5) {
-                            // show at least a sliver for the minimum value
-                            normalizedDuration = 0.5
-                        }
+
+                    let height = this.barMaxHeight // default to  a full bar
+                    if (statusData.duration > 0) {
+                        height = (statusData.duration/chosenScale)*this.barMaxHeight
                     }
+                    height = Math.max(height, 2)
                     let bar = {
                         "key": statusData.key,
                         "width": this.barWidth,
-                        "height": statusData.status ? normalizedDuration : this.barMaxHeight,
+                        "height": height,
                         "x": (this.barWidth + this.barSpacing) * i,
-                        "y": statusData.status ? (this.barMaxHeight - normalizedDuration) : 0,
+                        "y": this.barMaxHeight - height,
                         "color": statusData.status ? this.color : this.errorColor,
                         "checkStatus": statusData,
                         "description": this.check.description,
@@ -177,14 +165,6 @@
                 return barSet;
             },
             latest() {
-                var ta = this.timeago();
-                return ta.ago(this.latestSoFar, true).padStart(3," ")
-            },
-            showLatest() {
-                var now = new Date();
-                return Math.abs(now-this.latestSoFar)>120000
-            },
-            latestSoFar() {
                 var latestSoFar = null;
                 for (const statusData of this.statii) {
                     const checkDate = new Date(statusData.time + " UTC");

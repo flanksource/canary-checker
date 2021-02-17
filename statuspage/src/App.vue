@@ -1,35 +1,34 @@
 <template>
+
     <div class="ml-4 mr-4" id="app">
-
+        <h1>Canary Checker</h1>
         <auto-update-settings/>
-
-        <hr>
 
         <error-panel :error="error"/>
 
         <table class="table table-sm table-fixed text-nowrap" id="checks" v-cloak>
             <thead>
             <th class="border-right">Description</th>
-            <th :key="server" class="border-right" v-for="(server, serverName) in serversByNames">{{ serverName }}</th>
+            <th :key="server.value" class="border-right" v-for="server in orderedServers">{{ server.label }}</th>
             </thead>
            <tbody>
-            <template v-for="(checksByName, namespace) in groupedChecks">
+            <template v-for="byNamespace in groupedChecks">
 
-                <tr :key="namespace">
+                <tr :key="byNamespace.namespace">
                     <td :colspan="servers.length+1">
-                          <span class="badge badge-secondary">{{ shortHand(namespace, nsLimit) }}</span>
+                          <span class="badge badge-secondary">{{ shortHand(byNamespace.namespace, nsLimit) }}</span>
                     </td>
                 </tr>
 
-                <template v-for="(check) in checksByName" >
+                <template v-for="(check) in byNamespace.items" >
                     <tr :key="checkKey(check)" >
                         <td>
-                                <img :src="'images/' + check.type + '.svg'" :title="check.type " height="20px">  {{ shortHand(check.name, 60)}}
+                                <img :src="'images/' + check.type + '.svg'" :title="check.type " height="20px">  {{ shortHand(checkName(check),60) }}
                         </td>
 
-                        <td v-for="server in serversByNames" :key="server" class="align-top border-right border-left">
+                        <td v-for="server in orderedServers" :key="server.value" class="align-top border-right border-left">
                             <div>
-                              <status-strip  :checks="check.items" :server="server"
+                              <status-strip  :checks="check.items" :server="server.value"
                                           color="#28a745" error-color="#dc3545"
                                            :bar-width="20" :bar-spacing="5" :barMaxHeight="20"
                                            :zoominess="0.85"/>
@@ -86,7 +85,7 @@ export default {
       "checks",
       "disableReload",
     ]),
-    ...Vuex.mapGetters(["serversByNames", "groupedChecks"]),
+    ...Vuex.mapGetters(["orderedServers", "groupedChecks"]),
 
     shortHand() {
       return (txt, limit) => {
@@ -100,7 +99,7 @@ export default {
         if (name == null || name == "") {
           name = check.name
         }
-        return name + " (" + check.name + "," + check.endpoint + ")"
+        return name
       }
     },
 
