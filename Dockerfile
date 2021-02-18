@@ -17,5 +17,11 @@ RUN GOOS=linux GOARCH=amd64 go build -o canary-checker -ldflags "-X \"main.versi
 
 FROM ubuntu:bionic
 WORKDIR /app
+# install CA certificates
+RUN apt-get update && \
+  apt-get install -y ca-certificates && \
+  rm -Rf /var/lib/apt/lists/*  && \
+  rm -Rf /usr/share/doc && rm -Rf /usr/share/man  && \
+  apt-get clean
 COPY --from=builder /app/canary-checker /app
 ENTRYPOINT ["/app/canary-checker"]
