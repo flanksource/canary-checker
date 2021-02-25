@@ -75,6 +75,18 @@ spec:
               memory: 200Mi
             limits:
               memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /index.html
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /index.html
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
       terminationGracePeriodSeconds: 10
 
 ---
