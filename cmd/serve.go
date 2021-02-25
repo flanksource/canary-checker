@@ -77,7 +77,7 @@ func serve(cmd *cobra.Command) {
 		logger.Infof("    npm run serve -- --port %d ", devGuiHttpPort)
 		logger.Infof("   )")
 	} else {
-		staticRoot = statuspage.FS(false)
+		staticRoot = nethttp.FS(statuspage.StaticContent)
 		allowedCors = ""
 	}
 

@@ -94,11 +94,11 @@ compress:
 
 
 .PHONY: linux
-linux: static
+linux: vue-dist
 	GOOS=linux go build -o ./.bin/$(NAME) -ldflags "-X \"main.version=$(VERSION)\""  main.go
 
 .PHONY: darwin
-darwin: static
+darwin: vue-dist
 	GOOS=darwin go build -o ./.bin/$(NAME)_osx -ldflags "-X \"main.version=$(VERSION)\""  main.go
 
 .PHONY: serve-docs
@@ -124,11 +124,6 @@ deploy-docs:
 .PHONY: vue-dist
 vue-dist:
 	cd statuspage && npm install && npm run build
-
-.PHONY: static
-static: vue-dist
-	which esc 2>&1 > /dev/null || go get -u github.com/mjibson/esc
-	cd statuspage/dist && esc -o ../static.go -pkg statuspage .
 
 .PHONY: build
 build:

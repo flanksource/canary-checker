@@ -7,7 +7,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     container:
-      image: flanksource/build-tools:0.6
+      image: flanksource/build-tools:v0.12.0
     steps:
       - uses: actions/checkout@master
       - run: ./release.sh
