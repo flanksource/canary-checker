@@ -4,6 +4,7 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/kommons"
 )
 
 type Checker interface {
@@ -27,4 +28,8 @@ var All = []Checker{
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),
+}
+
+type SetsClient interface {
+	SetClient(client *kommons.Client)
 }

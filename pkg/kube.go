@@ -31,19 +31,26 @@ import (
 )
 
 func NewK8sClient() (*kubernetes.Clientset, error) {
-	kubeConfig := GetKubeconfig()
-	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	Client, err := NewKommonsClient()
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to generate rest config")
+		return nil, errors.Wrap(err, "Could not create kommons client")
 	}
-
-	Client := kommons.NewClient(config, logger.StandardLogger())
 	clientset, err := Client.GetClientset()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create k8s client")
 	}
 
 	return clientset, nil
+}
+
+func NewKommonsClient() (*kommons.Client, error) {
+	kubeConfig := GetKubeconfig()
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to generate rest config")
+	}
+	Client := kommons.NewClient(config, logger.StandardLogger())
+	return Client, nil
 }
 
 func GetClusterName(config *rest.Config) string {

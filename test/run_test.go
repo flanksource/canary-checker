@@ -84,7 +84,7 @@ func TestRunChecks(t *testing.T) {
 func runFixture(t *testing.T, name string) {
 	config := pkg.ParseConfig(fmt.Sprintf("../fixtures/%s", name))
 	t.Run(name, func(t *testing.T) {
-		checkResults := cmd.RunChecks(config)
+		checkResults := cmd.RunChecks(config, "podinfo-test")
 		for _, res := range checkResults {
 			if res == nil {
 				t.Errorf("Result in %v returned nil:\n", name)

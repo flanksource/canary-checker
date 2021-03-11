@@ -1,0 +1,21 @@
+http:
+  - headers:
+    - name: test
+      value: test
+    - name: value
+      valueFrom:
+        secretKeyRef:
+          key: value
+          name: podinfo-header
+    responseJSONContent:
+      path: "$.Value[0]"
+      value: foo
+    endpoint: http://podinfo.127.0.0.1.nip.io/headers
+    responseCodes:
+      - 200
+  - method: POST
+    body: foo
+    responseContent: foo
+    endpoint: http://podinfo.127.0.0.1.nip.io/echo
+    responseCodes:
+      - 202

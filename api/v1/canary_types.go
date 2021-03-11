@@ -18,7 +18,6 @@ package v1
 
 import (
 	"fmt"
-
 	"github.com/flanksource/canary-checker/api/external"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -93,6 +92,12 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	}
 
 	return checks
+}
+
+func (spec CanarySpec) SetNamespaces(namespace string) {
+	for i, _ := range spec.HTTP {
+		spec.HTTP[i].SetNamespace(namespace)
+	}
 }
 
 func (c Canary) GetKey(check external.Check) string {
