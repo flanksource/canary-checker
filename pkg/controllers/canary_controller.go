@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/flanksource/kommons"
 	"sync"
 	"time"
 
@@ -51,6 +52,7 @@ type CanaryReconciler struct {
 	IncludeNamespace, IncludeCheck string
 	client.Client
 	Kubernetes kubernetes.Interface
+	Kommons    *kommons.Client
 	Log        logr.Logger
 	Scheme     *runtime.Scheme
 	Events     record.EventRecorder
@@ -154,6 +156,8 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 	r.Kubernetes = clientset
 
+	r.Kommons = kommons.NewClient(mgr.GetConfig(), logger.StandardLogger())
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&canariesv1.Canary{}).
 		Complete(r)
@@ -213,7 +217,6 @@ func (c CanaryJob) GetNamespacedName() types.NamespacedName {
 }
 
 func (c CanaryJob) Run() {
-
 	spec, err := c.LoadSecrets()
 	if err != nil {
 		c.Error(err, "Failed to load secrets")
@@ -221,8 +224,14 @@ func (c CanaryJob) Run() {
 	}
 	c.V(2).Info("Starting")
 
+	spec.SetNamespaces(c.Check.Namespace)
+
 	var results []*pkg.CheckResult
 	for _, check := range checks.All {
+		switch cs := check.(type) {
+		case checks.SetsClient:
+			cs.SetClient(c.Client.Kommons)
+		}
 		results = append(results, check.Run(spec)...)
 	}
 

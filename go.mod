@@ -3,6 +3,7 @@ module github.com/flanksource/canary-checker
 go 1.16
 
 require (
+	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/aws/aws-sdk-go v1.29.25
 	github.com/chartmuseum/helm-push v0.8.1
@@ -10,19 +11,16 @@ require (
 	github.com/containerd/containerd v1.4.0
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
-	github.com/flanksource/commons v1.4.3
-	github.com/flanksource/kommons v0.2.2
+	github.com/flanksource/commons v1.5.1
+	github.com/flanksource/kommons v0.7.1
 	github.com/go-co-op/gocron v0.2.0
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/go-logr/logr v0.3.0
 	github.com/go-logr/zapr v0.2.0
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/hashicorp/vault/api v1.0.4
-	github.com/kr/pretty v0.2.0
 	github.com/lib/pq v1.9.0
-	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/mitchellh/reflectwalk v1.0.1
-	github.com/mjibson/esc v0.2.0 // indirect
 	github.com/ncw/swift v1.0.50
 	github.com/onsi/ginkgo v1.14.1
 	github.com/onsi/gomega v1.10.2
@@ -31,7 +29,6 @@ require (
 	github.com/prometheus/client_golang v1.7.1
 	github.com/prometheus/common v0.10.0
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/rs/cors v1.7.0 // indirect
 	github.com/sirupsen/logrus v1.7.0
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/spf13/cobra v1.1.1
@@ -42,17 +39,17 @@ require (
 	golang.org/x/tools v0.1.0 // indirect
 	gopkg.in/flanksource/yaml.v3 v3.1.1
 	helm.sh/helm/v3 v3.1.2
-	k8s.io/api v0.20.2
-	k8s.io/apimachinery v0.20.2
+	k8s.io/api v0.20.4
+	k8s.io/apimachinery v0.20.4
 	k8s.io/client-go v11.0.0+incompatible
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/controller-runtime v0.5.7
-	sigs.k8s.io/controller-tools v0.2.5 // indirect
 	sigs.k8s.io/yaml v1.2.0
 )
 
 replace (
 	github.com/docker/docker => github.com/moby/moby v17.12.0-ce-rc1.0.20210128214336-420b1d36250f+incompatible
+
 	gopkg.in/hairyhenderson/yaml.v2 => github.com/maxaudron/yaml v0.0.0-20190411130442-27c13492fe3c
 	helm.sh/helm/v3 => helm.sh/helm/v3 v3.5.1
 	k8s.io/api => k8s.io/api v0.19.4

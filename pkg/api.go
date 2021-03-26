@@ -122,11 +122,16 @@ type Checker interface {
 
 // URL information
 type URL struct {
-	IP     string
-	Port   int
-	Host   string
-	Scheme string
-	Path   string
+	IP       string
+	Port     int
+	Host     string
+	Scheme   string
+	Path     string
+	Username string
+	Password string
+	Method   string
+	Headers  map[string]string
+	Body     string
 }
 
 type CheckResult struct {

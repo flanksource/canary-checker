@@ -1,5 +1,13 @@
 name: test
 domain: 127.0.0.1.nip.io
+ca:
+  cert: .certs/root-ca.crt
+  privateKey: .certs/root-ca.key
+  password: foobar
+ingressCA:
+  cert: .certs/ingress-ca.crt
+  privateKey: .certs/ingress-ca.key
+  password: foobar
 ldap:
   adminGroup: NA1
   username: uid=admin,ou=system
@@ -47,10 +55,6 @@ s3:
   usePathStyle: true
   e2e:
     minio: true
-ca:
-  cert: .certs/root-ca.crt
-  privateKey: .certs/root-ca.key
-  password: foobar
 minio:
   version: RELEASE.2020-09-02T18-19-50Z
   access_key: minio

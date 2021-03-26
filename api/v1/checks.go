@@ -2,10 +2,21 @@ package v1
 
 import (
 	"fmt"
+	"github.com/flanksource/kommons"
 	"regexp"
 
 	"github.com/flanksource/canary-checker/api/external"
 )
+
+type JSONCheck struct {
+	Path  string `yaml:"path" json:"path"`
+	Value string `yaml:"value" json:"value"`
+}
+
+type Authentication struct {
+	Username kommons.EnvVar `yaml:"username" json:"username"`
+	Password kommons.EnvVar `yaml:"password" json:"password"`
+}
 
 type HTTPCheck struct {
 	Description string `yaml:"description" json:"description,omitempty"`
@@ -19,8 +30,27 @@ type HTTPCheck struct {
 	ResponseCodes []int `yaml:"responseCodes" json:"responseCodes,omitempty"`
 	// Exact response content expected to be returned by the endpoint.
 	ResponseContent string `yaml:"responseContent" json:"responseContent,omitempty"`
+	// Path and value to of expect JSON response by the endpoint
+	ResponseJSONContent JSONCheck `yaml:"responseJSONContent,omitempty" json:"responseJSONContent,omitempty"`
 	// Maximum number of days until the SSL Certificate expires.
 	MaxSSLExpiry int `yaml:"maxSSLExpiry" json:"maxSSLExpiry,omitempty"`
+	// HTTP method to call - defaults to GET
+	Method string `yaml:"method,omitempty" json:"method,omitempty"`
+	// HTTP request body contents
+	Body string `yaml:"body,omitempty" json:"body,omitempty"`
+	// HTTP Header fields to be used in the query
+	Headers []kommons.EnvVar `yaml:"headers,omitempty" json:"headers,omitempty"`
+	// Credentials for authentication headers:
+	Authentication *Authentication `yaml:"authentication,omitempty" json:"authentication,omitempty"`
+	specNamespace  string
+}
+
+func (c *HTTPCheck) SetNamespace(namespace string) {
+	c.specNamespace = namespace
+}
+
+func (c HTTPCheck) GetNamespace() string {
+	return c.specNamespace
 }
 
 func (c HTTPCheck) GetEndpoint() string {

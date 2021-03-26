@@ -3,7 +3,10 @@ package checks
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
+	"github.com/flanksource/kommons"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net"
@@ -16,6 +19,7 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/PaesslerAG/jsonpath"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/metrics"
@@ -43,11 +47,21 @@ func init() {
 	prometheus.MustRegister(responseStatus, sslExpiration)
 }
 
-type HttpChecker struct{}
+type HttpChecker struct {
+	kommons *kommons.Client `yaml:"-" json:"-"`
+}
 
 // Type: returns checker type
 func (c *HttpChecker) Type() string {
 	return "http"
+}
+
+func (c *HttpChecker) SetClient(client *kommons.Client) {
+	c.kommons = client
+}
+
+func (c HttpChecker) GetClient() *kommons.Client {
+	return c.kommons
 }
 
 // Run: Check every entry from config according to Checker interface
@@ -58,7 +72,6 @@ func (c *HttpChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 		results = append(results, c.Check(conf))
 	}
 	return results
-
 }
 
 // CheckConfig : Check every record of DNS name against config information
@@ -67,6 +80,9 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.HTTPCheck)
 	endpoint := check.Endpoint
 	namespace := check.Namespace
+	specNamespace := check.GetNamespace()
+
+
 
 	if endpoint == "" && namespace == "" {
 		return Failf(check, "One of Namespace or Endpoint must be specified")
@@ -114,7 +130,39 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 			}
 		}
 	}
+
+	username, password, err := c.ParseAuth(check)
+	if err != nil {
+		return Failf(check, "Failed to lookup authentication info %v:", err)
+	}
+	var headers map[string]string
+	kommons := c.GetClient()
+	for _, header := range check.Headers {
+		if kommons == nil {
+			return Failf(check, "Kommons client not set for HttpChecker instance")
+		}
+		key, value, err := kommons.GetEnvValue(header, specNamespace)
+		if err != nil {
+			return Failf(check, "Failed to parse header value: %v", err)
+		}
+		if headers == nil {
+			headers = map[string]string{key: value}
+		} else {
+			headers[key] = value
+		}
+	}
+
 	for _, urlObj := range lookupResult {
+
+		if check.Method == "" {
+			urlObj.Method = "GET"
+		} else {
+			urlObj.Method = check.Method
+		}
+		urlObj.Headers = headers
+		urlObj.Body = check.Body
+		urlObj.Username = username
+		urlObj.Password = password
 		checkResults, err := c.checkHTTP(urlObj)
 		if err != nil {
 			return invalidErrorf(check, err, "")
@@ -130,11 +178,34 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 			return Failf(check, "response code invalid %d != %v", checkResults.ResponseCode, check.ResponseCodes)
 		}
 
-		if check.ThresholdMillis < int(checkResults.ResponseTime) {
-			return Failf(check, "threshold exceeeded %d > %d", checkResults.ResponseTime, check.ThresholdMillis)
+		if check.ThresholdMillis > 0 && check.ThresholdMillis < int(checkResults.ResponseTime) {
+			return Failf(check, "threshold exceeded %d > %d", checkResults.ResponseTime, check.ThresholdMillis)
 		}
 		if check.ResponseContent != "" && !strings.Contains(checkResults.Content, check.ResponseContent) {
-			return Failf(check, "content not found")
+			return Failf(check, "Expected %v, found %v", check.ResponseContent, checkResults.Content)
+		}
+		if check.ResponseJSONContent.Path != "" {
+			var jsonContent interface{}
+			if err = json.Unmarshal([]byte(checkResults.Content), &jsonContent); err != nil {
+				return Failf(check, "Could not unmarshal response for json check: %v ", err)
+			}
+
+			jsonResult, err := jsonpath.Get(check.ResponseJSONContent.Path, jsonContent)
+			if err != nil {
+				return Failf(check, "Could not extract path %v from response %v: %v", check.ResponseJSONContent.Path, jsonContent, err)
+			}
+			switch s := jsonResult.(type) {
+			case string:
+				if s != check.ResponseJSONContent.Value {
+					return Failf(check, "%v not equal to %v", s, check.ResponseJSONContent.Value)
+				}
+			case fmt.Stringer:
+				if s.String() != check.ResponseJSONContent.Value {
+					return Failf(check, "%v not equal to %v", s.String(), check.ResponseJSONContent.Value)
+				}
+			default:
+				return Failf(check, "json response could not be parsed back to string")
+			}
 		}
 		if urlObj.Scheme == "https" && check.MaxSSLExpiry > checkResults.SSLExpiry {
 			return Failf(check, "SSL certificate expires soon %d > %d", checkResults.SSLExpiry, check.MaxSSLExpiry)
@@ -184,13 +255,19 @@ func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*HTTPCheckResult, error) {
 			return http.ErrUseLastResponse
 		},
 	}
-	req, err := http.NewRequest("GET", urlString, nil)
+	req, err := http.NewRequest(urlObj.Method, urlString, strings.NewReader(urlObj.Body))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Host = urlObj.Host
 	req.Header.Add("Host", urlObj.Host)
+	for header, field := range urlObj.Headers {
+		req.Header.Add(header, field)
+	}
+	if urlObj.Username != "" && urlObj.Password != "" {
+		req.SetBasicAuth(urlObj.Username, urlObj.Password)
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -226,6 +303,26 @@ func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*HTTPCheckResult, error) {
 		ResponseTime: elapsed.Milliseconds(),
 	}
 	return &checkResult, nil
+}
+
+func (c *HttpChecker) ParseAuth(check v1.HTTPCheck) (string, string, error) {
+	kommons := c.GetClient()
+	if kommons == nil {
+		return "", "", errors.New("Kommons client not set for HttpChecker instance")
+	}
+	namespace := check.GetNamespace()
+	if check.Authentication == nil {
+		return "", "", nil
+	}
+	_, username, err := kommons.GetEnvValue(check.Authentication.Username, namespace)
+	if err != nil {
+		return "", "", err
+	}
+	_, password, err := kommons.GetEnvValue(check.Authentication.Password, namespace)
+	if err != nil {
+		return "", "", err
+	}
+	return username, password, nil
 }
 
 func DNSLookup(endpoint string) ([]pkg.URL, error) {

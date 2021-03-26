@@ -6,6 +6,7 @@ export PLATFORM_CLI_VERSION=v0.28.0
 export PLATFORM_CLI="./karina -c test/config.yaml"
 export KUBECONFIG=~/.kube/config
 export DOCKER_API_VERSION=1.39
+export CLUSTER_NAME=test
 
 
 if which karina 2>&1 > /dev/null; then
@@ -24,17 +25,33 @@ else
   fi
 fi
 
-mkdir -p .bin
+echo "$(kubectl config current-context) != kind-$CLUSTER_NAME"
 
-$PLATFORM_CLI ca generate --name root-ca --cert-path .certs/root-ca.crt --private-key-path .certs/root-ca.key --password foobar  --expiry 1
-$PLATFORM_CLI ca generate --name ingress-ca --cert-path .certs/ingress-ca.crt --private-key-path .certs/ingress-ca.key --password foobar  --expiry 1
-$PLATFORM_CLI provision kind-cluster
+if [[ "$(kubectl config current-context)" != "kind-$CLUSTER_NAME" ]] ; then
+  echo "::group::Provisioning"
+  if [[ ! -e .certs/root-ca.key ]]; then
+    $PLATFORM_CLI ca generate --name root-ca --cert-path .certs/root-ca.crt --private-key-path .certs/root-ca.key --password foobar  --expiry 1
+    $PLATFORM_CLI ca generate --name ingress-ca --cert-path .certs/ingress-ca.crt --private-key-path .certs/ingress-ca.key --password foobar  --expiry 1
+    $PLATFORM_CLI ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.pem --private-key-path .certs/sealed-secrets-key.pem --password foobar  --expiry 1
+  fi
+  if $PLATFORM_CLI provision kind-cluster --trace -vv ; then
+    echo "::endgroup::"
+  else
+    echo "::endgroup::"
+    exit 1
+  fi
+fi
 
 
-$PLATFORM_CLI deploy phases --crds --base --stubs --calico --minio
+echo "::group::Deploying Base"
+$PLATFORM_CLI deploy phases --crds --calico --base --stubs --minio --ingress
+echo "::endgroup::"
 #$PLATFORM_CLI test stubs --wait=480 -v 5
+echo "::group::Setting up test environment"
 $PLATFORM_CLI apply test/setup.yml
+echo "::endgroup::"
 
+echo "::group::Testing"
 export DOCKER_USERNAME=test
 export DOCKER_PASSWORD=password
 
@@ -50,3 +67,4 @@ cd test
 go test ./... -v -c
 # ICMP requires privelages so we run the tests with sudo
 sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG ./test.test  -test.v
+echo "::endgroup::"
