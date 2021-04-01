@@ -45,9 +45,9 @@ uninstall: manifests
 	kubectl delete -f config/crd.yaml
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests
-	cd config && kustomize edit set image controller=${IMG}
-	kubectl kustomize config | kubectl apply -f -
+deploy: kustomize manifests
+	cd config && $(KUSTOMIZE) edit set image controller=${IMG}
+	kubectl $(KUSTOMIZE) config | kubectl apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
@@ -90,20 +90,29 @@ docker-push:
 compress:
 	# upx 3.95 has issues compressing darwin binaries - https://github.com/upx/upx/issues/301
 	which upx 2>&1 >  /dev/null  || (sudo apt-get update && sudo apt-get install -y xz-utils && wget -nv -O upx.tar.xz https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz; tar xf upx.tar.xz; mv upx-3.96-amd64_linux/upx /usr/bin )
-	upx -5 ./.bin/$(NAME) ./.bin/$(NAME)_osx
+	upx -5 ./.bin/$(NAME)-amd64 ./.bin/$(NAME)_osx-amd64 ./.bin/$(NAME)_osx-arm64 ./.bin/$(NAME).exe
 
 
 .PHONY: linux
 linux: vue-dist
-	GOOS=linux go build -o ./.bin/$(NAME) -ldflags "-X \"main.version=$(VERSION)\""  main.go
+	GOOS=linux GOARCH=amd64 go build -o ./.bin/$(NAME)-amd64 -ldflags "-X \"main.version=$(VERSION)\""  main.go
 
-.PHONY: darwin
-darwin: vue-dist
-	GOOS=darwin go build -o ./.bin/$(NAME)_osx -ldflags "-X \"main.version=$(VERSION)\""  main.go
+.PHONY: darwin-amd64
+darwin-amd64: vue-dist
+	GOOS=darwin GOARCH=amd64 go build -o ./.bin/$(NAME)_osx-amd64 -ldflags "-X \"main.version=$(VERSION)\""  main.go
+
+.PHONY: darwin-arm64
+darwin-arm64: vue-dist
+	GOOS=darwin GOARCH=arm64 go build -o ./.bin/$(NAME)_osx-arm64 -ldflags "-X \"main.version=$(VERSION)\""  main.go
 
 .PHONY: windows
 windows: vue-dist
 	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe -ldflags "-X \"main.version=$(VERSION)\""  main.go
+
+.PHONY: release
+release: kustomize linux darwin-amd64 darwin-arm64 windows compress
+	cd config && $(KUSTOMIZE) edit set image flanksource/canary-checker:${TAG}
+	$(KUSTOMIZE) build config/ > ./.bin/release.yaml
 
 .PHONY: serve-docs
 serve-docs:
@@ -152,4 +161,20 @@ ifeq (, $(shell which controller-gen))
 CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
+endif
+
+# find or download kustomize if necessary
+kustomize:
+ifeq (, $(shell which kustomize))
+	@{ \
+	set -e ;\
+	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
+	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
+	go mod init tmp ;\
+	go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
+	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
+	}
+KUSTOMIZE=$(GOBIN)/kustomize
+else
+KUSTOMIZE=$(shell which kustomize)
 endif
