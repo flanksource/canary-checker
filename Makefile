@@ -101,6 +101,10 @@ linux: vue-dist
 darwin: vue-dist
 	GOOS=darwin go build -o ./.bin/$(NAME)_osx -ldflags "-X \"main.version=$(VERSION)\""  main.go
 
+.PHONY: windows
+windows: vue-dist
+	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe -ldflags "-X \"main.version=$(VERSION)\""  main.go
+
 .PHONY: serve-docs
 serve-docs:
 	docker run --rm -it -p 8000:8000 -v $(PWD):/docs -w /docs squidfunk/mkdocs-material

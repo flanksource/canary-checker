@@ -6,12 +6,13 @@ NAME=$(echo $GITHUB_REPOSITORY | cut -d/ -f2)
 TAG=$(echo $GITHUB_REF | sed 's|refs/tags/||')
 VERSION="$TAG built $(date)"
 
-make static linux darwin compress
+make static linux darwin windows compress
 
 
 github-release release -u $GITHUB_USER -r ${NAME} --tag $TAG || echo Release already created
 github-release upload -R -u $GITHUB_USER -r ${NAME} --tag $TAG -n ${NAME} -f .bin/${NAME}
 github-release upload -R -u $GITHUB_USER -r ${NAME} --tag $TAG -n ${NAME}_osx -f .bin/${NAME}_osx
+github-release upload -R -u $GITHUB_USER -r ${NAME} --tag $TAG -n ${NAME}.exe -f .bin/${NAME}.exe
 
 cd config
 
