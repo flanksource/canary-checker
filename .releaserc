@@ -1,0 +1,26 @@
+plugins:
+  - - "@semantic-release/commit-analyzer"
+    - releaseRules:
+        - { type: doc, scope: README, release: patch }
+        - { type: fix, release: patch }
+        - { type: chore, release: patch }
+        - { type: refactor, release: patch }
+        - { type: feat, release: minor }
+        - { type: ci, release: false }
+        - { type: style, release: false }
+      parserOpts:
+        noteKeywords:
+          - MAJOR RELEASE
+  - "@semantic-release/release-notes-generator"
+  - - "@semantic-release/github"
+    - assets:
+      - path: ./.bin/canary-checker-amd64
+        name: canary-checker-amd64
+      - path: ./.bin/canary-checker.exe
+        name: canary-checker.exe
+      - path: ./.bin/canary-checker_osx-amd64
+        name: canary-checker_osx-amd64
+      - path: ./.bin/canary-checker_osx-arm64
+        name: canary-checker_osx-arm64
+      - path: ./.bin/release.yaml
+        name: release.yaml

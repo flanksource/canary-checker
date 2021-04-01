@@ -1,0 +1,42 @@
+name: Create Release
+on:
+  workflow_dispatch: {}
+jobs:
+  binary:
+    runs-on: ubuntu-latest
+    container:
+      image: flanksource/build-tools:v0.12.0
+    steps:
+      - uses: actions/checkout@v2
+      - run: make release
+      - uses: actions/upload-artifact@v2
+        with:
+          name: canary-checker
+          path: ./.bin/*
+
+  semantic-release:
+    needs: binary
+    runs-on: ubuntu-latest
+    outputs:
+      release-version: ${{ steps.semantic.outputs.release-version }}
+      new-release-published: ${{ steps.semantic.outputs.new-release-published }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: canary-checker
+          path: ./.bin
+      - run: ls -R ./.bin
+      - uses: codfish/semantic-release-action@v1
+        id: semantic
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  docs:
+    runs-on: ubuntu-latest
+    container:
+      image: flanksource/build-tools:v0.12.0
+    steps:
+      - uses: actions/checkout@v2
+      - run: make build-api-docs build-docs deploy-docs
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
