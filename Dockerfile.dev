@@ -5,5 +5,5 @@ RUN apt-get update && \
   rm -Rf /var/lib/apt/lists/*  && \
   rm -Rf /usr/share/doc && rm -Rf /usr/share/man  && \
   apt-get clean
-COPY  ./.bin/canary-checker  /app
+COPY  ./.bin/canary-checker-amd64  /app/canary-checker
 ENTRYPOINT ["/app/canary-checker"]

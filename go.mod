@@ -9,6 +9,7 @@ require (
 	github.com/chartmuseum/helm-push v0.8.1
 	github.com/containerd/cgroups v0.0.0-20200824123100-0b889c03f102 // indirect
 	github.com/containerd/containerd v1.4.0
+	github.com/denisenkom/go-mssqldb v0.9.0
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/flanksource/commons v1.5.1
@@ -50,7 +51,6 @@ require (
 replace (
 	github.com/docker/docker => github.com/moby/moby v17.12.0-ce-rc1.0.20210128214336-420b1d36250f+incompatible
 
-	gopkg.in/hairyhenderson/yaml.v2 => github.com/maxaudron/yaml v0.0.0-20190411130442-27c13492fe3c
 	helm.sh/helm/v3 => helm.sh/helm/v3 v3.5.1
 	k8s.io/api => k8s.io/api v0.19.4
 	k8s.io/client-go => k8s.io/client-go v0.19.4

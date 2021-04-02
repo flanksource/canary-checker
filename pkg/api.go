@@ -111,6 +111,7 @@ type Config struct {
 	LDAP           []v1.LDAPCheck           `yaml:"ldap,omitempty" json:"ldap,omitempty"`
 	ICMP           []v1.ICMPCheck           `yaml:"icmp,omitempty" json:"icmp,omitempty"`
 	Postgres       []v1.PostgresCheck       `yaml:"postgres,omitempty" json:"postgres,omitempty"`
+	Mssql          []v1.MssqlCheck          `yaml:"mssql,omitempty" json:"mssql,omitempty"`
 	Helm           []v1.HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace      []v1.NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Interval       metav1.Duration          `yaml:"-" json:"interval,omitempty"`

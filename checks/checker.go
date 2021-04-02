@@ -24,6 +24,7 @@ var All = []Checker{
 	&DockerPushChecker{},
 	&ContainerdPullChecker{},
 	&PostgresChecker{},
+	&MssqlChecker{},
 	&LdapChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
