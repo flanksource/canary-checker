@@ -225,8 +225,6 @@ spec:
               http:
                 items:
                   properties:
-                    SpecNamespace:
-                      type: string
                     authentication:
                       description: 'Credentials for authentication headers:'
                       properties:

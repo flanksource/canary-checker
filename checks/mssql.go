@@ -1,8 +1,6 @@
 package checks
 
 import (
-	"time"
-
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -34,14 +32,5 @@ func (c *MssqlChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 //               driver and connection string
 // Returns check result and metrics
 func (c *MssqlChecker) Check(extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.MssqlCheck)
-	start := time.Now()
-	queryResult, err := connectWithDriver(check.Driver, check.Connection, check.Query)
-	if err != nil {
-		return Failf(check, "failed to execute query %s", err)
-	}
-	if queryResult != check.Result {
-		return Failf(check, "expected %d results, got %d", check.Result, queryResult)
-	}
-	return Success(check, start)
+	return CheckSql(extConfig.(v1.MssqlCheck).SqlCheck)
 }
