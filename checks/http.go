@@ -82,8 +82,6 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	namespace := check.Namespace
 	specNamespace := check.GetNamespace()
 
-
-
 	if endpoint == "" && namespace == "" {
 		return Failf(check, "One of Namespace or Endpoint must be specified")
 	} else if endpoint != "" && namespace != "" {

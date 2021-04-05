@@ -1,35 +1,13 @@
 
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.2.5
+    controller-gen.kubebuilder.io/version: v0.4.0
   creationTimestamp: null
   name: canaries.canaries.flanksource.com
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .spec.interval
-    name: Interval
-    type: string
-  - JSONPath: .status.status
-    name: Status
-    type: string
-  - JSONPath: .status.message
-    name: Message
-    type: string
-  - JSONPath: .status.uptime1h
-    name: Uptime 1H
-    type: string
-  - JSONPath: .status.latency1h
-    name: Latency 1H
-    type: string
-  - JSONPath: .status.lastTransitionedTime
-    name: Last Transitioned
-    type: date
-  - JSONPath: .status.lastCheck
-    name: Last Check
-    type: date
   group: canaries.flanksource.com
   names:
     kind: Canary
@@ -37,471 +15,662 @@ spec:
     plural: canaries
     singular: canary
   scope: Namespaced
-  subresources:
-    status: {}
-  validation:
-    openAPIV3Schema:
-      description: Canary is the Schema for the canaries API
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-          type: string
-        metadata:
-          type: object
-        spec:
-          description: CanarySpec defines the desired state of Canary
-          properties:
-            dns:
-              items:
-                properties:
-                  description:
-                    type: string
-                  exactreply:
-                    items:
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.interval
+      name: Interval
+      type: string
+    - jsonPath: .status.status
+      name: Status
+      type: string
+    - jsonPath: .status.message
+      name: Message
+      type: string
+    - jsonPath: .status.uptime1h
+      name: Uptime 1H
+      type: string
+    - jsonPath: .status.latency1h
+      name: Latency 1H
+      type: string
+    - jsonPath: .status.lastTransitionedTime
+      name: Last Transitioned
+      type: date
+    - jsonPath: .status.lastCheck
+      name: Last Check
+      type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: Canary is the Schema for the canaries API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: CanarySpec defines the desired state of Canary
+            properties:
+              containerd:
+                items:
+                  properties:
+                    description:
                       type: string
-                    type: array
-                  minrecords:
-                    type: integer
-                  port:
-                    type: integer
-                  query:
-                    type: string
-                  querytype:
-                    type: string
-                  server:
-                    type: string
-                  timeout:
-                    type: integer
-                  thresholdMillis:
-                    type: integer
-                type: object
-              type: array
-            docker:
-              items:
-                properties:
-                  description:
-                    type: string
-                  expectedDigest:
-                    type: string
-                  expectedSize:
-                    format: int64
-                    type: integer
-                  image:
-                    type: string
-                  password:
-                    type: string
-                  username:
-                    type: string
-                type: object
-              type: array
-            dockerPush:
-              items:
-                properties:
-                  description:
-                    type: string
-                  image:
-                    type: string
-                  password:
-                    type: string
-                  username:
-                    type: string
-                type: object
-              type: array
-            env:
-              additionalProperties:
-                description: VarSource represents a source for a value
-                properties:
-                  configMapKeyRef:
-                    description: Selects a key of a ConfigMap.
-                    properties:
-                      key:
-                        description: The key to select.
-                        type: string
-                      name:
-                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?'
-                        type: string
-                      optional:
-                        description: Specify whether the ConfigMap or its key must
-                          be defined
-                        type: boolean
-                    required:
-                    - key
-                    type: object
-                  fieldRef:
-                    description: 'Selects a field of the pod: supports metadata.name,
-                      metadata.namespace, metadata.labels, metadata.annotations, spec.nodeName,
-                      spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.'
-                    properties:
-                      apiVersion:
-                        description: Version of the schema the FieldPath is written
-                          in terms of, defaults to "v1".
-                        type: string
-                      fieldPath:
-                        description: Path of the field to select in the specified
-                          API version.
-                        type: string
-                    required:
-                    - fieldPath
-                    type: object
-                  secretKeyRef:
-                    description: Selects a key of a secret in the pod's namespace
-                    properties:
-                      key:
-                        description: The key of the secret to select from.  Must be
-                          a valid secret key.
-                        type: string
-                      name:
-                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?'
-                        type: string
-                      optional:
-                        description: Specify whether the Secret or its key must be
-                          defined
-                        type: boolean
-                    required:
-                    - key
-                    type: object
-                  value:
-                    type: string
-                type: object
-              type: object
-            helm:
-              items:
-                properties:
-                  cafile:
-                    type: string
-                  chartmuseum:
-                    type: string
-                  description:
-                    type: string
-                  password:
-                    type: string
-                  project:
-                    type: string
-                  username:
-                    type: string
-                type: object
-              type: array
-            http:
-              items:
-                properties:
-                  description:
-                    type: string
-                  endpoint:
-                    description: HTTP endpoint to crawl
-                    type: string
-                  maxSSLExpiry:
-                    description: Maximum number of days until the SSL Certificate
-                      expires.
-                    type: integer
-                  responseCodes:
-                    description: Expected response codes for the HTTP Request.
-                    items:
-                      type: integer
-                    type: array
-                  responseContent:
-                    description: Exact response content expected to be returned by
-                      the endpoint.
-                    type: string
-                  thresholdMillis:
-                    description: Maximum duration in milliseconds for the HTTP request.
-                      It will fail the check if it takes longer.
-                    type: integer
-                type: object
-              type: array
-            icmp:
-              items:
-                properties:
-                  description:
-                    type: string
-                  endpoint:
-                    type: string
-                  packetCount:
-                    type: integer
-                  packetLossThreshold:
-                    format: int64
-                    type: integer
-                  thresholdMillis:
-                    format: int64
-                    type: integer
-                type: object
-              type: array
-            interval:
-              format: int64
-              type: integer
-            ldap:
-              items:
-                properties:
-                  bindDN:
-                    type: string
-                  description:
-                    type: string
-                  host:
-                    type: string
-                  password:
-                    type: string
-                  skipTLSVerify:
-                    type: boolean
-                  userSearch:
-                    type: string
-                  username:
-                    type: string
-                type: object
-              type: array
-            namespace:
-              items:
-                properties:
-                  checkName:
-                    type: string
-                  deadline:
-                    format: int64
-                    type: integer
-                  deleteTimeout:
-                    format: int64
-                    type: integer
-                  description:
-                    type: string
-                  expectedContent:
-                    type: string
-                  expectedHttpStatuses:
-                    items:
+                    expectedDigest:
+                      type: string
+                    expectedSize:
                       format: int64
                       type: integer
-                    type: array
-                  httpRetryInterval:
-                    format: int64
-                    type: integer
-                  httpTimeout:
-                    format: int64
-                    type: integer
-                  ingressHost:
-                    type: string
-                  ingressName:
-                    type: string
-                  ingressTimeout:
-                    format: int64
-                    type: integer
-                  namespaceAnnotations:
-                    additionalProperties:
+                    image:
                       type: string
-                    type: object
-                  namespaceLabels:
-                    additionalProperties:
+                    password:
                       type: string
-                    type: object
-                  namespaceNamePrefix:
-                    type: string
-                  path:
-                    type: string
-                  podSpec:
-                    type: string
-                  port:
-                    format: int64
-                    type: integer
-                  priorityClass:
-                    type: string
-                  readyTimeout:
-                    format: int64
-                    type: integer
-                  schedule_timeout:
-                    format: int64
-                    type: integer
-                type: object
-              type: array
-            pod:
-              items:
-                properties:
-                  deadline:
-                    format: int64
-                    type: integer
-                  deleteTimeout:
-                    format: int64
-                    type: integer
-                  description:
-                    type: string
-                  expectedContent:
-                    type: string
-                  expectedHttpStatuses:
-                    items:
+                    username:
+                      type: string
+                  type: object
+                type: array
+              containerdPush:
+                items:
+                  properties:
+                    description:
+                      type: string
+                    image:
+                      type: string
+                    password:
+                      type: string
+                    username:
+                      type: string
+                  type: object
+                type: array
+              dns:
+                items:
+                  properties:
+                    description:
+                      type: string
+                    exactreply:
+                      items:
+                        type: string
+                      type: array
+                    minrecords:
                       type: integer
-                    type: array
-                  httpRetryInterval:
-                    format: int64
-                    type: integer
-                  httpTimeout:
-                    format: int64
-                    type: integer
-                  ingressHost:
-                    type: string
-                  ingressName:
-                    type: string
-                  ingressTimeout:
-                    format: int64
-                    type: integer
-                  name:
-                    type: string
-                  namespace:
-                    type: string
-                  path:
-                    type: string
-                  port:
-                    format: int64
-                    type: integer
-                  priorityClass:
-                    type: string
-                  readyTimeout:
-                    format: int64
-                    type: integer
-                  scheduleTimeout:
-                    format: int64
-                    type: integer
-                  spec:
-                    type: string
+                    port:
+                      type: integer
+                    query:
+                      type: string
+                    querytype:
+                      type: string
+                    server:
+                      type: string
+                    thresholdMillis:
+                      type: integer
+                    timeout:
+                      type: integer
+                  type: object
+                type: array
+              docker:
+                items:
+                  properties:
+                    description:
+                      type: string
+                    expectedDigest:
+                      type: string
+                    expectedSize:
+                      format: int64
+                      type: integer
+                    image:
+                      type: string
+                    password:
+                      type: string
+                    username:
+                      type: string
+                  type: object
+                type: array
+              dockerPush:
+                items:
+                  properties:
+                    description:
+                      type: string
+                    image:
+                      type: string
+                    password:
+                      type: string
+                    username:
+                      type: string
+                  type: object
+                type: array
+              env:
+                additionalProperties:
+                  description: VarSource represents a source for a value
+                  properties:
+                    configMapKeyRef:
+                      description: Selects a key of a ConfigMap.
+                      properties:
+                        key:
+                          description: The key to select.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the ConfigMap or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                    fieldRef:
+                      description: 'Selects a field of the pod: supports metadata.name,
+                        metadata.namespace, metadata.labels, metadata.annotations,
+                        spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP,
+                        status.podIPs.'
+                      properties:
+                        apiVersion:
+                          description: Version of the schema the FieldPath is written
+                            in terms of, defaults to "v1".
+                          type: string
+                        fieldPath:
+                          description: Path of the field to select in the specified
+                            API version.
+                          type: string
+                      required:
+                      - fieldPath
+                      type: object
+                    secretKeyRef:
+                      description: Selects a key of a secret in the pod's namespace
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                    value:
+                      type: string
+                  type: object
                 type: object
-              type: array
-            postgres:
-              items:
-                properties:
-                  connection:
-                    type: string
-                  description:
-                    type: string
-                  driver:
-                    type: string
-                  query:
-                    type: string
-                  result:
-                    type: integer
-                type: object
-              type: array
-            s3:
-              items:
-                properties:
-                  accessKey:
-                    type: string
-                  bucket:
-                    properties:
-                      endpoint:
+              helm:
+                items:
+                  properties:
+                    cafile:
+                      type: string
+                    chartmuseum:
+                      type: string
+                    description:
+                      type: string
+                    password:
+                      type: string
+                    project:
+                      type: string
+                    username:
+                      type: string
+                  type: object
+                type: array
+              http:
+                items:
+                  properties:
+                    authentication:
+                      description: 'Credentials for authentication headers:'
+                      properties:
+                        password:
+                          properties:
+                            name:
+                              type: string
+                            value:
+                              type: string
+                            valueFrom:
+                              properties:
+                                configMapKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                    optional:
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                secretKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                    optional:
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                              type: object
+                          required:
+                          - name
+                          type: object
+                        username:
+                          properties:
+                            name:
+                              type: string
+                            value:
+                              type: string
+                            valueFrom:
+                              properties:
+                                configMapKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                    optional:
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                                secretKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                    optional:
+                                      type: boolean
+                                  required:
+                                  - key
+                                  type: object
+                              type: object
+                          required:
+                          - name
+                          type: object
+                      required:
+                      - password
+                      - username
+                      type: object
+                    body:
+                      description: HTTP request body contents
+                      type: string
+                    description:
+                      type: string
+                    endpoint:
+                      description: HTTP endpoint to check.  Mutually exclusive with
+                        Namespace
+                      type: string
+                    headers:
+                      description: HTTP Header fields to be used in the query
+                      items:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                - key
+                                type: object
+                            type: object
+                        required:
+                        - name
+                        type: object
+                      type: array
+                    maxSSLExpiry:
+                      description: Maximum number of days until the SSL Certificate
+                        expires.
+                      type: integer
+                    method:
+                      description: HTTP method to call - defaults to GET
+                      type: string
+                    namespace:
+                      description: Namespace to crawl for TLS endpoints.  Mutually
+                        exclusive with Endpoint
+                      type: string
+                    responseCodes:
+                      description: Expected response codes for the HTTP Request.
+                      items:
+                        type: integer
+                      type: array
+                    responseContent:
+                      description: Exact response content expected to be returned
+                        by the endpoint.
+                      type: string
+                    responseJSONContent:
+                      description: Path and value to of expect JSON response by the
+                        endpoint
+                      properties:
+                        path:
+                          type: string
+                        value:
+                          type: string
+                      required:
+                      - path
+                      - value
+                      type: object
+                    thresholdMillis:
+                      description: Maximum duration in milliseconds for the HTTP request.
+                        It will fail the check if it takes longer.
+                      type: integer
+                  type: object
+                type: array
+              icmp:
+                items:
+                  properties:
+                    description:
+                      type: string
+                    endpoint:
+                      type: string
+                    packetCount:
+                      type: integer
+                    packetLossThreshold:
+                      format: int64
+                      type: integer
+                    thresholdMillis:
+                      format: int64
+                      type: integer
+                  type: object
+                type: array
+              interval:
+                format: int64
+                type: integer
+              ldap:
+                items:
+                  properties:
+                    bindDN:
+                      type: string
+                    description:
+                      type: string
+                    host:
+                      type: string
+                    password:
+                      type: string
+                    skipTLSVerify:
+                      type: boolean
+                    userSearch:
+                      type: string
+                    username:
+                      type: string
+                  type: object
+                type: array
+              mssql:
+                items:
+                  properties:
+                    connection:
+                      type: string
+                    description:
+                      type: string
+                    driver:
+                      type: string
+                    query:
+                      type: string
+                    results:
+                      description: Number rows to check for
+                      type: integer
+                  type: object
+                type: array
+              namespace:
+                items:
+                  properties:
+                    checkName:
+                      type: string
+                    deadline:
+                      format: int64
+                      type: integer
+                    deleteTimeout:
+                      format: int64
+                      type: integer
+                    description:
+                      type: string
+                    expectedContent:
+                      type: string
+                    expectedHttpStatuses:
+                      items:
+                        format: int64
+                        type: integer
+                      type: array
+                    httpRetryInterval:
+                      format: int64
+                      type: integer
+                    httpTimeout:
+                      format: int64
+                      type: integer
+                    ingressHost:
+                      type: string
+                    ingressName:
+                      type: string
+                    ingressTimeout:
+                      format: int64
+                      type: integer
+                    namespaceAnnotations:
+                      additionalProperties:
                         type: string
-                      name:
+                      type: object
+                    namespaceLabels:
+                      additionalProperties:
                         type: string
-                      region:
-                        type: string
-                    type: object
-                  description:
-                    type: string
-                  objectPath:
-                    type: string
-                  secretKey:
-                    type: string
-                  skipTLSVerify:
-                    description: Skip TLS verify when connecting to s3
-                    type: boolean
-                type: object
-              type: array
-            s3Bucket:
-              items:
-                properties:
-                  accessKey:
-                    type: string
-                  bucket:
-                    type: string
-                  description:
-                    type: string
-                  endpoint:
-                    type: string
-                  maxAge:
-                    description: maximum allowed age of matched objects in seconds
-                    format: int64
-                    type: integer
-                  minSize:
-                    description: min size of of most recent matched object in bytes
-                    format: int64
-                    type: integer
-                  objectPath:
-                    description: glob path to restrict matches to a subset
-                    type: string
-                  readWrite:
-                    type: boolean
-                  region:
-                    type: string
-                  secretKey:
-                    type: string
-                  skipTLSVerify:
-                    description: Skip TLS verify when connecting to s3
-                    type: boolean
-                  usePathStyle:
-                    description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY
-                      instead of http://BUCKET.s3.amazonaws.com/KEY'
-                    type: boolean
-                type: object
-              type: array
-            ssl:
-              items:
-                properties:
-                  description:
-                    type: string
-                  endpoint:
-                    description: HTTP endpoint to crawl
-                    type: string
-                  maxSSLExpiry:
-                    description: Maximum number of days until the SSL Certificate
-                      expires.
-                    type: integer
-                type: object
-              type: array
-            tcp:
-              items:
-                properties:
-                  description:
-                    type: string
-                  endpoint:
-                    type: string
-                  thresholdMillis:
-                    format: int64
-                    type: integer
-                type: object
-              type: array
-          type: object
-        status:
-          description: CanaryStatus defines the observed state of Canary
-          properties:
-            lastCheck:
-              format: date-time
-              type: string
-            lastTransitionedTime:
-              format: date-time
-              type: string
-            latency1h:
-              description: Average latency to complete all checks
-              type: string
-            message:
-              type: string
-            observedGeneration:
-              description: If set, this represents the .metadata.generation that the
-                status was set for
-              format: int64
-              type: integer
-            status:
-              type: string
-            uptime1h:
-              description: Availibility over a rolling 1h period
-              type: string
-          type: object
-      type: object
-  version: v1
-  versions:
-  - name: v1
+                      type: object
+                    namespaceNamePrefix:
+                      type: string
+                    path:
+                      type: string
+                    podSpec:
+                      type: string
+                    port:
+                      format: int64
+                      type: integer
+                    priorityClass:
+                      type: string
+                    readyTimeout:
+                      format: int64
+                      type: integer
+                    schedule_timeout:
+                      format: int64
+                      type: integer
+                  type: object
+                type: array
+              pod:
+                items:
+                  properties:
+                    deadline:
+                      format: int64
+                      type: integer
+                    deleteTimeout:
+                      format: int64
+                      type: integer
+                    description:
+                      type: string
+                    expectedContent:
+                      type: string
+                    expectedHttpStatuses:
+                      items:
+                        type: integer
+                      type: array
+                    httpRetryInterval:
+                      format: int64
+                      type: integer
+                    httpTimeout:
+                      format: int64
+                      type: integer
+                    ingressHost:
+                      type: string
+                    ingressName:
+                      type: string
+                    ingressTimeout:
+                      format: int64
+                      type: integer
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    path:
+                      type: string
+                    port:
+                      format: int64
+                      type: integer
+                    priorityClass:
+                      type: string
+                    readyTimeout:
+                      format: int64
+                      type: integer
+                    scheduleTimeout:
+                      format: int64
+                      type: integer
+                    spec:
+                      type: string
+                  type: object
+                type: array
+              postgres:
+                items:
+                  properties:
+                    connection:
+                      type: string
+                    description:
+                      type: string
+                    driver:
+                      type: string
+                    query:
+                      type: string
+                    results:
+                      description: Number rows to check for
+                      type: integer
+                  type: object
+                type: array
+              s3:
+                items:
+                  properties:
+                    accessKey:
+                      type: string
+                    bucket:
+                      properties:
+                        endpoint:
+                          type: string
+                        name:
+                          type: string
+                        region:
+                          type: string
+                      type: object
+                    description:
+                      type: string
+                    objectPath:
+                      type: string
+                    secretKey:
+                      type: string
+                    skipTLSVerify:
+                      description: Skip TLS verify when connecting to s3
+                      type: boolean
+                  type: object
+                type: array
+              s3Bucket:
+                items:
+                  properties:
+                    accessKey:
+                      type: string
+                    bucket:
+                      type: string
+                    description:
+                      type: string
+                    endpoint:
+                      type: string
+                    maxAge:
+                      description: maximum allowed age of matched objects in seconds
+                      format: int64
+                      type: integer
+                    minSize:
+                      description: min size of of most recent matched object in bytes
+                      format: int64
+                      type: integer
+                    objectPath:
+                      description: glob path to restrict matches to a subset
+                      type: string
+                    readWrite:
+                      type: boolean
+                    region:
+                      type: string
+                    secretKey:
+                      type: string
+                    skipTLSVerify:
+                      description: Skip TLS verify when connecting to s3
+                      type: boolean
+                    usePathStyle:
+                      description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY
+                        instead of http://BUCKET.s3.amazonaws.com/KEY'
+                      type: boolean
+                  type: object
+                type: array
+              tcp:
+                items:
+                  properties:
+                    description:
+                      type: string
+                    endpoint:
+                      type: string
+                    thresholdMillis:
+                      format: int64
+                      type: integer
+                  type: object
+                type: array
+            type: object
+          status:
+            description: CanaryStatus defines the observed state of Canary
+            properties:
+              lastCheck:
+                format: date-time
+                type: string
+              lastTransitionedTime:
+                format: date-time
+                type: string
+              latency1h:
+                description: Average latency to complete all checks
+                type: string
+              message:
+                type: string
+              observedGeneration:
+                description: If set, this represents the .metadata.generation that
+                  the status was set for
+                format: int64
+                type: integer
+              status:
+                type: string
+              uptime1h:
+                description: Availibility over a rolling 1h period
+                type: string
+            type: object
+        type: object
     served: true
     storage: true
+    subresources:
+      status: {}
 status:
   acceptedNames:
     kind: ""

@@ -2,10 +2,8 @@ package v1
 
 import (
 	"fmt"
-	"github.com/flanksource/kommons"
-	"regexp"
-
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/kommons"
 )
 
 type JSONCheck struct {
@@ -42,7 +40,9 @@ type HTTPCheck struct {
 	Headers []kommons.EnvVar `yaml:"headers,omitempty" json:"headers,omitempty"`
 	// Credentials for authentication headers:
 	Authentication *Authentication `yaml:"authentication,omitempty" json:"authentication,omitempty"`
-	specNamespace  string
+	// specNamespace is the namespace in which the canary was deployed, and which
+	// configmap/secret lookups will be constrained to
+	specNamespace string `yaml:"-" json:"-"`
 }
 
 func (c *HTTPCheck) SetNamespace(namespace string) {
@@ -243,7 +243,7 @@ func (c ContainerdPushCheck) GetType() string {
 	return "containerdPush"
 }
 
-type PostgresCheck struct {
+type SqlCheck struct {
 	Description string `yaml:"description" json:"description,omitempty"`
 	Driver      string `yaml:"driver" json:"driver,omitempty"`
 	Connection  string `yaml:"connection" json:"connection,omitempty"`
@@ -252,38 +252,75 @@ type PostgresCheck struct {
 	Result int `yaml:"results" json:"results,omitempty"`
 }
 
-// Obfuscate passwords of the form ' password=xxxxx ' from connectionString since
-// connectionStrings are used as metric labels and we don't want to leak passwords
-// Returns the Connection string with the password replaced by '###'
-func (c PostgresCheck) GetEndpoint() string {
-	//looking for a substring that starts with a space,
-	//'password=', then any non-whitespace characters,
-	//until an ending space
-	re := regexp.MustCompile(`\spassword=\S*\s`)
-	return re.ReplaceAllString(c.Connection, " password=### ")
+func (c *SqlCheck) GetDriver() string {
+	return c.Driver
 }
 
-func (c PostgresCheck) GetDescription() string {
+func (c *SqlCheck) GetQuery() string {
+	return c.Query
+}
+
+func (c *SqlCheck) GetResult() int {
+	return c.Result
+}
+
+func (c *SqlCheck) GetConnection() string {
+	return c.Connection
+}
+
+func (c SqlCheck) GetEndpoint() string {
+	return sanitizeEndpoints(c.Connection)
+}
+
+func (c SqlCheck) GetDescription() string {
 	return c.Description
 }
 
-func (c PostgresCheck) GetType() string {
-	return "postgres"
+func (c SqlCheck) GetType() string {
+	return c.Driver
+}
+
+type PostgresCheck struct {
+	SqlCheck `yaml:",inline" json:",inline"`
 }
 
 // This is used to supply a default value for unsupplied fields
 func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type rawPostgresCheck PostgresCheck
 	raw := rawPostgresCheck{
-		Driver: "postgres",
-		Query:  "SELECT 1",
-		Result: 1,
+		SqlCheck{
+			Driver: "postgres",
+			Query:  "SELECT 1",
+			Result: 1,
+		},
 	}
 	if err := unmarshal(&raw); err != nil {
 		return err
 	}
 
 	*c = PostgresCheck(raw)
+	return nil
+}
+
+type MssqlCheck struct {
+	SqlCheck `yaml:",inline" json:",inline"`
+}
+
+// This is used to supply a default value for unsupplied fields
+func (c *MssqlCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type rawMsSqlCheck MssqlCheck
+	raw := rawMsSqlCheck{
+		SqlCheck{
+			Driver: "mssql",
+			Query:  "SELECT 1",
+			Result: 1,
+		},
+	}
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	*c = MssqlCheck(raw)
 	return nil
 }
 
@@ -667,6 +704,21 @@ type Postgres struct {
 	PostgresCheck `yaml:",inline" json:"inline"`
 }
 
+/*
+This check will try to connect to a specified MsSql database, run a query against it and verify the results.
+
+```yaml
+
+mssql:
+  - connection: 'server=localhost;user id=sa;password=Some_S3cure_p@sswd;port=1433;database=test'
+    query: "SELECT 1"
+	results: 1
+```
+*/
+type MsSql struct {
+	MssqlCheck `yaml:",inline" json:"inline"`
+}
+
 type Helm struct {
 	HelmCheck `yaml:",inline" json:"inline"`
 }
@@ -689,6 +741,7 @@ var AllChecks = []external.Check{
 	ContainerdPullCheck{},
 	ContainerdPushCheck{},
 	PostgresCheck{},
+	MssqlCheck{},
 	PodCheck{},
 	LDAPCheck{},
 	NamespaceCheck{},

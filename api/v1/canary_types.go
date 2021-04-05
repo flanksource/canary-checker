@@ -38,6 +38,7 @@ type CanarySpec struct {
 	LDAP           []LDAPCheck           `yaml:"ldap,omitempty" json:"ldap,omitempty"`
 	ICMP           []ICMPCheck           `yaml:"icmp,omitempty" json:"icmp,omitempty"`
 	Postgres       []PostgresCheck       `yaml:"postgres,omitempty" json:"postgres,omitempty"`
+	Mssql          []MssqlCheck          `yaml:"mssql,omitempty" json:"mssql,omitempty"`
 	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Interval       uint64                `yaml:"interval,omitempty" json:"interval,omitempty"`

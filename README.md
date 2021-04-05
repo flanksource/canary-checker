@@ -29,6 +29,7 @@
       * [Namespace - Create a new kubernetes namespace and pod](#namespace---create-a-new-kubernetes-namespace-and-pod)
       * [Pod - Create a new pod and verify reachability](#pod---create-a-new-pod-and-verify-reachability)
       * [Postgres - Query a Postgresql DB using SQL](#postgres---query-a-postgresql-db-using-sql)
+      * [Mssql - Query a Mssql DB using SQL](#mssql---query-a-mssql-db-using-sql)  
       * [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
       * [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
       * [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
@@ -408,6 +409,31 @@ postgres:
 | connection |  | string | Yes |
 | query |  | string | Yes |
 | results |  | int | Yes |
+
+
+
+### Mssql - Query a Mssql DB using SQL
+
+This check will try to connect to a specified Mssql database, run a query against it and verify the results.
+
+```yaml
+
+mssql:
+  - connection: 'server=localhost;user id=sa;password=S0m3S3curep@sswd;port=1433;database=master'
+    description: 'The mssql test'
+    driver: mssql
+    query: 'SELECT 1'
+    results: 1
+```
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| description |  | string | Yes |
+| driver |  | string | Yes |
+| connection |  | string | Yes |
+| query |  | string | Yes |
+| results |  | int | Yes |
+
 
 
 ### S3 - Verify reachability and correctness of an S3 compatible store
