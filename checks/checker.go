@@ -26,6 +26,7 @@ var All = []Checker{
 	&PostgresChecker{},
 	&MssqlChecker{},
 	&LdapChecker{},
+	&RedisChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),

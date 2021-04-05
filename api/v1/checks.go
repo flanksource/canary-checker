@@ -243,6 +243,25 @@ func (c ContainerdPushCheck) GetType() string {
 	return "containerdPush"
 }
 
+type RedisCheck struct {
+	Description string `yaml:"description" json:"description,omitempty"`
+	Addr        string `yaml:"addr" json:"addr,omitempty"`
+	Password    string `yaml:"password" json:"password,omitempty"`
+	DB          int    `yaml:"db" json:"db"`
+}
+
+func (c RedisCheck) GetDescription() string {
+	return c.Description
+}
+
+func (c RedisCheck) GetType() string {
+	return "redis"
+}
+
+func (c RedisCheck) GetEndpoint() string {
+	return c.Addr
+}
+
 type SqlCheck struct {
 	Description string `yaml:"description" json:"description,omitempty"`
 	Driver      string `yaml:"driver" json:"driver,omitempty"`
@@ -730,6 +749,10 @@ type SrvReply struct {
 	Weight   int    `yaml:"wight,omitempty"`
 }
 
+type Redis struct {
+	RedisCheck `yaml:",inline" json:"inline"`
+}
+
 var AllChecks = []external.Check{
 	HTTPCheck{},
 	TCPCheck{},
@@ -742,6 +765,7 @@ var AllChecks = []external.Check{
 	ContainerdPushCheck{},
 	PostgresCheck{},
 	MssqlCheck{},
+	RedisCheck{},
 	PodCheck{},
 	LDAPCheck{},
 	NamespaceCheck{},

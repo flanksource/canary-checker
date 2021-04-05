@@ -18,13 +18,14 @@ require (
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/go-logr/logr v0.3.0
 	github.com/go-logr/zapr v0.2.0
+	github.com/go-redis/redis/v8 v8.8.0
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/lib/pq v1.9.0
 	github.com/mitchellh/reflectwalk v1.0.1
 	github.com/ncw/swift v1.0.50
-	github.com/onsi/ginkgo v1.14.1
-	github.com/onsi/gomega v1.10.2
+	github.com/onsi/ginkgo v1.15.0
+	github.com/onsi/gomega v1.10.5
 	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.1
@@ -34,7 +35,7 @@ require (
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/spf13/cobra v1.1.1
 	golang.org/x/mod v0.4.1 // indirect
-	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
+	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 	golang.org/x/tools v0.1.0 // indirect

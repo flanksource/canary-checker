@@ -566,6 +566,21 @@ spec:
                       type: integer
                   type: object
                 type: array
+              redis:
+                items:
+                  properties:
+                    addr:
+                      type: string
+                    db:
+                      type: integer
+                    description:
+                      type: string
+                    password:
+                      type: string
+                  required:
+                  - db
+                  type: object
+                type: array
               s3:
                 items:
                   properties:
