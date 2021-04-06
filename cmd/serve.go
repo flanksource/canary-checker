@@ -15,6 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
+	"io/fs"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	nethttp "net/http"
 	_ "net/http/pprof"
@@ -87,7 +88,11 @@ func serve(cmd *cobra.Command) {
 		logger.Infof("    npm run serve -- --port %d ", devGuiHttpPort)
 		logger.Infof("   )")
 	} else {
-		staticRoot = nethttp.FS(statuspage.StaticContent)
+		fs, err := fs.Sub(statuspage.StaticContent, "dist")
+		if err != nil {
+			logger.Errorf("Error: %v", err)
+		}
+		staticRoot = nethttp.FS(fs)
 		allowedCors = ""
 	}
 
