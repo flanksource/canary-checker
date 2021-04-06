@@ -1,0 +1,13 @@
+on: pull_request
+name: Build
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build Container
+        run: docker build -f Dockerfile .
