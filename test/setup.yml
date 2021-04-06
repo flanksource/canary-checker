@@ -63,6 +63,53 @@ spec:
               value: admin123
 
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mssql
+  name: mssql
+  namespace: platform-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mssql
+  template:
+    metadata:
+      labels:
+        app: mssql
+    spec:
+      containers:
+        - image: mcr.microsoft.com/mssql/server:2019-latest
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 1433
+          name: mssql
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: SA_PASSWORD
+              value: "S0m3p@sswd"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mssql
+  namespace: platform-system
+spec:
+  type: NodePort
+  ports:
+    - name: mssql
+      port: 1433
+      targetPort: 1433
+      protocol: TCP
+      nodePort: 32010
+  selector:
+    app: mssql
+
+---
 apiVersion: v1
 kind: Service
 metadata:

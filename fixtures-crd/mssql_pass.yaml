@@ -1,0 +1,10 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: mssql-pass
+spec:
+  interval: 30
+  mssql:
+    - connection: "server=mssql.platform-system;user id=sa;password=S0m3p@sswd;port=32010;database=master"
+      query: "SELECT 1"
+      results: 1
