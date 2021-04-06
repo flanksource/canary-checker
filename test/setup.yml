@@ -31,13 +31,18 @@ kind: Namespace
 metadata:
   name: platform-system
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
+  labels:
+    app: postgres
   name: postgres
   namespace: platform-system
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
   template:
     metadata:
       labels:
@@ -68,6 +73,7 @@ spec:
   ports:
     - name: psql
       port: 5432
+      targetPort: 5432
       protocol: TCP
       nodePort: 32432
   selector:

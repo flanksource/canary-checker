@@ -31,7 +31,7 @@ kind:
 kubernetes:
   auditing:
     policyFile: ""
-  version: v1.16.9
+  version: v1.18.15
   kubeletExtraArgs:
     node-labels: "ingress-ready=true"
     authorization-mode: "AlwaysAllow"
