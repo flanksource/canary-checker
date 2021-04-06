@@ -27,6 +27,7 @@ kind:
     30389: 30389
     30636: 30636
     32432: 32432
+    32004: 32004
 kubernetes:
   auditing:
     policyFile: ""

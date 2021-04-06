@@ -577,7 +577,10 @@ spec:
                       type: string
                     password:
                       type: string
+                    username:
+                      type: string
                   required:
+                  - addr
                   - db
                   type: object
                 type: array

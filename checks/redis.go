@@ -33,7 +33,7 @@ func (c *RedisChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 func (c *RedisChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	redisCheck := extConfig.(v1.RedisCheck)
-	result, err := connectRedis(redisCheck.Addr, redisCheck.Password, redisCheck.DB)
+	result, err := connectRedis(redisCheck.Addr, redisCheck.Password, redisCheck.Username, redisCheck.DB)
 	if err != nil {
 		return Failf(redisCheck, "failed to execute query %s", err)
 	}
@@ -43,12 +43,13 @@ func (c *RedisChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	return Success(redisCheck, start)
 }
 
-func connectRedis(addr, password string, db int) (string, error) {
+func connectRedis(addr, password, username string, db int) (string, error) {
 	ctx := context.TODO()
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: password,
 		DB:       db,
+		Username: username,
 	})
 	return rdb.Ping(ctx).Result()
 }

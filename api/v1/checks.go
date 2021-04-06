@@ -245,7 +245,8 @@ func (c ContainerdPushCheck) GetType() string {
 
 type RedisCheck struct {
 	Description string `yaml:"description" json:"description,omitempty"`
-	Addr        string `yaml:"addr" json:"addr,omitempty"`
+	Addr        string `yaml:"addr" json:"addr"`
+	Username    string `yaml:"username" json:"username,omitempty"`
 	Password    string `yaml:"password" json:"password,omitempty"`
 	DB          int    `yaml:"db" json:"db"`
 }
@@ -748,6 +749,18 @@ type SrvReply struct {
 	Priority int    `yaml:"priority,omitempty"`
 	Weight   int    `yaml:"wight,omitempty"`
 }
+
+/*
+This check will try to connect to a specified Redis instance, run a ping against it and verify the pong response.
+
+```yaml
+
+redis:
+  - addr: "redis-service.default:6379"
+	db: 0
+	description: "The redis test"
+```
+*/
 
 type Redis struct {
 	RedisCheck `yaml:",inline" json:"inline"`
