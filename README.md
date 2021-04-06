@@ -30,6 +30,7 @@
       * [Pod - Create a new pod and verify reachability](#pod---create-a-new-pod-and-verify-reachability)
       * [Postgres - Query a Postgresql DB using SQL](#postgres---query-a-postgresql-db-using-sql)
       * [Mssql - Query a Mssql DB using SQL](#mssql---query-a-mssql-db-using-sql)  
+      * [Redis - Excute ping against redis instance](#redis---execute-ping-against-redis-instance)  
       * [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
       * [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
       * [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
@@ -434,6 +435,27 @@ mssql:
 | query |  | string | Yes |
 | results |  | int | Yes |
 
+
+
+### Redis - Execute ping against redis instance
+
+This check will execute ping against the specified redis instance and check its availability
+
+```yaml
+
+redis:
+  - addr: 'localhost:6379'
+    description: 'The redis test'
+    db: 0
+```
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| addr | host:port address. | string | Yes |
+| db | Database to be selected after connecting to the server. | int | Yes |
+| description | Description for canary | string | No |
+| password | Optional password. To authenticate the current connection | string | No |
+| username | Use the specified Username to authenticate the current connection | string | No |
 
 
 ### S3 - Verify reachability and correctness of an S3 compatible store

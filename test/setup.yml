@@ -31,13 +31,18 @@ kind: Namespace
 metadata:
   name: platform-system
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
+  labels:
+    app: postgres
   name: postgres
   namespace: platform-system
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
   template:
     metadata:
       labels:
@@ -68,10 +73,51 @@ spec:
   ports:
     - name: psql
       port: 5432
+      targetPort: 5432
       protocol: TCP
       nodePort: 32432
   selector:
     app: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: redis
+  name: redis
+  namespace: platform-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - image: redis
+          name: redis
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: platform-system
+spec:
+  type: NodePort
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
+      nodePort: 32004
+  selector:
+    app: redis
 ---
 apiVersion: v1
 kind: Namespace

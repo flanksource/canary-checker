@@ -41,6 +41,7 @@ type CanarySpec struct {
 	Mssql          []MssqlCheck          `yaml:"mssql,omitempty" json:"mssql,omitempty"`
 	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Redis          []RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
 	Interval       uint64                `yaml:"interval,omitempty" json:"interval,omitempty"`
 }
 

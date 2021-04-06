@@ -112,6 +112,7 @@ type Config struct {
 	ICMP           []v1.ICMPCheck           `yaml:"icmp,omitempty" json:"icmp,omitempty"`
 	Postgres       []v1.PostgresCheck       `yaml:"postgres,omitempty" json:"postgres,omitempty"`
 	Mssql          []v1.MssqlCheck          `yaml:"mssql,omitempty" json:"mssql,omitempty"`
+	Redis          []v1.RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
 	Helm           []v1.HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace      []v1.NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Interval       metav1.Duration          `yaml:"-" json:"interval,omitempty"`

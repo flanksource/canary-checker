@@ -61,6 +61,7 @@ chmod +x ./wait4x
 ./wait4x tcp 127.0.0.1:30636 -t 120s -i 5s || true
 ./wait4x tcp 127.0.0.1:30389 || true
 ./wait4x tcp 127.0.0.1:32432 || true
+./wait4x tcp 127.0.0.1:32004 || true
 
 make vue-dist
 cd test
