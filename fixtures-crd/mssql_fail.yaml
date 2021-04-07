@@ -1,0 +1,10 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: mssql-fail
+spec:
+  interval: 30
+  mssql:
+    - connection: "server=mssql.platformsystem;user id=sa;password=S0m3p@sswd;port=32010;database=master" #wrong server name for failure
+      query: "SELECT 1"
+      results: 1
