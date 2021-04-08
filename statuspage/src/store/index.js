@@ -127,21 +127,16 @@ export default new Vuex.Store({
 
             for (const check of state.checks) {
                 let groupBy = check.name + check.type + check.description
-                if (group[check.namespace] == null) {
-                    group[check.namespace] = {}
-                }
-
-                if (group[check.namespace][groupBy] == null) {
-                    group[check.namespace][groupBy] = {
-                        type: check.type,
-                        namespace: check.namespace,
-                        name: check.name,
-                        interval: check.interval,
-                        severity: check.severity,
-                        owner:    check.owner,
-                        description: check.description,
-                        items: []
-                    }
+                group[check.namespace] = group[check.namespace] ?? {}
+                group[check.namespace][groupBy] = group[check.namespace][groupBy] ?? {
+                    type: check.type,
+                    namespace: check.namespace,
+                    name: check.name,
+                    description: check.description,
+                    interval: check.interval,
+                    severity: check.severity,
+                    owner: check.owner,
+                    items: [],
                 }
 
                 group[check.namespace][groupBy].items.push(check)

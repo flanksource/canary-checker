@@ -1,18 +1,20 @@
 <!-- This component encapsulates a modal that is displayed -->
 <!-- when clicking on canary                               -->
 <template>
-  <b-modal :id="'modal-canary'+name+namespace" ok-only>
+<!--  Here we use dynamic id for the modal since it is being called from a loop.-->
+<!--  If ID is not distinguished then a click on any row will open modal for every value-->
+  <b-modal :id="`modal-canary${name}${namespace}`" ok-only>
     <template #modal-title>
-      <img :src="'images/' + checkType + '.svg'" height="30px"> {{name}}
+      <img :src="`images/${checkType}.svg`" v-bind:style="{ height: '1.875rem' }" alt=""> {{name}}
     </template>
-    <template v-slot:default>
-      <div class="name"><b>Name:</b> {{name}}</div>
-      <div class="namespace"><b>Namespace:</b> {{namespace}}</div>
-      <div class="description"><b>Description:</b> {{description}}</div>
-      <div class="interval"><b>Interval:</b> {{interval}} Seconds</div>
-      <div class="owner" v-if="owner.length !== 0"><b>Owner:</b> {{owner}}</div>
-      <div class="severity" v-if="severity.length !== 0"><b>Severity:</b> {{severity}}</div>
-    </template>
+    <ul class="list-unstyled">
+      <li><b>Name:</b> {{name}}</li>
+      <li><b>Namespace:</b> {{namespace}}</li>
+      <li><b>Description:</b> {{description}}</li>
+      <li><b>Interval:</b> {{interval}} Seconds</li>
+      <li><b>Owner:</b> {{getProp(owner)}}</li>
+      <li><b>Severity:</b> {{getProp(severity)}}</li>
+    </ul>
   </b-modal>
 
 </template>
@@ -52,9 +54,21 @@ export default {
       required: true,
     },
   },
+  methods: {
+    getProp(prop){
+      if (prop.length === 0) {
+        return "-"
+      }
+      return prop
+    }
+  }
 }
 </script>
 
 <style scoped>
-
+.list-unstyled {
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+}
 </style>

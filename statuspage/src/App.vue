@@ -22,8 +22,9 @@
 
                 <template v-for="(check) in byNamespace.items" >
                     <tr :key="checkKey(check)" >
-                        <td v-b-modal="'modal-canary'+check.name+check.namespace">
-                                <img :src="'images/' + check.type + '.svg'" :title="check.type " height="20px" >  {{ shortHand(checkName(check),60) }}
+<!--                      Component modal doc: : https://bootstrap-vue.org/docs/components/modal-->
+                      <td v-b-modal="`modal-canary${check.name}${check.namespace}`">
+                                <img :src="`images/${check.type}.svg`" :title="check.type " v-bind:style="{ height: '1.25rem' }" alt="" >  {{ shortHand(checkName(check),60) }}
                               <canary-modal :interval="check.interval"
                                             :owner="check.owner"
                                             :severity="check.severity"
@@ -115,8 +116,7 @@ export default {
 
     checkKey() {
       return (check) => {
-        let id = check.key + check.id + check.description + check.name + check.namespace + check.endpoint + check.serverURL
-        return id
+        return `${check.key}${check.id}${check.description}${check.name}${check.namespace}${check.endpoint}${check.serverURL}`
       }
     },
 
