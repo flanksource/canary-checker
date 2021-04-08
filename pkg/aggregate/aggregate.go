@@ -14,10 +14,11 @@ import (
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
 
-	"github.com/pkg/errors"
+	"github.com/orcaman/concurrent-map"
 )
 
 var Servers []string
+var checkCache = cmap.New()
 
 type AggregateCheck struct {
 	ServerURL   string                       `json:"serverURL"`
@@ -57,7 +58,7 @@ type Response struct {
 	Servers []string         `json:"servers"`
 }
 
-func getChecksFromServer(server string) (*api.Response, error) {
+func doChecksFromServer(server string) {
 	url := fmt.Sprintf("%s/api", server)
 	tr := &nethttp.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -65,19 +66,30 @@ func getChecksFromServer(server string) (*api.Response, error) {
 	client := &nethttp.Client{Transport: tr}
 	resp, err := client.Get(url)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get url %s", url)
+		logger.Errorf("failed to get url %s. Error: %v", url, err)
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to read response body for url %s", url)
+		logger.Errorf("failed to read response body for url %s. Error: %v", url, err)
 	}
 	apiResponse := &api.Response{}
 	if err := json.Unmarshal(bodyBytes, &apiResponse); err != nil {
-		return nil, errors.Wrapf(err, "failed to unmarshal json body for url %s", url)
+		logger.Errorf("failed to unmarshal json body for url %s. Error: %v", url, err)
 	}
-	return apiResponse, nil
+	checkCache.Set(server, apiResponse)
+}
+func getChecksFromServer(server string) *api.Response {
+	go doChecksFromServer(server)
+	apiResponse, exists := checkCache.Get(server)
+	if !exists {
+		return &api.Response{}
+	}
+	if response, ok := apiResponse.(*api.Response); ok {
+		return response
+	}
+	return &api.Response{}
 }
 
 func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
@@ -107,11 +119,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 	servers := []string{}
 
 	for _, serverURL := range Servers {
-		apiResponse, err := getChecksFromServer(serverURL)
-		if err != nil {
-			logger.Errorf("Failed to get checks from server %s: %v", serverURL, err)
-			continue
-		}
+		apiResponse := getChecksFromServer(serverURL)
 		serverId := fmt.Sprintf("%s@%s", apiResponse.ServerName, serverURL)
 		servers = append(servers, serverId)
 
