@@ -52,6 +52,9 @@ type Check struct {
 	Uptime      string        `json:"uptime"`
 	Latency     string        `json:"latency"`
 	Statuses    []CheckStatus `json:"checkStatuses" mapstructure:"-"`
+	Interval    uint64        `json:"interval"`
+	Owner       string        `json:"owner"`
+	Severity    string        `json:"severity"`
 	CheckCanary *v1.Canary    `json:"-"`
 }
 

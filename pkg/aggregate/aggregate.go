@@ -30,6 +30,9 @@ type AggregateCheck struct {
 	Endpoint    string                       `json:"endpoint"`
 	Health      map[string]CheckHealth       `json:"health"`
 	Statuses    map[string][]pkg.CheckStatus `json:"checkStatuses"`
+	Interval    uint64                       `json:"interval"`
+	Owner       string                       `json:"owner"`
+	Severity    string                       `json:"severity"`
 }
 
 type CheckHealth struct {
@@ -94,6 +97,9 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 			Type:        c.Type,
 			Description: c.Description,
 			Endpoint:    c.Endpoint,
+			Interval:    c.Interval,
+			Owner:       c.Owner,
+			Severity:    c.Severity,
 			ServerURL:   "local",
 			Health: map[string]CheckHealth{
 				localServerId: {c.Latency, c.Uptime},
@@ -129,6 +135,9 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 					Type:        c.Type,
 					Description: c.Description,
 					Endpoint:    c.Endpoint,
+					Interval:    c.Interval,
+					Owner:       c.Owner,
+					Severity:    c.Severity,
 					ServerURL:   serverURL,
 					Health: map[string]CheckHealth{
 						serverId: {c.Latency, c.Uptime},

@@ -22,8 +22,16 @@
 
                 <template v-for="(check) in byNamespace.items" >
                     <tr :key="checkKey(check)" >
-                        <td>
-                                <img :src="'images/' + check.type + '.svg'" :title="check.type " height="20px">  {{ shortHand(checkName(check),60) }}
+                        <td v-b-modal="'modal-canary'+check.name+check.namespace">
+                                <img :src="'images/' + check.type + '.svg'" :title="check.type " height="20px" >  {{ shortHand(checkName(check),60) }}
+                              <canary-modal :interval="check.interval"
+                                            :owner="check.owner"
+                                            :severity="check.severity"
+                                            :check-type="check.type"
+                                            :description="check.description"
+                                            :name="check.name"
+                                            :namespace="check.namespace"
+                              />
                         </td>
 
                         <td v-for="server in orderedServers" :key="server.value" class="align-top border-right border-left">
@@ -58,10 +66,12 @@ import store from "./store";
 import AutoUpdateSettings from "./components/AutoUpdateSettings.vue";
 import ErrorPanel from "./components/ErrorPanel.vue";
 import StatusStrip from "./components/StatusStrip.vue";
+import CanaryModal from "@/components/CanaryModal";
 
 export default {
   name: "App",
   components: {
+    CanaryModal,
     AutoUpdateSettings,
     ErrorPanel,
     StatusStrip,
@@ -105,7 +115,7 @@ export default {
 
     checkKey() {
       return (check) => {
-        let id = check.key + check.id + check.description + check.name + check.namespace + check.endpoint + check.ServerURL
+        let id = check.key + check.id + check.description + check.name + check.namespace + check.endpoint + check.serverURL
         return id
       }
     },

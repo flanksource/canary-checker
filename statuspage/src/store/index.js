@@ -135,7 +135,11 @@ export default new Vuex.Store({
                     group[check.namespace][groupBy] = {
                         type: check.type,
                         namespace: check.namespace,
-                        name: check.description ? check.description : check.name,
+                        name: check.name,
+                        interval: check.interval,
+                        severity: check.severity,
+                        owner:    check.owner,
+                        description: check.description,
                         items: []
                     }
                 }

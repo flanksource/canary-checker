@@ -43,6 +43,8 @@ type CanarySpec struct {
 	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Redis          []RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
 	Interval       uint64                `yaml:"interval,omitempty" json:"interval,omitempty"`
+	Severity       string                `yaml:"severity,omitempty" json:"severity,omitempty"`
+	Owner          string                `yaml:"owner,omitempty" json:"owner,omitempty"`
 }
 
 func (spec CanarySpec) GetAllChecks() []external.Check {
