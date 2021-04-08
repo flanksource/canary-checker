@@ -213,7 +213,37 @@ http:
     responseCodes: [200]
     responseContent: ""
     maxSSLExpiry: 60
-    
+  - headers:
+    - name: headerkey1
+      value: headervalue1
+    - name: headerkey2
+      valueFrom:
+        configMapRef:
+          key: headervalue2
+          name: header-configmap
+    responseJSONContent:
+      path: "$.headerkey1[0]"
+      value: headervalue1
+    endpoint: http://podinfo.127.0.0.1.nip.io/headers
+    responseCodes:
+      - 200
+  - method: POST
+    body: bodycontent
+    responseContent: bodycontent
+    endpoint: http://podinfo.127.0.0.1.nip.io/echo
+    responseCodes:
+      - 202
+  - authentication:
+      username:
+        value: user
+      password:
+        valueFrom:
+          secretKeyRef:
+            name: authentication-secret
+            key: password
+    responsecodes:
+      - 202
+    endpoint: https://testloginserver.127.0.0.1.nip.io/login
 ```
 
 | Field | Description | Scheme | Required |
@@ -224,7 +254,12 @@ http:
 | thresholdMillis | Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer. | int | Yes |
 | responseCodes | Expected response codes for the HTTP Request. | []int | Yes |
 | responseContent | Exact response content expected to be returned by the endpoint. | string | Yes |
+| responseJSONContent | `path` and `value` to parse json responses. `path` is a [jsonpath](https://tools.ietf.org/id/draft-goessner-dispatch-jsonpath-00.html) string, `value` is the expected content at that path | JSONCheck | | 
 | maxSSLExpiry | Maximum number of days until the SSL Certificate expires. | int | Yes |
+| method | Specify GET (default) or POST method for HTTP call | string | | 
+| body | Body of HTTP method | string | |
+| headers | Array of key-value pairs to be passed as headers to the HTTP method.  Specified in the same manner as pod environment variables but without the support for pod spec references |   [[]kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | |
+| authentication | `username` and `password` value, both of which are specified as [[]kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar), to be passed as authentication headers | *Authentication | |
 
 <sup>*</sup> One of either endpoint or namespace must be specified, but not both.  Specify a namespace of `"*"` to crawl all namespaces.
 
