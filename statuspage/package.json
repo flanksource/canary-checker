@@ -14,7 +14,7 @@
     "chart.js": "^2.9.3",
     "core-js": "^3.6.5",
     "date-and-time": "^0.14.2",
-    "jquery": "^1.9.1",
+    "jquery": "^3.5.0",
     "lodash": "^4.17.20",
     "material-icons": "^0.3.1",
     "mdi-vue": "^1.8.1",
