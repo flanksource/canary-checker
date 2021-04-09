@@ -2,6 +2,7 @@
 <!-- when clicking on canary                               -->
 <template>
   <tr :key="key">
+    <!--  Component modal doc: : https://bootstrap-vue.org/docs/components/modal-->
     <td v-b-modal="`modal-canary${name}${namespace}`">
       <img :src="`images/${checkType}.svg`" :title="checkType " v-bind:style="{ height: '1.25rem' }" :alt="`${checkType} logo`" >  {{ shortDescription }}
       <canary-modal :interval="interval"
@@ -28,6 +29,7 @@ import CanaryModal from "@/components/CanaryModal";
 import StatusStrip from "@/components/StatusStrip";
 import Vuex from "vuex";
 export default {
+  name: "CanaryStandardServerRow",
   components: {StatusStrip, CanaryModal},
   computed: {
     ...Vuex.mapState([

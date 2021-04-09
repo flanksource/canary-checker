@@ -21,7 +21,7 @@
                 </tr>
 
                 <template v-for="(check) in byNamespace.items" >
-                      <table-row :interval="check.interval"
+                      <canary-standard-server-row :interval="check.interval"
                                  :owner="check.owner"
                                  :severity="check.severity"
                                  :check-type="check.type"
@@ -54,12 +54,12 @@ import Vuex from "vuex";
 import store from "./store";
 import AutoUpdateSettings from "./components/AutoUpdateSettings.vue";
 import ErrorPanel from "./components/ErrorPanel.vue";
-import TableRow from "@/components/TableRow";
+import CanaryStandardServerRow from "./components/CanaryStandardServerRow.vue";
 
 export default {
   name: "App",
   components: {
-    TableRow,
+    CanaryStandardServerRow,
     AutoUpdateSettings,
     ErrorPanel,
   },
