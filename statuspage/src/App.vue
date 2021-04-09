@@ -21,29 +21,17 @@
                 </tr>
 
                 <template v-for="(check) in byNamespace.items" >
-                    <tr :key="checkKey(check)" >
-<!--                      Component modal doc: : https://bootstrap-vue.org/docs/components/modal-->
-                      <td v-b-modal="`modal-canary${check.name}${check.namespace}`">
-                                <img :src="`images/${check.type}.svg`" :title="check.type " v-bind:style="{ height: '1.25rem' }" alt="" >  {{ shortHand(checkName(check),60) }}
-                              <canary-modal :interval="check.interval"
-                                            :owner="check.owner"
-                                            :severity="check.severity"
-                                            :check-type="check.type"
-                                            :description="check.description"
-                                            :name="check.name"
-                                            :namespace="check.namespace"
-                              />
-                        </td>
-
-                        <td v-for="server in orderedServers" :key="server.value" class="align-top border-right border-left">
-                            <div>
-                              <status-strip  :checks="check.items" :server="server.value"
-                                          color="#28a745" error-color="#dc3545"
-                                           :bar-width="20" :bar-spacing="5" :barMaxHeight="20"
-                                           :zoominess="0.85"/>
-                            </div>
-                        </td>
-                    </tr>
+                      <table-row :interval="check.interval"
+                                 :owner="check.owner"
+                                 :severity="check.severity"
+                                 :check-type="check.type"
+                                 :description="check.description"
+                                 :name="check.name"
+                                 :namespace="check.namespace"
+                                 :short-description="shortHand(checkName(check),60)"
+                                 :items="check.items"
+                                 :key="checkKey(check)"
+                                 />
                 </template>
 
             </template>
@@ -66,16 +54,14 @@ import Vuex from "vuex";
 import store from "./store";
 import AutoUpdateSettings from "./components/AutoUpdateSettings.vue";
 import ErrorPanel from "./components/ErrorPanel.vue";
-import StatusStrip from "./components/StatusStrip.vue";
-import CanaryModal from "@/components/CanaryModal";
+import TableRow from "@/components/TableRow";
 
 export default {
   name: "App",
   components: {
-    CanaryModal,
+    TableRow,
     AutoUpdateSettings,
     ErrorPanel,
-    StatusStrip,
   },
   store: store,
   created() {
