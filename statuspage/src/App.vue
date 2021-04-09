@@ -21,20 +21,17 @@
                 </tr>
 
                 <template v-for="(check) in byNamespace.items" >
-                    <tr :key="checkKey(check)" >
-                        <td>
-                                <img :src="'images/' + check.type + '.svg'" :title="check.type " height="20px">  {{ shortHand(checkName(check),60) }}
-                        </td>
-
-                        <td v-for="server in orderedServers" :key="server.value" class="align-top border-right border-left">
-                            <div>
-                              <status-strip  :checks="check.items" :server="server.value"
-                                          color="#28a745" error-color="#dc3545"
-                                           :bar-width="20" :bar-spacing="5" :barMaxHeight="20"
-                                           :zoominess="0.85"/>
-                            </div>
-                        </td>
-                    </tr>
+                      <canary-standard-server-row :interval="check.interval"
+                                 :owner="check.owner"
+                                 :severity="check.severity"
+                                 :check-type="check.type"
+                                 :description="check.description"
+                                 :name="check.name"
+                                 :namespace="check.namespace"
+                                 :short-description="shortHand(checkName(check),60)"
+                                 :items="check.items"
+                                 :key="checkKey(check)"
+                                 />
                 </template>
 
             </template>
@@ -57,14 +54,14 @@ import Vuex from "vuex";
 import store from "./store";
 import AutoUpdateSettings from "./components/AutoUpdateSettings.vue";
 import ErrorPanel from "./components/ErrorPanel.vue";
-import StatusStrip from "./components/StatusStrip.vue";
+import CanaryStandardServerRow from "./components/CanaryStandardServerRow.vue";
 
 export default {
   name: "App",
   components: {
+    CanaryStandardServerRow,
     AutoUpdateSettings,
     ErrorPanel,
-    StatusStrip,
   },
   store: store,
   created() {
@@ -105,8 +102,7 @@ export default {
 
     checkKey() {
       return (check) => {
-        let id = check.key + check.id + check.description + check.name + check.namespace + check.endpoint + check.ServerURL
-        return id
+        return `${check.key}${check.id}${check.description}${check.name}${check.namespace}${check.endpoint}${check.serverURL}`
       }
     },
 

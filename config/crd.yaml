@@ -499,6 +499,8 @@ spec:
                       type: integer
                   type: object
                 type: array
+              owner:
+                type: string
               pod:
                 items:
                   properties:
@@ -646,6 +648,8 @@ spec:
                       type: boolean
                   type: object
                 type: array
+              severity:
+                type: string
               tcp:
                 items:
                   properties:
