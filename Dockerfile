@@ -16,6 +16,15 @@ RUN GOOS=linux GOARCH=amd64 go build -o canary-checker -ldflags "-X \"main.versi
 
 FROM ubuntu:bionic
 WORKDIR /app
+# Install restic from releases
+RUN apt-get update && \
+    apt-get install -y curl && \
+    curl -L https://github.com/restic/restic/releases/download/v0.12.0/restic_0.12.0_linux_amd64.bz2 -o restic.bz2 && \
+    bunzip2  /app/restic.bz2 && \
+    chmod +x /app/restic && \
+    mv /app/restic /usr/local/bin/ && \
+    rm -rf /app/restic.bz2
+
 # install CA certificates
 RUN apt-get update && \
   apt-get install -y ca-certificates && \

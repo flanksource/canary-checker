@@ -130,7 +130,7 @@ func Record(check v1.Canary, result *pkg.CheckResult) (rollingUptime string, rol
 	name := check.Name
 	checkType := result.Check.GetType()
 	endpoint := check.GetDescription(result.Check)
-	owner    := check.Spec.Owner
+	owner := check.Spec.Owner
 	severity := check.Spec.Severity
 	// We are recording aggreated metrics at the canary level, not the individual check level
 	key := check.GetKey(result.Check)

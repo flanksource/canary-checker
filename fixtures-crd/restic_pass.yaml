@@ -1,0 +1,13 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: restic-pass
+spec:
+  interval: 30
+  restic:
+    - repository: s3:https://minio.minio/restic-canary-checker
+      password: S0m3p@sswd
+      maxAge: 1h
+      accessKey: minio
+      secretKey: minio123
+      caCert: /home/runner/work/canary-checker/canary-checker/.certs/ingress-ca.crt

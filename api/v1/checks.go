@@ -163,6 +163,35 @@ func (c S3BucketCheck) GetType() string {
 	return "s3Bucket"
 }
 
+type ResticCheck struct {
+	// Description about the current restic canary check
+	Description string `yaml:"description,omitempty" json:"description,omitempty"`
+	// Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name
+	Repository string `yaml:"repository" json:"repository"`
+	// Password for the restic repository
+	Password string `yaml:"password" json:"password"`
+	// MaxAge for backup freshness
+	MaxAge string `yaml:"maxAge" json:"maxAge"`
+	// AccessKey access key id for connection with aws s3, minio, wasabi, alibaba oss
+	AccessKey string `yaml:"accessKey,omitempty" json:"accessKey,omitempty"`
+	// SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss
+	SecretKey string `yaml:"secretKey,omitempty" json:"secretKey,omitempty"`
+	// CaCert path to the root cert. In case of self-signed certificates
+	CaCert string `yaml:"caCert,omitempty" json:"caCert,omitempty"`
+}
+
+func (c ResticCheck) GetEndpoint() string {
+	return c.Repository
+}
+
+func (c ResticCheck) GetDescription() string {
+	return c.Description
+}
+
+func (c ResticCheck) GetType() string {
+	return "restic"
+}
+
 type DockerPullCheck struct {
 	Description    string `yaml:"description" json:"description,omitempty"`
 	Image          string `yaml:"image" json:"image,omitempty"`
@@ -766,6 +795,10 @@ type Redis struct {
 	RedisCheck `yaml:",inline" json:"inline"`
 }
 
+type Restic struct {
+	ResticCheck `yaml:",inline" json:"inline"`
+}
+
 var AllChecks = []external.Check{
 	HTTPCheck{},
 	TCPCheck{},
@@ -781,6 +814,7 @@ var AllChecks = []external.Check{
 	RedisCheck{},
 	PodCheck{},
 	LDAPCheck{},
+	ResticCheck{},
 	NamespaceCheck{},
 	DNSCheck{},
 	HelmCheck{},
