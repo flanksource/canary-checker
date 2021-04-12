@@ -810,7 +810,7 @@ restic:
       secretKey: some-secret-key
       description: The restic test
 ```
- */
+*/
 
 type Restic struct {
 	ResticCheck `yaml:",inline" json:"inline"`

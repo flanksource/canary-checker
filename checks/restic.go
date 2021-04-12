@@ -53,9 +53,9 @@ func (c *ResticChecker) Check(extConfig external.Check) *pkg.CheckResult {
 func checkIntegrity(repository, caCert string, envVars map[string]string) error {
 	resticCmd := ""
 	if caCert != "" {
-		resticCmd = fmt.Sprintf("restic -r %s check --read-data --no-lock -q --cacert %s", repository, caCert)
+		resticCmd = fmt.Sprintf("restic -r %[1]s --cacert %[2]s dump --no-lock -q latest $(restic -r %[1]s --cacert %[2]s --no-lock ls -q latest | awk 'FNR==1') 1> /dev/null", repository, caCert)
 	} else {
-		resticCmd = fmt.Sprintf("restic -r %s check --read-data --no-lock -q", repository)
+		resticCmd = fmt.Sprintf("restic -r %s dump --no-lock -q latest $(restic -r %s --no-lock ls -q latest | awk 'FNR==1') 1> /dev/null", repository)
 	}
 	return exec.ExecfWithEnv(resticCmd, envVars)
 }
