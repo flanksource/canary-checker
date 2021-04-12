@@ -797,6 +797,21 @@ type Redis struct {
 	RedisCheck `yaml:",inline" json:"inline"`
 }
 
+/*
+
+This check will connect to a restic repository and perform Integrity and backupFreshness Tests
+```yaml
+restic:
+	- repository: s3:http://minio.infra/restic-repo
+      password: S0M3p@sswd
+      maxAge: 5h30m
+      checkIntegrity: true
+      accessKey: some-access-key
+      secretKey: some-secret-key
+      description: The restic test
+```
+ */
+
 type Restic struct {
 	ResticCheck `yaml:",inline" json:"inline"`
 }
