@@ -357,6 +357,10 @@ spec:
                       description: Namespace to crawl for TLS endpoints.  Mutually
                         exclusive with Endpoint
                       type: string
+                    ntlm:
+                      description: NTLM when set to true will do authentication using
+                        NTLM protocol
+                      type: boolean
                     responseCodes:
                       description: Expected response codes for the HTTP Request.
                       items:
