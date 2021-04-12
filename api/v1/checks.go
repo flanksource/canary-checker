@@ -172,6 +172,8 @@ type ResticCheck struct {
 	Password string `yaml:"password" json:"password"`
 	// MaxAge for backup freshness
 	MaxAge string `yaml:"maxAge" json:"maxAge"`
+	// CheckIntegrity when enabled will check the Integrity and consistency of the restic reposiotry
+	CheckIntegrity bool `yaml:"checkIntegrity,omitempty" json:"checkIntegrity,omitempty"`
 	// AccessKey access key id for connection with aws s3, minio, wasabi, alibaba oss
 	AccessKey string `yaml:"accessKey,omitempty" json:"accessKey,omitempty"`
 	// SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss

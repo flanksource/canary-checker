@@ -597,6 +597,10 @@ spec:
                       description: CaCert path to the root cert. In case of self-signed
                         certificates
                       type: string
+                    checkIntegrity:
+                      description: CheckIntegrity when enabled will check the Integrity
+                        and consistency of the restic reposiotry
+                      type: boolean
                     description:
                       description: Description about the current restic canary check
                       type: string

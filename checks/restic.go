@@ -7,7 +7,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/exec"
-	"github.com/flanksource/commons/logger"
 	osExec "os/exec"
 	"time"
 )
@@ -37,18 +36,17 @@ func (c *ResticChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 }
 
 func (c *ResticChecker) Check(extConfig external.Check) *pkg.CheckResult {
-	logger.Debugf("Starting Restic checks")
 	start := time.Now()
 	resticCheck := extConfig.(v1.ResticCheck)
 	envVars := getEnvVars(resticCheck)
-	if err := checkIntegrity(resticCheck.Repository, resticCheck.CaCert, envVars); err != nil {
-		return Failf(resticCheck, "failed to check integrity of repository %v", err)
+	if resticCheck.CheckIntegrity {
+		if err := checkIntegrity(resticCheck.Repository, resticCheck.CaCert, envVars); err != nil {
+			return Failf(resticCheck, "integrity check failed %v", err)
+		}
 	}
-	logger.Debugf("Restic integrity check succeeded for repository: %s", resticCheck.Repository)
 	if err := checkBackupFreshness(resticCheck.Repository, resticCheck.MaxAge, resticCheck.CaCert, envVars); err != nil {
-		return Failf(resticCheck, "failed while checking backup freshness: %v", err)
+		return Failf(resticCheck, "backup freshness check failed: %v", err)
 	}
-	logger.Debugf("Restic backup freshness check succeeded for repository: %s", resticCheck.Repository)
 	return Success(resticCheck, start)
 }
 
@@ -90,7 +88,7 @@ func checkBackupFreshness(repository, maxAge, caCert string, envVars map[string]
 		return fmt.Errorf("error parsing the max age: %v", err)
 	}
 	if backupDuration > maxAllowedBackupDuration {
-		return fmt.Errorf("backup is not fresh")
+		return fmt.Errorf("backup is %s older than allowd maxAge for backup", (backupDuration - maxAllowedBackupDuration).String())
 	}
 	return nil
 }
