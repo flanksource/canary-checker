@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/Azure/go-ntlmssp"
 	"github.com/flanksource/kommons"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -161,7 +162,7 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		urlObj.Body = check.Body
 		urlObj.Username = username
 		urlObj.Password = password
-		checkResults, err := c.checkHTTP(urlObj)
+		checkResults, err := c.checkHTTP(urlObj, check.NTLM)
 		if err != nil {
 			return invalidErrorf(check, err, "")
 		}
@@ -232,7 +233,7 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	return Failf(check, "No DNS results found")
 }
 
-func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*HTTPCheckResult, error) {
+func (c *HttpChecker) checkHTTP(urlObj pkg.URL, ntlm bool) (*HTTPCheckResult, error) {
 	var exp time.Time
 	start := time.Now()
 	var urlString string
@@ -241,18 +242,7 @@ func (c *HttpChecker) checkHTTP(urlObj pkg.URL) (*HTTPCheckResult, error) {
 	} else {
 		urlString = fmt.Sprintf("%s://%s%s", urlObj.Scheme, urlObj.IP, urlObj.Path)
 	}
-	client := &http.Client{
-		Transport: &http.Transport{
-			DisableKeepAlives: true,
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-				ServerName:         urlObj.Host,
-			},
-		},
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
+	client := getHttpClient(urlObj.Host, ntlm)
 	req, err := http.NewRequest(urlObj.Method, urlString, strings.NewReader(urlObj.Body))
 	if err != nil {
 		return nil, err
@@ -321,6 +311,31 @@ func (c *HttpChecker) ParseAuth(check v1.HTTPCheck) (string, string, error) {
 		return "", "", err
 	}
 	return username, password, nil
+}
+
+func getHttpClient(urlHost string, ntlm bool) *http.Client {
+	transport := &http.Transport{
+		DisableKeepAlives: true,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+			ServerName:         urlHost,
+		},
+	}
+	checkRedirect := func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+	if ntlm {
+		return &http.Client{
+			Transport: ntlmssp.Negotiator{
+				RoundTripper: transport,
+			},
+			CheckRedirect: checkRedirect,
+		}
+	}
+	return &http.Client{
+		Transport:     transport,
+		CheckRedirect: checkRedirect,
+	}
 }
 
 func DNSLookup(endpoint string) ([]pkg.URL, error) {
