@@ -4,6 +4,7 @@ namespace: platform-system
 resources:
 - ./base
 - ./namespace.yaml
+- ./crd.yaml
 images:
 - name: controller
   newName: docker.io/flanksource/canary-checker
