@@ -34,7 +34,7 @@ run: generate fmt vet manifests
 
 # Install CRDs into a cluster
 install-crd: manifests
-	kubectl apply -f config/crd.yaml
+	kubectl apply -f config/deploy/crd.yaml
 
 
 kind-install: docker-build
@@ -42,7 +42,7 @@ kind-install: docker-build
 
 # Uninstall CRDs from a cluster
 uninstall: manifests
-	kubectl delete -f config/crd.yaml
+	kubectl delete -f config/deploy/crd.yaml
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: kustomize manifests
@@ -54,11 +54,10 @@ static: kustomize manifests
 	$(KUSTOMIZE) build ./config > config/deploy/manifests.yaml
 	cd config/base && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build ./config/base > config/deploy/base.yaml
-	cp config/crd.yaml config/deploy
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
-	$(CONTROLLER_GEN) crd:trivialVersions=false paths="./..." output:stdout > config/crd.yaml
+	$(CONTROLLER_GEN) crd:trivialVersions=false paths="./..." output:stdout > config/deploy/crd.yaml
 
 # Run go fmt against code
 fmt:
