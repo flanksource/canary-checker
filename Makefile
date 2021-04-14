@@ -49,6 +49,13 @@ deploy: kustomize manifests
 	cd config && $(KUSTOMIZE) edit set image controller=${IMG}
 	kubectl $(KUSTOMIZE) config | kubectl apply -f -
 
+static: kustomize manifests
+	cd config && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build ./config > config/deploy/manifests.yaml
+	cd config/base && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build ./config/base > config/deploy/base.yaml
+	cp config/crd.yaml config/deploy
+
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
 	$(CONTROLLER_GEN) crd:trivialVersions=false paths="./..." output:stdout > config/crd.yaml
@@ -68,8 +75,6 @@ generate: controller-gen
 # Build the docker image
 docker-build:
 	docker build . -t ${IMG}
-
-
 
 # Build the docker image
 docker-dev: linux

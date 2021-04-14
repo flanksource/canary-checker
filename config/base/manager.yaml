@@ -1,31 +1,16 @@
 apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: canary-checker
-  name: system
----
-apiVersion: scheduling.k8s.io/v1
-kind: PriorityClass
-metadata:
-  name: canary
-value: -1
-globalDefault: false
-description: "This priority class should be used for canary pods only."
----
-apiVersion: v1
 kind: ServiceAccount
 metadata:
-  namespace: system
-  name: sa
+  name: canary-checker-sa
+  namespace: platform-system
   labels:
     control-plane: canary-checker
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: controller
-  namespace: system
+  name: canary-checker
+  namespace: platform-system
   labels:
     control-plane: canary-checker
 spec:
@@ -39,7 +24,7 @@ spec:
       labels:
         control-plane: canary-checker
     spec:
-      serviceAccountName: sa
+      serviceAccountName: canary-checker-sa
       volumes:
         - name: dockersock
           hostPath:
@@ -93,7 +78,7 @@ spec:
 apiVersion: scheduling.k8s.io/v1
 kind: PriorityClass
 metadata:
-  name: priority
+  name: canary-checker-priority
 value: -1
 globalDefault: false
 description: "This priority class should be used for canary pods only."
@@ -101,8 +86,8 @@ description: "This priority class should be used for canary pods only."
 apiVersion: v1
 kind: Service
 metadata:
-  name: svc
-  namespace: system
+  name: canary-checker
+  namespace: platform-system
   labels:
     control-plane: canary-checker
 spec:
@@ -116,7 +101,7 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: monitor
+  name: canary-checker-monitor
   namespace: platform-system
   labels:
     control-plane: canary-checker
@@ -124,7 +109,7 @@ spec:
   jobLabel: canary-checker
   namespaceSelector:
     matchNames:
-      - system
+      - platform-system
   endpoints:
     - port: metrics
       interval: 30s
