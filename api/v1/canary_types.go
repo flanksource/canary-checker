@@ -39,6 +39,7 @@ type CanarySpec struct {
 	ICMP           []ICMPCheck           `yaml:"icmp,omitempty" json:"icmp,omitempty"`
 	Postgres       []PostgresCheck       `yaml:"postgres,omitempty" json:"postgres,omitempty"`
 	Mssql          []MssqlCheck          `yaml:"mssql,omitempty" json:"mssql,omitempty"`
+	Restic         []ResticCheck         `yaml:"restic,omitempty" json:"restic,omitempty"`
 	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Redis          []RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
@@ -83,6 +84,15 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Postgres {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.Mssql {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.Redis {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.Restic {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.ICMP {

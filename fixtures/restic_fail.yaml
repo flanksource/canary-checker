@@ -1,0 +1,6 @@
+restic:
+  - repository: s3:https://minio.127.0.0.1.nip.io/restic-canary-checker
+    password: S0m3p@sswd
+    maxAge: 10s
+    accessKey: minio
+    secretLKey: minio123

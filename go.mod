@@ -34,6 +34,7 @@ require (
 	github.com/prometheus/common v0.10.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sirupsen/logrus v1.7.0
+	github.com/spakin/awk v1.0.0
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/spf13/cobra v1.1.1
 	golang.org/x/mod v0.4.1 // indirect

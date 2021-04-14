@@ -64,6 +64,19 @@ chmod +x ./wait4x
 ./wait4x tcp 127.0.0.1:32004 || true
 ./wait4x tcp 127.0.0.1:32010 || true
 
+#Install Restic
+sudo apt-get install -y curl
+sudo curl -L https://github.com/restic/restic/releases/download/v0.12.0/restic_0.12.0_linux_amd64.bz2 -o /usr/bin/restic.bz2
+sudo bunzip2  /usr/bin/restic.bz2
+sudo chmod +x /usr/bin/restic
+rm -rf /usr/bin/restic.bz2
+
+#Verify
+restic version
+# Initialize Restic Repo
+RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="minio123" restic --cacert .certs/ingress-ca.crt -r s3:https://minio.127.0.0.1.nip.io/restic-canary-checker init
+#take some backup in restic
+RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="minio123" restic --cacert .certs/ingress-ca.crt -r s3:https://minio.127.0.0.1.nip.io/restic-canary-checker backup /home/runner/work/canary-checker/canary-checker
 make vue-dist
 cd test
 go test ./... -v -c

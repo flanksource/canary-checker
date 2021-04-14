@@ -33,6 +33,7 @@
       * [Redis - Excute ping against redis instance](#redis---execute-ping-against-redis-instance)  
       * [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
       * [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
+      * [Restic - Query the contents of a Restic reposiotry for backup freshness and integrity](#restic---query-the-contents-of-a-restic-repository-for-backup-freshness-and-integrity) 
       * [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
       * [TCP](#tcp)
 
@@ -559,6 +560,27 @@ s3Bucket:
 | minSize | min size of of most recent matched object in bytes | int64 | Yes |
 | usePathStyle | Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY | bool | Yes |
 | skipTLSVerify | Skip TLS verify when connecting to s3 | bool | Yes |
+
+
+
+### Restic - Query the contents of a Restic repository for backup freshness and integrity
+
+This Check will
+- Query a Restic Repository for contents
+- Check the integrity and consistency of repo and data-blobs
+- Check bakup freshness
+  
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| reposiory | the location of your restic repository | string | Yes |
+| password | password for your restic repository | string | Yes |
+| maxAge   | The max age for backup allowed..eg: 5h30m | string | Yes |
+| accessKey | Access key to access your s3/minio bucket | string | No |
+| secretkey | Secret key to access your s3/minio buket | string | No |
+| description | The description about the canary | string | Yes |
+| checkIntegrity | Wheather to check integrity for the specified repo | bool | No |
+| caCert | Path to ca-root crt in case of self-signed certificates is used | string | No |
+
 
 
 ### SSL - Verify the expiry date of a SSL cert
