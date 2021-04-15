@@ -590,6 +590,44 @@ spec:
                   - db
                   type: object
                 type: array
+              restic:
+                items:
+                  properties:
+                    accessKey:
+                      description: AccessKey access key id for connection with aws
+                        s3, minio, wasabi, alibaba oss
+                      type: string
+                    caCert:
+                      description: CaCert path to the root cert. In case of self-signed
+                        certificates
+                      type: string
+                    checkIntegrity:
+                      description: CheckIntegrity when enabled will check the Integrity
+                        and consistency of the restic reposiotry
+                      type: boolean
+                    description:
+                      description: Description about the current restic canary check
+                      type: string
+                    maxAge:
+                      description: MaxAge for backup freshness
+                      type: string
+                    password:
+                      description: Password for the restic repository
+                      type: string
+                    repository:
+                      description: 'Repository The restic repository path eg: rest:https://user:pass@host:8000/
+                        or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name'
+                      type: string
+                    secretKey:
+                      description: SecretKey secret access key for connection with
+                        aws s3, minio, wasabi, alibaba oss
+                      type: string
+                  required:
+                  - maxAge
+                  - password
+                  - repository
+                  type: object
+                type: array
               s3:
                 items:
                   properties:
