@@ -200,9 +200,9 @@ type JmeterCheck struct {
 	// JmxFrom defines tge ConfigMap or Secret reference to get the JMX test plan
 	JmxFrom kommons.EnvVar `yaml:"jmxFrom" json:"jmxFrom"`
 	// Host is the server against which test plan needs to be executed
-	Host string `yaml:"host" json:"host"`
+	Host string `yaml:"host,omitempty" json:"host,omitempty"`
 	// Port on which the server is running
-	Port int32 `yaml:"port" json:"port"`
+	Port int32 `yaml:"port,omitempty" json:"port,omitempty"`
 	// Properties defines the local Jmeter properties
 	Properties []string `yaml:"properties,omitempty" json:"properties,omitempty"`
 	// SystemProperties defines the java system property

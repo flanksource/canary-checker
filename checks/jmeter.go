@@ -53,7 +53,15 @@ func (c *JmeterChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if err != nil {
 		return Failf(jmeterCheck, "unable to write test plan file")
 	}
-	jmeterCmd := fmt.Sprintf("jmeter -n %s %s -t %s -H %s -P %d", getProperties(jmeterCheck.Properties), getSystemProperties(jmeterCheck.SystemProperties), filename, jmeterCheck.Host, jmeterCheck.Port)
+	var host string
+	var port string
+	if jmeterCheck.Host != "" {
+		host = "-H " + jmeterCheck.Host
+	}
+	if jmeterCheck.Port != 0 {
+		port = "-P " + string(jmeterCheck.Port)
+	}
+	jmeterCmd := fmt.Sprintf("jmeter -n %s %s -t %s %s %s", getProperties(jmeterCheck.Properties), getSystemProperties(jmeterCheck.SystemProperties), filename, host, port)
 	err = exec.Exec(jmeterCmd)
 	if err != nil {
 		return Failf(jmeterCheck, "error running the jmeter command: %v", jmeterCmd)

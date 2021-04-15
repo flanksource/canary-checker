@@ -474,9 +474,7 @@ spec:
                         type: string
                       type: array
                   required:
-                  - host
                   - jmxFrom
-                  - port
                   type: object
                 type: array
               ldap:

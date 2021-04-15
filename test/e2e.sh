@@ -64,6 +64,15 @@ chmod +x ./wait4x
 ./wait4x tcp 127.0.0.1:32004 || true
 ./wait4x tcp 127.0.0.1:32010 || true
 
+#Install jmeter
+curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmeter-5.4.1.tgz -o apache-jmeter-5.4.1.tgz && \
+sudo tar xf apache-jmeter-5.4.1.tgz -C / && \
+rm apache-jmeter-5.4.1.tgz && \
+sudo apt-get install -y openjdk-11-jre-headless
+sudo ln -s /apache-jmeter-5.4.1/bin/jmeter /usr/local/bin/jmeter
+#verification
+jmeter -v
+
 #Install Restic
 sudo apt-get install -y curl
 sudo curl -L https://github.com/restic/restic/releases/download/v0.12.0/restic_0.12.0_linux_amd64.bz2 -o /usr/bin/restic.bz2
