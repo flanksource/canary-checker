@@ -5,7 +5,11 @@ IMG ?= docker.io/flanksource/canary-checker:$(TAG)
 CRD_OPTIONS ?= ""
 NAME=canary-checker
 
-TAG=$(shell git describe --tags  --long)$(shell date +"%H%M%S")
+ifeq ($(CI),true)
+	TAG=$(shell git describe --tags  --long)$(shell date +"%H%M%S")
+else
+	TAG="latest"
+endif
 
 ifeq ($(VERSION),)
 VERSION=$(shell git describe --tags  --long)-$(shell date +"%Y%m%d%H%M%S")
