@@ -196,6 +196,44 @@ func (c ResticCheck) GetType() string {
 	return "restic"
 }
 
+type JmeterCheck struct {
+	// JmxFrom defines tge ConfigMap or Secret reference to get the JMX test plan
+	JmxFrom kommons.EnvVar `yaml:"jmxFrom" json:"jmxFrom"`
+	// Host is the server against which test plan needs to be executed
+	Host string `yaml:"host" json:"host"`
+	// Port on which the server is running
+	Port int32 `yaml:"port" json:"port"`
+	// Properties defines the local Jmeter properties
+	Properties []string `yaml:"properties,omitempty" json:"properties,omitempty"`
+	// SystemProperties defines the java system property
+	SystemProperties []string `yaml:"systemProperties,omitempty" json:"systemProperties,omitempty"`
+	// Description of the canary
+	Description string `yaml:"description,omitempty" json:"description,omitempty"`
+	// specNamespace is the namespace in which the canary was deployed, and which
+	// configmap/secret lookups will be constrained to
+	specNamespace string `yaml:"-" json:"-"`
+}
+
+func (c *JmeterCheck) SetNamespace(namespace string) {
+	c.specNamespace = namespace
+}
+
+func (c JmeterCheck) GetNamespace() string {
+	return c.specNamespace
+}
+
+func (c JmeterCheck) GetEndpoint() string {
+	return fmt.Sprintf(c.Host + ":" + string(c.Port))
+}
+
+func (c JmeterCheck) GetDescription() string {
+	return c.Description
+}
+
+func (c JmeterCheck) GetType() string {
+	return "jmeter"
+}
+
 type DockerPullCheck struct {
 	Description    string `yaml:"description" json:"description,omitempty"`
 	Image          string `yaml:"image" json:"image,omitempty"`
@@ -818,6 +856,28 @@ type Restic struct {
 	ResticCheck `yaml:",inline" json:"inline"`
 }
 
+/*
+Jmeter check will run jmeter cli against the supplied host
+```yaml
+jmeter:
+    - jmxFrom:
+        name: jmx-test-plan
+        valueFrom:
+          configMapKeyRef:
+             key: jmeter-test.xml
+             name: jmeter
+      host: "some-host"
+      port: 8080
+      properties:
+        - remote_hosts=127.0.0.1
+      systemProperties:
+        - user.dir=/home/mstover/jmeter_stuff
+      description: The Jmeter test
+*/
+type Jmeter struct {
+	JmeterCheck `yaml:",inline" json:",inline"`
+}
+
 var AllChecks = []external.Check{
 	HTTPCheck{},
 	TCPCheck{},
@@ -837,4 +897,5 @@ var AllChecks = []external.Check{
 	NamespaceCheck{},
 	DNSCheck{},
 	HelmCheck{},
+	JmeterCheck{},
 }

@@ -408,6 +408,72 @@ spec:
               interval:
                 format: int64
                 type: integer
+              jmeter:
+                items:
+                  properties:
+                    description:
+                      description: Description of the canary
+                      type: string
+                    host:
+                      description: Host is the server against which test plan needs
+                        to be executed
+                      type: string
+                    jmxFrom:
+                      description: JmxFrom defines tge ConfigMap or Secret reference
+                        to get the JMX test plan
+                      properties:
+                        name:
+                          type: string
+                        value:
+                          type: string
+                        valueFrom:
+                          properties:
+                            configMapKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                                optional:
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                            secretKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                                optional:
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                          type: object
+                      required:
+                      - name
+                      type: object
+                    port:
+                      description: Port on which the server is running
+                      format: int32
+                      type: integer
+                    properties:
+                      description: Properties defines the local Jmeter properties
+                      items:
+                        type: string
+                      type: array
+                    systemProperties:
+                      description: SystemProperties defines the java system property
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - host
+                  - jmxFrom
+                  - port
+                  type: object
+                type: array
               ldap:
                 items:
                   properties:

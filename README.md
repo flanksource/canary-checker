@@ -33,7 +33,8 @@
       * [Redis - Excute ping against redis instance](#redis---execute-ping-against-redis-instance)  
       * [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
       * [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
-      * [Restic - Query the contents of a Restic reposiotry for backup freshness and integrity](#restic---query-the-contents-of-a-restic-repository-for-backup-freshness-and-integrity) 
+      * [Restic - Query the contents of a Restic reposiotry for backup freshness and integrity](#restic---query-the-contents-of-a-restic-repository-for-backup-freshness-and-integrity)
+      * [Jmeter - Run the supplied JMX test plan against the specified host](#jmeter---run-the-supplied-jmx-test-plan-against-the-specified-host)  
       * [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
       * [TCP](#tcp)
 
@@ -569,6 +570,17 @@ This Check will
 - Query a Restic Repository for contents
 - Check the integrity and consistency of repo and data-blobs
 - Check bakup freshness
+
+```yaml
+restic:
+    - repository: s3:http://minio.infra/restic-repo
+      password: S0M3p@sswd
+      maxAge: 5h30m
+      checkIntegrity: true
+      accessKey: some-access-key
+      secretKey: some-secret-key
+      description: The restic test
+```
   
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -580,6 +592,38 @@ This Check will
 | description | The description about the canary | string | Yes |
 | checkIntegrity | Wheather to check integrity for the specified repo | bool | No |
 | caCert | Path to ca-root crt in case of self-signed certificates is used | string | No |
+
+
+
+### Jmeter - Run the supplied JMX test plan against the specified host
+
+This check will execute the jmeter cli to execute the JMX test plan on the specified host
+
+```yaml
+jmeter:
+    - jmxFrom:
+        name: jmx-test-plan
+        valueFrom:
+          configMapKeyRef:
+             key: jmeter-test.xml
+             name: jmeter
+      host: "some-host"
+      port: 8080
+      properties:
+        - remote_hosts=127.0.0.1
+      systemProperties:
+        - user.dir=/home/mstover/jmeter_stuff
+      description: "The Jmeter test"   
+```
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| jmxFrom | ConfigMap or Secret reference to get the JMX test plan | Object | Yes |
+| host | The server against which test plan needs to be executed | String | Yes |
+| port | The port on which the server is running | Int | Yes |
+| properties | defines the local Jmeter properties | []String | No |
+| systemProperties | defines the java system property | []String | No |
+| description | The description of the canary | String | Yes |
 
 
 
