@@ -463,6 +463,10 @@ spec:
                       items:
                         type: string
                       type: array
+                    responseDuration:
+                      description: ResponseDuration under which the all the test should
+                        pass
+                      type: string
                     systemProperties:
                       description: SystemProperties defines the java system property
                       items:

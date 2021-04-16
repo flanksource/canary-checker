@@ -209,6 +209,8 @@ type JmeterCheck struct {
 	SystemProperties []string `yaml:"systemProperties,omitempty" json:"systemProperties,omitempty"`
 	// Description of the canary
 	Description string `yaml:"description,omitempty" json:"description,omitempty"`
+	// ResponseDuration under which the all the test should pass
+	ResponseDuration string `yaml:"responseDuration,omitempty" json:"responseDuration,omitempty"`
 	// specNamespace is the namespace in which the canary was deployed, and which
 	// configmap/secret lookups will be constrained to
 	specNamespace string `yaml:"-" json:"-"`

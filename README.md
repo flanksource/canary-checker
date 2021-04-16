@@ -626,6 +626,7 @@ jmeter:
 | properties | defines the local Jmeter properties | []String | No |
 | systemProperties | defines the java system property | []String | No |
 | description | The description of the canary | String | Yes |
+| responseDuration | The duration under which all the test should pass | String | No |
 
 
 
