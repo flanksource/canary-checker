@@ -1,0 +1,7 @@
+jmeter:
+  - jmx:
+      name: jmx-fail-test-plan
+      valueFrom:
+        configMapKeyRef:
+          key: http.jmx
+          name: jmeter-fail-test

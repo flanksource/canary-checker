@@ -197,8 +197,8 @@ func (c ResticCheck) GetType() string {
 }
 
 type JmeterCheck struct {
-	// JmxFrom defines tge ConfigMap or Secret reference to get the JMX test plan
-	JmxFrom kommons.EnvVar `yaml:"jmxFrom" json:"jmxFrom"`
+	// Jmx defines tge ConfigMap or Secret reference to get the JMX test plan
+	Jmx kommons.EnvVar `yaml:"jmx" json:"jmx"`
 	// Host is the server against which test plan needs to be executed
 	Host string `yaml:"host,omitempty" json:"host,omitempty"`
 	// Port on which the server is running
@@ -860,7 +860,7 @@ type Restic struct {
 Jmeter check will run jmeter cli against the supplied host
 ```yaml
 jmeter:
-    - jmxFrom:
+    - jmx:
         name: jmx-test-plan
         valueFrom:
           configMapKeyRef:

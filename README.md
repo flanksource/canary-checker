@@ -599,13 +599,11 @@ restic:
 
 This check will execute the jmeter cli to execute the JMX test plan on the specified host
 
-When running Jmeter check one can increase the memory limits due to the usage of JRE inside the canary-checker pod 
-
-Note: The default memory limit is set to 512Mi
+> Note that JMeter is a memory hungry java application and you will likely need to increase the default memory limit from 512Mi to 1-2Gi or higher depending on the complexity, count, and frequency of jmeter tests
 
 ```yaml
 jmeter:
-    - jmxFrom:
+    - jmx:
         name: jmx-test-plan
         valueFrom:
           configMapKeyRef:
@@ -622,7 +620,7 @@ jmeter:
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| jmxFrom | ConfigMap or Secret reference to get the JMX test plan | Object | Yes |
+| jmx | ConfigMap or Secret reference to get the JMX test plan | Object | Yes |
 | host | The server against which test plan needs to be executed | String | No |
 | port | The port on which the server is running | Int | No |
 | properties | defines the local Jmeter properties | []String | No |

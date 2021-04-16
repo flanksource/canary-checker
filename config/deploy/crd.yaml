@@ -418,9 +418,9 @@ spec:
                       description: Host is the server against which test plan needs
                         to be executed
                       type: string
-                    jmxFrom:
-                      description: JmxFrom defines tge ConfigMap or Secret reference
-                        to get the JMX test plan
+                    jmx:
+                      description: Jmx defines tge ConfigMap or Secret reference to
+                        get the JMX test plan
                       properties:
                         name:
                           type: string
@@ -469,7 +469,7 @@ spec:
                         type: string
                       type: array
                   required:
-                  - jmxFrom
+                  - jmx
                   type: object
                 type: array
               ldap:

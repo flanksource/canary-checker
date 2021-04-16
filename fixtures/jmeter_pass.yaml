@@ -1,7 +1,7 @@
 jmeter:
-  - jmxFrom:
-      name: jmx-test-plan
+  - jmx:
+      name: jmx-pass-test-plan
       valueFrom:
         configMapKeyRef:
           key: sampleTest.jmx
-          name: jmeter-test
+          name: jmeter-pass-test
