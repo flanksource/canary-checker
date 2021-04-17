@@ -40,6 +40,7 @@ type CanarySpec struct {
 	Postgres       []PostgresCheck       `yaml:"postgres,omitempty" json:"postgres,omitempty"`
 	Mssql          []MssqlCheck          `yaml:"mssql,omitempty" json:"mssql,omitempty"`
 	Restic         []ResticCheck         `yaml:"restic,omitempty" json:"restic,omitempty"`
+	Jmeter         []JmeterCheck         `yaml:"jmeter,omitempty" json:"jmeter,omitempty"`
 	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Redis          []RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
@@ -104,13 +105,18 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	for _, check := range spec.Namespace {
 		checks = append(checks, check)
 	}
-
+	for _, check := range spec.Jmeter {
+		checks = append(checks, check)
+	}
 	return checks
 }
 
 func (spec CanarySpec) SetNamespaces(namespace string) {
 	for i, _ := range spec.HTTP {
 		spec.HTTP[i].SetNamespace(namespace)
+	}
+	for i, _ := range spec.Jmeter {
+		spec.Jmeter[i].SetNamespace(namespace)
 	}
 }
 

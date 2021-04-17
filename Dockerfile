@@ -25,6 +25,14 @@ RUN apt-get update && \
     mv /app/restic /usr/local/bin/ && \
     rm -rf /app/restic.bz2
 
+#Install jmeter
+RUN curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmeter-5.4.1.tgz -o apache-jmeter-5.4.1.tgz && \
+    tar xf apache-jmeter-5.4.1.tgz -C / && \
+    rm /app/apache-jmeter-5.4.1.tgz && \
+    apt-get install -y openjdk-11-jre-headless
+
+ENV PATH /apache-jmeter-5.4.1/bin/:$PATH
+
 # install CA certificates
 RUN apt-get update && \
   apt-get install -y ca-certificates && \
