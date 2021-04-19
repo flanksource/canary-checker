@@ -25,7 +25,7 @@ The built-in dashboard of canary-checker uses node v12. Developers will need to 
 
 ## Build the canary-checker binary
 
-**Note**: The following commands needs to be run from the root of canary-checker repo
+**Note**: The following commands needs to be run from the root of canary-checker repo.
 
 For most development work, it makes sense to build the binary and run the operator directly, rather than building and running a container image. With this in mind, this is how we can build and use the binary:
 - Based on your current distro build the binaries: `make linux|darwin-arm64|darwin-amd64|windows`
@@ -34,9 +34,9 @@ For most development work, it makes sense to build the binary and run the operat
 
 The above command will also start the canary-dashboard on `0.0.0.0:8080`.
 
-Now you can deploy the canary-checks in any namespace of the cluster and they'll be reconciled by the operator  .
+Now you can deploy the canary-checks in any namespace of the cluster and they'll be reconciled by the operator.
 
-You can test if your operator is working correctly by deploying a sample Canary by running the command given below:
+You can test if your operator is working correctly by deploying a sample Canary (by `kubectl` applying the following template):
 
 ```yaml
 cat <<EOF | kubectl apply -f -
@@ -64,5 +64,5 @@ NAME        INTERVAL   STATUS   MESSAGE   UPTIME 1H    LATENCY 1H   LAST TRANSIT
 http-pass   30         Passed             1/1 (100%)   500ms                            7s
 ```
 
-The above canary will also start showing on the dashboard(0.0.0.0:8080).:
+The above canary will also start showing on the dashboard (at `0.0.0.0:8080`):
 ![dashboard-with-canary](images/dashboard-http-pass-canary.png)
