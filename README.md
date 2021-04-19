@@ -602,5 +602,5 @@ This Check will
 
 ### Guide for Developers
 
-This guide aims to provide the step by step process for creating your local setup with the canary-checker
-[Dev Guide](docs/dev-guide.md)
+This guide provides a step-by-step process for creating your local setup with the canary-checker
+[Dev Guide](docs/dev-guide.md).

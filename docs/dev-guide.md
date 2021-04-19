@@ -1,39 +1,68 @@
 # Dev Guide
-The guide provides steps to configure your local setup with running canary-checker
 
+The guide provides steps to configure your local setup with running canary-checker.
 
-## Setup a Kubernetes Cluster
-Before proceeding one must have access to a functioning Kubernetes cluster
+## Set up a Kubernetes Cluster
 
-In this guide we'll be working with [kind](https://kind.sigs.k8s.io/)
+Before proceeding one must have access to a functioning Kubernetes cluster.
+
+In this guide we'll be working with [kind](https://kind.sigs.k8s.io/).
 
 ### Create a cluster
 
-- Install latest version of [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
-- Create the cluster with `kind create cluster --name <cluster-name>`
+- Install latest version of [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation).
+- Create the cluster with `kind create cluster --name <cluster-name>`.
 
 ### Install Metrics Server and Prometheus
 
-For installing and configuring metrics server and prometheus please see the [prereqs](prereqs.md)
-
-
+For installing and configuring metrics server and prometheus please see the [prereqs](prereqs.md).
 
 ## Install Node
-The built-in dashboard of canary-checker uses node v12. So developers need to install the compatible version
 
-- Install [nvm](https://github.com/nvm-sh/nvm) to install and manage different versions of node
-- After nvm is installed one can install node v12 by running `nvm install v12`
-
-
+The built-in dashboard of canary-checker uses node v12. Developers will need to install the compatible version:
+- Install [nvm](https://github.com/nvm-sh/nvm) to install and manage different versions of node.
+- After nvm is installed one can install node v12 by running `nvm install v12`.
 
 ## Build the canary-checker binary
-In most of the development work it makes sense to just build the binary and run the operator directly. Compared to the alternative approach of building the container image and using it
 
+**Note**: The following commands needs to be run from the root of canary-checker repo
+
+For most development work, it makes sense to build the binary and run the operator directly, rather than building and running a container image. With this in mind, this is how we can build and use the binary:
 - Based on your current distro build the binaries: `make linux|darwin-arm64|darwin-amd64|windows`
-- After building the binary one needs to apply the canary-checker CRD inside the cluster. `kubectl apply -f config/deploy/crd.yaml`
+- After building the binary one needs to apply the canary-checker CRD inside the cluster: `kubectl apply -f config/deploy/crd.yaml`
 - Once the CRDs are present in the cluster one can start the operator using the binary by: `./.bin/canary-checker-amd64 operator`
-The above command will also start the canary-dashboard on `0.0.0.0:8080`
 
-Now you can deploy the canary-checks in any namespace of the cluster and they'll be reconciled by the operator  
+The above command will also start the canary-dashboard on `0.0.0.0:8080`.
 
-Note: The above command needs to be run from the root of canary-checker repo
+Now you can deploy the canary-checks in any namespace of the cluster and they'll be reconciled by the operator  .
+
+You can test if your operator is working correctly by deploying a sample Canary by running the command given below:
+
+```yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-pass
+spec:
+  interval: 30
+  http:
+    - endpoint: https://httpstat.us/200
+      thresholdMillis: 3000
+      responseCodes: [201, 200, 301]
+      responseContent: ""
+      maxSSLExpiry: 7
+EOF
+```
+
+You can test the canary status by running: `kubectl get canaries.canaries.flanksource.com`
+
+Sample output:
+```
+kubectl get canaries.canaries.flanksource.com
+NAME        INTERVAL   STATUS   MESSAGE   UPTIME 1H    LATENCY 1H   LAST TRANSITIONED   LAST CHECK
+http-pass   30         Passed             1/1 (100%)   500ms                            7s
+```
+
+The above canary will also start showing on the dashboard(0.0.0.0:8080).:
+![dashboard-with-canary](images/dashboard-http-pass-canary.png)

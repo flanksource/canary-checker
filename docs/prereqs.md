@@ -15,6 +15,29 @@ To ensure you are getting metrics run:
 ```
 kubectl get --raw /metrics
 ```
+The command will give display metrics something like this:
+```
+workqueue_work_duration_seconds_bucket{name="open_api_aggregation_controller",le="0.01"} 966
+workqueue_work_duration_seconds_bucket{name="open_api_aggregation_controller",le="0.1"} 966
+workqueue_work_duration_seconds_bucket{name="open_api_aggregation_controller",le="1"} 967
+workqueue_work_duration_seconds_bucket{name="open_api_aggregation_controller",le="10"} 967
+workqueue_work_duration_seconds_bucket{name="open_api_aggregation_controller",le="+Inf"} 967
+workqueue_work_duration_seconds_sum{name="open_api_aggregation_controller"} 0.8046582159999999
+workqueue_work_duration_seconds_count{name="open_api_aggregation_controller"} 967
+workqueue_work_duration_seconds_bucket{name="priority_and_fairness_config_queue",le="1e-08"} 0
+workqueue_work_duration_seconds_bucket{name="priority_and_fairness_config_queue",le="1e-07"} 0
+workqueue_work_duration_seconds_bucket{name="priority_and_fairness_config_queue",le="1e-06"} 0
+workqueue_work_duration_seconds_bucket{name="priority_and_fairness_config_queue",le="9.999999999999999e-06"} 0
+workqueue_work_duration_seconds_bucket{name="priority_and_fairness_config_queue",le="9.999999999999999e-05"} 0
+workqueue_work_duration_seconds_bucket{name="priority_and_fairness_config_queue",le="0.001"} 1
+workqueue_work_duration_seconds_bucket{name="priority_and_fairness_config_queue",le="0.01"} 1
+workqueue_work_duration_seconds_bucket{name="priority_and_fairness_config_queue",le="0.1"} 1
+workqueue_work_duration_seconds_bucket{name="priority_and_fairness_config_queue",le="1"} 1
+workqueue_work_duration_seconds_bucket{name="priority_and_fairness_config_queue",le="10"} 1
+workqueue_work_duration_seconds_bucket{name="priority_and_fairness_config_queue",le="+Inf"} 1
+workqueue_work_duration_seconds_sum{name="priority_and_fairness_config_queue"} 0.000160916
+workqueue_work_duration_seconds_count{name="priority_and_fairness_config_queue"} 1
+```
 
 
 ## Prometheus Operator
