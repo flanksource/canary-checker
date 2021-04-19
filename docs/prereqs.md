@@ -16,7 +16,7 @@ To ensure you are getting metrics run:
 kubectl get --raw /metrics
 ```
 The command will give display metrics something like this:
-```
+```shell
 workqueue_work_duration_seconds_bucket{name="open_api_aggregation_controller",le="0.01"} 966
 workqueue_work_duration_seconds_bucket{name="open_api_aggregation_controller",le="0.1"} 966
 workqueue_work_duration_seconds_bucket{name="open_api_aggregation_controller",le="1"} 967
