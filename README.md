@@ -37,7 +37,7 @@
       * [Jmeter - Run the supplied JMX test plan against the specified host](#jmeter---run-the-supplied-jmx-test-plan-against-the-specified-host)  
       * [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
       * [TCP](#tcp)
-
+  * [Guide for Developers](#guide-for-developers)
 <!--te-->
 
 ## Introduction
@@ -64,7 +64,7 @@ Canary Checker is a Kubernetes native multi-tenant synthetic monitoring system. 
 
 ## Quick Start
 
-Before installing the Canary Checker, please ensure you have the [prerequisites installed](docs/prereqs.md) on your Kubernetes cluster including the [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator). 
+Before installing the Canary Checker, please ensure you have the [prerequisites installed](docs/prereqs.md) on your Kubernetes cluster.
 
 
 ```bash
@@ -647,3 +647,7 @@ jmeter:
 | endpoint |  | string | Yes |
 | thresholdMillis |  | int64 | Yes |
 
+### Guide for Developers
+
+This guide provides a step-by-step process for creating your local setup with the canary-checker
+[Dev Guide](docs/dev-guide.md).
