@@ -141,7 +141,9 @@ func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if _, err := namespaces.Create(context.TODO(), ns, metav1.CreateOptions{}); err != nil {
 		return unexpectedErrorf(check, err, "unable to create namespace")
 	}
-	defer c.Cleanup(ns) // nolint: errcheck
+	defer func() {
+		c.Cleanup(ns) // nolint: errcheck
+	}()
 
 	pod, err := c.newPod(check, ns)
 	if err != nil {
@@ -153,10 +155,7 @@ func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if _, err := pods.Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
 		return unexpectedErrorf(check, err, "unable to create pod")
 	}
-	pod, err = c.WaitForPod(ns.Name, pod.Name, time.Millisecond*time.Duration(check.ScheduleTimeout), v1.PodRunning)
-	if err != nil {
-		return unexpectedErrorf(check, err, "error while waiting for pod")
-	}
+	pod, _ = c.WaitForPod(ns.Name, pod.Name, time.Millisecond*time.Duration(check.ScheduleTimeout), v1.PodRunning)
 	created := pod.GetCreationTimestamp()
 
 	conditions, err := c.getConditionTimes(ns, pod)

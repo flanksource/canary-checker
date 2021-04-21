@@ -167,7 +167,9 @@ func (c *PodChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if _, err := pods.Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
 		return unexpectedErrorf(podCheck, err, "unable to create pod")
 	}
-	defer c.Cleanup(podCheck) // nolint: errcheck
+	defer func() {
+		c.Cleanup(podCheck) // nolint: errcheck
+	}()
 
 	pod, err = c.WaitForPod(podCheck.Namespace, pod.Name, time.Millisecond*time.Duration(podCheck.ScheduleTimeout), v1.PodRunning)
 	if err != nil {
