@@ -4,7 +4,7 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // Necessary for postgres
 )
 
 func init() {
@@ -29,5 +29,5 @@ func (c *PostgresChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 }
 
 func (c *PostgresChecker) Check(extConfig external.Check) *pkg.CheckResult {
-	return CheckSql(extConfig.(v1.PostgresCheck).SqlCheck)
+	return CheckSQL(extConfig.(v1.PostgresCheck).SQLCheck)
 }

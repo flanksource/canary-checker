@@ -2,18 +2,19 @@ package checks
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/exec"
 	"github.com/flanksource/kommons"
-	"github.com/recursionpharma/go-csv-map"
-	"io"
-	"io/ioutil"
+	csvmap "github.com/recursionpharma/go-csv-map"
 	"k8s.io/apimachinery/pkg/util/rand"
-	"os"
-	"strconv"
-	"time"
 )
 
 func init() {
@@ -55,7 +56,7 @@ func (c *JmeterChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	testPlanFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jmx", jmeterCheck.GetNamespace(), jmeterCheck.Jmx.Name, rand.Int())
 	logFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jtl", jmeterCheck.GetNamespace(), jmeterCheck.Jmx.Name, rand.Int())
 	err = ioutil.WriteFile(testPlanFilename, []byte(value), 0755)
-	defer os.Remove(testPlanFilename)
+	defer os.Remove(testPlanFilename) // nolint: errcheck
 	if err != nil {
 		return Failf(jmeterCheck, "unable to write test plan file")
 	}
@@ -69,15 +70,15 @@ func (c *JmeterChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 	jmeterCmd := fmt.Sprintf("jmeter -n %s %s -t %s %s %s -l %s", getProperties(jmeterCheck.Properties), getSystemProperties(jmeterCheck.SystemProperties), testPlanFilename, host, port, logFilename)
 	_, ok := exec.SafeExec(jmeterCmd)
-	defer os.Remove(logFilename)
+	defer os.Remove(logFilename) // nolint: errcheck
 	if !ok {
 		return Failf(jmeterCheck, "error running the jmeter command: %v", jmeterCmd)
 	}
 	f, err := os.Open(logFilename)
-	defer f.Close()
 	if err != nil {
 		return Failf(jmeterCheck, "error opening the log file: %v", err)
 	}
+	defer f.Close() // nolint: errcheck
 	elapsedTime, err := checkLogs(f)
 	if err != nil {
 		return Failf(jmeterCheck, "check failed: %v", err)
@@ -124,7 +125,7 @@ func checkLogs(r io.Reader) (int64, error) {
 		return 0, err
 	}
 
-	for i, _ := range records {
+	for i := range records {
 		tempElapsed, err := strconv.ParseInt(records[i]["elapsed"], 10, 64)
 		if err != nil {
 			return elapsedTime, err

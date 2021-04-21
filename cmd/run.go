@@ -36,7 +36,6 @@ func init() {
 	Run.Flags().StringP("namespace", "n", "", "Specify namespace")
 }
 func RunChecks(config v1.CanarySpec, namespace string) []*pkg.CheckResult {
-
 	var results []*pkg.CheckResult
 	kommonsClient, err := pkg.NewKommonsClient()
 	if err != nil {

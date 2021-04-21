@@ -3,12 +3,13 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
+	osExec "os/exec"
+	"time"
+
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/exec"
-	osExec "os/exec"
-	"time"
 )
 
 func init() {
@@ -17,7 +18,7 @@ func init() {
 
 const (
 	resticPasswordEnvKey       = "RESTIC_PASSWORD"
-	resticAwsAccessKeyIdEnvKey = "AWS_ACCESS_KEY_ID"
+	resticAwsAccessKeyIDEnvKey = "AWS_ACCESS_KEY_ID"
 	resticAwsSecretAccessKey   = "AWS_SECRET_ACCESS_KEY"
 )
 
@@ -55,7 +56,7 @@ func checkIntegrity(repository, caCert string, envVars map[string]string) error 
 	if caCert != "" {
 		resticCmd = fmt.Sprintf("restic -r %[1]s --cacert %[2]s dump --no-lock -q latest $(restic -r %[1]s --cacert %[2]s --no-lock ls -q latest | awk 'FNR==1') 1> /dev/null", repository, caCert)
 	} else {
-		resticCmd = fmt.Sprintf("restic -r %s dump --no-lock -q latest $(restic -r %s --no-lock ls -q latest | awk 'FNR==1') 1> /dev/null", repository)
+		resticCmd = fmt.Sprintf("restic -r %[1]s dump --no-lock -q latest $(restic -r %[1]s --no-lock ls -q latest | awk 'FNR==1') 1> /dev/null", repository)
 	}
 	return exec.ExecfWithEnv(resticCmd, envVars)
 }
@@ -97,6 +98,6 @@ func getEnvVars(r v1.ResticCheck) map[string]string {
 	return map[string]string{
 		resticPasswordEnvKey:       r.Password,
 		resticAwsSecretAccessKey:   r.SecretKey,
-		resticAwsAccessKeyIdEnvKey: r.AccessKey,
+		resticAwsAccessKeyIDEnvKey: r.AccessKey,
 	}
 }

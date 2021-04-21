@@ -77,14 +77,13 @@ func (c *NamespaceChecker) Type() string {
 }
 
 func (c *NamespaceChecker) newPod(check canaryv1.NamespaceCheck, ns *v1.Namespace) (*v1.Pod, error) {
-
 	if check.PodSpec == "" {
-		return nil, fmt.Errorf("Pod spec cannot be empty")
+		return nil, fmt.Errorf("pod spec cannot be empty")
 	}
 
 	pod := &v1.Pod{}
 	if err := yaml.Unmarshal([]byte(check.PodSpec), pod); err != nil {
-		return nil, fmt.Errorf("Failed to unmarshall pod spec: %v", err)
+		return nil, fmt.Errorf("failed to unmarshall pod spec: %v", err)
 	}
 
 	pod.Name = "canary-check-pod"
@@ -142,9 +141,7 @@ func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if _, err := namespaces.Create(context.TODO(), ns, metav1.CreateOptions{}); err != nil {
 		return unexpectedErrorf(check, err, "unable to create namespace")
 	}
-	defer func() {
-		c.Cleanup(ns)
-	}()
+	defer c.Cleanup(ns) // nolint: errcheck
 
 	pod, err := c.newPod(check, ns)
 	if err != nil {
@@ -157,6 +154,9 @@ func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		return unexpectedErrorf(check, err, "unable to create pod")
 	}
 	pod, err = c.WaitForPod(ns.Name, pod.Name, time.Millisecond*time.Duration(check.ScheduleTimeout), v1.PodRunning)
+	if err != nil {
+		return unexpectedErrorf(check, err, "error while waiting for pod")
+	}
 	created := pod.GetCreationTimestamp()
 
 	conditions, err := c.getConditionTimes(ns, pod)
@@ -182,7 +182,6 @@ func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	deleteOk := true
 	deletion := NewTimer()
 	if err := pods.Delete(context.TODO(), pod.Name, metav1.DeleteOptions{}); err != nil {
-		deleteOk = false
 		return unexpectedErrorf(check, err, "failed to delete pod")
 	}
 
@@ -208,19 +207,19 @@ func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
 				Name:   "delete_time",
 				Type:   metrics.HistogramType,
 				Labels: map[string]string{"namespaceCheck": check.CheckName},
-				Value:  float64(deletion.Elapsed()),
+				Value:  deletion.Elapsed(),
 			},
 			{
 				Name:   "ingress_time",
 				Type:   metrics.HistogramType,
 				Labels: map[string]string{"namespaceCheck": check.CheckName},
-				Value:  float64(ingressTime),
+				Value:  ingressTime,
 			},
 			{
 				Name:   "request_time",
 				Type:   metrics.HistogramType,
 				Labels: map[string]string{"namespaceCheck": check.CheckName},
-				Value:  float64(requestTime),
+				Value:  requestTime,
 			},
 		},
 	}
@@ -243,20 +242,20 @@ func (c *NamespaceChecker) httpCheck(check canaryv1.NamespaceCheck, deadline tim
 	}
 
 	timer := NewTimer()
-	retryInterval := time.Duration(check.HttpRetryInterval) * time.Millisecond
+	retryInterval := time.Duration(check.HTTPRetryInterval) * time.Millisecond
 
 	for {
 		url := fmt.Sprintf("http://%s%s", check.IngressHost, check.Path)
 		logger.Debugf("Checking url %s", url)
 		httpTimer := NewTimer()
-		response, responseCode, err := c.getHttp(url, check.HttpTimeout, hardDeadline)
+		response, responseCode, err := c.getHTTP(url, check.HTTPTimeout, hardDeadline)
 		if err != nil && perrors.Is(err, context.DeadlineExceeded) {
-			if timer.Millis() > check.HttpTimeout && time.Now().Before(hardDeadline) {
-				logger.Debugf("[%s] request completed in %s, above threshold of %d", check, httpTimer, check.HttpTimeout)
+			if timer.Millis() > check.HTTPTimeout && time.Now().Before(hardDeadline) {
+				logger.Debugf("[%s] request completed in %s, above threshold of %d", check, httpTimer, check.HTTPTimeout)
 				time.Sleep(retryInterval)
 				continue
-			} else if timer.Millis() > check.HttpTimeout && time.Now().After(hardDeadline) {
-				return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "request timeout exceeded %s > %d", timer, check.HttpTimeout)
+			} else if timer.Millis() > check.HTTPTimeout && time.Now().After(hardDeadline) {
+				return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "request timeout exceeded %s > %d", timer, check.HTTPTimeout)
 			} else if time.Now().After(hardDeadline) {
 				return timer.Elapsed(), 0, Failf(check, "ingress timeout exceeded %s > %d", timer, check.IngressTimeout)
 			} else {
@@ -270,7 +269,7 @@ func (c *NamespaceChecker) httpCheck(check canaryv1.NamespaceCheck, deadline tim
 		}
 
 		found := false
-		for _, c := range check.ExpectedHttpStatuses {
+		for _, c := range check.ExpectedHTTPStatuses {
 			if c == int64(responseCode) {
 				found = true
 				break
@@ -278,21 +277,20 @@ func (c *NamespaceChecker) httpCheck(check canaryv1.NamespaceCheck, deadline tim
 		}
 
 		if !found && responseCode == http.StatusServiceUnavailable || responseCode == http.StatusNotFound {
-			logger.Debugf("[%s] request completed with %d, expected %v, retrying", check, responseCode, check.ExpectedHttpStatuses)
+			logger.Debugf("[%s] request completed with %d, expected %v, retrying", check, responseCode, check.ExpectedHTTPStatuses)
 			time.Sleep(retryInterval)
 			continue
 		} else if !found {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "status code %d not expected %v ", responseCode, check.ExpectedHttpStatuses)
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "status code %d not expected %v ", responseCode, check.ExpectedHTTPStatuses)
 		}
 		if !strings.Contains(response, check.ExpectedContent) {
 			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "content check failed")
 		}
-		if int64(httpTimer.Elapsed()) > check.HttpTimeout {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "request timeout exceeded %s > %d", httpTimer, check.HttpTimeout)
+		if int64(httpTimer.Elapsed()) > check.HTTPTimeout {
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(check, "request timeout exceeded %s > %d", httpTimer, check.HTTPTimeout)
 		}
 		return timer.Elapsed(), httpTimer.Elapsed(), Passf(check, "")
 	}
-
 }
 
 func (c *NamespaceChecker) createServiceAndIngress(check canaryv1.NamespaceCheck, ns *v1.Namespace, pod *v1.Pod) error {
@@ -384,7 +382,7 @@ func (c *NamespaceChecker) newIngress(check canaryv1.NamespaceCheck, ns *v1.Name
 	return ingress
 }
 
-func (c *NamespaceChecker) getHttp(url string, timeout int64, deadline time.Time) (string, int, error) {
+func (c *NamespaceChecker) getHTTP(url string, timeout int64, deadline time.Time) (string, int, error) {
 	var hardDeadline time.Time
 	softTimeoutDeadline := time.Now().Add(time.Duration(timeout) * time.Millisecond)
 	if softTimeoutDeadline.After(deadline) {
@@ -393,13 +391,12 @@ func (c *NamespaceChecker) getHttp(url string, timeout int64, deadline time.Time
 		hardDeadline = softTimeoutDeadline
 	}
 
-	ctx, _ := context.WithDeadline(context.Background(), hardDeadline)
+	ctx, _ := context.WithDeadline(context.Background(), hardDeadline) // nolint: govet
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", 0, perrors.Wrapf(err, "failed to create http request for url %s", url)
 	}
-
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if err != nil {
 		return "", 0, perrors.Wrapf(err, "failed to get url %s", url)
@@ -417,10 +414,6 @@ func (c *NamespaceChecker) podCheckSelectorValue(check canaryv1.NamespaceCheck, 
 	return fmt.Sprintf("%s.%s", check.CheckName, ns.Name)
 }
 
-func (c *NamespaceChecker) podCheckSelector(check canaryv1.NamespaceCheck, ns *v1.Namespace) string {
-	return fmt.Sprintf("%s=%s", podCheckSelector, c.podCheckSelectorValue(check, ns))
-}
-
 // WaitForPod waits for a pod to be in the specified phase, or returns an
 // error if the timeout is exceeded
 func (c *NamespaceChecker) WaitForPod(ns, name string, timeout time.Duration, phases ...v1.PodPhase) (*v1.Pod, error) {
@@ -429,7 +422,7 @@ func (c *NamespaceChecker) WaitForPod(ns, name string, timeout time.Duration, ph
 	for {
 		pod, err := pods.Get(context.TODO(), name, metav1.GetOptions{})
 		if start.Add(timeout).Before(time.Now()) {
-			return pod, fmt.Errorf("Timeout exceeded waiting for %s is %s, error: %v", name, pod.Status.Phase, err)
+			return pod, fmt.Errorf("timeout exceeded waiting for %s is %s, error: %v", name, pod.Status.Phase, err)
 		}
 
 		if pod == nil || pod.Status.Phase == v1.PodPending {

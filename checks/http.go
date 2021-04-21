@@ -5,17 +5,18 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/Azure/go-ntlmssp"
-	"github.com/flanksource/kommons"
-	"github.com/pkg/errors"
 	"io/ioutil"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Azure/go-ntlmssp"
+	"github.com/flanksource/kommons"
+	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
@@ -48,26 +49,26 @@ func init() {
 	prometheus.MustRegister(responseStatus, sslExpiration)
 }
 
-type HttpChecker struct {
+type HTTPChecker struct {
 	kommons *kommons.Client `yaml:"-" json:"-"`
 }
 
 // Type: returns checker type
-func (c *HttpChecker) Type() string {
+func (c *HTTPChecker) Type() string {
 	return "http"
 }
 
-func (c *HttpChecker) SetClient(client *kommons.Client) {
+func (c *HTTPChecker) SetClient(client *kommons.Client) {
 	c.kommons = client
 }
 
-func (c HttpChecker) GetClient() *kommons.Client {
+func (c HTTPChecker) GetClient() *kommons.Client {
 	return c.kommons
 }
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *HttpChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *HTTPChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
 	for _, conf := range config.HTTP {
 		results = append(results, c.Check(conf))
@@ -77,7 +78,7 @@ func (c *HttpChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
-func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *HTTPChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.HTTPCheck)
 	endpoint := check.Endpoint
 	namespace := check.Namespace
@@ -138,7 +139,7 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	kommons := c.GetClient()
 	for _, header := range check.Headers {
 		if kommons == nil {
-			return Failf(check, "Kommons client not set for HttpChecker instance")
+			return Failf(check, "Kommons client not set for HTTPChecker instance")
 		}
 		key, value, err := kommons.GetEnvValue(header, specNamespace)
 		if err != nil {
@@ -152,7 +153,6 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 
 	for _, urlObj := range lookupResult {
-
 		if check.Method == "" {
 			urlObj.Method = "GET"
 		} else {
@@ -213,7 +213,7 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		responseStatus.WithLabelValues(strconv.Itoa(checkResults.ResponseCode), statusCodeToClass(checkResults.ResponseCode), endpoint).Inc()
 		sslExpiration.WithLabelValues(endpoint).Set(float64(checkResults.SSLExpiry))
 
-		return &pkg.CheckResult{
+		return &pkg.CheckResult{ // nolint: staticcheck
 			Check:    check,
 			Pass:     true,
 			Duration: checkResults.ResponseTime,
@@ -233,7 +233,7 @@ func (c *HttpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	return Failf(check, "No DNS results found")
 }
 
-func (c *HttpChecker) checkHTTP(urlObj pkg.URL, ntlm bool) (*HTTPCheckResult, error) {
+func (c *HTTPChecker) checkHTTP(urlObj pkg.URL, ntlm bool) (*HTTPCheckResult, error) {
 	var exp time.Time
 	start := time.Now()
 	var urlString string
@@ -242,7 +242,7 @@ func (c *HttpChecker) checkHTTP(urlObj pkg.URL, ntlm bool) (*HTTPCheckResult, er
 	} else {
 		urlString = fmt.Sprintf("%s://%s%s", urlObj.Scheme, urlObj.IP, urlObj.Path)
 	}
-	client := getHttpClient(urlObj.Host, ntlm)
+	client := getHTTPClient(urlObj.Host, ntlm)
 	req, err := http.NewRequest(urlObj.Method, urlString, strings.NewReader(urlObj.Body))
 	if err != nil {
 		return nil, err
@@ -293,10 +293,10 @@ func (c *HttpChecker) checkHTTP(urlObj pkg.URL, ntlm bool) (*HTTPCheckResult, er
 	return &checkResult, nil
 }
 
-func (c *HttpChecker) ParseAuth(check v1.HTTPCheck) (string, string, error) {
+func (c *HTTPChecker) ParseAuth(check v1.HTTPCheck) (string, string, error) {
 	kommons := c.GetClient()
 	if kommons == nil {
-		return "", "", errors.New("Kommons client not set for HttpChecker instance")
+		return "", "", errors.New("Kommons client not set for HTTPChecker instance")
 	}
 	namespace := check.GetNamespace()
 	if check.Authentication == nil {
@@ -313,7 +313,7 @@ func (c *HttpChecker) ParseAuth(check v1.HTTPCheck) (string, string, error) {
 	return username, password, nil
 }
 
-func getHttpClient(urlHost string, ntlm bool) *http.Client {
+func getHTTPClient(urlHost string, ntlm bool) *http.Client {
 	transport := &http.Transport{
 		DisableKeepAlives: true,
 		TLSClientConfig: &tls.Config{

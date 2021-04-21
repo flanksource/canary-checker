@@ -42,16 +42,21 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "{\"error\": \"internal\", \"checks\": []}")
 		return
 	}
-	w.Write(jsonData)
+	if _, err = w.Write(jsonData); err != nil {
+		logger.Errorf("failed to write data in response: %v", err)
+	}
 }
 
-func triggerCheckOnServer(serverUrl string, triggerData TriggerData) (*vapi.Response, error) {
-	url := fmt.Sprintf("%s/api/triggerCheck", serverUrl)
+func triggerCheckOnServer(serverURL string, triggerData TriggerData) (*vapi.Response, error) {
+	url := fmt.Sprintf("%s/api/triggerCheck", serverURL)
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
 	jsonData, err := json.Marshal(triggerData)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to marshal the data")
+	}
 	resp, err := client.Post(url, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get url %s", url)
@@ -132,7 +137,10 @@ func TriggerCheckHandler(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("{}"))
+	_, err = w.Write([]byte("{}"))
+	if err != nil {
+		return
+	}
 }
 
 type PrometheusGraphData struct {
@@ -212,7 +220,11 @@ func PrometheusGraphHandler(prometheusHost string) func(http.ResponseWriter, *ht
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write(jsonResponse)
+		_, err = w.Write(jsonResponse)
+		if err != nil {
+			log.Errorf("Failed to write response: %v", err)
+			return
+		}
 	}
 }
 
@@ -249,7 +261,7 @@ func getMetric(prometheusClient v1.API, metric string, timeframe time.Duration) 
 		log.Infof("Warnings: %v", warnings)
 	}
 	log.Infof("Query: %s", metric)
-	log.Debug("Result:\n%v\n", result)
+	log.Debugf("Result:\n%v\n", result)
 
 	// ensure matrix result
 	matrix, ok := result.(model.Matrix)

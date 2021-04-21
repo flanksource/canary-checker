@@ -16,7 +16,7 @@ type Checker interface {
 var All = []Checker{
 	&HelmChecker{},
 	&DNSChecker{},
-	&HttpChecker{},
+	&HTTPChecker{},
 	&IcmpChecker{},
 	&S3Checker{},
 	&S3BucketChecker{},

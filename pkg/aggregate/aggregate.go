@@ -14,13 +14,13 @@ import (
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
 
-	"github.com/orcaman/concurrent-map"
+	cmap "github.com/orcaman/concurrent-map"
 )
 
 var Servers []string
 var checkCache = cmap.New()
 
-type AggregateCheck struct {
+type AggregateCheck struct { // nolint: golint
 	ServerURL   string                       `json:"serverURL"`
 	Key         string                       `json:"key"`
 	Type        string                       `json:"type"`
@@ -41,7 +41,7 @@ type CheckHealth struct {
 	Uptime  string `json:"uptime"`
 }
 
-type AggregateChecks []AggregateCheck
+type AggregateChecks []AggregateCheck // nolint: golint
 
 func (c AggregateChecks) Len() int {
 	return len(c)
@@ -99,7 +99,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 	aggregateData := map[string]*AggregateCheck{}
 	data := cache.GetChecks()
 
-	localServerId := api.ServerName
+	localServerID := api.ServerName
 	for _, c := range data {
 		aggregateData[c.ID()] = &AggregateCheck{
 			Key:         c.Key,
@@ -114,10 +114,10 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 			Severity:    c.Severity,
 			ServerURL:   "local",
 			Health: map[string]CheckHealth{
-				localServerId: {c.Latency, c.Uptime},
+				localServerID: {c.Latency, c.Uptime},
 			},
 			Statuses: map[string][]pkg.CheckStatus{
-				localServerId: c.Statuses,
+				localServerID: c.Statuses,
 			},
 		}
 	}
@@ -126,14 +126,14 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 
 	for _, serverURL := range Servers {
 		apiResponse := getChecksFromServer(serverURL)
-		serverId := fmt.Sprintf("%s@%s", apiResponse.ServerName, serverURL)
-		servers = append(servers, serverId)
+		serverID := fmt.Sprintf("%s@%s", apiResponse.ServerName, serverURL)
+		servers = append(servers, serverID)
 
 		for _, c := range apiResponse.Checks {
 			ac, found := aggregateData[c.ID()]
 			if found {
-				ac.Health[serverId] = CheckHealth{c.Latency, c.Uptime}
-				ac.Statuses[serverId] = c.Statuses
+				ac.Health[serverID] = CheckHealth{c.Latency, c.Uptime}
+				ac.Statuses[serverID] = c.Statuses
 			} else {
 				aggregateData[c.ID()] = &AggregateCheck{
 					Key:         c.Key,
@@ -148,10 +148,10 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 					Severity:    c.Severity,
 					ServerURL:   serverURL,
 					Health: map[string]CheckHealth{
-						serverId: {c.Latency, c.Uptime},
+						serverID: {c.Latency, c.Uptime},
 					},
 					Statuses: map[string][]pkg.CheckStatus{
-						serverId: c.Statuses,
+						serverID: c.Statuses,
 					},
 				}
 			}
@@ -159,7 +159,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 	}
 
 	sort.Strings(servers)
-	allServers := []string{localServerId}
+	allServers := []string{localServerID}
 	allServers = append(allServers, servers...)
 
 	aggregateList := AggregateChecks{}
@@ -178,5 +178,9 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 		fmt.Fprintf(w, "{\"error\": \"internal\", \"checks\": []}")
 		return
 	}
-	w.Write(jsonData)
+	_, err = w.Write(jsonData)
+	if err != nil {
+		logger.Errorf("Failed to write data: %v", err)
+		return
+	}
 }

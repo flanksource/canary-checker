@@ -41,19 +41,16 @@ func getSecretRefValue(client kubernetes.Interface, namespace string, secretSele
 		return string(data), nil
 	}
 	return "", fmt.Errorf("key %s not found in secret %s", secretSelector.Key, secretSelector.Name)
-
 }
 
 // getConfigMapRefValue returns the value of a configmap in the supplied namespace
 func getConfigMapRefValue(client kubernetes.Interface, namespace string, configMapSelector *corev1.ConfigMapKeySelector) (string, error) {
-
 	configMap, err := client.CoreV1().ConfigMaps(namespace).Get(context.TODO(), configMapSelector.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
-
 	if data, ok := configMap.Data[configMapSelector.Key]; ok {
-		return string(data), nil
+		return data, nil
 	}
 	return "", fmt.Errorf("key %s not found in config map %s", configMapSelector.Key, configMapSelector.Name)
 }

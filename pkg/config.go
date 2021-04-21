@@ -20,7 +20,7 @@ func ParseConfig(configfile string) v1.CanarySpec {
 	if err != nil {
 		logger.Infof("yamlFile.Get err   #%v ", err)
 	}
-	yamlerr := yaml.Unmarshal([]byte(data), &config)
+	yamlerr := yaml.Unmarshal(data, &config)
 	if yamlerr != nil {
 		logger.Fatalf("error: %v", yamlerr)
 	}

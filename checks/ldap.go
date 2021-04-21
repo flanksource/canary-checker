@@ -51,7 +51,7 @@ func (c *LdapChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	res, err := ld.Search(req)
 
 	if err != nil {
-		return Failf(check, "Failed to search %v", check.Host, err)
+		return Failf(check, "Failed to search host %v error: %v", check.Host, err)
 	}
 
 	if len(res.Entries) == 0 {

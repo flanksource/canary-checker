@@ -110,18 +110,17 @@ func (c *cache) AddCheck(checks v1.Canary, result *pkg.CheckResult) *pkg.Check {
 		if len(check.Statuses) > Size {
 			check.Statuses = check.Statuses[:Size]
 		}
-	} else {
 	}
 	c.Checks[check.Key] = check
 	return &lastCheck
 }
 
-func (s *cache) GetChecks() pkg.Checks {
-	s.mtx.Lock()
-	defer s.mtx.Unlock()
+func (c *cache) GetChecks() pkg.Checks {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
 	result := pkg.Checks{}
 
-	for _, check := range s.Checks {
+	for _, check := range c.Checks {
 		uptime, latency := metrics.GetMetrics(check.Key)
 		check.Uptime = uptime
 		check.Latency = latency.String()

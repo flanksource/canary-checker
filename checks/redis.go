@@ -2,11 +2,12 @@ package checks
 
 import (
 	"context"
+	"time"
+
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/go-redis/redis/v8"
-	"time"
 )
 
 func init() {
@@ -38,7 +39,7 @@ func (c *RedisChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		return Failf(redisCheck, "failed to execute query %s", err)
 	}
 	if result != "PONG" {
-		return Failf(redisCheck, "expected PONG as result, got %d", result)
+		return Failf(redisCheck, "expected PONG as result, got %s", result)
 	}
 	return Success(redisCheck, start)
 }

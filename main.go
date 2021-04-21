@@ -17,7 +17,6 @@ var (
 )
 
 func main() {
-
 	var root = &cobra.Command{
 		Use: "canary-checker",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
