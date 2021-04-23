@@ -1,11 +1,11 @@
 name: Lint
 on:
   push:
-    tags:
-      - v*
     branches:
       - master
   pull_request:
+    paths:
+    - '**.go'
 jobs:
   golangci:
     name: lint
