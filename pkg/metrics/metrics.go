@@ -51,7 +51,7 @@ var (
 		[]string{"type", "endpoint", "name", "namespace", "owner", "severity"},
 	)
 
-	Guage = prometheus.NewGaugeVec(
+	Gauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "canary_check",
 			Help: "A gauge representing the canaries success (0) or failure (1)",
@@ -90,7 +90,7 @@ var passed = make(map[string]*rolling.TimePolicy)
 var latencies = make(map[string]*rolling.TimePolicy)
 
 func init() {
-	prometheus.MustRegister(Guage, OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency, GenericGauge, GenericCounter, GenericHistogram)
+	prometheus.MustRegister(Gauge, OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency, GenericGauge, GenericCounter, GenericHistogram)
 }
 
 func RemoveCheck(checks v1.Canary) {
@@ -163,7 +163,7 @@ func Record(check v1.Canary, result *pkg.CheckResult) (rollingUptime string, rol
 	}
 	if result.Pass {
 		pass.Append(1)
-		Guage.WithLabelValues(checkType, endpoint, name, namespace, owner, severity).Set(0)
+		Gauge.WithLabelValues(checkType, endpoint, name, namespace, owner, severity).Set(0)
 		OpsSuccessCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity).Inc()
 		// always add a failed count to ensure the metric is present in prometheus
 		// for an uptime calculation
@@ -180,7 +180,7 @@ func Record(check v1.Canary, result *pkg.CheckResult) (rollingUptime string, rol
 		}
 	} else {
 		fail.Append(1)
-		Guage.WithLabelValues(checkType, endpoint, name, namespace, owner, severity).Set(1)
+		Gauge.WithLabelValues(checkType, endpoint, name, namespace, owner, severity).Set(1)
 		OpsFailedCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity).Inc()
 	}
 	failCount := fail.Reduce(rolling.Sum)

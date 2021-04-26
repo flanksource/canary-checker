@@ -19,14 +19,14 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/flanksource/kommons"
 	"sync"
 	"time"
+
+	"github.com/flanksource/kommons"
 
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons/ktemplate"
 
-	canariesv1 "github.com/flanksource/canary-checker/api/v1"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
@@ -159,7 +159,7 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.Kommons = kommons.NewClient(mgr.GetConfig(), logger.StandardLogger())
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&canariesv1.Canary{}).
+		For(&v1.Canary{}).
 		Complete(r)
 }
 
@@ -261,5 +261,4 @@ func (c CanaryJob) LoadSecrets() (v1.CanarySpec, error) {
 		Clientset: k8sclient,
 	})
 	return *val, err
-
 }

@@ -15,10 +15,11 @@ package pkg
 
 import (
 	"context"
-	"github.com/flanksource/commons/logger"
-	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"path/filepath"
+
+	"github.com/flanksource/commons/logger"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/flanksource/commons/files"
 	"github.com/flanksource/kommons"

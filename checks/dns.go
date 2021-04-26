@@ -45,19 +45,19 @@ func (c *DNSChecker) Check(extConfig external.Check) *pkg.CheckResult {
 
 	switch qs := check.QueryType; qs {
 	case "A":
-		go checkA(&r, ctx, check, resultCh)
+		go checkA(ctx, &r, check, resultCh)
 	case "PTR":
-		go checkPTR(&r, ctx, check, resultCh)
+		go checkPTR(ctx, &r, check, resultCh)
 	case "CNAME":
-		go checkCNAME(&r, ctx, check, resultCh)
+		go checkCNAME(ctx, &r, check, resultCh)
 	case "SRV":
-		go checkSRV(&r, ctx, check, resultCh)
+		go checkSRV(ctx, &r, check, resultCh)
 	case "MX":
-		go checkMX(&r, ctx, check, resultCh)
+		go checkMX(ctx, &r, check, resultCh)
 	case "TXT":
-		go checkTXT(&r, ctx, check, resultCh)
+		go checkTXT(ctx, &r, check, resultCh)
 	case "NS":
-		go checkNS(&r, ctx, check, resultCh)
+		go checkNS(ctx, &r, check, resultCh)
 	default:
 		return Failf(check, "unknown query type: %s", check.QueryType)
 	}
@@ -72,7 +72,7 @@ func (c *DNSChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 }
 
-func checkA(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
+func checkA(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
 	start := time.Now()
 	result, err := r.LookupHost(ctx, check.Query)
 	if err != nil {
@@ -92,7 +92,7 @@ func checkA(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh ch
 	}
 }
 
-func checkPTR(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
+func checkPTR(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
 	start := time.Now()
 	result, err := r.LookupAddr(ctx, check.Query)
 	if err != nil {
@@ -111,7 +111,7 @@ func checkPTR(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh 
 	}
 }
 
-func checkCNAME(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
+func checkCNAME(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
 	start := time.Now()
 	result, err := r.LookupCNAME(ctx, check.Query)
 	if err != nil {
@@ -129,7 +129,7 @@ func checkCNAME(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultC
 	}
 }
 
-func checkSRV(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
+func checkSRV(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
 	service, proto, name, err := srvInfo(check.Query)
 	if err != nil {
 		resultCh <- Failf(check, "Wrong SRV query %s", check.Query)
@@ -141,7 +141,7 @@ func checkSRV(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh 
 	resultCh <- Passf(check, "got: %s %v", cname, addr)
 }
 
-func checkMX(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
+func checkMX(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
 	start := time.Now()
 	result, err := r.LookupMX(ctx, check.Query)
 	if err != nil {
@@ -162,7 +162,7 @@ func checkMX(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh c
 	}
 }
 
-func checkTXT(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
+func checkTXT(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
 	start := time.Now()
 	result, err := r.LookupTXT(ctx, check.Query)
 	if err != nil {
@@ -179,7 +179,7 @@ func checkTXT(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh 
 	}
 }
 
-func checkNS(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
+func checkNS(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
 	start := time.Now()
 	result, err := r.LookupNS(ctx, check.Query)
 	elapsed := time.Since(start)
@@ -206,7 +206,7 @@ func checkNS(r *net.Resolver, ctx context.Context, check v1.DNSCheck, resultCh c
 	}
 }
 
-func getDialer(check v1.DNSCheck, timeout int) (func(ctx context.Context, network, address string) (net.Conn, error), error) {
+func getDialer(check v1.DNSCheck, timeout int) (func(ctx context.Context, network, address string) (net.Conn, error), error) { // nolint: unparam
 	return func(ctx context.Context, network, address string) (net.Conn, error) {
 		d := net.Dialer{
 			Timeout: time.Second * time.Duration(timeout),
@@ -226,8 +226,8 @@ func checkResult(got []string, check v1.DNSCheck) (result bool, message string) 
 	}
 
 	if len(check.ExactReply) != 0 {
-		sort.Sort(sort.StringSlice(got))
-		sort.Sort(sort.StringSlice(expected))
+		sort.Strings(got)
+		sort.Strings(expected)
 		if !reflect.DeepEqual(got, expected) {
 			pass = false
 			errMessage = fmt.Sprintf("Got %s, expected %s", got, check.ExactReply)

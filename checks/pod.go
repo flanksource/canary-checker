@@ -42,15 +42,6 @@ type PodChecker struct {
 	latestNodeIndex int
 }
 
-type ingressHttpResult struct {
-	IngressTime float64
-	StatusOk    bool
-	ContentOk   bool
-	RequestTime float64
-	StatusCode  int
-	Content     string
-}
-
 func NewPodChecker() *PodChecker {
 	pc := &PodChecker{
 		lock: semaphore.NewWeighted(1),
@@ -97,14 +88,13 @@ func (c *PodChecker) Type() string {
 }
 
 func (c *PodChecker) newPod(podCheck canaryv1.PodCheck, nodeName string) (*v1.Pod, error) {
-
 	if podCheck.Spec == "" {
-		return nil, fmt.Errorf("Pod spec cannot be empty")
+		return nil, fmt.Errorf("pod spec cannot be empty")
 	}
 
 	pod := &v1.Pod{}
 	if err := yaml.Unmarshal([]byte(podCheck.Spec), pod); err != nil {
-		return nil, fmt.Errorf("Failed to unmarshall pod spec: %v", err)
+		return nil, fmt.Errorf("failed to unmarshall pod spec: %v", err)
 	}
 
 	pod.Name = c.ng.PodName(pod.Name + "-")
@@ -178,9 +168,13 @@ func (c *PodChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		return unexpectedErrorf(podCheck, err, "unable to create pod")
 	}
 	defer func() {
-		c.Cleanup(podCheck)
+		c.Cleanup(podCheck) // nolint: errcheck
 	}()
+
 	pod, err = c.WaitForPod(podCheck.Namespace, pod.Name, time.Millisecond*time.Duration(podCheck.ScheduleTimeout), v1.PodRunning)
+	if err != nil {
+		return unexpectedErrorf(podCheck, err, "unable to fetch pod details")
+	}
 	created := pod.GetCreationTimestamp()
 
 	conditions, err := c.getConditionTimes(podCheck, pod)
@@ -206,7 +200,7 @@ func (c *PodChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	message := ingressResult.Message
 
 	if !ingressResult.Pass {
-		podFailMessage, err := c.podFailMessage(podCheck, pod)
+		podFailMessage, err := c.podFailMessage(pod)
 		if err != nil {
 			logger.Errorf("failed to get pod fail message: %v", err)
 		} else if podFailMessage != "" {
@@ -241,19 +235,19 @@ func (c *PodChecker) Check(extConfig external.Check) *pkg.CheckResult {
 				Name:   "delete_time",
 				Type:   metrics.HistogramType,
 				Labels: map[string]string{"podCheck": podCheck.Name},
-				Value:  float64(deletion.Elapsed()),
+				Value:  deletion.Elapsed(),
 			},
 			{
 				Name:   "ingress_time",
 				Type:   metrics.HistogramType,
 				Labels: map[string]string{"podCheck": podCheck.Name},
-				Value:  float64(ingressTime),
+				Value:  ingressTime,
 			},
 			{
 				Name:   "request_time",
 				Type:   metrics.HistogramType,
 				Labels: map[string]string{"podCheck": podCheck.Name},
-				Value:  float64(requestTime),
+				Value:  requestTime,
 			},
 		},
 	}
@@ -263,7 +257,7 @@ func (c *PodChecker) Cleanup(podCheck canaryv1.PodCheck) error {
 	listOptions := metav1.ListOptions{LabelSelector: c.podCheckSelector(podCheck)}
 
 	if c.k8s == nil {
-		return fmt.Errorf("Connection to k8s not established")
+		return fmt.Errorf("connection to k8s not established")
 	}
 	err := c.k8s.CoreV1().Pods(podCheck.Namespace).DeleteCollection(context.TODO(), metav1.DeleteOptions{}, listOptions)
 	if err != nil && !errors.IsNotFound(err) {
@@ -293,7 +287,7 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 	}
 
 	timer := NewTimer()
-	retryInterval := time.Duration(podCheck.HttpRetryInterval) * time.Millisecond
+	retryInterval := time.Duration(podCheck.HTTPRetryInterval) * time.Millisecond
 
 	for {
 		url := fmt.Sprintf("http://%s%s", podCheck.IngressHost, podCheck.Path)
@@ -301,14 +295,14 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 			return 0, 0, Failf(podCheck, "invalid url: %v", err)
 		}
 		httpTimer := NewTimer()
-		response, responseCode, err := c.getHttp(url, podCheck.HttpTimeout, hardDeadline)
+		response, responseCode, err := c.getHTTP(url, podCheck.HTTPTimeout, hardDeadline)
 		if err != nil && perrors.Is(err, context.DeadlineExceeded) {
-			if timer.Millis() > podCheck.HttpTimeout && time.Now().Before(hardDeadline) {
-				logger.Debugf("[%s] request completed in %s, above threshold of %d", podCheck, httpTimer, podCheck.HttpTimeout)
+			if timer.Millis() > podCheck.HTTPTimeout && time.Now().Before(hardDeadline) {
+				logger.Debugf("[%s] request completed in %s, above threshold of %d", podCheck, httpTimer, podCheck.HTTPTimeout)
 				time.Sleep(retryInterval)
 				continue
-			} else if timer.Millis() > podCheck.HttpTimeout && time.Now().After(hardDeadline) {
-				return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HttpTimeout)
+			} else if timer.Millis() > podCheck.HTTPTimeout && time.Now().After(hardDeadline) {
+				return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HTTPTimeout)
 			} else if time.Now().After(hardDeadline) {
 				return timer.Elapsed(), 0, Failf(podCheck, "ingress timeout exceeded %s > %d", timer, podCheck.IngressTimeout)
 			} else {
@@ -322,7 +316,7 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 		}
 
 		found := false
-		for _, c := range podCheck.ExpectedHttpStatuses {
+		for _, c := range podCheck.ExpectedHTTPStatuses {
 			if c == responseCode {
 				found = true
 				break
@@ -333,13 +327,13 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 			time.Sleep(retryInterval)
 			continue
 		} else if !found {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "status code %d not expected %v ", responseCode, podCheck.ExpectedHttpStatuses)
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "status code %d not expected %v ", responseCode, podCheck.ExpectedHTTPStatuses)
 		}
 		if !strings.Contains(response, podCheck.ExpectedContent) {
 			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "content check failed")
 		}
-		if int64(httpTimer.Elapsed()) > podCheck.HttpTimeout {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HttpTimeout)
+		if int64(httpTimer.Elapsed()) > podCheck.HTTPTimeout {
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HTTPTimeout)
 		}
 		return timer.Elapsed(), httpTimer.Elapsed(), Passf(podCheck, "")
 	}
@@ -434,7 +428,7 @@ func (c *PodChecker) newIngress(podCheck canaryv1.PodCheck, svc string) *v1beta1
 	return ingress
 }
 
-func (c *PodChecker) getHttp(url string, timeout int64, deadline time.Time) (string, int, error) {
+func (c *PodChecker) getHTTP(url string, timeout int64, deadline time.Time) (string, int, error) {
 	var hardDeadline time.Time
 	softTimeoutDeadline := time.Now().Add(time.Duration(timeout) * time.Millisecond)
 	if softTimeoutDeadline.After(deadline) {
@@ -443,7 +437,7 @@ func (c *PodChecker) getHttp(url string, timeout int64, deadline time.Time) (str
 		hardDeadline = softTimeoutDeadline
 	}
 
-	ctx, _ := context.WithDeadline(context.Background(), hardDeadline)
+	ctx, _ := context.WithDeadline(context.Background(), hardDeadline) // nolint: govet
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -463,15 +457,6 @@ func (c *PodChecker) getHttp(url string, timeout int64, deadline time.Time) (str
 	return string(respBytes), resp.StatusCode, nil
 }
 
-func (c *PodChecker) findPort(pod *v1.Pod) (int32, error) {
-	for _, container := range pod.Spec.Containers {
-		for _, port := range container.Ports {
-			return port.ContainerPort, nil
-		}
-	}
-	return 0, perrors.Errorf("Failed to find any port for pod %s", pod.Name)
-}
-
 func (c *PodChecker) podCheckSelectorValue(podCheck canaryv1.PodCheck) string {
 	return fmt.Sprintf("%s.%s", podCheck.Name, podCheck.Namespace)
 }
@@ -480,7 +465,7 @@ func (c *PodChecker) podCheckSelector(podCheck canaryv1.PodCheck) string {
 	return fmt.Sprintf("%s=%s", podCheckSelector, c.podCheckSelectorValue(podCheck))
 }
 
-func (c *PodChecker) podFailMessage(podCheck canaryv1.PodCheck, pod *v1.Pod) (string, error) {
+func (c *PodChecker) podFailMessage(pod *v1.Pod) (string, error) {
 	pods := c.k8s.CoreV1().Pods(pod.Namespace)
 	p, err := pods.Get(context.TODO(), pod.Name, metav1.GetOptions{})
 	if err != nil {
@@ -506,7 +491,7 @@ func (c *PodChecker) WaitForPod(ns, name string, timeout time.Duration, phases .
 	for {
 		pod, err := pods.Get(context.TODO(), name, metav1.GetOptions{})
 		if start.Add(timeout).Before(time.Now()) {
-			return pod, fmt.Errorf("Timeout exceeded waiting for %s is %s, error: %v", name, pod.Status.Phase, err)
+			return pod, fmt.Errorf("timeout exceeded waiting for %s is %s, error: %v", name, pod.Status.Phase, err)
 		}
 
 		if pod == nil || pod.Status.Phase == v1.PodPending {

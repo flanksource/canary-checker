@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/kommons"
 )
@@ -153,8 +154,8 @@ type S3BucketCheck struct {
 	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
 }
 
-func (s3 S3BucketCheck) GetEndpoint() string {
-	return fmt.Sprintf("%s/%s", s3.Endpoint, s3.Bucket)
+func (c S3BucketCheck) GetEndpoint() string {
+	return fmt.Sprintf("%s/%s", c.Endpoint, c.Bucket)
 }
 
 func (c S3BucketCheck) GetDescription() string {
@@ -336,7 +337,7 @@ func (c RedisCheck) GetEndpoint() string {
 	return c.Addr
 }
 
-type SqlCheck struct {
+type SQLCheck struct {
 	Description string `yaml:"description" json:"description,omitempty"`
 	Driver      string `yaml:"driver" json:"driver,omitempty"`
 	Connection  string `yaml:"connection" json:"connection,omitempty"`
@@ -345,43 +346,43 @@ type SqlCheck struct {
 	Result int `yaml:"results" json:"results,omitempty"`
 }
 
-func (c *SqlCheck) GetDriver() string {
+func (c *SQLCheck) GetDriver() string {
 	return c.Driver
 }
 
-func (c *SqlCheck) GetQuery() string {
+func (c *SQLCheck) GetQuery() string {
 	return c.Query
 }
 
-func (c *SqlCheck) GetResult() int {
+func (c *SQLCheck) GetResult() int {
 	return c.Result
 }
 
-func (c *SqlCheck) GetConnection() string {
+func (c *SQLCheck) GetConnection() string {
 	return c.Connection
 }
 
-func (c SqlCheck) GetEndpoint() string {
+func (c SQLCheck) GetEndpoint() string {
 	return sanitizeEndpoints(c.Connection)
 }
 
-func (c SqlCheck) GetDescription() string {
+func (c SQLCheck) GetDescription() string {
 	return c.Description
 }
 
-func (c SqlCheck) GetType() string {
+func (c SQLCheck) GetType() string {
 	return c.Driver
 }
 
 type PostgresCheck struct {
-	SqlCheck `yaml:",inline" json:",inline"`
+	SQLCheck `yaml:",inline" json:",inline"`
 }
 
 // This is used to supply a default value for unsupplied fields
 func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type rawPostgresCheck PostgresCheck
 	raw := rawPostgresCheck{
-		SqlCheck{
+		SQLCheck{
 			Driver: "postgres",
 			Query:  "SELECT 1",
 			Result: 1,
@@ -396,14 +397,14 @@ func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type MssqlCheck struct {
-	SqlCheck `yaml:",inline" json:",inline"`
+	SQLCheck `yaml:",inline" json:",inline"`
 }
 
 // This is used to supply a default value for unsupplied fields
 func (c *MssqlCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	type rawMsSqlCheck MssqlCheck
-	raw := rawMsSqlCheck{
-		SqlCheck{
+	type rawMsSQLCheck MssqlCheck
+	raw := rawMsSQLCheck{
+		SQLCheck{
 			Driver: "mssql",
 			Query:  "SELECT 1",
 			Result: 1,
@@ -424,17 +425,17 @@ type PodCheck struct {
 	Spec                 string `yaml:"spec" json:"spec,omitempty"`
 	ScheduleTimeout      int64  `yaml:"scheduleTimeout" json:"scheduleTimeout,omitempty"`
 	ReadyTimeout         int64  `yaml:"readyTimeout" json:"readyTimeout,omitempty"`
-	HttpTimeout          int64  `yaml:"httpTimeout" json:"httpTimeout,omitempty"`
+	HTTPTimeout          int64  `yaml:"httpTimeout" json:"httpTimeout,omitempty"`
 	DeleteTimeout        int64  `yaml:"deleteTimeout" json:"deleteTimeout,omitempty"`
 	IngressTimeout       int64  `yaml:"ingressTimeout" json:"ingressTimeout,omitempty"`
-	HttpRetryInterval    int64  `yaml:"httpRetryInterval" json:"httpRetryInterval,omitempty"`
+	HTTPRetryInterval    int64  `yaml:"httpRetryInterval" json:"httpRetryInterval,omitempty"`
 	Deadline             int64  `yaml:"deadline" json:"deadline,omitempty"`
 	Port                 int64  `yaml:"port" json:"port,omitempty"`
 	Path                 string `yaml:"path" json:"path,omitempty"`
 	IngressName          string `yaml:"ingressName" json:"ingressName,omitempty"`
 	IngressHost          string `yaml:"ingressHost" json:"ingressHost,omitempty"`
 	ExpectedContent      string `yaml:"expectedContent" json:"expectedContent,omitempty"`
-	ExpectedHttpStatuses []int  `yaml:"expectedHttpStatuses" json:"expectedHttpStatuses,omitempty"`
+	ExpectedHTTPStatuses []int  `yaml:"expectedHttpStatuses" json:"expectedHttpStatuses,omitempty"`
 	PriorityClass        string `yaml:"priorityClass" json:"priorityClass,omitempty"`
 }
 
@@ -442,12 +443,12 @@ func (c PodCheck) GetDescription() string {
 	return c.Description
 }
 
-func (p PodCheck) GetEndpoint() string {
-	return p.Name
+func (c PodCheck) GetEndpoint() string {
+	return c.Name
 }
 
-func (p PodCheck) String() string {
-	return "pod/" + p.Name
+func (c PodCheck) String() string {
+	return "pod/" + c.Name
 }
 
 func (c PodCheck) GetType() string {
@@ -485,17 +486,17 @@ type NamespaceCheck struct {
 	PodSpec              string            `yaml:"podSpec" json:"podSpec,omitempty"`
 	ScheduleTimeout      int64             `yaml:"scheduleTimeout" json:"schedule_timeout,omitempty"`
 	ReadyTimeout         int64             `yaml:"readyTimeout" json:"readyTimeout,omitempty"`
-	HttpTimeout          int64             `yaml:"httpTimeout" json:"httpTimeout,omitempty"`
+	HTTPTimeout          int64             `yaml:"httpTimeout" json:"httpTimeout,omitempty"`
 	DeleteTimeout        int64             `yaml:"deleteTimeout" json:"deleteTimeout,omitempty"`
 	IngressTimeout       int64             `yaml:"ingressTimeout" json:"ingressTimeout,omitempty"`
-	HttpRetryInterval    int64             `yaml:"httpRetryInterval" json:"httpRetryInterval,omitempty"`
+	HTTPRetryInterval    int64             `yaml:"httpRetryInterval" json:"httpRetryInterval,omitempty"`
 	Deadline             int64             `yaml:"deadline" json:"deadline,omitempty"`
 	Port                 int64             `yaml:"port" json:"port,omitempty"`
 	Path                 string            `yaml:"path" json:"path,omitempty"`
 	IngressName          string            `yaml:"ingressName" json:"ingressName,omitempty"`
 	IngressHost          string            `yaml:"ingressHost" json:"ingressHost,omitempty"`
 	ExpectedContent      string            `yaml:"expectedContent" json:"expectedContent,omitempty"`
-	ExpectedHttpStatuses []int64           `yaml:"expectedHttpStatuses" json:"expectedHttpStatuses,omitempty"`
+	ExpectedHTTPStatuses []int64           `yaml:"expectedHttpStatuses" json:"expectedHttpStatuses,omitempty"`
 	PriorityClass        string            `yaml:"priorityClass" json:"priorityClass,omitempty"`
 }
 
@@ -503,12 +504,12 @@ func (c NamespaceCheck) GetDescription() string {
 	return c.Description
 }
 
-func (p NamespaceCheck) GetEndpoint() string {
-	return p.CheckName
+func (c NamespaceCheck) GetEndpoint() string {
+	return c.CheckName
 }
 
-func (p NamespaceCheck) String() string {
-	return "namespace/" + p.CheckName
+func (c NamespaceCheck) String() string {
+	return "namespace/" + c.CheckName
 }
 
 func (c NamespaceCheck) GetType() string {
@@ -798,7 +799,7 @@ type Postgres struct {
 }
 
 /*
-This check will try to connect to a specified MsSql database, run a query against it and verify the results.
+This check will try to connect to a specified MsSQL database, run a query against it and verify the results.
 
 ```yaml
 
@@ -808,7 +809,7 @@ mssql:
 	results: 1
 ```
 */
-type MsSql struct {
+type MsSQL struct {
 	MssqlCheck `yaml:",inline" json:"inline"`
 }
 

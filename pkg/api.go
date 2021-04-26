@@ -70,13 +70,11 @@ func (c Check) GetNamespace() string {
 }
 
 func (c Check) GetName() string {
-
 	parts := strings.Split(c.Name, "/")
 	if len(parts) == 1 {
 		return parts[0]
 	}
 	return parts[1]
-
 }
 
 type Checks []Check
@@ -166,10 +164,8 @@ func (c CheckResult) String() string {
 	}
 	if c.Pass {
 		return fmt.Sprintf("[%s] [%s] %s duration=%d %s %s", console.Greenf("PASS"), checkType, endpoint, c.Duration, c.Metrics, c.Message)
-	} else {
-		return fmt.Sprintf("[%s] [%s] %s duration=%d %s %s", console.Redf("FAIL"), checkType, endpoint, c.Duration, c.Metrics, c.Message)
-
 	}
+	return fmt.Sprintf("[%s] [%s] %s duration=%d %s %s", console.Redf("FAIL"), checkType, endpoint, c.Duration, c.Metrics, c.Message)
 }
 
 type MetricType string

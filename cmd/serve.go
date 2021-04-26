@@ -2,6 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"io/fs"
+	nethttp "net/http"
+	_ "net/http/pprof" // required by serve
+	"time"
+
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
@@ -15,11 +20,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
-	"io/fs"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	nethttp "net/http"
-	_ "net/http/pprof"
-	"time"
 )
 
 var Serve = &cobra.Command{
@@ -56,7 +57,7 @@ var Serve = &cobra.Command{
 			case checks.SetsClient:
 				cs.SetClient(kommonsClient)
 			}
-			scheduler.Every(interval).Seconds().StartImmediately().Do(func() {
+			scheduler.Every(interval).Seconds().StartImmediately().Do(func() { // nolint: errcheck
 				go func() {
 					for _, result := range c.Run(config) {
 						cache.AddCheck(canary, result)
@@ -74,18 +75,18 @@ var Serve = &cobra.Command{
 func serve(cmd *cobra.Command) {
 	httpPort, _ := cmd.Flags().GetInt("httpPort")
 	dev, _ := cmd.Flags().GetBool("dev")
-	devGuiHttpPort, _ := cmd.Flags().GetInt("devGuiHttpPort")
+	devGuiHTTPPort, _ := cmd.Flags().GetInt("devGuiHTTPPort")
 
 	var staticRoot nethttp.FileSystem
 	var allowedCors string
 
 	if dev {
 		staticRoot = nethttp.Dir("./statuspage/dist")
-		allowedCors = fmt.Sprintf("http://localhost:%d", devGuiHttpPort)
+		allowedCors = fmt.Sprintf("http://localhost:%d", devGuiHTTPPort)
 		logger.Infof("Starting in local development mode")
 		logger.Infof("Allowing access from a GUI on %s", allowedCors)
 		logger.Infof("   (it can be started with:")
-		logger.Infof("    npm run serve -- --port %d ", devGuiHttpPort)
+		logger.Infof("    npm run serve -- --port %d ", devGuiHTTPPort)
 		logger.Infof("   )")
 	} else {
 		fs, err := fs.Sub(statuspage.StaticContent, "dist")

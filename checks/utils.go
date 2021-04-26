@@ -18,7 +18,7 @@ func unexpectedErrorf(check external.Check, err error, msg string, args ...inter
 	}
 }
 
-func invalidErrorf(check external.Check, err error, msg string, args ...interface{}) *pkg.CheckResult {
+func invalidErrorf(check external.Check, err error, msg string, args ...interface{}) *pkg.CheckResult { // nolint: unparam
 	return &pkg.CheckResult{
 		Check:   check,
 		Pass:    false,

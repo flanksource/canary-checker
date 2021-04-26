@@ -47,9 +47,10 @@ func run(cmd *cobra.Command, args []string) {
 	zapLogger := logger.GetZapLogger()
 	if zapLogger == nil {
 		logger.Fatalf("failed to get zap logger")
+		return
 	}
 
-	logger := ctrlzap.NewRaw(
+	loggr := ctrlzap.NewRaw(
 		ctrlzap.UseDevMode(true),
 		ctrlzap.WriteTo(os.Stderr),
 		ctrlzap.Level(zapLogger.Level),
@@ -63,7 +64,7 @@ func run(cmd *cobra.Command, args []string) {
 	_ = canaryv1.AddToScheme(scheme)
 	go serve(cmd)
 
-	ctrl.SetLogger(zapr.NewLogger(logger))
+	ctrl.SetLogger(zapr.NewLogger(loggr))
 	setupLog := ctrl.Log.WithName("setup")
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
@@ -80,7 +81,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	clusterName := pkg.GetClusterName(mgr.GetConfig())
-	logger.Sugar().Infof("Using cluster name: %s", clusterName)
+	loggr.Sugar().Infof("Using cluster name: %s", clusterName)
 	api.ServerName = clusterName
 
 	reconciler := &controllers.CanaryReconciler{
@@ -102,5 +103,4 @@ func run(cmd *cobra.Command, args []string) {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-
 }

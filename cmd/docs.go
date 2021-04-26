@@ -117,13 +117,13 @@ func (strukt Struct) String() string {
 }
 
 type StructField struct {
-	Name, Doc, Type, Id string
+	Name, Doc, Type, ID string
 	Mandatory           bool
 }
 
 func NewStructField(field *ast.Field) StructField {
 	return StructField{
-		Id:        fieldId(field.Type),
+		ID:        fieldID(field.Type),
 		Mandatory: fieldRequired(field),
 		Name:      fieldName(field),
 		Type:      fieldType(field.Type),
@@ -158,10 +158,10 @@ func ParseDocumentationFrom(srcs []string) map[string]*Struct {
 	// check for inline fields (yaml:"-") and move their fields up
 	for _, strukt := range structs {
 		if len(strukt.Fields) == 1 && strukt.Fields[0].Name == "-" {
-			if inline, ok := structs[strukt.Fields[0].Id]; ok {
+			if inline, ok := structs[strukt.Fields[0].ID]; ok {
 				strukt.Fields = inline.Fields
 			} else {
-				fmt.Printf("Cannot find inline field: %s\n", strukt.Fields[0].Id)
+				fmt.Printf("Cannot find inline field: %s\n", strukt.Fields[0].ID)
 			}
 		}
 	}
@@ -275,8 +275,9 @@ func fieldRequired(field *ast.Field) bool {
 	return false
 }
 
-func fieldId(typ ast.Expr) string {
-	switch typ.(type) { // nolint: gosimple
+// nolint: gosimple
+func fieldID(typ ast.Expr) string {
+	switch typ.(type) {
 	case *ast.Ident:
 		return typ.(*ast.Ident).Name
 	case *ast.StarExpr:
@@ -298,18 +299,18 @@ func fieldId(typ ast.Expr) string {
 func fieldType(typ ast.Expr) string {
 	switch typ.(type) { // nolint: gosimple
 	case *ast.Ident:
-		return toLink(typ.(*ast.Ident).Name)
+		return toLink(typ.(*ast.Ident).Name) // nolint: gosimple
 	case *ast.StarExpr:
-		return "*" + toLink(fieldType(typ.(*ast.StarExpr).X))
+		return "*" + toLink(fieldType(typ.(*ast.StarExpr).X)) // nolint: gosimple
 	case *ast.SelectorExpr:
 		e := typ.(*ast.SelectorExpr)
 		pkg := e.X.(*ast.Ident)
 		t := e.Sel
 		return toLink(pkg.Name + "." + t.Name)
 	case *ast.ArrayType:
-		return "[]" + toLink(fieldType(typ.(*ast.ArrayType).Elt))
+		return "[]" + toLink(fieldType(typ.(*ast.ArrayType).Elt)) // nolint: gosimple
 	case *ast.MapType:
-		mapType := typ.(*ast.MapType)
+		mapType := typ.(*ast.MapType) // nolint: gosimple
 		return "map[" + toLink(fieldType(mapType.Key)) + "]" + toLink(fieldType(mapType.Value))
 	default:
 		return ""

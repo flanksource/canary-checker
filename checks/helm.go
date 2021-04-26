@@ -62,7 +62,9 @@ func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		}
 	}
 	response, err := client.UploadChartPackage(*chartPath, false)
-
+	defer func() {
+		response.Close = true
+	}()
 	if err != nil {
 		return &pkg.CheckResult{
 			Check:    config,
@@ -74,7 +76,6 @@ func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 
 	if response.StatusCode != 201 {
-		uploadOK = false
 		return &pkg.CheckResult{
 			Check:    config,
 			Pass:     false,
@@ -94,7 +95,7 @@ func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		}
 	}
 
-	defer os.RemoveAll("./test-chart-0.1.0.tgz")
+	defer os.RemoveAll("./test-chart-0.1.0.tgz") // nolint: errcheck
 
 	iCli := action.NewPull()
 	if config.CaFile != nil {
@@ -119,7 +120,6 @@ func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	url.Path = path.Join(url.Path, "charts/test-chart-0.1.0.tgz")
 	_, err = iCli.Run(url.String())
 	if err != nil {
-		downloadOK = false
 		return &pkg.CheckResult{
 			Check:    config,
 			Pass:     false,
@@ -128,7 +128,7 @@ func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		}
 	}
 
-	defer cleanUp("test-chart", chartmuseum, config)
+	defer cleanUp("test-chart", chartmuseum, config) // nolint: errcheck
 
 	if err != nil {
 		logger.Warnf("Failed to perform cleanup: %v", err)
@@ -158,7 +158,7 @@ func cleanUp(chartname string, chartmuseum string, config v1.HelmCheck) error {
 	}
 	url, err := url.Parse(chartmuseum)
 	if err != nil {
-		return fmt.Errorf("Failed to parse chartmuseum url: %v", err)
+		return fmt.Errorf("failed to parse chartmuseum url: %v", err)
 	}
 	url.Path = path.Join("api", url.Path, "charts", chartname)
 	req, err := http.NewRequest("DELETE", url.String(), nil)

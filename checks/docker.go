@@ -41,7 +41,7 @@ var (
 
 func init() {
 	var err error
-	dockerClient, err = client.NewEnvClient()
+	dockerClient, err = client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		panic(err)
 	}
@@ -94,11 +94,10 @@ func (c *DockerPullChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	elapsed := time.Since(start)
 	if err != nil {
 		return Failf(check, "Failed to pull image: %s", err)
-	} else {
-		digest := getDigestFromOutput(out)
-		if digest != check.ExpectedDigest {
-			return Failf(check, "digests do not match %s != %s", digest, check.ExpectedDigest)
-		}
+	}
+	digest := getDigestFromOutput(out)
+	if digest != check.ExpectedDigest {
+		return Failf(check, "digests do not match %s != %s", digest, check.ExpectedDigest)
 	}
 
 	inspect, _, _ := dockerClient.ImageInspectWithRaw(ctx, check.Image)

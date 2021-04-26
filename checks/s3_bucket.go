@@ -142,7 +142,7 @@ func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		return Failf(bucket, "could not find any matching objects")
 	}
 
-	latestObjectAge := time.Now().Sub(aws.TimeValue(latestObject.LastModified))
+	latestObjectAge := time.Since(aws.TimeValue(latestObject.LastModified))
 	bucketScanLastWrite.WithLabelValues(bucket.Endpoint, bucket.Bucket).Set(float64(latestObject.LastModified.Unix()))
 
 	if latestObjectAge.Seconds() > float64(bucket.MaxAge) {

@@ -47,6 +47,7 @@ var (
 	}
 )
 
+// nolint: errcheck
 func setup() {
 	docker := deps.Binary("docker", "", "")
 	docker("pull docker.io/library/busybox:1.30")
@@ -88,11 +89,9 @@ func runFixture(t *testing.T, name string) {
 		for _, res := range checkResults {
 			if res == nil {
 				t.Errorf("Result in %v returned nil:\n", name)
-
 			} else {
 				if strings.Contains(name, "fail") && res.Pass {
 					t.Errorf("Expected test to fail, but it passed: %s", res)
-
 				} else if !strings.Contains(name, "fail") && !res.Pass {
 					t.Errorf("Expected test to pass but it failed %s", res)
 				} else {

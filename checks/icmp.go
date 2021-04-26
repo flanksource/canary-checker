@@ -60,7 +60,7 @@ func (c *IcmpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		if pingerStats.PacketsSent == 0 {
 			return Failf(check, "Failed to check icmp, no packets sent")
 		}
-		latency := int64(pingerStats.AvgRtt.Milliseconds())
+		latency := pingerStats.AvgRtt.Milliseconds()
 		loss := pingerStats.PacketLoss
 
 		if check.ThresholdMillis < latency {
@@ -72,7 +72,7 @@ func (c *IcmpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 
 		packetLoss.WithLabelValues(endpoint, urlObj.IP).Set(loss)
 
-		return &pkg.CheckResult{
+		return &pkg.CheckResult{ // nolint: staticcheck
 			Pass:     true,
 			Check:    check,
 			Duration: latency,
@@ -80,7 +80,6 @@ func (c *IcmpChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 
 	return Failf(check, "No results found")
-
 }
 
 func (c *IcmpChecker) checkICMP(urlObj pkg.URL, packetCount int) (*ping.Statistics, error) {
@@ -89,7 +88,7 @@ func (c *IcmpChecker) checkICMP(urlObj pkg.URL, packetCount int) (*ping.Statisti
 	if err != nil {
 		return nil, err
 	}
-	// this requires running as root or with NET_RAW priveleges, this is easier than the alternativer
+	// this requires running as root or with NET_RAW privileges, this is easier than the alternative
 	// sysctl -w net.ipv4.ping_group_range="0   2147483647" which doesn't require root, but does require kubelet changes
 	// whitelist the sysctl's for use
 	pinger.SetPrivileged(true)
