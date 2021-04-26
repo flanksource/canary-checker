@@ -53,7 +53,7 @@ deploy: kustomize manifests
 	cd config && $(KUSTOMIZE) edit set image controller=${IMG}
 	kubectl $(KUSTOMIZE) config | kubectl apply -f -
 
-static: kustomize manifests
+static: kustomize manifests generate
 	cd config && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build ./config > config/deploy/manifests.yaml
 	cd config/base && $(KUSTOMIZE) edit set image controller=${IMG}
@@ -144,7 +144,7 @@ deploy-docs:
 
 .PHONY: vue-dist
 vue-dist:
-	cd statuspage && npm install && npm run build
+	cd statuspage && npm ci && npm run build
 
 .PHONY: build
 build:
@@ -186,3 +186,7 @@ KUSTOMIZE=$(GOBIN)/kustomize
 else
 KUSTOMIZE=$(shell which kustomize)
 endif
+
+# Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
+.PHONY: resources
+resources: fmt vue-dist static

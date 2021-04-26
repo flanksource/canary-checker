@@ -6,6 +6,8 @@ on:
   pull_request:
     paths:
     - '**.go'
+    - 'Makefile'
+    - '**.yaml'
 jobs:
   golangci:
     name: lint
@@ -15,3 +17,15 @@ jobs:
       - uses: actions/setup-go@v2
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
+      - name: setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '12'
+      - name: Check auto-generated files
+        env:
+          CI: false
+        run: |
+          make resources
+          git diff
+          changed_files=$(git status -s)
+          [[ -z "$changed_files" ]] ||  (printf "Change is detected in some files: \n$changed_files\n Did you run 'make resources' before sending the PR?" && exit 1)
