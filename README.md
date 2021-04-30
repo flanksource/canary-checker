@@ -30,6 +30,7 @@
       * [Pod - Create a new pod and verify reachability](#pod---create-a-new-pod-and-verify-reachability)
       * [Postgres - Query a Postgresql DB using SQL](#postgres---query-a-postgresql-db-using-sql)
       * [Mssql - Query a Mssql DB using SQL](#mssql---query-a-mssql-db-using-sql)  
+      * [OracleDB - Query a OracleDB instance using SQL](#oracleDB---query-a-oracle-db-using-sql) 
       * [Redis - Excute ping against redis instance](#redis---execute-ping-against-redis-instance)  
       * [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
       * [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
@@ -473,7 +474,27 @@ mssql:
 | query |  | string | Yes |
 | results |  | int | Yes |
 
+### OracleDB - Query a Oracle DB using SQL
 
+This check will try to connect to a specified Oracle database, run a query against it and verify the results.
+
+```yaml
+
+oracleDB:
+  - connection: 'user="Scott" password="tiger" connectString="192.168.1.2:1521/ORCLPDB1.localdomain'
+    description: 'The Oracle DB test'
+    driver: godror
+    query: 'select sysdate from dual'
+    results: 1
+```
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| description |  | string | Yes |
+| driver |  | string | Yes |
+| connection |  | string | Yes |
+| query |  | string | Yes |
+| results |  | int | Yes |
 
 ### Redis - Execute ping against redis instance
 

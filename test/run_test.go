@@ -72,12 +72,14 @@ func TestRunChecks(t *testing.T) {
 	files, _ := ioutil.ReadDir("../fixtures")
 	wg := sync.WaitGroup{}
 	for _, fixture := range files {
-		wg.Add(1)
-		_fixture := fixture
-		go func() {
-			runFixture(t, path.Base(_fixture.Name()))
-			wg.Done()
-		}()
+		if !strings.Contains(fixture.Name(), "exclude") {
+			wg.Add(1)
+			_fixture := fixture
+			go func() {
+				runFixture(t, path.Base(_fixture.Name()))
+				wg.Done()
+			}()
+		}
 	}
 	wg.Wait()
 }

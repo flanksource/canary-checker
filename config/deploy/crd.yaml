@@ -571,6 +571,22 @@ spec:
                       type: integer
                   type: object
                 type: array
+              oracleDB:
+                items:
+                  properties:
+                    connection:
+                      type: string
+                    description:
+                      type: string
+                    driver:
+                      type: string
+                    query:
+                      type: string
+                    results:
+                      description: Number rows to check for
+                      type: integer
+                  type: object
+                type: array
               owner:
                 type: string
               pod:

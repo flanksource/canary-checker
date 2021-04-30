@@ -20,6 +20,7 @@ require (
 	github.com/go-logr/logr v0.3.0
 	github.com/go-logr/zapr v0.2.0
 	github.com/go-redis/redis/v8 v8.8.0
+	github.com/godror/godror v0.13.3
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/lib/pq v1.9.0
