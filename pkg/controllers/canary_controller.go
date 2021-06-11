@@ -19,9 +19,10 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/flanksource/kommons"
 	"sync"
 	"time"
+
+	"github.com/flanksource/kommons"
 
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons/ktemplate"
@@ -49,7 +50,8 @@ import (
 
 // CanaryReconciler reconciles a Canary object
 type CanaryReconciler struct {
-	IncludeNamespace, IncludeCheck string
+	IncludeCheck      string
+	IncludeNamespaces []string
 	client.Client
 	Kubernetes kubernetes.Interface
 	Kommons    *kommons.Client
@@ -68,7 +70,7 @@ const FinalizerName = "canary.canaries.flanksource.com"
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries/status,verbs=get;update;patch
 func (r *CanaryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	if r.IncludeNamespace != "" && r.IncludeNamespace != req.Namespace {
+	if len(r.IncludeNamespaces) > 0 && !r.includeNamespace(req.Namespace) {
 		r.Log.V(2).Info("namespace not included, skipping")
 		return ctrl.Result{}, nil
 	}
@@ -204,6 +206,15 @@ func (r *CanaryReconciler) Patch(canary *v1.Canary) {
 	if err := r.Status().Update(context.TODO(), canary, &client.UpdateOptions{}); err != nil {
 		r.Log.Error(err, "failed to patch", "canary", canary.Name)
 	}
+}
+
+func (r *CanaryReconciler) includeNamespace(namespace string) bool {
+	for _, n := range r.IncludeNamespaces {
+		if n == namespace {
+			return true
+		}
+	}
+	return false
 }
 
 type CanaryJob struct {
