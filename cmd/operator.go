@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -84,12 +85,17 @@ func run(cmd *cobra.Command, args []string) {
 	loggr.Sugar().Infof("Using cluster name: %s", clusterName)
 	api.ServerName = clusterName
 
+	includeNamespaces := []string{}
+	if includeNamespace != "" {
+		includeNamespaces = strings.Split(includeNamespace, ",")
+	}
+
 	reconciler := &controllers.CanaryReconciler{
-		IncludeCheck:     includeCheck,
-		IncludeNamespace: includeNamespace,
-		Client:           mgr.GetClient(),
-		Log:              ctrl.Log.WithName("controllers").WithName("canary"),
-		Scheme:           mgr.GetScheme(),
+		IncludeCheck:      includeCheck,
+		IncludeNamespaces: includeNamespaces,
+		Client:            mgr.GetClient(),
+		Log:               ctrl.Log.WithName("controllers").WithName("canary"),
+		Scheme:            mgr.GetScheme(),
 	}
 
 	if err = reconciler.SetupWithManager(mgr); err != nil {
