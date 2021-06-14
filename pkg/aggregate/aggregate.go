@@ -18,6 +18,7 @@ import (
 )
 
 var Servers []string
+var PivotByNamespace bool
 var checkCache = cmap.New()
 
 type AggregateCheck struct { // nolint: golint
@@ -99,46 +100,28 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 	aggregateData := map[string]*AggregateCheck{}
 	data := cache.GetChecks()
 
-	localServerID := api.ServerName
-	for _, c := range data {
-		aggregateData[c.ID()] = &AggregateCheck{
-			Key:         c.Key,
-			Name:        c.GetName(),
-			Namespace:   c.GetNamespace(),
-			CanaryName:  c.CanaryName,
-			Type:        c.Type,
-			Description: c.Description,
-			Endpoint:    c.Endpoint,
-			Interval:    c.Interval,
-			Owner:       c.Owner,
-			Severity:    c.Severity,
-			ServerURL:   "local",
-			Health: map[string]CheckHealth{
-				localServerID: {c.Latency, c.Uptime},
-			},
-			Statuses: map[string][]pkg.CheckStatus{
-				localServerID: c.Statuses,
-			},
-		}
-	}
-
 	servers := []string{}
+	allServers := []string{}
 
-	for _, serverURL := range Servers {
-		apiResponse := getChecksFromServer(serverURL)
-		serverID := fmt.Sprintf("%s@%s", apiResponse.ServerName, serverURL)
-		servers = append(servers, serverID)
+	if PivotByNamespace {
+		namespaceMap := map[string]bool{}
+		for _, c := range data {
+			namespaceMap[c.GetNamespace()] = true
+		}
+		for n := range namespaceMap {
+			servers = append(servers, n)
+		}
 
-		for _, c := range apiResponse.Checks {
+		for _, c := range data {
 			ac, found := aggregateData[c.ID()]
 			if found {
-				ac.Health[serverID] = CheckHealth{c.Latency, c.Uptime}
-				ac.Statuses[serverID] = c.Statuses
+				ac.Health[c.GetNamespace()] = CheckHealth{c.Latency, c.Uptime}
+				ac.Statuses[c.GetNamespace()] = c.Statuses
 			} else {
 				aggregateData[c.ID()] = &AggregateCheck{
 					Key:         c.Key,
 					Name:        c.GetName(),
-					Namespace:   c.GetNamespace(),
+					Namespace:   "",
 					CanaryName:  c.CanaryName,
 					Type:        c.Type,
 					Description: c.Description,
@@ -146,20 +129,78 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 					Interval:    c.Interval,
 					Owner:       c.Owner,
 					Severity:    c.Severity,
-					ServerURL:   serverURL,
+					ServerURL:   c.GetNamespace(),
 					Health: map[string]CheckHealth{
-						serverID: {c.Latency, c.Uptime},
+						c.GetNamespace(): {c.Latency, c.Uptime},
 					},
 					Statuses: map[string][]pkg.CheckStatus{
-						serverID: c.Statuses,
+						c.GetNamespace(): c.Statuses,
 					},
 				}
 			}
 		}
+	} else {
+		localServerID := api.ServerName
+		for _, c := range data {
+			aggregateData[c.ID()] = &AggregateCheck{
+				Key:         c.Key,
+				Name:        c.GetName(),
+				Namespace:   c.GetNamespace(),
+				CanaryName:  c.CanaryName,
+				Type:        c.Type,
+				Description: c.Description,
+				Endpoint:    c.Endpoint,
+				Interval:    c.Interval,
+				Owner:       c.Owner,
+				Severity:    c.Severity,
+				ServerURL:   "local",
+				Health: map[string]CheckHealth{
+					localServerID: {c.Latency, c.Uptime},
+				},
+				Statuses: map[string][]pkg.CheckStatus{
+					localServerID: c.Statuses,
+				},
+			}
+		}
+
+		for _, serverURL := range Servers {
+			apiResponse := getChecksFromServer(serverURL)
+			serverID := fmt.Sprintf("%s@%s", apiResponse.ServerName, serverURL)
+			servers = append(servers, serverID)
+
+			for _, c := range apiResponse.Checks {
+				ac, found := aggregateData[c.ID()]
+				if found {
+					ac.Health[serverID] = CheckHealth{c.Latency, c.Uptime}
+					ac.Statuses[serverID] = c.Statuses
+				} else {
+					aggregateData[c.ID()] = &AggregateCheck{
+						Key:         c.Key,
+						Name:        c.GetName(),
+						Namespace:   c.GetNamespace(),
+						CanaryName:  c.CanaryName,
+						Type:        c.Type,
+						Description: c.Description,
+						Endpoint:    c.Endpoint,
+						Interval:    c.Interval,
+						Owner:       c.Owner,
+						Severity:    c.Severity,
+						ServerURL:   serverURL,
+						Health: map[string]CheckHealth{
+							serverID: {c.Latency, c.Uptime},
+						},
+						Statuses: map[string][]pkg.CheckStatus{
+							serverID: c.Statuses,
+						},
+					}
+				}
+			}
+		}
+
+		allServers = []string{localServerID}
 	}
 
 	sort.Strings(servers)
-	allServers := []string{localServerID}
 	allServers = append(allServers, servers...)
 
 	aggregateList := AggregateChecks{}

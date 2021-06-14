@@ -80,6 +80,10 @@ func serve(cmd *cobra.Command) {
 	var staticRoot nethttp.FileSystem
 	var allowedCors string
 
+	if aggregate.PivotByNamespace && len(aggregate.Servers) > 0 {
+		logger.Fatalf("pivot by namespace and aggregate servers cannot be enabled at the same time")
+	}
+
 	if dev {
 		staticRoot = nethttp.Dir("./statuspage/dist")
 		allowedCors = fmt.Sprintf("http://localhost:%d", devGuiHTTPPort)
@@ -142,6 +146,7 @@ func init() {
 	Serve.Flags().IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
 	Serve.Flags().StringSliceVar(&aggregate.Servers, "aggregateServers", []string{}, "Aggregate check results from multiple servers in the status page")
 	Serve.Flags().StringVar(&api.ServerName, "name", "local", "Server name shown in aggregate dashboard")
+	Serve.Flags().BoolVar(&aggregate.PivotByNamespace, "pivot-by-namespace", false, "Show the same check across namespaces in a different column")
 
 	Serve.Flags().String("canary-name", "", "Canary name")
 	Serve.Flags().String("canary-namespace", "", "Canary namespace")
