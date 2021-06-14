@@ -31,6 +31,7 @@ var includeNamespace, includeCheck string
 
 func init() {
 	Operator.Flags().IntVar(&httpPort, "httpPort", 8080, "Port to expose a health dashboard ")
+	Operator.Flags().Int("devGuiHttpPort", 8081, "Port used by a local npm server in development mode")
 	Operator.Flags().IntVar(&metricsPort, "metricsPort", 8081, "Port to expose a health dashboard ")
 	Operator.Flags().IntVar(&webhookPort, "webhookPort", 8082, "Port for webhooks ")
 	Operator.Flags().BoolVar(&dev, "dev", false, "Run in development mode")
@@ -41,6 +42,7 @@ func init() {
 	Operator.Flags().IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
 	Operator.Flags().StringSliceVar(&aggregate.Servers, "aggregateServers", []string{}, "Aggregate check results from multiple servers in the status page")
 	Operator.Flags().StringVar(&api.ServerName, "name", "local", "Server name shown in aggregate dashboard")
+	Operator.Flags().BoolVar(&aggregate.PivotByNamespace, "pivot-by-namespace", false, "Show the same check across namespaces in a different column")
 	// +kubebuilder:scaffold:scheme
 }
 
