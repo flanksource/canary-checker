@@ -68,6 +68,7 @@ chmod +x ./wait4x
 curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmeter-5.4.1.tgz -o apache-jmeter-5.4.1.tgz && \
 sudo tar xf apache-jmeter-5.4.1.tgz -C / && \
 rm apache-jmeter-5.4.1.tgz && \
+sudo apt-get update -y
 sudo apt-get install -y openjdk-11-jre-headless
 sudo ln -s /apache-jmeter-5.4.1/bin/jmeter /usr/local/bin/jmeter
 #verification

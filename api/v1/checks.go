@@ -371,6 +371,9 @@ func (c SQLCheck) GetDescription() string {
 }
 
 func (c SQLCheck) GetType() string {
+	if c.Driver == "godror" {
+		return "oracleDB"
+	}
 	return c.Driver
 }
 
@@ -415,6 +418,28 @@ func (c *MssqlCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 
 	*c = MssqlCheck(raw)
+	return nil
+}
+
+type OracleDBCheck struct {
+	SQLCheck `yaml:",inline" json:",inline"`
+}
+
+// This is used to supply a default value for unsupplied fields
+func (c *OracleDBCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type rawMsSQLCheck OracleDBCheck
+	raw := rawMsSQLCheck{
+		SQLCheck{
+			Driver: "godror",
+			Query:  "select sysdate from dual",
+			Result: 1,
+		},
+	}
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	*c = OracleDBCheck(raw)
 	return nil
 }
 
@@ -813,6 +838,21 @@ type MsSQL struct {
 	MssqlCheck `yaml:",inline" json:"inline"`
 }
 
+/*
+This check will try to connect to a specified Oracle database, run a query against it and verify the results.
+
+```yaml
+
+oracleDB:
+  - connection: 'user="Scott" password="tiger" connectString="192.168.1.2:1521/ORCLPDB1.localdomain'
+    query: "select sysdate from dual"
+	results: 1
+```
+*/
+type OracleDB struct {
+	OracleDBCheck `yaml:",inline" json:"inline"`
+}
+
 type Helm struct {
 	HelmCheck `yaml:",inline" json:"inline"`
 }
@@ -893,6 +933,7 @@ var AllChecks = []external.Check{
 	ContainerdPushCheck{},
 	PostgresCheck{},
 	MssqlCheck{},
+	OracleDBCheck{},
 	RedisCheck{},
 	PodCheck{},
 	LDAPCheck{},

@@ -18,6 +18,15 @@ RUN curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmete
 
 ENV PATH /apache-jmeter-5.4.1/bin/:$PATH
 
+# Install Oracle DB instant client
+RUN apt-get install unzip -y
+    curl -LO https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-basic-linux.x64-21.1.0.0.0.zip && \
+    mkdir -p /opt/oracle && \
+    unzip instantclient-basic-linux.x64-21.1.0.0.0.zip -d /opt/oracle && \
+
+ENV PATH /opt/oracle/instantclient_21_1/:$PATH
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/oracle/instantclient_21_1
+
 RUN apt-get update && \
   apt-get install -y ca-certificates && \
   rm -Rf /var/lib/apt/lists/*  && \
