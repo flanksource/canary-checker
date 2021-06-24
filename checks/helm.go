@@ -41,7 +41,7 @@ func (c *HelmChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	config := extConfig.(v1.HelmCheck)
 	start := time.Now()
-	var uploadOK, downloadOK bool = true, true
+	var uploadOK, downloadOK = true, true
 	chartmuseum := fmt.Sprintf("%s/chartrepo/%s/", config.Chartmuseum, config.Project)
 	logger.Tracef("Uploading test chart")
 	client, _ := pusher.NewClient(
