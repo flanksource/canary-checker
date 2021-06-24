@@ -48,7 +48,7 @@ $KARINA deploy bootstrap
 echo "::endgroup::"
 #$KARINA test stubs --wait=480 -v 5
 echo "::group::Setting up test environment"
-$KARINA apply test/setup.yml
+$KARINA apply setup.yml
 echo "::endgroup::"
 
 echo "::group::Testing"
