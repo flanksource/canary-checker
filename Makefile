@@ -53,11 +53,11 @@ deploy: kustomize manifests
 	cd config && $(KUSTOMIZE) edit set image controller=${IMG}
 	kubectl $(KUSTOMIZE) config | kubectl apply -f -
 
-static: kustomize manifests generate
+static: kustomize manifests generate .bin/yq
 	cd config && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build ./config > config/deploy/manifests.yaml
+	$(KUSTOMIZE) build ./config | $(YQ) eval -P '' - > config/deploy/manifests.yaml
 	cd config/base && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build ./config/base > config/deploy/base.yaml
+	$(KUSTOMIZE) build ./config/base | $(YQ) eval -P '' - > config/deploy/base.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
@@ -186,6 +186,14 @@ KUSTOMIZE=$(GOBIN)/kustomize
 else
 KUSTOMIZE=$(shell which kustomize)
 endif
+
+OS   = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ARCH = $(shell uname -m | sed 's/x86_64/amd64/')
+
+.bin/yq:
+	mkdir -p .bin
+	curl -sSLo .bin/yq https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_$(OS)_$(ARCH) && chmod +x .bin/yq
+YQ = $(realpath ./.bin/yq)
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources
