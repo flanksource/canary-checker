@@ -41,8 +41,6 @@ kubernetes:
   masterIP: localhost
 podSubnet: 100.200.0.0/16
 serviceSubnet: 100.100.0.0/16
-opa:
-  disabled: true
 calico:
   ipip: Never
   vxlan: Never
