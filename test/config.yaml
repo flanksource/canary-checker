@@ -1,4 +1,6 @@
-name: test
+name: kind-kind
+patches:
+  - ./patch1.yaml
 domain: 127.0.0.1.nip.io
 ca:
   cert: .certs/root-ca.crt
@@ -32,7 +34,7 @@ kind:
 kubernetes:
   auditing:
     policyFile: ""
-  version: v1.18.15
+  version: !!env KUBERNETES_VERSION
   kubeletExtraArgs:
     node-labels: "ingress-ready=true"
     authorization-mode: "AlwaysAllow"
@@ -45,18 +47,13 @@ calico:
   ipip: Never
   vxlan: Never
   version: v3.8.2
-
 s3:
   endpoint: http://minio.minio.svc:9000
-  externalEndpoint: minio.127.0.0.1.nip.io
-  bucket: harbor
   access_key: minio
   secret_key: minio123
   region: us-east1
-  kmsMasterKey: minio-demo-key:6368616e676520746869732070617373776f726420746f206120736563726574
   usePathStyle: true
-  e2e:
-    minio: true
+  skipTLSVerify: true
 minio:
   version: RELEASE.2020-09-02T18-19-50Z
   access_key: minio
