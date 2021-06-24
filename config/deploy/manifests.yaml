@@ -49,14 +49,10 @@ spec:
         description: Canary is the Schema for the canaries API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -161,29 +157,22 @@ spec:
                           description: The key to select.
                           type: string
                         name:
-                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
                           type: string
                         optional:
-                          description: Specify whether the ConfigMap or its key must
-                            be defined
+                          description: Specify whether the ConfigMap or its key must be defined
                           type: boolean
                       required:
                       - key
                       type: object
                     fieldRef:
-                      description: 'Selects a field of the pod: supports metadata.name,
-                        metadata.namespace, metadata.labels, metadata.annotations,
-                        spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP,
-                        status.podIPs.'
+                      description: 'Selects a field of the pod: supports metadata.name, metadata.namespace, metadata.labels, metadata.annotations, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.'
                       properties:
                         apiVersion:
-                          description: Version of the schema the FieldPath is written
-                            in terms of, defaults to "v1".
+                          description: Version of the schema the FieldPath is written in terms of, defaults to "v1".
                           type: string
                         fieldPath:
-                          description: Path of the field to select in the specified
-                            API version.
+                          description: Path of the field to select in the specified API version.
                           type: string
                       required:
                       - fieldPath
@@ -192,16 +181,13 @@ spec:
                       description: Selects a key of a secret in the pod's namespace
                       properties:
                         key:
-                          description: The key of the secret to select from.  Must
-                            be a valid secret key.
+                          description: The key of the secret to select from.  Must be a valid secret key.
                           type: string
                         name:
-                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
                           type: string
                         optional:
-                          description: Specify whether the Secret or its key must
-                            be defined
+                          description: Specify whether the Secret or its key must be defined
                           type: boolean
                       required:
                       - key
@@ -311,8 +297,7 @@ spec:
                     description:
                       type: string
                     endpoint:
-                      description: HTTP endpoint to check.  Mutually exclusive with
-                        Namespace
+                      description: HTTP endpoint to check.  Mutually exclusive with Namespace
                       type: string
                     headers:
                       description: HTTP Header fields to be used in the query
@@ -352,19 +337,16 @@ spec:
                         type: object
                       type: array
                     maxSSLExpiry:
-                      description: Maximum number of days until the SSL Certificate
-                        expires.
+                      description: Maximum number of days until the SSL Certificate expires.
                       type: integer
                     method:
                       description: HTTP method to call - defaults to GET
                       type: string
                     namespace:
-                      description: Namespace to crawl for TLS endpoints.  Mutually
-                        exclusive with Endpoint
+                      description: Namespace to crawl for TLS endpoints.  Mutually exclusive with Endpoint
                       type: string
                     ntlm:
-                      description: NTLM when set to true will do authentication using
-                        NTLM protocol
+                      description: NTLM when set to true will do authentication using NTLM protocol
                       type: boolean
                     responseCodes:
                       description: Expected response codes for the HTTP Request.
@@ -372,12 +354,10 @@ spec:
                         type: integer
                       type: array
                     responseContent:
-                      description: Exact response content expected to be returned
-                        by the endpoint.
+                      description: Exact response content expected to be returned by the endpoint.
                       type: string
                     responseJSONContent:
-                      description: Path and value to of expect JSON response by the
-                        endpoint
+                      description: Path and value to of expect JSON response by the endpoint
                       properties:
                         path:
                           type: string
@@ -388,8 +368,7 @@ spec:
                       - value
                       type: object
                     thresholdMillis:
-                      description: Maximum duration in milliseconds for the HTTP request.
-                        It will fail the check if it takes longer.
+                      description: Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.
                       type: integer
                   type: object
                 type: array
@@ -420,12 +399,10 @@ spec:
                       description: Description of the canary
                       type: string
                     host:
-                      description: Host is the server against which test plan needs
-                        to be executed
+                      description: Host is the server against which test plan needs to be executed
                       type: string
                     jmx:
-                      description: Jmx defines tge ConfigMap or Secret reference to
-                        get the JMX test plan
+                      description: Jmx defines tge ConfigMap or Secret reference to get the JMX test plan
                       properties:
                         name:
                           type: string
@@ -469,8 +446,7 @@ spec:
                         type: string
                       type: array
                     responseDuration:
-                      description: ResponseDuration under which the all the test should
-                        pass
+                      description: ResponseDuration under which the all the test should pass
                       type: string
                     systemProperties:
                       description: SystemProperties defines the java system property
@@ -667,16 +643,13 @@ spec:
                 items:
                   properties:
                     accessKey:
-                      description: AccessKey access key id for connection with aws
-                        s3, minio, wasabi, alibaba oss
+                      description: AccessKey access key id for connection with aws s3, minio, wasabi, alibaba oss
                       type: string
                     caCert:
-                      description: CaCert path to the root cert. In case of self-signed
-                        certificates
+                      description: CaCert path to the root cert. In case of self-signed certificates
                       type: string
                     checkIntegrity:
-                      description: CheckIntegrity when enabled will check the Integrity
-                        and consistency of the restic reposiotry
+                      description: CheckIntegrity when enabled will check the Integrity and consistency of the restic reposiotry
                       type: boolean
                     description:
                       description: Description about the current restic canary check
@@ -688,12 +661,10 @@ spec:
                       description: Password for the restic repository
                       type: string
                     repository:
-                      description: 'Repository The restic repository path eg: rest:https://user:pass@host:8000/
-                        or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name'
+                      description: 'Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name'
                       type: string
                     secretKey:
-                      description: SecretKey secret access key for connection with
-                        aws s3, minio, wasabi, alibaba oss
+                      description: SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss
                       type: string
                   required:
                   - maxAge
@@ -758,8 +729,7 @@ spec:
                       description: Skip TLS verify when connecting to s3
                       type: boolean
                     usePathStyle:
-                      description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY
-                        instead of http://BUCKET.s3.amazonaws.com/KEY'
+                      description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                       type: boolean
                   type: object
                 type: array
@@ -793,8 +763,7 @@ spec:
               message:
                 type: string
               observedGeneration:
-                description: If set, this represents the .metadata.generation that
-                  the status was set for
+                description: If set, this represents the .metadata.generation that the status was set for
                 format: int64
                 type: integer
               status:
@@ -1007,26 +976,6 @@ spec:
           path: /var/run/docker.sock
         name: dockersock
 ---
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  annotations:
-    kubernetes.io/tls-acme: "true"
-  name: canary-checker
-  namespace: platform-system
-spec:
-  rules:
-  - host: canaries.{{.domain}}
-    http:
-      paths:
-      - backend:
-          serviceName: canary-checker
-          servicePort: 8080
-  tls:
-  - hosts:
-    - canaries.{{.domain}}
-    secretName: canary-tls
----
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -1045,3 +994,25 @@ spec:
   selector:
     matchLabels:
       control-plane: canary-checker
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/tls-acme: "true"
+  name: canary-checker
+  namespace: platform-system
+spec:
+  rules:
+  - host: canaries.{{.domain}}
+    http:
+      paths:
+      - backend:
+          service:
+            name: canary-checker
+            port:
+              number: 8080
+  tls:
+  - hosts:
+    - canaries.{{.domain}}
+    secretName: canary-tls

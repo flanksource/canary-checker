@@ -190,26 +190,6 @@ spec:
           path: /var/run/docker.sock
         name: dockersock
 ---
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  annotations:
-    kubernetes.io/tls-acme: "true"
-  name: canary-checker
-  namespace: platform-system
-spec:
-  rules:
-  - host: canaries.{{.domain}}
-    http:
-      paths:
-      - backend:
-          serviceName: canary-checker
-          servicePort: 8080
-  tls:
-  - hosts:
-    - canaries.{{.domain}}
-    secretName: canary-tls
----
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -228,3 +208,25 @@ spec:
   selector:
     matchLabels:
       control-plane: canary-checker
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/tls-acme: "true"
+  name: canary-checker
+  namespace: platform-system
+spec:
+  rules:
+  - host: canaries.{{.domain}}
+    http:
+      paths:
+      - backend:
+          service:
+            name: canary-checker
+            port:
+              number: 8080
+  tls:
+  - hosts:
+    - canaries.{{.domain}}
+    secretName: canary-tls
