@@ -42,6 +42,7 @@ if [[ "$(kubectl config current-context)" != "kind-$CLUSTER_NAME" ]] ; then
   fi
 fi
 
+export PATH=$(pwd)/.bin:$PATH
 
 echo "::group::Deploying Base"
 $KARINA deploy bootstrap
@@ -51,6 +52,7 @@ $KARINA deploy apacheds
 echo "::endgroup::"
 #$KARINA test stubs --wait=480 -v 5
 echo "::group::Setting up test environment"
+kubectl -n ldap delete svc apacheds
 $KARINA apply setup.yml
 echo "::endgroup::"
 
