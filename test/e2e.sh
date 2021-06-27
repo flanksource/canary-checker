@@ -2,21 +2,21 @@
 
 set -ex
 
-export PLATFORM_CLI_VERSION=v0.28.0
-export PLATFORM_CLI="./karina -c test/config.yaml"
+export KARINA_VERSION=v0.49.2
+export KARINA="./karina -c test/config.yaml"
 export KUBECONFIG=~/.kube/config
 export DOCKER_API_VERSION=1.39
 export CLUSTER_NAME=test
 
 
 if which karina 2>&1 > /dev/null; then
-  PLATFORM_CLI="karina -c test/config.yaml"
+  KARINA="karina -c test/config.yaml"
 else
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    wget -q https://github.com/flanksource/karina/releases/download/$PLATFORM_CLI_VERSION/karina
+    wget -q https://github.com/flanksource/karina/releases/download/$KARINA_VERSION/karina
     chmod +x karina
   elif [[ "$OSTYPE" == "darwin"* ]]; then
-    wget -q https://github.com/flanksource/karina/releases/download/$PLATFORM_CLI_VERSION/karina_osx
+    wget -q https://github.com/flanksource/karina/releases/download/$KARINA_VERSION/karina_osx
     cp karina_osx karina
     chmod +x karina
   else
@@ -30,11 +30,11 @@ echo "$(kubectl config current-context) != kind-$CLUSTER_NAME"
 if [[ "$(kubectl config current-context)" != "kind-$CLUSTER_NAME" ]] ; then
   echo "::group::Provisioning"
   if [[ ! -e .certs/root-ca.key ]]; then
-    $PLATFORM_CLI ca generate --name root-ca --cert-path .certs/root-ca.crt --private-key-path .certs/root-ca.key --password foobar  --expiry 1
-    $PLATFORM_CLI ca generate --name ingress-ca --cert-path .certs/ingress-ca.crt --private-key-path .certs/ingress-ca.key --password foobar  --expiry 1
-    $PLATFORM_CLI ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.pem --private-key-path .certs/sealed-secrets-key.pem --password foobar  --expiry 1
+    $KARINA ca generate --name root-ca --cert-path .certs/root-ca.crt --private-key-path .certs/root-ca.key --password foobar  --expiry 1
+    $KARINA ca generate --name ingress-ca --cert-path .certs/ingress-ca.crt --private-key-path .certs/ingress-ca.key --password foobar  --expiry 1
+    $KARINA ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.pem --private-key-path .certs/sealed-secrets-key.pem --password foobar  --expiry 1
   fi
-  if $PLATFORM_CLI provision kind-cluster --trace -vv ; then
+  if $KARINA provision kind-cluster --trace -vv ; then
     echo "::endgroup::"
   else
     echo "::endgroup::"
@@ -42,13 +42,18 @@ if [[ "$(kubectl config current-context)" != "kind-$CLUSTER_NAME" ]] ; then
   fi
 fi
 
+export PATH=$(pwd)/.bin:$PATH
 
 echo "::group::Deploying Base"
-$PLATFORM_CLI deploy phases --crds --calico --base --stubs --minio --ingress
+$KARINA deploy bootstrap
 echo "::endgroup::"
-#$PLATFORM_CLI test stubs --wait=480 -v 5
+echo "::group::Deploying Stubs"
+$KARINA deploy apacheds
+echo "::endgroup::"
+#$KARINA test stubs --wait=480 -v 5
 echo "::group::Setting up test environment"
-$PLATFORM_CLI apply test/setup.yml
+kubectl -n ldap delete svc apacheds
+$KARINA apply setup.yml
 echo "::endgroup::"
 
 echo "::group::Testing"

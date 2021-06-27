@@ -1,0 +1,170 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: minio
+spec:
+  template:
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:RELEASE.2020-03-06T22-23-56Z
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vault
+  namespace: vault
+spec:
+  replicas: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dex
+  namespace: dex
+spec:
+  replicas: 1
+  template:
+    spec:
+      resources:
+        requests:
+          cpu: 10m
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: k8s
+  namespace: monitoring
+spec:
+  replicas: 1
+  storage:
+    emptyDir:
+      sizeLimit: 10Gi
+    volumeClaimTemplate: {}
+  resources:
+    requests:
+      memory: 100Mi
+      cpu: 10m
+  retention: 10h
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
+metadata:
+  name: main
+  namespace: monitoring
+spec:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 10m
+---
+apiVersion: integreatly.org/v1alpha1
+kind: Grafana
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  resources:
+    requests:
+      cpu: 10m
+
+---
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: calico-node
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      containers:
+        - name: calico-node
+          resources:
+            requests:
+              cpu: 10m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-state-metrics
+  namespace: monitoring
+spec:
+  template:
+    spec:
+      containers:
+        - name: kube-state-metrics
+          resources:
+            requests:
+              cpu: 10m
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Disable reload/all in tests
+  annotations:
+    $patch: delete
+  name: quack
+  namespace: quack
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        $patch: delete
+    spec:
+      containers:
+        - name: quack
+          resources:
+            requests:
+              cpu: 10m
+              memory: 10Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Disable reload/all in tests
+  annotations: null
+  name: platform-operator
+  namespace: platform-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        $patch: delete
+    spec:
+      containers:
+        - name: manager
+          resources:
+            requests:
+              cpu: 10m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Disable reload/all in tests
+  annotations: null
+  name: canary-checker
+  namespace: platform-system
+spec:
+  template:
+    metadata:
+      annotations:
+        $patch: delete
+    spec:
+      containers:
+        - name: canary-checker
+          resources:
+            requests:
+              cpu: 10m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager-webhook
+  namespace: cert-manager
+spec:
+  replicas: 1

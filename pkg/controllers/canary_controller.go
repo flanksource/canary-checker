@@ -261,7 +261,7 @@ func (c CanaryJob) LoadSecrets() (v1.CanarySpec, error) {
 		values[key] = val
 	}
 
-	var val *v1.CanarySpec = &c.Check.Spec
+	var val = &c.Check.Spec
 	k8sclient, err := pkg.NewK8sClient()
 	if err != nil {
 		logger.Warnf("Could not create k8s client for templating: %v", err)
