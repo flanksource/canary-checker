@@ -1,0 +1,15 @@
+junit:
+  - testResults: "/tmp/junit-results/"
+    spec: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+       name: junit-pass
+       namespace: default
+      spec:
+        containers:
+         - name: jes
+           image: docker.io/tarun18/junit-test-pass
+           command: ["/bin/sh","-c"]
+           args:
+             - "mkdir /tmp/junit-results/;cp /tmp/*.xml /tmp/junit-results/;sleep 10"

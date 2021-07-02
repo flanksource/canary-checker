@@ -42,6 +42,7 @@ type CanarySpec struct {
 	Mssql          []MssqlCheck          `yaml:"mssql,omitempty" json:"mssql,omitempty"`
 	Restic         []ResticCheck         `yaml:"restic,omitempty" json:"restic,omitempty"`
 	Jmeter         []JmeterCheck         `yaml:"jmeter,omitempty" json:"jmeter,omitempty"`
+	Junit          []JunitCheck          `yaml:"junit,omitempty" json:"junit,omitempty"`
 	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Redis          []RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
@@ -107,6 +108,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Jmeter {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.Junit {
 		checks = append(checks, check)
 	}
 	return checks

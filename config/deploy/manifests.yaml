@@ -457,6 +457,20 @@ spec:
                       - jmx
                     type: object
                   type: array
+                junit:
+                  items:
+                    properties:
+                      description:
+                        type: string
+                      spec:
+                        type: string
+                      testResults:
+                        type: string
+                    required:
+                      - spec
+                      - testResults
+                    type: object
+                  type: array
                 ldap:
                   items:
                     properties:

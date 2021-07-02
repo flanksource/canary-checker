@@ -29,6 +29,7 @@ var All = []Checker{
 	&JmeterChecker{},
 	&ResticChecker{},
 	&RedisChecker{},
+	&JunitChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),

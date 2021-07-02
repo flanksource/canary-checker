@@ -562,6 +562,22 @@ func (c HelmCheck) GetType() string {
 	return "helm"
 }
 
+type JunitCheck struct {
+	Description string `yaml:"description" json:"description,omitempty"`
+	TestResults string `yaml:"testResults" json:"testResults"`
+	Spec        string `yaml:"spec" json:"spec"`
+}
+
+func (c JunitCheck) GetEndpoint() string {
+	return fmt.Sprintf("file://%s", c.TestResults)
+}
+func (c JunitCheck) GetDescription() string {
+	return c.Description
+}
+func (c JunitCheck) GetType() string {
+	return "junit"
+}
+
 /*
 
 ```yaml
@@ -881,6 +897,30 @@ type Jmeter struct {
 	JmeterCheck `yaml:",inline" json:",inline"`
 }
 
+/*
+Junit check will wait for the given pod to be completed than parses all the xml files present in the defined testResults directory
+```yaml
+junit:
+	- testResults: "/tmp/junit-results/"
+      description: "A sample junit check"
+      spec: |
+         apiVersion: v1
+         kind: Pod
+         metadata:
+          name: junit-results
+          namespace: default
+         spec:
+           containers:
+            - name: jes
+              image: docker.io/tarun18/junit-test-fail
+              command: ["/bin/sh","-c"]
+              args:
+                - "mkdir /tmp/junit-results/;cp /tmp/*.xml /tmp/junit-results/;sleep 10"
+*/
+type Junit struct {
+	JunitCheck `yaml:",inline" json:",inline"`
+}
+
 var AllChecks = []external.Check{
 	HTTPCheck{},
 	TCPCheck{},
@@ -901,4 +941,5 @@ var AllChecks = []external.Check{
 	DNSCheck{},
 	HelmCheck{},
 	JmeterCheck{},
+	JunitCheck{},
 }
