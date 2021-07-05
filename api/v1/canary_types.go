@@ -123,6 +123,15 @@ func (spec CanarySpec) SetNamespaces(namespace string) {
 	for i := range spec.Jmeter {
 		spec.Jmeter[i].SetNamespace(namespace)
 	}
+	for i := range spec.Junit {
+		spec.Junit[i].SetNamespace(namespace)
+	}
+}
+
+func (spec CanarySpec) SetNames(name string) {
+	for i := range spec.Junit {
+		spec.Junit[i].SetName(name)
+	}
 }
 
 func (c Canary) GetKey(check external.Check) string {

@@ -1,0 +1,15 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: junit-canary-pass
+spec:
+  interval: 120
+  owner: DBAdmin
+  severity: high
+  junit:
+    - testResults: "/tmp/junit-results/"
+      spec:
+        containers:
+          - name: jes
+            image: docker.io/tarun18/junit-test-fail
+            command: ["/start.sh"]

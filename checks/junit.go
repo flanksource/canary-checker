@@ -13,7 +13,6 @@ import (
 	"github.com/flanksource/kommons"
 	"github.com/joshdk/go-junit"
 	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/yaml"
 )
 
 func init() {
@@ -27,6 +26,7 @@ const (
 	containerImage = "ubuntu"
 	// time in minutes to wait for the initial pod is completed
 	maxTime = 5
+	podKind = "Pod"
 )
 
 type JunitChecker struct {
@@ -56,15 +56,13 @@ func (c *JunitChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	junitCheck := extConfig.(v1.JunitCheck)
-	if junitCheck.Spec == "" {
-		return Failf(junitCheck, "pod spec not defined")
-	}
-	podDef := strings.ReplaceAll(junitCheck.Spec, "containers", "initContainers")
 	pod := &corev1.Pod{}
-	if err := yaml.Unmarshal([]byte(podDef), pod); err != nil {
-		return Failf(junitCheck, "error parsing the given pod spec: %v", err)
-	}
-
+	pod.APIVersion = corev1.SchemeGroupVersion.Version
+	pod.Kind = podKind
+	pod.Namespace = junitCheck.GetNamespace()
+	pod.Name = junitCheck.GetName()
+	pod.Spec = junitCheck.Spec
+	pod.Spec.InitContainers = pod.Spec.Containers
 	pod.Spec.Containers = getContainers()
 	pod.Spec.Volumes = []corev1.Volume{
 		{

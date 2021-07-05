@@ -21,6 +21,10 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '12'
+      - name: Install yq
+        run: |
+          sudo curl -L https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64 -o /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
       - name: Check auto-generated files
         env:
           CI: false

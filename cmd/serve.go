@@ -51,6 +51,7 @@ var Serve = &cobra.Command{
 		}
 
 		config.SetNamespaces(canaryNamespace)
+		config.SetNames(canaryName)
 		for _, _c := range checks.All {
 			c := _c
 			switch cs := c.(type) {
