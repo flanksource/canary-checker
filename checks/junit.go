@@ -26,7 +26,7 @@ const (
 	containerName  = "junit-results"
 	containerImage = "ubuntu"
 	// time in minutes to wait for the initial pod is completed
-	maxTime = 3
+	maxTime = 5
 )
 
 type JunitChecker struct {
