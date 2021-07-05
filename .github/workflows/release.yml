@@ -8,6 +8,10 @@ jobs:
       image: flanksource/build-tools:v0.12.0
     steps:
       - uses: actions/checkout@v2
+      - name: Install yq
+        run: |
+          sudo curl -L https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64 -o /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
       - run: make release
       - uses: actions/upload-artifact@v2
         with:

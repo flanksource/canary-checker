@@ -235,6 +235,7 @@ func (c CanaryJob) Run() {
 	c.V(2).Info("Starting")
 
 	spec.SetNamespaces(c.Check.Namespace)
+	spec.SetNames(c.Check.Name)
 
 	var results []*pkg.CheckResult
 	for _, check := range checks.All {

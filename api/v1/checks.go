@@ -3,6 +3,8 @@ package v1
 import (
 	"fmt"
 
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/kommons"
 )
@@ -562,6 +564,42 @@ func (c HelmCheck) GetType() string {
 	return "helm"
 }
 
+type JunitCheck struct {
+	Description string `yaml:"description" json:"description,omitempty"`
+	TestResults string `yaml:"testResults" json:"testResults"`
+	// namespace in which canary is created
+	namespace string `yaml:"-" json:"-"`
+	// name of the canary. will be the same for the pod
+	name string     `yaml:"-" json:"-"`
+	Spec v1.PodSpec `yaml:"spec" json:"spec"`
+}
+
+func (c *JunitCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c JunitCheck) GetNamespace() string {
+	return c.namespace
+}
+
+func (c *JunitCheck) SetName(name string) {
+	c.name = name
+}
+
+func (c JunitCheck) GetName() string {
+	return c.name
+}
+
+func (c JunitCheck) GetEndpoint() string {
+	return fmt.Sprintf("file://%s", c.TestResults)
+}
+func (c JunitCheck) GetDescription() string {
+	return c.Description
+}
+func (c JunitCheck) GetType() string {
+	return "junit"
+}
+
 /*
 
 ```yaml
@@ -881,6 +919,30 @@ type Jmeter struct {
 	JmeterCheck `yaml:",inline" json:",inline"`
 }
 
+/*
+Junit check will wait for the given pod to be completed than parses all the xml files present in the defined testResults directory
+```yaml
+junit:
+	- testResults: "/tmp/junit-results/"
+      description: "A sample junit check"
+      spec: |
+         apiVersion: v1
+         kind: Pod
+         metadata:
+          name: junit-results
+          namespace: default
+         spec:
+           containers:
+            - name: jes
+              image: docker.io/tarun18/junit-test-fail
+              command: ["/bin/sh","-c"]
+              args:
+                - "mkdir /tmp/junit-results/;cp /tmp/*.xml /tmp/junit-results/;sleep 10"
+*/
+type Junit struct {
+	JunitCheck `yaml:",inline" json:",inline"`
+}
+
 var AllChecks = []external.Check{
 	HTTPCheck{},
 	TCPCheck{},
@@ -901,4 +963,5 @@ var AllChecks = []external.Check{
 	DNSCheck{},
 	HelmCheck{},
 	JmeterCheck{},
+	JunitCheck{},
 }

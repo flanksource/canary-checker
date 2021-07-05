@@ -13,7 +13,7 @@ require (
 	github.com/denisenkom/go-mssqldb v0.9.0
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
-	github.com/flanksource/commons v1.5.1
+	github.com/flanksource/commons v1.5.6
 	github.com/flanksource/kommons v0.7.1
 	github.com/go-co-op/gocron v0.2.0
 	github.com/go-ldap/ldap/v3 v3.1.7
@@ -22,6 +22,7 @@ require (
 	github.com/go-redis/redis/v8 v8.8.0
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/hashicorp/vault/api v1.0.4
+	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/lib/pq v1.9.0
 	github.com/mitchellh/reflectwalk v1.0.1
 	github.com/ncw/swift v1.0.50
@@ -48,7 +49,7 @@ require (
 	k8s.io/apimachinery v0.20.4
 	k8s.io/client-go v11.0.0+incompatible
 	rsc.io/letsencrypt v0.0.3 // indirect
-	sigs.k8s.io/controller-runtime v0.5.7
+	sigs.k8s.io/controller-runtime v0.8.3
 	sigs.k8s.io/yaml v1.2.0
 )
 

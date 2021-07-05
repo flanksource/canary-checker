@@ -2,7 +2,7 @@
 
 set -ex
 
-export KARINA_VERSION=v0.49.2
+export KARINA_VERSION=v0.50.0
 export KARINA="./karina -c test/config.yaml"
 export KUBECONFIG=~/.kube/config
 export DOCKER_API_VERSION=1.39
