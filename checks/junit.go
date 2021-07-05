@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/rand"
+
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -59,8 +61,17 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	pod := &corev1.Pod{}
 	pod.APIVersion = corev1.SchemeGroupVersion.Version
 	pod.Kind = podKind
-	pod.Namespace = junitCheck.GetNamespace()
-	pod.Name = junitCheck.GetName()
+	if junitCheck.GetNamespace() != "" {
+		pod.Namespace = junitCheck.GetNamespace()
+	} else {
+		pod.Namespace = corev1.NamespaceDefault
+	}
+	if junitCheck.GetName() != "" {
+		pod.Name = junitCheck.GetName()
+	} else {
+		name := rand.String(5)
+		pod.Name = strings.ToLower(name)
+	}
 	pod.Spec = junitCheck.Spec
 	pod.Spec.InitContainers = pod.Spec.Containers
 	pod.Spec.Containers = getContainers()
