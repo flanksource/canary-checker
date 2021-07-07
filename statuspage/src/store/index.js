@@ -136,6 +136,7 @@ export default new Vuex.Store({
                     interval: check.interval,
                     severity: check.severity,
                     owner: check.owner,
+                    displayType: check.displayType,
                     items: [],
                 }
 

@@ -123,7 +123,7 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if len(failedTests) != 0 {
 		return Failf(junitCheck, "the following tests failed %v", failedTests)
 	}
-	return Success(junitCheck, start)
+	return Successf(junitCheck, start, "my custom message")
 }
 
 func getContainers() []corev1.Container {

@@ -1,7 +1,7 @@
 <!-- This component encapsulates the table rows that is displayed -->
 <!-- when clicking on canary                               -->
 <template>
-  <tr :key="key">
+  <tr :key="checkKey">
     <!--  Component modal doc: : https://bootstrap-vue.org/docs/components/modal-->
     <td v-b-modal="`modal-canary${name}${namespace}`">
       <img :src="`images/${checkType}.svg`" :title="checkType " v-bind:style="{ height: '1.25rem' }" :alt="`${checkType} logo`" >  {{ shortDescription }}
@@ -16,7 +16,7 @@
     </td>
     <td v-for="server in orderedServers" :key="server.value" class="align-top border-right border-left">
       <div>
-        <status-strip :checks="items" :server="server.value"
+        <status-strip :checks="items" :server="server.value" :display-type="displayType"
                       color="#28a745" error-color="#dc3545"
                       :bar-width="20" :bar-spacing="5" :barMaxHeight="20"
                       :zoominess="0.85"/>
@@ -39,7 +39,7 @@ export default {
   },
   props: {
     interval: {
-      type: String,
+      type: Number,
       required: true
     },
     owner: {
@@ -74,11 +74,14 @@ export default {
       type: Array,
       required: true
     },
-    key: {
+    checkKey: {
       type: String,
       required: true
     },
-
+    displayType: {
+      type: String,
+      required: true
+    },
   },
 }
 </script>

@@ -1,58 +1,75 @@
 <template>
     <div class="status-strip" >
         <div class="time-bookend" >{{latest}}</div>
+      <template v-if="displayType !== 'Text'">
         <svg
-                xmlns="http://www.w3.org/2000/svg"
-                style="text-wrap: normal;"
-                baseProfile="tiny"
-                version="1.2"
-                :width="fullWidth"
-                :height="barMaxHeight">
-            <g
-                    v-for="(bar, index) in barSet"
-                    :id="'bar-'+barSet[index].key"
-                    :key="keyBar(barSet[index].key)">
-                <!-- This rect is not for visual effect,-->
-                <!-- but makes the following, actual    -->
-                <!-- data bar easier to select when it  -->
-                <!-- is narrow.                         -->
-                <rect
-                        :height="barMaxHeight" :width="barWidth"
-                        :x="barSet[index].x"
-                        :style=" {fill: 'white'}"/>
-                <rect
-                        :height="barSet[index].height" :width="barWidth"
-                        :x="barSet[index].x" :y="barSet[index].y"
-                        :style=" {fill: barSet[index].color}"/>
-            </g>
+             xmlns="http://www.w3.org/2000/svg"
+             style="text-wrap: normal;"
+             baseProfile="tiny"
+             version="1.2"
+             :width="fullWidth"
+             :height="barMaxHeight">
+          <g
+              v-for="(bar, index) in barSet"
+              :id="'bar-'+barSet[index].key"
+              :key="keyBar(barSet[index].key)">
+            <!-- This rect is not for visual effect,-->
+            <!-- but makes the following, actual    -->
+            <!-- data bar easier to select when it  -->
+            <!-- is narrow.                         -->
+            <rect
+                :height="barMaxHeight" :width="barWidth"
+                :x="barSet[index].x"
+                :style=" {fill: 'white'}"/>
+            <rect
+                :height="barSet[index].height" :width="barWidth"
+                :x="barSet[index].x" :y="barSet[index].y"
+                :style=" {fill: barSet[index].color}"/>
+          </g>
         </svg>
-       <div class="time-bookend right" >{{earliest}}</div>
         <bar-popover
-                v-for="bar in barSet"
-                :key="keyPopover(bar.key)"
-                :target="'bar-'+bar.key"
-                :checkStatusKey="bar.key"
-                :description="bar.description"
-                :time="bar.time" :duration="bar.duration"
-                :message="bar.message"
-                :health="bar.health"/>
+            v-for="bar in barSet"
+            :key="keyPopover(bar.key)"
+            :target="'bar-'+bar.key"
+            :checkStatusKey="bar.key"
+            :description="bar.description"
+            :time="bar.time" :duration="bar.duration"
+            :message="bar.message"
+            :health="bar.health"/>
         <check-prometheus
-                v-for="bar in barSet"
-                :key="keyCheck(bar.key)"
-                :checkType="bar.checkType"
-                :check-key="bar.endpoint"
-                :canary-name="bar.canaryName"
-                :target-id="modalName(bar.key)"></check-prometheus>
+            v-for="bar in barSet"
+            :key="keyCheck(bar.key)"
+            :checkType="bar.checkType"
+            :check-key="bar.endpoint"
+            :canary-name="bar.canaryName"
+            :target-id="modalName(bar.key)"></check-prometheus>
+      </template>
+      <template v-else-if="displayType==='Text'">
+        <p v-if="check.checkStatuses[server][0].status"
+           style="color: green"
+           :id=check.key >{{check.checkStatuses[server][0].message}} </p>
+        <p v-else-if="!check.checkStatuses[server][0].status"
+           style="color: red"
+           :id=check.key >{{check.checkStatuses[server][0].message}} </p>
+        <text-popover 
+            :check-statuses="check.checkStatuses[server]"
+            :health="check.health[server]"
+            :target="check.key" :check-name="check.name"
+        />
+      </template>
+       <div class="time-bookend right" >{{earliest}}</div>
     </div>
 </template>
 
 <script>
     import BarPopover from "./BarPopover";
     import CheckPrometheus from "./CheckPrometheus";
+    import TextPopover from "./TextPopover";
 
     export default {
         name: "StatusStrip",
         components: {
+          TextPopover,
             BarPopover,
             CheckPrometheus,
         },
@@ -65,6 +82,11 @@
             server: {
                 type: String,
                 required: true,
+            },
+            displayType: {
+              type: String,
+              required: false,
+              default: "Bar"
             },
             color: {
                 type: String,

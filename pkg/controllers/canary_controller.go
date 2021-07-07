@@ -191,6 +191,7 @@ func (r *CanaryReconciler) Report(key types.NamespacedName, results []*pkg.Check
 			check.Status.LastTransitionedTime = &metav1.Time{Time: time.Now()}
 		}
 		pass = pass && result.Pass
+		check.Status.Message = &result.Message
 	}
 	if pass {
 		check.Status.Status = &v1.Passed

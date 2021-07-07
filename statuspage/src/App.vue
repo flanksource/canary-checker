@@ -30,6 +30,8 @@
                                  :namespace="check.namespace"
                                  :short-description="shortHand(checkName(check),60)"
                                  :items="check.items"
+                                 :display-type="check.displayType"
+                                 :check-key="checkKey(check)"
                                  :key="checkKey(check)"
                                  />
                 </template>

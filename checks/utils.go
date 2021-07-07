@@ -45,6 +45,17 @@ func Success(check external.Check, start time.Time) *pkg.CheckResult {
 	}
 }
 
+func Successf(check external.Check, start time.Time, msg string, args ...interface{}) *pkg.CheckResult {
+	return &pkg.CheckResult{
+		Check:    check,
+		Pass:     true,
+		DisplayType: "Text",
+		Invalid:  false,
+		Message: fmt.Sprintf(msg, args...),
+		Duration: time.Since(start).Milliseconds(),
+	}
+}
+
 func Passf(check external.Check, msg string, args ...interface{}) *pkg.CheckResult {
 	return &pkg.CheckResult{
 		Check:   check,
