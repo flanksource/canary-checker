@@ -1,10 +1,9 @@
 <template>
-  <b-popover style="min-width: 100%"
+  <b-popover
       :target="target"
-      container="myContainer"
-      triggers="hover"
+      triggers="click"
       placement="top"
-      custom-class="wide-popover"
+      custom-class="text-popover-wide"
       :delay="{ show: 150, hide: 0 }"
       boundary="window"
       boundary-padding="100"
@@ -26,7 +25,7 @@
             <td>{{status.duration / 1000}}s</td>
             <td>{{ timeago(status.time, false) }} Ago</td>
             <td v-if="status.status" style="color: green">{{status.message}}</td>
-            <td v-if="!status.status" style="color: red">{{status.message}}</td>
+            <td v-if="!status.status" style="color: red" class="pre-formatted">{{status.message}}</td>
           </tr>
         </template>
       </table>
@@ -74,5 +73,10 @@ export default {
 }
 </script>
 <style>
-.wide-popover { max-width: 1000px; min-width: 500px }
+.text-popover-wide {
+  max-width: 100%; min-width: 32.5rem; max-height: 100%;
+}
+.pre-formatted {
+  white-space: pre;
+}
 </style>

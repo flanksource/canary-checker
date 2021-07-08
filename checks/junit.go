@@ -114,10 +114,14 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		allTestSuite = append(allTestSuite, testSuite...)
 	}
 	//initializing results map with 0 values
+	var failedTests = make(map[string]string)
 	var results = map[junit.Status]int{junit.StatusFailed: 0, junit.StatusPassed: 0, junit.StatusSkipped: 0, junit.StatusError: 0}
-	for _, result := range allTestSuite {
-		for _, test := range result.Tests {
+	for _, suite := range allTestSuite {
+		for _, test := range suite.Tests {
 			results[test.Status] += 1
+			if test.Status == junit.StatusFailed {
+				failedTests[suite.Name+"/"+test.Name] = failedTests[test.Message]
+			}
 		}
 	}
 	message, err := text.Template(junitCheck.GetTemplate(), results)
@@ -125,6 +129,11 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		return TextFailf(junitCheck, "error templating the message: %v", err)
 	}
 	if results[junit.StatusFailed] != 0 {
+		failMessage := ""
+		for testName, testMessage := range failedTests {
+			failMessage = failMessage + "\n"+testName+":"+testMessage
+		}
+		message=message+failMessage
 		return TextFailf(junitCheck, message)
 	}
 	return Successf(junitCheck, start, message)

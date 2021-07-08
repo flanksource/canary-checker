@@ -65,6 +65,7 @@ func (c *S3BucketChecker) Type() string {
 }
 
 func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
+	//start := time.Now()
 	bucket := extConfig.(v1.S3BucketCheck)
 	if _, err := DNSLookup(bucket.Endpoint); err != nil {
 		return unexpectedErrorf(bucket, err, "failed to resolve DNS")
@@ -154,6 +155,6 @@ func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if bucket.MinSize > 0 && latestObjectSize < bucket.MinSize {
 		return Failf(bucket, "Latest object is %s required at least %s", mb(latestObjectSize), mb(bucket.MinSize))
 	}
-
+	//var results = map[string]string{"maxAge":}
 	return Passf(bucket, fmt.Sprintf("maxAge=%s size=%s objects=%d totalSize=%s", age(latestObjectAge), mb(latestObjectSize), objects, mb(totalSize)))
 }

@@ -49,7 +49,7 @@
            style="color: green"
            :id=check.key >{{check.checkStatuses[server][0].message}} </p>
         <p v-else-if="!check.checkStatuses[server][0].status"
-           style="color: red"
+           style="color: red;" class="one-line-output pre-formatted"
            :id=check.key >{{check.checkStatuses[server][0].message}} </p>
         <text-popover 
             :check-statuses="check.checkStatuses[server]"
@@ -316,6 +316,13 @@
         vertical-align: middle;
         font-size: xx-small;
         padding: 0.5em 1em;
+    }
+    .one-line-output {
+      height: 1.5em;
+      overflow-y: hidden;
+    }
+    .pre-formatted {
+      white-space: pre;
     }
 </style>
 
