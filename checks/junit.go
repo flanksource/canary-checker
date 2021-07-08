@@ -2,11 +2,11 @@ package checks
 
 import (
 	"fmt"
-	"github.com/flanksource/commons/text"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/flanksource/commons/text"
 	"k8s.io/apimachinery/pkg/util/rand"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -58,7 +58,11 @@ func (c *JunitChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 
 func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
+	var textResults bool
 	junitCheck := extConfig.(v1.JunitCheck)
+	if junitCheck.GetTemplate() != "" {
+		textResults = true
+	}
 	pod := &corev1.Pod{}
 	pod.APIVersion = corev1.SchemeGroupVersion.Version
 	pod.Kind = podKind
@@ -88,28 +92,28 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	pod.Spec.Containers[0].VolumeMounts = getVolumeMount(volumeName, mounthPath)
 	err := c.kommons.Apply(pod.Namespace, pod)
 	if err != nil {
-		return TextFailf(junitCheck, "error creating pod: %v", err)
+		return TextFailf(junitCheck, textResults, "error creating pod: %v", err)
 	}
 	defer c.kommons.DeleteByKind(pod.Kind, pod.Namespace, pod.Name) // nolint: errcheck
 	logger.Tracef("waiting for pod to be ready")
 	err = c.kommons.WaitForPod(pod.Namespace, pod.Name, maxTime*time.Minute, corev1.PodRunning)
 	if err != nil {
-		return TextFailf(junitCheck, "error waiting for pod: %v", err)
+		return TextFailf(junitCheck, textResults, "error waiting for pod: %v", err)
 	}
 	files, stderr, err := c.kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", fmt.Sprintf("find %v -name \\*.xml -type f", mounthPath))
 	if stderr != "" || err != nil {
-		return TextFailf(junitCheck, "error fetching test files: %v %v", stderr, err)
+		return TextFailf(junitCheck, textResults, "error fetching test files: %v %v", stderr, err)
 	}
 	files = strings.TrimSpace(files)
 	var allTestSuite []junit.Suite
 	for _, file := range strings.Split(files, "\n") {
 		output, stderr, err := c.kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "cat", file)
 		if stderr != "" || err != nil {
-			return TextFailf(junitCheck, "error reading results: %v %v", stderr, err)
+			return TextFailf(junitCheck, textResults, "error reading results: %v %v", stderr, err)
 		}
 		testSuite, err := junit.Ingest([]byte(output))
 		if err != nil {
-			return TextFailf(junitCheck, "error parsing the result file")
+			return TextFailf(junitCheck, textResults, "error parsing the result file")
 		}
 		allTestSuite = append(allTestSuite, testSuite...)
 	}
@@ -126,17 +130,17 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 	message, err := text.Template(junitCheck.GetTemplate(), results)
 	if err != nil {
-		return TextFailf(junitCheck, "error templating the message: %v", err)
+		return TextFailf(junitCheck, textResults, "error templating the message: %v", err)
 	}
 	if results[junit.StatusFailed] != 0 {
 		failMessage := ""
 		for testName, testMessage := range failedTests {
-			failMessage = failMessage + "\n"+testName+":"+testMessage
+			failMessage = failMessage + "\n" + testName + ":" + testMessage
 		}
-		message=message+failMessage
-		return TextFailf(junitCheck, message)
+		message = message + failMessage
+		return TextFailf(junitCheck, textResults, message)
 	}
-	return Successf(junitCheck, start, message)
+	return Successf(junitCheck, start, textResults, message)
 }
 
 func getContainers() []corev1.Container {
