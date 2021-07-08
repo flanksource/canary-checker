@@ -455,6 +455,9 @@ spec:
                     properties:
                       description:
                         type: string
+                      displayTemplate:
+                        description: 'DisplayTemplate represents the output format for the results. Example: ''Passed: {{.passed}} Failed: {{.failed}}'''
+                        type: string
                       spec:
                         description: PodSpec is a description of a pod.
                         properties:

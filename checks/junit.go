@@ -2,6 +2,7 @@ package checks
 
 import (
 	"fmt"
+	"github.com/flanksource/commons/text"
 	"path/filepath"
 	"strings"
 	"time"
@@ -87,43 +88,46 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	pod.Spec.Containers[0].VolumeMounts = getVolumeMount(volumeName, mounthPath)
 	err := c.kommons.Apply(pod.Namespace, pod)
 	if err != nil {
-		return Failf(junitCheck, "error creating pod: %v", err)
+		return TextFailf(junitCheck, "error creating pod: %v", err)
 	}
 	defer c.kommons.DeleteByKind(pod.Kind, pod.Namespace, pod.Name) // nolint: errcheck
 	logger.Tracef("waiting for pod to be ready")
 	err = c.kommons.WaitForPod(pod.Namespace, pod.Name, maxTime*time.Minute, corev1.PodRunning)
 	if err != nil {
-		return Failf(junitCheck, "error waiting for pod: %v", err)
+		return TextFailf(junitCheck, "error waiting for pod: %v", err)
 	}
 	files, stderr, err := c.kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", fmt.Sprintf("find %v -name \\*.xml -type f", mounthPath))
 	if stderr != "" || err != nil {
-		return Failf(junitCheck, "error fetching test files: %v %v", stderr, err)
+		return TextFailf(junitCheck, "error fetching test files: %v %v", stderr, err)
 	}
 	files = strings.TrimSpace(files)
 	var allTestSuite []junit.Suite
 	for _, file := range strings.Split(files, "\n") {
 		output, stderr, err := c.kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "cat", file)
 		if stderr != "" || err != nil {
-			return Failf(junitCheck, "error reading results: %v %v", stderr, err)
+			return TextFailf(junitCheck, "error reading results: %v %v", stderr, err)
 		}
 		testSuite, err := junit.Ingest([]byte(output))
 		if err != nil {
-			return Failf(junitCheck, "error parsing the result file")
+			return TextFailf(junitCheck, "error parsing the result file")
 		}
 		allTestSuite = append(allTestSuite, testSuite...)
 	}
-	var failedTests = make(map[string]string)
+	//initializing results map with 0 values
+	var results = map[junit.Status]int{junit.StatusFailed: 0, junit.StatusPassed: 0, junit.StatusSkipped: 0, junit.StatusError: 0}
 	for _, result := range allTestSuite {
 		for _, test := range result.Tests {
-			if test.Status == junit.StatusFailed || test.Status == junit.StatusError {
-				failedTests[test.Name] = test.Message
-			}
+			results[test.Status] += 1
 		}
 	}
-	if len(failedTests) != 0 {
-		return Failf(junitCheck, "the following tests failed %v", failedTests)
+	message, err := text.Template(junitCheck.GetTemplate(), results)
+	if err != nil {
+		return TextFailf(junitCheck, "error templating the message: %v", err)
 	}
-	return Successf(junitCheck, start, "my custom message")
+	if results[junit.StatusFailed] != 0 {
+		return TextFailf(junitCheck, message)
+	}
+	return Successf(junitCheck, start, message)
 }
 
 func getContainers() []corev1.Container {

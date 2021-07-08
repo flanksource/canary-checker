@@ -572,6 +572,16 @@ type JunitCheck struct {
 	// name of the canary. will be the same for the pod
 	name string     `yaml:"-" json:"-"`
 	Spec v1.PodSpec `yaml:"spec" json:"spec"`
+	//DisplayTemplate represents the output format for the results. Example: 'Passed: {{.passed}} Failed: {{.failed}} Skipped: {{.skipped}} Error: {{.error}}'.
+	//Defaults to 'Passed: {{.passed}} Failed: {{.failed}}'
+	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
+}
+
+func (c JunitCheck) GetTemplate() string {
+	if c.DisplayTemplate != "" {
+		return c.DisplayTemplate
+	}
+	return "Passed: {{.passed}} Failed: {{.failed}}"
 }
 
 func (c *JunitCheck) SetNamespace(namespace string) {
