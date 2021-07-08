@@ -25,7 +25,7 @@
             <td>{{status.duration / 1000}}s</td>
             <td>{{ timeago(status.time, false) }} Ago</td>
             <td v-if="status.status" style="color: green">{{status.message}}</td>
-            <td v-if="!status.status" style="color: red" class="pre-formatted">{{status.message}}</td>
+            <td v-if="!status.status" style="color: red" class="text-pre-formatted">{{status.message}}</td>
           </tr>
         </template>
       </table>
@@ -76,7 +76,7 @@ export default {
 .text-popover-wide {
   max-width: 100%; min-width: 32.5rem; max-height: 100%;
 }
-.pre-formatted {
+.text-pre-formatted {
   white-space: pre;
 }
 </style>

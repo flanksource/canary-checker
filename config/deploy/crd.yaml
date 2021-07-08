@@ -456,7 +456,7 @@ spec:
                       description:
                         type: string
                       displayTemplate:
-                        description: 'DisplayTemplate represents the output format for the results. Example: ''Passed: {{.passed}} Failed: {{.failed}}'''
+                        description: 'DisplayTemplate represents the output format for the results. Example: ''Passed: {{.passed}} Failed: {{.failed}} Skipped: {{.skipped}} Error: {{.error}}''. Defaults to ''Passed: {{.passed}}, Failed: {{.failed}}'''
                         type: string
                       spec:
                         description: PodSpec is a description of a pod.
@@ -4447,6 +4447,9 @@ spec:
                       bucket:
                         type: string
                       description:
+                        type: string
+                      displayTemplate:
+                        description: DisplayTemplate represents the output format for the test results
                         type: string
                       endpoint:
                         type: string

@@ -154,8 +154,16 @@ type S3BucketCheck struct {
 	UsePathStyle bool `yaml:"usePathStyle" json:"usePathStyle,omitempty"`
 	// Skip TLS verify when connecting to s3
 	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
+	// DisplayTemplate represents the output format for the test results. Example: 'Size: {{.size}}; Age: {{.maxAge}}; Count: {{.count}}; TotalSize: {{.totalSize}}'
+	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
+func (c S3BucketCheck) GetDisplayTemplate() string {
+	if c.DisplayTemplate != "" {
+		return c.DisplayTemplate
+	}
+	return "Size: {{.size}}; Age: {{.maxAge}}; Count: {{.count}}; TotalSize: {{.totalSize}}"
+}
 func (c S3BucketCheck) GetEndpoint() string {
 	return fmt.Sprintf("%s/%s", c.Endpoint, c.Bucket)
 }
@@ -577,7 +585,7 @@ type JunitCheck struct {
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
-func (c JunitCheck) GetTemplate() string {
+func (c JunitCheck) GetDisplayTemplate() string {
 	if c.DisplayTemplate != "" {
 		return c.DisplayTemplate
 	}

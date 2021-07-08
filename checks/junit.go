@@ -60,7 +60,7 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	var textResults bool
 	junitCheck := extConfig.(v1.JunitCheck)
-	if junitCheck.GetTemplate() != "" {
+	if junitCheck.GetDisplayTemplate() != "" {
 		textResults = true
 	}
 	pod := &corev1.Pod{}
@@ -128,7 +128,7 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 			}
 		}
 	}
-	message, err := text.Template(junitCheck.GetTemplate(), results)
+	message, err := text.Template(junitCheck.GetDisplayTemplate(), results)
 	if err != nil {
 		return TextFailf(junitCheck, textResults, "error templating the message: %v", err)
 	}
