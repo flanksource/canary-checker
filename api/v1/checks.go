@@ -48,6 +48,13 @@ type HTTPCheck struct {
 	// specNamespace is the namespace in which the canary was deployed, and which
 	// configmap/secret lookups will be constrained to
 	specNamespace string `yaml:"-" json:"-"`
+	// DisplayTemplate defines the output format. When set the result of the canary will be displayed in the text format.
+	// Example 'Response Codes [[.code]]'
+	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
+}
+
+func (c HTTPCheck) GetDisplayTemplate() string {
+	return c.DisplayTemplate
 }
 
 func (c *HTTPCheck) SetNamespace(namespace string) {
@@ -154,7 +161,7 @@ type S3BucketCheck struct {
 	UsePathStyle bool `yaml:"usePathStyle" json:"usePathStyle,omitempty"`
 	// Skip TLS verify when connecting to s3
 	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
-	// DisplayTemplate represents the output format for the test results. Example: 'Size: {{.size}}; Age: {{.maxAge}}; Count: {{.count}}; TotalSize: {{.totalSize}}'
+	// DisplayTemplate represents the output format for the test results. Example: 'Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -162,7 +169,7 @@ func (c S3BucketCheck) GetDisplayTemplate() string {
 	if c.DisplayTemplate != "" {
 		return c.DisplayTemplate
 	}
-	return "Size: {{.size}}; Age: {{.maxAge}}; Count: {{.count}}; TotalSize: {{.totalSize}}"
+	return "Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]"
 }
 func (c S3BucketCheck) GetEndpoint() string {
 	return fmt.Sprintf("%s/%s", c.Endpoint, c.Bucket)
@@ -580,7 +587,7 @@ type JunitCheck struct {
 	// name of the canary. will be the same for the pod
 	name string     `yaml:"-" json:"-"`
 	Spec v1.PodSpec `yaml:"spec" json:"spec"`
-	//DisplayTemplate represents the output format for the results. Example: 'Passed: {{.passed}} Failed: {{.failed}} Skipped: {{.skipped}} Error: {{.error}}'.
+	//DisplayTemplate represents the output format for the results. Example: 'Passed: [[.passed]] Failed: [[.failed]] Skipped: [[.skipped]] Error: [[.error]]'.
 	//Defaults to 'Passed: {{.passed}}, Failed: {{.failed}}'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
@@ -589,7 +596,7 @@ func (c JunitCheck) GetDisplayTemplate() string {
 	if c.DisplayTemplate != "" {
 		return c.DisplayTemplate
 	}
-	return "Passed: {{.passed}}, Failed: {{.failed}}"
+	return "Passed: [[.passed]], Failed: [[.failed]]"
 }
 
 func (c *JunitCheck) SetNamespace(namespace string) {

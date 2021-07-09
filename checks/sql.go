@@ -29,7 +29,7 @@ func querySQL(driver string, connectionSting string, query string) (int, error) 
 	for rows.Next() {
 		count++
 	}
-
+	rows.Scan()
 	return count, nil
 }
 

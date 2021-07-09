@@ -153,8 +153,8 @@ func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	bucketScanLastWrite.WithLabelValues(bucket.Endpoint, bucket.Bucket).Set(float64(latestObject.LastModified.Unix()))
 	latestObjectSize := aws.Int64Value(latestObject.Size)
 
-	var results = map[string]string{"maxAge": age(latestObjectAge), "size":  mb(latestObjectSize), "count":  strconv.Itoa(objects), "totalSize": mb(totalSize)}
-	message, err := text.Template(bucket.GetDisplayTemplate(), results)
+	var results = map[string]string{"maxAge": age(latestObjectAge), "size": mb(latestObjectSize), "count": strconv.Itoa(objects), "totalSize": mb(totalSize)}
+	message, err := text.TemplateWithDelims(bucket.GetDisplayTemplate(), "[[", "]]", results)
 	if err != nil {
 		return TextFailf(bucket, textResults, "error templating the message: %v", err)
 	}

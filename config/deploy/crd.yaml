@@ -289,6 +289,8 @@ spec:
                         type: string
                       description:
                         type: string
+                      displayTemplate:
+                        type: string
                       endpoint:
                         description: HTTP endpoint to check.  Mutually exclusive with Namespace
                         type: string
@@ -4449,7 +4451,7 @@ spec:
                       description:
                         type: string
                       displayTemplate:
-                        description: DisplayTemplate represents the output format for the test results
+                        description: 'DisplayTemplate represents the output format for the test results. Example: ''Size: {{.size}}; Age: {{.maxAge}}; Count: {{.count}}; TotalSize: {{.totalSize}}'''
                         type: string
                       endpoint:
                         type: string

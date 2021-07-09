@@ -46,7 +46,7 @@
       </template>
       <template v-else-if="displayType==='Text'">
         <p v-if="check.checkStatuses[server][0].status"
-           style="color: green"
+           style="color: green" class="pre-formatted"
            :id=check.key >{{firstLine(check.checkStatuses[server][0].message)}} </p>
         <p v-else-if="!check.checkStatuses[server][0].status"
            style="color: red;" class="pre-formatted"

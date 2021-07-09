@@ -128,7 +128,7 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 			}
 		}
 	}
-	message, err := text.Template(junitCheck.GetDisplayTemplate(), results)
+	message, err := text.TemplateWithDelims(junitCheck.GetDisplayTemplate(), "[[", "]]", results)
 	if err != nil {
 		return TextFailf(junitCheck, textResults, "error templating the message: %v", err)
 	}

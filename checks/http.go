@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/flanksource/commons/text"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -83,11 +84,15 @@ func (c *HTTPChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	endpoint := check.Endpoint
 	namespace := check.Namespace
 	specNamespace := check.GetNamespace()
+	var textResults bool
+	if check.GetDisplayTemplate() != "" {
+		textResults = true
+	}
 
 	if endpoint == "" && namespace == "" {
-		return Failf(check, "One of Namespace or Endpoint must be specified")
+		return TextFailf(check, textResults, "One of Namespace or Endpoint must be specified")
 	} else if endpoint != "" && namespace != "" {
-		return Failf(check, "Namespace and Endpoint are mutually exclusive, only one may be specified")
+		return TextFailf(check, textResults, "Namespace and Endpoint are mutually exclusive, only one may be specified")
 	}
 	if namespace == "*" {
 		namespace = metav1.NamespaceAll
@@ -97,21 +102,21 @@ func (c *HTTPChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		var err error
 		lookupResult, err = DNSLookup(endpoint)
 		if err != nil {
-			return Failf(check, "failed to resolve DNS for %s", endpoint)
+			return TextFailf(check, textResults, "failed to resolve DNS for %s", endpoint)
 		}
 	} else {
 		k8sClient, err := pkg.NewK8sClient()
 		if err != nil {
-			return Failf(check, fmt.Sprintf("Unable to connect to k8s: %v", err))
+			return TextFailf(check, textResults, fmt.Sprintf("Unable to connect to k8s: %v", err))
 		}
 		serviceList, err := k8sClient.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
-			return Failf(check, fmt.Sprintf("failed to obtain service list for namespace %v: %v", namespace, err))
+			return TextFailf(check, textResults, fmt.Sprintf("failed to obtain service list for namespace %v: %v", namespace, err))
 		}
 		for _, service := range serviceList.Items {
 			endPoints, err := k8sClient.CoreV1().Endpoints(namespace).Get(context.TODO(), service.Name, metav1.GetOptions{})
 			if err != nil {
-				return Failf(check, fmt.Sprintf("Failed to obtain endpoints for service %v: %v", service.Name, err))
+				return TextFailf(check, textResults, fmt.Sprintf("Failed to obtain endpoints for service %v: %v", service.Name, err))
 			}
 
 			for _, endPoint := range endPoints.Subsets {
@@ -133,17 +138,17 @@ func (c *HTTPChecker) Check(extConfig external.Check) *pkg.CheckResult {
 
 	username, password, err := c.ParseAuth(check)
 	if err != nil {
-		return Failf(check, "Failed to lookup authentication info %v:", err)
+		return TextFailf(check, textResults, "Failed to lookup authentication info %v:", err)
 	}
 	var headers map[string]string
 	kommons := c.GetClient()
 	for _, header := range check.Headers {
 		if kommons == nil {
-			return Failf(check, "Kommons client not set for HTTPChecker instance")
+			return TextFailf(check, textResults, "Kommons client not set for HTTPChecker instance")
 		}
 		key, value, err := kommons.GetEnvValue(header, specNamespace)
 		if err != nil {
-			return Failf(check, "Failed to parse header value: %v", err)
+			return TextFailf(check, textResults, "Failed to parse header value: %v", err)
 		}
 		if headers == nil {
 			headers = map[string]string{key: value}
@@ -164,60 +169,92 @@ func (c *HTTPChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		urlObj.Password = password
 		checkResults, err := c.checkHTTP(urlObj, check.NTLM)
 		if err != nil {
-			return invalidErrorf(check, err, "")
+			return TextFailf(check, textResults, err.Error())
 		}
+		var results = map[string]interface{}{"code": strconv.Itoa(checkResults.ResponseCode), "content": checkResults.Content, "header": headers}
+		var message string
 		rcOK := false
 		for _, rc := range check.ResponseCodes {
 			if rc == checkResults.ResponseCode {
 				rcOK = true
 			}
 		}
-
+		if check.GetDisplayTemplate() != "" {
+			message, err = text.TemplateWithDelims(check.GetDisplayTemplate(), "[[", "]]", results)
+		}
 		if !rcOK {
-			return Failf(check, "response code invalid %d != %v", checkResults.ResponseCode, check.ResponseCodes)
+			failMessage := fmt.Sprintf("\nresponse code invalid %d != %v", checkResults.ResponseCode, check.ResponseCodes)
+			return TextFailf(check, textResults, message+failMessage)
 		}
 
 		if check.ThresholdMillis > 0 && check.ThresholdMillis < int(checkResults.ResponseTime) {
-			return Failf(check, "threshold exceeded %d > %d", checkResults.ResponseTime, check.ThresholdMillis)
+			failMessage := fmt.Sprintf("\nthreshold exceeded %d > %d", checkResults.ResponseTime, check.ThresholdMillis)
+			return TextFailf(check, textResults, message+failMessage)
 		}
 		if check.ResponseContent != "" && !strings.Contains(checkResults.Content, check.ResponseContent) {
-			return Failf(check, "Expected %v, found %v", check.ResponseContent, checkResults.Content)
+			failMessage := fmt.Sprintf("\nExpected %v, found %v", check.ResponseContent, checkResults.Content)
+			return TextFailf(check, textResults, message+failMessage)
 		}
 		if check.ResponseJSONContent.Path != "" {
 			var jsonContent interface{}
 			if err = json.Unmarshal([]byte(checkResults.Content), &jsonContent); err != nil {
-				return Failf(check, "Could not unmarshal response for json check: %v ", err)
+				failMessage := fmt.Sprintf("\nCould not unmarshal response for json check: %v ", err)
+				return TextFailf(check, textResults, message+failMessage)
 			}
 
 			jsonResult, err := jsonpath.Get(check.ResponseJSONContent.Path, jsonContent)
 			if err != nil {
-				return Failf(check, "Could not extract path %v from response %v: %v", check.ResponseJSONContent.Path, jsonContent, err)
+				failMessage := fmt.Sprintf("\nCould not extract path %v from response %v: %v", check.ResponseJSONContent.Path, jsonContent, err)
+				return TextFailf(check, textResults, message+failMessage)
 			}
 			switch s := jsonResult.(type) {
 			case string:
 				if s != check.ResponseJSONContent.Value {
-					return Failf(check, "%v not equal to %v", s, check.ResponseJSONContent.Value)
+					failMessage := fmt.Sprintf("\n%v not equal to %v", s, check.ResponseJSONContent.Value)
+					return TextFailf(check, textResults, message+failMessage)
 				}
 			case fmt.Stringer:
 				if s.String() != check.ResponseJSONContent.Value {
-					return Failf(check, "%v not equal to %v", s.String(), check.ResponseJSONContent.Value)
+					failMessage := fmt.Sprintf("\n%v not equal to %v", s.String(), check.ResponseJSONContent.Value)
+					return TextFailf(check, textResults, message+failMessage)
 				}
 			default:
-				return Failf(check, "json response could not be parsed back to string")
+				return TextFailf(check, textResults, message+"\njson response could not be parsed back to string")
 			}
 		}
 		if urlObj.Scheme == "https" && check.MaxSSLExpiry > checkResults.SSLExpiry {
-			return Failf(check, "SSL certificate expires soon %d > %d", checkResults.SSLExpiry, check.MaxSSLExpiry)
+			failMessage := fmt.Sprintf("\nSSL certificate expires soon %d > %d", checkResults.SSLExpiry, check.MaxSSLExpiry)
+			return TextFailf(check, textResults, failMessage)
 		}
 
 		responseStatus.WithLabelValues(strconv.Itoa(checkResults.ResponseCode), statusCodeToClass(checkResults.ResponseCode), endpoint).Inc()
 		sslExpiration.WithLabelValues(endpoint).Set(float64(checkResults.SSLExpiry))
 
+		if !textResults {
+			return &pkg.CheckResult{ // nolint: staticcheck
+				Check:    check,
+				Pass:     true,
+				Duration: checkResults.ResponseTime,
+				Invalid:  false,
+				Metrics: []pkg.Metric{
+					{
+						Name: "response_code",
+						Type: metrics.CounterType,
+						Labels: map[string]string{
+							"code":     strconv.Itoa(checkResults.ResponseCode),
+							"endpoint": endpoint,
+						},
+					},
+				},
+			}
+		}
 		return &pkg.CheckResult{ // nolint: staticcheck
-			Check:    check,
-			Pass:     true,
-			Duration: checkResults.ResponseTime,
-			Invalid:  false,
+			Check:       check,
+			Pass:        true,
+			Duration:    checkResults.ResponseTime,
+			Invalid:     false,
+			DisplayType: "Text",
+			Message:     message,
 			Metrics: []pkg.Metric{
 				{
 					Name: "response_code",
