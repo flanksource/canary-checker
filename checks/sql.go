@@ -60,33 +60,36 @@ func CheckSQL(check v1.SQLCheck) *pkg.CheckResult { // nolint: golint
 	template := check.GetDisplayTemplate()
 	count, result, err := querySQL(check.GetDriver(), check.GetConnection(), check.GetQuery())
 	if err != nil {
-		return failf(check, textResults, template, "failed to execute query %s", err)
+		return sqlFailF(check, textResults, template, "failed to execute query %s", err)
 	}
 	if count != check.Result || count == 0 {
-		return failf(check, textResults, template, "expected %d results, got %d", check.GetResult(), count)
+		return sqlFailF(check, textResults, template, "expected %d results, got %d", check.GetResult(), count)
 	}
 	results := map[string]interface{}{"results": result}
 	if check.ResultsFunction != "" {
 		success, err := text.TemplateWithDelims(check.ResultsFunction, "[[", "]]", results)
 		if err != nil {
-			failf(check, textResults, template, "error templating %v", err)
+			sqlFailF(check, textResults, template, "error templating %v", err)
 		}
 		if success == "false" || success == "False" {
-			failf(check, textResults, template, "result function returned %v", success)
+			sqlFailF(check, textResults, template, "result function returned %v", success)
 		}
 	}
-	message := templateResult(check.GetDisplayTemplate(), results)
+	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
+	if err != nil {
+		sqlFailF(check, textResults, template, "error templating")
+	}
 	return Successf(check, start, textResults, message)
 }
 
-func failf(check external.Check, textResults bool, template, msg string, args ...interface{}) *pkg.CheckResult {
+func sqlFailF(check external.Check, textResults bool, template, msg string, args ...interface{}) *pkg.CheckResult {
 	var results = map[string]interface{}{"results": []string{"null"}}
-	message := templateResult(template, results)
+	message := sqlTemplateResult(template, results)
 	message = message + "\n" + fmt.Sprintf(msg, args...)
 	return TextFailf(check, textResults, message)
 }
 
-func templateResult(template string, results map[string]interface{}) (message string) {
+func sqlTemplateResult(template string, results map[string]interface{}) (message string) {
 	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
 	if err != nil {
 		message = message + "\n" + err.Error()

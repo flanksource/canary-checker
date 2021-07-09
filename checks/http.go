@@ -55,6 +55,12 @@ type HTTPChecker struct {
 	kommons *kommons.Client `yaml:"-" json:"-"`
 }
 
+type HTTPStatus struct {
+	responseCode int
+	content      string
+	headers      map[string]string
+}
+
 // Type: returns checker type
 func (c *HTTPChecker) Type() string {
 	return "http"
@@ -89,11 +95,12 @@ func (c *HTTPChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if check.GetDisplayTemplate() != "" {
 		textResults = true
 	}
-
+	template := check.GetDisplayTemplate()
+	var httpStatus HTTPStatus
 	if endpoint == "" && namespace == "" {
-		return TextFailf(check, textResults, "One of Namespace or Endpoint must be specified")
+		return httpFailF(check, textResults, httpStatus, template, "One of Namespace or Endpoint must be specified")
 	} else if endpoint != "" && namespace != "" {
-		return TextFailf(check, textResults, "Namespace and Endpoint are mutually exclusive, only one may be specified")
+		return httpFailF(check, textResults, httpStatus, template, "Namespace and Endpoint are mutually exclusive, only one may be specified")
 	}
 	if namespace == "*" {
 		namespace = metav1.NamespaceAll
@@ -103,21 +110,21 @@ func (c *HTTPChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		var err error
 		lookupResult, err = DNSLookup(endpoint)
 		if err != nil {
-			return TextFailf(check, textResults, "failed to resolve DNS for %s", endpoint)
+			return httpFailF(check, textResults, httpStatus, template, "failed to resolve DNS for %s", endpoint)
 		}
 	} else {
 		k8sClient, err := pkg.NewK8sClient()
 		if err != nil {
-			return TextFailf(check, textResults, fmt.Sprintf("Unable to connect to k8s: %v", err))
+			return httpFailF(check, textResults, httpStatus, template, fmt.Sprintf("Unable to connect to k8s: %v", err))
 		}
 		serviceList, err := k8sClient.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
-			return TextFailf(check, textResults, fmt.Sprintf("failed to obtain service list for namespace %v: %v", namespace, err))
+			return httpFailF(check, textResults, httpStatus, template, fmt.Sprintf("failed to obtain service list for namespace %v: %v", namespace, err))
 		}
 		for _, service := range serviceList.Items {
 			endPoints, err := k8sClient.CoreV1().Endpoints(namespace).Get(context.TODO(), service.Name, metav1.GetOptions{})
 			if err != nil {
-				return TextFailf(check, textResults, fmt.Sprintf("Failed to obtain endpoints for service %v: %v", service.Name, err))
+				return httpFailF(check, textResults, httpStatus, template, fmt.Sprintf("Failed to obtain endpoints for service %v: %v", service.Name, err))
 			}
 
 			for _, endPoint := range endPoints.Subsets {
@@ -139,17 +146,17 @@ func (c *HTTPChecker) Check(extConfig external.Check) *pkg.CheckResult {
 
 	username, password, err := c.ParseAuth(check)
 	if err != nil {
-		return TextFailf(check, textResults, "Failed to lookup authentication info %v:", err)
+		return httpFailF(check, textResults, httpStatus, template, "Failed to lookup authentication info %v:", err)
 	}
 	var headers map[string]string
 	kommons := c.GetClient()
 	for _, header := range check.Headers {
 		if kommons == nil {
-			return TextFailf(check, textResults, "Kommons client not set for HTTPChecker instance")
+			return httpFailF(check, textResults, httpStatus, template, "Kommons client not set for HTTPChecker instance")
 		}
 		key, value, err := kommons.GetEnvValue(header, specNamespace)
 		if err != nil {
-			return TextFailf(check, textResults, "Failed to parse header value: %v", err)
+			return httpFailF(check, textResults, httpStatus, template, "Failed to parse header value: %v", err)
 		}
 		if headers == nil {
 			headers = map[string]string{key: value}
@@ -170,67 +177,61 @@ func (c *HTTPChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		urlObj.Password = password
 		checkResults, err := c.checkHTTP(urlObj, check.NTLM)
 		if err != nil {
-			return TextFailf(check, textResults, err.Error())
+			return httpFailF(check, textResults, httpStatus, template, err.Error())
 		}
-		var results = map[string]interface{}{"code": strconv.Itoa(checkResults.ResponseCode), "content": checkResults.Content, "header": headers}
-		var message string
+		httpStatus.headers = headers
+		httpStatus.responseCode = checkResults.ResponseCode
+		httpStatus.content = checkResults.Content
 		rcOK := false
 		for _, rc := range check.ResponseCodes {
 			if rc == checkResults.ResponseCode {
 				rcOK = true
 			}
 		}
-		if check.GetDisplayTemplate() != "" {
-			message, err = text.TemplateWithDelims(check.GetDisplayTemplate(), "[[", "]]", results)
-		}
 		if !rcOK {
-			failMessage := fmt.Sprintf("\nresponse code invalid %d != %v", checkResults.ResponseCode, check.ResponseCodes)
-			return TextFailf(check, textResults, message+failMessage)
+			return httpFailF(check, textResults, httpStatus, template, "response code invalid %d != %v", checkResults.ResponseCode, check.ResponseCodes)
 		}
 
 		if check.ThresholdMillis > 0 && check.ThresholdMillis < int(checkResults.ResponseTime) {
-			failMessage := fmt.Sprintf("\nthreshold exceeded %d > %d", checkResults.ResponseTime, check.ThresholdMillis)
-			return TextFailf(check, textResults, message+failMessage)
+			return httpFailF(check, textResults, httpStatus, template, "threshold exceeded %d > %d", checkResults.ResponseTime, check.ThresholdMillis)
 		}
 		if check.ResponseContent != "" && !strings.Contains(checkResults.Content, check.ResponseContent) {
-			failMessage := fmt.Sprintf("\nExpected %v, found %v", check.ResponseContent, checkResults.Content)
-			return TextFailf(check, textResults, message+failMessage)
+			return httpFailF(check, textResults, httpStatus, template, "Expected %v, found %v", check.ResponseContent, checkResults.Content)
 		}
 		if check.ResponseJSONContent.Path != "" {
 			var jsonContent interface{}
 			if err = json.Unmarshal([]byte(checkResults.Content), &jsonContent); err != nil {
-				failMessage := fmt.Sprintf("\nCould not unmarshal response for json check: %v ", err)
-				return TextFailf(check, textResults, message+failMessage)
+				return httpFailF(check, textResults, httpStatus, template, "Could not unmarshal response for json check: %v ", err)
 			}
 
 			jsonResult, err := jsonpath.Get(check.ResponseJSONContent.Path, jsonContent)
 			if err != nil {
-				failMessage := fmt.Sprintf("\nCould not extract path %v from response %v: %v", check.ResponseJSONContent.Path, jsonContent, err)
-				return TextFailf(check, textResults, message+failMessage)
+				return httpFailF(check, textResults, httpStatus, template, "Could not extract path %v from response %v: %v", check.ResponseJSONContent.Path, jsonContent, err)
 			}
 			switch s := jsonResult.(type) {
 			case string:
 				if s != check.ResponseJSONContent.Value {
-					failMessage := fmt.Sprintf("\n%v not equal to %v", s, check.ResponseJSONContent.Value)
-					return TextFailf(check, textResults, message+failMessage)
+					return httpFailF(check, textResults, httpStatus, template, "%v not equal to %v", s, check.ResponseJSONContent.Value)
 				}
 			case fmt.Stringer:
 				if s.String() != check.ResponseJSONContent.Value {
-					failMessage := fmt.Sprintf("\n%v not equal to %v", s.String(), check.ResponseJSONContent.Value)
-					return TextFailf(check, textResults, message+failMessage)
+					return httpFailF(check, textResults, httpStatus, template, "%v not equal to %v", s.String(), check.ResponseJSONContent.Value)
 				}
 			default:
-				return TextFailf(check, textResults, message+"\njson response could not be parsed back to string")
+				return httpFailF(check, textResults, httpStatus, template, "json response could not be parsed back to string")
 			}
 		}
 		if urlObj.Scheme == "https" && check.MaxSSLExpiry > checkResults.SSLExpiry {
-			failMessage := fmt.Sprintf("\nSSL certificate expires soon %d > %d", checkResults.SSLExpiry, check.MaxSSLExpiry)
-			return TextFailf(check, textResults, failMessage)
+			return httpFailF(check, textResults, httpStatus, template, "SSL certificate expires soon %d > %d", checkResults.SSLExpiry, check.MaxSSLExpiry)
 		}
 
 		responseStatus.WithLabelValues(strconv.Itoa(checkResults.ResponseCode), statusCodeToClass(checkResults.ResponseCode), endpoint).Inc()
 		sslExpiration.WithLabelValues(endpoint).Set(float64(checkResults.SSLExpiry))
-
+		var results = map[string]interface{}{"code": checkResults.ResponseCode, "content": checkResults.Content, "header": headers}
+		message, err := text.TemplateWithDelims(template, "[[", "]]", results)
+		if err != nil {
+			return httpFailF(check, textResults, httpStatus, template, "error templating")
+		}
 		if !textResults {
 			return &pkg.CheckResult{ // nolint: staticcheck
 				Check:    check,
@@ -268,7 +269,7 @@ func (c *HTTPChecker) Check(extConfig external.Check) *pkg.CheckResult {
 			},
 		}
 	}
-	return Failf(check, "No DNS results found")
+	return httpFailF(check, textResults, httpStatus, template, "No DNS results found")
 }
 
 func (c *HTTPChecker) checkHTTP(urlObj pkg.URL, ntlm bool) (*HTTPCheckResult, error) {
@@ -440,4 +441,19 @@ type HTTPCheckResult struct {
 
 func (check HTTPCheckResult) String() string {
 	return fmt.Sprintf("%s ssl=%d code=%d time=%d", check.Endpoint, check.SSLExpiry, check.ResponseCode, check.ResponseTime)
+}
+
+func httpFailF(check external.Check, textResults bool, httpStatus HTTPStatus, template, msg string, args ...interface{}) *pkg.CheckResult {
+	var results = map[string]interface{}{"code": httpStatus.responseCode, "headers": httpStatus.headers, "content": httpStatus.content}
+	message := httpTemplateResult(template, results)
+	message = message + "\n" + fmt.Sprintf(msg, args...)
+	return TextFailf(check, textResults, message)
+}
+
+func httpTemplateResult(template string, results map[string]interface{}) (message string) {
+	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
+	if err != nil {
+		message = message + "\n" + err.Error()
+	}
+	return message
 }
