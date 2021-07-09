@@ -3,11 +3,12 @@ package checks
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/flanksource/commons/text"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/flanksource/commons/text"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"

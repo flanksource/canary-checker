@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/flanksource/commons/text"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -13,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/flanksource/commons/text"
 
 	"github.com/Azure/go-ntlmssp"
 	"github.com/flanksource/kommons"

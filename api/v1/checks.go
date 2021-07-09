@@ -361,10 +361,18 @@ type SQLCheck struct {
 	Query       string `yaml:"query" json:"query,omitempty"`
 	// Number rows to check for
 	Result int `yaml:"results" json:"results,omitempty"`
+	// ResultsFunction defines the results that needs to be checked.
+	// Example: '[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'
+	// Note: The test will fail on when the template returns false
+	ResultsFunction string `yaml:"resultsFunction,omitempty" json:"resultsFunction,omitempty"`
+	//DisplayTemplate represents the output format for the results. Example '[[ .results 0 ]]'
+	// Note: When DisplayTemplate is defined the dashboard will show the text-based results,
+	// instead of traditional pass/fail bar resulys
+	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
-func (c *SQLCheck) GetDriver() string {
-	return c.Driver
+func (c SQLCheck) GetDisplayTemplate() string {
+	return c.DisplayTemplate
 }
 
 func (c *SQLCheck) GetQuery() string {
@@ -377,6 +385,10 @@ func (c *SQLCheck) GetResult() int {
 
 func (c *SQLCheck) GetConnection() string {
 	return c.Connection
+}
+
+func (c *SQLCheck) GetDriver() string {
+	return c.Driver
 }
 
 func (c SQLCheck) GetEndpoint() string {
