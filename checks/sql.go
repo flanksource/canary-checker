@@ -33,7 +33,7 @@ func querySQL(driver string, connectionSting string, query string) (count int, r
 	}
 	for rows.Next() {
 		var rowValues = make([]interface{}, len(columns))
-		for i, _ := range rowValues {
+		for i := range rowValues {
 			s := ""
 			rowValues[i] = &s
 		}

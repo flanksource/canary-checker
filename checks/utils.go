@@ -9,7 +9,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 )
 
-func unexpectedErrorf(check external.Check, err error, msg string, args ...interface{}) *pkg.CheckResult {
+func unexpectedErrorf(check external.Check, err error, msg string, args ...interface{}) *pkg.CheckResult { //nolint: unparam
 	return &pkg.CheckResult{
 		Check:   check,
 		Pass:    false,
@@ -47,7 +47,7 @@ func TextFailf(check external.Check, textResults bool, msg string, args ...inter
 			Message:     fmt.Sprintf(msg, args...),
 		}
 	}
-	return Failf(check, msg, args)
+	return Failf(check, msg, args...)
 }
 func Success(check external.Check, start time.Time) *pkg.CheckResult {
 	return &pkg.CheckResult{

@@ -296,6 +296,9 @@ spec:
                         type: string
                       description:
                         type: string
+                      displayTemplate:
+                        description: DisplayTemplate defines the output format. When set the result of the canary will be displayed in the text format. Example 'Response Codes [[.code]]'
+                        type: string
                       endpoint:
                         description: HTTP endpoint to check.  Mutually exclusive with Namespace
                         type: string
@@ -461,6 +464,9 @@ spec:
                   items:
                     properties:
                       description:
+                        type: string
+                      displayTemplate:
+                        description: 'DisplayTemplate represents the output format for the results. Example: ''Passed: [[.passed]] Failed: [[.failed]] Skipped: [[.skipped]] Error: [[.error]]''. Defaults to ''Passed: {{.passed}}, Failed: {{.failed}}'''
                         type: string
                       spec:
                         description: PodSpec is a description of a pod.
@@ -4229,6 +4235,9 @@ spec:
                         type: string
                       description:
                         type: string
+                      displayTemplate:
+                        description: 'DisplayTemplate represents the output format for the results. Example ''[[ .results 0 ]]'' Note: When DisplayTemplate is defined the dashboard will show the text-based results, instead of traditional pass/fail bar resulys'
+                        type: string
                       driver:
                         type: string
                       query:
@@ -4236,6 +4245,9 @@ spec:
                       results:
                         description: Number rows to check for
                         type: integer
+                      resultsFunction:
+                        description: 'ResultsFunction defines the results that needs to be checked. Example: ''[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'' Note: The test will fail on when the template returns false'
+                        type: string
                     type: object
                   type: array
                 namespace:
@@ -4358,6 +4370,9 @@ spec:
                         type: string
                       description:
                         type: string
+                      displayTemplate:
+                        description: 'DisplayTemplate represents the output format for the results. Example ''[[ .results 0 ]]'' Note: When DisplayTemplate is defined the dashboard will show the text-based results, instead of traditional pass/fail bar resulys'
+                        type: string
                       driver:
                         type: string
                       query:
@@ -4365,6 +4380,9 @@ spec:
                       results:
                         description: Number rows to check for
                         type: integer
+                      resultsFunction:
+                        description: 'ResultsFunction defines the results that needs to be checked. Example: ''[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'' Note: The test will fail on when the template returns false'
+                        type: string
                     type: object
                   type: array
                 redis:
@@ -4451,6 +4469,9 @@ spec:
                       bucket:
                         type: string
                       description:
+                        type: string
+                      displayTemplate:
+                        description: 'DisplayTemplate represents the output format for the test results. Example: ''Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'''
                         type: string
                       endpoint:
                         type: string

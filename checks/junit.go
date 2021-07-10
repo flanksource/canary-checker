@@ -132,14 +132,14 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		for _, test := range suite.Tests {
 			switch test.Status {
 			case junit.StatusFailed:
-				junitStatus.failed += 1
+				junitStatus.failed++
 				failedTests[suite.Name+"/"+test.Name] = failedTests[test.Message]
 			case junit.StatusPassed:
-				junitStatus.passed += 1
+				junitStatus.passed++
 			case junit.StatusSkipped:
-				junitStatus.skipped += 1
+				junitStatus.skipped++
 			case junit.StatusError:
-				junitStatus.error += 1
+				junitStatus.error++
 			}
 			if test.Status == junit.StatusFailed {
 				failedTests[suite.Name+"/"+test.Name] = failedTests[test.Message]
@@ -187,7 +187,6 @@ func getVolumeMount(volumeName, mountPath string) []corev1.VolumeMount {
 }
 
 func junitFailF(check external.Check, textResults bool, junitState JunitStatus, template, msg string, args ...interface{}) *pkg.CheckResult {
-
 	message := junitTemplateResult(template, junitState.passed, junitState.failed, junitState.skipped, junitState.error)
 	message = message + "\n" + fmt.Sprintf(msg, args...)
 	return TextFailf(check, textResults, message)

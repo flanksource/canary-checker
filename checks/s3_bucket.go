@@ -115,7 +115,7 @@ func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if bucket.ObjectPath != "" {
 		re, err := regexp.Compile(bucket.ObjectPath)
 		if err != nil {
-			return s3BucketFailF(bucket, textResults, bucketStatus, template, "failed to compile regex: %s ", bucket.ObjectPath, err)
+			return s3BucketFailF(bucket, textResults, bucketStatus, template, "failed to compile regex: %s error: %v", bucket.ObjectPath, err)
 		}
 		regex = re
 	}
