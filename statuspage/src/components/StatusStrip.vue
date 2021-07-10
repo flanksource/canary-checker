@@ -45,13 +45,13 @@
             :target-id="modalName(bar.key)"></check-prometheus>
       </template>
       <template v-else-if="displayType==='Text'">
-        <p v-if="check.checkStatuses[server][0].status"
+        <p v-b-modal="check.key" v-if="check.checkStatuses[server][0].status"
            style="color: green" class="pre-formatted"
            :id=check.key >{{firstLine(check.checkStatuses[server][0].message)}} </p>
-        <p v-else-if="!check.checkStatuses[server][0].status"
+        <p v-b-modal="check.key" v-else-if="!check.checkStatuses[server][0].status"
            style="color: red;" class="pre-formatted"
            :id=check.key >{{firstLine(check.checkStatuses[server][0].message)}} </p>
-        <text-popover 
+        <text-modal
             :check-statuses="check.checkStatuses[server]"
             :health="check.health[server]"
             :target="check.key" :check-name="check.name"
@@ -64,12 +64,12 @@
 <script>
     import BarPopover from "./BarPopover";
     import CheckPrometheus from "./CheckPrometheus";
-    import TextPopover from "./TextPopover";
+    import TextModal from "./TextModal";
 
     export default {
         name: "StatusStrip",
         components: {
-          TextPopover,
+            TextModal,
             BarPopover,
             CheckPrometheus,
         },

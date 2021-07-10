@@ -1,13 +1,5 @@
 <template>
-  <b-popover
-      :target="target"
-      triggers="click"
-      placement="top"
-      custom-class="text-popover-wide"
-      :delay="{ show: 150, hide: 0 }"
-      boundary="window"
-      boundary-padding="100"
-      >
+  <b-modal :id="target" :canCancel="['escape']" size="lg" ok-only>
     <template v-slot:title>
       <div class="description">{{ checkName }}</div>
     </template>
@@ -31,13 +23,13 @@
       </table>
       <div class="left health" v-if="health != null" ><b>Avg latency:</b> {{health.latency}}<br/><b>Uptime: </b>{{health.uptime}}</div>
     </template>
-  </b-popover>
+  </b-modal>
 </template>
 
 <script>
 import StatusStrip from "@/components/StatusStrip";
 export default {
-  name: "TextPopover",
+  name: "TextModal",
   data() {
     return {
       elapsed: null,
@@ -73,9 +65,6 @@ export default {
 }
 </script>
 <style>
-.text-popover-wide {
-  max-width: 100%; min-width: 32.5rem; max-height: 100%;
-}
 .text-pre-formatted {
   white-space: pre;
 }
