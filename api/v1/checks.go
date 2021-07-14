@@ -48,6 +48,13 @@ type HTTPCheck struct {
 	// specNamespace is the namespace in which the canary was deployed, and which
 	// configmap/secret lookups will be constrained to
 	specNamespace string `yaml:"-" json:"-"`
+	// DisplayTemplate defines the output format. When set the result of the canary will be displayed in the text format.
+	// Example 'Response Codes [[.code]]'
+	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
+}
+
+func (c HTTPCheck) GetDisplayTemplate() string {
+	return c.DisplayTemplate
 }
 
 func (c *HTTPCheck) SetNamespace(namespace string) {
@@ -154,8 +161,16 @@ type S3BucketCheck struct {
 	UsePathStyle bool `yaml:"usePathStyle" json:"usePathStyle,omitempty"`
 	// Skip TLS verify when connecting to s3
 	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
+	// DisplayTemplate represents the output format for the test results. Example: 'Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'
+	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
+func (c S3BucketCheck) GetDisplayTemplate() string {
+	if c.DisplayTemplate != "" {
+		return c.DisplayTemplate
+	}
+	return "Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]"
+}
 func (c S3BucketCheck) GetEndpoint() string {
 	return fmt.Sprintf("%s/%s", c.Endpoint, c.Bucket)
 }
@@ -346,10 +361,18 @@ type SQLCheck struct {
 	Query       string `yaml:"query" json:"query,omitempty"`
 	// Number rows to check for
 	Result int `yaml:"results" json:"results,omitempty"`
+	// ResultsFunction defines the results that needs to be checked.
+	// Example: '[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'
+	// Note: The test will fail on when the template returns false
+	ResultsFunction string `yaml:"resultsFunction,omitempty" json:"resultsFunction,omitempty"`
+	//DisplayTemplate represents the output format for the results. Example '[[ .results 0 ]]'
+	// Note: When DisplayTemplate is defined the dashboard will show the text-based results,
+	// instead of traditional pass/fail bar resulys
+	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
-func (c *SQLCheck) GetDriver() string {
-	return c.Driver
+func (c SQLCheck) GetDisplayTemplate() string {
+	return c.DisplayTemplate
 }
 
 func (c *SQLCheck) GetQuery() string {
@@ -362,6 +385,10 @@ func (c *SQLCheck) GetResult() int {
 
 func (c *SQLCheck) GetConnection() string {
 	return c.Connection
+}
+
+func (c *SQLCheck) GetDriver() string {
+	return c.Driver
 }
 
 func (c SQLCheck) GetEndpoint() string {
@@ -572,6 +599,16 @@ type JunitCheck struct {
 	// name of the canary. will be the same for the pod
 	name string     `yaml:"-" json:"-"`
 	Spec v1.PodSpec `yaml:"spec" json:"spec"`
+	//DisplayTemplate represents the output format for the results. Example: 'Passed: [[.passed]] Failed: [[.failed]] Skipped: [[.skipped]] Error: [[.error]]'.
+	//Defaults to 'Passed: {{.passed}}, Failed: {{.failed}}'
+	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
+}
+
+func (c JunitCheck) GetDisplayTemplate() string {
+	if c.DisplayTemplate != "" {
+		return c.DisplayTemplate
+	}
+	return "Passed: [[.passed]], Failed: [[.failed]]"
 }
 
 func (c *JunitCheck) SetNamespace(namespace string) {

@@ -25,7 +25,7 @@ export default {
   name: "CanaryModal",
   props: {
     interval: {
-      type: String,
+      type: Number,
       required: true
     },
     owner: {

@@ -76,7 +76,7 @@ var Serve = &cobra.Command{
 func serve(cmd *cobra.Command) {
 	httpPort, _ := cmd.Flags().GetInt("httpPort")
 	dev, _ := cmd.Flags().GetBool("dev")
-	devGuiHTTPPort, _ := cmd.Flags().GetInt("devGuiHTTPPort")
+	devGuiHTTPPort, _ := cmd.Flags().GetInt("devGuiHttpPort")
 
 	var staticRoot nethttp.FileSystem
 	var allowedCors string

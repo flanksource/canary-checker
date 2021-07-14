@@ -93,6 +93,7 @@ func (c *cache) AddCheck(checks v1.Canary, result *pkg.CheckResult) *pkg.Check {
 		Owner:       checks.Spec.Owner,
 		Severity:    checks.Spec.Severity,
 		CheckCanary: &checks,
+		DisplayType: result.DisplayType,
 		Statuses: []pkg.CheckStatus{
 			{
 				Status:   result.Pass,

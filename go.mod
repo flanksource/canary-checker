@@ -13,7 +13,7 @@ require (
 	github.com/denisenkom/go-mssqldb v0.9.0
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
-	github.com/flanksource/commons v1.5.6
+	github.com/flanksource/commons v1.5.8
 	github.com/flanksource/kommons v0.7.1
 	github.com/go-co-op/gocron v0.2.0
 	github.com/go-ldap/ldap/v3 v3.1.7

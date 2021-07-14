@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/commons/text"
 	"k8s.io/apimachinery/pkg/util/rand"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -35,6 +36,13 @@ type JunitChecker struct {
 	kommons *kommons.Client `yaml:"-" json:"-"`
 }
 
+type JunitStatus struct {
+	passed  int
+	failed  int
+	skipped int
+	error   int
+}
+
 func (c *JunitChecker) SetClient(client *kommons.Client) {
 	c.kommons = client
 }
@@ -57,7 +65,13 @@ func (c *JunitChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 
 func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
+	var textResults bool
 	junitCheck := extConfig.(v1.JunitCheck)
+	if junitCheck.GetDisplayTemplate() != "" {
+		textResults = true
+	}
+	var junitStatus JunitStatus
+	template := junitCheck.GetDisplayTemplate()
 	pod := &corev1.Pod{}
 	pod.APIVersion = corev1.SchemeGroupVersion.Version
 	pod.Kind = podKind
@@ -87,43 +101,67 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	pod.Spec.Containers[0].VolumeMounts = getVolumeMount(volumeName, mounthPath)
 	err := c.kommons.Apply(pod.Namespace, pod)
 	if err != nil {
-		return Failf(junitCheck, "error creating pod: %v", err)
+		return junitFailF(junitCheck, textResults, junitStatus, template, "error creating pod: %v", err)
 	}
 	defer c.kommons.DeleteByKind(pod.Kind, pod.Namespace, pod.Name) // nolint: errcheck
 	logger.Tracef("waiting for pod to be ready")
 	err = c.kommons.WaitForPod(pod.Namespace, pod.Name, maxTime*time.Minute, corev1.PodRunning)
 	if err != nil {
-		return Failf(junitCheck, "error waiting for pod: %v", err)
+		return junitFailF(junitCheck, textResults, junitStatus, template, "error waiting for pod: %v", err)
 	}
 	files, stderr, err := c.kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", fmt.Sprintf("find %v -name \\*.xml -type f", mounthPath))
 	if stderr != "" || err != nil {
-		return Failf(junitCheck, "error fetching test files: %v %v", stderr, err)
+		return junitFailF(junitCheck, textResults, junitStatus, template, "error fetching test files: %v %v", stderr, err)
 	}
 	files = strings.TrimSpace(files)
 	var allTestSuite []junit.Suite
 	for _, file := range strings.Split(files, "\n") {
 		output, stderr, err := c.kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "cat", file)
 		if stderr != "" || err != nil {
-			return Failf(junitCheck, "error reading results: %v %v", stderr, err)
+			return junitFailF(junitCheck, textResults, junitStatus, template, "error reading results: %v %v", stderr, err)
 		}
 		testSuite, err := junit.Ingest([]byte(output))
 		if err != nil {
-			return Failf(junitCheck, "error parsing the result file")
+			return junitFailF(junitCheck, textResults, junitStatus, template, "error parsing the result file: %v", err)
 		}
 		allTestSuite = append(allTestSuite, testSuite...)
 	}
+	//initializing results map with 0 values
 	var failedTests = make(map[string]string)
-	for _, result := range allTestSuite {
-		for _, test := range result.Tests {
-			if test.Status == junit.StatusFailed || test.Status == junit.StatusError {
-				failedTests[test.Name] = test.Message
+	for _, suite := range allTestSuite {
+		for _, test := range suite.Tests {
+			switch test.Status {
+			case junit.StatusFailed:
+				junitStatus.failed++
+				failedTests[suite.Name+"/"+test.Name] = failedTests[test.Message]
+			case junit.StatusPassed:
+				junitStatus.passed++
+			case junit.StatusSkipped:
+				junitStatus.skipped++
+			case junit.StatusError:
+				junitStatus.error++
+			}
+			if test.Status == junit.StatusFailed {
+				failedTests[suite.Name+"/"+test.Name] = failedTests[test.Message]
 			}
 		}
 	}
-	if len(failedTests) != 0 {
-		return Failf(junitCheck, "the following tests failed %v", failedTests)
+	if junitStatus.failed != 0 {
+		failMessage := ""
+		for testName, testMessage := range failedTests {
+			failMessage = failMessage + "\n" + testName + ":" + testMessage
+		}
+		return junitFailF(junitCheck, textResults, junitStatus, template, failMessage)
 	}
-	return Success(junitCheck, start)
+
+	// Don't use junitTemplateResult since we also need to check if templating succeeds here if not we fail
+	var results = map[junit.Status]int{junit.StatusFailed: junitStatus.failed, junit.StatusPassed: junitStatus.passed, junit.StatusSkipped: junitStatus.skipped, junit.StatusError: junitStatus.error}
+	message, err := text.TemplateWithDelims(junitCheck.GetDisplayTemplate(), "[[", "]]", results)
+	if err != nil {
+		return junitFailF(junitCheck, textResults, junitStatus, template, "error templating the message: %v", err)
+	}
+
+	return Successf(junitCheck, start, textResults, message)
 }
 
 func getContainers() []corev1.Container {
@@ -146,4 +184,19 @@ func getVolumeMount(volumeName, mountPath string) []corev1.VolumeMount {
 			MountPath: mountPath,
 		},
 	}
+}
+
+func junitFailF(check external.Check, textResults bool, junitState JunitStatus, template, msg string, args ...interface{}) *pkg.CheckResult {
+	message := junitTemplateResult(template, junitState.passed, junitState.failed, junitState.skipped, junitState.error)
+	message = message + "\n" + fmt.Sprintf(msg, args...)
+	return TextFailf(check, textResults, message)
+}
+
+func junitTemplateResult(template string, passed, failed, skipped, error int) (message string) {
+	var results = map[junit.Status]int{junit.StatusFailed: failed, junit.StatusPassed: passed, junit.StatusSkipped: skipped, junit.StatusError: error}
+	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
+	if err != nil {
+		message = message + "\n" + err.Error()
+	}
+	return message
 }

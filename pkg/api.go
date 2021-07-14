@@ -55,6 +55,7 @@ type Check struct {
 	Interval    uint64        `json:"interval"`
 	Owner       string        `json:"owner"`
 	Severity    string        `json:"severity"`
+	DisplayType string        `json:"displayType"`
 	CheckCanary *v1.Canary    `json:"-"`
 }
 
@@ -142,6 +143,7 @@ type CheckResult struct {
 	Invalid     bool
 	Duration    int64
 	Description string
+	DisplayType string
 	Message     string
 	Metrics     []Metric
 	// Check is the configuration

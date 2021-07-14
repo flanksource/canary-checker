@@ -35,6 +35,7 @@ type AggregateCheck struct { // nolint: golint
 	Interval    uint64                       `json:"interval"`
 	Owner       string                       `json:"owner"`
 	Severity    string                       `json:"severity"`
+	DisplayType string                       `json:"displayType"`
 }
 
 type CheckHealth struct {
@@ -130,6 +131,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 					Owner:       c.Owner,
 					Severity:    c.Severity,
 					ServerURL:   c.GetNamespace(),
+					DisplayType: c.DisplayType,
 					Health: map[string]CheckHealth{
 						c.GetNamespace(): {c.Latency, c.Uptime},
 					},
@@ -153,6 +155,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 				Interval:    c.Interval,
 				Owner:       c.Owner,
 				Severity:    c.Severity,
+				DisplayType: c.DisplayType,
 				ServerURL:   "local",
 				Health: map[string]CheckHealth{
 					localServerID: {c.Latency, c.Uptime},
@@ -185,6 +188,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 						Interval:    c.Interval,
 						Owner:       c.Owner,
 						Severity:    c.Severity,
+						DisplayType: c.DisplayType,
 						ServerURL:   serverURL,
 						Health: map[string]CheckHealth{
 							serverID: {c.Latency, c.Uptime},

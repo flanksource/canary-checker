@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"time"
+
+	"github.com/flanksource/commons/text"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
@@ -49,6 +52,13 @@ func init() {
 type S3BucketChecker struct {
 }
 
+type BucketStatus struct {
+	latestObjectAge  time.Duration
+	latestObjectSize int64
+	objects          int
+	totalSize        int64
+}
+
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
 func (c *S3BucketChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
@@ -65,9 +75,16 @@ func (c *S3BucketChecker) Type() string {
 }
 
 func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
+	start := time.Now()
 	bucket := extConfig.(v1.S3BucketCheck)
+	var textResults bool
+	var bucketStatus BucketStatus
+	if bucket.GetDisplayTemplate() != "" {
+		textResults = true
+	}
+	template := bucket.GetDisplayTemplate()
 	if _, err := DNSLookup(bucket.Endpoint); err != nil {
-		return unexpectedErrorf(bucket, err, "failed to resolve DNS")
+		return s3BucketFailF(bucket, textResults, bucketStatus, template, "failed to resolve DNS: %v", err)
 	}
 
 	cfg := aws.NewConfig().
@@ -84,7 +101,7 @@ func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 	ssn, err := session.NewSession(cfg)
 	if err != nil {
-		return unexpectedErrorf(bucket, err, "failed to create S3 session")
+		return s3BucketFailF(bucket, textResults, bucketStatus, template, "failed to create S3 session: %v", err)
 	}
 	client := s3.New(ssn)
 	client.Config.S3ForcePathStyle = aws.Bool(bucket.UsePathStyle)
@@ -98,7 +115,7 @@ func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if bucket.ObjectPath != "" {
 		re, err := regexp.Compile(bucket.ObjectPath)
 		if err != nil {
-			return unexpectedErrorf(bucket, err, "failed to compile regex: %s", bucket.ObjectPath)
+			return s3BucketFailF(bucket, textResults, bucketStatus, template, "failed to compile regex: %s error: %v", bucket.ObjectPath, err)
 		}
 		regex = re
 	}
@@ -111,7 +128,7 @@ func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		}
 		resp, err := client.ListObjects(req)
 		if err != nil {
-			return unexpectedErrorf(bucket, err, "failed to list bucket")
+			return s3BucketFailF(bucket, textResults, bucketStatus, template, "failed to list buckets %v", err)
 		}
 
 		for _, obj := range resp.Contents {
@@ -125,6 +142,8 @@ func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
 
 			objects++
 			totalSize += *obj.Size
+			bucketStatus.objects = objects
+			bucketStatus.totalSize = totalSize
 		}
 
 		if resp.IsTruncated != nil && aws.BoolValue(resp.IsTruncated) && len(resp.Contents) > 0 {
@@ -139,21 +158,42 @@ func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	bucketScanTotalSize.WithLabelValues(bucket.Endpoint, bucket.Bucket).Set(float64(totalSize))
 
 	if latestObject == nil {
-		return Failf(bucket, "could not find any matching objects")
+		return s3BucketFailF(bucket, textResults, bucketStatus, template, "could not find any matching objects")
 	}
 
 	latestObjectAge := time.Since(aws.TimeValue(latestObject.LastModified))
 	bucketScanLastWrite.WithLabelValues(bucket.Endpoint, bucket.Bucket).Set(float64(latestObject.LastModified.Unix()))
+	latestObjectSize := aws.Int64Value(latestObject.Size)
+	bucketStatus.latestObjectSize = latestObjectSize
+	bucketStatus.latestObjectAge = latestObjectAge
 
 	if latestObjectAge.Seconds() > float64(bucket.MaxAge) {
-		return Failf(bucket, "Latest object age is %s required at most %s", age(latestObjectAge), age(time.Second*time.Duration(bucket.MaxAge)))
+		return s3BucketFailF(bucket, textResults, bucketStatus, template, "Latest object age is %s required at most %s", age(latestObjectAge), age(time.Second*time.Duration(bucket.MaxAge)))
 	}
-
-	latestObjectSize := aws.Int64Value(latestObject.Size)
 
 	if bucket.MinSize > 0 && latestObjectSize < bucket.MinSize {
-		return Failf(bucket, "Latest object is %s required at least %s", mb(latestObjectSize), mb(bucket.MinSize))
+		return s3BucketFailF(bucket, textResults, bucketStatus, template, "Latest object is %s required at least %s", mb(latestObjectSize), mb(bucket.MinSize))
 	}
+	// Don't use s3BucketTemplateResult since we also need to check if templating succeeds here if not we fail
+	var results = map[string]string{"maxAge": age(latestObjectAge), "size": mb(latestObjectSize), "count": strconv.Itoa(objects), "totalSize": mb(totalSize)}
+	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
+	if err != nil {
+		return s3BucketFailF(bucket, textResults, bucketStatus, template, "error templating")
+	}
+	return Successf(bucket, start, textResults, message)
+}
 
-	return Passf(bucket, fmt.Sprintf("maxAge=%s size=%s objects=%d totalSize=%s", age(latestObjectAge), mb(latestObjectSize), objects, mb(totalSize)))
+func s3BucketFailF(check external.Check, textResults bool, bucketState BucketStatus, template, msg string, args ...interface{}) *pkg.CheckResult {
+	message := s3BucketTemplateResult(template, bucketState.latestObjectAge, bucketState.latestObjectSize, bucketState.objects, bucketState.totalSize)
+	message = message + "\n" + fmt.Sprintf(msg, args...)
+	return TextFailf(check, textResults, message)
+}
+
+func s3BucketTemplateResult(template string, latestObjectAge time.Duration, latestObjectSize int64, objects int, totalSize int64) (message string) {
+	var results = map[string]string{"maxAge": age(latestObjectAge), "size": mb(latestObjectSize), "count": strconv.Itoa(objects), "totalSize": mb(totalSize)}
+	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
+	if err != nil {
+		message = message + "\n" + err.Error()
+	}
+	return message
 }

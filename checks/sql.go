@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/commons/text"
+
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 )
@@ -14,36 +17,82 @@ import (
 // Connects to a db using the specified `driver` and `connectionstring`
 // Performs the test query given in `query`.
 // Gives the single row test query result as result.
-func querySQL(driver string, connectionSting string, query string) (int, error) {
+func querySQL(driver string, connectionSting string, query string) (count int, result []map[string]interface{}, err error) {
 	db, err := sql.Open(driver, connectionSting)
 	if err != nil {
-		return 0, fmt.Errorf("failed to connect to db: %s", err.Error())
+		return 0, result, fmt.Errorf("failed to connect to db: %s", err.Error())
 	}
 	defer db.Close()
-
-	var count int
 	rows, err := db.Query(query)
 	if err != nil || rows.Err() != nil {
-		return 0, fmt.Errorf("failed to query db: %s", err.Error())
+		return 0, result, fmt.Errorf("failed to query db: %s", err.Error())
+	}
+	columns, err := rows.Columns()
+	if err != nil {
+		return 0, result, fmt.Errorf("failed to get columns")
 	}
 	for rows.Next() {
+		var rowValues = make([]interface{}, len(columns))
+		for i := range rowValues {
+			s := ""
+			rowValues[i] = &s
+		}
+		err = rows.Scan(rowValues...)
+		var row = make(map[string]interface{})
+		for i, val := range rowValues {
+			row[columns[i]] = *val.(*string)
+		}
+		result = append(result, row)
 		count++
 	}
-
-	return count, nil
+	return count, result, nil
 }
 
-// CheckConfig : Attempts to connect to a DB using the specified
+// CheckSQL : Attempts to connect to a DB using the specified
 //               driver and connection string
 // Returns check result and metrics
 func CheckSQL(check v1.SQLCheck) *pkg.CheckResult { // nolint: golint
 	start := time.Now()
-	queryResult, err := querySQL(check.GetDriver(), check.GetConnection(), check.GetQuery())
+	var textResults bool
+	if check.DisplayTemplate != "" {
+		textResults = true
+	}
+	template := check.GetDisplayTemplate()
+	count, result, err := querySQL(check.GetDriver(), check.GetConnection(), check.GetQuery())
 	if err != nil {
-		return Failf(check, "failed to execute query %s", err)
+		return sqlFailF(check, textResults, template, "failed to execute query %s", err)
 	}
-	if queryResult != check.Result {
-		return Failf(check, "expected %d results, got %d", check.GetResult(), queryResult)
+	if count != check.Result || count == 0 {
+		return sqlFailF(check, textResults, template, "expected %d results, got %d", check.GetResult(), count)
 	}
-	return Success(check, start)
+	results := map[string]interface{}{"results": result}
+	if check.ResultsFunction != "" {
+		success, err := text.TemplateWithDelims(check.ResultsFunction, "[[", "]]", results)
+		if err != nil {
+			sqlFailF(check, textResults, template, "error templating %v", err)
+		}
+		if success == "false" || success == "False" {
+			sqlFailF(check, textResults, template, "result function returned %v", success)
+		}
+	}
+	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
+	if err != nil {
+		sqlFailF(check, textResults, template, "error templating")
+	}
+	return Successf(check, start, textResults, message)
+}
+
+func sqlFailF(check external.Check, textResults bool, template, msg string, args ...interface{}) *pkg.CheckResult {
+	var results = map[string]interface{}{"results": []string{"null"}}
+	message := sqlTemplateResult(template, results)
+	message = message + "\n" + fmt.Sprintf(msg, args...)
+	return TextFailf(check, textResults, message)
+}
+
+func sqlTemplateResult(template string, results map[string]interface{}) (message string) {
+	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
+	if err != nil {
+		message = message + "\n" + err.Error()
+	}
+	return message
 }

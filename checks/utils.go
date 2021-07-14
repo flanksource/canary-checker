@@ -9,7 +9,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 )
 
-func unexpectedErrorf(check external.Check, err error, msg string, args ...interface{}) *pkg.CheckResult {
+func unexpectedErrorf(check external.Check, err error, msg string, args ...interface{}) *pkg.CheckResult { //nolint: unparam
 	return &pkg.CheckResult{
 		Check:   check,
 		Pass:    false,
@@ -36,11 +36,44 @@ func Failf(check external.Check, msg string, args ...interface{}) *pkg.CheckResu
 	}
 }
 
+// TextFailf used for failure in case of text based results
+func TextFailf(check external.Check, textResults bool, msg string, args ...interface{}) *pkg.CheckResult {
+	if textResults {
+		return &pkg.CheckResult{
+			Check:       check,
+			Pass:        false,
+			Invalid:     false,
+			DisplayType: "Text",
+			Message:     fmt.Sprintf(msg, args...),
+		}
+	}
+	return Failf(check, msg, args...)
+}
 func Success(check external.Check, start time.Time) *pkg.CheckResult {
 	return &pkg.CheckResult{
 		Check:    check,
 		Pass:     true,
 		Invalid:  false,
+		Duration: time.Since(start).Milliseconds(),
+	}
+}
+
+func Successf(check external.Check, start time.Time, textResults bool, msg string, args ...interface{}) *pkg.CheckResult {
+	if textResults {
+		return &pkg.CheckResult{
+			Check:       check,
+			Pass:        true,
+			DisplayType: "Text",
+			Invalid:     false,
+			Message:     fmt.Sprintf(msg, args...),
+			Duration:    time.Since(start).Milliseconds(),
+		}
+	}
+	return &pkg.CheckResult{
+		Check:    check,
+		Pass:     true,
+		Invalid:  false,
+		Message:  fmt.Sprintf(msg, args...),
 		Duration: time.Since(start).Milliseconds(),
 	}
 }
