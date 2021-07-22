@@ -637,6 +637,47 @@ func (c JunitCheck) GetType() string {
 	return "junit"
 }
 
+type SmbCheck struct {
+	//Server location of smb server
+	Server string `yaml:"server" json:"server"`
+	//Port on which smb server is running. Defaults to 445
+	Port int `yaml:"port,omitempty" json:"port,omitempty"`
+	//Username to authenticate against given smb server
+	Username string `yaml:"username" json:"username"`
+	//Password to authenticate against given smb server
+	Password string `yaml:"password" json:"password"`
+	//Domain...
+	Domain string `yaml:"domain,omitempty" json:"domain,omitempty"`
+	// Workstation...
+	Workstation string `yaml:"workstation,omitempty" json:"workstation,omitempty"`
+	//Sharename to mount from the samba server
+	Sharename string `yaml:"sharename" json:"sharename"`
+	//MinAge
+	MinAge          string `yaml:"minAge" json:"minAge"`
+	MinCount        int    `yaml:"minCount,omitempty" json:"minCount,omitempty"`
+	Description     string `yaml:"description,omitempty" json:"description,omitempty"`
+	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
+}
+
+func (c SmbCheck) GetEndpoint() string {
+	return fmt.Sprintf("%s:%d/%s", c.Server, c.Port, c.Sharename)
+}
+
+func (c SmbCheck) GetDescription() string {
+	return c.Description
+}
+
+func (c SmbCheck) GetType() string {
+	return "smb"
+}
+
+func (c SmbCheck) GetDisplayTemplate() string {
+	if c.DisplayTemplate != "" {
+		return c.DisplayTemplate
+	}
+	return "File Age: [[.age]]; File count: [[.count]]"
+}
+
 /*
 
 ```yaml
@@ -980,6 +1021,22 @@ type Junit struct {
 	JunitCheck `yaml:",inline" json:",inline"`
 }
 
+/*
+Smb check will connect to the given samba server with given credentials
+find the age of the latest updated file and compare it with minAge
+count the number of file present and compare with minCount if defined
+smb:
+   - server: 192.168.1.9
+     username: samba
+     password: password
+     sharename: "Some Public Folder"
+     minAge: 10h
+     description: "Success SMB server"
+*/
+type Smb struct {
+	SmbCheck `yaml:",inline" json:",inline"`
+}
+
 var AllChecks = []external.Check{
 	HTTPCheck{},
 	TCPCheck{},
@@ -1001,4 +1058,5 @@ var AllChecks = []external.Check{
 	HelmCheck{},
 	JmeterCheck{},
 	JunitCheck{},
+	SmbCheck{},
 }

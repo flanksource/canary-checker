@@ -22,6 +22,7 @@ require (
 	github.com/go-redis/redis/v8 v8.8.0
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/hashicorp/vault/api v1.0.4
+	github.com/hirochachacha/go-smb2 v1.0.10
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/lib/pq v1.9.0
 	github.com/mitchellh/reflectwalk v1.0.1

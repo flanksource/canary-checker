@@ -43,6 +43,7 @@ type CanarySpec struct {
 	Restic         []ResticCheck         `yaml:"restic,omitempty" json:"restic,omitempty"`
 	Jmeter         []JmeterCheck         `yaml:"jmeter,omitempty" json:"jmeter,omitempty"`
 	Junit          []JunitCheck          `yaml:"junit,omitempty" json:"junit,omitempty"`
+	Smb            []SmbCheck            `yaml:"smb,omitempty" json:"smb,omitempty"`
 	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Redis          []RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
