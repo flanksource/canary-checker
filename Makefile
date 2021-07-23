@@ -10,7 +10,7 @@ else
 endif
 
 # Image URL to use all building/pushing image targets
-IMG ?= docker.io/flanksource/canary-checker:$(VERSION_TAG)
+IMG ?= docker.io/flanksource/canary-checker:${VERSION_TAG}
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -51,9 +51,7 @@ deploy: kustomize manifests
 	kubectl $(KUSTOMIZE) config | kubectl apply -f -
 
 static: kustomize manifests generate .bin/yq
-	cd config && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build ./config | $(YQ) eval -P '' - > config/deploy/manifests.yaml
-	cd config/base && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build ./config/base | $(YQ) eval -P '' - > config/deploy/base.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.

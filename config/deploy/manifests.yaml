@@ -4747,7 +4747,7 @@ spec:
           env:
             - name: DOCKER_API_VERSION
               value: "1.39"
-          image: flanksource/canary-checker:v0.11.2
+          image: docker.io/flanksource/canary-checker:latest
           livenessProbe:
             httpGet:
               path: /index.html
