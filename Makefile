@@ -1,19 +1,16 @@
 
-# Image URL to use all building/pushing image targets
-IMG ?= docker.io/flanksource/canary-checker:$(TAG)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= ""
 NAME=canary-checker
 
-ifeq ($(CI),true)
-	TAG=$(shell git describe --tags  --long)$(shell date +"%H%M%S")
+ifeq ($(VERSION),)
+  VERSION_TAG=$(shell git describe --abbrev=0 --tags --exact-match 2>/dev/null || echo latest)
 else
-	TAG="latest"
+  VERSION_TAG=$(VERSION)
 endif
 
-ifeq ($(VERSION),)
-VERSION=$(shell git describe --tags  --long)-$(shell date +"%Y%m%d%H%M%S")
-endif
+# Image URL to use all building/pushing image targets
+IMG ?= docker.io/flanksource/canary-checker:$(VERSION_TAG)
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -105,23 +102,23 @@ compress:
 
 .PHONY: linux
 linux: vue-dist
-	GOOS=linux GOARCH=amd64 go build -o ./.bin/$(NAME)-amd64 -ldflags "-X \"main.version=$(VERSION)\""  main.go
+	GOOS=linux GOARCH=amd64 go build -o ./.bin/$(NAME)-amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: darwin-amd64
 darwin-amd64: vue-dist
-	GOOS=darwin GOARCH=amd64 go build -o ./.bin/$(NAME)_osx-amd64 -ldflags "-X \"main.version=$(VERSION)\""  main.go
+	GOOS=darwin GOARCH=amd64 go build -o ./.bin/$(NAME)_osx-amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: darwin-arm64
 darwin-arm64: vue-dist
-	GOOS=darwin GOARCH=arm64 go build -o ./.bin/$(NAME)_osx-arm64 -ldflags "-X \"main.version=$(VERSION)\""  main.go
+	GOOS=darwin GOARCH=arm64 go build -o ./.bin/$(NAME)_osx-arm64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: windows
 windows: vue-dist
-	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe -ldflags "-X \"main.version=$(VERSION)\""  main.go
+	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: release
 release: kustomize linux darwin-amd64 darwin-arm64 windows compress
-	cd config && $(KUSTOMIZE) edit set image flanksource/canary-checker:${TAG}
+	cd config && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/ > ./.bin/release.yaml
 
 .PHONY: serve-docs
@@ -150,7 +147,7 @@ vue-dist:
 
 .PHONY: build
 build:
-	go build -o ./.bin/$(NAME) -ldflags "-X \"main.version=$(VERSION)\""  main.go
+	go build -o ./.bin/$(NAME) -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: install
 install: build

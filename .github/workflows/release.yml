@@ -1,7 +1,21 @@
 name: Create Release
 on:
-  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+      - master
 jobs:
+  semantic-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release-version: ${{ steps.semantic.outputs.release-version }}
+      new-release-published: ${{ steps.semantic.outputs.new-release-published }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: codfish/semantic-release-action@v1
+        id: semantic
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}}
   binary:
     runs-on: ubuntu-latest
     container:
@@ -13,28 +27,14 @@ jobs:
           sudo curl -L https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64 -o /usr/bin/yq
           sudo chmod +x /usr/bin/yq
       - run: make release
-      - uses: actions/upload-artifact@v2
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          name: canary-checker
-          path: ./.bin/*
-
-  semantic-release:
-    needs: binary
-    runs-on: ubuntu-latest
-    outputs:
-      release-version: ${{ steps.semantic.outputs.release-version }}
-      new-release-published: ${{ steps.semantic.outputs.new-release-published }}
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
-        with:
-          name: canary-checker
-          path: ./.bin
-      - run: ls -R ./.bin
-      - uses: codfish/semantic-release-action@v1
-        id: semantic
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./.bin/*
+          tag: v${{ needs.semantic-release.outputs.release-version }}
+          overwrite: true
+          file_glob: true
   docker:
     needs: semantic-release
     # Only build/push new docker images when there is new version released
@@ -56,6 +56,11 @@ jobs:
       image: flanksource/build-tools:v0.12.0
     steps:
       - uses: actions/checkout@v2
+      - name: setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '12'
+      - run: make vue-dist
       - run: make build-api-docs build-docs deploy-docs
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
