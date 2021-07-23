@@ -4502,6 +4502,47 @@ spec:
                   type: array
                 severity:
                   type: string
+                smb:
+                  items:
+                    properties:
+                      description:
+                        type: string
+                      displayTemplate:
+                        type: string
+                      domain:
+                        description: Domain...
+                        type: string
+                      minAge:
+                        description: MinAge
+                        type: string
+                      minCount:
+                        type: integer
+                      password:
+                        description: Password to authenticate against given smb server
+                        type: string
+                      port:
+                        description: Port on which smb server is running. Defaults to 445
+                        type: integer
+                      server:
+                        description: Server location of smb server
+                        type: string
+                      sharename:
+                        description: Sharename to mount from the samba server
+                        type: string
+                      username:
+                        description: Username to authenticate against given smb server
+                        type: string
+                      workstation:
+                        description: Workstation...
+                        type: string
+                    required:
+                      - minAge
+                      - password
+                      - server
+                      - sharename
+                      - username
+                    type: object
+                  type: array
                 tcp:
                   items:
                     properties:

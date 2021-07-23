@@ -30,6 +30,7 @@ var All = []Checker{
 	&ResticChecker{},
 	&RedisChecker{},
 	&JunitChecker{},
+	&SmbChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),
