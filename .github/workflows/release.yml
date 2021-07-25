@@ -28,6 +28,8 @@ jobs:
           sudo curl -L https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64 -o /usr/bin/yq
           sudo chmod +x /usr/bin/yq
       - run: make release
+        env:
+          VERSION: v${{ needs.semantic-release.outputs.release-version }}
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
