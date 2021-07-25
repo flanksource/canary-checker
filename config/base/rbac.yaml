@@ -46,6 +46,14 @@ rules:
       - services
     verbs:
       - "*"
+  # for getting the  XML results from junit tests
+  - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+      - pods/logs
+    verbs:
+      - "*"
   - apiGroups:
       - ""
     resources:
