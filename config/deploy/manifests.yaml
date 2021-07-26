@@ -4637,6 +4637,13 @@ rules:
   - apiGroups:
       - ""
     resources:
+      - pods/exec
+      - pods/logs
+    verbs:
+      - '*'
+  - apiGroups:
+      - ""
+    resources:
       - nodes
     verbs:
       - get
