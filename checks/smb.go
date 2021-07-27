@@ -102,11 +102,12 @@ func getLatestFileAgeAndCount(fs *smb2.Share) (duration time.Duration, count int
 	if err != nil {
 		return
 	}
+	duration = time.Since(files[0].ModTime())
 	for _, file := range files {
 		if file.IsDir() {
 			continue
 		}
-		if duration < time.Since(file.ModTime()) {
+		if duration >= time.Since(file.ModTime()) {
 			duration = time.Since(file.ModTime())
 		}
 		count++
