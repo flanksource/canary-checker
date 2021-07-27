@@ -638,7 +638,8 @@ func (c JunitCheck) GetType() string {
 }
 
 type SmbCheck struct {
-	//Server location of smb server
+	//Server location of smb server. Can be hostname/ip or in '\\server\e$\a\b\c' syntax
+	//Where server is the hostname e$ is the sharename and a/b/c is the searchPath location
 	Server string `yaml:"server" json:"server"`
 	//Port on which smb server is running. Defaults to 445
 	Port int `yaml:"port,omitempty" json:"port,omitempty"`
@@ -651,9 +652,14 @@ type SmbCheck struct {
 	// Workstation...
 	Workstation string `yaml:"workstation,omitempty" json:"workstation,omitempty"`
 	//Sharename to mount from the samba server
-	Sharename string `yaml:"sharename" json:"sharename"`
-	//MinAge
-	MinAge          string `yaml:"minAge" json:"minAge"`
+	Sharename string `yaml:"sharename,omitempty" json:"sharename,omitempty"`
+	//SearchPath sub-path inside the mount location
+	SearchPath string `yaml:"searchPath,omitempty" json:"searchPath,omitempty" `
+	//MinAge the latest object should be older than defined age
+	MinAge string `yaml:"minAge,omitempty" json:"minAge,omitempty"`
+	//MaxAge the latest object should be younger than defined age
+	MaxAge string `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
+	//MinCount the minimum number of files inside the searchPath
 	MinCount        int    `yaml:"minCount,omitempty" json:"minCount,omitempty"`
 	Description     string `yaml:"description,omitempty" json:"description,omitempty"`
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`

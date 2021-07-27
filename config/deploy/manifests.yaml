@@ -4512,10 +4512,14 @@ spec:
                       domain:
                         description: Domain...
                         type: string
+                      maxAge:
+                        description: MaxAge the latest object should be younger than defined age
+                        type: string
                       minAge:
-                        description: MinAge
+                        description: MinAge the latest object should be older than defined age
                         type: string
                       minCount:
+                        description: MinCount the minimum number of files inside the searchPath
                         type: integer
                       password:
                         description: Password to authenticate against given smb server
@@ -4523,8 +4527,11 @@ spec:
                       port:
                         description: Port on which smb server is running. Defaults to 445
                         type: integer
+                      searchPath:
+                        description: SearchPath sub-path inside the mount location
+                        type: string
                       server:
-                        description: Server location of smb server
+                        description: Server location of smb server. Can be hostname/ip or in '\\server\e$\a\b\c' syntax Where server is the hostname e$ is the sharename and a/b/c is the searchPath location
                         type: string
                       sharename:
                         description: Sharename to mount from the samba server
@@ -4536,10 +4543,8 @@ spec:
                         description: Workstation...
                         type: string
                     required:
-                      - minAge
                       - password
                       - server
-                      - sharename
                       - username
                     type: object
                   type: array
@@ -4632,6 +4637,13 @@ rules:
       - pods
       - namespaces
       - services
+    verbs:
+      - '*'
+  - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+      - pods/logs
     verbs:
       - '*'
   - apiGroups:
