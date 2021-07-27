@@ -3,6 +3,7 @@ package checks
 import (
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -41,7 +42,15 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	template := smbCheck.GetDisplayTemplate()
 	var smbStatus SmbStatus
 	textResults := smbCheck.GetDisplayTemplate() != ""
-	serverPath := getServerPath(smbCheck.Server, smbCheck.Port)
+	var serverPath string
+	if strings.Contains(smbCheck.Server, "\\") {
+		serverPath, smbCheck.Sharename, smbCheck.SearchPath = getServerDetails(smbCheck.Server, smbCheck.Port)
+	} else {
+		serverPath = getServerPath(smbCheck.Server, smbCheck.Port)
+	}
+	if smbCheck.SearchPath == "" {
+		smbCheck.SearchPath = "."
+	}
 	conn, err := net.Dial("tcp", serverPath)
 	if err != nil {
 		return smbFailF(smbCheck, textResults, smbStatus, template, "failed getting connection: %v", err)
@@ -66,18 +75,29 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		return smbFailF(smbCheck, textResults, smbStatus, template, "failed mounting sharname %v to server: %v", smbCheck.Sharename, err)
 	}
 	defer fs.Umount() //nolint: errcheck
-	age, count, err := getLatestFileAgeAndCount(fs)
+	age, count, err := getLatestFileAgeAndCount(fs, smbCheck.SearchPath)
 	if err != nil {
 		return smbFailF(smbCheck, textResults, smbStatus, template, "error traversing files: %v", err)
 	}
 	smbStatus.age = age.String()
 	smbStatus.count = count
-	minAge, err := time.ParseDuration(smbCheck.MinAge)
-	if err != nil {
-		return smbFailF(smbCheck, textResults, smbStatus, template, "error parsing minAge: %v", err)
+	if smbCheck.MinAge != "" {
+		minAge, err := time.ParseDuration(smbCheck.MinAge)
+		if err != nil {
+			return smbFailF(smbCheck, textResults, smbStatus, template, "error parsing minAge: %v", err)
+		}
+		if age < minAge {
+			return smbFailF(smbCheck, textResults, smbStatus, template, "age of latest object %v is less than the minimum age: %v ", age, minAge)
+		}
 	}
-	if age < minAge {
-		return smbFailF(smbCheck, textResults, smbStatus, template, "age of latest object %v is less than the minimum age: %v ", age, minAge)
+	if smbCheck.MaxAge != "" {
+		maxAge, err := time.ParseDuration(smbCheck.MaxAge)
+		if err != nil {
+			return smbFailF(smbCheck, textResults, smbStatus, template, "error parsing minAge: %v", err)
+		}
+		if age > maxAge {
+			return smbFailF(smbCheck, textResults, smbStatus, template, "age of latest object %v is more than the maximum age: %v ", age, maxAge)
+		}
 	}
 	if count < smbCheck.MinCount {
 		return smbFailF(smbCheck, textResults, smbStatus, template, "file count: %v is less than specified minCount: %v", count, smbCheck.MinCount)
@@ -97,8 +117,21 @@ func getServerPath(url string, port int) string {
 	return url + ":" + defaultPort
 }
 
-func getLatestFileAgeAndCount(fs *smb2.Share) (duration time.Duration, count int, err error) {
-	files, err := fs.ReadDir(".")
+func getServerDetails(serverPath string, port int) (server, sharename, searchPath string) {
+	serverPath = strings.TrimLeft(serverPath, "\\")
+	serverDetails := strings.SplitN(serverPath, "\\", 3)
+	if port != 0 {
+		server = fmt.Sprintf("%s:%d", serverDetails[0], port)
+	} else {
+		server = serverDetails[0] + ":" + defaultPort
+	}
+	sharename = serverDetails[1]
+	searchPath = strings.ReplaceAll(serverDetails[2], "\\", "/")
+	return
+}
+
+func getLatestFileAgeAndCount(fs *smb2.Share, searchPath string) (duration time.Duration, count int, err error) {
+	files, err := fs.ReadDir(searchPath)
 	if err != nil {
 		return
 	}
