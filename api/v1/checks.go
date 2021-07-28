@@ -998,6 +998,7 @@ jmeter:
       systemProperties:
         - user.dir=/home/mstover/jmeter_stuff
       description: The Jmeter test
+```
 */
 type Jmeter struct {
 	JmeterCheck `yaml:",inline" json:",inline"`
@@ -1014,6 +1015,7 @@ junit:
         - name: jes
           image: docker.io/tarun18/junit-test-pass
           command: ["/start.sh"]
+```
 */
 type Junit struct {
 	JunitCheck `yaml:",inline" json:",inline"`
@@ -1023,6 +1025,7 @@ type Junit struct {
 Smb check will connect to the given samba server with given credentials
 find the age of the latest updated file and compare it with minAge
 count the number of file present and compare with minCount if defined
+```yaml
 smb:
    - server: 192.168.1.9
      username: samba
@@ -1032,6 +1035,20 @@ smb:
 	 maxAge: 20h
 	 searchPath: a/b/c
      description: "Success SMB server"
+```
+
+User can define server in `\\server\e$\a\b\c` format where `server` is the host
+`e$` is the sharename and `a/b/c` represent the sub-dir inside mount location where the test will run to verify
+```yaml
+smb:
+   - server: '\\192.168.1.5\Some Public Folder\somedir'
+     username: samba
+     password: password
+     sharename: "Tarun Khandelwal’s Public Folder"
+     minAge: 10h
+     maxAge: 100h
+     description: "Success SMB server"
+```
 */
 type Smb struct {
 	SmbCheck `yaml:",inline" json:",inline"`

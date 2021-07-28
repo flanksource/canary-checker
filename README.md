@@ -36,10 +36,10 @@
       * [Restic - Query the contents of a Restic reposiotry for backup freshness and integrity](#restic---query-the-contents-of-a-restic-repository-for-backup-freshness-and-integrity)
       * [Jmeter - Run the supplied JMX test plan against the specified host](#jmeter---run-the-supplied-jmx-test-plan-against-the-specified-host)  
       * [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
-      * [Junit](#junit)  
-      * [Smb](#smb)  
       * [TCP](#tcp)
-  * [Guide for Developers](#guide-for-developers)
+      * [Junit](#junit)
+      * [Smb - Verify Folder Freshness](#smb---verify-folder-freshness)
+* [Guide for Developers](#guide-for-developers)
 <!--te-->
 
 ## Introduction
@@ -652,7 +652,7 @@ jmeter:
 
 ### Junit
 
-The check take's container definition as input complete its job and post the result of the generated junit result files
+The check take's pod spec as input complete its job and post the result of the generated junit result files
 ```yaml
 junit:
   - testResults: "/tmp/junit-results/"
@@ -667,13 +667,58 @@ The above sample junit test will wait for the specified container to finish its 
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| testResults | directory where the results will be published | string | yes |
+| testResults | directory where the results will be published | string | Yes |
 | description| description about the test | string | No |
-| spec | Pod specification | corev1.PodSpec | yes |
+| spec | Pod specification | corev1.PodSpec | Yes |
 | displayTemplate | display template for the text based results | string | No |
 
 >Note: the only thing required in spec is the containers section with only your job container
 
+
+### Smb - Verify Folder Freshness
+This check connect to the specified samba server to check folder freshness. This check will 
+- Verify the age of most recently modified file against `minAge` and `maxAge`.
+- Verify the number of files present in the mount against `minCount`.
+```yaml
+smb:
+  - server: 192.168.1.9
+    username: samba
+    password: password
+    sharename: "Some Public Folder"
+    minAge: 10h
+    maxAge: 20h
+    searchPath: a/b/c
+    description: "Success SMB server"
+```
+User can define server in `\\server\e$\a\b\c` format where `server` is the host `e$` is the sharename and `a/b/c` represent the sub-dir inside mount location where the test will run to verify
+```yaml
+smb:
+   - server: '\\192.168.1.5\Some Public Folder\somedir'
+     username: samba
+     password: password
+     sharename: "sharename" #will be overwritten by 'Some Public Folder'
+     searchPath: a/b/c #will be overwritten by 'somedir'
+     minAge: 10h
+     maxAge: 100h
+     description: "Success SMB server"
+```
+>Note when you use the above syntax the sharename and searchPath will be overwritten by the server
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| server | path to the server | string | Yes |
+| port | port on which smb is running. Defaults to 443 | int | No |
+| username | username for smb | string | Yes |
+| password | password for smb | string | Yes |
+| domain | domain for smb | string | No |
+| workstation | workstation for smb | string | No |
+| sharename | sharename for smb | string | No |
+| searchPath | sub-dir inside mount location inside which files will be checked | string | No |
+| minAge | minimum permissible file age | string | No |
+| maxAge | maxmimum permissible file age | string | No |
+| minCount | minimum number of files permissible | int | No |
+| description | description about the test | string | No |
+| displayTemplate | display template for the text based results | string | No |
 
 
 ### Guide for Developers
