@@ -1007,21 +1007,13 @@ type Jmeter struct {
 Junit check will wait for the given pod to be completed than parses all the xml files present in the defined testResults directory
 ```yaml
 junit:
-	- testResults: "/tmp/junit-results/"
-      description: "A sample junit check"
-      spec: |
-         apiVersion: v1
-         kind: Pod
-         metadata:
-          name: junit-results
-          namespace: default
-         spec:
-           containers:
-            - name: jes
-              image: docker.io/tarun18/junit-test-fail
-              command: ["/bin/sh","-c"]
-              args:
-                - "mkdir /tmp/junit-results/;cp /tmp/*.xml /tmp/junit-results/;sleep 10"
+  - testResults: "/tmp/junit-results/"
+	description: "junit demo test"
+    spec:
+      containers:
+        - name: jes
+          image: docker.io/tarun18/junit-test-pass
+          command: ["/start.sh"]
 */
 type Junit struct {
 	JunitCheck `yaml:",inline" json:",inline"`
@@ -1037,6 +1029,8 @@ smb:
      password: password
      sharename: "Some Public Folder"
      minAge: 10h
+	 maxAge: 20h
+	 searchPath: a/b/c
      description: "Success SMB server"
 */
 type Smb struct {

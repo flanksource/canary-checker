@@ -36,6 +36,8 @@
       * [Restic - Query the contents of a Restic reposiotry for backup freshness and integrity](#restic---query-the-contents-of-a-restic-repository-for-backup-freshness-and-integrity)
       * [Jmeter - Run the supplied JMX test plan against the specified host](#jmeter---run-the-supplied-jmx-test-plan-against-the-specified-host)  
       * [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
+      * [Junit](#junit)  
+      * [Smb](#smb)  
       * [TCP](#tcp)
   * [Guide for Developers](#guide-for-developers)
 <!--te-->
@@ -646,6 +648,33 @@ jmeter:
 | description |  | string | Yes |
 | endpoint |  | string | Yes |
 | thresholdMillis |  | int64 | Yes |
+
+
+### Junit
+
+The check take's container definition as input complete its job and post the result of the generated junit result files
+```yaml
+junit:
+  - testResults: "/tmp/junit-results/"
+    description: "junit demo test"
+    spec:
+      containers:
+        - name: jes
+          image: docker.io/tarun18/junit-test-pass
+          command: ["/start.sh"]
+```
+The above sample junit test will wait for the specified container to finish its job and once completed will parse all the xml files defined in `testResults` field
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| testResults | directory where the results will be published | string | yes |
+| description| description about the test | string | No |
+| spec | Pod specification | corev1.PodSpec | yes |
+| displayTemplate | display template for the text based results | string | No |
+
+>Note: the only thing required in spec is the containers section with only your job container
+
+
 
 ### Guide for Developers
 
