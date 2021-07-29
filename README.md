@@ -272,8 +272,8 @@ http:
 
 <sup>*</sup> One of either endpoint or namespace must be specified, but not both.  Specify a namespace of `"*"` to crawl all namespaces.
 
-This check has an option to display result in text format instead of pass/fail bar format.
-To enable text based result user would define `displayTemplate`.
+This check provides an option to display results in text format instead of pass/fail bar format.
+To enable text format the user would define a `displayTemplate`.
 
 The fields exposed for `displayTemplate` are:
 - .code: response code from the http server.
@@ -463,7 +463,7 @@ postgres:
 | query | query that needs to be executed on the server  | string | Yes |
 | results | Number of rows returned by query. Defaults to 1 | int | No |
 | resultsFunction |  resultsFunction defines the results that needs to be checked. | string | No |
-| displayTemplate | displayTemplate represents the output format for the results. When defined results are published in text format. | string | No |
+| displayTemplate | displayTemplate represents the output format for the results. When defined, results are published in text format. | string | No |
 
 #### Example with resultsFunction
 
@@ -478,7 +478,7 @@ postgres:
 ```
 This check has an option to display result in text format instead of pass/fail bar format.
 
-To enable text based result user would define `displayTemplate`.
+To enable text-based results the user would define a `displayTemplate`.
 
 The fields exposed for `displayTemplate` are:
 - .results: rows returned by the query
@@ -518,7 +518,7 @@ mssql:
       displayTemplate: '[[ index .results 0 ]]'
 ```
 
-This check has an option to display result in text format instead of pass/fail bar format.
+This check provides an option to display result in text format instead of pass/fail bar format.
 
 To enable text based result user would define `displayTemplate`.
 
@@ -730,9 +730,9 @@ The above sample junit test will wait for the specified container to finish its 
 | spec | Pod specification | corev1.PodSpec | Yes |
 | displayTemplate | displayTemplate represents the output format for the results. | string | No |
 
->Note: the only thing required in spec is the containers section with only your job container
+> **Note:** the only thing required in spec is the containers section with only your job container
 
-This check always display results in text based format. The `displayTemplate` defaults to `Passed: [[.passed]], Failed: [[.failed]]`
+This check always displays results in text-based format. The `displayTemplate` defaults to `Passed: [[.passed]], Failed: [[.failed]]`
 
 The fields exposed for `displayTemplate` are:
 - .passed: number of test passed.
@@ -742,7 +742,7 @@ The fields exposed for `displayTemplate` are:
 
 ### Smb - Verify Folder Freshness
 
-This check connect to the specified samba server to check folder freshness. This check will:
+This check connects to the specified samba server to check folder freshness. This check will:
 
 - Verify the age of most recently modified file against `minAge` and `maxAge`.
 - Verify the number of files present in the mount against `minCount`.
@@ -758,7 +758,11 @@ smb:
     description: "Success SMB server"
 ```
 
-User can define server in `\\server\e$\a\b\c` format where `server` is the host `e$` is the sharename and `a/b/c` represent the sub-dir inside mount location where the test will run to verify
+The user can define server in `\\server\e$\a\b\c` format where:
+
+- `server` is the host 
+- `e$` is the sharename 
+- `a/b/c` represent the sub-dir inside mount location where the test will run to verify.
 
 ```yaml
 smb:
@@ -772,7 +776,7 @@ smb:
      displayTemplate: 'Age: [[.age]]'
      description: "Success SMB server"
 ```
-> **Note:** when you use the above syntax the sharename and searchPath will be overwritten by the server
+> **Note:** When using the above syntax, the sharename and searchPath will be overwritten by the server.
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -805,7 +809,7 @@ In the check user can define `displayTemplate` to get text based results.
 
 The `displayTemplate` accepts a template with delimiter `[[` `]]` and supports all the functions of [gomplate](https://docs.gomplate.ca/).
 
-Checks that currently have support for displayTemplate are:
+Checks that currently have support for `displayTemplate` are:
 - [s3Bucket](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
 - sql
   - [postgres](#postgres---query-a-postgresql-db-using-sql)
