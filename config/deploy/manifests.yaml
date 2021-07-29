@@ -297,7 +297,7 @@ spec:
                       description:
                         type: string
                       displayTemplate:
-                        description: DisplayTemplate defines the output format. When set the result of the canary will be displayed in the text format. Example 'Response Codes [[.code]]'
+                        description: 'DisplayTemplate defines the output format. When set the result of the canary will be displayed in the text format. Example: ''Response Codes [[.code]]'' Note: When DisplayTemplate is defined the dashboard will show the text-based results, instead of traditional pass/fail bar results'
                         type: string
                       endpoint:
                         description: HTTP endpoint to check.  Mutually exclusive with Namespace
@@ -466,7 +466,7 @@ spec:
                       description:
                         type: string
                       displayTemplate:
-                        description: 'DisplayTemplate represents the output format for the results. Example: ''Passed: [[.passed]] Failed: [[.failed]] Skipped: [[.skipped]] Error: [[.error]]''. Defaults to ''Passed: {{.passed}}, Failed: {{.failed}}'''
+                        description: 'DisplayTemplate represents the output format for the results. Example: ''Passed: [[.passed]] Failed: [[.failed]] Skipped: [[.skipped]] Error: [[.error]]''. Defaults to ''Passed: [[.passed]], Failed: [[.failed]]'''
                         type: string
                       spec:
                         description: PodSpec is a description of a pod.
@@ -4236,7 +4236,7 @@ spec:
                       description:
                         type: string
                       displayTemplate:
-                        description: 'DisplayTemplate represents the output format for the results. Example ''[[ .results 0 ]]'' Note: When DisplayTemplate is defined the dashboard will show the text-based results, instead of traditional pass/fail bar resulys'
+                        description: 'DisplayTemplate represents the output format for the results. Example ''[[ .results 0 ]]'' Note: When DisplayTemplate is defined the dashboard will show the text-based results, instead of traditional pass/fail bar results'
                         type: string
                       driver:
                         type: string
@@ -4371,7 +4371,7 @@ spec:
                       description:
                         type: string
                       displayTemplate:
-                        description: 'DisplayTemplate represents the output format for the results. Example ''[[ .results 0 ]]'' Note: When DisplayTemplate is defined the dashboard will show the text-based results, instead of traditional pass/fail bar resulys'
+                        description: 'DisplayTemplate represents the output format for the results. Example ''[[ .results 0 ]]'' Note: When DisplayTemplate is defined the dashboard will show the text-based results, instead of traditional pass/fail bar results'
                         type: string
                       driver:
                         type: string
@@ -4508,6 +4508,7 @@ spec:
                       description:
                         type: string
                       displayTemplate:
+                        description: 'DisplayTemplate represents the output format for the results. Example ''File Age: [[.age]]'' Defaults to ''File Age: [[.age]]; File count: [[.count]]'''
                         type: string
                       domain:
                         description: Domain...

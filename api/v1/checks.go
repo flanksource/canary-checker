@@ -49,7 +49,9 @@ type HTTPCheck struct {
 	// configmap/secret lookups will be constrained to
 	specNamespace string `yaml:"-" json:"-"`
 	// DisplayTemplate defines the output format. When set the result of the canary will be displayed in the text format.
-	// Example 'Response Codes [[.code]]'
+	// Example: 'Response Codes [[.code]]'
+	// Note: When DisplayTemplate is defined the dashboard will show the text-based results,
+	// instead of traditional pass/fail bar results
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -161,7 +163,8 @@ type S3BucketCheck struct {
 	UsePathStyle bool `yaml:"usePathStyle" json:"usePathStyle,omitempty"`
 	// Skip TLS verify when connecting to s3
 	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
-	// DisplayTemplate represents the output format for the test results. Example: 'Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'
+	// DisplayTemplate represents the output format for the test results.
+	// Example: 'Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -365,9 +368,9 @@ type SQLCheck struct {
 	// Example: '[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'
 	// Note: The test will fail on when the template returns false
 	ResultsFunction string `yaml:"resultsFunction,omitempty" json:"resultsFunction,omitempty"`
-	//DisplayTemplate represents the output format for the results. Example '[[ .results 0 ]]'
+	// DisplayTemplate represents the output format for the results. Example '[[ .results 0 ]]'
 	// Note: When DisplayTemplate is defined the dashboard will show the text-based results,
-	// instead of traditional pass/fail bar resulys
+	// instead of traditional pass/fail bar results
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -600,7 +603,7 @@ type JunitCheck struct {
 	name string     `yaml:"-" json:"-"`
 	Spec v1.PodSpec `yaml:"spec" json:"spec"`
 	//DisplayTemplate represents the output format for the results. Example: 'Passed: [[.passed]] Failed: [[.failed]] Skipped: [[.skipped]] Error: [[.error]]'.
-	//Defaults to 'Passed: {{.passed}}, Failed: {{.failed}}'
+	//Defaults to 'Passed: [[.passed]], Failed: [[.failed]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -660,8 +663,10 @@ type SmbCheck struct {
 	//MaxAge the latest object should be younger than defined age
 	MaxAge string `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
 	//MinCount the minimum number of files inside the searchPath
-	MinCount        int    `yaml:"minCount,omitempty" json:"minCount,omitempty"`
-	Description     string `yaml:"description,omitempty" json:"description,omitempty"`
+	MinCount    int    `yaml:"minCount,omitempty" json:"minCount,omitempty"`
+	Description string `yaml:"description,omitempty" json:"description,omitempty"`
+	//DisplayTemplate represents the output format for the results. Example 'File Age: [[.age]]'
+	//Defaults to 'File Age: [[.age]]; File count: [[.count]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 

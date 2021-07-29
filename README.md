@@ -39,7 +39,8 @@
       * [TCP](#tcp)
       * [Junit](#junit)
       * [Smb - Verify Folder Freshness](#smb---verify-folder-freshness)
-* [Guide for Developers](#guide-for-developers)
+  * [Text Based Results](#text-based-results)  
+  * [Guide for Developers](#guide-for-developers)
 <!--te-->
 
 ## Introduction
@@ -265,8 +266,17 @@ http:
 | headers | Array of key-value pairs to be passed as headers to the HTTP method.  Specified in the same manner as pod environment variables but without the support for pod spec references |   [[]kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | |
 | authentication | `username` and `password` value, both of which are specified as [[]kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar), to be passed as authentication headers | *Authentication | |
 | ntlm | if set to true will change the authentication protocol | bool | |
+| displayTemplate | displayTemplate represents the output format for the results. When defined results are published in text format. | string | No |
 
 <sup>*</sup> One of either endpoint or namespace must be specified, but not both.  Specify a namespace of `"*"` to crawl all namespaces.
+
+This check has an option to display result in text format instead of pass/fail bar format.
+To enable text based result user would define `displayTemplate`.
+
+The fields exposed for displayTemplate are:
+- .code: response code from the http server.
+- .headers: response headers.
+- .content: content from the http request.
 
 ### Helm - Build and push a helm chart
 
@@ -445,13 +455,29 @@ postgres:
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| driver |  | string | Yes |
-| connection |  | string | Yes |
-| query |  | string | Yes |
-| results |  | int | Yes |
+| description | description for the test | string | No |
+| driver | sql driver | string | Yes |
+| connection | connection string to connect to the server | string | Yes |
+| query | query that needs to be executed on the server  | string | Yes |
+| results | Number of rows returned by query. Defaults to 1 | int | No |
+| resultsFunction |  resultsFunction defines the results that needs to be checked. | string | No |
+| displayTemplate | displayTemplate represents the output format for the results. When defined results are published in text format. | string | No |
 
+Example with resultsFunction:
+```yaml
+postgres:
+    - connection: "host=localhost port=5432 user=postgres password=password dbname=postgres sslmode=disable"
+      query: "SELECT * from names"
+      results: 2 # number of rows
+      driver: postgres
+      resultsFunction: '[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'
+      displayTemplate: '[[ index .results 0 ]]'
+```
+This check has an option to display result in text format instead of pass/fail bar format.
+To enable text based result user would define `displayTemplate`.
 
+The fields exposed for displayTemplate are:
+- .results: rows returned by the query
 
 ### Mssql - Query a Mssql DB using SQL
 
@@ -469,12 +495,31 @@ mssql:
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| driver |  | string | Yes |
-| connection |  | string | Yes |
-| query |  | string | Yes |
-| results |  | int | Yes |
+| description | description for the test | string | No |
+| driver | sql driver | string | Yes |
+| connection | connection string to connect to the server | string | Yes |
+| query | query that needs to be executed on the server  | string | Yes |
+| results | Number of rows returned by query. Defaults to 1 | int | No |
+| resultsFunction |  resultsFunction defines the results that needs to be checked. | string | No |
+| displayTemplate | displayTemplate represents the output format for the results. When defined results are published in text format. | string | No |
 
+Example with resultsFunction:
+```yaml
+mssql:
+    - connection: "server=localhost;user id=sa;password=S0m3S3curep@sswd;port=1433;database=master"
+      query: "SELECT * from names"
+      results: 2 # number of rows
+      driver: mssql
+      resultsFunction: '[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'
+      displayTemplate: '[[ index .results 0 ]]'
+```
+
+This check has an option to display result in text format instead of pass/fail bar format.
+To enable text based result user would define `displayTemplate`.
+
+
+The fields exposed for displayTemplate are:
+- .results: rows returned by the query
 
 
 ### Redis - Execute ping against redis instance
@@ -563,8 +608,15 @@ s3Bucket:
 | minSize | min size of of most recent matched object in bytes | int64 | Yes |
 | usePathStyle | Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY | bool | Yes |
 | skipTLSVerify | Skip TLS verify when connecting to s3 | bool | Yes |
+| displayTemplate | displayTemplate represents the output format for the results. | string | No |
 
+>Note: This check always display results in text based format. The displayTemplate defaults to `"Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]"`
 
+The fields exposed for displayTemplate are:
+- .size: size of the latest object in mb
+- .maxAge: age of the latest object
+- .count: number of objects
+- .totalSize: total size of all the objects
 
 ### Restic - Query the contents of a Restic repository for backup freshness and integrity
 
@@ -657,6 +709,7 @@ The check take's pod spec as input complete its job and post the result of the g
 junit:
   - testResults: "/tmp/junit-results/"
     description: "junit demo test"
+    displayTemplate: 'Passed: [[.passed]]; Failed: [[.failed]]; Skipped: [[.skipped]]; Error: [[.error]]'
     spec:
       containers:
         - name: jes
@@ -670,10 +723,17 @@ The above sample junit test will wait for the specified container to finish its 
 | testResults | directory where the results will be published | string | Yes |
 | description| description about the test | string | No |
 | spec | Pod specification | corev1.PodSpec | Yes |
-| displayTemplate | display template for the text based results | string | No |
+| displayTemplate | displayTemplate represents the output format for the results. | string | No |
 
 >Note: the only thing required in spec is the containers section with only your job container
 
+This check always display results in text based format. The displayTemplate defaults to `Passed: [[.passed]], Failed: [[.failed]]`
+
+The fields exposed for displayTemplate are:
+- .passed: number of test passed.
+- .failed: number of test failed.
+- .skipped: number of test skipped.
+- .error: number of test errored out.
 
 ### Smb - Verify Folder Freshness
 This check connect to the specified samba server to check folder freshness. This check will 
@@ -700,6 +760,7 @@ smb:
      searchPath: a/b/c #will be overwritten by 'somedir'
      minAge: 10h
      maxAge: 100h
+     displayTemplate: 'Age: [[.age]]'
      description: "Success SMB server"
 ```
 >Note when you use the above syntax the sharename and searchPath will be overwritten by the server
@@ -715,11 +776,35 @@ smb:
 | sharename | sharename for smb | string | No |
 | searchPath | sub-dir inside mount location inside which files will be checked | string | No |
 | minAge | minimum permissible file age | string | No |
-| maxAge | maxmimum permissible file age | string | No |
+| maxAge | maximum permissible file age | string | No |
 | minCount | minimum number of files permissible | int | No |
 | description | description about the test | string | No |
-| displayTemplate | display template for the text based results | string | No |
+| displayTemplate | displayTemplate represents the output format for the results. | string | No |
 
+This check always display results in text based format. The displayTemplate defaults to `File Age: [[.age]]; File count: [[.count]]`
+
+The fields exposed for displayTemplate are:
+- .age: Age of the most recently modified file.
+- .count: number of files present in the mount.
+
+
+
+### Text Based Results
+Alongside our normal bar based results we now have the feature to display text based results for some checks.
+In the check user can define `displayTemplate` to get text based results. 
+
+The displayTemplate accepts a template with delimiter `[[` `]]` and supports all the functions of [gomplate](https://docs.gomplate.ca/).
+
+Checks that currently have support for displayTemplate are:
+- [s3Bucket](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
+- sql
+  - [postgres](#postgres---query-a-postgresql-db-using-sql)
+  - [mssql](#mssql---query-a-mssql-db-using-sql)
+- [http](#http---query-an-http-endpoint-or-namespace)    
+- [junit](#junit)
+- [smb](#smb---verify-folder-freshness)
+
+Checkout the above tests for more info about the fields that are available for their displayTemplate.
 
 ### Guide for Developers
 
