@@ -4238,13 +4238,8 @@ spec:
                       displayTemplate:
                         description: 'DisplayTemplate represents the output format for the results. Example ''[[ .results 0 ]]'' Note: When DisplayTemplate is defined the dashboard will show the text-based results, instead of traditional pass/fail bar resulys'
                         type: string
-                      driver:
-                        type: string
                       query:
                         type: string
-                      results:
-                        description: Number rows to check for
-                        type: integer
                       resultsFunction:
                         description: 'ResultsFunction defines the results that needs to be checked. Example: ''[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'' Note: The test will fail on when the template returns false'
                         type: string
@@ -4373,13 +4368,8 @@ spec:
                       displayTemplate:
                         description: 'DisplayTemplate represents the output format for the results. Example ''[[ .results 0 ]]'' Note: When DisplayTemplate is defined the dashboard will show the text-based results, instead of traditional pass/fail bar resulys'
                         type: string
-                      driver:
-                        type: string
                       query:
                         type: string
-                      results:
-                        description: Number rows to check for
-                        type: integer
                       resultsFunction:
                         description: 'ResultsFunction defines the results that needs to be checked. Example: ''[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'' Note: The test will fail on when the template returns false'
                         type: string

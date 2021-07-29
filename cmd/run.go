@@ -43,7 +43,7 @@ func RunChecks(config v1.CanarySpec, namespace string) []*pkg.CheckResult {
 	}
 
 	config.SetNamespaces(namespace)
-
+	config.SetSQLDrivers()
 	for _, c := range checks.All {
 		switch cs := c.(type) {
 		case checks.SetsClient:
