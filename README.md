@@ -29,7 +29,9 @@
       * [Namespace - Create a new kubernetes namespace and pod](#namespace---create-a-new-kubernetes-namespace-and-pod)
       * [Pod - Create a new pod and verify reachability](#pod---create-a-new-pod-and-verify-reachability)
       * [Postgres - Query a Postgresql DB using SQL](#postgres---query-a-postgresql-db-using-sql)
-      * [Mssql - Query a Mssql DB using SQL](#mssql---query-a-mssql-db-using-sql)  
+         * [Example with resultsFunction](#example-with-resultsfunction)
+      * [Mssql - Query a Mssql DB using SQL](#mssql---query-a-mssql-db-using-sql)
+         * [Example with resultsFunction](#example-with-resultsfunction-1)
       * [Redis - Excute ping against redis instance](#redis---execute-ping-against-redis-instance)  
       * [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
       * [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
@@ -463,7 +465,8 @@ postgres:
 | resultsFunction |  resultsFunction defines the results that needs to be checked. | string | No |
 | displayTemplate | displayTemplate represents the output format for the results. When defined results are published in text format. | string | No |
 
-Example with `resultsFunction`:
+#### Example with resultsFunction
+
 ```yaml
 postgres:
     - connection: "host=localhost port=5432 user=postgres password=password dbname=postgres sslmode=disable"
@@ -485,7 +488,6 @@ The fields exposed for `displayTemplate` are:
 This check will try to connect to a specified Mssql database, run a query against it and verify the results.
 
 ```yaml
-
 mssql:
   - connection: 'server=localhost;user id=sa;password=S0m3S3curep@sswd;port=1433;database=master'
     description: 'The mssql test'
@@ -504,7 +506,8 @@ mssql:
 | resultsFunction |  resultsFunction defines the results that needs to be checked. | string | No |
 | displayTemplate | displayTemplate represents the output format for the results. When defined results are published in text format. | string | No |
 
-Example with `resultsFunction`:
+#### Example with resultsFunction
+
 ```yaml
 mssql:
     - connection: "server=localhost;user id=sa;password=S0m3S3curep@sswd;port=1433;database=master"
