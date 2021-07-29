@@ -266,14 +266,14 @@ http:
 | headers | Array of key-value pairs to be passed as headers to the HTTP method.  Specified in the same manner as pod environment variables but without the support for pod spec references |   [[]kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | |
 | authentication | `username` and `password` value, both of which are specified as [[]kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar), to be passed as authentication headers | *Authentication | |
 | ntlm | if set to true will change the authentication protocol | bool | |
-| displayTemplate | displayTemplate represents the output format for the results. When defined results are published in text format. | string | No |
+| displayTemplate | displayTemplate represents the output format for the results. When defined, results are published in text format. | string | No |
 
 <sup>*</sup> One of either endpoint or namespace must be specified, but not both.  Specify a namespace of `"*"` to crawl all namespaces.
 
 This check has an option to display result in text format instead of pass/fail bar format.
 To enable text based result user would define `displayTemplate`.
 
-The fields exposed for displayTemplate are:
+The fields exposed for `displayTemplate` are:
 - .code: response code from the http server.
 - .headers: response headers.
 - .content: content from the http request.
@@ -463,7 +463,7 @@ postgres:
 | resultsFunction |  resultsFunction defines the results that needs to be checked. | string | No |
 | displayTemplate | displayTemplate represents the output format for the results. When defined results are published in text format. | string | No |
 
-Example with resultsFunction:
+Example with `resultsFunction`:
 ```yaml
 postgres:
     - connection: "host=localhost port=5432 user=postgres password=password dbname=postgres sslmode=disable"
@@ -474,9 +474,10 @@ postgres:
       displayTemplate: '[[ index .results 0 ]]'
 ```
 This check has an option to display result in text format instead of pass/fail bar format.
+
 To enable text based result user would define `displayTemplate`.
 
-The fields exposed for displayTemplate are:
+The fields exposed for `displayTemplate` are:
 - .results: rows returned by the query
 
 ### Mssql - Query a Mssql DB using SQL
@@ -503,7 +504,7 @@ mssql:
 | resultsFunction |  resultsFunction defines the results that needs to be checked. | string | No |
 | displayTemplate | displayTemplate represents the output format for the results. When defined results are published in text format. | string | No |
 
-Example with resultsFunction:
+Example with `resultsFunction`:
 ```yaml
 mssql:
     - connection: "server=localhost;user id=sa;password=S0m3S3curep@sswd;port=1433;database=master"
@@ -515,10 +516,11 @@ mssql:
 ```
 
 This check has an option to display result in text format instead of pass/fail bar format.
+
 To enable text based result user would define `displayTemplate`.
 
 
-The fields exposed for displayTemplate are:
+The fields exposed for `displayTemplate` are:
 - .results: rows returned by the query
 
 
@@ -610,9 +612,9 @@ s3Bucket:
 | skipTLSVerify | Skip TLS verify when connecting to s3 | bool | Yes |
 | displayTemplate | displayTemplate represents the output format for the results. | string | No |
 
->Note: This check always display results in text based format. The displayTemplate defaults to `"Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]"`
+> **Note:** This check always display results in text based format. The displayTemplate defaults to `"Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]"`
 
-The fields exposed for displayTemplate are:
+The fields exposed for `displayTemplate` are:
 - .size: size of the latest object in mb
 - .maxAge: age of the latest object
 - .count: number of objects
@@ -727,16 +729,18 @@ The above sample junit test will wait for the specified container to finish its 
 
 >Note: the only thing required in spec is the containers section with only your job container
 
-This check always display results in text based format. The displayTemplate defaults to `Passed: [[.passed]], Failed: [[.failed]]`
+This check always display results in text based format. The `displayTemplate` defaults to `Passed: [[.passed]], Failed: [[.failed]]`
 
-The fields exposed for displayTemplate are:
+The fields exposed for `displayTemplate` are:
 - .passed: number of test passed.
 - .failed: number of test failed.
 - .skipped: number of test skipped.
 - .error: number of test errored out.
 
 ### Smb - Verify Folder Freshness
-This check connect to the specified samba server to check folder freshness. This check will 
+
+This check connect to the specified samba server to check folder freshness. This check will:
+
 - Verify the age of most recently modified file against `minAge` and `maxAge`.
 - Verify the number of files present in the mount against `minCount`.
 ```yaml
@@ -750,7 +754,9 @@ smb:
     searchPath: a/b/c
     description: "Success SMB server"
 ```
+
 User can define server in `\\server\e$\a\b\c` format where `server` is the host `e$` is the sharename and `a/b/c` represent the sub-dir inside mount location where the test will run to verify
+
 ```yaml
 smb:
    - server: '\\192.168.1.5\Some Public Folder\somedir'
@@ -763,7 +769,7 @@ smb:
      displayTemplate: 'Age: [[.age]]'
      description: "Success SMB server"
 ```
->Note when you use the above syntax the sharename and searchPath will be overwritten by the server
+> **Note:** when you use the above syntax the sharename and searchPath will be overwritten by the server
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -781,9 +787,9 @@ smb:
 | description | description about the test | string | No |
 | displayTemplate | displayTemplate represents the output format for the results. | string | No |
 
-This check always display results in text based format. The displayTemplate defaults to `File Age: [[.age]]; File count: [[.count]]`
+This check always display results in text based format. The `displayTemplate` defaults to `File Age: [[.age]]; File count: [[.count]]`
 
-The fields exposed for displayTemplate are:
+The fields exposed for `displayTemplate` are:
 - .age: Age of the most recently modified file.
 - .count: number of files present in the mount.
 
@@ -791,9 +797,10 @@ The fields exposed for displayTemplate are:
 
 ### Text Based Results
 Alongside our normal bar based results we now have the feature to display text based results for some checks.
+
 In the check user can define `displayTemplate` to get text based results. 
 
-The displayTemplate accepts a template with delimiter `[[` `]]` and supports all the functions of [gomplate](https://docs.gomplate.ca/).
+The `displayTemplate` accepts a template with delimiter `[[` `]]` and supports all the functions of [gomplate](https://docs.gomplate.ca/).
 
 Checks that currently have support for displayTemplate are:
 - [s3Bucket](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
@@ -804,7 +811,7 @@ Checks that currently have support for displayTemplate are:
 - [junit](#junit)
 - [smb](#smb---verify-folder-freshness)
 
-Checkout the above tests for more info about the fields that are available for their displayTemplate.
+Check out the above tests for more info about the fields that are available for their `displayTemplate`.
 
 ### Guide for Developers
 
