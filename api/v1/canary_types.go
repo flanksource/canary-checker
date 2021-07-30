@@ -23,6 +23,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	mssqlDriver    = "mssql"
+	postgresDriver = "postgres"
+)
+
 // CanarySpec defines the desired state of Canary
 type CanarySpec struct {
 	Env            map[string]VarSource  `yaml:"env,omitempty" json:"env,omitempty"`
@@ -132,6 +137,19 @@ func (spec CanarySpec) SetNamespaces(namespace string) {
 func (spec CanarySpec) SetNames(name string) {
 	for i := range spec.Junit {
 		spec.Junit[i].SetName(name)
+	}
+}
+
+func (spec CanarySpec) SetSQLDrivers() {
+	for i := range spec.Mssql {
+		if spec.Mssql[i].driver == "" {
+			spec.Mssql[i].SetDriver(mssqlDriver)
+		}
+	}
+	for i := range spec.Postgres {
+		if spec.Postgres[i].driver == "" {
+			spec.Postgres[i].SetDriver(postgresDriver)
+		}
 	}
 }
 

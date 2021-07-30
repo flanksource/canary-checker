@@ -2,4 +2,3 @@ mssql:
   - connection: 'server=mssql.platform-system;user id=sa;password=S0m3p@sswd;port=1433;database=master' #wrong port for failure
     query: "SELECT 1"
     results: 1
-    driver: mssql

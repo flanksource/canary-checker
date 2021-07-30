@@ -3,6 +3,7 @@ package checks
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -62,8 +63,8 @@ func CheckSQL(check v1.SQLCheck) *pkg.CheckResult { // nolint: golint
 	if err != nil {
 		return sqlFailF(check, textResults, template, "failed to execute query %s", err)
 	}
-	if count != check.Result || count == 0 {
-		return sqlFailF(check, textResults, template, "expected %d results, got %d", check.GetResult(), count)
+	if count == 0 {
+		return sqlFailF(check, textResults, template, "0 rows returned from the query")
 	}
 	results := map[string]interface{}{"results": result}
 	if check.ResultsFunction != "" {
@@ -71,7 +72,7 @@ func CheckSQL(check v1.SQLCheck) *pkg.CheckResult { // nolint: golint
 		if err != nil {
 			sqlFailF(check, textResults, template, "error templating %v", err)
 		}
-		if success == "false" || success == "False" {
+		if strings.ToLower(success) != "true" {
 			sqlFailF(check, textResults, template, "result function returned %v", success)
 		}
 	}
