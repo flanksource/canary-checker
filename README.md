@@ -272,7 +272,7 @@ http:
 | headers | array of key-value pairs to be passed as headers to the HTTP method.  Specified in the same manner as pod environment variables but without the support for pod spec references |   [[]kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | |
 | authentication | `username` and `password` value, both of which are specified as [[]kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar), to be passed as authentication headers | *Authentication | |
 | ntlm | if true, will change authentication protocol | bool | |
-| displayTemplate | template to display query results (overrides default bar format for UI) | string | No |
+| displayTemplate | template to display server response in text (overrides default bar format for UI) | string | No |
 
 <sup>*</sup> One of either endpoint or namespace must be specified, but not both.  Specify a namespace of `"*"` to crawl all namespaces.
 
@@ -463,7 +463,7 @@ postgres:
 | connection | connection string to connect to the server | string | Yes |
 | query | query that needs to be executed on the server  | string | Yes |
 | resultsFunction | function that tests query output for pass/fail (must return boolean) | string | No |
-| displayTemplate | template to display query results (overrides default bar format for UI) | string | No |
+| displayTemplate | template to display query results in text (overrides default bar format for UI) | string | No |
 
 #### displayTemplate
 
@@ -490,7 +490,7 @@ mssql:
 | connection | connection string to connect to the server | string | Yes |
 | query | query that needs to be executed on the server  | string | Yes |
 | resultsFunction | function that tests query output for pass/fail (must return boolean) | string | No |
-| displayTemplate | template to display query results (overrides default bar format for UI) | string | No |
+| displayTemplate | template to display query results in text (overrides default bar format for UI) | string | No |
 
 #### displayTemplate
 

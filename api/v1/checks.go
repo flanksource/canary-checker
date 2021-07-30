@@ -48,10 +48,8 @@ type HTTPCheck struct {
 	// specNamespace is the namespace in which the canary was deployed, and which
 	// configmap/secret lookups will be constrained to
 	specNamespace string `yaml:"-" json:"-"`
-	// DisplayTemplate defines the output format. When set the result of the canary will be displayed in the text format.
-	// Example: 'Response Codes [[.code]]'
-	// Note: When DisplayTemplate is defined the dashboard will show the text-based results,
-	// instead of traditional pass/fail bar results
+	// DisplayTemplate displays server response in text (overrides default bar format for UI).
+	// Example: 'Response Code: [[.code]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -163,8 +161,8 @@ type S3BucketCheck struct {
 	UsePathStyle bool `yaml:"usePathStyle" json:"usePathStyle,omitempty"`
 	// Skip TLS verify when connecting to s3
 	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
-	// DisplayTemplate represents the output format for the test results.
-	// Example: 'Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'
+	// DisplayTemplate displays testResults results in text.
+	// Default: 'Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -364,13 +362,11 @@ type SQLCheck struct {
 	Query       string `yaml:"query" json:"query,omitempty"`
 	// Number rows to check for
 	Result int `yaml:"results" json:"results,omitempty"`
-	// ResultsFunction defines the results that needs to be checked.
+	// ResultsFunction tests query output for pass/fail (must return boolean)
 	// Example: '[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'
-	// Note: The test will fail on when the template returns false
 	ResultsFunction string `yaml:"resultsFunction,omitempty" json:"resultsFunction,omitempty"`
-	// DisplayTemplate represents the output format for the results. Example '[[ .results 0 ]]'
-	// Note: When DisplayTemplate is defined the dashboard will show the text-based results,
-	// instead of traditional pass/fail bar results
+	// DisplayTemplate displays query results in text (overrides default bar format for UI)
+	// Example: '[[index .results 0]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -602,8 +598,8 @@ type JunitCheck struct {
 	// name of the canary. will be the same for the pod
 	name string     `yaml:"-" json:"-"`
 	Spec v1.PodSpec `yaml:"spec" json:"spec"`
-	//DisplayTemplate represents the output format for the results. Example: 'Passed: [[.passed]] Failed: [[.failed]] Skipped: [[.skipped]] Error: [[.error]]'.
-	//Defaults to 'Passed: [[.passed]], Failed: [[.failed]]'
+	// DisplayTemplate displays testResults results in text
+	// Default: 'Passed: [[.passed]], Failed: [[.failed]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -665,8 +661,8 @@ type SmbCheck struct {
 	//MinCount the minimum number of files inside the searchPath
 	MinCount    int    `yaml:"minCount,omitempty" json:"minCount,omitempty"`
 	Description string `yaml:"description,omitempty" json:"description,omitempty"`
-	//DisplayTemplate represents the output format for the results. Example 'File Age: [[.age]]'
-	//Defaults to 'File Age: [[.age]]; File count: [[.count]]'
+	// DisplayTemplate displays check output in text
+	// Default: 'File Age: [[.age]]; File count: [[.count]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
