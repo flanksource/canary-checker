@@ -90,7 +90,7 @@ func (c *NamespaceChecker) newPod(check canaryv1.NamespaceCheck, ns *v1.Namespac
 	pod.Namespace = ns.Name
 	pod.Labels[podLabelSelector] = pod.Name
 	pod.Labels[podCheckSelector] = c.podCheckSelectorValue(check, ns)
-	pod.Labels[podGeneralSelector] = "true"
+	pod.Labels[podGeneralSelector] = "true" //nolint: goconst
 	if check.PriorityClass != "" {
 		pod.Spec.PriorityClassName = check.PriorityClass
 	}

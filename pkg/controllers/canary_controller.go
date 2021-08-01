@@ -109,7 +109,9 @@ func (r *CanaryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			return ctrl.Result{}, err
 		}
 	}
-
+	check.Spec.SetSQLDrivers()
+	check.Spec.SetNames(check.Name)
+	check.Spec.SetNamespaces(check.Namespace)
 	_, run := observed.Load(req.NamespacedName)
 	if run && check.Status.ObservedGeneration == check.Generation {
 		logger.V(2).Info("check already up to date")
@@ -237,9 +239,6 @@ func (c CanaryJob) Run() {
 		return
 	}
 	c.V(2).Info("Starting")
-
-	spec.SetNamespaces(c.Check.Namespace)
-	spec.SetNames(c.Check.Name)
 
 	var results []*pkg.CheckResult
 	for _, check := range checks.All {

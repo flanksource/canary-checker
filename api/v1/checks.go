@@ -357,7 +357,7 @@ func (c RedisCheck) GetEndpoint() string {
 
 type SQLCheck struct {
 	Description string `yaml:"description" json:"description,omitempty"`
-	Driver      string `yaml:"driver" json:"driver,omitempty"`
+	driver      string `yaml:"-" json:"-"`
 	Connection  string `yaml:"connection" json:"connection,omitempty"`
 	Query       string `yaml:"query" json:"query,omitempty"`
 	// Number rows to check for
@@ -375,19 +375,22 @@ func (c SQLCheck) GetDisplayTemplate() string {
 }
 
 func (c *SQLCheck) GetQuery() string {
+	if c.Query == "" {
+		return "SELECT 1"
+	}
 	return c.Query
-}
-
-func (c *SQLCheck) GetResult() int {
-	return c.Result
 }
 
 func (c *SQLCheck) GetConnection() string {
 	return c.Connection
 }
 
-func (c *SQLCheck) GetDriver() string {
-	return c.Driver
+func (c SQLCheck) GetDriver() string {
+	return c.driver
+}
+
+func (c *SQLCheck) SetDriver(driver string) {
+	c.driver = driver
 }
 
 func (c SQLCheck) GetEndpoint() string {
@@ -399,51 +402,15 @@ func (c SQLCheck) GetDescription() string {
 }
 
 func (c SQLCheck) GetType() string {
-	return c.Driver
+	return c.GetDriver()
 }
 
 type PostgresCheck struct {
 	SQLCheck `yaml:",inline" json:",inline"`
 }
 
-// This is used to supply a default value for unsupplied fields
-func (c *PostgresCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	type rawPostgresCheck PostgresCheck
-	raw := rawPostgresCheck{
-		SQLCheck{
-			Driver: "postgres",
-			Query:  "SELECT 1",
-			Result: 1,
-		},
-	}
-	if err := unmarshal(&raw); err != nil {
-		return err
-	}
-
-	*c = PostgresCheck(raw)
-	return nil
-}
-
 type MssqlCheck struct {
 	SQLCheck `yaml:",inline" json:",inline"`
-}
-
-// This is used to supply a default value for unsupplied fields
-func (c *MssqlCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	type rawMsSQLCheck MssqlCheck
-	raw := rawMsSQLCheck{
-		SQLCheck{
-			Driver: "mssql",
-			Query:  "SELECT 1",
-			Result: 1,
-		},
-	}
-	if err := unmarshal(&raw); err != nil {
-		return err
-	}
-
-	*c = MssqlCheck(raw)
-	return nil
 }
 
 type PodCheck struct {
