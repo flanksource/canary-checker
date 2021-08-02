@@ -4197,6 +4197,9 @@ spec:
                         type: object
                       testResults:
                         type: string
+                      timeout:
+                        description: timeout in minutes to wait for specified container to finish its job. Defaults to 5 minutes
+                        type: integer
                     required:
                       - spec
                       - testResults

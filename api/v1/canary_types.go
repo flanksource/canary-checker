@@ -140,6 +140,12 @@ func (spec CanarySpec) SetNames(name string) {
 	}
 }
 
+func (spec CanarySpec) SetIntervals(interval uint64) {
+	for i := range spec.Junit {
+		spec.Junit[i].SetInterval(interval)
+	}
+}
+
 func (spec CanarySpec) SetSQLDrivers() {
 	for i := range spec.Mssql {
 		if spec.Mssql[i].driver == "" {

@@ -55,10 +55,10 @@ static: kustomize manifests generate .bin/yq
 	$(KUSTOMIZE) build ./config/base | $(YQ) eval -P '' - > config/deploy/base.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests: controller-gen
+manifests: controller-gen .bin/yq
 	$(CONTROLLER_GEN) crd:trivialVersions=false paths="./..." output:stdout > config/deploy/crd.yaml
-	yq eval -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.junit.items.properties.spec.properties.containers.items.properties.ports.items.required=["containerPort", "protocol"]' config/deploy/crd.yaml
-	yq eval -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.junit.items.properties.spec.properties.initContainers.items.properties.ports.items.required=["containerPort", "protocol"]' config/deploy/crd.yaml
+	$(YQ) eval -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.junit.items.properties.spec.properties.containers.items.properties.ports.items.required=["containerPort", "protocol"]' config/deploy/crd.yaml
+	$(YQ) eval -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.junit.items.properties.spec.properties.initContainers.items.properties.ports.items.required=["containerPort", "protocol"]' config/deploy/crd.yaml
 
 # Run go fmt against code
 fmt:

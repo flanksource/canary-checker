@@ -563,8 +563,13 @@ type JunitCheck struct {
 	// namespace in which canary is created
 	namespace string `yaml:"-" json:"-"`
 	// name of the canary. will be the same for the pod
-	name string     `yaml:"-" json:"-"`
-	Spec v1.PodSpec `yaml:"spec" json:"spec"`
+	name string `yaml:"-" json:"-"`
+	// interval of the canary
+	interval uint64 `yaml:"-" json:"-"`
+	//timeout in minutes to wait for specified container to finish its job.
+	// Defaults to 5 minutes
+	Timeout int        `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+	Spec    v1.PodSpec `yaml:"spec" json:"spec"`
 	// DisplayTemplate displays testResults results in text
 	// Default: 'Passed: [[.passed]], Failed: [[.failed]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
@@ -575,6 +580,14 @@ func (c JunitCheck) GetDisplayTemplate() string {
 		return c.DisplayTemplate
 	}
 	return "Passed: [[.passed]], Failed: [[.failed]]"
+}
+
+func (c *JunitCheck) SetInterval(interval uint64) {
+	c.interval = interval
+}
+
+func (c JunitCheck) GetInterval() uint64 {
+	return c.interval
 }
 
 func (c *JunitCheck) SetNamespace(namespace string) {
@@ -599,6 +612,14 @@ func (c JunitCheck) GetEndpoint() string {
 func (c JunitCheck) GetDescription() string {
 	return c.Description
 }
+
+func (c JunitCheck) GetTimeout() int {
+	if c.Timeout != 0 {
+		return c.Timeout
+	}
+	return 5
+}
+
 func (c JunitCheck) GetType() string {
 	return "junit"
 }
