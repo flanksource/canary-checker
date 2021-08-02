@@ -4,7 +4,7 @@
   <!--  Component modal doc: : https://bootstrap-vue.org/docs/components/modal-->
   <!--  Here we use dynamic id for the modal since it is being called from a loop.-->
   <!--  If ID is not distinguished then a click on any row will open modal for every value-->
-  <b-modal :id="`modal-canary${name}${namespace}`" ok-only>
+  <b-modal :id="`modal-canary-${checkKey}`" ok-only>
     <template #modal-title>
       <img :src="`images/${checkType}.svg`" v-bind:style="{ height: '1.875rem' }" alt=""> {{name}}
     </template>
@@ -49,6 +49,10 @@ export default {
       required: true,
     },
     checkType: {
+      type: String,
+      required: true,
+    },
+    checkKey: {
       type: String,
       required: true,
     },

@@ -634,7 +634,7 @@ type SmbCheck struct {
 }
 
 func (c SmbCheck) GetEndpoint() string {
-	return fmt.Sprintf("%s:%d/%s", c.Server, c.Port, c.Sharename)
+	return fmt.Sprintf("%s:%d/%s-%s", c.Server, c.GetPort(), c.Sharename, c.Description)
 }
 
 func (c SmbCheck) GetDescription() string {
@@ -643,6 +643,13 @@ func (c SmbCheck) GetDescription() string {
 
 func (c SmbCheck) GetType() string {
 	return "smb"
+}
+
+func (c SmbCheck) GetPort() int {
+	if c.Port != 0 {
+		return c.Port
+	}
+	return 445
 }
 
 func (c SmbCheck) GetDisplayTemplate() string {

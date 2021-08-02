@@ -15,10 +15,6 @@ import (
 	"github.com/hirochachacha/go-smb2"
 )
 
-const (
-	defaultPort = "445"
-)
-
 type SmbChecker struct{}
 
 type SmbStatus struct {
@@ -42,17 +38,18 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	smbCheck := extConfig.(v1.SmbCheck)
 	template := smbCheck.GetDisplayTemplate()
+	port := smbCheck.GetPort()
 	var smbStatus SmbStatus
 	var err error
 	textResults := smbCheck.GetDisplayTemplate() != ""
 	var serverPath string
 	if strings.Contains(smbCheck.Server, "\\") {
-		serverPath, smbCheck.Sharename, smbCheck.SearchPath, err = getServerDetails(smbCheck.Server, smbCheck.Port)
+		serverPath, smbCheck.Sharename, smbCheck.SearchPath, err = getServerDetails(smbCheck.Server, port)
 		if err != nil {
 			return smbFailF(smbCheck, textResults, smbStatus, template, "error fetching server details: %v. serverPath: %v", err, serverPath)
 		}
 	} else {
-		serverPath = getServerPath(smbCheck.Server, smbCheck.Port)
+		serverPath = fmt.Sprintf("%s:%d", smbCheck.Server, port)
 	}
 	if smbCheck.SearchPath == "" {
 		smbCheck.SearchPath = "."
@@ -116,24 +113,13 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	return Successf(smbCheck, start, textResults, message)
 }
 
-func getServerPath(url string, port int) string {
-	if port != 0 {
-		return fmt.Sprintf("%s:%d", url, port)
-	}
-	return url + ":" + defaultPort
-}
-
 func getServerDetails(serverPath string, port int) (server, sharename, searchPath string, err error) {
 	serverPath = strings.TrimLeft(serverPath, "\\")
 	if serverPath == "" {
 		return "", "", "", fmt.Errorf("error parsing server path")
 	}
 	serverDetails := strings.SplitN(serverPath, "\\", 3)
-	if port != 0 {
-		server = fmt.Sprintf("%s:%d", serverDetails[0], port)
-	} else {
-		server = serverDetails[0] + ":" + defaultPort
-	}
+	server = fmt.Sprintf("%s:%d", serverDetails[0], port)
 	switch len(serverDetails) {
 	case 1:
 		return "", "", "", fmt.Errorf("error parsing server path")

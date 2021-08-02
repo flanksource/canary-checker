@@ -3,7 +3,7 @@
 <template>
   <tr :key="checkKey">
     <!--  Component modal doc: : https://bootstrap-vue.org/docs/components/modal-->
-    <td v-b-modal="`modal-canary${name}${namespace}`">
+    <td v-b-modal="`modal-canary-${checkKey}`">
       <img :src="`images/${checkType}.svg`" :title="checkType " v-bind:style="{ height: '1.25rem' }" :alt="`${checkType} logo`" >  {{ shortDescription }}
       <canary-modal :interval="interval"
                     :owner="owner"
@@ -12,6 +12,7 @@
                     :description="description"
                     :name="name"
                     :namespace="namespace"
+                    :check-key="checkKey"
       />
     </td>
     <td v-for="server in orderedServers" :key="server.value" class="align-top border-right border-left">
