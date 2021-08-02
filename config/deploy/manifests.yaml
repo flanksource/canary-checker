@@ -297,7 +297,7 @@ spec:
                       description:
                         type: string
                       displayTemplate:
-                        description: 'DisplayTemplate defines the output format. When set the result of the canary will be displayed in the text format. Example: ''Response Codes [[.code]]'' Note: When DisplayTemplate is defined the dashboard will show the text-based results, instead of traditional pass/fail bar results'
+                        description: 'DisplayTemplate displays server response in text (overrides default bar format for UI). Example: ''Response Code: [[.code]]'''
                         type: string
                       endpoint:
                         description: HTTP endpoint to check.  Mutually exclusive with Namespace
@@ -466,7 +466,7 @@ spec:
                       description:
                         type: string
                       displayTemplate:
-                        description: 'DisplayTemplate represents the output format for the results. Example: ''Passed: [[.passed]] Failed: [[.failed]] Skipped: [[.skipped]] Error: [[.error]]''. Defaults to ''Passed: [[.passed]], Failed: [[.failed]]'''
+                        description: 'DisplayTemplate displays testResults results in text Default: ''Passed: [[.passed]], Failed: [[.failed]]'''
                         type: string
                       spec:
                         description: PodSpec is a description of a pod.
@@ -4236,12 +4236,15 @@ spec:
                       description:
                         type: string
                       displayTemplate:
-                        description: 'DisplayTemplate represents the output format for the results. Example ''[[ .results 0 ]]'' Note: When DisplayTemplate is defined the dashboard will show the text-based results, instead of traditional pass/fail bar results'
+                        description: 'DisplayTemplate displays query results in text (overrides default bar format for UI) Example: ''[[index .results 0]]'''
                         type: string
                       query:
                         type: string
+                      results:
+                        description: Number rows to check for
+                        type: integer
                       resultsFunction:
-                        description: 'ResultsFunction defines the results that needs to be checked. Example: ''[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'' Note: The test will fail on when the template returns false'
+                        description: 'ResultsFunction tests query output for pass/fail (must return boolean) Example: ''[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'''
                         type: string
                     type: object
                   type: array
@@ -4366,12 +4369,15 @@ spec:
                       description:
                         type: string
                       displayTemplate:
-                        description: 'DisplayTemplate represents the output format for the results. Example ''[[ .results 0 ]]'' Note: When DisplayTemplate is defined the dashboard will show the text-based results, instead of traditional pass/fail bar results'
+                        description: 'DisplayTemplate displays query results in text (overrides default bar format for UI) Example: ''[[index .results 0]]'''
                         type: string
                       query:
                         type: string
+                      results:
+                        description: Number rows to check for
+                        type: integer
                       resultsFunction:
-                        description: 'ResultsFunction defines the results that needs to be checked. Example: ''[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'' Note: The test will fail on when the template returns false'
+                        description: 'ResultsFunction tests query output for pass/fail (must return boolean) Example: ''[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'''
                         type: string
                     type: object
                   type: array
@@ -4461,7 +4467,7 @@ spec:
                       description:
                         type: string
                       displayTemplate:
-                        description: 'DisplayTemplate represents the output format for the test results. Example: ''Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'''
+                        description: 'DisplayTemplate displays testResults results in text. Default: ''Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'''
                         type: string
                       endpoint:
                         type: string
@@ -4498,7 +4504,7 @@ spec:
                       description:
                         type: string
                       displayTemplate:
-                        description: 'DisplayTemplate represents the output format for the results. Example ''File Age: [[.age]]'' Defaults to ''File Age: [[.age]]; File count: [[.count]]'''
+                        description: 'DisplayTemplate displays check output in text Default: ''File Age: [[.age]]; File count: [[.count]]'''
                         type: string
                       domain:
                         description: Domain...
