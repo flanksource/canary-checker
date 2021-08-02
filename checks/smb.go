@@ -85,7 +85,7 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if err != nil {
 		return smbFailF(smbCheck, textResults, smbStatus, template, "error traversing files: %v", err)
 	}
-	smbStatus.age = age.String()
+	smbStatus.age = text.HumanizeDuration(age)
 	smbStatus.count = count
 	if smbCheck.MinAge != "" {
 		minAge, err := time.ParseDuration(smbCheck.MinAge)
