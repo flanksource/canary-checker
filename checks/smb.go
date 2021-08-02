@@ -6,15 +6,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/commons/logger"
+
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/text"
 	"github.com/hirochachacha/go-smb2"
-)
-
-const (
-	defaultPort = "445"
 )
 
 type SmbChecker struct{}
@@ -40,13 +38,18 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	smbCheck := extConfig.(v1.SmbCheck)
 	template := smbCheck.GetDisplayTemplate()
+	port := smbCheck.GetPort()
 	var smbStatus SmbStatus
+	var err error
 	textResults := smbCheck.GetDisplayTemplate() != ""
 	var serverPath string
 	if strings.Contains(smbCheck.Server, "\\") {
-		serverPath, smbCheck.Sharename, smbCheck.SearchPath = getServerDetails(smbCheck.Server, smbCheck.Port)
+		serverPath, smbCheck.Sharename, smbCheck.SearchPath, err = getServerDetails(smbCheck.Server, port)
+		if err != nil {
+			return smbFailF(smbCheck, textResults, smbStatus, template, "error fetching server details: %v. serverPath: %v", err, serverPath)
+		}
 	} else {
-		serverPath = getServerPath(smbCheck.Server, smbCheck.Port)
+		serverPath = fmt.Sprintf("%s:%d", smbCheck.Server, port)
 	}
 	if smbCheck.SearchPath == "" {
 		smbCheck.SearchPath = "."
@@ -79,7 +82,7 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if err != nil {
 		return smbFailF(smbCheck, textResults, smbStatus, template, "error traversing files: %v", err)
 	}
-	smbStatus.age = age.String()
+	smbStatus.age = text.HumanizeDuration(age)
 	smbStatus.count = count
 	if smbCheck.MinAge != "" {
 		minAge, err := time.ParseDuration(smbCheck.MinAge)
@@ -110,30 +113,40 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	return Successf(smbCheck, start, textResults, message)
 }
 
-func getServerPath(url string, port int) string {
-	if port != 0 {
-		return fmt.Sprintf("%s:%d", url, port)
-	}
-	return url + ":" + defaultPort
-}
-
-func getServerDetails(serverPath string, port int) (server, sharename, searchPath string) {
+func getServerDetails(serverPath string, port int) (server, sharename, searchPath string, err error) {
 	serverPath = strings.TrimLeft(serverPath, "\\")
-	serverDetails := strings.SplitN(serverPath, "\\", 3)
-	if port != 0 {
-		server = fmt.Sprintf("%s:%d", serverDetails[0], port)
-	} else {
-		server = serverDetails[0] + ":" + defaultPort
+	if serverPath == "" {
+		return "", "", "", fmt.Errorf("error parsing server path")
 	}
-	sharename = serverDetails[1]
-	searchPath = strings.ReplaceAll(serverDetails[2], "\\", "/")
-	return
+	serverDetails := strings.SplitN(serverPath, "\\", 3)
+	server = fmt.Sprintf("%s:%d", serverDetails[0], port)
+	switch len(serverDetails) {
+	case 1:
+		return "", "", "", fmt.Errorf("error parsing server path")
+	case 2:
+		logger.Tracef("searchPath not found in the server path. Default '.' will be taken")
+		sharename = serverDetails[1]
+		searchPath = "."
+		return
+	default:
+		sharename = serverDetails[1]
+		searchPath = strings.ReplaceAll(serverDetails[2], "\\", "/")
+		return
+	}
 }
 
 func getLatestFileAgeAndCount(fs *smb2.Share, searchPath string) (duration time.Duration, count int, err error) {
 	files, err := fs.ReadDir(searchPath)
 	if err != nil {
 		return
+	}
+	if len(files) == 0 {
+		// directory is empty. returning duration of directory
+		info, err := fs.Stat(searchPath)
+		if err != nil {
+			return duration, count, err
+		}
+		return time.Since(info.ModTime()), 0, nil
 	}
 	duration = time.Since(files[0].ModTime())
 	for _, file := range files {
