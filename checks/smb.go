@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/commons/logger"
+
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -41,10 +43,14 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	smbCheck := extConfig.(v1.SmbCheck)
 	template := smbCheck.GetDisplayTemplate()
 	var smbStatus SmbStatus
+	var err error
 	textResults := smbCheck.GetDisplayTemplate() != ""
 	var serverPath string
 	if strings.Contains(smbCheck.Server, "\\") {
-		serverPath, smbCheck.Sharename, smbCheck.SearchPath = getServerDetails(smbCheck.Server, smbCheck.Port)
+		serverPath, smbCheck.Sharename, smbCheck.SearchPath, err = getServerDetails(smbCheck.Server, smbCheck.Port)
+		if err != nil {
+			return smbFailF(smbCheck, textResults, smbStatus, template, "error fetching server details: %v. serverPath: %v", err, serverPath)
+		}
 	} else {
 		serverPath = getServerPath(smbCheck.Server, smbCheck.Port)
 	}
@@ -117,17 +123,30 @@ func getServerPath(url string, port int) string {
 	return url + ":" + defaultPort
 }
 
-func getServerDetails(serverPath string, port int) (server, sharename, searchPath string) {
+func getServerDetails(serverPath string, port int) (server, sharename, searchPath string, err error) {
 	serverPath = strings.TrimLeft(serverPath, "\\")
+	if serverPath == "" {
+		return "", "", "", fmt.Errorf("error parsing server path")
+	}
 	serverDetails := strings.SplitN(serverPath, "\\", 3)
 	if port != 0 {
 		server = fmt.Sprintf("%s:%d", serverDetails[0], port)
 	} else {
 		server = serverDetails[0] + ":" + defaultPort
 	}
-	sharename = serverDetails[1]
-	searchPath = strings.ReplaceAll(serverDetails[2], "\\", "/")
-	return
+	switch len(serverDetails) {
+	case 1:
+		return "", "", "", fmt.Errorf("error parsing server path")
+	case 2:
+		logger.Tracef("searchPath not found in the server path. Default '.' will be taken")
+		sharename = serverDetails[1]
+		searchPath = "."
+		return
+	default:
+		sharename = serverDetails[1]
+		searchPath = strings.ReplaceAll(serverDetails[2], "\\", "/")
+		return
+	}
 }
 
 func getLatestFileAgeAndCount(fs *smb2.Share, searchPath string) (duration time.Duration, count int, err error) {
