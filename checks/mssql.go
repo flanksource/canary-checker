@@ -18,7 +18,7 @@ func (c *MssqlChecker) Type() string {
 	return "mssql"
 }
 
-// Run: Check every entry from config according to Checker interface
+// Run - Check every entry from config according to Checker interface
 // Returns check result and metrics
 func (c *MssqlChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
@@ -28,7 +28,7 @@ func (c *MssqlChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 	return results
 }
 
-// CheckConfig : Attempts to connect to a DB using the specified
+// Check CheckConfig : Attempts to connect to a DB using the specified
 //               driver and connection string
 // Returns check result and metrics
 func (c *MssqlChecker) Check(extConfig external.Check) *pkg.CheckResult {

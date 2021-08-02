@@ -48,8 +48,8 @@ type HTTPCheck struct {
 	// specNamespace is the namespace in which the canary was deployed, and which
 	// configmap/secret lookups will be constrained to
 	specNamespace string `yaml:"-" json:"-"`
-	// DisplayTemplate defines the output format. When set the result of the canary will be displayed in the text format.
-	// Example 'Response Codes [[.code]]'
+	// DisplayTemplate displays server response in text (overrides default bar format for UI).
+	// Example: 'Response Code: [[.code]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -161,7 +161,8 @@ type S3BucketCheck struct {
 	UsePathStyle bool `yaml:"usePathStyle" json:"usePathStyle,omitempty"`
 	// Skip TLS verify when connecting to s3
 	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
-	// DisplayTemplate represents the output format for the test results. Example: 'Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'
+	// DisplayTemplate displays testResults results in text.
+	// Default: 'Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -359,13 +360,13 @@ type SQLCheck struct {
 	driver      string `yaml:"-" json:"-"`
 	Connection  string `yaml:"connection" json:"connection,omitempty"`
 	Query       string `yaml:"query" json:"query,omitempty"`
-	// ResultsFunction defines the results that needs to be checked.
+	// Number rows to check for
+	Result int `yaml:"results" json:"results,omitempty"`
+	// ResultsFunction tests query output for pass/fail (must return boolean)
 	// Example: '[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'
-	// Note: The test will fail on when the template returns false
 	ResultsFunction string `yaml:"resultsFunction,omitempty" json:"resultsFunction,omitempty"`
-	//DisplayTemplate represents the output format for the results. Example '[[ .results 0 ]]'
-	// Note: When DisplayTemplate is defined the dashboard will show the text-based results,
-	// instead of traditional pass/fail bar resulys
+	// DisplayTemplate displays query results in text (overrides default bar format for UI)
+	// Example: '[[index .results 0]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -564,8 +565,8 @@ type JunitCheck struct {
 	// name of the canary. will be the same for the pod
 	name string     `yaml:"-" json:"-"`
 	Spec v1.PodSpec `yaml:"spec" json:"spec"`
-	//DisplayTemplate represents the output format for the results. Example: 'Passed: [[.passed]] Failed: [[.failed]] Skipped: [[.skipped]] Error: [[.error]]'.
-	//Defaults to 'Passed: {{.passed}}, Failed: {{.failed}}'
+	// DisplayTemplate displays testResults results in text
+	// Default: 'Passed: [[.passed]], Failed: [[.failed]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -625,8 +626,10 @@ type SmbCheck struct {
 	//MaxAge the latest object should be younger than defined age
 	MaxAge string `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
 	//MinCount the minimum number of files inside the searchPath
-	MinCount        int    `yaml:"minCount,omitempty" json:"minCount,omitempty"`
-	Description     string `yaml:"description,omitempty" json:"description,omitempty"`
+	MinCount    int    `yaml:"minCount,omitempty" json:"minCount,omitempty"`
+	Description string `yaml:"description,omitempty" json:"description,omitempty"`
+	// DisplayTemplate displays check output in text
+	// Default: 'File Age: [[.age]]; File count: [[.count]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
@@ -963,6 +966,7 @@ jmeter:
       systemProperties:
         - user.dir=/home/mstover/jmeter_stuff
       description: The Jmeter test
+```
 */
 type Jmeter struct {
 	JmeterCheck `yaml:",inline" json:",inline"`
@@ -972,21 +976,14 @@ type Jmeter struct {
 Junit check will wait for the given pod to be completed than parses all the xml files present in the defined testResults directory
 ```yaml
 junit:
-	- testResults: "/tmp/junit-results/"
-      description: "A sample junit check"
-      spec: |
-         apiVersion: v1
-         kind: Pod
-         metadata:
-          name: junit-results
-          namespace: default
-         spec:
-           containers:
-            - name: jes
-              image: docker.io/tarun18/junit-test-fail
-              command: ["/bin/sh","-c"]
-              args:
-                - "mkdir /tmp/junit-results/;cp /tmp/*.xml /tmp/junit-results/;sleep 10"
+  - testResults: "/tmp/junit-results/"
+	description: "junit demo test"
+    spec:
+      containers:
+        - name: jes
+          image: docker.io/tarun18/junit-test-pass
+          command: ["/start.sh"]
+```
 */
 type Junit struct {
 	JunitCheck `yaml:",inline" json:",inline"`
@@ -996,13 +993,30 @@ type Junit struct {
 Smb check will connect to the given samba server with given credentials
 find the age of the latest updated file and compare it with minAge
 count the number of file present and compare with minCount if defined
+```yaml
 smb:
    - server: 192.168.1.9
      username: samba
      password: password
      sharename: "Some Public Folder"
      minAge: 10h
+	 maxAge: 20h
+	 searchPath: a/b/c
      description: "Success SMB server"
+```
+
+User can define server in `\\server\e$\a\b\c` format where `server` is the host
+`e$` is the sharename and `a/b/c` represent the sub-dir inside mount location where the test will run to verify
+```yaml
+smb:
+   - server: '\\192.168.1.5\Some Public Folder\somedir'
+     username: samba
+     password: password
+     sharename: "Tarun Khandelwal’s Public Folder"
+     minAge: 10h
+     maxAge: 100h
+     description: "Success SMB server"
+```
 */
 type Smb struct {
 	SmbCheck `yaml:",inline" json:",inline"`

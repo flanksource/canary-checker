@@ -13,31 +13,42 @@
 
 ---
 <!--ts-->
-  * [Introduction](#introduction)
-  * [Features](#features)
-  * [Comparisons](#comparisions)
-  * [Quick Start](#quick-start)
-  * [Check Types](#check-types)
-      * [DNS - Query a DNS server](#dns---query-a-dns-server)
-      * [Containerd Pull - Pull an image using containerd](#containerd-pull---pull-an-image-using-containerd)
-      * [Docker Pull - Pull an image using docker](#docker-pull---pull-an-image-using-docker)
-      * [Docker Push - Create and push a docker image](#docker-push---create-and-push-a-docker-image)
-      * [HTTP - Query an HTTP endpoint or Namespace](#http---query-an-http-endpoint-or-namespace)
-      * [Helm - Build and push a helm chart](#helm---build-and-push-a-helm-chart)
-      * [ICMP - Ping a destination and check for packet loss](#icmp---ping-a-destination-and-check-for-packet-loss)
-      * [LDAP - Query a ldap(s) server](#ldap---query-a-ldaps-server)
-      * [Namespace - Create a new kubernetes namespace and pod](#namespace---create-a-new-kubernetes-namespace-and-pod)
-      * [Pod - Create a new pod and verify reachability](#pod---create-a-new-pod-and-verify-reachability)
-      * [Postgres - Query a Postgresql DB using SQL](#postgres---query-a-postgresql-db-using-sql)
-      * [Mssql - Query a Mssql DB using SQL](#mssql---query-a-mssql-db-using-sql)  
-      * [Redis - Excute ping against redis instance](#redis---execute-ping-against-redis-instance)  
-      * [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
-      * [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
-      * [Restic - Query the contents of a Restic reposiotry for backup freshness and integrity](#restic---query-the-contents-of-a-restic-repository-for-backup-freshness-and-integrity)
-      * [Jmeter - Run the supplied JMX test plan against the specified host](#jmeter---run-the-supplied-jmx-test-plan-against-the-specified-host)  
-      * [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
-      * [TCP](#tcp)
-  * [Guide for Developers](#guide-for-developers)
+- [Introduction](#introduction)
+- [Features](#features)
+- [Comparisons](#comparisons)
+- [Quick Start](#quick-start)
+- [Check Types](#check-types)
+  - [DNS - Query a DNS server](#dns---query-a-dns-server)
+  - [Containerd Pull - Pull an image using containerd](#containerd-pull---pull-an-image-using-containerd)
+  - [Docker Pull - Pull an image using docker](#docker-pull---pull-an-image-using-docker)
+  - [Docker Push - Create and push a docker image](#docker-push---create-and-push-a-docker-image)
+  - [HTTP - Query an HTTP endpoint or namespace](#http---query-an-http-endpoint-or-namespace)
+    - [displayTemplate](#displaytemplate)
+  - [Helm - Build and push a helm chart](#helm---build-and-push-a-helm-chart)
+  - [ICMP - Ping a destination and check for packet loss](#icmp---ping-a-destination-and-check-for-packet-loss)
+  - [LDAP - Query a ldap(s) server](#ldap---query-a-ldaps-server)
+  - [Namespace - Create a new kubernetes namespace and pod](#namespace---create-a-new-kubernetes-namespace-and-pod)
+  - [Pod - Create a new pod and verify reachability](#pod---create-a-new-pod-and-verify-reachability)
+  - [Postgres - Query a Postgresql DB using SQL](#postgres---query-a-postgresql-db-using-sql)
+    - [displayTemplate](#displaytemplate-1)
+  - [Mssql - Query a Mssql DB using SQL](#mssql---query-a-mssql-db-using-sql)
+    - [displayTemplate](#displaytemplate-2)
+  - [Redis - Execute ping against redis instance](#redis---execute-ping-against-redis-instance)
+  - [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
+  - [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
+    - [displayTemplate](#displaytemplate-3)
+  - [Restic - Query the contents of a Restic repository for backup freshness and integrity](#restic---query-the-contents-of-a-restic-repository-for-backup-freshness-and-integrity)
+  - [Jmeter - Run the supplied JMX test plan against the specified host](#jmeter---run-the-supplied-jmx-test-plan-against-the-specified-host)
+  - [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
+  - [TCP](#tcp)
+  - [Junit](#junit)
+    - [displayTemplate](#displaytemplate-4)
+  - [Smb - Verify Folder Freshness](#smb---verify-folder-freshness)
+    - [server](#server)
+    - [displayTemplate](#displaytemplate-5)
+  - [Display Types](#display-types)
+    - [displayTemplate](#displaytemplate-6)
+  - [Guide for Developers](#guide-for-developers)
 <!--te-->
 
 ## Introduction
@@ -104,11 +115,7 @@ spec:
       maxSSLExpiry: 7
 ```
 
-
-
-
 ## Check Types
-
 
 ### DNS - Query a DNS server
 
@@ -137,7 +144,7 @@ dns:
 
 ### Containerd Pull - Pull an image using containerd
 
-This check will try to pull a Docker image from specified registry using containers and then verify it's checksum and size.
+This check will try to pull a Docker image from specified registry using containers and then verify its checksum and size.
 
 ```yaml
 containerdPull:
@@ -162,7 +169,6 @@ containerdPull:
 This check will try to pull a Docker image from specified registry, verify it's checksum and size.
 
 ```yaml
-
 docker:
   - image: docker.io/library/busybox:1.31.1
     username:
@@ -191,7 +197,7 @@ docker:
 | password |  | string | Yes |
 
 
-### HTTP - Query an HTTP endpoint or Namespace
+### HTTP - Query an HTTP endpoint or namespace
 
 ```yaml
 http:
@@ -200,6 +206,7 @@ http:
     responseCodes: [201,200,301]
     responseContent: ""
     maxSSLExpiry: 60
+    displayTemplate: 'Response Code: [[.code]] Content: [[.content]]; Headers: [[.headers]]'
   - endpoint: https://httpstat.us/500
     thresholdMillis: 3000
     responseCodes: [500]
@@ -215,6 +222,7 @@ http:
     responseCodes: [200]
     responseContent: ""
     maxSSLExpiry: 60
+    displayTemplate: 'Response Code: [[.code]]'
   - headers:
     - name: headerkey1
       value: headervalue1
@@ -233,6 +241,7 @@ http:
     body: bodycontent
     responseContent: bodycontent
     endpoint: http://podinfo.127.0.0.1.nip.io/echo
+    displayTemplate: 'Response Code: [[.code]] Content: [[.content]]; Headers: [[.headers]]'
     responseCodes:
       - 202
   - authentication:
@@ -252,19 +261,28 @@ http:
 | ----- | ----------- | ------ | -------- |
 | description |  | string | Yes |
 | endpoint | HTTP endpoint to monitor | string | Yes <sup>*</sup> |
-| namespace | Kubernetes namespace to monitor | string | Yes <sup>*</sup> |
-| thresholdMillis | Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer. | int | Yes |
-| responseCodes | Expected response codes for the HTTP Request. | []int | Yes |
-| responseContent | Exact response content expected to be returned by the endpoint. | string | Yes |
+| namespace | kubernetes namespace to monitor | string | Yes <sup>*</sup> |
+| thresholdMillis | maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer. | int | Yes |
+| responseCodes | expected response codes for the HTTP Request. | []int | Yes |
+| responseContent | exact response content expected to be returned by the endpoint. | string | Yes |
 | responseJSONContent | `path` and `value` to parse json responses. `path` is a [jsonpath](https://tools.ietf.org/id/draft-goessner-dispatch-jsonpath-00.html) string, `value` is the expected content at that path | JSONCheck | | 
-| maxSSLExpiry | Maximum number of days until the SSL Certificate expires. | int | Yes |
-| method | Specify GET (default) or POST method for HTTP call | string | | 
-| body | Body of HTTP method | string | |
-| headers | Array of key-value pairs to be passed as headers to the HTTP method.  Specified in the same manner as pod environment variables but without the support for pod spec references |   [[]kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | |
+| maxSSLExpiry | maximum number of days until the SSL Certificate expires. | int | Yes |
+| method | specify GET (default) or POST method for HTTP call | string | | 
+| body | body of HTTP method | string | |
+| headers | array of key-value pairs to be passed as headers to the HTTP method.  Specified in the same manner as pod environment variables but without the support for pod spec references |   [[]kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | |
 | authentication | `username` and `password` value, both of which are specified as [[]kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar), to be passed as authentication headers | *Authentication | |
-| ntlm | if set to true will change the authentication protocol | bool | |
+| ntlm | if true, will change authentication protocol | bool | |
+| displayTemplate | template to display server response in text (overrides default bar format for UI) | string | No |
 
 <sup>*</sup> One of either endpoint or namespace must be specified, but not both.  Specify a namespace of `"*"` to crawl all namespaces.
+
+#### displayTemplate
+
+The fields for `displayTemplate` (see [Display Types]((#display-types))) are :
+
+- `.code`: response code from the http server
+- `.headers`: response headers
+- `.content`: content from the http request
 
 ### Helm - Build and push a helm chart
 
@@ -309,7 +327,6 @@ The LDAP check will:
 * search an object type in the provided bind DN.s
 
 ```yaml
-
 ldap:
   - host: ldap://127.0.0.1:10389
     username: uid=admin,ou=system
@@ -336,12 +353,11 @@ ldap:
 
 ### Namespace - Create a new kubernetes namespace and pod
 
-The Namespace check will:
+The namespace check will:
 
 * create a new namespace using the labels/annotations provided
 
 ```yaml
-
 namespace:
   - namePrefix: "test-name-prefix-"
     labels:
@@ -434,46 +450,53 @@ pod:
 This check will try to connect to a specified Postgresql database, run a query against it and verify the results.
 
 ```yaml
-
 postgres:
   - connection: "user=postgres password=mysecretpassword host=192.168.0.103 port=15432 dbname=postgres sslmode=disable"
-    query:  "SELECT 1"
-    results: 1
+    query: "SELECT * from names"
+    resultsFunction: '[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'
+    displayTemplate: '[[ index .results 0 ]]'
 ```
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| driver |  | string | Yes |
-| connection |  | string | Yes |
-| query |  | string | Yes |
-| results |  | int | Yes |
+| description | description for the test | string | No |
+| connection | connection string to connect to the server | string | Yes |
+| query | query that needs to be executed on the server  | string | Yes |
+| resultsFunction | function that tests query output for pass/fail (must return boolean) | string | No |
+| displayTemplate | template to display query results in text (overrides default bar format for UI) | string | No |
 
+#### displayTemplate
 
+The fields for `displayTemplate` are:
+
+- `.results`: rows returned by the query
 
 ### Mssql - Query a Mssql DB using SQL
 
 This check will try to connect to a specified Mssql database, run a query against it and verify the results.
 
 ```yaml
-
 mssql:
   - connection: 'server=localhost;user id=sa;password=S0m3S3curep@sswd;port=1433;database=master'
     description: 'The mssql test'
-    driver: mssql
-    query: 'SELECT 1'
-    results: 1
+    query: "SELECT * from names"
+    resultsFunction: '[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'
+    displayTemplate: '[[ index .results 0 ]]'
 ```
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| driver |  | string | Yes |
-| connection |  | string | Yes |
-| query |  | string | Yes |
-| results |  | int | Yes |
+| description | description for the test | string | No |
+| connection | connection string to connect to the server | string | Yes |
+| query | query that needs to be executed on the server  | string | Yes |
+| resultsFunction | function that tests query output for pass/fail (must return boolean) | string | No |
+| displayTemplate | template to display query results in text (overrides default bar format for UI) | string | No |
 
+#### displayTemplate
 
+The fields for `displayTemplate` (see [Display Types]((#display-types))) are:
+
+- `.results`: rows returned by the query
 
 ### Redis - Execute ping against redis instance
 
@@ -490,10 +513,10 @@ redis:
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | addr | host:port address. | string | Yes |
-| db | Database to be selected after connecting to the server. | int | Yes |
-| description | Description for canary | string | No |
-| password | Optional password. To authenticate the current connection | string | No |
-| username | Use the specified Username to authenticate the current connection | string | No |
+| db | database to be selected after connecting to the server. | int | Yes |
+| description | description for canary | string | No |
+| password | optional password. To authenticate the current connection | string | No |
+| username | use the specified Username to authenticate the current connection | string | No |
 
 
 ### S3 - Verify reachability and correctness of an S3 compatible store
@@ -523,16 +546,16 @@ s3:
 | accessKey |  | string | Yes |
 | secretKey |  | string | Yes |
 | objectPath |  | string | Yes |
-| skipTLSVerify | Skip TLS verify when connecting to s3 | bool | Yes |
+| skipTLSVerify | skip TLS verify when connecting to s3 | bool | Yes |
 
 
 ### S3 Bucket - Query the contents of an S3 bucket for freshness
 
-This check will
+This check will:
 
 - search objects matching the provided object path pattern
-- check that latest object is no older than provided MaxAge value in seconds
-- check that latest object size is not smaller than provided MinSize value in bytes.
+- check that latest object is no older than provided `maxAge` value in seconds
+- check that latest object size is not smaller than provided `minSize` value in bytes
 
 ```yaml
 s3Bucket:
@@ -559,17 +582,26 @@ s3Bucket:
 | readWrite |  | bool | Yes |
 | maxAge | maximum allowed age of matched objects in seconds | int64 | Yes |
 | minSize | min size of of most recent matched object in bytes | int64 | Yes |
-| usePathStyle | Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY | bool | Yes |
-| skipTLSVerify | Skip TLS verify when connecting to s3 | bool | Yes |
+| usePathStyle | use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY | bool | Yes |
+| skipTLSVerify | skip TLS verify when connecting to s3 | bool | Yes |
+| displayTemplate | template to display testResults results in text (default: `Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]`) | string | No |
 
+#### displayTemplate
 
+The fields for `displayTemplate` (see [Display Types]((#display-types))) are:
+
+- `.size`: size of the latest object in mb
+- `.maxAge`: age of the latest object
+- `.count`: number of objects
+- `.totalSize`: total size of objects
 
 ### Restic - Query the contents of a Restic repository for backup freshness and integrity
 
-This Check will
-- Query a Restic Repository for contents
-- Check the integrity and consistency of repo and data-blobs
-- Check bakup freshness
+This check will:
+
+- query a Restic Repository for contents
+- check the integrity and consistency of repo and data-blobs
+- check bakup freshness
 
 ```yaml
 restic:
@@ -586,20 +618,18 @@ restic:
 | ----- | ----------- | ------ | -------- |
 | reposiory | the location of your restic repository | string | Yes |
 | password | password for your restic repository | string | Yes |
-| maxAge   | The max age for backup allowed..eg: 5h30m | string | Yes |
-| accessKey | Access key to access your s3/minio bucket | string | No |
-| secretkey | Secret key to access your s3/minio buket | string | No |
-| description | The description about the canary | string | Yes |
-| checkIntegrity | Wheather to check integrity for the specified repo | bool | No |
-| caCert | Path to ca-root crt in case of self-signed certificates is used | string | No |
-
-
+| maxAge   | the max age for backup allowed..eg: 5h30m | string | Yes |
+| accessKey | access key to access your s3/minio bucket | string | No |
+| secretkey | secret key to access your s3/minio buket | string | No |
+| description | the description about the canary | string | Yes |
+| checkIntegrity | whether to check integrity for the specified repo | bool | No |
+| caCert | path to ca-root crt in case of self-signed certificates is used | string | No |
 
 ### Jmeter - Run the supplied JMX test plan against the specified host
 
-This check will execute the jmeter cli to execute the JMX test plan on the specified host
+This check will execute the jmeter cli to execute the JMX test plan on the specified host.
 
-> Note that JMeter is a memory hungry java application and you will likely need to increase the default memory limit from 512Mi to 1-2Gi or higher depending on the complexity, count, and frequency of jmeter tests
+> **Note:** JMeter is a memory hungry Java application and you will likely need to increase the default memory limit from 512Mi to 1-2Gi or higher depending on the complexity, count, and frequency of jmeter tests
 
 ```yaml
 jmeter:
@@ -620,15 +650,13 @@ jmeter:
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| jmx | ConfigMap or Secret reference to get the JMX test plan | Object | Yes |
-| host | The server against which test plan needs to be executed | String | No |
-| port | The port on which the server is running | Int | No |
+| jmx | configmap or Secret reference to get the JMX test plan | Object | Yes |
+| host | the server against which test plan needs to be executed | String | No |
+| port | the port on which the server is running | Int | No |
 | properties | defines the local Jmeter properties | []String | No |
 | systemProperties | defines the java system property | []String | No |
-| description | The description of the canary | String | Yes |
-| responseDuration | The duration under which all the test should pass | String | No |
-
-
+| description | the description of the canary | String | Yes |
+| responseDuration | the duration under which all the test should pass | String | No |
 
 ### SSL - Verify the expiry date of a SSL cert
 
@@ -636,8 +664,7 @@ jmeter:
 | ----- | ----------- | ------ | -------- |
 | description |  | string | Yes |
 | endpoint | HTTP endpoint to crawl | string | Yes |
-| maxSSLExpiry | Maximum number of days until the SSL Certificate expires. | int | Yes |
-
+| maxSSLExpiry | maximum number of days until the SSL Certificate expires. | int | Yes |
 
 ### TCP
 
@@ -647,7 +674,128 @@ jmeter:
 | endpoint |  | string | Yes |
 | thresholdMillis |  | int64 | Yes |
 
+### Junit
+
+The check occurs on the specified container's completion and parses any junit test reports in the container (at the `testResults` path):
+
+```yaml
+junit:
+  - testResults: "/tmp/junit-results/"
+    description: "junit demo test"
+    displayTemplate: 'Passed: [[.passed]]; Failed: [[.failed]]; Skipped: [[.skipped]]; Error: [[.error]]'
+    spec:
+      containers:
+        - name: jes
+          image: docker.io/tarun18/junit-test-pass
+          command: ["/start.sh"]
+```
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| testResults | directory where the results will be published | string | Yes |
+| description| description about the test | string | No |
+| spec | pod specification | corev1.PodSpec | Yes |
+| displayTemplate | template to display testResults results in text (default: `Passed: [[.passed]], Failed: [[.failed]]`) | string | No |
+
+> **Note:** For this `corev1.PodSpec` implementation, only containers field is required.
+
+#### displayTemplate
+
+The fields for `displayTemplate` (see [Display Types]((#display-types))) are:
+
+- `.passed`: number of tests passed
+- `.failed`: number of tests failed
+- `.skipped`: number of tests skipped
+- `.error`: number of tests errored
+
+### Smb - Verify Folder Freshness
+
+This check connects to a samba server to check folder freshness. This check will:
+
+- verify most recently modified file fulfills the `minAge` and `maxAge` constraints (each an optional bound)
+- verify files present in the mount is more than `minCount`
+  
+```yaml
+smb:
+  - server: 192.168.1.9
+    username: samba
+    password: password
+    sharename: "Some Public Folder"
+    minAge: 10h
+    maxAge: 20h
+    searchPath: a/b/c
+    displayTemplate: 'Age: [[.age]]'
+    description: "Success SMB server"
+```
+
+Or with `server` in path format:
+
+```yaml
+smb:
+   - server: '\\192.168.1.5\Some Public Folder\somedir'
+     username: samba
+     password: password
+     sharename: "sharename" #will be overwritten by 'Some Public Folder'
+     searchPath: a/b/c #will be overwritten by 'somedir'
+     minAge: 10h
+     maxAge: 100h
+     displayTemplate: 'Age: [[.age]]'
+     description: "Success SMB server"
+```
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| server | path to the server (host and path format supported) | string | Yes |
+| port | port on which smb is running. Defaults to 443 | int | No |
+| username | username for smb | string | Yes |
+| password | password for smb | string | Yes |
+| domain | domain for smb | string | No |
+| workstation | workstation for smb | string | No |
+| sharename | sharename for smb (overridden in `server` path format) | string | No |
+| searchPath | the sub-dir relative to mount representing the test root (overridden in `server` path format) | string | No |
+| minAge | minimum permissible file age | string | No |
+| maxAge | maximum permissible file age | string | No |
+| minCount | minimum number of files permissible | int | No |
+| description | description about the test | string | No |
+| displayTemplate | template to display check output in text (default `File Age: [[.age]]; File count: [[.count]]`). | string | No |
+
+#### server
+
+The user can define server in two formats:
+
+- host: `192.168.1.9`, `www.server.com`
+- path: `\\www.server.com\e$\a\b\c`
+
+For path format:
+
+- `www.server.com` is the host 
+- `e$` is the sharename (overrides `sharename` field)
+- `a/b/c` the sub-dir relative to mount representing the test root (overrides `searchPath` field)
+
+#### displayTemplate
+
+The fields for `displayTemplate` (see [Display Types]((#display-types))) are:
+
+- `.age`: age of most recently modified file
+- `.count`: number of files present in the mount
+
+### Display Types
+
+Most checks display a bar/historgram on the UI. Some checks display text data. Some depend on the fields specified in the check.
+
+#### displayTemplate
+
+Where display is text, the `displayTemplate` field allows a user to configure the output format. The `displayTemplate` field accepts a template with delimiter `[[` `]]` and supports all the functions of [gomplate](https://docs.gomplate.ca/).
+
+Checks that currently have support for `displayTemplate` are:
+- [s3Bucket](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
+- sql
+  - [postgres](#postgres---query-a-postgresql-db-using-sql)
+  - [mssql](#mssql---query-a-mssql-db-using-sql)
+- [http](#http---query-an-http-endpoint-or-namespace)    
+- [junit](#junit)
+- [smb](#smb---verify-folder-freshness)
+
 ### Guide for Developers
 
-This guide provides a step-by-step process for creating your local setup with the canary-checker
-[Dev Guide](docs/dev-guide.md).
+This guide provides a step-by-step process for creating your local setup with the canary-checker: [dev Guide](docs/dev-guide.md).
