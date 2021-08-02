@@ -135,6 +135,14 @@ func getLatestFileAgeAndCount(fs *smb2.Share, searchPath string) (duration time.
 	if err != nil {
 		return
 	}
+	if len(files) == 0 {
+		// directory is empty. returning duration of directory
+		info, err := fs.Stat(searchPath)
+		if err != nil {
+			return duration, count, err
+		}
+		return time.Since(info.ModTime()), 0, nil
+	}
 	duration = time.Since(files[0].ModTime())
 	for _, file := range files {
 		if file.IsDir() {
