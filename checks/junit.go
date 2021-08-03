@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -93,31 +92,19 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		pod.Namespace = corev1.NamespaceDefault
 	}
 	if junitCheck.GetName() != "" {
-		pod.Name = junitCheck.GetName() + "-" + strconv.Itoa(int(start.Unix()))
+		pod.Name = junitCheck.GetName() + "-" + strings.ToLower(rand.String(5))
 	} else {
-		name := rand.String(5)
-		pod.Name = strings.ToLower(name)
+		pod.Name = strings.ToLower(rand.String(5))
 	}
 	existingPods := getJunitPods(c.kommons, pod.Namespace)
-	if len(existingPods) != 0 {
-		for _, junitPod := range existingPods {
-			obj, err := c.kommons.GetByKind(podKind, junitPod.Namespace, junitPod.Name)
-			if err != nil {
-				return junitFailF(junitCheck, textResults, junitStatus, template, "error fetching the pod: %v", err)
-			}
-			if obj != nil {
-				logger.Tracef("pod already exist")
-				createTime := obj.GetCreationTimestamp()
-				duration := time.Since(createTime.Time)
-				dur := uint64(duration.Seconds())
-				if dur < 2*interval {
-					logger.Tracef("Check already in progress, skipping")
-					return nil
-				}
-				if err := c.kommons.DeleteByKind(podKind, junitPod.Namespace, junitPod.Name); err != nil {
-					return junitFailF(junitCheck, textResults, junitStatus, template, "error deleting the pod: %v", err)
-				}
-			}
+	for _, junitPod := range existingPods {
+		createTime := junitPod.CreationTimestamp
+		if uint64(time.Since(createTime.Time)) < 2*interval {
+			logger.Tracef("Check already in progress, skipping")
+			return nil
+		}
+		if err := c.kommons.DeleteByKind(podKind, junitPod.Namespace, junitPod.Name); err != nil {
+			return junitFailF(junitCheck, textResults, junitStatus, template, "error deleting the pod: %v", err)
 		}
 	}
 	pod.Spec = junitCheck.Spec
@@ -144,11 +131,16 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if err != nil {
 		return junitFailF(junitCheck, textResults, junitStatus, template, "timeout waiting for pod: %v", err)
 	}
-	podObj, err := getJunitPod(c.kommons, pod.Namespace, pod.Name)
+	var podObj = corev1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			Kind: podKind,
+		},
+	}
+	err = c.kommons.Get(pod.Namespace, pod.Name, &podObj)
 	if err != nil {
 		return junitFailF(junitCheck, textResults, junitStatus, template, "error getting pod: %v", err)
 	}
-	if !kommons.IsPodHealthy(*podObj) {
+	if !kommons.IsPodHealthy(podObj) {
 		message, _ := c.kommons.GetPodLogs(pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
 		return junitFailF(junitCheck, textResults, junitStatus, template, "pod is not healthy \n Logs : %v", message)
 	}
@@ -249,7 +241,6 @@ func getJunitPods(kommonsClient *kommons.Client, namespace string) []corev1.Pod 
 	if err != nil {
 		return nil
 	}
-	//kommonsClient.GetFirstPodByLabelSelector()
 	podList, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: junitCheckSelector,
 	})
@@ -257,13 +248,4 @@ func getJunitPods(kommonsClient *kommons.Client, namespace string) []corev1.Pod 
 		return nil
 	}
 	return podList.Items
-}
-
-func getJunitPod(kommonsClient *kommons.Client, namespace, name string) (*corev1.Pod, error) {
-	client, err := kommonsClient.GetClientset()
-	if err != nil {
-		return nil, err
-	}
-	pod, err := client.CoreV1().Pods(namespace).Get(context.TODO(), name, metav1.GetOptions{})
-	return pod, err
 }
