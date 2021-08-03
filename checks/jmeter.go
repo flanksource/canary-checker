@@ -2,10 +2,8 @@ package checks
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -13,7 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/exec"
 	"github.com/flanksource/kommons"
-	csvmap "github.com/recursionpharma/go-csv-map"
+	"github.com/jszwec/csvutil"
 	"k8s.io/apimachinery/pkg/util/rand"
 )
 
@@ -74,12 +72,11 @@ func (c *JmeterChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if !ok {
 		return Failf(jmeterCheck, "error running the jmeter command: %v", jmeterCmd)
 	}
-	f, err := os.Open(logFilename)
+	raw, err := ioutil.ReadFile(logFilename)
 	if err != nil {
 		return Failf(jmeterCheck, "error opening the log file: %v", err)
 	}
-	defer f.Close() // nolint: errcheck
-	elapsedTime, err := checkLogs(f)
+	elapsedTime, err := checkLogs(raw)
 	if err != nil {
 		return Failf(jmeterCheck, "check failed: %v", err)
 	}
@@ -111,32 +108,34 @@ func getSystemProperties(properties []string) string {
 	return props
 }
 
-func checkLogs(r io.Reader) (int64, error) {
+type JMeterRecord struct {
+	Elapsed        int64  `csv:"elapsed"`
+	Success        bool   `csv:"success"`
+	FailureMessage string `csv:"failureMessage,omitempty"`
+}
+
+func checkLogs(r []byte) (int64, error) {
 	var err error
 	var elapsedTime int64
 	var failMessage string
-	csvReader := csvmap.NewReader(r)
-	csvReader.Columns, err = csvReader.ReadHeader()
+	var records []JMeterRecord
+	failure := false
+
+	err = csvutil.Unmarshal(r, &records)
 	if err != nil {
-		return 0, err
-	}
-	records, err := csvReader.ReadAll()
-	if err != nil {
-		return 0, err
+		return elapsedTime, err
 	}
 
 	for i := range records {
-		tempElapsed, err := strconv.ParseInt(records[i]["elapsed"], 10, 64)
-		if err != nil {
-			return elapsedTime, err
-		}
-		elapsedTime += tempElapsed
-		if records[i]["success"] == "false" {
-			failMessage += records[i]["failureMessage"]
+		elapsedTime += records[i].Elapsed
+		if !records[i].Success {
+			failure = true
+			failMessage += "\n"
+			failMessage += records[i].FailureMessage
 		}
 	}
-	if failMessage != "" {
+	if failure {
 		return elapsedTime, fmt.Errorf(failMessage)
 	}
-	return elapsedTime, err
+	return elapsedTime, nil
 }
