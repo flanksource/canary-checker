@@ -14,7 +14,7 @@ require (
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/flanksource/commons v1.5.8
-	github.com/flanksource/kommons v0.7.1
+	github.com/flanksource/kommons v0.21.0
 	github.com/go-co-op/gocron v0.2.0
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/go-logr/logr v0.3.0
@@ -56,7 +56,6 @@ require (
 
 replace (
 	github.com/docker/docker => github.com/moby/moby v17.12.0-ce-rc1.0.20210128214336-420b1d36250f+incompatible
-
 	helm.sh/helm/v3 => helm.sh/helm/v3 v3.5.1
 	k8s.io/api => k8s.io/api v0.19.4
 	k8s.io/client-go => k8s.io/client-go v0.19.4
