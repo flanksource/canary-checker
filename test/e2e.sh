@@ -46,6 +46,9 @@ kubectl config use-context kind-$CLUSTER_NAME
 
 export PATH=$(pwd)/.bin:$PATH
 
+kubectl create namespace ec2test
+kubectl create secret generic aws-credentials --from-literal=AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --from-literal=AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -n ec2test
+
 echo "::group::Deploying Base"
 $KARINA deploy bootstrap -vv
 echo "::endgroup::"

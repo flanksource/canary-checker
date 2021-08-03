@@ -7,6 +7,11 @@ require (
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/aws/aws-sdk-go v1.29.25
+	github.com/aws/aws-sdk-go-v2 v1.8.0
+	github.com/aws/aws-sdk-go-v2/config v1.5.0
+	github.com/aws/aws-sdk-go-v2/credentials v1.3.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.12.0
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.8.1
 	github.com/chartmuseum/helm-push v0.8.1
 	github.com/containerd/cgroups v0.0.0-20200824123100-0b889c03f102 // indirect
 	github.com/containerd/containerd v1.4.0
@@ -20,6 +25,7 @@ require (
 	github.com/go-logr/zapr v0.2.0
 	github.com/go-redis/redis/v8 v8.8.0
 	github.com/gogo/googleapis v1.4.0 // indirect
+	github.com/hairyhenderson/gomplate/v3 v3.6.0
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/hirochachacha/go-smb2 v1.0.10
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
@@ -31,7 +37,7 @@ require (
 	github.com/onsi/gomega v1.10.5
 	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
-	github.com/phf/go-queue v0.0.0-20170504031614-9abe38d0371d // indirect
+	github.com/phf/go-queue v0.0.0-20170504031614-9abe38d0371d
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.1
 	github.com/prometheus/common v0.10.0

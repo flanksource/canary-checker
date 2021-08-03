@@ -51,6 +51,9 @@ func NewKommonsClient() (*kommons.Client, error) {
 		return nil, errors.Wrap(err, "Failed to generate rest config")
 	}
 	Client := kommons.NewClient(config, logger.StandardLogger())
+	if Client == nil {
+		return nil, errors.New("could not create kommons client")
+	}
 	return Client, nil
 }
 

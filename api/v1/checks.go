@@ -2,7 +2,6 @@ package v1
 
 import (
 	"fmt"
-
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -958,6 +957,25 @@ type Smb struct {
 	SmbCheck `yaml:",inline" json:",inline"`
 }
 
+type EC2Check struct {
+	Description `yaml:",inline" json:",inline"`
+	AccessKey   kommons.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
+	SecretKey   kommons.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
+	Region      string         `yaml:"region,omitempty" json:"region,omitempty"`
+	AMI string `yaml:"ami" json:"ami"`
+	UserData	string	`yaml:"userData,omitempty" json:"userData,omitempty"`
+	// Skip TLS verify when connecting to aws
+	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
+}
+
+func (c EC2Check) GetEndpoint() string {
+	return c.Region
+}
+
+func (c EC2Check) GetType() string {
+	return "ec2"
+}
+
 var AllChecks = []external.Check{
 	HTTPCheck{},
 	TCPCheck{},
@@ -980,4 +998,5 @@ var AllChecks = []external.Check{
 	JmeterCheck{},
 	JunitCheck{},
 	SmbCheck{},
+	EC2Check{},
 }

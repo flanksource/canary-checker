@@ -52,6 +52,7 @@ type CanarySpec struct {
 	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Redis          []RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
+	EC2            []EC2Check            `yaml:"ec2,omitempty" json:"ec2,omitempty"`
 	IconURL        string                `yaml:"iconURL,omitempty" json:"iconURL,omitempty"`
 	// interval (in seconds) to run checks on
 	// Deprecated in favor of Schedule
@@ -126,6 +127,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Smb {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.EC2 {
 		checks = append(checks, check)
 	}
 	return checks
