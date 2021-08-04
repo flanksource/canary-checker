@@ -24,6 +24,7 @@ require (
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/hirochachacha/go-smb2 v1.0.10
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
+	github.com/jszwec/csvutil v1.5.0
 	github.com/lib/pq v1.9.0
 	github.com/mitchellh/reflectwalk v1.0.1
 	github.com/ncw/swift v1.0.50
@@ -34,7 +35,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.1
 	github.com/prometheus/common v0.10.0
-	github.com/recursionpharma/go-csv-map v0.0.0-20160524001940-792523c65ae9
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sirupsen/logrus v1.7.0
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
