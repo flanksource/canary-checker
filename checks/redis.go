@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/flanksource/kommons"
+
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -14,7 +16,13 @@ func init() {
 	//register metrics here
 }
 
-type RedisChecker struct{}
+type RedisChecker struct {
+	kommons *kommons.Client `yaml:"-" json:"-"`
+}
+
+func (c *RedisChecker) SetClient(client *kommons.Client) {
+	c.kommons = client
+}
 
 // Type: returns checker type
 func (c *RedisChecker) Type() string {
@@ -34,7 +42,20 @@ func (c *RedisChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 func (c *RedisChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	redisCheck := extConfig.(v1.RedisCheck)
-	result, err := connectRedis(redisCheck.Addr, redisCheck.Password, redisCheck.Username, redisCheck.DB)
+	namespace := redisCheck.GetNamespace()
+	var username, password string
+	var err error
+	if redisCheck.Auth != nil {
+		_, username, err = c.kommons.GetEnvValue(redisCheck.Auth.Username, namespace)
+		if err != nil {
+			return Failf(redisCheck, "failed to fetch username from envVar: %v", err)
+		}
+		_, password, err = c.kommons.GetEnvValue(redisCheck.Auth.Password, namespace)
+		if err != nil {
+			return Failf(redisCheck, "failed to fetch password from envVar: %v", err)
+		}
+	}
+	result, err := connectRedis(redisCheck.Addr, password, username, redisCheck.DB)
 	if err != nil {
 		return Failf(redisCheck, "failed to execute query %s", err)
 	}

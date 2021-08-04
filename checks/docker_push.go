@@ -5,9 +5,10 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/flanksource/kommons"
 	"strings"
 	"time"
+
+	"github.com/flanksource/kommons"
 
 	"github.com/docker/docker/api/types"
 	"github.com/flanksource/canary-checker/api/external"

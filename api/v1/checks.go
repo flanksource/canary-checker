@@ -360,11 +360,19 @@ func (c ContainerdPushCheck) GetType() string {
 }
 
 type RedisCheck struct {
-	Description string `yaml:"description" json:"description,omitempty"`
-	Addr        string `yaml:"addr" json:"addr"`
-	Username    string `yaml:"username" json:"username,omitempty"`
-	Password    string `yaml:"password" json:"password,omitempty"`
-	DB          int    `yaml:"db" json:"db"`
+	Description string          `yaml:"description" json:"description,omitempty"`
+	Addr        string          `yaml:"addr" json:"addr"`
+	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	DB          int             `yaml:"db" json:"db"`
+	namespace   string          `yaml:"-" json:"-"`
+}
+
+func (c *RedisCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c RedisCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c RedisCheck) GetDescription() string {

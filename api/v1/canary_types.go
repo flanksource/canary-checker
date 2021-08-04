@@ -144,6 +144,9 @@ func (spec CanarySpec) SetNamespaces(namespace string) {
 	for i := range spec.ContainerdPull {
 		spec.ContainerdPull[i].SetNamespace(namespace)
 	}
+	for i := range spec.Redis {
+		spec.Redis[i].SetNamespace(namespace)
+	}
 }
 
 func (spec CanarySpec) SetNames(name string) {

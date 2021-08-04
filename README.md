@@ -524,8 +524,7 @@ redis:
 | addr | host:port address. | string | Yes |
 | db | database to be selected after connecting to the server. | int | Yes |
 | description | description for canary | string | No |
-| password | optional password. To authenticate the current connection | string | No |
-| username | use the specified Username to authenticate the current connection | string | No |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for redis server | Object | No |
 
 
 ### S3 - Verify reachability and correctness of an S3 compatible store
