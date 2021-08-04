@@ -629,11 +629,8 @@ type SmbCheck struct {
 	//Where server is the hostname e$ is the sharename and a/b/c is the searchPath location
 	Server string `yaml:"server" json:"server"`
 	//Port on which smb server is running. Defaults to 445
-	Port int `yaml:"port,omitempty" json:"port,omitempty"`
-	//Username to authenticate against given smb server
-	Username string `yaml:"username" json:"username"`
-	//Password to authenticate against given smb server
-	Password string `yaml:"password" json:"password"`
+	Port int             `yaml:"port,omitempty" json:"port,omitempty"`
+	Auth *Authentication `yaml:"auth" json:"auth"`
 	//Domain...
 	Domain string `yaml:"domain,omitempty" json:"domain,omitempty"`
 	// Workstation...
@@ -652,6 +649,17 @@ type SmbCheck struct {
 	// DisplayTemplate displays check output in text
 	// Default: 'File Age: [[.age]]; File count: [[.count]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
+	// specNamespace is the namespace in which the canary was deployed, and which
+	// configmap/secret lookups will be constrained to
+	namespace string `yaml:"-" json:"-"`
+}
+
+func (c *SmbCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c SmbCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c SmbCheck) GetEndpoint() string {
@@ -1024,8 +1032,11 @@ count the number of file present and compare with minCount if defined
 ```yaml
 smb:
    - server: 192.168.1.9
-     username: samba
-     password: password
+	 auth:
+       username:
+          value: samba
+       password:
+           value: password
      sharename: "Some Public Folder"
      minAge: 10h
 	 maxAge: 20h
@@ -1038,8 +1049,14 @@ User can define server in `\\server\e$\a\b\c` format where `server` is the host
 ```yaml
 smb:
    - server: '\\192.168.1.5\Some Public Folder\somedir'
-     username: samba
-     password: password
+     auth:
+		 username:
+		   value: samba
+		 password:
+		   valueFrom:
+			 secretKeyRef:
+			   key: smb-password
+			   name: smb
      sharename: "Tarun Khandelwal’s Public Folder"
      minAge: 10h
      maxAge: 100h

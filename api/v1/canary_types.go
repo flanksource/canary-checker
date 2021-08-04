@@ -132,6 +132,9 @@ func (spec CanarySpec) SetNamespaces(namespace string) {
 	for i := range spec.Junit {
 		spec.Junit[i].SetNamespace(namespace)
 	}
+	for i := range spec.Smb {
+		spec.Smb[i].SetNamespace(namespace)
+	}
 }
 
 func (spec CanarySpec) SetNames(name string) {

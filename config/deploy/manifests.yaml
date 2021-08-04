@@ -250,8 +250,6 @@ spec:
                                       - key
                                     type: object
                                 type: object
-                            required:
-                              - name
                             type: object
                           username:
                             properties:
@@ -284,8 +282,6 @@ spec:
                                       - key
                                     type: object
                                 type: object
-                            required:
-                              - name
                             type: object
                         required:
                           - password
@@ -335,8 +331,6 @@ spec:
                                     - key
                                   type: object
                               type: object
-                          required:
-                            - name
                           type: object
                         type: array
                       maxSSLExpiry:
@@ -436,8 +430,6 @@ spec:
                                   - key
                                 type: object
                             type: object
-                        required:
-                          - name
                         type: object
                       port:
                         description: Port on which the server is running
@@ -4504,6 +4496,76 @@ spec:
                 smb:
                   items:
                     properties:
+                      auth:
+                        properties:
+                          password:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          username:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                        required:
+                          - password
+                          - username
+                        type: object
                       description:
                         type: string
                       displayTemplate:
@@ -4521,9 +4583,6 @@ spec:
                       minCount:
                         description: MinCount the minimum number of files inside the searchPath
                         type: integer
-                      password:
-                        description: Password to authenticate against given smb server
-                        type: string
                       port:
                         description: Port on which smb server is running. Defaults to 445
                         type: integer
@@ -4536,16 +4595,12 @@ spec:
                       sharename:
                         description: Sharename to mount from the samba server
                         type: string
-                      username:
-                        description: Username to authenticate against given smb server
-                        type: string
                       workstation:
                         description: Workstation...
                         type: string
                     required:
-                      - password
+                      - auth
                       - server
-                      - username
                     type: object
                   type: array
                 tcp:

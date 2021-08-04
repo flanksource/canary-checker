@@ -718,8 +718,14 @@ This check connects to a samba server to check folder freshness. This check will
 ```yaml
 smb:
   - server: 192.168.1.9
-    username: samba
-    password: password
+    auth:
+      username: 
+        value: samba
+      password:
+        valueFrom:
+          secretKeyRef:
+            key: smb-password
+            name: smb
     sharename: "Some Public Folder"
     minAge: 10h
     maxAge: 20h
@@ -733,8 +739,11 @@ Or with `server` in path format:
 ```yaml
 smb:
    - server: '\\192.168.1.5\Some Public Folder\somedir'
-     username: samba
-     password: password
+     auth:
+       username: 
+        value: samba
+       password: 
+        value: password
      sharename: "sharename" #will be overwritten by 'Some Public Folder'
      searchPath: a/b/c #will be overwritten by 'somedir'
      minAge: 10h
@@ -747,8 +756,7 @@ smb:
 | ----- | ----------- | ------ | -------- |
 | server | path to the server (host and path format supported) | string | Yes |
 | port | port on which smb is running. Defaults to 443 | int | No |
-| username | username for smb | string | Yes |
-| password | password for smb | string | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for smb | Object | Yes |
 | domain | domain for smb | string | No |
 | workstation | workstation for smb | string | No |
 | sharename | sharename for smb (overridden in `server` path format) | string | No |
