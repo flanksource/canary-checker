@@ -190,17 +190,26 @@ type ResticCheck struct {
 	// Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name
 	Repository string `yaml:"repository" json:"repository"`
 	// Password for the restic repository
-	Password string `yaml:"password" json:"password"`
+	Password *kommons.EnvVar `yaml:"password" json:"password"`
 	// MaxAge for backup freshness
 	MaxAge string `yaml:"maxAge" json:"maxAge"`
 	// CheckIntegrity when enabled will check the Integrity and consistency of the restic reposiotry
 	CheckIntegrity bool `yaml:"checkIntegrity,omitempty" json:"checkIntegrity,omitempty"`
 	// AccessKey access key id for connection with aws s3, minio, wasabi, alibaba oss
-	AccessKey string `yaml:"accessKey,omitempty" json:"accessKey,omitempty"`
+	AccessKey *kommons.EnvVar `yaml:"accessKey,omitempty" json:"accessKey,omitempty"`
 	// SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss
-	SecretKey string `yaml:"secretKey,omitempty" json:"secretKey,omitempty"`
+	SecretKey *kommons.EnvVar `yaml:"secretKey,omitempty" json:"secretKey,omitempty"`
 	// CaCert path to the root cert. In case of self-signed certificates
-	CaCert string `yaml:"caCert,omitempty" json:"caCert,omitempty"`
+	CaCert    string `yaml:"caCert,omitempty" json:"caCert,omitempty"`
+	namespace string `yaml:"-" json:"-"`
+}
+
+func (c *ResticCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c ResticCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c ResticCheck) GetEndpoint() string {
@@ -1020,11 +1029,14 @@ This check will connect to a restic repository and perform Integrity and backupF
 ```yaml
 restic:
 	- repository: s3:http://minio.infra/restic-repo
-      password: S0M3p@sswd
+      password:
+        value: S0M3p@sswd
       maxAge: 5h30m
       checkIntegrity: true
-      accessKey: some-access-key
-      secretKey: some-secret-key
+      accessKey:
+        value: some-access-key
+      secretKey:
+        value: some-secret-key
       description: The restic test
 ```
 */

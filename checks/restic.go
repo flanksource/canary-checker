@@ -6,6 +6,8 @@ import (
 	osExec "os/exec"
 	"time"
 
+	"github.com/flanksource/kommons"
+
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -22,8 +24,13 @@ const (
 	resticAwsSecretAccessKey   = "AWS_SECRET_ACCESS_KEY"
 )
 
-type ResticChecker struct{}
+type ResticChecker struct {
+	kommons *kommons.Client `yaml:"-" json:"-"`
+}
 
+func (c *ResticChecker) SetClient(client *kommons.Client) {
+	c.kommons = client
+}
 func (c *ResticChecker) Type() string {
 	return "restic"
 }
@@ -39,7 +46,10 @@ func (c *ResticChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 func (c *ResticChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	resticCheck := extConfig.(v1.ResticCheck)
-	envVars := getEnvVars(resticCheck)
+	envVars, err := c.getEnvVars(resticCheck)
+	if err != nil {
+		return Failf(resticCheck, "error getting envVars %v", err)
+	}
 	if resticCheck.CheckIntegrity {
 		if err := checkIntegrity(resticCheck.Repository, resticCheck.CaCert, envVars); err != nil {
 			return Failf(resticCheck, "integrity check failed %v", err)
@@ -94,10 +104,29 @@ func checkBackupFreshness(repository, maxAge, caCert string, envVars map[string]
 	return nil
 }
 
-func getEnvVars(r v1.ResticCheck) map[string]string {
-	return map[string]string{
-		resticPasswordEnvKey:       r.Password,
-		resticAwsSecretAccessKey:   r.SecretKey,
-		resticAwsAccessKeyIDEnvKey: r.AccessKey,
+func (c *ResticChecker) getEnvVars(r v1.ResticCheck) (map[string]string, error) {
+	var password, secretKey, accessKey string
+	var err error
+	namespace := r.GetNamespace()
+	_, password, err = c.kommons.GetEnvValue(*r.Password, namespace)
+	if err != nil {
+		return nil, err
 	}
+	if r.SecretKey != nil {
+		_, secretKey, err = c.kommons.GetEnvValue(*r.SecretKey, namespace)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if r.AccessKey != nil {
+		_, accessKey, err = c.kommons.GetEnvValue(*r.AccessKey, namespace)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return map[string]string{
+		resticPasswordEnvKey:       password,
+		resticAwsSecretAccessKey:   secretKey,
+		resticAwsAccessKeyIDEnvKey: accessKey,
+	}, nil
 }

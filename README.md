@@ -614,21 +614,24 @@ This check will:
 ```yaml
 restic:
     - repository: s3:http://minio.infra/restic-repo
-      password: S0M3p@sswd
+      password: 
+        value: S0M3p@sswd
       maxAge: 5h30m
       checkIntegrity: true
-      accessKey: some-access-key
-      secretKey: some-secret-key
+      accessKey: 
+        value: some-access-key
+      secretKey: 
+        value: some-secret-key
       description: The restic test
 ```
   
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | reposiory | the location of your restic repository | string | Yes |
-| password | password for your restic repository | string | Yes |
+| password | password value or valueFrom configMapKeyRef or SecretKeyRef to access your restic repository | string | Yes |
 | maxAge   | the max age for backup allowed..eg: 5h30m | string | Yes |
-| accessKey | access key to access your s3/minio bucket | string | No |
-| secretkey | secret key to access your s3/minio buket | string | No |
+| accessKey | access key value or valueFrom configMapKeyRef or SecretKeyRef to access your s3/minio bucket | string | No |
+| secretkey | secret key value or valueFrom configMapKeyRef or SecretKeyRef to access your s3/minio bucket | string | No |
 | description | the description about the canary | string | Yes |
 | checkIntegrity | whether to check integrity for the specified repo | bool | No |
 | caCert | path to ca-root crt in case of self-signed certificates is used | string | No |
