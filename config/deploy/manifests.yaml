@@ -62,6 +62,76 @@ spec:
                 containerd:
                   items:
                     properties:
+                      auth:
+                        properties:
+                          password:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          username:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                        required:
+                          - password
+                          - username
+                        type: object
                       description:
                         type: string
                       expectedDigest:
@@ -70,10 +140,6 @@ spec:
                         format: int64
                         type: integer
                       image:
-                        type: string
-                      password:
-                        type: string
-                      username:
                         type: string
                     type: object
                   type: array
@@ -118,6 +184,76 @@ spec:
                 docker:
                   items:
                     properties:
+                      auth:
+                        properties:
+                          password:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          username:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                        required:
+                          - password
+                          - username
+                        type: object
                       description:
                         type: string
                       expectedDigest:
@@ -127,23 +263,87 @@ spec:
                         type: integer
                       image:
                         type: string
-                      password:
-                        type: string
-                      username:
-                        type: string
                     type: object
                   type: array
                 dockerPush:
                   items:
                     properties:
+                      auth:
+                        properties:
+                          password:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          username:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                        required:
+                          - password
+                          - username
+                        type: object
                       description:
                         type: string
                       image:
                         type: string
-                      password:
-                        type: string
-                      username:
-                        type: string
+                    required:
+                      - auth
                     type: object
                   type: array
                 env:

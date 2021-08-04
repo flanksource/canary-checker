@@ -135,6 +135,15 @@ func (spec CanarySpec) SetNamespaces(namespace string) {
 	for i := range spec.Smb {
 		spec.Smb[i].SetNamespace(namespace)
 	}
+	for i := range spec.DockerPull {
+		spec.DockerPull[i].SetNamespace(namespace)
+	}
+	for i := range spec.DockerPush {
+		spec.DockerPush[i].SetNamespace(namespace)
+	}
+	for i := range spec.ContainerdPull {
+		spec.ContainerdPull[i].SetNamespace(namespace)
+	}
 }
 
 func (spec CanarySpec) SetNames(name string) {

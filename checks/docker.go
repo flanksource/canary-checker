@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/flanksource/kommons"
 	"io"
 	"strings"
 	"time"
@@ -48,7 +49,13 @@ func init() {
 	prometheus.MustRegister(size, imagePullTime)
 }
 
-type DockerPullChecker struct{}
+type DockerPullChecker struct {
+	kommons *kommons.Client `yaml:"-" json:"-"`
+}
+
+func (c *DockerPullChecker) SetClient(client *kommons.Client) {
+	c.kommons = client
+}
 
 func (c *DockerPullChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
@@ -84,9 +91,22 @@ func (c *DockerPullChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DockerPullCheck)
 	start := time.Now()
 	ctx := context.Background()
+	var username, password string
+	var err error
+	namespace := check.GetNamespace()
+	if check.Auth != nil {
+		_, username, err = c.kommons.GetEnvValue(check.Auth.Username, namespace)
+		if err != nil {
+			return Failf(check, "failed to fetch username from envVar: %v", err)
+		}
+		_, password, err = c.kommons.GetEnvValue(check.Auth.Password, namespace)
+		if err != nil {
+			return Failf(check, "failed to fetch password from envVar: %v", err)
+		}
+	}
 	authConfig := types.AuthConfig{
-		Username: check.Username,
-		Password: check.Password,
+		Username: username,
+		Password: password,
 	}
 	encodedJSON, _ := json.Marshal(authConfig)
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)

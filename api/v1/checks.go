@@ -256,12 +256,20 @@ func (c JmeterCheck) GetType() string {
 }
 
 type DockerPullCheck struct {
-	Description    string `yaml:"description" json:"description,omitempty"`
-	Image          string `yaml:"image" json:"image,omitempty"`
-	Username       string `yaml:"username" json:"username,omitempty"`
-	Password       string `yaml:"password" json:"password,omitempty"`
-	ExpectedDigest string `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
-	ExpectedSize   int64  `yaml:"expectedSize" json:"expectedSize,omitempty"`
+	Description    string          `yaml:"description" json:"description,omitempty"`
+	Image          string          `yaml:"image" json:"image,omitempty"`
+	Auth           *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	ExpectedDigest string          `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
+	ExpectedSize   int64           `yaml:"expectedSize" json:"expectedSize,omitempty"`
+	namespace      string          `yaml:"-" json:"-"`
+}
+
+func (c *DockerPullCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c *DockerPullCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c DockerPullCheck) GetEndpoint() string {
@@ -277,10 +285,18 @@ func (c DockerPullCheck) GetType() string {
 }
 
 type DockerPushCheck struct {
-	Description string `yaml:"description" json:"description,omitempty"`
-	Image       string `yaml:"image" json:"image,omitempty"`
-	Username    string `yaml:"username" json:"username,omitempty"`
-	Password    string `yaml:"password" json:"password,omitempty"`
+	Description string          `yaml:"description" json:"description,omitempty"`
+	Image       string          `yaml:"image" json:"image,omitempty"`
+	Auth        *Authentication `yaml:"auth" json:"auth"`
+	namespace   string          `yaml:"-" json:"-"`
+}
+
+func (c *DockerPushCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c *DockerPushCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c DockerPushCheck) GetEndpoint() string {
@@ -296,12 +312,20 @@ func (c DockerPushCheck) GetType() string {
 }
 
 type ContainerdPullCheck struct {
-	Description    string `yaml:"description" json:"description,omitempty"`
-	Image          string `yaml:"image" json:"image,omitempty"`
-	Username       string `yaml:"username" json:"username,omitempty"`
-	Password       string `yaml:"password" json:"password,omitempty"`
-	ExpectedDigest string `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
-	ExpectedSize   int64  `yaml:"expectedSize" json:"expectedSize,omitempty"`
+	Description    string         `yaml:"description" json:"description,omitempty"`
+	Image          string         `yaml:"image" json:"image,omitempty"`
+	Auth           Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	ExpectedDigest string         `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
+	ExpectedSize   int64          `yaml:"expectedSize" json:"expectedSize,omitempty"`
+	namespace      string         `yaml:"-" json:"-"`
+}
+
+func (c *ContainerdPullCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c ContainerdPullCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c ContainerdPullCheck) GetEndpoint() string {
@@ -735,16 +759,17 @@ type DNS struct {
 }
 
 /*
-# Check docker images
-
-This check will try to pull a Docker image from specified registry, verify it's checksum and size.
+DockerPull check will try to pull a Docker image from specified registry, verify it's checksum and size.
 
 ```yaml
 
 docker:
   - image: docker.io/library/busybox:1.31.1
-    username:
-    password:
+    auth:
+		username:
+			value: some-user
+		password:
+			value: some-password
     expectedDigest: 6915be4043561d64e0ab0f8f098dc2ac48e077fe23f488ac24b665166898115a
     expectedSize: 1219782
 ```
@@ -754,12 +779,27 @@ type DockerPull struct {
 	DockerPullCheck `yaml:",inline" json:"inline"`
 }
 
+/*
+DockerPush check will try to push a Docker image to specified registry.
+
+```yaml
+
+dockerPush:
+  - image: ttl.sh/flanksource-busybox:1.30
+    auth:
+      username:
+        value: $DOCKER_USERNAME
+      password:
+        value: $DOCKER_PASSWORD
+```
+
+*/
 type DockerPush struct {
 	DockerPushCheck `yaml:",inline" json:"inline"`
 }
 
 /*
-This check will:
+S3 check will:
 
 * list objects in the bucket to check for Read permissions
 * PUT an object into the bucket for Write permissions

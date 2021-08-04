@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/flanksource/kommons"
 	"strings"
 	"time"
 
@@ -14,7 +15,13 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 )
 
-type DockerPushChecker struct{}
+type DockerPushChecker struct {
+	kommons *kommons.Client `yaml:"-" json:"-"`
+}
+
+func (c *DockerPushChecker) SetClient(client *kommons.Client) {
+	c.kommons = client
+}
 
 func (c *DockerPushChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
@@ -35,9 +42,20 @@ func (c *DockerPushChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DockerPushCheck)
 	start := time.Now()
 	ctx := context.Background()
+	var username, password string
+	var err error
+	namespace := check.GetNamespace()
+	_, username, err = c.kommons.GetEnvValue(check.Auth.Username, namespace)
+	if err != nil {
+		return Failf(check, "failed to fetch username from envVar: %v", err)
+	}
+	_, password, err = c.kommons.GetEnvValue(check.Auth.Password, namespace)
+	if err != nil {
+		return Failf(check, "failed to fetch password from envVar: %v", err)
+	}
 	authConfig := types.AuthConfig{
-		Username: check.Username,
-		Password: check.Password,
+		Username: username,
+		Password: password,
 	}
 	encodedJSON, _ := json.Marshal(authConfig)
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)

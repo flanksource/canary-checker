@@ -1,16 +1,10 @@
 docker:
   - image: docker.io/busybox
-    username:
-    password:
     expectedDigest: abcdef123
     expectedSize: 200
   - image: docker.io/library/busybox:random
-    username:
-    password:
     expectedDigest: abcdef123
     expectedSize: 200
   - image: docker.io/library/busybox:1.31.1
-    username:
-    password:
     expectedDigest: abcdef123
     expectedSize: 200

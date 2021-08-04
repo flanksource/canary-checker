@@ -159,8 +159,7 @@ containerdPull:
 | -------------- | ----------- | ------ | -------- |
 | description    |             | string | Yes      |
 | image          |             | string | Yes      |
-| username       |             | string | Yes      |
-| password       |             | string | Yes      |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | Object | No |
 | expectedDigest |             | string | Yes      |
 | expectedSize   |             | int64  | Yes      |
 
@@ -171,8 +170,11 @@ This check will try to pull a Docker image from specified registry, verify it's 
 ```yaml
 docker:
   - image: docker.io/library/busybox:1.31.1
-    username:
-    password:
+    auth:
+      username:
+        value: some-user
+      password:
+        value: some-password
     expectedDigest: 6915be4043561d64e0ab0f8f098dc2ac48e077fe23f488ac24b665166898115a
     expectedSize: 1219782
 ```
@@ -181,20 +183,27 @@ docker:
 | ----- | ----------- | ------ | -------- |
 | description |  | string | Yes |
 | image |  | string | Yes |
-| username |  | string | Yes |
-| password |  | string | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | Object | No |
 | expectedDigest |  | string | Yes |
 | expectedSize |  | int64 | Yes |
 
 
 ### Docker Push - Create and push a docker image
 
+```yaml
+dockerPush:
+  - image: ttl.sh/flanksource-busybox:1.30
+    auth:
+      username:
+        value: $DOCKER_USERNAME
+      password:
+        value: $DOCKER_PASSWORD
+```
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | description |  | string | Yes |
 | image |  | string | Yes |
-| username |  | string | Yes |
-| password |  | string | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | Object | Yes |
 
 
 ### HTTP - Query an HTTP endpoint or namespace
