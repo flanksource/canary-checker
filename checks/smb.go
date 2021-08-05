@@ -56,14 +56,9 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	var err error
 	textResults := smbCheck.GetDisplayTemplate() != ""
 	var serverPath string
-	var username, password string
-	_, username, err = c.kommons.GetEnvValue(smbCheck.Auth.Username, namespace)
+	username, password, err := GetAuthValues(smbCheck.Auth, c.kommons, namespace)
 	if err != nil {
-		return smbFailF(smbCheck, textResults, smbStatus, template, "error getting username: %v", err)
-	}
-	_, password, err = c.kommons.GetEnvValue(smbCheck.Auth.Password, namespace)
-	if err != nil {
-		return smbFailF(smbCheck, textResults, smbStatus, template, "error getting password: %v", err)
+		return smbFailF(smbCheck, textResults, smbStatus, template, "failed getting auth details: %v", err)
 	}
 	if strings.Contains(smbCheck.Server, "\\") {
 		serverPath, smbCheck.Sharename, smbCheck.SearchPath, err = getServerDetails(smbCheck.Server, port)

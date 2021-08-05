@@ -52,18 +52,10 @@ func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	var uploadOK, downloadOK = true, true
 	chartmuseum := fmt.Sprintf("%s/chartrepo/%s/", config.Chartmuseum, config.Project)
 	logger.Tracef("Uploading test chart")
-	var username, password string
-	var err error
 	namespace := config.GetNamespace()
-	if config.Auth != nil {
-		_, username, err = c.kommons.GetEnvValue(config.Auth.Username, namespace)
-		if err != nil {
-			return Failf(config, "failed to get username: %v", err)
-		}
-		_, password, err = c.kommons.GetEnvValue(config.Auth.Password, namespace)
-		if err != nil {
-			return Failf(config, "failed to get password: %v", err)
-		}
+	username, password, err := GetAuthValues(config.Auth, c.kommons, namespace)
+	if err != nil {
+		return Failf(config, "failed to fetch auth details: %v", err)
 	}
 	client, _ := pusher.NewClient(
 		pusher.URL(chartmuseum),

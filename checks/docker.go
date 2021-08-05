@@ -92,18 +92,10 @@ func (c *DockerPullChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DockerPullCheck)
 	start := time.Now()
 	ctx := context.Background()
-	var username, password string
-	var err error
 	namespace := check.GetNamespace()
-	if check.Auth != nil {
-		_, username, err = c.kommons.GetEnvValue(check.Auth.Username, namespace)
-		if err != nil {
-			return Failf(check, "failed to fetch username from envVar: %v", err)
-		}
-		_, password, err = c.kommons.GetEnvValue(check.Auth.Password, namespace)
-		if err != nil {
-			return Failf(check, "failed to fetch password from envVar: %v", err)
-		}
+	username, password, err := GetAuthValues(check.Auth, c.kommons, namespace)
+	if err != nil {
+		return Failf(check, "failed to fetch auth details: %v", err)
 	}
 	authConfig := types.AuthConfig{
 		Username: username,

@@ -341,11 +341,7 @@ func (c *HTTPChecker) ParseAuth(check v1.HTTPCheck) (string, string, error) {
 	if check.Authentication == nil {
 		return "", "", nil
 	}
-	_, username, err := kommons.GetEnvValue(check.Authentication.Username, namespace)
-	if err != nil {
-		return "", "", err
-	}
-	_, password, err := kommons.GetEnvValue(check.Authentication.Password, namespace)
+	username, password, err := GetAuthValues(check.Authentication, c.kommons, namespace)
 	if err != nil {
 		return "", "", err
 	}

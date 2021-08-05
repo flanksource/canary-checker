@@ -43,17 +43,9 @@ func (c *RedisChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	redisCheck := extConfig.(v1.RedisCheck)
 	namespace := redisCheck.GetNamespace()
-	var username, password string
-	var err error
-	if redisCheck.Auth != nil {
-		_, username, err = c.kommons.GetEnvValue(redisCheck.Auth.Username, namespace)
-		if err != nil {
-			return Failf(redisCheck, "failed to fetch username from envVar: %v", err)
-		}
-		_, password, err = c.kommons.GetEnvValue(redisCheck.Auth.Password, namespace)
-		if err != nil {
-			return Failf(redisCheck, "failed to fetch password from envVar: %v", err)
-		}
+	username, password, err := GetAuthValues(redisCheck.Auth, c.kommons, namespace)
+	if err != nil {
+		return Failf(redisCheck, "failed to fetch auth details: %v", err)
 	}
 	result, err := connectRedis(redisCheck.Addr, password, username, redisCheck.DB)
 	if err != nil {

@@ -44,17 +44,10 @@ func (c *LdapChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if err != nil {
 		return Failf(check, "Failed to connect %v", err)
 	}
-	var username, password string
 	namespace := check.GetNamespace()
-	if check.Auth != nil {
-		_, username, err = c.kommons.GetEnvValue(check.Auth.Username, namespace)
-		if err != nil {
-			return Failf(check, "error getting username: %v", err)
-		}
-		_, password, err = c.kommons.GetEnvValue(check.Auth.Password, namespace)
-		if err != nil {
-			return Failf(check, "error getting password: %v", err)
-		}
+	username, password, err := GetAuthValues(check.Auth, c.kommons, namespace)
+	if err != nil {
+		return Failf(check, "failed to fetch auth details: %v", err)
 	}
 	if err := ld.Bind(username, password); err != nil {
 		return Failf(check, "Failed to bind using %s %v", username, err)
