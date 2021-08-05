@@ -47,7 +47,7 @@ var Run = &cobra.Command{
 func init() {
 	Run.Flags().StringP("configfile", "c", "", "Specify configfile")
 	Run.Flags().StringP("namespace", "n", "", "Specify namespace")
-	Run.Flags().StringP("junit-file", "j", "", "path to file where junit results will be published. E.g: junit.xml")
+	Run.Flags().StringP("junit", "j", "", "Export JUnit XML formatted results to this file e.g: junit.xml")
 }
 func RunChecks(config v1.CanarySpec, namespace string) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
