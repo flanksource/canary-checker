@@ -43,11 +43,12 @@ func (c *RedisChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	redisCheck := extConfig.(v1.RedisCheck)
 	namespace := redisCheck.GetNamespace()
-	username, password, err := GetAuthValues(redisCheck.Auth, c.kommons, namespace)
+	var err error
+	redisCheck.Auth, err = GetAuthValues(redisCheck.Auth, c.kommons, namespace)
 	if err != nil {
 		return Failf(redisCheck, "failed to fetch auth details: %v", err)
 	}
-	result, err := connectRedis(redisCheck.Addr, password, username, redisCheck.DB)
+	result, err := connectRedis(redisCheck.Addr, redisCheck.Auth.Password.Value, redisCheck.Auth.Username.Value, redisCheck.DB)
 	if err != nil {
 		return Failf(redisCheck, "failed to execute query %s", err)
 	}

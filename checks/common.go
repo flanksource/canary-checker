@@ -5,17 +5,32 @@ import (
 	"github.com/flanksource/kommons"
 )
 
-func GetAuthValues(auth *v1.Authentication, client *kommons.Client, namespace string) (username, password string, err error) {
+func GetAuthValues(auth *v1.Authentication, client *kommons.Client, namespace string) (*v1.Authentication, error) {
+	authentication := &v1.Authentication{
+		Username: kommons.EnvVar{
+			Value: "",
+		},
+		Password: kommons.EnvVar{
+			Value: "",
+		},
+	}
+	// in case nil we are sending empty string values for username and password
 	if auth == nil {
-		return
+		return authentication, nil
 	}
-	_, username, err = client.GetEnvValue(auth.Username, namespace)
+	_, username, err := client.GetEnvValue(auth.Username, namespace)
 	if err != nil {
-		return
+		return authentication, err
 	}
-	_, password, err = client.GetEnvValue(auth.Password, namespace)
+	authentication.Username = kommons.EnvVar{
+		Value: username,
+	}
+	_, password, err := client.GetEnvValue(auth.Password, namespace)
 	if err != nil {
-		return
+		return authentication, err
 	}
-	return
+	authentication.Password = kommons.EnvVar{
+		Value: password,
+	}
+	return authentication, err
 }

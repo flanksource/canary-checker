@@ -53,14 +53,15 @@ func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	chartmuseum := fmt.Sprintf("%s/chartrepo/%s/", config.Chartmuseum, config.Project)
 	logger.Tracef("Uploading test chart")
 	namespace := config.GetNamespace()
-	username, password, err := GetAuthValues(config.Auth, c.kommons, namespace)
+	var err error
+	config.Auth, err = GetAuthValues(config.Auth, c.kommons, namespace)
 	if err != nil {
 		return Failf(config, "failed to fetch auth details: %v", err)
 	}
 	client, _ := pusher.NewClient(
 		pusher.URL(chartmuseum),
-		pusher.Username(username),
-		pusher.Password(password),
+		pusher.Username(config.Auth.Username.Value),
+		pusher.Password(config.Auth.Password.Value),
 		pusher.ContextPath(""),
 		pusher.Timeout(60),
 		pusher.CAFile(*config.CaFile))
@@ -141,7 +142,7 @@ func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		}
 	}
 
-	defer cleanUp("test-chart", chartmuseum, config, username, password) // nolint: errcheck
+	defer cleanUp("test-chart", chartmuseum, config) // nolint: errcheck
 
 	if err != nil {
 		logger.Warnf("Failed to perform cleanup: %v", err)
@@ -155,7 +156,7 @@ func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 }
 
-func cleanUp(chartname string, chartmuseum string, config v1.HelmCheck, username, password string) error {
+func cleanUp(chartname string, chartmuseum string, config v1.HelmCheck) error {
 	caCert, err := ioutil.ReadFile(*config.CaFile)
 	if err != nil {
 		return fmt.Errorf("failed to read certificate file: %v", err)
@@ -175,7 +176,7 @@ func cleanUp(chartname string, chartmuseum string, config v1.HelmCheck, username
 	}
 	url.Path = path.Join("api", url.Path, "charts", chartname)
 	req, err := http.NewRequest("DELETE", url.String(), nil)
-	req.SetBasicAuth(username, password)
+	req.SetBasicAuth(config.Auth.Username.Value, config.Auth.Password.Value)
 	if err != nil {
 		return fmt.Errorf("failed to create DELETE request: %v", err)
 	}

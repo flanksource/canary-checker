@@ -341,11 +341,12 @@ func (c *HTTPChecker) ParseAuth(check v1.HTTPCheck) (string, string, error) {
 	if check.Authentication == nil {
 		return "", "", nil
 	}
-	username, password, err := GetAuthValues(check.Authentication, c.kommons, namespace)
+	var err error
+	check.Authentication, err = GetAuthValues(check.Authentication, c.kommons, namespace)
 	if err != nil {
 		return "", "", err
 	}
-	return username, password, nil
+	return check.Authentication.Username.Value, check.Authentication.Password.Value, nil
 }
 
 func getHTTPClient(urlHost string, ntlm bool) *http.Client {

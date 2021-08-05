@@ -93,13 +93,14 @@ func (c *DockerPullChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	ctx := context.Background()
 	namespace := check.GetNamespace()
-	username, password, err := GetAuthValues(check.Auth, c.kommons, namespace)
+	var err error
+	check.Auth, err = GetAuthValues(check.Auth, c.kommons, namespace)
 	if err != nil {
 		return Failf(check, "failed to fetch auth details: %v", err)
 	}
 	authConfig := types.AuthConfig{
-		Username: username,
-		Password: password,
+		Username: check.Auth.Username.Value,
+		Password: check.Auth.Password.Value,
 	}
 	encodedJSON, _ := json.Marshal(authConfig)
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
