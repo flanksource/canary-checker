@@ -3,13 +3,21 @@ package checks
 import (
 	"crypto/tls"
 
+	"github.com/flanksource/kommons"
+
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	ldap "github.com/go-ldap/ldap/v3"
 )
 
-type LdapChecker struct{}
+type LdapChecker struct {
+	kommons *kommons.Client `yaml:"-" json:"-"`
+}
+
+func (c *LdapChecker) SetClient(client *kommons.Client) {
+	c.kommons = client
+}
 
 // Type: returns checker type
 func (c *LdapChecker) Type() string {
@@ -36,9 +44,20 @@ func (c *LdapChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if err != nil {
 		return Failf(check, "Failed to connect %v", err)
 	}
-
-	if err := ld.Bind(check.Username, check.Password); err != nil {
-		return Failf(check, "Failed to bind using %s %v", check.Username, err)
+	var username, password string
+	namespace := check.GetNamespace()
+	if check.Auth != nil {
+		_, username, err = c.kommons.GetEnvValue(check.Auth.Username, namespace)
+		if err != nil {
+			return Failf(check, "error getting username: %v", err)
+		}
+		_, password, err = c.kommons.GetEnvValue(check.Auth.Password, namespace)
+		if err != nil {
+			return Failf(check, "error getting password: %v", err)
+		}
+	}
+	if err := ld.Bind(username, password); err != nil {
+		return Failf(check, "Failed to bind using %s %v", username, err)
 	}
 
 	req := &ldap.SearchRequest{

@@ -338,13 +338,19 @@ The LDAP check will:
 ```yaml
 ldap:
   - host: ldap://127.0.0.1:10389
-    username: uid=admin,ou=system
-    password: secret
+    auth:
+      username:
+        value: uid=admin,ou=system
+      password:
+        value: secret
     bindDN: ou=users,dc=example,dc=com
     userSearch: "(&(objectClass=organizationalPerson))"
   - host: ldap://127.0.0.1:10389
-    username: uid=admin,ou=system
-    password: secret
+    auth:
+      username:
+        value: uid=admin,ou=system
+      password:
+        value: secret
     bindDN: ou=groups,dc=example,dc=com
     userSearch: "(&(objectClass=groupOfNames))"
 ```
@@ -353,8 +359,7 @@ ldap:
 | ----- | ----------- | ------ | -------- |
 | description |  | string | Yes |
 | host |  | string | Yes |
-| username |  | string | Yes |
-| password |  | string | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for LDAP server | Object | Yes |
 | bindDN |  | string | Yes |
 | userSearch |  | string | Yes |
 | skipTLSVerify |  | bool | Yes |

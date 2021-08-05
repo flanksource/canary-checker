@@ -150,6 +150,9 @@ func (spec CanarySpec) SetNamespaces(namespace string) {
 	for i := range spec.Restic {
 		spec.Restic[i].SetNamespace(namespace)
 	}
+	for i := range spec.LDAP {
+		spec.LDAP[i].SetNamespace(namespace)
+	}
 }
 
 func (spec CanarySpec) SetNames(name string) {

@@ -492,13 +492,21 @@ func (c PodCheck) GetType() string {
 }
 
 type LDAPCheck struct {
-	Description   string `yaml:"description" json:"description,omitempty"`
-	Host          string `yaml:"host" json:"host,omitempty"`
-	Username      string `yaml:"username" json:"username,omitempty"`
-	Password      string `yaml:"password" json:"password,omitempty"`
-	BindDN        string `yaml:"bindDN" json:"bindDN,omitempty"`
-	UserSearch    string `yaml:"userSearch" json:"userSearch,omitempty"`
-	SkipTLSVerify bool   `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
+	Description   string          `yaml:"description" json:"description,omitempty"`
+	Host          string          `yaml:"host" json:"host,omitempty"`
+	Auth          *Authentication `yaml:"auth" json:"auth,omitempty"`
+	BindDN        string          `yaml:"bindDN" json:"bindDN,omitempty"`
+	UserSearch    string          `yaml:"userSearch" json:"userSearch,omitempty"`
+	SkipTLSVerify bool            `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
+	namespace     string          `yaml:"-" json:"-"`
+}
+
+func (c *LDAPCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c LDAPCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c LDAPCheck) GetEndpoint() string {
@@ -913,13 +921,19 @@ The LDAP check will:
 
 ldap:
   - host: ldap://127.0.0.1:10389
-    username: uid=admin,ou=system
-    password: secret
+    auth:
+      username:
+        value: uid=admin,ou=system
+      password:
+        value: secret
     bindDN: ou=users,dc=example,dc=com
     userSearch: "(&(objectClass=organizationalPerson))"
   - host: ldap://127.0.0.1:10389
-    username: uid=admin,ou=system
-    password: secret
+    auth:
+      username:
+        value: uid=admin,ou=system
+      password:
+        value: secret
     bindDN: ou=groups,dc=example,dc=com
     userSearch: "(&(objectClass=groupOfNames))"
 ```
