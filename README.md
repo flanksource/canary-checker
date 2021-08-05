@@ -300,8 +300,7 @@ The fields for `displayTemplate` (see [Display Types]((#display-types))) are :
 | description |  | string | Yes |
 | chartmuseum |  | string | Yes |
 | project |  | string |  |
-| username |  | string | Yes |
-| password |  | string | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for helm | Object | Yes |
 | cafile |  | *string |  |
 
 

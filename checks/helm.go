@@ -11,6 +11,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/flanksource/kommons"
+
 	pusher "github.com/chartmuseum/helm-push/pkg/chartmuseum"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -21,7 +23,13 @@ import (
 	"helm.sh/helm/v3/pkg/cli"
 )
 
-type HelmChecker struct{}
+type HelmChecker struct {
+	kommons *kommons.Client `yaml:"-" json:"-"`
+}
+
+func (c *HelmChecker) SetClient(client *kommons.Client) {
+	c.kommons = client
+}
 
 type ResultWriter struct{}
 
@@ -44,10 +52,23 @@ func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	var uploadOK, downloadOK = true, true
 	chartmuseum := fmt.Sprintf("%s/chartrepo/%s/", config.Chartmuseum, config.Project)
 	logger.Tracef("Uploading test chart")
+	var username, password string
+	var err error
+	namespace := config.GetNamespace()
+	if config.Auth != nil {
+		_, username, err = c.kommons.GetEnvValue(config.Auth.Username, namespace)
+		if err != nil {
+			return Failf(config, "failed to get username: %v", err)
+		}
+		_, password, err = c.kommons.GetEnvValue(config.Auth.Password, namespace)
+		if err != nil {
+			return Failf(config, "failed to get password: %v", err)
+		}
+	}
 	client, _ := pusher.NewClient(
 		pusher.URL(chartmuseum),
-		pusher.Username(config.Username),
-		pusher.Password(config.Password),
+		pusher.Username(username),
+		pusher.Password(password),
 		pusher.ContextPath(""),
 		pusher.Timeout(60),
 		pusher.CAFile(*config.CaFile))
@@ -128,7 +149,7 @@ func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		}
 	}
 
-	defer cleanUp("test-chart", chartmuseum, config) // nolint: errcheck
+	defer cleanUp("test-chart", chartmuseum, config, username, password) // nolint: errcheck
 
 	if err != nil {
 		logger.Warnf("Failed to perform cleanup: %v", err)
@@ -142,7 +163,7 @@ func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 }
 
-func cleanUp(chartname string, chartmuseum string, config v1.HelmCheck) error {
+func cleanUp(chartname string, chartmuseum string, config v1.HelmCheck, username, password string) error {
 	caCert, err := ioutil.ReadFile(*config.CaFile)
 	if err != nil {
 		return fmt.Errorf("failed to read certificate file: %v", err)
@@ -162,7 +183,7 @@ func cleanUp(chartname string, chartmuseum string, config v1.HelmCheck) error {
 	}
 	url.Path = path.Join("api", url.Path, "charts", chartname)
 	req, err := http.NewRequest("DELETE", url.String(), nil)
-	req.SetBasicAuth(config.Username, config.Password)
+	req.SetBasicAuth(username, password)
 	if err != nil {
 		return fmt.Errorf("failed to create DELETE request: %v", err)
 	}

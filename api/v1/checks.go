@@ -586,12 +586,20 @@ func (c DNSCheck) GetType() string {
 }
 
 type HelmCheck struct {
-	Description string  `yaml:"description" json:"description,omitempty"`
-	Chartmuseum string  `yaml:"chartmuseum" json:"chartmuseum,omitempty"`
-	Project     string  `yaml:"project,omitempty" json:"project,omitempty"`
-	Username    string  `yaml:"username" json:"username,omitempty"`
-	Password    string  `yaml:"password" json:"password,omitempty"`
-	CaFile      *string `yaml:"cafile,omitempty" json:"cafile,omitempty"`
+	Description string          `yaml:"description" json:"description,omitempty"`
+	Chartmuseum string          `yaml:"chartmuseum" json:"chartmuseum,omitempty"`
+	Project     string          `yaml:"project,omitempty" json:"project,omitempty"`
+	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	CaFile      *string         `yaml:"cafile,omitempty" json:"cafile,omitempty"`
+	namespace   string          `yaml:"-" json:"-"`
+}
+
+func (c *HelmCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c HelmCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c HelmCheck) GetEndpoint() string {
