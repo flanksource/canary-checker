@@ -27,6 +27,7 @@ type AggregateCheck struct { // nolint: golint
 	Type        string                       `json:"type"`
 	Name        string                       `json:"name"`
 	Namespace   string                       `json:"namespace"`
+	Labels      map[string]string            `json:"labels"`
 	CanaryName  string                       `json:"canaryName"`
 	Description string                       `json:"description"`
 	Endpoint    string                       `json:"endpoint"`
@@ -124,6 +125,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 					Key:         c.Key,
 					Name:        c.GetName(),
 					Namespace:   "",
+					Labels:      c.CheckCanary.Labels,
 					CanaryName:  c.CanaryName,
 					Type:        c.Type,
 					Description: c.Description,
@@ -150,6 +152,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 				Key:         c.Key,
 				Name:        c.GetName(),
 				Namespace:   c.GetNamespace(),
+				Labels:      c.CheckCanary.Labels,
 				CanaryName:  c.CanaryName,
 				Type:        c.Type,
 				Description: c.Description,
@@ -184,6 +187,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 						Key:         c.Key,
 						Name:        c.GetName(),
 						Namespace:   c.GetNamespace(),
+						Labels:      c.CheckCanary.Labels,
 						CanaryName:  c.CanaryName,
 						Type:        c.Type,
 						Description: c.Description,
