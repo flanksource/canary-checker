@@ -6,7 +6,7 @@ export KARINA_VERSION=v0.50.0
 export KARINA="./karina -c test/config.yaml"
 export KUBECONFIG=~/.kube/config
 export DOCKER_API_VERSION=1.39
-export CLUSTER_NAME=test
+export CLUSTER_NAME=kind-test
 
 
 if which karina 2>&1 > /dev/null; then
@@ -42,10 +42,12 @@ if [[ "$(kubectl config current-context)" != "kind-$CLUSTER_NAME" ]] ; then
   fi
 fi
 
+kubectl config use-context kind-$CLUSTER_NAME
+
 export PATH=$(pwd)/.bin:$PATH
 
 echo "::group::Deploying Base"
-$KARINA deploy bootstrap
+$KARINA deploy bootstrap -vv
 echo "::endgroup::"
 echo "::group::Deploying Stubs"
 $KARINA deploy apacheds
@@ -70,30 +72,36 @@ chmod +x ./wait4x
 ./wait4x tcp 127.0.0.1:32010 || true
 
 #Install jmeter
-curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmeter-5.4.1.tgz -o apache-jmeter-5.4.1.tgz && \
-sudo tar xf apache-jmeter-5.4.1.tgz -C / && \
-rm apache-jmeter-5.4.1.tgz && \
-sudo apt-get install -y openjdk-11-jre-headless
-sudo ln -s /apache-jmeter-5.4.1/bin/jmeter /usr/local/bin/jmeter
+if ! which jmeter 2>&1 > /dev/null; then
+    sudo apt-get install -y curl
+    curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmeter-5.4.1.tgz -o apache-jmeter-5.4.1.tgz && \
+    sudo tar xf apache-jmeter-5.4.1.tgz -C / && \
+    rm apache-jmeter-5.4.1.tgz && \
+    sudo apt-get install -y openjdk-11-jre-headless
+    sudo ln -s /apache-jmeter-5.4.1/bin/jmeter /usr/local/bin/jmeter
+fi
 #verification
 jmeter -v
 
 #Install Restic
-sudo apt-get install -y curl
-sudo curl -L https://github.com/restic/restic/releases/download/v0.12.0/restic_0.12.0_linux_amd64.bz2 -o /usr/bin/restic.bz2
-sudo bunzip2  /usr/bin/restic.bz2
-sudo chmod +x /usr/bin/restic
-rm -rf /usr/bin/restic.bz2
+if ! which restic 2>&1 > /dev/null; then
+    sudo apt-get install -y curl
+    sudo curl -L https://github.com/restic/restic/releases/download/v0.12.0/restic_0.12.0_linux_amd64.bz2 -o /usr/local/bin/restic.bz2
+    sudo bunzip2  /usr/local/bin/restic.bz2
+    sudo chmod +x /usr/local/bin/restic
+    rm -rf /usr/local/bin/restic.bz2
+fi
 
 #Verify
 restic version
 # Initialize Restic Repo
-RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="minio123" restic --cacert .certs/ingress-ca.crt -r s3:https://minio.127.0.0.1.nip.io/restic-canary-checker init
+# Do not fail if it already exists
+RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="minio123" restic --cacert .certs/ingress-ca.crt -r s3:https://minio.127.0.0.1.nip.io/restic-canary-checker init || true
 #take some backup in restic
-RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="minio123" restic --cacert .certs/ingress-ca.crt -r s3:https://minio.127.0.0.1.nip.io/restic-canary-checker backup /home/runner/work/canary-checker/canary-checker
+RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="minio123" restic --cacert .certs/ingress-ca.crt -r s3:https://minio.127.0.0.1.nip.io/restic-canary-checker backup $(pwd)
 make vue-dist
 cd test
 go test ./... -v -c
-# ICMP requires privelages so we run the tests with sudo
+# ICMP requires privileges so we run the tests with sudo
 sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG ./test.test  -test.v
 echo "::endgroup::"

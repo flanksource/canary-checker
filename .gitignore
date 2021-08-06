@@ -10,3 +10,5 @@ docs/cli/
 cover.out
 test.test
 *.tgz
+*.log
+wait4x

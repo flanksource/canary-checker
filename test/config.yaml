@@ -1,4 +1,4 @@
-name: kind-kind
+name: !!env CLUSTER_NAME
 patches:
   - ./patch1.yaml
 domain: 127.0.0.1.nip.io
