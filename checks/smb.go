@@ -56,7 +56,7 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	var err error
 	textResults := smbCheck.GetDisplayTemplate() != ""
 	var serverPath string
-	smbCheck.Auth, err = GetAuthValues(smbCheck.Auth, c.kommons, namespace)
+	auth, err := GetAuthValues(smbCheck.Auth, c.kommons, namespace)
 	if err != nil {
 		return smbFailF(smbCheck, textResults, smbStatus, template, "failed getting auth details: %v", err)
 	}
@@ -78,8 +78,8 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	defer conn.Close()
 	d := &smb2.Dialer{
 		Initiator: &smb2.NTLMInitiator{
-			User:        smbCheck.Auth.Username.Value,
-			Password:    smbCheck.Auth.Password.Value,
+			User:        auth.Username.Value,
+			Password:    auth.Password.Value,
 			Domain:      smbCheck.Domain,
 			Workstation: smbCheck.Workstation,
 		},

@@ -45,12 +45,12 @@ func (c *LdapChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		return Failf(check, "Failed to connect %v", err)
 	}
 	namespace := check.GetNamespace()
-	check.Auth, err = GetAuthValues(check.Auth, c.kommons, namespace)
+	auth, err := GetAuthValues(check.Auth, c.kommons, namespace)
 	if err != nil {
 		return Failf(check, "failed to fetch auth details: %v", err)
 	}
-	if err := ld.Bind(check.Auth.Username.Value, check.Auth.Password.Value); err != nil {
-		return Failf(check, "Failed to bind using %s %v", check.Auth.Username.Value, err)
+	if err := ld.Bind(auth.Username.Value, auth.Password.Value); err != nil {
+		return Failf(check, "Failed to bind using %s %v", auth.Username.Value, err)
 	}
 
 	req := &ldap.SearchRequest{

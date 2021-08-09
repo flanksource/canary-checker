@@ -342,11 +342,11 @@ func (c *HTTPChecker) ParseAuth(check v1.HTTPCheck) (string, string, error) {
 		return "", "", nil
 	}
 	var err error
-	check.Authentication, err = GetAuthValues(check.Authentication, c.kommons, namespace)
+	auth, err := GetAuthValues(check.Authentication, c.kommons, namespace)
 	if err != nil {
 		return "", "", err
 	}
-	return check.Authentication.Username.Value, check.Authentication.Password.Value, nil
+	return auth.Username.Value, auth.Password.Value, nil
 }
 
 func getHTTPClient(urlHost string, ntlm bool) *http.Client {
