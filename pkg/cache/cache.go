@@ -82,7 +82,24 @@ func (c *cache) AddCheck(checks v1.Canary, result *pkg.CheckResult) *pkg.Check {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
-	check := pkg.Check{
+	check := Check(checks, result)
+	return c.Add(check)
+}
+
+func (c *cache) Add(check pkg.Check) *pkg.Check {
+	lastCheck, found := c.Checks[check.Key]
+	if found {
+		check.Statuses = append(check.Statuses, lastCheck.Statuses...)
+		if len(check.Statuses) > Size {
+			check.Statuses = check.Statuses[:Size]
+		}
+	}
+	c.Checks[check.Key] = check
+	return &lastCheck
+}
+
+func Check(checks v1.Canary, result *pkg.CheckResult) pkg.Check {
+	return pkg.Check{
 		Key:         checks.GetKey(result.Check),
 		Type:        result.Check.GetType(),
 		Name:        checks.ID(),
@@ -106,16 +123,6 @@ func (c *cache) AddCheck(checks v1.Canary, result *pkg.CheckResult) *pkg.Check {
 			},
 		},
 	}
-
-	lastCheck, found := c.Checks[check.Key]
-	if found {
-		check.Statuses = append(check.Statuses, lastCheck.Statuses...)
-		if len(check.Statuses) > Size {
-			check.Statuses = check.Statuses[:Size]
-		}
-	}
-	c.Checks[check.Key] = check
-	return &lastCheck
 }
 
 func (c *cache) GetChecks() pkg.Checks {

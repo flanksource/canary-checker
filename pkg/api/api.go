@@ -25,15 +25,15 @@ import (
 )
 
 type Response struct {
-	ServerName string     `json:"serverName"`
+	RunnerName string     `json:"runnerName"`
 	Checks     pkg.Checks `json:"checks"`
 }
 
-var ServerName string
+var RunnerName string
 
 func Handler(w http.ResponseWriter, req *http.Request) {
 	apiResponse := &Response{
-		ServerName: ServerName,
+		RunnerName: RunnerName,
 		Checks:     cache.GetChecks(),
 	}
 	jsonData, err := json.Marshal(apiResponse)

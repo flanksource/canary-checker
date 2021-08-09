@@ -23,10 +23,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/flanksource/kommons/ktemplate"
-	"github.com/mitchellh/reflectwalk"
+	"github.com/flanksource/canary-checker/pkg/push"
 
 	"github.com/flanksource/kommons"
+
+	"github.com/flanksource/kommons/ktemplate"
+	"github.com/mitchellh/reflectwalk"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
@@ -159,7 +161,6 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.Kubernetes = clientset
 
 	r.Kommons = kommons.NewClient(mgr.GetConfig(), logger.StandardLogger())
-
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1.Canary{}).
 		Complete(r)
@@ -195,6 +196,7 @@ func (r *CanaryReconciler) Report(key types.NamespacedName, results []*pkg.Check
 		//replacing new-line char from message so we don't mess up terminal message
 		message := strings.ReplaceAll(result.Message, "\\n", " ")
 		check.Status.Message = &message
+		push.Queue(cache.Check(check, result))
 	}
 	if pass {
 		check.Status.Status = &v1.Passed
