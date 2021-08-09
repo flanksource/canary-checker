@@ -55,6 +55,7 @@ type Check struct {
 	Interval    uint64        `json:"interval"`
 	Owner       string        `json:"owner"`
 	Severity    string        `json:"severity"`
+	IconURL     string        `json:"iconURL"`
 	DisplayType string        `json:"displayType"`
 	CheckCanary *v1.Canary    `json:"-"`
 }

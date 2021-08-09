@@ -19,8 +19,17 @@ type Authentication struct {
 	Password kommons.EnvVar `yaml:"password" json:"password"`
 }
 
+type Description struct {
+	// Description for the check
+	Description string `yaml:"description,omitempty" json:"description,omitempty"`
+	// Name of the check
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+	// IconURL for overwriting default icon on the dashboard
+	IconURL string `yaml:"iconURL,omitempty" json:"iconURL,omitempty"`
+}
+
 type HTTPCheck struct {
-	Description string `yaml:"description" json:"description,omitempty"`
+	Description `yaml:",inline" json:",inline"`
 	// HTTP endpoint to check.  Mutually exclusive with Namespace
 	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty"`
 	// Namespace to crawl for TLS endpoints.  Mutually exclusive with Endpoint
@@ -70,7 +79,11 @@ func (c HTTPCheck) GetEndpoint() string {
 }
 
 func (c HTTPCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c HTTPCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c HTTPCheck) GetType() string {
@@ -78,7 +91,7 @@ func (c HTTPCheck) GetType() string {
 }
 
 type TCPCheck struct {
-	Description     string `yaml:"description" json:"description,omitempty"`
+	Description     `yaml:",inline" json:",inline"`
 	Endpoint        string `yaml:"endpoint" json:"endpoint,omitempty"`
 	ThresholdMillis int64  `yaml:"thresholdMillis" json:"thresholdMillis,omitempty"`
 }
@@ -88,7 +101,11 @@ func (t TCPCheck) GetEndpoint() string {
 }
 
 func (t TCPCheck) GetDescription() string {
-	return t.Description
+	return t.Description.Description
+}
+
+func (t TCPCheck) GetIconURL() string {
+	return t.IconURL
 }
 
 func (t TCPCheck) GetType() string {
@@ -96,7 +113,7 @@ func (t TCPCheck) GetType() string {
 }
 
 type ICMPCheck struct {
-	Description         string `yaml:"description" json:"description,omitempty"`
+	Description         `yaml:",inline" json:",inline"`
 	Endpoint            string `yaml:"endpoint" json:"endpoint,omitempty"`
 	ThresholdMillis     int64  `yaml:"thresholdMillis" json:"thresholdMillis,omitempty"`
 	PacketLossThreshold int64  `yaml:"packetLossThreshold" json:"packetLossThreshold,omitempty"`
@@ -108,7 +125,11 @@ func (c ICMPCheck) GetEndpoint() string {
 }
 
 func (c ICMPCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c ICMPCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c ICMPCheck) GetType() string {
@@ -122,7 +143,7 @@ type Bucket struct {
 }
 
 type S3Check struct {
-	Description string `yaml:"description" json:"description,omitempty"`
+	Description `yaml:",inline" json:",inline"`
 	Bucket      Bucket `yaml:"bucket" json:"bucket,omitempty"`
 	AccessKey   string `yaml:"accessKey" json:"accessKey,omitempty"`
 	SecretKey   string `yaml:"secretKey" json:"secretKey,omitempty"`
@@ -136,15 +157,19 @@ func (c S3Check) GetEndpoint() string {
 }
 
 func (c S3Check) GetDescription() string {
-	return c.Description
+	return c.Description.Description
 }
 
 func (c S3Check) GetType() string {
 	return "s3"
 }
 
+func (c S3Check) GetIconURL() string {
+	return c.IconURL
+}
+
 type S3BucketCheck struct {
-	Description string `yaml:"description" json:"description,omitempty"`
+	Description `yaml:",inline" json:",inline"`
 	Bucket      string `yaml:"bucket" json:"bucket,omitempty"`
 	AccessKey   string `yaml:"accessKey" json:"accessKey,omitempty"`
 	SecretKey   string `yaml:"secretKey" json:"secretKey,omitempty"`
@@ -177,16 +202,19 @@ func (c S3BucketCheck) GetEndpoint() string {
 }
 
 func (c S3BucketCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
 }
 
 func (c S3BucketCheck) GetType() string {
 	return "s3Bucket"
 }
 
+func (c S3BucketCheck) GetIconURL() string {
+	return c.IconURL
+}
+
 type ResticCheck struct {
-	// Description about the current restic canary check
-	Description string `yaml:"description,omitempty" json:"description,omitempty"`
+	Description `yaml:",inline" json:",inline"`
 	// Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name
 	Repository string `yaml:"repository" json:"repository"`
 	// Password for the restic repository
@@ -217,7 +245,11 @@ func (c ResticCheck) GetEndpoint() string {
 }
 
 func (c ResticCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c ResticCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c ResticCheck) GetType() string {
@@ -235,8 +267,7 @@ type JmeterCheck struct {
 	Properties []string `yaml:"properties,omitempty" json:"properties,omitempty"`
 	// SystemProperties defines the java system property
 	SystemProperties []string `yaml:"systemProperties,omitempty" json:"systemProperties,omitempty"`
-	// Description of the canary
-	Description string `yaml:"description,omitempty" json:"description,omitempty"`
+	Description      `yaml:",inline" json:",inline"`
 	// ResponseDuration under which the all the test should pass
 	ResponseDuration string `yaml:"responseDuration,omitempty" json:"responseDuration,omitempty"`
 	// specNamespace is the namespace in which the canary was deployed, and which
@@ -257,7 +288,11 @@ func (c JmeterCheck) GetEndpoint() string {
 }
 
 func (c JmeterCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c JmeterCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c JmeterCheck) GetType() string {
@@ -265,7 +300,7 @@ func (c JmeterCheck) GetType() string {
 }
 
 type DockerPullCheck struct {
-	Description    string          `yaml:"description" json:"description,omitempty"`
+	Description    `yaml:",inline" json:",inline"`
 	Image          string          `yaml:"image" json:"image,omitempty"`
 	Auth           *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 	ExpectedDigest string          `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
@@ -286,7 +321,11 @@ func (c DockerPullCheck) GetEndpoint() string {
 }
 
 func (c DockerPullCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c DockerPullCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c DockerPullCheck) GetType() string {
@@ -294,7 +333,7 @@ func (c DockerPullCheck) GetType() string {
 }
 
 type DockerPushCheck struct {
-	Description string          `yaml:"description" json:"description,omitempty"`
+	Description `yaml:",inline" json:",inline"`
 	Image       string          `yaml:"image" json:"image,omitempty"`
 	Auth        *Authentication `yaml:"auth" json:"auth"`
 	namespace   string          `yaml:"-" json:"-"`
@@ -313,7 +352,11 @@ func (c DockerPushCheck) GetEndpoint() string {
 }
 
 func (c DockerPushCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c DockerPushCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c DockerPushCheck) GetType() string {
@@ -321,7 +364,7 @@ func (c DockerPushCheck) GetType() string {
 }
 
 type ContainerdPullCheck struct {
-	Description    string         `yaml:"description" json:"description,omitempty"`
+	Description    `yaml:",inline" json:",inline"`
 	Image          string         `yaml:"image" json:"image,omitempty"`
 	Auth           Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 	ExpectedDigest string         `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
@@ -342,7 +385,11 @@ func (c ContainerdPullCheck) GetEndpoint() string {
 }
 
 func (c ContainerdPullCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c ContainerdPullCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c ContainerdPullCheck) GetType() string {
@@ -350,7 +397,7 @@ func (c ContainerdPullCheck) GetType() string {
 }
 
 type ContainerdPushCheck struct {
-	Description string `yaml:"description" json:"description,omitempty"`
+	Description `yaml:",inline" json:",inline"`
 	Image       string `yaml:"image" json:"image,omitempty"`
 	Username    string `yaml:"username" json:"username,omitempty"`
 	Password    string `yaml:"password" json:"password,omitempty"`
@@ -361,7 +408,11 @@ func (c ContainerdPushCheck) GetEndpoint() string {
 }
 
 func (c ContainerdPushCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c ContainerdPushCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c ContainerdPushCheck) GetType() string {
@@ -369,7 +420,7 @@ func (c ContainerdPushCheck) GetType() string {
 }
 
 type RedisCheck struct {
-	Description string          `yaml:"description" json:"description,omitempty"`
+	Description `yaml:",inline" json:",inline"`
 	Addr        string          `yaml:"addr" json:"addr"`
 	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 	DB          int             `yaml:"db" json:"db"`
@@ -385,7 +436,11 @@ func (c RedisCheck) GetNamespace() string {
 }
 
 func (c RedisCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c RedisCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c RedisCheck) GetType() string {
@@ -397,7 +452,7 @@ func (c RedisCheck) GetEndpoint() string {
 }
 
 type SQLCheck struct {
-	Description string `yaml:"description" json:"description,omitempty"`
+	Description `yaml:",inline" json:",inline"`
 	driver      string `yaml:"-" json:"-"`
 	Connection  string `yaml:"connection" json:"connection,omitempty"`
 	Query       string `yaml:"query" json:"query,omitempty"`
@@ -439,7 +494,11 @@ func (c SQLCheck) GetEndpoint() string {
 }
 
 func (c SQLCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c SQLCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c SQLCheck) GetType() string {
@@ -455,8 +514,7 @@ type MssqlCheck struct {
 }
 
 type PodCheck struct {
-	Description          string `yaml:"description" json:"description,omitempty"`
-	Name                 string `yaml:"name" json:"name,omitempty"`
+	Description          `yaml:",inline" json:",inline"`
 	Namespace            string `yaml:"namespace" json:"namespace,omitempty"`
 	Spec                 string `yaml:"spec" json:"spec,omitempty"`
 	ScheduleTimeout      int64  `yaml:"scheduleTimeout" json:"scheduleTimeout,omitempty"`
@@ -476,7 +534,11 @@ type PodCheck struct {
 }
 
 func (c PodCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c PodCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c PodCheck) GetEndpoint() string {
@@ -492,7 +554,7 @@ func (c PodCheck) GetType() string {
 }
 
 type LDAPCheck struct {
-	Description   string          `yaml:"description" json:"description,omitempty"`
+	Description   `yaml:",inline" json:",inline"`
 	Host          string          `yaml:"host" json:"host,omitempty"`
 	Auth          *Authentication `yaml:"auth" json:"auth,omitempty"`
 	BindDN        string          `yaml:"bindDN" json:"bindDN,omitempty"`
@@ -514,7 +576,11 @@ func (c LDAPCheck) GetEndpoint() string {
 }
 
 func (c LDAPCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c LDAPCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c LDAPCheck) GetType() string {
@@ -522,7 +588,7 @@ func (c LDAPCheck) GetType() string {
 }
 
 type NamespaceCheck struct {
-	Description          string            `yaml:"description" json:"description,omitempty"`
+	Description          `yaml:",inline" json:",inline"`
 	CheckName            string            `yaml:"checkName" json:"checkName,omitempty"`
 	NamespaceNamePrefix  string            `yaml:"namespaceNamePrefix" json:"namespaceNamePrefix,omitempty"`
 	NamespaceLabels      map[string]string `yaml:"namespaceLabels" json:"namespaceLabels,omitempty"`
@@ -545,7 +611,11 @@ type NamespaceCheck struct {
 }
 
 func (c NamespaceCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c NamespaceCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c NamespaceCheck) GetEndpoint() string {
@@ -561,7 +631,7 @@ func (c NamespaceCheck) GetType() string {
 }
 
 type DNSCheck struct {
-	Description     string   `yaml:"description" json:"description,omitempty"`
+	Description     `yaml:",inline" json:",inline"`
 	Server          string   `yaml:"server" json:"server,omitempty"`
 	Port            int      `yaml:"port" json:"port,omitempty"`
 	Query           string   `yaml:"query,omitempty" json:"query,omitempty"`
@@ -578,7 +648,11 @@ func (c DNSCheck) GetEndpoint() string {
 }
 
 func (c DNSCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c DNSCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c DNSCheck) GetType() string {
@@ -586,7 +660,7 @@ func (c DNSCheck) GetType() string {
 }
 
 type HelmCheck struct {
-	Description string          `yaml:"description" json:"description,omitempty"`
+	Description `yaml:",inline" json:",inline"`
 	Chartmuseum string          `yaml:"chartmuseum" json:"chartmuseum,omitempty"`
 	Project     string          `yaml:"project,omitempty" json:"project,omitempty"`
 	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
@@ -607,7 +681,11 @@ func (c HelmCheck) GetEndpoint() string {
 }
 
 func (c HelmCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c HelmCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c HelmCheck) GetType() string {
@@ -615,7 +693,7 @@ func (c HelmCheck) GetType() string {
 }
 
 type JunitCheck struct {
-	Description string `yaml:"description" json:"description,omitempty"`
+	Description `yaml:",inline" json:",inline"`
 	TestResults string `yaml:"testResults" json:"testResults"`
 	// namespace in which canary is created
 	namespace string `yaml:"-" json:"-"`
@@ -667,7 +745,11 @@ func (c JunitCheck) GetEndpoint() string {
 	return fmt.Sprintf("file://%s", c.TestResults)
 }
 func (c JunitCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c JunitCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c JunitCheck) GetTimeout() int {
@@ -701,8 +783,8 @@ type SmbCheck struct {
 	//MaxAge the latest object should be younger than defined age
 	MaxAge string `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
 	//MinCount the minimum number of files inside the searchPath
-	MinCount    int    `yaml:"minCount,omitempty" json:"minCount,omitempty"`
-	Description string `yaml:"description,omitempty" json:"description,omitempty"`
+	MinCount    int `yaml:"minCount,omitempty" json:"minCount,omitempty"`
+	Description `yaml:",inline" json:",inline"`
 	// DisplayTemplate displays check output in text
 	// Default: 'File Age: [[.age]]; File count: [[.count]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
@@ -724,7 +806,11 @@ func (c SmbCheck) GetEndpoint() string {
 }
 
 func (c SmbCheck) GetDescription() string {
-	return c.Description
+	return c.Description.Description
+}
+
+func (c SmbCheck) GetIconURL() string {
+	return c.IconURL
 }
 
 func (c SmbCheck) GetType() string {

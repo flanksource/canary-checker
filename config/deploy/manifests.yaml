@@ -133,13 +133,20 @@ spec:
                           - username
                         type: object
                       description:
+                        description: Description for the check
                         type: string
                       expectedDigest:
                         type: string
                       expectedSize:
                         format: int64
                         type: integer
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
                       image:
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                     type: object
                   type: array
@@ -147,8 +154,15 @@ spec:
                   items:
                     properties:
                       description:
+                        description: Description for the check
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
                         type: string
                       image:
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                       password:
                         type: string
@@ -160,13 +174,20 @@ spec:
                   items:
                     properties:
                       description:
+                        description: Description for the check
                         type: string
                       exactreply:
                         items:
                           type: string
                         type: array
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
                       minrecords:
                         type: integer
+                      name:
+                        description: Name of the check
+                        type: string
                       port:
                         type: integer
                       query:
@@ -255,13 +276,20 @@ spec:
                           - username
                         type: object
                       description:
+                        description: Description for the check
                         type: string
                       expectedDigest:
                         type: string
                       expectedSize:
                         format: int64
                         type: integer
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
                       image:
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                     type: object
                   type: array
@@ -339,8 +367,15 @@ spec:
                           - username
                         type: object
                       description:
+                        description: Description for the check
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
                         type: string
                       image:
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                     required:
                       - auth
@@ -474,6 +509,13 @@ spec:
                       chartmuseum:
                         type: string
                       description:
+                        description: Description for the check
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                       project:
                         type: string
@@ -557,6 +599,7 @@ spec:
                         description: HTTP request body contents
                         type: string
                       description:
+                        description: Description for the check
                         type: string
                       displayTemplate:
                         description: 'DisplayTemplate displays server response in text (overrides default bar format for UI). Example: ''Response Code: [[.code]]'''
@@ -599,11 +642,17 @@ spec:
                               type: object
                           type: object
                         type: array
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
                       maxSSLExpiry:
                         description: Maximum number of days until the SSL Certificate expires.
                         type: integer
                       method:
                         description: HTTP method to call - defaults to GET
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                       namespace:
                         description: Namespace to crawl for TLS endpoints.  Mutually exclusive with Endpoint
@@ -639,8 +688,15 @@ spec:
                   items:
                     properties:
                       description:
+                        description: Description for the check
                         type: string
                       endpoint:
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                       packetCount:
                         type: integer
@@ -659,10 +715,13 @@ spec:
                   items:
                     properties:
                       description:
-                        description: Description of the canary
+                        description: Description for the check
                         type: string
                       host:
                         description: Host is the server against which test plan needs to be executed
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
                         type: string
                       jmx:
                         description: Jmx defines tge ConfigMap or Secret reference to get the JMX test plan
@@ -697,6 +756,9 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      name:
+                        description: Name of the check
+                        type: string
                       port:
                         description: Port on which the server is running
                         format: int32
@@ -722,9 +784,16 @@ spec:
                   items:
                     properties:
                       description:
+                        description: Description for the check
                         type: string
                       displayTemplate:
                         description: 'DisplayTemplate displays testResults results in text Default: ''Passed: [[.passed]], Failed: [[.failed]]'''
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                       spec:
                         description: PodSpec is a description of a pod.
@@ -4546,8 +4615,15 @@ spec:
                       bindDN:
                         type: string
                       description:
+                        description: Description for the check
                         type: string
                       host:
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                       skipTLSVerify:
                         type: boolean
@@ -4561,9 +4637,16 @@ spec:
                       connection:
                         type: string
                       description:
+                        description: Description for the check
                         type: string
                       displayTemplate:
                         description: 'DisplayTemplate displays query results in text (overrides default bar format for UI) Example: ''[[index .results 0]]'''
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                       query:
                         type: string
@@ -4587,6 +4670,7 @@ spec:
                         format: int64
                         type: integer
                       description:
+                        description: Description for the check
                         type: string
                       expectedContent:
                         type: string
@@ -4601,6 +4685,9 @@ spec:
                       httpTimeout:
                         format: int64
                         type: integer
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
                       ingressHost:
                         type: string
                       ingressName:
@@ -4608,6 +4695,9 @@ spec:
                       ingressTimeout:
                         format: int64
                         type: integer
+                      name:
+                        description: Name of the check
+                        type: string
                       namespaceAnnotations:
                         additionalProperties:
                           type: string
@@ -4647,6 +4737,7 @@ spec:
                         format: int64
                         type: integer
                       description:
+                        description: Description for the check
                         type: string
                       expectedContent:
                         type: string
@@ -4660,6 +4751,9 @@ spec:
                       httpTimeout:
                         format: int64
                         type: integer
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
                       ingressHost:
                         type: string
                       ingressName:
@@ -4668,6 +4762,7 @@ spec:
                         format: int64
                         type: integer
                       name:
+                        description: Name of the check
                         type: string
                       namespace:
                         type: string
@@ -4694,9 +4789,16 @@ spec:
                       connection:
                         type: string
                       description:
+                        description: Description for the check
                         type: string
                       displayTemplate:
                         description: 'DisplayTemplate displays query results in text (overrides default bar format for UI) Example: ''[[index .results 0]]'''
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                       query:
                         type: string
@@ -4786,6 +4888,13 @@ spec:
                       db:
                         type: integer
                       description:
+                        description: Description for the check
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                     required:
                       - addr
@@ -4835,10 +4944,16 @@ spec:
                         description: CheckIntegrity when enabled will check the Integrity and consistency of the restic reposiotry
                         type: boolean
                       description:
-                        description: Description about the current restic canary check
+                        description: Description for the check
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
                         type: string
                       maxAge:
                         description: MaxAge for backup freshness
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                       password:
                         description: Password for the restic repository
@@ -4930,6 +5045,13 @@ spec:
                             type: string
                         type: object
                       description:
+                        description: Description for the check
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                       objectPath:
                         type: string
@@ -4948,11 +5070,15 @@ spec:
                       bucket:
                         type: string
                       description:
+                        description: Description for the check
                         type: string
                       displayTemplate:
                         description: 'DisplayTemplate displays testResults results in text. Default: ''Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'''
                         type: string
                       endpoint:
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
                         type: string
                       maxAge:
                         description: maximum allowed age of matched objects in seconds
@@ -4962,6 +5088,9 @@ spec:
                         description: min size of of most recent matched object in bytes
                         format: int64
                         type: integer
+                      name:
+                        description: Name of the check
+                        type: string
                       objectPath:
                         description: glob path to restrict matches to a subset
                         type: string
@@ -5055,12 +5184,16 @@ spec:
                           - username
                         type: object
                       description:
+                        description: Description for the check
                         type: string
                       displayTemplate:
                         description: 'DisplayTemplate displays check output in text Default: ''File Age: [[.age]]; File count: [[.count]]'''
                         type: string
                       domain:
                         description: Domain...
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
                         type: string
                       maxAge:
                         description: MaxAge the latest object should be younger than defined age
@@ -5071,6 +5204,9 @@ spec:
                       minCount:
                         description: MinCount the minimum number of files inside the searchPath
                         type: integer
+                      name:
+                        description: Name of the check
+                        type: string
                       port:
                         description: Port on which smb server is running. Defaults to 445
                         type: integer
@@ -5095,8 +5231,15 @@ spec:
                   items:
                     properties:
                       description:
+                        description: Description for the check
                         type: string
                       endpoint:
+                        type: string
+                      iconURL:
+                        description: IconURL for overwriting default icon on the dashboard
+                        type: string
+                      name:
+                        description: Name of the check
                         type: string
                       thresholdMillis:
                         format: int64

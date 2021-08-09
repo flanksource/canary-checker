@@ -67,6 +67,7 @@ func (c *cache) InitCheck(checks v1.Canary) {
 			Endpoint:    check.GetEndpoint(),
 			Interval:    checks.Spec.Interval,
 			Owner:       checks.Spec.Owner,
+			IconURL:     check.GetIconURL(),
 			Severity:    checks.Spec.Severity,
 		}
 		c.CheckConfigs[key] = check
@@ -93,6 +94,7 @@ func (c *cache) AddCheck(checks v1.Canary, result *pkg.CheckResult) *pkg.Check {
 		Owner:       checks.Spec.Owner,
 		Severity:    checks.Spec.Severity,
 		CheckCanary: &checks,
+		IconURL:     result.Check.GetIconURL(),
 		DisplayType: result.DisplayType,
 		Statuses: []pkg.CheckStatus{
 			{
