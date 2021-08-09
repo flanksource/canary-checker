@@ -132,6 +132,30 @@ func (spec CanarySpec) SetNamespaces(namespace string) {
 	for i := range spec.Junit {
 		spec.Junit[i].SetNamespace(namespace)
 	}
+	for i := range spec.Smb {
+		spec.Smb[i].SetNamespace(namespace)
+	}
+	for i := range spec.DockerPull {
+		spec.DockerPull[i].SetNamespace(namespace)
+	}
+	for i := range spec.DockerPush {
+		spec.DockerPush[i].SetNamespace(namespace)
+	}
+	for i := range spec.ContainerdPull {
+		spec.ContainerdPull[i].SetNamespace(namespace)
+	}
+	for i := range spec.Redis {
+		spec.Redis[i].SetNamespace(namespace)
+	}
+	for i := range spec.Restic {
+		spec.Restic[i].SetNamespace(namespace)
+	}
+	for i := range spec.LDAP {
+		spec.LDAP[i].SetNamespace(namespace)
+	}
+	for i := range spec.Helm {
+		spec.Helm[i].SetNamespace(namespace)
+	}
 }
 
 func (spec CanarySpec) SetNames(name string) {

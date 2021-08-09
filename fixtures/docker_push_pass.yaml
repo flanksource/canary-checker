@@ -1,4 +1,7 @@
 dockerPush:
   - image: ttl.sh/flanksource-busybox:1.30
-    username: $DOCKER_USERNAME
-    password: $DOCKER_PASSWORD
+    auth:
+      username:
+        value: $DOCKER_USERNAME
+      password:
+        value: $DOCKER_PASSWORD

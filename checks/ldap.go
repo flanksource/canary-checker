@@ -3,13 +3,21 @@ package checks
 import (
 	"crypto/tls"
 
+	"github.com/flanksource/kommons"
+
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	ldap "github.com/go-ldap/ldap/v3"
 )
 
-type LdapChecker struct{}
+type LdapChecker struct {
+	kommons *kommons.Client `yaml:"-" json:"-"`
+}
+
+func (c *LdapChecker) SetClient(client *kommons.Client) {
+	c.kommons = client
+}
 
 // Type: returns checker type
 func (c *LdapChecker) Type() string {
@@ -36,9 +44,13 @@ func (c *LdapChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if err != nil {
 		return Failf(check, "Failed to connect %v", err)
 	}
-
-	if err := ld.Bind(check.Username, check.Password); err != nil {
-		return Failf(check, "Failed to bind using %s %v", check.Username, err)
+	namespace := check.GetNamespace()
+	auth, err := GetAuthValues(check.Auth, c.kommons, namespace)
+	if err != nil {
+		return Failf(check, "failed to fetch auth details: %v", err)
+	}
+	if err := ld.Bind(auth.Username.Value, auth.Password.Value); err != nil {
+		return Failf(check, "Failed to bind using %s %v", auth.Username.Value, err)
 	}
 
 	req := &ldap.SearchRequest{

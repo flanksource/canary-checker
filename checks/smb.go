@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/kommons"
+
 	"github.com/flanksource/commons/logger"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -15,7 +17,17 @@ import (
 	"github.com/hirochachacha/go-smb2"
 )
 
-type SmbChecker struct{}
+type SmbChecker struct {
+	kommons *kommons.Client `yaml:"-" json:"-"`
+}
+
+func (c *SmbChecker) SetClient(client *kommons.Client) {
+	c.kommons = client
+}
+
+func (c SmbChecker) GetClient() *kommons.Client {
+	return c.kommons
+}
 
 type SmbStatus struct {
 	age   string
@@ -39,10 +51,15 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	smbCheck := extConfig.(v1.SmbCheck)
 	template := smbCheck.GetDisplayTemplate()
 	port := smbCheck.GetPort()
+	namespace := smbCheck.GetNamespace()
 	var smbStatus SmbStatus
 	var err error
 	textResults := smbCheck.GetDisplayTemplate() != ""
 	var serverPath string
+	auth, err := GetAuthValues(smbCheck.Auth, c.kommons, namespace)
+	if err != nil {
+		return smbFailF(smbCheck, textResults, smbStatus, template, "failed getting auth details: %v", err)
+	}
 	if strings.Contains(smbCheck.Server, "\\") {
 		serverPath, smbCheck.Sharename, smbCheck.SearchPath, err = getServerDetails(smbCheck.Server, port)
 		if err != nil {
@@ -61,8 +78,8 @@ func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	defer conn.Close()
 	d := &smb2.Dialer{
 		Initiator: &smb2.NTLMInitiator{
-			User:        smbCheck.Username,
-			Password:    smbCheck.Password,
+			User:        auth.Username.Value,
+			Password:    auth.Password.Value,
 			Domain:      smbCheck.Domain,
 			Workstation: smbCheck.Workstation,
 		},

@@ -190,17 +190,26 @@ type ResticCheck struct {
 	// Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name
 	Repository string `yaml:"repository" json:"repository"`
 	// Password for the restic repository
-	Password string `yaml:"password" json:"password"`
+	Password *kommons.EnvVar `yaml:"password" json:"password"`
 	// MaxAge for backup freshness
 	MaxAge string `yaml:"maxAge" json:"maxAge"`
 	// CheckIntegrity when enabled will check the Integrity and consistency of the restic reposiotry
 	CheckIntegrity bool `yaml:"checkIntegrity,omitempty" json:"checkIntegrity,omitempty"`
 	// AccessKey access key id for connection with aws s3, minio, wasabi, alibaba oss
-	AccessKey string `yaml:"accessKey,omitempty" json:"accessKey,omitempty"`
+	AccessKey *kommons.EnvVar `yaml:"accessKey,omitempty" json:"accessKey,omitempty"`
 	// SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss
-	SecretKey string `yaml:"secretKey,omitempty" json:"secretKey,omitempty"`
+	SecretKey *kommons.EnvVar `yaml:"secretKey,omitempty" json:"secretKey,omitempty"`
 	// CaCert path to the root cert. In case of self-signed certificates
-	CaCert string `yaml:"caCert,omitempty" json:"caCert,omitempty"`
+	CaCert    string `yaml:"caCert,omitempty" json:"caCert,omitempty"`
+	namespace string `yaml:"-" json:"-"`
+}
+
+func (c *ResticCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c ResticCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c ResticCheck) GetEndpoint() string {
@@ -256,12 +265,20 @@ func (c JmeterCheck) GetType() string {
 }
 
 type DockerPullCheck struct {
-	Description    string `yaml:"description" json:"description,omitempty"`
-	Image          string `yaml:"image" json:"image,omitempty"`
-	Username       string `yaml:"username" json:"username,omitempty"`
-	Password       string `yaml:"password" json:"password,omitempty"`
-	ExpectedDigest string `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
-	ExpectedSize   int64  `yaml:"expectedSize" json:"expectedSize,omitempty"`
+	Description    string          `yaml:"description" json:"description,omitempty"`
+	Image          string          `yaml:"image" json:"image,omitempty"`
+	Auth           *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	ExpectedDigest string          `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
+	ExpectedSize   int64           `yaml:"expectedSize" json:"expectedSize,omitempty"`
+	namespace      string          `yaml:"-" json:"-"`
+}
+
+func (c *DockerPullCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c *DockerPullCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c DockerPullCheck) GetEndpoint() string {
@@ -277,10 +294,18 @@ func (c DockerPullCheck) GetType() string {
 }
 
 type DockerPushCheck struct {
-	Description string `yaml:"description" json:"description,omitempty"`
-	Image       string `yaml:"image" json:"image,omitempty"`
-	Username    string `yaml:"username" json:"username,omitempty"`
-	Password    string `yaml:"password" json:"password,omitempty"`
+	Description string          `yaml:"description" json:"description,omitempty"`
+	Image       string          `yaml:"image" json:"image,omitempty"`
+	Auth        *Authentication `yaml:"auth" json:"auth"`
+	namespace   string          `yaml:"-" json:"-"`
+}
+
+func (c *DockerPushCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c *DockerPushCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c DockerPushCheck) GetEndpoint() string {
@@ -296,12 +321,20 @@ func (c DockerPushCheck) GetType() string {
 }
 
 type ContainerdPullCheck struct {
-	Description    string `yaml:"description" json:"description,omitempty"`
-	Image          string `yaml:"image" json:"image,omitempty"`
-	Username       string `yaml:"username" json:"username,omitempty"`
-	Password       string `yaml:"password" json:"password,omitempty"`
-	ExpectedDigest string `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
-	ExpectedSize   int64  `yaml:"expectedSize" json:"expectedSize,omitempty"`
+	Description    string         `yaml:"description" json:"description,omitempty"`
+	Image          string         `yaml:"image" json:"image,omitempty"`
+	Auth           Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	ExpectedDigest string         `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
+	ExpectedSize   int64          `yaml:"expectedSize" json:"expectedSize,omitempty"`
+	namespace      string         `yaml:"-" json:"-"`
+}
+
+func (c *ContainerdPullCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c ContainerdPullCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c ContainerdPullCheck) GetEndpoint() string {
@@ -336,11 +369,19 @@ func (c ContainerdPushCheck) GetType() string {
 }
 
 type RedisCheck struct {
-	Description string `yaml:"description" json:"description,omitempty"`
-	Addr        string `yaml:"addr" json:"addr"`
-	Username    string `yaml:"username" json:"username,omitempty"`
-	Password    string `yaml:"password" json:"password,omitempty"`
-	DB          int    `yaml:"db" json:"db"`
+	Description string          `yaml:"description" json:"description,omitempty"`
+	Addr        string          `yaml:"addr" json:"addr"`
+	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	DB          int             `yaml:"db" json:"db"`
+	namespace   string          `yaml:"-" json:"-"`
+}
+
+func (c *RedisCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c RedisCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c RedisCheck) GetDescription() string {
@@ -451,13 +492,21 @@ func (c PodCheck) GetType() string {
 }
 
 type LDAPCheck struct {
-	Description   string `yaml:"description" json:"description,omitempty"`
-	Host          string `yaml:"host" json:"host,omitempty"`
-	Username      string `yaml:"username" json:"username,omitempty"`
-	Password      string `yaml:"password" json:"password,omitempty"`
-	BindDN        string `yaml:"bindDN" json:"bindDN,omitempty"`
-	UserSearch    string `yaml:"userSearch" json:"userSearch,omitempty"`
-	SkipTLSVerify bool   `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
+	Description   string          `yaml:"description" json:"description,omitempty"`
+	Host          string          `yaml:"host" json:"host,omitempty"`
+	Auth          *Authentication `yaml:"auth" json:"auth,omitempty"`
+	BindDN        string          `yaml:"bindDN" json:"bindDN,omitempty"`
+	UserSearch    string          `yaml:"userSearch" json:"userSearch,omitempty"`
+	SkipTLSVerify bool            `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
+	namespace     string          `yaml:"-" json:"-"`
+}
+
+func (c *LDAPCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c LDAPCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c LDAPCheck) GetEndpoint() string {
@@ -537,12 +586,20 @@ func (c DNSCheck) GetType() string {
 }
 
 type HelmCheck struct {
-	Description string  `yaml:"description" json:"description,omitempty"`
-	Chartmuseum string  `yaml:"chartmuseum" json:"chartmuseum,omitempty"`
-	Project     string  `yaml:"project,omitempty" json:"project,omitempty"`
-	Username    string  `yaml:"username" json:"username,omitempty"`
-	Password    string  `yaml:"password" json:"password,omitempty"`
-	CaFile      *string `yaml:"cafile,omitempty" json:"cafile,omitempty"`
+	Description string          `yaml:"description" json:"description,omitempty"`
+	Chartmuseum string          `yaml:"chartmuseum" json:"chartmuseum,omitempty"`
+	Project     string          `yaml:"project,omitempty" json:"project,omitempty"`
+	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	CaFile      *string         `yaml:"cafile,omitempty" json:"cafile,omitempty"`
+	namespace   string          `yaml:"-" json:"-"`
+}
+
+func (c *HelmCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c HelmCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c HelmCheck) GetEndpoint() string {
@@ -629,11 +686,8 @@ type SmbCheck struct {
 	//Where server is the hostname e$ is the sharename and a/b/c is the searchPath location
 	Server string `yaml:"server" json:"server"`
 	//Port on which smb server is running. Defaults to 445
-	Port int `yaml:"port,omitempty" json:"port,omitempty"`
-	//Username to authenticate against given smb server
-	Username string `yaml:"username" json:"username"`
-	//Password to authenticate against given smb server
-	Password string `yaml:"password" json:"password"`
+	Port int             `yaml:"port,omitempty" json:"port,omitempty"`
+	Auth *Authentication `yaml:"auth" json:"auth"`
 	//Domain...
 	Domain string `yaml:"domain,omitempty" json:"domain,omitempty"`
 	// Workstation...
@@ -652,6 +706,17 @@ type SmbCheck struct {
 	// DisplayTemplate displays check output in text
 	// Default: 'File Age: [[.age]]; File count: [[.count]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
+	// specNamespace is the namespace in which the canary was deployed, and which
+	// configmap/secret lookups will be constrained to
+	namespace string `yaml:"-" json:"-"`
+}
+
+func (c *SmbCheck) SetNamespace(namespace string) {
+	c.namespace = namespace
+}
+
+func (c SmbCheck) GetNamespace() string {
+	return c.namespace
 }
 
 func (c SmbCheck) GetEndpoint() string {
@@ -727,16 +792,17 @@ type DNS struct {
 }
 
 /*
-# Check docker images
-
-This check will try to pull a Docker image from specified registry, verify it's checksum and size.
+DockerPull check will try to pull a Docker image from specified registry, verify it's checksum and size.
 
 ```yaml
 
 docker:
   - image: docker.io/library/busybox:1.31.1
-    username:
-    password:
+    auth:
+		username:
+			value: some-user
+		password:
+			value: some-password
     expectedDigest: 6915be4043561d64e0ab0f8f098dc2ac48e077fe23f488ac24b665166898115a
     expectedSize: 1219782
 ```
@@ -746,12 +812,27 @@ type DockerPull struct {
 	DockerPullCheck `yaml:",inline" json:"inline"`
 }
 
+/*
+DockerPush check will try to push a Docker image to specified registry.
+
+```yaml
+
+dockerPush:
+  - image: ttl.sh/flanksource-busybox:1.30
+    auth:
+      username:
+        value: $DOCKER_USERNAME
+      password:
+        value: $DOCKER_PASSWORD
+```
+
+*/
 type DockerPush struct {
 	DockerPushCheck `yaml:",inline" json:"inline"`
 }
 
 /*
-This check will:
+S3 check will:
 
 * list objects in the bucket to check for Read permissions
 * PUT an object into the bucket for Write permissions
@@ -848,13 +929,19 @@ The LDAP check will:
 
 ldap:
   - host: ldap://127.0.0.1:10389
-    username: uid=admin,ou=system
-    password: secret
+    auth:
+      username:
+        value: uid=admin,ou=system
+      password:
+        value: secret
     bindDN: ou=users,dc=example,dc=com
     userSearch: "(&(objectClass=organizationalPerson))"
   - host: ldap://127.0.0.1:10389
-    username: uid=admin,ou=system
-    password: secret
+    auth:
+      username:
+        value: uid=admin,ou=system
+      password:
+        value: secret
     bindDN: ou=groups,dc=example,dc=com
     userSearch: "(&(objectClass=groupOfNames))"
 ```
@@ -964,11 +1051,14 @@ This check will connect to a restic repository and perform Integrity and backupF
 ```yaml
 restic:
 	- repository: s3:http://minio.infra/restic-repo
-      password: S0M3p@sswd
+      password:
+        value: S0M3p@sswd
       maxAge: 5h30m
       checkIntegrity: true
-      accessKey: some-access-key
-      secretKey: some-secret-key
+      accessKey:
+        value: some-access-key
+      secretKey:
+        value: some-secret-key
       description: The restic test
 ```
 */
@@ -1024,8 +1114,11 @@ count the number of file present and compare with minCount if defined
 ```yaml
 smb:
    - server: 192.168.1.9
-     username: samba
-     password: password
+	 auth:
+       username:
+          value: samba
+       password:
+           value: password
      sharename: "Some Public Folder"
      minAge: 10h
 	 maxAge: 20h
@@ -1038,8 +1131,14 @@ User can define server in `\\server\e$\a\b\c` format where `server` is the host
 ```yaml
 smb:
    - server: '\\192.168.1.5\Some Public Folder\somedir'
-     username: samba
-     password: password
+     auth:
+		 username:
+		   value: samba
+		 password:
+		   valueFrom:
+			 secretKeyRef:
+			   key: smb-password
+			   name: smb
      sharename: "Tarun Khandelwal’s Public Folder"
      minAge: 10h
      maxAge: 100h

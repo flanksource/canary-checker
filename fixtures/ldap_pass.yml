@@ -1,12 +1,18 @@
 ldap:
   - host: ldaps://127.0.0.1:30636
-    username: uid=admin,ou=system
-    password: secret
+    auth:
+      username:
+        value: uid=admin,ou=system
+      password:
+        value: secret
     bindDN: ou=users,dc=example,dc=com
     userSearch: "(&(objectClass=organizationalPerson))"
     skipTLSVerify: true
   - host: ldap://127.0.0.1:30389
-    username: uid=admin,ou=system
-    password: secret
+    auth:
+      username:
+        value: uid=admin,ou=system
+      password:
+        value: secret
     bindDN: ou=groups,dc=example,dc=com
     userSearch: "(&(objectClass=groupOfNames))"

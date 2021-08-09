@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/kommons"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/flanksource/canary-checker/api/external"
@@ -48,7 +50,13 @@ func init() {
 	prometheus.MustRegister(size, imagePullTime)
 }
 
-type DockerPullChecker struct{}
+type DockerPullChecker struct {
+	kommons *kommons.Client `yaml:"-" json:"-"`
+}
+
+func (c *DockerPullChecker) SetClient(client *kommons.Client) {
+	c.kommons = client
+}
 
 func (c *DockerPullChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
@@ -84,9 +92,15 @@ func (c *DockerPullChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DockerPullCheck)
 	start := time.Now()
 	ctx := context.Background()
+	namespace := check.GetNamespace()
+	var err error
+	auth, err := GetAuthValues(check.Auth, c.kommons, namespace)
+	if err != nil {
+		return Failf(check, "failed to fetch auth details: %v", err)
+	}
 	authConfig := types.AuthConfig{
-		Username: check.Username,
-		Password: check.Password,
+		Username: auth.Username.Value,
+		Password: auth.Password.Value,
 	}
 	encodedJSON, _ := json.Marshal(authConfig)
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)

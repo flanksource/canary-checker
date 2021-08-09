@@ -159,8 +159,7 @@ containerdPull:
 | -------------- | ----------- | ------ | -------- |
 | description    |             | string | Yes      |
 | image          |             | string | Yes      |
-| username       |             | string | Yes      |
-| password       |             | string | Yes      |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | Object | No |
 | expectedDigest |             | string | Yes      |
 | expectedSize   |             | int64  | Yes      |
 
@@ -171,8 +170,11 @@ This check will try to pull a Docker image from specified registry, verify it's 
 ```yaml
 docker:
   - image: docker.io/library/busybox:1.31.1
-    username:
-    password:
+    auth:
+      username:
+        value: some-user
+      password:
+        value: some-password
     expectedDigest: 6915be4043561d64e0ab0f8f098dc2ac48e077fe23f488ac24b665166898115a
     expectedSize: 1219782
 ```
@@ -181,20 +183,27 @@ docker:
 | ----- | ----------- | ------ | -------- |
 | description |  | string | Yes |
 | image |  | string | Yes |
-| username |  | string | Yes |
-| password |  | string | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | Object | No |
 | expectedDigest |  | string | Yes |
 | expectedSize |  | int64 | Yes |
 
 
 ### Docker Push - Create and push a docker image
 
+```yaml
+dockerPush:
+  - image: ttl.sh/flanksource-busybox:1.30
+    auth:
+      username:
+        value: $DOCKER_USERNAME
+      password:
+        value: $DOCKER_PASSWORD
+```
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | description |  | string | Yes |
 | image |  | string | Yes |
-| username |  | string | Yes |
-| password |  | string | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | Object | Yes |
 
 
 ### HTTP - Query an HTTP endpoint or namespace
@@ -291,8 +300,7 @@ The fields for `displayTemplate` (see [Display Types]((#display-types))) are :
 | description |  | string | Yes |
 | chartmuseum |  | string | Yes |
 | project |  | string |  |
-| username |  | string | Yes |
-| password |  | string | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for helm | Object | Yes |
 | cafile |  | *string |  |
 
 
@@ -329,13 +337,19 @@ The LDAP check will:
 ```yaml
 ldap:
   - host: ldap://127.0.0.1:10389
-    username: uid=admin,ou=system
-    password: secret
+    auth:
+      username:
+        value: uid=admin,ou=system
+      password:
+        value: secret
     bindDN: ou=users,dc=example,dc=com
     userSearch: "(&(objectClass=organizationalPerson))"
   - host: ldap://127.0.0.1:10389
-    username: uid=admin,ou=system
-    password: secret
+    auth:
+      username:
+        value: uid=admin,ou=system
+      password:
+        value: secret
     bindDN: ou=groups,dc=example,dc=com
     userSearch: "(&(objectClass=groupOfNames))"
 ```
@@ -344,8 +358,7 @@ ldap:
 | ----- | ----------- | ------ | -------- |
 | description |  | string | Yes |
 | host |  | string | Yes |
-| username |  | string | Yes |
-| password |  | string | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for LDAP server | Object | Yes |
 | bindDN |  | string | Yes |
 | userSearch |  | string | Yes |
 | skipTLSVerify |  | bool | Yes |
@@ -515,8 +528,7 @@ redis:
 | addr | host:port address. | string | Yes |
 | db | database to be selected after connecting to the server. | int | Yes |
 | description | description for canary | string | No |
-| password | optional password. To authenticate the current connection | string | No |
-| username | use the specified Username to authenticate the current connection | string | No |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for redis server | Object | No |
 
 
 ### S3 - Verify reachability and correctness of an S3 compatible store
@@ -606,21 +618,24 @@ This check will:
 ```yaml
 restic:
     - repository: s3:http://minio.infra/restic-repo
-      password: S0M3p@sswd
+      password: 
+        value: S0M3p@sswd
       maxAge: 5h30m
       checkIntegrity: true
-      accessKey: some-access-key
-      secretKey: some-secret-key
+      accessKey: 
+        value: some-access-key
+      secretKey: 
+        value: some-secret-key
       description: The restic test
 ```
   
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | reposiory | the location of your restic repository | string | Yes |
-| password | password for your restic repository | string | Yes |
+| password | password value or valueFrom configMapKeyRef or SecretKeyRef to access your restic repository | string | Yes |
 | maxAge   | the max age for backup allowed..eg: 5h30m | string | Yes |
-| accessKey | access key to access your s3/minio bucket | string | No |
-| secretkey | secret key to access your s3/minio buket | string | No |
+| accessKey | access key value or valueFrom configMapKeyRef or SecretKeyRef to access your s3/minio bucket | string | No |
+| secretkey | secret key value or valueFrom configMapKeyRef or SecretKeyRef to access your s3/minio bucket | string | No |
 | description | the description about the canary | string | Yes |
 | checkIntegrity | whether to check integrity for the specified repo | bool | No |
 | caCert | path to ca-root crt in case of self-signed certificates is used | string | No |
@@ -718,8 +733,14 @@ This check connects to a samba server to check folder freshness. This check will
 ```yaml
 smb:
   - server: 192.168.1.9
-    username: samba
-    password: password
+    auth:
+      username: 
+        value: samba
+      password:
+        valueFrom:
+          secretKeyRef:
+            key: smb-password
+            name: smb
     sharename: "Some Public Folder"
     minAge: 10h
     maxAge: 20h
@@ -733,8 +754,11 @@ Or with `server` in path format:
 ```yaml
 smb:
    - server: '\\192.168.1.5\Some Public Folder\somedir'
-     username: samba
-     password: password
+     auth:
+       username: 
+        value: samba
+       password: 
+        value: password
      sharename: "sharename" #will be overwritten by 'Some Public Folder'
      searchPath: a/b/c #will be overwritten by 'somedir'
      minAge: 10h
@@ -747,8 +771,7 @@ smb:
 | ----- | ----------- | ------ | -------- |
 | server | path to the server (host and path format supported) | string | Yes |
 | port | port on which smb is running. Defaults to 443 | int | No |
-| username | username for smb | string | Yes |
-| password | password for smb | string | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for smb | Object | Yes |
 | domain | domain for smb | string | No |
 | workstation | workstation for smb | string | No |
 | sharename | sharename for smb (overridden in `server` path format) | string | No |

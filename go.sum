@@ -309,8 +309,8 @@ github.com/fatih/structs v1.1.0/go.mod h1:9NiDSp5zOcgEDl+j00MP/WkGVPOlPRLejGD8Ga
 github.com/flanksource/commons v1.5.6/go.mod h1:boFAup9GmLcnz0fWQnPV5WVFcHYA7U0aWEA14ww/T/4=
 github.com/flanksource/commons v1.5.8 h1:dIQ4E/SbbLRCInc96nB7UsJHCybfhKQV3qFHrYMeOms=
 github.com/flanksource/commons v1.5.8/go.mod h1:boFAup9GmLcnz0fWQnPV5WVFcHYA7U0aWEA14ww/T/4=
-github.com/flanksource/kommons v0.21.0 h1:KSZytiZxFpBMQhNlWwDedn3EFme9uewLhKS1rs2aBxI=
-github.com/flanksource/kommons v0.21.0/go.mod h1:evSkgfTHXqgOwWeM4XPhj43J7xGJcTxHfhJYQchJDp8=
+github.com/flanksource/kommons v0.21.1 h1:gqSmaw2MMfFjuObclEY49uyaIo2oIsQfPwvGGMAJRCk=
+github.com/flanksource/kommons v0.21.1/go.mod h1:evSkgfTHXqgOwWeM4XPhj43J7xGJcTxHfhJYQchJDp8=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/fortytw2/leaktest v1.2.0/go.mod h1:jDsjWgpAGjm2CA7WthBh/CdZYEPF31XHquHwclZch5g=
 github.com/fortytw2/leaktest v1.3.0/go.mod h1:jDsjWgpAGjm2CA7WthBh/CdZYEPF31XHquHwclZch5g=
