@@ -701,6 +701,8 @@ spec:
                         type: integer
                     type: object
                   type: array
+                iconURL:
+                  type: string
                 interval:
                   format: int64
                   type: integer
