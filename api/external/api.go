@@ -8,6 +8,7 @@ type Endpointer interface {
 
 type Describable interface {
 	GetDescription() string
+	GetIconURL() string
 }
 
 type WithType interface {

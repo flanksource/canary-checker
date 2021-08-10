@@ -52,6 +52,7 @@ type CanarySpec struct {
 	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Redis          []RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
+	IconURL        string                `yaml:"iconURL,omitempty" json:"iconURL,omitempty"`
 	Interval       uint64                `yaml:"interval,omitempty" json:"interval,omitempty"`
 	Severity       string                `yaml:"severity,omitempty" json:"severity,omitempty"`
 	Owner          string                `yaml:"owner,omitempty" json:"owner,omitempty"`
