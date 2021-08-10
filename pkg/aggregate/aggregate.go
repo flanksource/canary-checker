@@ -33,6 +33,7 @@ type AggregateCheck struct { // nolint: golint
 	Health      map[string]CheckHealth       `json:"health"`
 	Statuses    map[string][]pkg.CheckStatus `json:"checkStatuses"`
 	Interval    uint64                       `json:"interval"`
+	Schedule    string                       `json:"schedule"`
 	Owner       string                       `json:"owner"`
 	Severity    string                       `json:"severity"`
 	IconURL     string                       `json:"iconURL"`
@@ -129,6 +130,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 					Description: c.Description,
 					Endpoint:    c.Endpoint,
 					Interval:    c.Interval,
+					Schedule:    c.Schedule,
 					Owner:       c.Owner,
 					Severity:    c.Severity,
 					ServerURL:   c.GetNamespace(),
@@ -155,6 +157,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 				Description: c.Description,
 				Endpoint:    c.Endpoint,
 				Interval:    c.Interval,
+				Schedule:    c.Schedule,
 				Owner:       c.Owner,
 				Severity:    c.Severity,
 				IconURL:     c.IconURL,
@@ -189,6 +192,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 						Description: c.Description,
 						Endpoint:    c.Endpoint,
 						Interval:    c.Interval,
+						Schedule:    c.Schedule,
 						Owner:       c.Owner,
 						Severity:    c.Severity,
 						IconURL:     c.IconURL,

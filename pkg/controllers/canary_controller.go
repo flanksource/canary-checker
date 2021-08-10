@@ -126,15 +126,23 @@ func (r *CanaryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		}
 	}
 
-	if check.Spec.Interval > 0 {
+	if check.Spec.Interval > 0 || check.Spec.Schedule != "" {
 		job := CanaryJob{Client: *r, Check: *check, Logger: logger}
 		if !run {
 			// check each job on startup
 			go job.Run()
 		}
-		id, err := r.Cron.AddJob(fmt.Sprintf("@every %ds", check.Spec.Interval), job)
+		var id cron.EntryID
+		var schedule string
+		if check.Spec.Schedule != "" {
+			schedule = check.Spec.Schedule
+			id, err = r.Cron.AddJob(schedule, job)
+		} else if check.Spec.Interval > 0 {
+			schedule = fmt.Sprintf("@every %ds", check.Spec.Interval)
+			id, err = r.Cron.AddJob(schedule, job)
+		}
 		if err != nil {
-			logger.Error(err, "failed to schedule job", "schedule", check.Spec.Interval)
+			logger.Error(err, "failed to schedule job", "schedule", schedule)
 		} else {
 			logger.Info("scheduled", "id", id, "next", r.Cron.Entry(id).Next)
 		}

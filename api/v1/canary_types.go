@@ -53,9 +53,14 @@ type CanarySpec struct {
 	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Redis          []RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
 	IconURL        string                `yaml:"iconURL,omitempty" json:"iconURL,omitempty"`
-	Interval       uint64                `yaml:"interval,omitempty" json:"interval,omitempty"`
-	Severity       string                `yaml:"severity,omitempty" json:"severity,omitempty"`
-	Owner          string                `yaml:"owner,omitempty" json:"owner,omitempty"`
+	// interval (in seconds) to run checks on
+	// Deprecated in favor of Schedule
+	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
+	Severity string `yaml:"severity,omitempty" json:"severity,omitempty"`
+	Owner    string `yaml:"owner,omitempty" json:"owner,omitempty"`
+	// Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
+	// Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.
+	Schedule string `yaml:"schedule,omitempty" json:"schedule,omitempty"`
 }
 
 func (spec CanarySpec) GetAllChecks() []external.Check {
