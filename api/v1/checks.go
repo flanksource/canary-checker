@@ -28,6 +28,14 @@ type Description struct {
 	IconURL string `yaml:"iconURL,omitempty" json:"iconURL,omitempty"`
 }
 
+func (d Description) GetDescription() string {
+	return d.Description
+}
+
+func (d Description) GetIconURL() string {
+	return d.IconURL
+}
+
 type HTTPCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	// HTTP endpoint to check.  Mutually exclusive with Namespace
@@ -78,14 +86,6 @@ func (c HTTPCheck) GetEndpoint() string {
 	return c.Endpoint
 }
 
-func (c HTTPCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c HTTPCheck) GetIconURL() string {
-	return c.IconURL
-}
-
 func (c HTTPCheck) GetType() string {
 	return "http"
 }
@@ -98,14 +98,6 @@ type TCPCheck struct {
 
 func (t TCPCheck) GetEndpoint() string {
 	return t.Endpoint
-}
-
-func (t TCPCheck) GetDescription() string {
-	return t.Description.Description
-}
-
-func (t TCPCheck) GetIconURL() string {
-	return t.IconURL
 }
 
 func (t TCPCheck) GetType() string {
@@ -122,14 +114,6 @@ type ICMPCheck struct {
 
 func (c ICMPCheck) GetEndpoint() string {
 	return c.Endpoint
-}
-
-func (c ICMPCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c ICMPCheck) GetIconURL() string {
-	return c.IconURL
 }
 
 func (c ICMPCheck) GetType() string {
@@ -156,16 +140,8 @@ func (c S3Check) GetEndpoint() string {
 	return fmt.Sprintf("%s/%s", c.Bucket.Endpoint, c.Bucket.Name)
 }
 
-func (c S3Check) GetDescription() string {
-	return c.Description.Description
-}
-
 func (c S3Check) GetType() string {
 	return "s3"
-}
-
-func (c S3Check) GetIconURL() string {
-	return c.IconURL
 }
 
 type S3BucketCheck struct {
@@ -201,16 +177,8 @@ func (c S3BucketCheck) GetEndpoint() string {
 	return fmt.Sprintf("%s/%s", c.Endpoint, c.Bucket)
 }
 
-func (c S3BucketCheck) GetDescription() string {
-	return c.Description.Description
-}
-
 func (c S3BucketCheck) GetType() string {
 	return "s3Bucket"
-}
-
-func (c S3BucketCheck) GetIconURL() string {
-	return c.IconURL
 }
 
 type ResticCheck struct {
@@ -242,14 +210,6 @@ func (c ResticCheck) GetNamespace() string {
 
 func (c ResticCheck) GetEndpoint() string {
 	return c.Repository
-}
-
-func (c ResticCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c ResticCheck) GetIconURL() string {
-	return c.IconURL
 }
 
 func (c ResticCheck) GetType() string {
@@ -287,14 +247,6 @@ func (c JmeterCheck) GetEndpoint() string {
 	return fmt.Sprintf(c.Host + ":" + string(c.Port))
 }
 
-func (c JmeterCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c JmeterCheck) GetIconURL() string {
-	return c.IconURL
-}
-
 func (c JmeterCheck) GetType() string {
 	return "jmeter"
 }
@@ -320,14 +272,6 @@ func (c DockerPullCheck) GetEndpoint() string {
 	return c.Image
 }
 
-func (c DockerPullCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c DockerPullCheck) GetIconURL() string {
-	return c.IconURL
-}
-
 func (c DockerPullCheck) GetType() string {
 	return "dockerPull"
 }
@@ -349,14 +293,6 @@ func (c *DockerPushCheck) GetNamespace() string {
 
 func (c DockerPushCheck) GetEndpoint() string {
 	return c.Image
-}
-
-func (c DockerPushCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c DockerPushCheck) GetIconURL() string {
-	return c.IconURL
 }
 
 func (c DockerPushCheck) GetType() string {
@@ -384,14 +320,6 @@ func (c ContainerdPullCheck) GetEndpoint() string {
 	return c.Image
 }
 
-func (c ContainerdPullCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c ContainerdPullCheck) GetIconURL() string {
-	return c.IconURL
-}
-
 func (c ContainerdPullCheck) GetType() string {
 	return "containerdPull"
 }
@@ -405,14 +333,6 @@ type ContainerdPushCheck struct {
 
 func (c ContainerdPushCheck) GetEndpoint() string {
 	return c.Image
-}
-
-func (c ContainerdPushCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c ContainerdPushCheck) GetIconURL() string {
-	return c.IconURL
 }
 
 func (c ContainerdPushCheck) GetType() string {
@@ -433,14 +353,6 @@ func (c *RedisCheck) SetNamespace(namespace string) {
 
 func (c RedisCheck) GetNamespace() string {
 	return c.namespace
-}
-
-func (c RedisCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c RedisCheck) GetIconURL() string {
-	return c.IconURL
 }
 
 func (c RedisCheck) GetType() string {
@@ -493,14 +405,6 @@ func (c SQLCheck) GetEndpoint() string {
 	return sanitizeEndpoints(c.Connection)
 }
 
-func (c SQLCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c SQLCheck) GetIconURL() string {
-	return c.IconURL
-}
-
 func (c SQLCheck) GetType() string {
 	return c.GetDriver()
 }
@@ -531,14 +435,6 @@ type PodCheck struct {
 	ExpectedContent      string `yaml:"expectedContent" json:"expectedContent,omitempty"`
 	ExpectedHTTPStatuses []int  `yaml:"expectedHttpStatuses" json:"expectedHttpStatuses,omitempty"`
 	PriorityClass        string `yaml:"priorityClass" json:"priorityClass,omitempty"`
-}
-
-func (c PodCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c PodCheck) GetIconURL() string {
-	return c.IconURL
 }
 
 func (c PodCheck) GetEndpoint() string {
@@ -575,14 +471,6 @@ func (c LDAPCheck) GetEndpoint() string {
 	return c.Host
 }
 
-func (c LDAPCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c LDAPCheck) GetIconURL() string {
-	return c.IconURL
-}
-
 func (c LDAPCheck) GetType() string {
 	return "ldap"
 }
@@ -608,14 +496,6 @@ type NamespaceCheck struct {
 	ExpectedContent      string            `yaml:"expectedContent" json:"expectedContent,omitempty"`
 	ExpectedHTTPStatuses []int64           `yaml:"expectedHttpStatuses" json:"expectedHttpStatuses,omitempty"`
 	PriorityClass        string            `yaml:"priorityClass" json:"priorityClass,omitempty"`
-}
-
-func (c NamespaceCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c NamespaceCheck) GetIconURL() string {
-	return c.IconURL
 }
 
 func (c NamespaceCheck) GetEndpoint() string {
@@ -647,14 +527,6 @@ func (c DNSCheck) GetEndpoint() string {
 	return fmt.Sprintf("%s/%s@%s:%d", c.QueryType, c.Query, c.Server, c.Port)
 }
 
-func (c DNSCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c DNSCheck) GetIconURL() string {
-	return c.IconURL
-}
-
 func (c DNSCheck) GetType() string {
 	return "dns"
 }
@@ -678,14 +550,6 @@ func (c HelmCheck) GetNamespace() string {
 
 func (c HelmCheck) GetEndpoint() string {
 	return fmt.Sprintf("%s/%s", c.Chartmuseum, c.Project)
-}
-
-func (c HelmCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c HelmCheck) GetIconURL() string {
-	return c.IconURL
 }
 
 func (c HelmCheck) GetType() string {
@@ -744,13 +608,6 @@ func (c JunitCheck) GetName() string {
 func (c JunitCheck) GetEndpoint() string {
 	return fmt.Sprintf("file://%s", c.TestResults)
 }
-func (c JunitCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c JunitCheck) GetIconURL() string {
-	return c.IconURL
-}
 
 func (c JunitCheck) GetTimeout() int {
 	if c.Timeout != 0 {
@@ -803,14 +660,6 @@ func (c SmbCheck) GetNamespace() string {
 
 func (c SmbCheck) GetEndpoint() string {
 	return fmt.Sprintf("%s:%d/%s-%s", c.Server, c.GetPort(), c.Sharename, c.Description)
-}
-
-func (c SmbCheck) GetDescription() string {
-	return c.Description.Description
-}
-
-func (c SmbCheck) GetIconURL() string {
-	return c.IconURL
 }
 
 func (c SmbCheck) GetType() string {
