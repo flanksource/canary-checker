@@ -6,10 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/commons/timer"
 	"github.com/hairyhenderson/gomplate/v3/base64"
 	"github.com/prometheus/client_golang/prometheus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 	"time"
 
@@ -146,7 +148,6 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 		ami = aws.String(check.AMI)
 	}
 
-	fmt.Println(*ami)
 	client := ec2.NewFromConfig(cfg)
 
 	describeInput := &ec2.DescribeInstancesInput{
@@ -187,6 +188,9 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 	if err != nil {
 		HandleFail(check, fmt.Sprintf("Error encoding userData: %s", err))
 	}
+	if check.SecurityGroup == "" {
+		check.SecurityGroup = "default"
+	}
 
 	runInput := &ec2.RunInstancesInput{
 		ImageId:      ami,
@@ -205,6 +209,9 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 			},
 		},
 		UserData: aws.String(userData),
+		SecurityGroups: []string{
+			check.SecurityGroup,
+		},
 	}
 
 	timer := NewTimer()
@@ -219,7 +226,8 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 
 	instanceId := runOutput.Instances[0].InstanceId
-	var ip string
+	ip := ""
+	internalDNS := ""
 
 	var startTime float64
 	for {
@@ -242,6 +250,9 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 			if describeOutput.Reservations[0].Instances[0].PublicIpAddress != nil {
 				ip = *describeOutput.Reservations[0].Instances[0].PublicIpAddress
 			}
+			if describeOutput.Reservations[0].Instances[0].PrivateDnsName != nil {
+				internalDNS = *describeOutput.Reservations[0].Instances[0].PrivateDnsName
+			}
 			break
 		}
 		if timer.Millis() > 300000 {
@@ -252,22 +263,51 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 	prometheusStartupTime.WithLabelValues(check.Region).Set(startTime)
 	fmt.Println(ip)
 
-//	httpcheck := v1.HTTPCheck{
-//		Endpoint: fmt.Sprintf("http://%v", ip),
-//		ResponseCodes: []int{200},
-//	}
-//	httpcheck.SetNamespace(check.GetNamespace())
-//
-//	httpchecker := HTTPChecker{}
-//	httpchecker.SetClient(kommons)
-//
-//	httpcheckresult := httpchecker.Check(httpcheck)
-//
-//	if !httpcheckresult.Pass {
-//		return HandleFail(check, "HTTP connection to instance failed")
-//	}
-//	httptime := httpcheckresult.Duration
-//	prometheusResponseTime.WithLabelValues(check.Region).Set(float64(httptime))
+	var innerSpecList []v1.CanarySpec
+
+
+	innerFail := false
+	var innerMessage []string
+
+	for _, canary := range check.CanaryRef {
+		innerCanary := v1.Canary{
+			TypeMeta: metav1.TypeMeta{
+				Kind: "Canary",
+				APIVersion: "canaries.flanksource.com/v1",
+			},
+		}
+		err = kommons.Get(check.GetNamespace(), canary.Name, &innerCanary)
+		if err != nil {
+			innerFail = true
+			innerMessage = append(innerMessage, fmt.Sprintf("Could not retrieve canary ref %v in %v: %v", canary.Name, check.GetNamespace(), err))
+			break
+		}
+		spew.Dump(innerCanary)
+		if innerCanary.Name == "" {
+			innerFail = true
+			innerMessage = append(innerMessage, fmt.Sprintf("Could not retrieve canary ref %v in %v", canary.Name, check.GetNamespace()))
+			break
+		}
+		innerSpecList = append(innerSpecList, innerCanary.Spec)
+	}
+
+
+	ec2Vars := map[string]string {
+		"PublicIpAddress": ip,
+		"instanceId": *instanceId,
+		"PrivateDnsName": internalDNS,
+	}
+
+	for _, canarySpec := range innerSpecList {
+		canarySpec = pkg.ApplyLocalTemplates(canarySpec, ec2Vars)
+		innerResults := RunChecks(canarySpec, check.GetNamespace())
+		for _, result := range innerResults {
+			if !result.Pass {
+				innerFail = true
+				innerMessage = append(innerMessage, result.Message)
+			}
+		}
+	}
 
 	timer = NewTimer()
 	err = terminateInstances(client, []string{*instanceId}, 300000)
@@ -289,11 +329,10 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 			Value: stopTime,
 			Type: metrics.GaugeType,
 		},
-//		{
-//			Name: "Response Time",
-//			Value: float64(httptime),
-//			Type: metrics.GaugeType,
-//		},
+	}
+
+	if innerFail {
+		return HandleFail(check, fmt.Sprintf("referenced canaries failed: %v", strings.Join(innerMessage, ", ")))
 	}
 
 	return &pkg.CheckResult{

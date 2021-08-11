@@ -22,3 +22,30 @@ ec2:
       chmod 2775 /var/www
       find /var/www -type d -exec chmod 2775 {} \;
       find /var/www -type f -exec chmod 0664 {} \;
+    securityGroup: WebAccess
+  - description: test instance
+    accessKeyID:
+      valueFrom:
+        secretKeyRef:
+          name: aws-credentials
+          key: AWS_ACCESS_KEY_ID
+    secretKey:
+      valueFrom:
+        secretKeyRef:
+          name: aws-credentials
+          key: AWS_SECRET_ACCESS_KEY
+    region: af-south-1
+    ami: ami-0edec67949fd25461
+    userData: |
+      #!/bin/bash
+      yum install -y httpd
+      systemctl start httpd
+      systemctl enable httpd
+      usermod -a -G apache ec2-user
+      chown -R ec2-user:apache /var/www
+      chmod 2775 /var/www
+      find /var/www -type d -exec chmod 2775 {} \;
+      find /var/www -type f -exec chmod 0664 {} \;
+    securityGroup: WebAccess
+    canaryRef:
+      - name: nested-http

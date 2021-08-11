@@ -57,27 +57,9 @@ func init() {
 	Run.Flags().StringP("namespace", "n", "", "Specify namespace")
 	Run.Flags().StringP("junit", "j", "", "Export JUnit XML formatted results to this file e.g: junit.xml")
 }
-func RunChecks(canary v1.Canary) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
-	kommonsClient, err := pkg.NewKommonsClient()
-	if err != nil {
-		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
-	}
 
-	canary.Spec.SetSQLDrivers()
-	for _, c := range checks.All {
-		switch cs := c.(type) {
-		case checks.SetsClient:
-			cs.SetClient(kommonsClient)
-		}
-		result := c.Run(canary)
-		for _, r := range result {
-			if r != nil {
-				results = append(results, r)
-			}
-		}
-	}
-	return results
+func RunChecks(config v1.Canary) []*pkg.CheckResult {
+	return checks.RunChecks(config)
 }
 
 func getJunitReport(results []*pkg.CheckResult) string {
