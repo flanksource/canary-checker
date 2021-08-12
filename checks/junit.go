@@ -271,7 +271,7 @@ func waitForExistingJunitCheck(interval uint64, spec string, createTime time.Tim
 		}
 		return false, nil
 	}
-	if uint64(time.Since(createTime)) < 2*interval {
+	if uint64(time.Since(createTime).Seconds()) < 2*interval {
 		return true, nil
 	}
 	return false, nil
