@@ -123,7 +123,7 @@ func TriggerCheckHandler(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "Check config not found", http.StatusNotFound)
 			return
 		}
-		result := checker.Check(conf)
+		result := checker.Check(*check.CheckCanary, conf)
 		cache.AddCheck(*check.CheckCanary, result)
 		metrics.Record(*check.CheckCanary, result)
 	} else {

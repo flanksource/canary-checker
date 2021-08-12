@@ -61,19 +61,19 @@ func NewPodChecker() *PodChecker {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *PodChecker) Run(config canaryv1.CanarySpec) []*pkg.CheckResult {
+func (c *PodChecker) Run(canary canaryv1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	if len(config.Pod) > 0 {
+	if len(canary.Spec.Pod) > 0 {
 		if c.k8s == nil {
 			k8sClient, err := pkg.NewK8sClient()
 			if err != nil {
-				results = append(results, unexpectedErrorf(config.Pod[0], err, "Could not initialise k8s client"))
+				results = append(results, unexpectedErrorf(canary.Spec.Pod[0], err, "Could not initialise k8s client"))
 				return results
 			}
 			c.k8s = k8sClient
 		}
-		for _, conf := range config.Pod {
-			result := c.Check(conf)
+		for _, conf := range canary.Spec.Pod {
+			result := c.Check(canary, conf)
 			if result != nil {
 				results = append(results, result)
 			}
@@ -134,7 +134,7 @@ func diff(times map[v1.PodConditionType]metav1.Time, c1 v1.PodConditionType, c2 
 	return -1
 }
 
-func (c *PodChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *PodChecker) Check(canary canaryv1.Canary, extConfig external.Check) *pkg.CheckResult {
 	podCheck := extConfig.(canaryv1.PodCheck)
 	if !c.lock.TryAcquire(1) {
 		logger.Tracef("Check already in progress, skipping")

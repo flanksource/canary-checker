@@ -23,18 +23,18 @@ import (
 	"sync"
 	"time"
 
-	"github.com/flanksource/kommons"
-
-	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons/ktemplate"
+	"github.com/mitchellh/reflectwalk"
+
+	"github.com/flanksource/kommons"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/metrics"
+	"github.com/flanksource/commons/logger"
 	"github.com/go-logr/logr"
-	"github.com/mitchellh/reflectwalk"
 	"github.com/robfig/cron/v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -110,9 +110,6 @@ func (r *CanaryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		}
 	}
 	check.Spec.SetSQLDrivers()
-	check.Spec.SetNames(check.Name)
-	check.Spec.SetNamespaces(check.Namespace)
-	check.Spec.SetIntervals(check.Spec.Interval)
 	_, run := observed.Load(req.NamespacedName)
 	if run && check.Status.ObservedGeneration == check.Generation {
 		logger.V(2).Info("check already up to date")
@@ -255,13 +252,13 @@ func (c CanaryJob) Run() {
 	c.V(3).Info("Ending")
 }
 
-func (c CanaryJob) LoadSecrets() (v1.CanarySpec, error) {
+func (c CanaryJob) LoadSecrets() (v1.Canary, error) {
 	var values = make(map[string]string)
 
 	for key, source := range c.Check.Spec.Env {
 		val, err := v1.GetEnvVarRefValue(c.Client.Kubernetes, c.Check.Namespace, &source, &c.Check)
 		if err != nil {
-			return c.Check.Spec, err
+			return c.Check, err
 		}
 		values[key] = val
 	}
@@ -275,5 +272,6 @@ func (c CanaryJob) LoadSecrets() (v1.CanarySpec, error) {
 		Values:    values,
 		Clientset: k8sclient,
 	})
-	return *val, err
+	c.Check.Spec = *val
+	return c.Check, err
 }

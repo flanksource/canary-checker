@@ -24,10 +24,10 @@ func (c *DockerPushChecker) SetClient(client *kommons.Client) {
 	c.kommons = client
 }
 
-func (c *DockerPushChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *DockerPushChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.DockerPush {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.DockerPush {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
@@ -39,11 +39,11 @@ func (c *DockerPushChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *DockerPushChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *DockerPushChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DockerPushCheck)
 	start := time.Now()
 	ctx := context.Background()
-	namespace := check.GetNamespace()
+	namespace := canary.Namespace
 	var err error
 	auth, err := GetAuthValues(check.Auth, c.kommons, namespace)
 	if err != nil {

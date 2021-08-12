@@ -45,10 +45,10 @@ type S3Checker struct{}
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *S3Checker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *S3Checker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.S3 {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.S3 {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
@@ -58,7 +58,7 @@ func (c *S3Checker) Type() string {
 	return "s3"
 }
 
-func (c *S3Checker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *S3Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.S3Check)
 	bucket := check.Bucket
 

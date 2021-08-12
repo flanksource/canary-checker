@@ -58,10 +58,10 @@ func (c *JunitChecker) Type() string {
 	return "junit"
 }
 
-func (c *JunitChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *JunitChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.Junit {
-		result := c.Check(conf)
+	for _, conf := range canary.Spec.Junit {
+		result := c.Check(canary, conf)
 		if result != nil {
 			results = append(results, result)
 		}
@@ -69,14 +69,16 @@ func (c *JunitChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 	return results
 }
 
-func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	var textResults bool
 	junitCheck := extConfig.(v1.JunitCheck)
 	if junitCheck.GetDisplayTemplate() != "" {
 		textResults = true
 	}
-	interval := junitCheck.GetInterval()
+	interval := canary.Spec.Interval
+	name := canary.Name
+	namespace := canary.Namespace
 	timeout := junitCheck.GetTimeout()
 	var junitStatus JunitStatus
 	template := junitCheck.GetDisplayTemplate()
@@ -86,13 +88,13 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	pod.Labels = map[string]string{
 		junitCheckSelector: junitCheckLabelValue,
 	}
-	if junitCheck.GetNamespace() != "" {
-		pod.Namespace = junitCheck.GetNamespace()
+	if namespace != "" {
+		pod.Namespace = namespace
 	} else {
 		pod.Namespace = corev1.NamespaceDefault
 	}
-	if junitCheck.GetName() != "" {
-		pod.Name = junitCheck.GetName() + "-" + strings.ToLower(rand.String(5))
+	if name != "" {
+		pod.Name = name + "-" + strings.ToLower(rand.String(5))
 	} else {
 		pod.Name = strings.ToLower(rand.String(5))
 	}

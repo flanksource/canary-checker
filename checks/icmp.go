@@ -34,17 +34,17 @@ func (c *IcmpChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *IcmpChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *IcmpChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.ICMP {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.ICMP {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
 
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
-func (c *IcmpChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *IcmpChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.ICMPCheck)
 	endpoint := check.Endpoint
 

@@ -61,10 +61,10 @@ type BucketStatus struct {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *S3BucketChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *S3BucketChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.S3Bucket {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.S3Bucket {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
@@ -74,7 +74,7 @@ func (c *S3BucketChecker) Type() string {
 	return "s3Bucket"
 }
 
-func (c *S3BucketChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *S3BucketChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	bucket := extConfig.(v1.S3BucketCheck)
 	var textResults bool

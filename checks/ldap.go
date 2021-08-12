@@ -26,17 +26,17 @@ func (c *LdapChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *LdapChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *LdapChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.LDAP {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.LDAP {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
 
 // CheckConfig : Check every ldap entry for lookup and auth
 // Returns check result and metrics
-func (c *LdapChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *LdapChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.LDAPCheck)
 	ld, err := ldap.DialURL(check.Host, ldap.DialWithTLSConfig(&tls.Config{
 		InsecureSkipVerify: check.SkipTLSVerify,
@@ -44,7 +44,7 @@ func (c *LdapChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	if err != nil {
 		return Failf(check, "Failed to connect %v", err)
 	}
-	namespace := check.GetNamespace()
+	namespace := canary.Namespace
 	auth, err := GetAuthValues(check.Auth, c.kommons, namespace)
 	if err != nil {
 		return Failf(check, "failed to fetch auth details: %v", err)

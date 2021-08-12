@@ -58,10 +58,10 @@ func (c *DockerPullChecker) SetClient(client *kommons.Client) {
 	c.kommons = client
 }
 
-func (c *DockerPullChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *DockerPullChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.DockerPull {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.DockerPull {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
@@ -88,11 +88,11 @@ func getDigestFromOutput(out io.ReadCloser) string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *DockerPullChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *DockerPullChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DockerPullCheck)
 	start := time.Now()
 	ctx := context.Background()
-	namespace := check.GetNamespace()
+	namespace := canary.Namespace
 	var err error
 	auth, err := GetAuthValues(check.Auth, c.kommons, namespace)
 	if err != nil {

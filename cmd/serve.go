@@ -44,14 +44,12 @@ var Serve = &cobra.Command{
 				Name:      canaryName,
 				Namespace: canaryNamespace,
 			},
+			Spec: config,
 		}
 		kommonsClient, err := pkg.NewKommonsClient()
 		if err != nil {
 			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
 		}
-
-		config.SetNamespaces(canaryNamespace)
-		config.SetNames(canaryName)
 		config.SetSQLDrivers()
 		for _, _c := range checks.All {
 			c := _c
@@ -61,7 +59,7 @@ var Serve = &cobra.Command{
 			}
 			scheduler.Every(interval).Seconds().StartImmediately().Do(func() { // nolint: errcheck
 				go func() {
-					for _, result := range c.Run(config) {
+					for _, result := range c.Run(canary) {
 						cache.AddCheck(canary, result)
 						metrics.Record(canary, result)
 					}
