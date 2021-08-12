@@ -144,7 +144,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 			}
 		}
 	} else {
-		localServerID := api.ServerName
+		localServerID := api.RunnerName
 		for _, c := range data {
 			aggregateData[c.ID()] = &AggregateCheck{
 				Key:         c.Key,
@@ -171,7 +171,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 
 		for _, serverURL := range Servers {
 			apiResponse := getChecksFromServer(serverURL)
-			serverID := fmt.Sprintf("%s@%s", apiResponse.ServerName, serverURL)
+			serverID := fmt.Sprintf("%s@%s", apiResponse.RunnerName, serverURL)
 			servers = append(servers, serverID)
 
 			for _, c := range apiResponse.Checks {

@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/flanksource/canary-checker/pkg/push"
+
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/aggregate"
@@ -28,6 +30,7 @@ var Operator = &cobra.Command{
 var enableLeaderElection, dev bool
 var httpPort, metricsPort, webhookPort int
 var includeNamespace, includeCheck string
+var pushServers []string
 
 func init() {
 	Operator.Flags().IntVar(&httpPort, "httpPort", 8080, "Port to expose a health dashboard ")
@@ -41,7 +44,8 @@ func init() {
 	Operator.Flags().BoolVar(&enableLeaderElection, "enable-leader-election", false, "Enabling this will ensure there is only one active controller manager")
 	Operator.Flags().IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
 	Operator.Flags().StringSliceVar(&aggregate.Servers, "aggregateServers", []string{}, "Aggregate check results from multiple servers in the status page")
-	Operator.Flags().StringVar(&api.ServerName, "name", "local", "Server name shown in aggregate dashboard")
+	Operator.Flags().StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
+	Operator.Flags().StringVar(&api.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 	Operator.Flags().BoolVar(&aggregate.PivotByNamespace, "pivot-by-namespace", false, "Show the same check across namespaces in a different column")
 	// +kubebuilder:scaffold:scheme
 }
@@ -83,9 +87,10 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	clusterName := pkg.GetClusterName(mgr.GetConfig())
-	loggr.Sugar().Infof("Using cluster name: %s", clusterName)
-	api.ServerName = clusterName
+	if api.RunnerName == "" {
+		api.RunnerName = pkg.GetClusterName(mgr.GetConfig())
+	}
+	loggr.Sugar().Infof("Using runner name: %s", api.RunnerName)
 
 	includeNamespaces := []string{}
 	if includeNamespace != "" {
@@ -104,6 +109,8 @@ func run(cmd *cobra.Command, args []string) {
 		setupLog.Error(err, "unable to create controller", "controller", "Canary")
 		os.Exit(1)
 	}
+	push.AddServers(pushServers)
+	go push.Start()
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")

@@ -7,6 +7,8 @@ import (
 	_ "net/http/pprof" // required by serve
 	"time"
 
+	"github.com/flanksource/canary-checker/pkg/push"
+
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
@@ -110,7 +112,7 @@ func serve(cmd *cobra.Command) {
 	nethttp.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))
 	nethttp.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler(prometheusHost), allowedCors))
 	nethttp.HandleFunc("/api/aggregate", simpleCors(aggregate.Handler, allowedCors))
-
+	nethttp.HandleFunc("/api/push", simpleCors(push.Handler, allowedCors))
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
 	logger.Infof("Starting health dashboard at http://%s", addr)
 	logger.Infof("Metrics dashboard can be accessed at http://%s/metrics", addr)
@@ -145,7 +147,8 @@ func init() {
 	Serve.Flags().String("prometheus", "http://localhost:8080", "Prometheus address")
 	Serve.Flags().IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
 	Serve.Flags().StringSliceVar(&aggregate.Servers, "aggregateServers", []string{}, "Aggregate check results from multiple servers in the status page")
-	Serve.Flags().StringVar(&api.ServerName, "name", "local", "Server name shown in aggregate dashboard")
+	Serve.Flags().StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
+	Serve.Flags().StringVar(&api.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 	Serve.Flags().BoolVar(&aggregate.PivotByNamespace, "pivot-by-namespace", false, "Show the same check across namespaces in a different column")
 
 	Serve.Flags().String("canary-name", "", "Canary name")
