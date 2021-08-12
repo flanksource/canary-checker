@@ -147,7 +147,7 @@ func init() {
 	Serve.Flags().String("prometheus", "http://localhost:8080", "Prometheus address")
 	Serve.Flags().IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
 	Serve.Flags().StringSliceVar(&aggregate.Servers, "aggregateServers", []string{}, "Aggregate check results from multiple servers in the status page")
-	Serve.Flags().StringSlice("push-servers", []string{}, "push check results to multiple canary servers")
+	Serve.Flags().StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
 	Serve.Flags().StringVar(&api.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 	Serve.Flags().BoolVar(&aggregate.PivotByNamespace, "pivot-by-namespace", false, "Show the same check across namespaces in a different column")
 

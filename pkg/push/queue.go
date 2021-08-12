@@ -26,17 +26,19 @@ func Queue(check pkg.Check) {
 }
 
 func Start() {
-	for {
-		for server, queue := range Queues {
-			go consumeQueue(server, queue)
-		}
-		time.Sleep(10 * time.Second)
+	for server, queue := range Queues {
+		go consumeQueue(server, queue)
 	}
 }
 
 func consumeQueue(server string, queue *goqueue.Queue) {
-	for queue.Len() != 0 {
-		check := queue.PopBack().(pkg.Check)
+	for {
+		element := queue.PopBack()
+		if element == nil {
+			time.Sleep(100 * time.Millisecond)
+			continue
+		}
+		check := element.(pkg.Check)
 		jsonData, err := json.Marshal(check)
 		if err != nil {
 			logger.Errorf("error unmarshalling request body: %v", err)
