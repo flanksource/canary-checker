@@ -21,15 +21,15 @@ func (c *DNSChecker) Type() string {
 	return "dns"
 }
 
-func (c *DNSChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *DNSChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.DNS {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.DNS {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
 
-func (c *DNSChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *DNSChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DNSCheck)
 	ctx := context.Background()
 	dialer, err := getDialer(check, check.Timeout)

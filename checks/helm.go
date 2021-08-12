@@ -38,21 +38,21 @@ func (c *HelmChecker) Type() string {
 	return "helm"
 }
 
-func (c *HelmChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *HelmChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.Helm {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.Helm {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
 
-func (c *HelmChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *HelmChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	config := extConfig.(v1.HelmCheck)
 	start := time.Now()
 	var uploadOK, downloadOK = true, true
 	chartmuseum := fmt.Sprintf("%s/chartrepo/%s/", config.Chartmuseum, config.Project)
 	logger.Tracef("Uploading test chart")
-	namespace := config.GetNamespace()
+	namespace := canary.Namespace
 	var err error
 	auth, err := GetAuthValues(config.Auth, c.kommons, namespace)
 	if err != nil {

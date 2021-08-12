@@ -35,18 +35,18 @@ func (c *ResticChecker) Type() string {
 	return "restic"
 }
 
-func (c *ResticChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *ResticChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.Restic {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.Restic {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
 
-func (c *ResticChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *ResticChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	resticCheck := extConfig.(v1.ResticCheck)
-	envVars, err := c.getEnvVars(resticCheck)
+	envVars, err := c.getEnvVars(resticCheck, canary.Namespace)
 	if err != nil {
 		return Failf(resticCheck, "error getting envVars %v", err)
 	}
@@ -104,10 +104,9 @@ func checkBackupFreshness(repository, maxAge, caCert string, envVars map[string]
 	return nil
 }
 
-func (c *ResticChecker) getEnvVars(r v1.ResticCheck) (map[string]string, error) {
+func (c *ResticChecker) getEnvVars(r v1.ResticCheck, namespace string) (map[string]string, error) {
 	var password, secretKey, accessKey string
 	var err error
-	namespace := r.GetNamespace()
 	_, password, err = c.kommons.GetEnvValue(*r.Password, namespace)
 	if err != nil {
 		return nil, err

@@ -35,24 +35,25 @@ func (c *JmeterChecker) Type() string {
 	return "jmeter"
 }
 
-func (c *JmeterChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *JmeterChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.Jmeter {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.Jmeter {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
 
-func (c *JmeterChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *JmeterChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	jmeterCheck := extConfig.(v1.JmeterCheck)
 	client := c.GetClient()
-	_, value, err := client.GetEnvValue(jmeterCheck.Jmx, jmeterCheck.GetNamespace())
+	namespace := canary.Namespace
+	_, value, err := client.GetEnvValue(jmeterCheck.Jmx, namespace)
 	if err != nil {
 		return Failf(jmeterCheck, "Failed to parse the jmx plan: %v", err)
 	}
-	testPlanFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jmx", jmeterCheck.GetNamespace(), jmeterCheck.Jmx.Name, rand.Int())
-	logFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jtl", jmeterCheck.GetNamespace(), jmeterCheck.Jmx.Name, rand.Int())
+	testPlanFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jmx", namespace, jmeterCheck.Jmx.Name, rand.Int())
+	logFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jtl", namespace, jmeterCheck.Jmx.Name, rand.Int())
 	err = ioutil.WriteFile(testPlanFilename, []byte(value), 0755)
 	defer os.Remove(testPlanFilename) // nolint: errcheck
 	if err != nil {

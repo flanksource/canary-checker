@@ -10,6 +10,9 @@ import (
 	"testing"
 	"time"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/deps"
@@ -84,8 +87,14 @@ func TestRunChecks(t *testing.T) {
 
 func runFixture(t *testing.T, name string) {
 	config := pkg.ParseConfig(fmt.Sprintf("../fixtures/%s", name))
+	canary := v1.Canary{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: "podinfo-test",
+		},
+		Spec: config,
+	}
 	t.Run(name, func(t *testing.T) {
-		checkResults := cmd.RunChecks(config, "podinfo-test")
+		checkResults := cmd.RunChecks(canary)
 		for _, res := range checkResults {
 			if res == nil {
 				t.Errorf("Result in %v returned nil:\n", name)

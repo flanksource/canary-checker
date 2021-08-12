@@ -20,10 +20,10 @@ func (c *MssqlChecker) Type() string {
 
 // Run - Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *MssqlChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *MssqlChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.Mssql {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.Mssql {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
@@ -31,6 +31,6 @@ func (c *MssqlChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 // Check CheckConfig : Attempts to connect to a DB using the specified
 //               driver and connection string
 // Returns check result and metrics
-func (c *MssqlChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *MssqlChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	return CheckSQL(extConfig.(v1.MssqlCheck).SQLCheck)
 }

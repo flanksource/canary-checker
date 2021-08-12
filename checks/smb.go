@@ -38,20 +38,20 @@ func (c *SmbChecker) Type() string {
 	return "smb"
 }
 
-func (c *SmbChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *SmbChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.Smb {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.Smb {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
 
-func (c *SmbChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *SmbChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	smbCheck := extConfig.(v1.SmbCheck)
 	template := smbCheck.GetDisplayTemplate()
 	port := smbCheck.GetPort()
-	namespace := smbCheck.GetNamespace()
+	namespace := canary.Namespace
 	var smbStatus SmbStatus
 	var err error
 	textResults := smbCheck.GetDisplayTemplate() != ""

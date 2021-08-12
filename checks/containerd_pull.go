@@ -27,10 +27,10 @@ func init() {
 
 type ContainerdPullChecker struct{}
 
-func (c *ContainerdPullChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *ContainerdPullChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.ContainerdPull {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.ContainerdPull {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
@@ -42,7 +42,7 @@ func (c *ContainerdPullChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *ContainerdPullChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *ContainerdPullChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.ContainerdPullCheck)
 	start := time.Now()
 

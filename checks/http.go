@@ -76,21 +76,21 @@ func (c HTTPChecker) GetClient() *kommons.Client {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *HTTPChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *HTTPChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.HTTP {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.HTTP {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
 
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
-func (c *HTTPChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *HTTPChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.HTTPCheck)
 	endpoint := check.Endpoint
 	namespace := check.Namespace
-	specNamespace := check.GetNamespace()
+	specNamespace := canary.Namespace
 	var textResults bool
 	if check.GetDisplayTemplate() != "" {
 		textResults = true
@@ -144,7 +144,7 @@ func (c *HTTPChecker) Check(extConfig external.Check) *pkg.CheckResult {
 		}
 	}
 
-	username, password, err := c.ParseAuth(check)
+	username, password, err := c.ParseAuth(check, specNamespace)
 	if err != nil {
 		return httpFailF(check, textResults, httpStatus, template, "Failed to lookup authentication info %v:", err)
 	}
@@ -332,12 +332,11 @@ func (c *HTTPChecker) checkHTTP(urlObj pkg.URL, ntlm bool) (*HTTPCheckResult, er
 	return &checkResult, nil
 }
 
-func (c *HTTPChecker) ParseAuth(check v1.HTTPCheck) (string, string, error) {
+func (c *HTTPChecker) ParseAuth(check v1.HTTPCheck, namespace string) (string, string, error) {
 	kommons := c.GetClient()
 	if kommons == nil {
 		return "", "", errors.New("Kommons client not set for HTTPChecker instance")
 	}
-	namespace := check.GetNamespace()
 	if check.Authentication == nil {
 		return "", "", nil
 	}

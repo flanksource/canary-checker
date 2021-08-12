@@ -31,18 +31,18 @@ func (c *RedisChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *RedisChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *RedisChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.Redis {
-		results = append(results, c.Check(conf))
+	for _, conf := range canary.Spec.Redis {
+		results = append(results, c.Check(canary, conf))
 	}
 	return results
 }
 
-func (c *RedisChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *RedisChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	redisCheck := extConfig.(v1.RedisCheck)
-	namespace := redisCheck.GetNamespace()
+	namespace := canary.Namespace
 	var err error
 	auth, err := GetAuthValues(redisCheck.Auth, c.kommons, namespace)
 	if err != nil {

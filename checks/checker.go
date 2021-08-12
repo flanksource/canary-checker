@@ -8,9 +8,9 @@ import (
 )
 
 type Checker interface {
-	Run(config v1.CanarySpec) []*pkg.CheckResult
+	Run(config v1.Canary) []*pkg.CheckResult
 	Type() string
-	Check(extConfig external.Check) *pkg.CheckResult
+	Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult
 }
 
 var All = []Checker{
