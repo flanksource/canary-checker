@@ -704,6 +704,7 @@ spec:
                 iconURL:
                   type: string
                 interval:
+                  description: interval (in seconds) to run checks on Deprecated in favor of Schedule
                   format: int64
                   type: integer
                 jmeter:
@@ -5103,6 +5104,9 @@ spec:
                         type: boolean
                     type: object
                   type: array
+                schedule:
+                  description: 'Schedule to run checks on. Supports all cron expression, example: ''30 3-6,20-23 * * *''. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron Also supports golang duration, can be set as ''@every 1m30s'' which runs the check every 1 minute and 30 seconds.'
+                  type: string
                 severity:
                   type: string
                 smb:

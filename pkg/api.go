@@ -53,6 +53,7 @@ type Check struct {
 	Latency     string        `json:"latency"`
 	Statuses    []CheckStatus `json:"checkStatuses" mapstructure:"-"`
 	Interval    uint64        `json:"interval"`
+	Schedule    string        `json:"schedule"`
 	Owner       string        `json:"owner"`
 	Severity    string        `json:"severity"`
 	IconURL     string        `json:"iconURL"`
