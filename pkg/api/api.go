@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/canary-checker/pkg/utils"
+
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
@@ -30,6 +32,7 @@ type Response struct {
 }
 
 var RunnerName string
+var Prometheus *utils.PrometheusClient
 
 func Handler(w http.ResponseWriter, req *http.Request) {
 	apiResponse := &Response{

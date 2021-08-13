@@ -13,6 +13,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/controllers"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/go-logr/zapr"
 	"github.com/spf13/cobra"
@@ -29,7 +30,7 @@ var Operator = &cobra.Command{
 }
 var enableLeaderElection, dev bool
 var httpPort, metricsPort, webhookPort int
-var includeNamespace, includeCheck string
+var includeNamespace, includeCheck, prometheusURL string
 var pushServers []string
 
 func init() {
@@ -47,6 +48,7 @@ func init() {
 	Operator.Flags().StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
 	Operator.Flags().StringVar(&api.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 	Operator.Flags().BoolVar(&aggregate.PivotByNamespace, "pivot-by-namespace", false, "Show the same check across namespaces in a different column")
+	Operator.Flags().StringVar(&prometheusURL, "prometheus-url", "", "location of the prometheus server")
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -111,6 +113,12 @@ func run(cmd *cobra.Command, args []string) {
 	}
 	push.AddServers(pushServers)
 	go push.Start()
+
+	api.Prometheus, err = utils.NewPrometheusAPI(prometheusURL)
+	if err != nil {
+		logger.Debugf("error getting prometheus client")
+		return
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
