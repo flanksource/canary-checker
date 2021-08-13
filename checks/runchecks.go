@@ -28,4 +28,3 @@ func RunChecks(canary v1.Canary) []*pkg.CheckResult {
 	}
 	return results
 }
-

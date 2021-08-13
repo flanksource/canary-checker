@@ -52,16 +52,17 @@ type CanarySpec struct {
 	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Redis          []RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
-	EC2            []EC2Check            `yaml:"ec2,omitempty" json:"ec2,omitempty"`
-	IconURL        string                `yaml:"iconURL,omitempty" json:"iconURL,omitempty"`
+	// Because the EC2 check attempts to clean up stale instances at the start of the check, only one EC2Check can be scoped per Canary instance
+	EC2 EC2Check `yaml:"ec2,omitempty" json:"ec2,omitempty"`
 	// interval (in seconds) to run checks on
 	// Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
-	Severity string `yaml:"severity,omitempty" json:"severity,omitempty"`
-	Owner    string `yaml:"owner,omitempty" json:"owner,omitempty"`
 	// Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
 	// Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.
 	Schedule string `yaml:"schedule,omitempty" json:"schedule,omitempty"`
+	IconURL  string `yaml:"iconURL,omitempty" json:"iconURL,omitempty"`
+	Severity string `yaml:"severity,omitempty" json:"severity,omitempty"`
+	Owner    string `yaml:"owner,omitempty" json:"owner,omitempty"`
 }
 
 func (spec CanarySpec) GetAllChecks() []external.Check {
@@ -129,9 +130,7 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	for _, check := range spec.Smb {
 		checks = append(checks, check)
 	}
-	for _, check := range spec.EC2 {
-		checks = append(checks, check)
-	}
+	checks = append(checks, spec.EC2)
 	return checks
 }
 

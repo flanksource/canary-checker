@@ -46,10 +46,6 @@ kubectl config use-context kind-$CLUSTER_NAME
 
 export PATH=$(pwd)/.bin:$PATH
 
-kubectl create namespace ec2test
-kubectl apply -R -f test/nested-canaries/
-kubectl create secret generic aws-credentials --from-literal=AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --from-literal=AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -n ec2test
-
 echo "::group::Deploying Base"
 $KARINA deploy bootstrap -vv
 echo "::endgroup::"
@@ -104,6 +100,10 @@ RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="mi
 #take some backup in restic
 RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="minio123" restic --cacert .certs/ingress-ca.crt -r s3:https://minio.127.0.0.1.nip.io/restic-canary-checker backup $(pwd)
 make vue-dist
+
+kubectl apply -R -f test/nested-canaries/
+kubectl create secret generic aws-credentials --from-literal=AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --from-literal=AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -n podinfo-test
+
 cd test
 go test ./... -v -c
 # ICMP requires privileges so we run the tests with sudo

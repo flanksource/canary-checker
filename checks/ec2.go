@@ -5,18 +5,20 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/flanksource/canary-checker/pkg/metrics"
+	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/timer"
 	"github.com/hairyhenderson/gomplate/v3/base64"
 	"github.com/prometheus/client_golang/prometheus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
-	"time"
+
+	"net/http"
 
 	"github.com/flanksource/kommons"
-	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -27,6 +29,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 )
+
 var (
 	prometheusCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -74,10 +77,10 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(prometheusCount, prometheusFailCount,prometheusPassCount, prometheusResponseTime, prometheusStartupTime, prometheusTerminateTime)
+	prometheus.MustRegister(prometheusCount, prometheusFailCount, prometheusPassCount, prometheusResponseTime, prometheusStartupTime, prometheusTerminateTime)
 }
 
-type EC2Checker struct{
+type EC2Checker struct {
 	kommons *kommons.Client `yaml:"-" json:"-"`
 }
 
@@ -91,49 +94,48 @@ func (c EC2Checker) GetClient() *kommons.Client {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *EC2Checker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *EC2Checker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.EC2 {
-		results = append(results, c.Check(conf))
+	if canary.Spec.EC2.AMI != "" {
+		results = append(results, c.Check(canary, canary.Spec.EC2))
 	}
 	return results
 }
-
 
 // Type: returns checker type
 func (c *EC2Checker) Type() string {
 	return "ec2"
 }
 
-func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.EC2Check)
 	prometheusCount.WithLabelValues(check.Region).Inc()
+	namespace := canary.Namespace
 
-	kommons := c.GetClient()
-	if kommons == nil {
+	kommonsClient := c.GetClient()
+	if kommonsClient == nil {
 		return HandleFail(check, "Kommons client not configured for ec2 checker")
 	}
-	_, ak, err := kommons.GetEnvValue(check.AccessKeyID, check.GetNamespace())
+	_, accessKey, err := kommonsClient.GetEnvValue(check.AccessKeyID, namespace)
 	if err != nil {
 		return HandleFail(check, fmt.Sprintf("Could not parse EC2 access key: %v", err))
 	}
-	_, sk, err := kommons.GetEnvValue(check.SecretKey, check.GetNamespace())
+	_, secretKey, err := kommonsClient.GetEnvValue(check.SecretKey, namespace)
 	if err != nil {
 		return HandleFail(check, fmt.Sprintf("Could not parse EC2 secret key: %v", err))
 	}
+
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
-	}
-	if check.SkipTLSVerify {
-		tr = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: check.SkipTLSVerify},
 	}
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(ak, sk, "")),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
 		config.WithRegion(check.Region),
 		config.WithHTTPClient(&http.Client{Transport: tr}),
 	)
+	if err != nil {
+		return HandleFail(check, fmt.Sprintf("failed to load AWS credentials: %v", err))
+	}
 
 	var ami *string
 	if check.AMI == "" {
@@ -149,19 +151,27 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 
 	client := ec2.NewFromConfig(cfg)
+	idString := fmt.Sprintf("%v/%v/%v", canary.ClusterName, namespace, canary.Name)
 
 	describeInput := &ec2.DescribeInstancesInput{
 		Filters: []types.Filter{
 			{
-				Name: aws.String("tag:owner"),
+				Name: aws.String("tag:type"),
 				Values: []string{
 					"canary-checker",
+				},
+			},
+			{
+				Name: aws.String("tag:owner"),
+				Values: []string{
+					idString,
 				},
 			},
 			{
 				Name: aws.String("instance-state-name"),
 				Values: []string{
 					"running",
+					"pending",
 				},
 			},
 		},
@@ -173,20 +183,21 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 	}
 
 	staleIds := []string{}
-	for r, _ := range describeOutput.Reservations{
-		for i, _ := range describeOutput.Reservations[r].Instances {
+	for r := range describeOutput.Reservations {
+		for i := range describeOutput.Reservations[r].Instances {
 			staleIds = append(staleIds, *describeOutput.Reservations[r].Instances[i].InstanceId)
 		}
 	}
 	if len(staleIds) > 0 {
+		logger.Infof("Found %v stale ec2 instances, terminating...", len(staleIds))
 		err = terminateInstances(client, staleIds, 300000)
 		if err != nil {
-			return HandleFail(check,fmt.Sprintf("Could not terminate stale instances: %s", err),)
+			return HandleFail(check, fmt.Sprintf("Could not terminate stale instances: %s", err))
 		}
 	}
 	userData, err := base64.Encode([]byte(check.UserData))
 	if err != nil {
-		HandleFail(check, fmt.Sprintf("Error encoding userData: %s", err))
+		return HandleFail(check, fmt.Sprintf("Error encoding userData: %s", err))
 	}
 	if check.SecurityGroup == "" {
 		check.SecurityGroup = "default"
@@ -198,12 +209,16 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 		MinCount:     aws.Int32(1),
 		MaxCount:     aws.Int32(1),
 		TagSpecifications: []types.TagSpecification{
-			types.TagSpecification{
+			{
 				ResourceType: types.ResourceTypeInstance,
 				Tags: []types.Tag{
-					types.Tag{
-						Key:   aws.String("owner"),
+					{
+						Key:   aws.String("type"),
 						Value: aws.String("canary-checker"),
+					},
+					{
+						Key:   aws.String("owner"),
+						Value: aws.String(idString),
 					},
 				},
 			},
@@ -214,39 +229,35 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 		},
 	}
 
-	timer := NewTimer()
+	timeTracker := NewTimer()
 
 	runOutput, err := client.RunInstances(context.TODO(), runInput)
 	if err != nil {
-		return HandleFail(check,fmt.Sprintf("Could not create ec2 instance: %s", err))
+		return HandleFail(check, fmt.Sprintf("Could not create ec2 instance: %s", err))
 	}
 
 	if len(runOutput.Instances) != 1 {
 		return HandleFail(check, fmt.Sprintf("Expected 1 instance, got: %v", len(runOutput.Instances)))
 	}
 
-	instanceId := runOutput.Instances[0].InstanceId
+	instanceID := runOutput.Instances[0].InstanceId
 	ip := ""
 	internalDNS := ""
 
+	logger.Infof("Created EC2 instance with id %v", *instanceID)
 	var startTime float64
 	for {
-		describeInput := &ec2.DescribeInstancesInput{InstanceIds: []string{*instanceId}}
+		describeInput := &ec2.DescribeInstancesInput{InstanceIds: []string{*instanceID}}
 		describeOutput, err := client.DescribeInstances(context.TODO(), describeInput)
 		if err != nil {
-			return &pkg.CheckResult{ // nolint: staticcheck
-				Check:       check,
-				Pass:        false,
-				Duration:    0,
-				Invalid:     false,
-				DisplayType: "Text",
-				Message:     fmt.Sprintf("Could not retrieve instance health: %s", err),
-			}
+			return HandleFail(check, fmt.Sprintf("Could not retrieve instance health: %s", err))
 		}
-		state := describeOutput.Reservations[0].Instances[0].State
-		reason := describeOutput.Reservations[0].Instances[0].StateReason
+		instance := describeOutput.Reservations[0].Instances[0]
+		state := instance.State
+		reason := instance.StateReason
+
 		if state.Name == types.InstanceStateNameRunning {
-			startTime = timer.Elapsed()
+			startTime = timeTracker.Elapsed()
 			if describeOutput.Reservations[0].Instances[0].PublicIpAddress != nil {
 				ip = *describeOutput.Reservations[0].Instances[0].PublicIpAddress
 			}
@@ -255,16 +266,16 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 			}
 			break
 		}
-		if timer.Millis() > 300000 {
-			return HandleFail(check,fmt.Sprintf("Instance did not start within 5 minutes: %v", *reason.Message))
+		if timeTracker.Millis() > 300000 {
+			return HandleFail(check, fmt.Sprintf("Instance did not start within 5 minutes: %v", *reason.Message))
 		}
-		time.Sleep(1*time.Second)
+		time.Sleep(1 * time.Second)
 	}
 	prometheusStartupTime.WithLabelValues(check.Region).Set(startTime)
+	time.Sleep(time.Duration(check.WaitTime) * time.Second)
 	fmt.Println(ip)
 
-	var innerSpecList []v1.CanarySpec
-
+	var innerCanaries []v1.Canary
 
 	innerFail := false
 	var innerMessage []string
@@ -272,35 +283,38 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 	for _, canary := range check.CanaryRef {
 		innerCanary := v1.Canary{
 			TypeMeta: metav1.TypeMeta{
-				Kind: "Canary",
+				Kind:       "Canary",
 				APIVersion: "canaries.flanksource.com/v1",
 			},
 		}
-		err = kommons.Get(check.GetNamespace(), canary.Name, &innerCanary)
+		err = kommonsClient.Get(namespace, canary.Name, &innerCanary)
+		logger.Infof("Accessing Canary %v/%v", namespace, canary.Name)
 		if err != nil {
 			innerFail = true
-			innerMessage = append(innerMessage, fmt.Sprintf("Could not retrieve canary ref %v in %v: %v", canary.Name, check.GetNamespace(), err))
+			innerMessage = append(innerMessage, fmt.Sprintf("Could not retrieve canary ref %v in %v: %v", canary.Name, namespace, err))
 			break
 		}
-		spew.Dump(innerCanary)
 		if innerCanary.Name == "" {
 			innerFail = true
-			innerMessage = append(innerMessage, fmt.Sprintf("Could not retrieve canary ref %v in %v", canary.Name, check.GetNamespace()))
+			innerMessage = append(innerMessage, fmt.Sprintf("Could not retrieve canary ref %v in %v", canary.Name, namespace))
 			break
 		}
-		innerSpecList = append(innerSpecList, innerCanary.Spec)
+		innerCanaries = append(innerCanaries, innerCanary)
 	}
 
-
-	ec2Vars := map[string]string {
+	ec2Vars := map[string]string{
 		"PublicIpAddress": ip,
-		"instanceId": *instanceId,
-		"PrivateDnsName": internalDNS,
+		"instanceId":      *instanceID,
+		"PrivateDnsName":  internalDNS,
 	}
 
-	for _, canarySpec := range innerSpecList {
-		canarySpec = pkg.ApplyLocalTemplates(canarySpec, ec2Vars)
-		innerResults := RunChecks(canarySpec, check.GetNamespace())
+	for _, inner := range innerCanaries {
+		inner.Spec = pkg.ApplyLocalTemplates(inner.Spec, ec2Vars)
+		if inner.Spec.EC2.AMI != "" {
+			logger.Warnf("EC2 checks may not be nested to avoid potential recursion.  Skipping inner EC2")
+			inner.Spec.EC2.AMI = ""
+		}
+		innerResults := RunChecks(inner)
 		for _, result := range innerResults {
 			if !result.Pass {
 				innerFail = true
@@ -309,25 +323,27 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 		}
 	}
 
-	timer = NewTimer()
-	err = terminateInstances(client, []string{*instanceId}, 300000)
-	stopTime := timer.Elapsed()
-
-	if err != nil {
-		return HandleFail(check,fmt.Sprintf("Could not terminate: %s", err) )
+	timeTracker = NewTimer()
+	if !check.KeepAlive {
+		err = terminateInstances(client, []string{*instanceID}, 300000)
+		if err != nil {
+			return HandleFail(check, fmt.Sprintf("Could not terminate: %s", err))
+		}
 	}
+	stopTime := timeTracker.Elapsed()
+
 	prometheusTerminateTime.WithLabelValues(check.Region).Set(stopTime)
 
 	metricsList := []pkg.Metric{
 		{
-			Name: "Startup Time",
+			Name:  "Startup Time",
 			Value: startTime,
-			Type: metrics.GaugeType,
+			Type:  metrics.GaugeType,
 		},
 		{
-			Name: "Termination Time",
+			Name:  "Termination Time",
 			Value: stopTime,
-			Type: metrics.GaugeType,
+			Type:  metrics.GaugeType,
 		},
 	}
 
@@ -339,8 +355,8 @@ func (c *EC2Checker) Check(extConfig external.Check) *pkg.CheckResult {
 		Check:    check,
 		Pass:     true,
 		Invalid:  false,
-		Duration: int64(timer.Elapsed()),
-		Metrics: metricsList,
+		Duration: int64(timeTracker.Elapsed()),
+		Metrics:  metricsList,
 	}
 }
 
@@ -372,9 +388,9 @@ func terminateInstances(client *ec2.Client, instanceIds []string, timeout int64)
 			return fmt.Errorf("describe call error: %w", err)
 		}
 		terminated := true
-		message := []string{}
-		for r, _ := range describeOutput.Reservations{
-			for i, _ := range describeOutput.Reservations[r].Instances {
+		var message []string
+		for r := range describeOutput.Reservations {
+			for i := range describeOutput.Reservations[r].Instances {
 				state := *describeOutput.Reservations[r].Instances[i].State
 				if state.Name != types.InstanceStateNameTerminated {
 					terminated = false
@@ -389,6 +405,6 @@ func terminateInstances(client *ec2.Client, instanceIds []string, timeout int64)
 		if timer.Millis() > timeout {
 			return errors.New(strings.Join(message, "\n"))
 		}
-		time.Sleep(1*time.Second)
+		time.Sleep(1 * time.Second)
 	}
 }

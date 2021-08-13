@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -958,14 +959,16 @@ type Smb struct {
 }
 
 type EC2Check struct {
-	Description `yaml:",inline" json:",inline"`
-	AccessKey   kommons.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
-	SecretKey   kommons.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
-	Region      string         `yaml:"region,omitempty" json:"region,omitempty"`
-	AMI string `yaml:"ami" json:"ami"`
-	UserData	string	`yaml:"userData,omitempty" json:"userData,omitempty"`
-	SecurityGroup 	string	`yaml:"securityGroup,omitempty" json:"securityGroup,omitempty"`
-	CanaryRef	[]v1.LocalObjectReference	`yaml:"canaryRef,omitempty" json:"canaryRef,omitempty"`
+	Description   `yaml:",inline" json:",inline"`
+	AccessKeyID   kommons.EnvVar            `yaml:"accessKeyID" json:"accessKeyID,omitempty"`
+	SecretKey     kommons.EnvVar            `yaml:"secretKey" json:"secretKey,omitempty"`
+	Region        string                    `yaml:"region,omitempty" json:"region,omitempty"`
+	AMI           string                    `yaml:"ami" json:"ami"`
+	UserData      string                    `yaml:"userData,omitempty" json:"userData,omitempty"`
+	SecurityGroup string                    `yaml:"securityGroup,omitempty" json:"securityGroup,omitempty"`
+	KeepAlive     bool                      `yaml:"keepAlive,omitempty" json:"keepAlive,omitempty"`
+	WaitTime      int                       `yaml:"waitTime,omitempty" json:"waitTime,omitempty"`
+	CanaryRef     []v1.LocalObjectReference `yaml:"canaryRef,omitempty" json:"canaryRef,omitempty"`
 	// Skip TLS verify when connecting to aws
 	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
 }
