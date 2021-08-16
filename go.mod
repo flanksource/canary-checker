@@ -15,7 +15,6 @@ require (
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/flanksource/commons v1.5.8
 	github.com/flanksource/kommons v0.21.1
-	github.com/go-co-op/gocron v0.2.0
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/go-logr/logr v0.3.0
 	github.com/go-logr/zapr v0.2.0
@@ -32,6 +31,7 @@ require (
 	github.com/onsi/gomega v1.10.5
 	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
+	github.com/phf/go-queue v0.0.0-20170504031614-9abe38d0371d // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.1
 	github.com/prometheus/common v0.10.0

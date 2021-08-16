@@ -23,18 +23,20 @@ import (
 	"sync"
 	"time"
 
+	"github.com/flanksource/canary-checker/pkg/push"
+
 	"github.com/flanksource/kommons"
 
-	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons/ktemplate"
+	"github.com/mitchellh/reflectwalk"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/metrics"
+	"github.com/flanksource/commons/logger"
 	"github.com/go-logr/logr"
-	"github.com/mitchellh/reflectwalk"
 	"github.com/robfig/cron/v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -110,9 +112,6 @@ func (r *CanaryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		}
 	}
 	check.Spec.SetSQLDrivers()
-	check.Spec.SetNames(check.Name)
-	check.Spec.SetNamespaces(check.Namespace)
-	check.Spec.SetIntervals(check.Spec.Interval)
 	_, run := observed.Load(req.NamespacedName)
 	if run && check.Status.ObservedGeneration == check.Generation {
 		logger.V(2).Info("check already up to date")
@@ -129,15 +128,23 @@ func (r *CanaryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		}
 	}
 
-	if check.Spec.Interval > 0 {
+	if check.Spec.Interval > 0 || check.Spec.Schedule != "" {
 		job := CanaryJob{Client: *r, Check: *check, Logger: logger}
 		if !run {
 			// check each job on startup
 			go job.Run()
 		}
-		id, err := r.Cron.AddJob(fmt.Sprintf("@every %ds", check.Spec.Interval), job)
+		var id cron.EntryID
+		var schedule string
+		if check.Spec.Schedule != "" {
+			schedule = check.Spec.Schedule
+			id, err = r.Cron.AddJob(schedule, job)
+		} else if check.Spec.Interval > 0 {
+			schedule = fmt.Sprintf("@every %ds", check.Spec.Interval)
+			id, err = r.Cron.AddJob(schedule, job)
+		}
 		if err != nil {
-			logger.Error(err, "failed to schedule job", "schedule", check.Spec.Interval)
+			logger.Error(err, "failed to schedule job", "schedule", schedule)
 		} else {
 			logger.Info("scheduled", "id", id, "next", r.Cron.Entry(id).Next)
 		}
@@ -162,7 +169,6 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.Kubernetes = clientset
 
 	r.Kommons = kommons.NewClient(mgr.GetConfig(), logger.StandardLogger())
-
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1.Canary{}).
 		Complete(r)
@@ -198,6 +204,7 @@ func (r *CanaryReconciler) Report(key types.NamespacedName, results []*pkg.Check
 		//replacing new-line char from message so we don't mess up terminal message
 		message := strings.ReplaceAll(result.Message, "\\n", " ")
 		check.Status.Message = &message
+		push.Queue(cache.Check(check, result))
 	}
 	if pass {
 		check.Status.Status = &v1.Passed
@@ -255,13 +262,13 @@ func (c CanaryJob) Run() {
 	c.V(3).Info("Ending")
 }
 
-func (c CanaryJob) LoadSecrets() (v1.CanarySpec, error) {
+func (c CanaryJob) LoadSecrets() (v1.Canary, error) {
 	var values = make(map[string]string)
 
 	for key, source := range c.Check.Spec.Env {
 		val, err := v1.GetEnvVarRefValue(c.Client.Kubernetes, c.Check.Namespace, &source, &c.Check)
 		if err != nil {
-			return c.Check.Spec, err
+			return c.Check, err
 		}
 		values[key] = val
 	}
@@ -275,5 +282,6 @@ func (c CanaryJob) LoadSecrets() (v1.CanarySpec, error) {
 		Values:    values,
 		Clientset: k8sclient,
 	})
-	return *val, err
+	c.Check.Spec = *val
+	return c.Check, err
 }

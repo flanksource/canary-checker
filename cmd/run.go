@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"strconv"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/flanksource/commons/console"
 
 	"github.com/spf13/cobra"
@@ -24,7 +26,13 @@ var Run = &cobra.Command{
 		junitFile, _ := cmd.Flags().GetString("junit-file")
 		config := pkg.ParseConfig(configfile)
 		failed := 0
-		results := RunChecks(config, namespace)
+		canary := v1.Canary{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: namespace,
+			},
+			Spec: config,
+		}
+		results := RunChecks(canary)
 		if junitFile != "" {
 			report := getJunitReport(results)
 			err := ioutil.WriteFile(junitFile, []byte(report), 0755)
@@ -49,21 +57,20 @@ func init() {
 	Run.Flags().StringP("namespace", "n", "", "Specify namespace")
 	Run.Flags().StringP("junit", "j", "", "Export JUnit XML formatted results to this file e.g: junit.xml")
 }
-func RunChecks(config v1.CanarySpec, namespace string) []*pkg.CheckResult {
+func RunChecks(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
 	kommonsClient, err := pkg.NewKommonsClient()
 	if err != nil {
 		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
 	}
 
-	config.SetNamespaces(namespace)
-	config.SetSQLDrivers()
+	canary.Spec.SetSQLDrivers()
 	for _, c := range checks.All {
 		switch cs := c.(type) {
 		case checks.SetsClient:
 			cs.SetClient(kommonsClient)
 		}
-		result := c.Run(config)
+		result := c.Run(canary)
 		for _, r := range result {
 			if r != nil {
 				results = append(results, r)

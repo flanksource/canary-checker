@@ -5,7 +5,8 @@ import (
 	"io/fs"
 	nethttp "net/http"
 	_ "net/http/pprof" // required by serve
-	"time"
+
+	"github.com/flanksource/canary-checker/pkg/push"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
@@ -16,9 +17,9 @@ import (
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/statuspage"
 	"github.com/flanksource/commons/logger"
-	"github.com/go-co-op/gocron"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/robfig/cron/v3"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -31,11 +32,9 @@ var Serve = &cobra.Command{
 		config := pkg.ParseConfig(configfile)
 
 		interval, _ := cmd.Flags().GetUint64("interval")
-
+		schedule, _ := cmd.Flags().GetString("schedule")
 		config.Interval = interval
-		logger.Infof("Running checks every %d seconds", config.Interval)
-
-		scheduler := gocron.NewScheduler(time.UTC)
+		config.Schedule = schedule
 
 		canaryName, _ := cmd.Flags().GetString("canary-name")
 		canaryNamespace, _ := cmd.Flags().GetString("canary-namespace")
@@ -44,14 +43,13 @@ var Serve = &cobra.Command{
 				Name:      canaryName,
 				Namespace: canaryNamespace,
 			},
+			Spec: config,
 		}
 		kommonsClient, err := pkg.NewKommonsClient()
 		if err != nil {
 			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
 		}
-
-		config.SetNamespaces(canaryNamespace)
-		config.SetNames(canaryName)
+		cron := cron.New()
 		config.SetSQLDrivers()
 		for _, _c := range checks.All {
 			c := _c
@@ -59,17 +57,28 @@ var Serve = &cobra.Command{
 			case checks.SetsClient:
 				cs.SetClient(kommonsClient)
 			}
-			scheduler.Every(interval).Seconds().StartImmediately().Do(func() { // nolint: errcheck
-				go func() {
-					for _, result := range c.Run(config) {
-						cache.AddCheck(canary, result)
-						metrics.Record(canary, result)
-					}
-				}()
-			})
+			if config.Schedule != "" {
+				cron.AddFunc(config.Schedule, func() { // nolint: errcheck
+					go func() {
+						for _, result := range c.Run(canary) {
+							cache.AddCheck(canary, result)
+							metrics.Record(canary, result)
+						}
+					}()
+				})
+				logger.Infof("Running canary %v on %v schedule", canary.Name, config.Schedule)
+			} else if config.Interval > 0 {
+				cron.AddFunc(fmt.Sprintf("@every %ds", config.Interval), func() { // nolint: errcheck
+					go func() {
+						for _, result := range c.Run(canary) {
+							cache.AddCheck(canary, result)
+							metrics.Record(canary, result)
+						}
+					}()
+				})
+				logger.Infof("Running canary %v every %v seconds", canary.Name, config.Interval)
+			}
 		}
-
-		scheduler.StartAsync()
 		serve(cmd)
 	},
 }
@@ -112,7 +121,7 @@ func serve(cmd *cobra.Command) {
 	nethttp.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))
 	nethttp.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler(prometheusHost), allowedCors))
 	nethttp.HandleFunc("/api/aggregate", simpleCors(aggregate.Handler, allowedCors))
-
+	nethttp.HandleFunc("/api/push", simpleCors(push.Handler, allowedCors))
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
 	logger.Infof("Starting health dashboard at http://%s", addr)
 	logger.Infof("Metrics dashboard can be accessed at http://%s/metrics", addr)
@@ -141,15 +150,17 @@ func init() {
 	Serve.Flags().StringP("configfile", "c", "", "Specify configfile")
 	Serve.Flags().Int("httpPort", 8080, "Port to expose a health dashboard ")
 	Serve.Flags().Int("devGuiHttpPort", 8081, "Port used by a local npm server in development mode")
-	Serve.Flags().Uint64("interval", 30, "Default interval (in seconds) to run checks on")
+	Serve.Flags().Uint64("interval", 30, "Default interval (in seconds) to run checks on. Deprecated in favor of schedule")
+	Serve.Flags().StringP("schedule", "s", "", "schedule to run checks on. Supports all cron expression and golang duration support in format: '@every duration'")
 	Serve.Flags().Int("failureThreshold", 2, "Default Number of consecutive failures required to fail a check")
 	Serve.Flags().Bool("dev", false, "Run in development mode")
 	Serve.Flags().String("prometheus", "http://localhost:8080", "Prometheus address")
 	Serve.Flags().IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
 	Serve.Flags().StringSliceVar(&aggregate.Servers, "aggregateServers", []string{}, "Aggregate check results from multiple servers in the status page")
-	Serve.Flags().StringVar(&api.ServerName, "name", "local", "Server name shown in aggregate dashboard")
+	Serve.Flags().StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
+	Serve.Flags().StringVar(&api.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 	Serve.Flags().BoolVar(&aggregate.PivotByNamespace, "pivot-by-namespace", false, "Show the same check across namespaces in a different column")
-
+	Serve.Flags().StringVar(&prometheusURL, "prometheus-url", "", "location of the prometheus server")
 	Serve.Flags().String("canary-name", "", "Canary name")
 	Serve.Flags().String("canary-namespace", "", "Canary namespace")
 }

@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/canary-checker/pkg/utils"
+
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
@@ -25,15 +27,16 @@ import (
 )
 
 type Response struct {
-	ServerName string     `json:"serverName"`
+	RunnerName string     `json:"runnerName"`
 	Checks     pkg.Checks `json:"checks"`
 }
 
-var ServerName string
+var RunnerName string
+var Prometheus *utils.PrometheusClient
 
 func Handler(w http.ResponseWriter, req *http.Request) {
 	apiResponse := &Response{
-		ServerName: ServerName,
+		RunnerName: RunnerName,
 		Checks:     cache.GetChecks(),
 	}
 	jsonData, err := json.Marshal(apiResponse)
@@ -123,7 +126,7 @@ func TriggerCheckHandler(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "Check config not found", http.StatusNotFound)
 			return
 		}
-		result := checker.Check(conf)
+		result := checker.Check(*check.CheckCanary, conf)
 		cache.AddCheck(*check.CheckCanary, result)
 		metrics.Record(*check.CheckCanary, result)
 	} else {

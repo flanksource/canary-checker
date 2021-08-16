@@ -62,9 +62,6 @@ type HTTPCheck struct {
 	Headers []kommons.EnvVar `yaml:"headers,omitempty" json:"headers,omitempty"`
 	// Credentials for authentication headers:
 	Authentication *Authentication `yaml:"authentication,omitempty" json:"authentication,omitempty"`
-	// specNamespace is the namespace in which the canary was deployed, and which
-	// configmap/secret lookups will be constrained to
-	specNamespace string `yaml:"-" json:"-"`
 	// DisplayTemplate displays server response in text (overrides default bar format for UI).
 	// Example: 'Response Code: [[.code]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
@@ -72,14 +69,6 @@ type HTTPCheck struct {
 
 func (c HTTPCheck) GetDisplayTemplate() string {
 	return c.DisplayTemplate
-}
-
-func (c *HTTPCheck) SetNamespace(namespace string) {
-	c.specNamespace = namespace
-}
-
-func (c HTTPCheck) GetNamespace() string {
-	return c.specNamespace
 }
 
 func (c HTTPCheck) GetEndpoint() string {
@@ -196,16 +185,7 @@ type ResticCheck struct {
 	// SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss
 	SecretKey *kommons.EnvVar `yaml:"secretKey,omitempty" json:"secretKey,omitempty"`
 	// CaCert path to the root cert. In case of self-signed certificates
-	CaCert    string `yaml:"caCert,omitempty" json:"caCert,omitempty"`
-	namespace string `yaml:"-" json:"-"`
-}
-
-func (c *ResticCheck) SetNamespace(namespace string) {
-	c.namespace = namespace
-}
-
-func (c ResticCheck) GetNamespace() string {
-	return c.namespace
+	CaCert string `yaml:"caCert,omitempty" json:"caCert,omitempty"`
 }
 
 func (c ResticCheck) GetEndpoint() string {
@@ -230,17 +210,6 @@ type JmeterCheck struct {
 	Description      `yaml:",inline" json:",inline"`
 	// ResponseDuration under which the all the test should pass
 	ResponseDuration string `yaml:"responseDuration,omitempty" json:"responseDuration,omitempty"`
-	// specNamespace is the namespace in which the canary was deployed, and which
-	// configmap/secret lookups will be constrained to
-	specNamespace string `yaml:"-" json:"-"`
-}
-
-func (c *JmeterCheck) SetNamespace(namespace string) {
-	c.specNamespace = namespace
-}
-
-func (c JmeterCheck) GetNamespace() string {
-	return c.specNamespace
 }
 
 func (c JmeterCheck) GetEndpoint() string {
@@ -257,15 +226,6 @@ type DockerPullCheck struct {
 	Auth           *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 	ExpectedDigest string          `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
 	ExpectedSize   int64           `yaml:"expectedSize" json:"expectedSize,omitempty"`
-	namespace      string          `yaml:"-" json:"-"`
-}
-
-func (c *DockerPullCheck) SetNamespace(namespace string) {
-	c.namespace = namespace
-}
-
-func (c *DockerPullCheck) GetNamespace() string {
-	return c.namespace
 }
 
 func (c DockerPullCheck) GetEndpoint() string {
@@ -280,15 +240,6 @@ type DockerPushCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Image       string          `yaml:"image" json:"image,omitempty"`
 	Auth        *Authentication `yaml:"auth" json:"auth"`
-	namespace   string          `yaml:"-" json:"-"`
-}
-
-func (c *DockerPushCheck) SetNamespace(namespace string) {
-	c.namespace = namespace
-}
-
-func (c *DockerPushCheck) GetNamespace() string {
-	return c.namespace
 }
 
 func (c DockerPushCheck) GetEndpoint() string {
@@ -305,15 +256,6 @@ type ContainerdPullCheck struct {
 	Auth           Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 	ExpectedDigest string         `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
 	ExpectedSize   int64          `yaml:"expectedSize" json:"expectedSize,omitempty"`
-	namespace      string         `yaml:"-" json:"-"`
-}
-
-func (c *ContainerdPullCheck) SetNamespace(namespace string) {
-	c.namespace = namespace
-}
-
-func (c ContainerdPullCheck) GetNamespace() string {
-	return c.namespace
 }
 
 func (c ContainerdPullCheck) GetEndpoint() string {
@@ -344,15 +286,6 @@ type RedisCheck struct {
 	Addr        string          `yaml:"addr" json:"addr"`
 	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 	DB          int             `yaml:"db" json:"db"`
-	namespace   string          `yaml:"-" json:"-"`
-}
-
-func (c *RedisCheck) SetNamespace(namespace string) {
-	c.namespace = namespace
-}
-
-func (c RedisCheck) GetNamespace() string {
-	return c.namespace
 }
 
 func (c RedisCheck) GetType() string {
@@ -456,15 +389,6 @@ type LDAPCheck struct {
 	BindDN        string          `yaml:"bindDN" json:"bindDN,omitempty"`
 	UserSearch    string          `yaml:"userSearch" json:"userSearch,omitempty"`
 	SkipTLSVerify bool            `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
-	namespace     string          `yaml:"-" json:"-"`
-}
-
-func (c *LDAPCheck) SetNamespace(namespace string) {
-	c.namespace = namespace
-}
-
-func (c LDAPCheck) GetNamespace() string {
-	return c.namespace
 }
 
 func (c LDAPCheck) GetEndpoint() string {
@@ -537,15 +461,6 @@ type HelmCheck struct {
 	Project     string          `yaml:"project,omitempty" json:"project,omitempty"`
 	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 	CaFile      *string         `yaml:"cafile,omitempty" json:"cafile,omitempty"`
-	namespace   string          `yaml:"-" json:"-"`
-}
-
-func (c *HelmCheck) SetNamespace(namespace string) {
-	c.namespace = namespace
-}
-
-func (c HelmCheck) GetNamespace() string {
-	return c.namespace
 }
 
 func (c HelmCheck) GetEndpoint() string {
@@ -559,12 +474,6 @@ func (c HelmCheck) GetType() string {
 type JunitCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	TestResults string `yaml:"testResults" json:"testResults"`
-	// namespace in which canary is created
-	namespace string `yaml:"-" json:"-"`
-	// name of the canary. will be the same for the pod
-	name string `yaml:"-" json:"-"`
-	// interval of the canary
-	interval uint64 `yaml:"-" json:"-"`
 	//timeout in minutes to wait for specified container to finish its job.
 	// Defaults to 5 minutes
 	Timeout int        `yaml:"timeout,omitempty" json:"timeout,omitempty"`
@@ -579,30 +488,6 @@ func (c JunitCheck) GetDisplayTemplate() string {
 		return c.DisplayTemplate
 	}
 	return "Passed: [[.passed]], Failed: [[.failed]]"
-}
-
-func (c *JunitCheck) SetInterval(interval uint64) {
-	c.interval = interval
-}
-
-func (c JunitCheck) GetInterval() uint64 {
-	return c.interval
-}
-
-func (c *JunitCheck) SetNamespace(namespace string) {
-	c.namespace = namespace
-}
-
-func (c JunitCheck) GetNamespace() string {
-	return c.namespace
-}
-
-func (c *JunitCheck) SetName(name string) {
-	c.name = name
-}
-
-func (c JunitCheck) GetName() string {
-	return c.name
 }
 
 func (c JunitCheck) GetEndpoint() string {
@@ -645,17 +530,6 @@ type SmbCheck struct {
 	// DisplayTemplate displays check output in text
 	// Default: 'File Age: [[.age]]; File count: [[.count]]'
 	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
-	// specNamespace is the namespace in which the canary was deployed, and which
-	// configmap/secret lookups will be constrained to
-	namespace string `yaml:"-" json:"-"`
-}
-
-func (c *SmbCheck) SetNamespace(namespace string) {
-	c.namespace = namespace
-}
-
-func (c SmbCheck) GetNamespace() string {
-	return c.namespace
 }
 
 func (c SmbCheck) GetEndpoint() string {

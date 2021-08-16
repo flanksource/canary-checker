@@ -20,16 +20,16 @@ func NewTCPChecker() *TCPChecker {
 }
 
 // Run executes tcp checks for the given config, returning results
-func (t *TCPChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
-	results := []*pkg.CheckResult{}
-	for _, c := range config.TCP {
-		results = append(results, t.Check(c))
+func (t *TCPChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+	var results []*pkg.CheckResult
+	for _, c := range canary.Spec.TCP {
+		results = append(results, t.Check(canary, c))
 	}
 	return results
 }
 
 // Check performs a single tcp check, returning a checkResult
-func (t *TCPChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (t *TCPChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	c := extConfig.(v1.TCPCheck)
 	addr, port, err := extractAddrAndPort(c.Endpoint)
 	if err != nil {

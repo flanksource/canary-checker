@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/robfig/cron/v3"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/flanksource/commons/text"
@@ -58,10 +60,10 @@ func (c *JunitChecker) Type() string {
 	return "junit"
 }
 
-func (c *JunitChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
+func (c *JunitChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range config.Junit {
-		result := c.Check(conf)
+	for _, conf := range canary.Spec.Junit {
+		result := c.Check(canary, conf)
 		if result != nil {
 			results = append(results, result)
 		}
@@ -69,14 +71,17 @@ func (c *JunitChecker) Run(config v1.CanarySpec) []*pkg.CheckResult {
 	return results
 }
 
-func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	var textResults bool
 	junitCheck := extConfig.(v1.JunitCheck)
 	if junitCheck.GetDisplayTemplate() != "" {
 		textResults = true
 	}
-	interval := junitCheck.GetInterval()
+	interval := canary.Spec.Interval
+	name := canary.Name
+	namespace := canary.Namespace
+	schedule := canary.Spec.Schedule
 	timeout := junitCheck.GetTimeout()
 	var junitStatus JunitStatus
 	template := junitCheck.GetDisplayTemplate()
@@ -86,21 +91,25 @@ func (c *JunitChecker) Check(extConfig external.Check) *pkg.CheckResult {
 	pod.Labels = map[string]string{
 		junitCheckSelector: junitCheckLabelValue,
 	}
-	if junitCheck.GetNamespace() != "" {
-		pod.Namespace = junitCheck.GetNamespace()
+	if namespace != "" {
+		pod.Namespace = namespace
 	} else {
 		pod.Namespace = corev1.NamespaceDefault
 	}
-	if junitCheck.GetName() != "" {
-		pod.Name = junitCheck.GetName() + "-" + strings.ToLower(rand.String(5))
+	if name != "" {
+		pod.Name = name + "-" + strings.ToLower(rand.String(5))
 	} else {
 		pod.Name = strings.ToLower(rand.String(5))
 	}
 	existingPods := getJunitPods(c.kommons, pod.Namespace)
 	for _, junitPod := range existingPods {
-		createTime := junitPod.CreationTimestamp
-		if uint64(time.Since(createTime.Time)) < 2*interval {
-			logger.Tracef("Check already in progress, skipping")
+		createTime := junitPod.CreationTimestamp.Time
+		wait, err := waitForExistingJunitCheck(interval, schedule, createTime)
+		if err != nil {
+			return junitFailF(junitCheck, textResults, junitStatus, template, "error: %v", err)
+		}
+		if wait {
+			logger.Tracef("junit check already in progress, skipping")
 			return nil
 		}
 		if err := c.kommons.DeleteByKind(podKind, junitPod.Namespace, junitPod.Name); err != nil {
@@ -248,4 +257,22 @@ func getJunitPods(kommonsClient *kommons.Client, namespace string) []corev1.Pod 
 		return nil
 	}
 	return podList.Items
+}
+
+func waitForExistingJunitCheck(interval uint64, spec string, createTime time.Time) (wait bool, err error) {
+	if spec != "" {
+		schedule, err := cron.ParseStandard(spec)
+		if err != nil {
+			return false, err
+		}
+		checkTime := schedule.Next(time.Now())
+		if time.Since(createTime) < 2*time.Until(checkTime) {
+			return true, nil
+		}
+		return false, nil
+	}
+	if uint64(time.Since(createTime).Seconds()) < 2*interval {
+		return true, nil
+	}
+	return false, nil
 }

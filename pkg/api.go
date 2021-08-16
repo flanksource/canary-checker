@@ -42,24 +42,25 @@ type CheckStatus struct {
 }
 
 type Check struct {
-	Key          string            `json:"key"`
-	Type         string            `json:"type"`
-	Name         string            `json:"name"`
-	Namespace    string            `json:"namespace"`
-	Labels       map[string]string `json:"labels"`
+	Key         string        `json:"key"`
+	Type        string        `json:"type"`
+	Name        string        `json:"name"`
+	Namespace   string        `json:"namespace"`
+  Labels       map[string]string `json:"labels"`
 	RunnerLabels map[string]string `json:"runnerLabels"`
-	CanaryName   string            `json:"canaryName"`
-	Description  string            `json:"description"`
-	Endpoint     string            `json:"endpoint"`
-	Uptime       string            `json:"uptime"`
-	Latency      string            `json:"latency"`
-	Statuses     []CheckStatus     `json:"checkStatuses" mapstructure:"-"`
-	Interval     uint64            `json:"interval"`
-	Owner        string            `json:"owner"`
-	Severity     string            `json:"severity"`
-	IconURL      string            `json:"iconURL"`
-	DisplayType  string            `json:"displayType"`
-	CheckCanary  *v1.Canary        `json:"-"`
+	CanaryName  string        `json:"canaryName"`
+	Description string        `json:"description"`
+	Endpoint    string        `json:"endpoint"`
+	Uptime      string        `json:"uptime"`
+	Latency     string        `json:"latency"`
+	Statuses    []CheckStatus `json:"checkStatuses" mapstructure:"-"`
+	Interval    uint64        `json:"interval"`
+	Schedule    string        `json:"schedule"`
+	Owner       string        `json:"owner"`
+	Severity    string        `json:"severity"`
+	IconURL     string        `json:"iconURL"`
+	DisplayType string        `json:"displayType"`
+	CheckCanary *v1.Canary    `json:"-"`
 }
 
 func (c Check) ID() string {

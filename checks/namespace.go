@@ -53,19 +53,19 @@ func NewNamespaceChecker() *NamespaceChecker {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *NamespaceChecker) Run(config canaryv1.CanarySpec) []*pkg.CheckResult {
+func (c *NamespaceChecker) Run(canary canaryv1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	if len(config.Namespace) > 0 {
+	if len(canary.Spec.Namespace) > 0 {
 		if c.k8s == nil {
 			k8sClient, err := pkg.NewK8sClient()
 			if err != nil {
-				results = append(results, unexpectedErrorf(config.Namespace[0], err, "Could not initialise k8s client"))
+				results = append(results, unexpectedErrorf(canary.Spec.Namespace[0], err, "Could not initialise k8s client"))
 				return results
 			}
 			c.k8s = k8sClient
 		}
-		for _, conf := range config.Namespace {
-			results = append(results, c.Check(conf))
+		for _, conf := range canary.Spec.Namespace {
+			results = append(results, c.Check(canary, conf))
 		}
 	}
 	return results
@@ -112,7 +112,7 @@ func (c *NamespaceChecker) getConditionTimes(ns *v1.Namespace, pod *v1.Pod) (tim
 	return times, nil
 }
 
-func (c *NamespaceChecker) Check(extConfig external.Check) *pkg.CheckResult {
+func (c *NamespaceChecker) Check(canary canaryv1.Canary, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(canaryv1.NamespaceCheck)
 
 	if !c.lock.TryAcquire(1) {
