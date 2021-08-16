@@ -24,16 +24,16 @@ type Description struct {
 	Description string `yaml:"description,omitempty" json:"description,omitempty"`
 	// Name of the check
 	Name string `yaml:"name,omitempty" json:"name,omitempty"`
-	// IconURL for overwriting default icon on the dashboard
-	IconURL string `yaml:"iconURL,omitempty" json:"iconURL,omitempty"`
+	// Icon for overwriting default icon on the dashboard
+	Icon string `yaml:"icon,omitempty" json:"icon,omitempty"`
 }
 
 func (d Description) GetDescription() string {
 	return d.Description
 }
 
-func (d Description) GetIconURL() string {
-	return d.IconURL
+func (d Description) GetIcon() string {
+	return d.Icon
 }
 
 type HTTPCheck struct {
@@ -968,7 +968,7 @@ type EC2Check struct {
 	SecurityGroup string                    `yaml:"securityGroup,omitempty" json:"securityGroup,omitempty"`
 	KeepAlive     bool                      `yaml:"keepAlive,omitempty" json:"keepAlive,omitempty"`
 	WaitTime      int                       `yaml:"waitTime,omitempty" json:"waitTime,omitempty"`
-	TimeOut		  int						`yaml:"timeOut,omitempty" json:"timeOut,omitempty"`
+	TimeOut       int                       `yaml:"timeOut,omitempty" json:"timeOut,omitempty"`
 	CanaryRef     []v1.LocalObjectReference `yaml:"canaryRef,omitempty" json:"canaryRef,omitempty"`
 	// Skip TLS verify when connecting to aws
 	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
