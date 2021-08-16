@@ -960,10 +960,10 @@ type Smb struct {
 
 type EC2Check struct {
 	Description   `yaml:",inline" json:",inline"`
-	AccessKeyID   kommons.EnvVar            `yaml:"accessKeyID" json:"accessKeyID,omitempty"`
-	SecretKey     kommons.EnvVar            `yaml:"secretKey" json:"secretKey,omitempty"`
-	Region        string                    `yaml:"region,omitempty" json:"region,omitempty"`
-	AMI           string                    `yaml:"ami" json:"ami"`
+	AccessKeyID   kommons.EnvVar            `yaml:"accessKeyID" json:"accessKeyID"`
+	SecretKey     kommons.EnvVar            `yaml:"secretKey" json:"secretKey"`
+	Region        string                    `yaml:"region" json:"region"`
+	AMI           string                    `yaml:"ami,omitempty" json:"ami,omitempty"`
 	UserData      string                    `yaml:"userData,omitempty" json:"userData,omitempty"`
 	SecurityGroup string                    `yaml:"securityGroup,omitempty" json:"securityGroup,omitempty"`
 	KeepAlive     bool                      `yaml:"keepAlive,omitempty" json:"keepAlive,omitempty"`
