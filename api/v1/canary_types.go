@@ -173,6 +173,8 @@ type CanaryStatus struct {
 	Status *CanaryStatusCondition `json:"status,omitempty"`
 	// +optional
 	Message *string `json:"message,omitempty"`
+	// +optional
+	ErrorMessage *string `json:"errorMessage,omitempty"`
 	// If set, this represents the .metadata.generation that the status was set for
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`

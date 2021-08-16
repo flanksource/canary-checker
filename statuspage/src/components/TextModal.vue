@@ -17,7 +17,7 @@
             <td>{{status.duration / 1000}}s</td>
             <td>{{ timeago(status.time, false) }} Ago</td>
             <td v-if="status.status" style="color: green">{{status.message}}</td>
-            <td v-if="!status.status" style="color: red" class="text-pre-formatted">{{status.message}}</td>
+            <td v-if="!status.status" style="color: red" class="text-pre-formatted">{{status.message}}<br/>{{status.error}}</td>
           </tr>
         </template>
       </table>

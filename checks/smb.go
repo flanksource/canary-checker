@@ -58,12 +58,12 @@ func (c *SmbChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 	var serverPath string
 	auth, err := GetAuthValues(smbCheck.Auth, c.kommons, namespace)
 	if err != nil {
-		return smbFailF(smbCheck, textResults, smbStatus, template, "failed getting auth details: %v", err)
+		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
 	}
 	if strings.Contains(smbCheck.Server, "\\") {
 		serverPath, smbCheck.Sharename, smbCheck.SearchPath, err = getServerDetails(smbCheck.Server, port)
 		if err != nil {
-			return smbFailF(smbCheck, textResults, smbStatus, template, "error fetching server details: %v. serverPath: %v", err, serverPath)
+			return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
 		}
 	} else {
 		serverPath = fmt.Sprintf("%s:%d", smbCheck.Server, port)
@@ -73,7 +73,7 @@ func (c *SmbChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 	}
 	conn, err := net.Dial("tcp", serverPath)
 	if err != nil {
-		return smbFailF(smbCheck, textResults, smbStatus, template, "failed getting connection: %v", err)
+		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
 	}
 	defer conn.Close()
 	d := &smb2.Dialer{
@@ -87,47 +87,47 @@ func (c *SmbChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 
 	s, err := d.Dial(conn)
 	if err != nil {
-		return smbFailF(smbCheck, textResults, smbStatus, template, "failed connecting to server: %v", err)
+		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
 	}
 	defer s.Logoff() //nolint: errcheck
 	fs, err := s.Mount(smbCheck.Sharename)
 	if err != nil {
-		return smbFailF(smbCheck, textResults, smbStatus, template, "failed mounting sharname %v to server: %v", smbCheck.Sharename, err)
+		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
 	}
 	defer fs.Umount() //nolint: errcheck
 	age, count, err := getLatestFileAgeAndCount(fs, smbCheck.SearchPath)
 	if err != nil {
-		return smbFailF(smbCheck, textResults, smbStatus, template, "error traversing files: %v", err)
+		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
 	}
 	smbStatus.age = text.HumanizeDuration(age)
 	smbStatus.count = count
 	if smbCheck.MinAge != "" {
 		minAge, err := time.ParseDuration(smbCheck.MinAge)
 		if err != nil {
-			return smbFailF(smbCheck, textResults, smbStatus, template, "error parsing minAge: %v", err)
+			return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
 		}
 		if age < minAge {
-			return smbFailF(smbCheck, textResults, smbStatus, template, "age of latest object %v is less than the minimum age: %v ", age, minAge)
+			return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(fmt.Errorf("age of latest object %v is less than the minimum age: %v ", age, minAge)).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
 		}
 	}
 	if smbCheck.MaxAge != "" {
 		maxAge, err := time.ParseDuration(smbCheck.MaxAge)
 		if err != nil {
-			return smbFailF(smbCheck, textResults, smbStatus, template, "error parsing minAge: %v", err)
+			return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
 		}
 		if age > maxAge {
-			return smbFailF(smbCheck, textResults, smbStatus, template, "age of latest object %v is more than the maximum age: %v ", age, maxAge)
+			return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(fmt.Errorf("age of latest object %v is more than the maximum age: %v ", age, maxAge)).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
 		}
 	}
 	if count < smbCheck.MinCount {
-		return smbFailF(smbCheck, textResults, smbStatus, template, "file count: %v is less than specified minCount: %v", count, smbCheck.MinCount)
+		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(fmt.Errorf("file count: %v is less than specified minCount: %v", count, smbCheck.MinCount)).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
 	}
 	var results = map[string]interface{}{"age": smbStatus.age, "count": smbStatus.count}
 	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
 	if err != nil {
-		return smbFailF(smbCheck, textResults, smbStatus, template, "error templating the message: %v", err)
+		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
 	}
-	return Successf(smbCheck, start, textResults, message)
+	return pkg.Success(smbCheck).TextResults(textResults).ResultMessage(message).StartTime(start)
 }
 
 func getServerDetails(serverPath string, port int) (server, sharename, searchPath string, err error) {
@@ -178,14 +178,8 @@ func getLatestFileAgeAndCount(fs *smb2.Share, searchPath string) (duration time.
 	return
 }
 
-func smbFailF(check external.Check, textResults bool, smbStatus SmbStatus, template, msg string, args ...interface{}) *pkg.CheckResult {
+func smbTemplateResult(template string, smbStatus SmbStatus) (message string) {
 	var results = map[string]interface{}{"age": smbStatus.age, "count": smbStatus.count}
-	message := smbTemplateResult(template, results)
-	message = message + "\n" + fmt.Sprintf(msg, args...)
-	return TextFailf(check, textResults, message)
-}
-
-func smbTemplateResult(template string, results map[string]interface{}) (message string) {
 	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
 	if err != nil {
 		message = message + "\n" + err.Error()

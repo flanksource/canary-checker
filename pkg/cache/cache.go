@@ -145,6 +145,7 @@ func Check(checks v1.Canary, result *pkg.CheckResult) pkg.Check {
 				Duration: int(result.Duration),
 				Time:     pkg.JSONTime(time.Now().UTC()),
 				Message:  result.Message,
+				Error:    result.Error,
 			},
 		},
 	}

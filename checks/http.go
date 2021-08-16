@@ -98,9 +98,9 @@ func (c *HTTPChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Che
 	template := check.GetDisplayTemplate()
 	var httpStatus HTTPStatus
 	if endpoint == "" && namespace == "" {
-		return httpFailF(check, textResults, httpStatus, template, "One of Namespace or Endpoint must be specified")
+		return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("one of Namespace or Endpoint must be specified"))
 	} else if endpoint != "" && namespace != "" {
-		return httpFailF(check, textResults, httpStatus, template, "Namespace and Endpoint are mutually exclusive, only one may be specified")
+		return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("namespace and endpoint are mutually exclusive, only one may be specified"))
 	}
 	if namespace == "*" {
 		namespace = metav1.NamespaceAll
@@ -110,21 +110,21 @@ func (c *HTTPChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Che
 		var err error
 		lookupResult, err = DNSLookup(endpoint)
 		if err != nil {
-			return httpFailF(check, textResults, httpStatus, template, "failed to resolve DNS for %s", endpoint)
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
 		}
 	} else {
 		k8sClient, err := pkg.NewK8sClient()
 		if err != nil {
-			return httpFailF(check, textResults, httpStatus, template, fmt.Sprintf("Unable to connect to k8s: %v", err))
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
 		}
 		serviceList, err := k8sClient.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
-			return httpFailF(check, textResults, httpStatus, template, fmt.Sprintf("failed to obtain service list for namespace %v: %v", namespace, err))
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("failed to obtain service list for namespace %v: %v", namespace, err))
 		}
 		for _, service := range serviceList.Items {
 			endPoints, err := k8sClient.CoreV1().Endpoints(namespace).Get(context.TODO(), service.Name, metav1.GetOptions{})
 			if err != nil {
-				return httpFailF(check, textResults, httpStatus, template, fmt.Sprintf("Failed to obtain endpoints for service %v: %v", service.Name, err))
+				return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("failed to obtain endpoints for service %v: %v", service.Name, err))
 			}
 
 			for _, endPoint := range endPoints.Subsets {
@@ -146,17 +146,17 @@ func (c *HTTPChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Che
 
 	username, password, err := c.ParseAuth(check, specNamespace)
 	if err != nil {
-		return httpFailF(check, textResults, httpStatus, template, "Failed to lookup authentication info %v:", err)
+		return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
 	}
 	var headers map[string]string
 	kommons := c.GetClient()
 	for _, header := range check.Headers {
 		if kommons == nil {
-			return httpFailF(check, textResults, httpStatus, template, "Kommons client not set for HTTPChecker instance")
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("kommons client not set for HTTPChecker instance"))
 		}
 		key, value, err := kommons.GetEnvValue(header, specNamespace)
 		if err != nil {
-			return httpFailF(check, textResults, httpStatus, template, "Failed to parse header value: %v", err)
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
 		}
 		if headers == nil {
 			headers = map[string]string{key: value}
@@ -177,7 +177,7 @@ func (c *HTTPChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Che
 		urlObj.Password = password
 		checkResults, err := c.checkHTTP(urlObj, check.NTLM)
 		if err != nil {
-			return httpFailF(check, textResults, httpStatus, template, err.Error())
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
 		}
 		httpStatus.headers = headers
 		httpStatus.responseCode = checkResults.ResponseCode
@@ -189,40 +189,40 @@ func (c *HTTPChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Che
 			}
 		}
 		if !rcOK {
-			return httpFailF(check, textResults, httpStatus, template, "response code invalid %d != %v", checkResults.ResponseCode, check.ResponseCodes)
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("response code invalid %d != %v", checkResults.ResponseCode, check.ResponseCodes))
 		}
 
 		if check.ThresholdMillis > 0 && check.ThresholdMillis < int(checkResults.ResponseTime) {
-			return httpFailF(check, textResults, httpStatus, template, "threshold exceeded %d > %d", checkResults.ResponseTime, check.ThresholdMillis)
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("threshold exceeded %d > %d", checkResults.ResponseTime, check.ThresholdMillis))
 		}
 		if check.ResponseContent != "" && !strings.Contains(checkResults.Content, check.ResponseContent) {
-			return httpFailF(check, textResults, httpStatus, template, "Expected %v, found %v", check.ResponseContent, checkResults.Content)
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("expected %v, found %v", check.ResponseContent, checkResults.Content))
 		}
 		if check.ResponseJSONContent.Path != "" {
 			var jsonContent interface{}
 			if err = json.Unmarshal([]byte(checkResults.Content), &jsonContent); err != nil {
-				return httpFailF(check, textResults, httpStatus, template, "Could not unmarshal response for json check: %v ", err)
+				return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
 			}
 
 			jsonResult, err := jsonpath.Get(check.ResponseJSONContent.Path, jsonContent)
 			if err != nil {
-				return httpFailF(check, textResults, httpStatus, template, "Could not extract path %v from response %v: %v", check.ResponseJSONContent.Path, jsonContent, err)
+				return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("could not extract path %v from response %v: %v", check.ResponseJSONContent.Path, jsonContent, err))
 			}
 			switch s := jsonResult.(type) {
 			case string:
 				if s != check.ResponseJSONContent.Value {
-					return httpFailF(check, textResults, httpStatus, template, "%v not equal to %v", s, check.ResponseJSONContent.Value)
+					return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("%v not equal to %v", s, check.ResponseJSONContent.Value))
 				}
 			case fmt.Stringer:
 				if s.String() != check.ResponseJSONContent.Value {
-					return httpFailF(check, textResults, httpStatus, template, "%v not equal to %v", s.String(), check.ResponseJSONContent.Value)
+					return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("%v not equal to %v", s.String(), check.ResponseJSONContent.Value))
 				}
 			default:
-				return httpFailF(check, textResults, httpStatus, template, "json response could not be parsed back to string")
+				return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("json response could not be parsed back to string"))
 			}
 		}
 		if urlObj.Scheme == "https" && check.MaxSSLExpiry > checkResults.SSLExpiry {
-			return httpFailF(check, textResults, httpStatus, template, "SSL certificate expires soon %d > %d", checkResults.SSLExpiry, check.MaxSSLExpiry)
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("SSL certificate expires soon %d > %d", checkResults.SSLExpiry, check.MaxSSLExpiry))
 		}
 
 		responseStatus.WithLabelValues(strconv.Itoa(checkResults.ResponseCode), statusCodeToClass(checkResults.ResponseCode), endpoint).Inc()
@@ -230,7 +230,7 @@ func (c *HTTPChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Che
 		var results = map[string]interface{}{"code": checkResults.ResponseCode, "content": checkResults.Content, "header": headers}
 		message, err := text.TemplateWithDelims(template, "[[", "]]", results)
 		if err != nil {
-			return httpFailF(check, textResults, httpStatus, template, "error templating")
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
 		}
 		if !textResults {
 			return &pkg.CheckResult{ // nolint: staticcheck
@@ -269,7 +269,7 @@ func (c *HTTPChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Che
 			},
 		}
 	}
-	return httpFailF(check, textResults, httpStatus, template, "No DNS results found")
+	return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("no DNS results found"))
 }
 
 func (c *HTTPChecker) checkHTTP(urlObj pkg.URL, ntlm bool) (*HTTPCheckResult, error) {
@@ -439,14 +439,8 @@ func (check HTTPCheckResult) String() string {
 	return fmt.Sprintf("%s ssl=%d code=%d time=%d", check.Endpoint, check.SSLExpiry, check.ResponseCode, check.ResponseTime)
 }
 
-func httpFailF(check external.Check, textResults bool, httpStatus HTTPStatus, template, msg string, args ...interface{}) *pkg.CheckResult {
+func httpTemplateResult(template string, httpStatus HTTPStatus) (message string) {
 	var results = map[string]interface{}{"code": httpStatus.responseCode, "headers": httpStatus.headers, "content": httpStatus.content}
-	message := httpTemplateResult(template, results)
-	message = message + "\n" + fmt.Sprintf(msg, args...)
-	return TextFailf(check, textResults, message)
-}
-
-func httpTemplateResult(template string, results map[string]interface{}) (message string) {
 	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
 	if err != nil {
 		message = message + "\n" + err.Error()

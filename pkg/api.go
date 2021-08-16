@@ -39,6 +39,7 @@ type CheckStatus struct {
 	Time     JSONTime `json:"time"`
 	Duration int      `json:"duration"`
 	Message  string   `json:"message"`
+	Error    string   `json:"error,omitempty"`
 }
 
 type Check struct {
@@ -149,29 +150,30 @@ type CheckResult struct {
 	Description string
 	DisplayType string
 	Message     string
+	Error       string
 	Metrics     []Metric
 	// Check is the configuration
 	Check external.Check
 }
 
-func (c CheckResult) GetDescription() string {
-	if c.Check.GetDescription() != "" {
-		return c.Check.GetDescription()
+func (result CheckResult) GetDescription() string {
+	if result.Check.GetDescription() != "" {
+		return result.Check.GetDescription()
 	}
-	return c.Check.GetEndpoint()
+	return result.Check.GetEndpoint()
 }
 
-func (c CheckResult) String() string {
+func (result CheckResult) String() string {
 	checkType := ""
 	endpoint := ""
-	if c.Check != nil {
-		checkType = c.Check.GetType()
-		endpoint = c.Check.GetEndpoint()
+	if result.Check != nil {
+		checkType = result.Check.GetType()
+		endpoint = result.Check.GetEndpoint()
 	}
-	if c.Pass {
-		return fmt.Sprintf("[%s] [%s] %s duration=%d %s %s", console.Greenf("PASS"), checkType, endpoint, c.Duration, c.Metrics, c.Message)
+	if result.Pass {
+		return fmt.Sprintf("[%s] [%s] %s duration=%d %s %s", console.Greenf("PASS"), checkType, endpoint, result.Duration, result.Metrics, result.Message)
 	}
-	return fmt.Sprintf("[%s] [%s] %s duration=%d %s %s", console.Redf("FAIL"), checkType, endpoint, c.Duration, c.Metrics, c.Message)
+	return fmt.Sprintf("[%s] [%s] %s duration=%d %s %s", console.Redf("FAIL"), checkType, endpoint, result.Duration, result.Metrics, result.Message)
 }
 
 type MetricType string

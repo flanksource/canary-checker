@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -201,9 +200,8 @@ func (r *CanaryReconciler) Report(key types.NamespacedName, results []*pkg.Check
 			check.Status.LastTransitionedTime = &metav1.Time{Time: time.Now()}
 		}
 		pass = pass && result.Pass
-		//replacing new-line char from message so we don't mess up terminal message
-		message := strings.ReplaceAll(result.Message, "\\n", " ")
-		check.Status.Message = &message
+		check.Status.Message = &result.Message
+		check.Status.ErrorMessage = &result.Error
 		push.Queue(cache.Check(check, result))
 	}
 	if pass {

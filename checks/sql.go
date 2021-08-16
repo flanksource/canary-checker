@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/commons/text"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -61,36 +60,30 @@ func CheckSQL(check v1.SQLCheck) *pkg.CheckResult { // nolint: golint
 	template := check.GetDisplayTemplate()
 	count, result, err := querySQL(check.GetDriver(), check.GetConnection(), check.GetQuery())
 	if err != nil {
-		return sqlFailF(check, textResults, template, "failed to execute query %s", err)
+		return pkg.Fail(check).TextResults(textResults).ResultMessage(sqlTemplateResult(template)).ErrorMessage(err).StartTime(start)
 	}
 	if count == 0 {
-		return sqlFailF(check, textResults, template, "0 rows returned from the query")
+		return pkg.Fail(check).TextResults(textResults).ResultMessage(sqlTemplateResult(template)).ErrorMessage(fmt.Errorf("0 rows returned from the query")).StartTime(start)
 	}
 	results := map[string]interface{}{"results": result}
 	if check.ResultsFunction != "" {
 		success, err := text.TemplateWithDelims(check.ResultsFunction, "[[", "]]", results)
 		if err != nil {
-			sqlFailF(check, textResults, template, "error templating %v", err)
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(sqlTemplateResult(template)).ErrorMessage(err).StartTime(start)
 		}
 		if strings.ToLower(success) != "true" {
-			sqlFailF(check, textResults, template, "result function returned %v", success)
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(sqlTemplateResult(template)).ErrorMessage(fmt.Errorf("result function returned %v", success)).StartTime(start)
 		}
 	}
 	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
 	if err != nil {
-		sqlFailF(check, textResults, template, "error templating")
+		return pkg.Fail(check).TextResults(textResults).ResultMessage(sqlTemplateResult(template)).ErrorMessage(err).StartTime(start)
 	}
-	return Successf(check, start, textResults, message)
+	return pkg.Success(check).TextResults(textResults).ResultMessage(message).StartTime(start)
 }
 
-func sqlFailF(check external.Check, textResults bool, template, msg string, args ...interface{}) *pkg.CheckResult {
+func sqlTemplateResult(template string) (message string) {
 	var results = map[string]interface{}{"results": []string{"null"}}
-	message := sqlTemplateResult(template, results)
-	message = message + "\n" + fmt.Sprintf(msg, args...)
-	return TextFailf(check, textResults, message)
-}
-
-func sqlTemplateResult(template string, results map[string]interface{}) (message string) {
 	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
 	if err != nil {
 		message = message + "\n" + err.Error()
