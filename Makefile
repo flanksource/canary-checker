@@ -73,8 +73,8 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
-docker-build:
-	docker build . -t ${IMG}
+docker:
+	docker build . -t ${IMG} --build-arg=GITHUB_TOKEN=$(GITHUB_TOKEN)
 
 # Build the docker image
 docker-dev: linux
