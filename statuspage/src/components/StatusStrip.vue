@@ -47,10 +47,10 @@
       <template v-else-if="displayType==='Text'">
         <p v-b-modal="check.key" v-if="check.checkStatuses[server][0].status"
            style="color: green" class="pre-formatted"
-           :id=check.key >{{firstLine(check.checkStatuses[server][0].message)}} </p>
+           :id=check.key >{{check.checkStatuses[server][0].message}} </p>
         <p v-b-modal="check.key" v-else-if="!check.checkStatuses[server][0].status"
            style="color: red;" class="pre-formatted"
-           :id=check.key >{{firstLine(check.checkStatuses[server][0].message)}} </p>
+           :id=check.key >{{check.checkStatuses[server][0].message}} </p>
         <text-modal
             :check-statuses="check.checkStatuses[server]"
             :health="check.health[server]"
@@ -290,9 +290,6 @@
                 }
 
                 return obj;
-            },
-            firstLine(message){
-              return message.split("\n")[0]
             }
         },
     }
