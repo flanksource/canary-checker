@@ -23,7 +23,7 @@ var (
 			Name: "canary_check_count",
 			Help: "The total number of checks",
 		},
-		[]string{"type", "endpoint", "name", "namespace", "owner", "severity"},
+		[]string{"type", "endpoint", "name", "namespace", "owner", "severity", "key"},
 	)
 
 	OpsSuccessCount = prometheus.NewCounterVec(
@@ -31,7 +31,7 @@ var (
 			Name: "canary_check_success_count",
 			Help: "The total number of successful checks",
 		},
-		[]string{"type", "endpoint", "name", "namespace", "owner", "severity"},
+		[]string{"type", "endpoint", "name", "namespace", "owner", "severity", "key"},
 	)
 
 	OpsFailedCount = prometheus.NewCounterVec(
@@ -39,7 +39,7 @@ var (
 			Name: "canary_check_failed_count",
 			Help: "The total number of failed checks",
 		},
-		[]string{"type", "endpoint", "name", "namespace", "owner", "severity"},
+		[]string{"type", "endpoint", "name", "namespace", "owner", "severity", "key"},
 	)
 
 	RequestLatency = prometheus.NewHistogramVec(
@@ -48,7 +48,7 @@ var (
 			Help:    "A histogram of the response latency in milliseconds.",
 			Buckets: []float64{5, 10, 25, 50, 200, 500, 1000, 3000, 10000, 30000},
 		},
-		[]string{"type", "endpoint", "name", "namespace", "owner", "severity"},
+		[]string{"type", "endpoint", "name", "namespace", "owner", "severity", "key"},
 	)
 
 	Gauge = prometheus.NewGaugeVec(
@@ -56,7 +56,7 @@ var (
 			Name: "canary_check",
 			Help: "A gauge representing the canaries success (0) or failure (1)",
 		},
-		[]string{"type", "endpoint", "name", "namespace", "owner", "severity"},
+		[]string{"type", "endpoint", "name", "namespace", "owner", "severity", "key"},
 	)
 
 	GenericGauge = prometheus.NewGaugeVec(
@@ -64,7 +64,7 @@ var (
 			Name: "canary_check_gauge",
 			Help: "A gauge representing duration",
 		},
-		[]string{"type", "name", "metric", "namespace", "owner", "severity"},
+		[]string{"type", "name", "metric", "namespace", "owner", "severity", "key"},
 	)
 
 	GenericCounter = prometheus.NewCounterVec(
@@ -72,7 +72,7 @@ var (
 			Name: "canary_check_counter",
 			Help: "A gauge representing counters",
 		},
-		[]string{"type", "name", "metric", "value", "namespace", "owner", "severity"},
+		[]string{"type", "name", "metric", "value", "namespace", "owner", "severity", "key"},
 	)
 
 	GenericHistogram = prometheus.NewHistogramVec(
@@ -81,7 +81,7 @@ var (
 			Help:    "A histogram representing durations",
 			Buckets: []float64{5, 10, 25, 50, 200, 500, 1000, 2500, 5000, 10000, 20000},
 		},
-		[]string{"type", "name", "metric", "namespace", "owner", "severity"},
+		[]string{"type", "name", "metric", "namespace", "owner", "severity", "key"},
 	)
 )
 
@@ -156,32 +156,32 @@ func Record(check v1.Canary, result *pkg.CheckResult) (rollingUptime string, rol
 	if logger.IsTraceEnabled() {
 		logger.Tracef(result.String())
 	}
-	OpsCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity).Inc()
+	OpsCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Inc()
 	if result.Duration > 0 {
-		RequestLatency.WithLabelValues(checkType, endpoint, name, namespace, owner, severity).Observe(float64(result.Duration))
+		RequestLatency.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Observe(float64(result.Duration))
 		latency.Append(float64(result.Duration))
 	}
 	if result.Pass {
 		pass.Append(1)
-		Gauge.WithLabelValues(checkType, endpoint, name, namespace, owner, severity).Set(0)
-		OpsSuccessCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity).Inc()
+		Gauge.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Set(0)
+		OpsSuccessCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Inc()
 		// always add a failed count to ensure the metric is present in prometheus
 		// for an uptime calculation
-		OpsFailedCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity).Add(0)
+		OpsFailedCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Add(0)
 		for _, m := range result.Metrics {
 			switch m.Type {
 			case CounterType:
-				GenericCounter.WithLabelValues(checkType, endpoint, m.Name, strconv.Itoa(int(m.Value)), namespace, owner, severity).Inc()
+				GenericCounter.WithLabelValues(checkType, endpoint, m.Name, strconv.Itoa(int(m.Value)), namespace, owner, severity, key).Inc()
 			case GaugeType:
-				GenericGauge.WithLabelValues(checkType, endpoint, m.Name, namespace, owner, severity).Set(m.Value)
+				GenericGauge.WithLabelValues(checkType, endpoint, m.Name, namespace, owner, severity, key).Set(m.Value)
 			case HistogramType:
-				GenericHistogram.WithLabelValues(checkType, endpoint, m.Name, namespace, owner, severity).Observe(m.Value)
+				GenericHistogram.WithLabelValues(checkType, endpoint, m.Name, namespace, owner, severity, key).Observe(m.Value)
 			}
 		}
 	} else {
 		fail.Append(1)
-		Gauge.WithLabelValues(checkType, endpoint, name, namespace, owner, severity).Set(1)
-		OpsFailedCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity).Inc()
+		Gauge.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Set(1)
+		OpsFailedCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Inc()
 	}
 	failCount := fail.Reduce(rolling.Sum)
 	passCount := pass.Reduce(rolling.Sum)
