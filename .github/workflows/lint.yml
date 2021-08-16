@@ -5,9 +5,9 @@ on:
       - master
   pull_request:
     paths:
-    - '**.go'
-    - 'Makefile'
-    - '**.yaml'
+      - "**.go"
+      - "Makefile"
+      - "**.yaml"
 jobs:
   golangci:
     name: lint
@@ -20,11 +20,12 @@ jobs:
       - name: setup node
         uses: actions/setup-node@v2
         with:
-          node-version: '12'
+          node-version: "12"
       - name: Check auto-generated files
         env:
           CI: false
         run: |
+          mkdir -p ui/build
           make resources
           git diff
           changed_files=$(git status -s)
