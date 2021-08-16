@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -90,7 +91,7 @@ func runFixture(t *testing.T, name string) {
 	canary := v1.Canary{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "podinfo-test",
-			Name:      name,
+			Name:      cleanupFilename(name),
 		},
 		Spec: config,
 	}
@@ -110,4 +111,9 @@ func runFixture(t *testing.T, name string) {
 			}
 		}
 	})
+}
+
+func cleanupFilename(fileName string) string {
+	removeSuffix := fileName[:len(fileName)-len(filepath.Ext(fileName))]
+	return strings.Replace(removeSuffix, "_", "", -1)
 }

@@ -475,7 +475,9 @@ spec:
                     waitTime:
                       type: integer
                   required:
-                    - ami
+                    - accessKeyID
+                    - region
+                    - secretKey
                   type: object
                 env:
                   additionalProperties:
