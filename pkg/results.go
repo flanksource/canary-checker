@@ -16,7 +16,7 @@ func Fail(check external.Check) *CheckResult {
 
 func Success(check external.Check) *CheckResult {
 	return &CheckResult{
-		Pass:  false,
+		Pass:  true,
 		Check: check,
 	}
 }
