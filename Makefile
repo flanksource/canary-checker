@@ -73,8 +73,8 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
-docker-build:
-	docker build . -t ${IMG}
+docker:
+	docker build . -t ${IMG} --build-arg=GITHUB_TOKEN=$(GITHUB_TOKEN)
 
 # Build the docker image
 docker-dev: linux
@@ -99,19 +99,19 @@ compress:
 
 
 .PHONY: linux
-linux: vue-dist
+linux: ui
 	GOOS=linux GOARCH=amd64 go build -o ./.bin/$(NAME)-amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: darwin-amd64
-darwin-amd64: vue-dist
+darwin-amd64: ui
 	GOOS=darwin GOARCH=amd64 go build -o ./.bin/$(NAME)_osx-amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: darwin-arm64
-darwin-arm64: vue-dist
+darwin-arm64: ui
 	GOOS=darwin GOARCH=arm64 go build -o ./.bin/$(NAME)_osx-arm64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: windows
-windows: vue-dist
+windows: ui
 	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: release
@@ -139,9 +139,9 @@ deploy-docs:
 	which netlify 2>&1 > /dev/null || sudo npm install -g netlify-cli
 	netlify deploy --site cfe8c6b7-79b7-4a88-9e13-ff792126717f --prod --dir build/docs
 
-.PHONY: vue-dist
-vue-dist:
-	cd statuspage && npm ci && npm run build
+.PHONY: ui
+ui:
+	cd ui && npm ci && npm run build
 
 .PHONY: build
 build:
@@ -194,4 +194,4 @@ YQ = $(realpath ./.bin/yq)
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources
-resources: fmt vue-dist static
+resources: fmt static manifests

@@ -10,4 +10,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Build Container
-        run: docker build -f Dockerfile .
+        run: make docker
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

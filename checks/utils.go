@@ -27,6 +27,15 @@ func invalidErrorf(check external.Check, err error, msg string, args ...interfac
 	}
 }
 
+func Error(check external.Check, err error) *pkg.CheckResult {
+	return &pkg.CheckResult{
+		Check:   check,
+		Pass:    false,
+		Invalid: true,
+		Error:   err.Error(),
+	}
+}
+
 func Failf(check external.Check, msg string, args ...interface{}) *pkg.CheckResult {
 	return &pkg.CheckResult{
 		Check:   check,

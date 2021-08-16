@@ -21,24 +21,24 @@ var PivotByNamespace bool
 var checkCache = cmap.New()
 
 type AggregateCheck struct { // nolint: golint
-	ServerURL    string            `json:"serverURL"`
-	Key          string            `json:"key"`
-	Type         string            `json:"type"`
-	Name         string            `json:"name"`
-	Namespace    string            `json:"namespace"`
-	Labels       map[string]string `json:"labels"`
-	RunnerLabels map[string]string
 	CanaryName   string                       `json:"canaryName"`
 	Description  string                       `json:"description"`
+	DisplayType  string                       `json:"displayType"`
 	Endpoint     string                       `json:"endpoint"`
 	Health       map[string]CheckHealth       `json:"health"`
-	Statuses     map[string][]pkg.CheckStatus `json:"checkStatuses"`
-	Interval     uint64                       `json:"interval"`
-	Schedule     string                       `json:"schedule"`
-	Owner        string                       `json:"owner"`
-	Severity     string                       `json:"severity"`
 	IconURL      string                       `json:"iconURL"`
-	DisplayType  string                       `json:"displayType"`
+	Interval     uint64                       `json:"interval"`
+	Key          string                       `json:"key"`
+	Labels       map[string]string            `json:"labels"`
+	Name         string                       `json:"name"`
+	Namespace    string                       `json:"namespace"`
+	Owner        string                       `json:"owner"`
+	RunnerLabels map[string]string            `json:"runner"`
+	Schedule     string                       `json:"schedule"`
+	ServerURL    string                       `json:"serverURL"`
+	Severity     string                       `json:"severity"`
+	Statuses     map[string][]pkg.CheckStatus `json:"checkStatuses"`
+	Type         string                       `json:"type"`
 }
 
 type CheckHealth struct {
@@ -47,9 +47,9 @@ type CheckHealth struct {
 }
 
 type Latency struct {
-	Percentile99 string `json:"Percentile99,omitempty"`
-	Percentile97 string `json:"percentile97,omitempty"`
-	Percentile95 string `json:"percentile95,omitempty"`
+	Percentile99 string `json:"p99,omitempty"`
+	Percentile97 string `json:"p97,omitempty"`
+	Percentile95 string `json:"p95,omitempty"`
 	Rolling1H    string `json:"rolling1h"`
 }
 
@@ -100,6 +100,7 @@ func doChecksFromServer(server string) {
 	}
 	checkCache.Set(server, apiResponse)
 }
+
 func getChecksFromServer(server string) *api.Response {
 	go doChecksFromServer(server)
 	apiResponse, exists := checkCache.Get(server)
@@ -151,7 +152,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 					Owner:        c.Owner,
 					Severity:     c.Severity,
 					ServerURL:    c.GetNamespace(),
-					IconURL:      c.IconURL,
+					IconURL:      c.Icon,
 					DisplayType:  c.DisplayType,
 					Health: map[string]CheckHealth{
 						c.GetNamespace(): {getLatenciesFromPrometheus(c.Key, latencyTime, c.Latency), getUptimeFromPrometheus(c.Key, uptime, c.Uptime)},
@@ -179,7 +180,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 				Schedule:     c.Schedule,
 				Owner:        c.Owner,
 				Severity:     c.Severity,
-				IconURL:      c.IconURL,
+				IconURL:      c.Icon,
 				DisplayType:  c.DisplayType,
 				ServerURL:    "local",
 				Health: map[string]CheckHealth{
@@ -216,7 +217,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 						Schedule:     c.Schedule,
 						Owner:        c.Owner,
 						Severity:     c.Severity,
-						IconURL:      c.IconURL,
+						IconURL:      c.Icon,
 						DisplayType:  c.DisplayType,
 						ServerURL:    serverURL,
 						Health: map[string]CheckHealth{
@@ -252,6 +253,8 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 		fmt.Fprintf(w, "{\"error\": \"internal\", \"checks\": []}")
 		return
 	}
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	_, err = w.Write(jsonData)
 	if err != nil {
 		logger.Errorf("Failed to write data: %v", err)

@@ -15,7 +15,6 @@ linters:
     - goconst
     - gofmt
     - goimports
-    - golint
     - goprintffuncname
     - gosimple
     - govet

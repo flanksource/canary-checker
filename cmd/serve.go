@@ -15,7 +15,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/metrics"
-	"github.com/flanksource/canary-checker/statuspage"
+	"github.com/flanksource/canary-checker/ui"
 	"github.com/flanksource/commons/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -59,27 +59,33 @@ var Serve = &cobra.Command{
 			}
 			if config.Schedule != "" {
 				cron.AddFunc(config.Schedule, func() { // nolint: errcheck
+
 					go func() {
+						logger.Debugf("Running")
 						for _, result := range c.Run(canary) {
 							cache.AddCheck(canary, result)
 							metrics.Record(canary, result)
 						}
 					}()
 				})
-				logger.Infof("Running canary %v on %v schedule", canary.Name, config.Schedule)
+				logger.Infof("Running canary %v on %v schedule", canary, config.Schedule)
 			} else if config.Interval > 0 {
 				cron.AddFunc(fmt.Sprintf("@every %ds", config.Interval), func() { // nolint: errcheck
 					go func() {
+						logger.Debugf("Running")
 						for _, result := range c.Run(canary) {
 							cache.AddCheck(canary, result)
 							metrics.Record(canary, result)
 						}
 					}()
 				})
-				logger.Infof("Running canary %v every %v seconds", canary.Name, config.Interval)
+				logger.Infof("Running canary %v every %v seconds", canary, config.Interval)
 			}
 		}
 		serve(cmd)
+		cron.Start()
+		logger.Infof("%+v", cron.Entries())
+
 	},
 }
 
@@ -96,15 +102,10 @@ func serve(cmd *cobra.Command) {
 	}
 
 	if dev {
-		staticRoot = nethttp.Dir("./statuspage/dist")
+		staticRoot = nethttp.Dir("./ui/build")
 		allowedCors = fmt.Sprintf("http://localhost:%d", devGuiHTTPPort)
-		logger.Infof("Starting in local development mode")
-		logger.Infof("Allowing access from a GUI on %s", allowedCors)
-		logger.Infof("   (it can be started with:")
-		logger.Infof("    npm run serve -- --port %d ", devGuiHTTPPort)
-		logger.Infof("   )")
 	} else {
-		fs, err := fs.Sub(statuspage.StaticContent, "dist")
+		fs, err := fs.Sub(ui.StaticContent, "dist")
 		if err != nil {
 			logger.Errorf("Error: %v", err)
 		}

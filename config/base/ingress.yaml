@@ -14,7 +14,9 @@ spec:
     - host: canaries.{{.domain}}
       http:
         paths:
-          - backend:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
               service:
                 name: canary-checker
                 port:
