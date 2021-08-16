@@ -3,7 +3,9 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -29,6 +31,7 @@ var Run = &cobra.Command{
 		canary := v1.Canary{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespace,
+				Name:      CleanupFilename(configfile),
 			},
 			Spec: config,
 		}
@@ -98,4 +101,9 @@ func getJunitReport(results []*pkg.CheckResult) string {
 		logger.Fatalf("error creating junit results: %v", err)
 	}
 	return report
+}
+
+func CleanupFilename(fileName string) string {
+	removeSuffix := fileName[:len(fileName)-len(filepath.Ext(fileName))]
+	return strings.Replace(removeSuffix, "_", "", -1)
 }
