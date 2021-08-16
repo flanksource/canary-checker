@@ -76,6 +76,8 @@ var (
 	)
 )
 
+const defaultARN = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+
 func init() {
 	prometheus.MustRegister(prometheusCount, prometheusFailCount, prometheusPassCount, prometheusResponseTime, prometheusStartupTime, prometheusTerminateTime)
 }
@@ -140,7 +142,7 @@ func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 	var ami *string
 	if check.AMI == "" {
 		ssmClient := ssm.NewFromConfig(cfg)
-		arnLookupInput := &ssm.GetParameterInput{Name: aws.String("/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2")}
+		arnLookupInput := &ssm.GetParameterInput{Name: aws.String(defaultARN)}
 		arnLookupOutput, err := ssmClient.GetParameter(context.TODO(), arnLookupInput)
 		if err != nil {
 			return HandleFail(check, fmt.Sprintf("Could not look up amazon image arn: %v", err))
