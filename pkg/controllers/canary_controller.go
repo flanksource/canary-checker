@@ -70,6 +70,8 @@ const FinalizerName = "canary.canaries.flanksource.com"
 
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=pods/exec,verbs=*
+// +kubebuilder:rbac:groups="",resources=pods/logs,verbs=*
 func (r *CanaryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	if len(r.IncludeNamespaces) > 0 && !r.includeNamespace(req.Namespace) {
 		r.Log.V(2).Info("namespace not included, skipping")
