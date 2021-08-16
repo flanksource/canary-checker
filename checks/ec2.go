@@ -96,7 +96,7 @@ func (c EC2Checker) GetClient() *kommons.Client {
 // Returns check result and metrics
 func (c *EC2Checker) Run(canary v1.Canary) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	if canary.Spec.EC2.AMI != "" {
+	if canary.Spec.EC2.Region != "" {
 		results = append(results, c.Check(canary, canary.Spec.EC2))
 	}
 	return results
@@ -310,9 +310,9 @@ func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 
 	for _, inner := range innerCanaries {
 		inner.Spec = pkg.ApplyLocalTemplates(inner.Spec, ec2Vars)
-		if inner.Spec.EC2.AMI != "" {
+		if inner.Spec.EC2.Region != "" {
 			logger.Warnf("EC2 checks may not be nested to avoid potential recursion.  Skipping inner EC2")
-			inner.Spec.EC2.AMI = ""
+			inner.Spec.EC2.Region = ""
 		}
 		innerResults := RunChecks(inner)
 		for _, result := range innerResults {
