@@ -29,6 +29,12 @@ spec:
         - name: dockersock
           hostPath:
             path: /var/run/docker.sock
+        - name: podinfo
+          downwardAPI:
+            items:
+              - path: "labels"
+                fieldRef:
+                  fieldPath: metadata.labels
       containers:
         - name: canary-checker
           # we need elevated privileges to run ICMP checks
@@ -44,9 +50,12 @@ spec:
             - name: DOCKER_API_VERSION
               value: "1.39"
           # docker mounts required for docker checks
+          # podinfo mounts required for runner labels
           volumeMounts:
             - name: dockersock
               mountPath: "/var/run/docker.sock"
+            - mountPath: /etc/podinfo
+              name: podinfo
           command:
             - /app/canary-checker
           args:

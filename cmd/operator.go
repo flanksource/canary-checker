@@ -99,6 +99,8 @@ func run(cmd *cobra.Command, args []string) {
 		includeNamespaces = strings.Split(includeNamespace, ",")
 	}
 
+	pkg.RunnerLabels = pkg.LoadLabels("/etc/podinfo/labels")
+
 	reconciler := &controllers.CanaryReconciler{
 		IncludeCheck:      includeCheck,
 		IncludeNamespaces: includeNamespaces,

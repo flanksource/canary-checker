@@ -190,12 +190,20 @@ spec:
           volumeMounts:
             - mountPath: /var/run/docker.sock
               name: dockersock
+            - mountPath: /etc/podinfo
+              name: podinfo
       serviceAccountName: canary-checker-sa
       terminationGracePeriodSeconds: 10
       volumes:
         - hostPath:
             path: /var/run/docker.sock
           name: dockersock
+        - downwardAPI:
+            items:
+              - fieldRef:
+                  fieldPath: metadata.labels
+                path: labels
+          name: podinfo
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor

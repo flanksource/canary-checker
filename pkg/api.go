@@ -46,6 +46,8 @@ type Check struct {
 	Type        string        `json:"type"`
 	Name        string        `json:"name"`
 	Namespace   string        `json:"namespace"`
+  Labels       map[string]string `json:"labels"`
+	RunnerLabels map[string]string `json:"runnerLabels"`
 	CanaryName  string        `json:"canaryName"`
 	Description string        `json:"description"`
 	Endpoint    string        `json:"endpoint"`

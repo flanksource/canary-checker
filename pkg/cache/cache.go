@@ -62,6 +62,8 @@ func (c *cache) InitCheck(checks v1.Canary) {
 			Type:        check.GetType(),
 			Name:        checks.ID(),
 			Namespace:   checks.Namespace,
+      Labels:       checks.ObjectMeta.Labels,
+			RunnerLabels: pkg.RunnerLabels,
 			CanaryName:  checks.Name,
 			Description: check.GetDescription(),
 			Endpoint:    check.GetEndpoint(),
@@ -70,6 +72,7 @@ func (c *cache) InitCheck(checks v1.Canary) {
 			Owner:       checks.Spec.Owner,
 			IconURL:     check.GetIconURL(),
 			Severity:    checks.Spec.Severity,
+
 		}
 		c.CheckConfigs[key] = check
 	}
@@ -82,6 +85,24 @@ func (c *cache) AddCheck(checks v1.Canary, result *pkg.CheckResult) *pkg.Check {
 	}
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
+
+
+	check := pkg.Check{
+		Key:          checks.GetKey(result.Check),
+		Type:         result.Check.GetType(),
+		Name:         checks.ID(),
+		Namespace:    checks.Namespace,
+		Labels:       checks.ObjectMeta.Labels,
+		RunnerLabels: pkg.RunnerLabels,
+		CanaryName:   checks.Name,
+		Description:  checks.GetDescription(result.Check),
+		Endpoint:     result.Check.GetEndpoint(),
+		Interval:     checks.Spec.Interval,
+		Owner:        checks.Spec.Owner,
+		Severity:     checks.Spec.Severity,
+		CheckCanary:  &checks,
+		IconURL:      result.Check.GetIconURL(),
+		DisplayType:  result.DisplayType,
 
 	check := Check(checks, result)
 	return c.Add(check)
@@ -105,6 +126,8 @@ func Check(checks v1.Canary, result *pkg.CheckResult) pkg.Check {
 		Type:        result.Check.GetType(),
 		Name:        checks.ID(),
 		Namespace:   checks.Namespace,
+    		Labels:       checks.ObjectMeta.Labels,
+		RunnerLabels: pkg.RunnerLabels,
 		CanaryName:  checks.Name,
 		Description: checks.GetDescription(result.Check),
 		Endpoint:    result.Check.GetEndpoint(),
