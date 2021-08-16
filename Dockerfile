@@ -1,8 +1,8 @@
 FROM node:16 as node
 WORKDIR /app
 ARG GITHUB_TOKEN
-RUN echo //npm.pkg.github.com/:_authToken=$GITHUB_TOKEN >> ui/.npmrc
 COPY ./ ./
+RUN echo //npm.pkg.github.com/:_authToken=$GITHUB_TOKEN >> ui/.npmrc
 RUN make ui
 RUN rm ui/.npmrc
 
