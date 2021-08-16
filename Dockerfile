@@ -6,13 +6,14 @@ RUN echo //npm.pkg.github.com/:_authToken=$GITHUB_TOKEN >> ui/.npmrc
 RUN make ui
 RUN rm ui/.npmrc
 
+
 FROM golang:1.16 as builder
 WORKDIR /app
 COPY ./ ./
 ARG NAME
 ARG VERSION
-COPY --from=node /app/statuspage/dist /app/statuspage/dist
-WORKDIR /app/statuspage/dist
+COPY --from=node /app/ui/build /app/ui/build
+WORKDIR /app/ui/build
 WORKDIR /app
 RUN go version
 RUN GOOS=linux GOARCH=amd64 go build -o canary-checker -ldflags "-X \"main.version=$VERSION\""  main.go
