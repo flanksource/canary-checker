@@ -3,7 +3,9 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -29,6 +31,7 @@ var Run = &cobra.Command{
 		canary := v1.Canary{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespace,
+				Name:      CleanupFilename(configfile),
 			},
 			Spec: config,
 		}
@@ -57,27 +60,9 @@ func init() {
 	Run.Flags().StringP("namespace", "n", "", "Specify namespace")
 	Run.Flags().StringP("junit", "j", "", "Export JUnit XML formatted results to this file e.g: junit.xml")
 }
-func RunChecks(canary v1.Canary) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
-	kommonsClient, err := pkg.NewKommonsClient()
-	if err != nil {
-		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
-	}
 
-	canary.Spec.SetSQLDrivers()
-	for _, c := range checks.All {
-		switch cs := c.(type) {
-		case checks.SetsClient:
-			cs.SetClient(kommonsClient)
-		}
-		result := c.Run(canary)
-		for _, r := range result {
-			if r != nil {
-				results = append(results, r)
-			}
-		}
-	}
-	return results
+func RunChecks(config v1.Canary) []*pkg.CheckResult {
+	return checks.RunChecks(config)
 }
 
 func getJunitReport(results []*pkg.CheckResult) string {
@@ -116,4 +101,9 @@ func getJunitReport(results []*pkg.CheckResult) string {
 		logger.Fatalf("error creating junit results: %v", err)
 	}
 	return report
+}
+
+func CleanupFilename(fileName string) string {
+	removeSuffix := fileName[:len(fileName)-len(filepath.Ext(fileName))]
+	return strings.Replace(removeSuffix, "_", "", -1)
 }

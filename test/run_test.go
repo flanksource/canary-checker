@@ -90,6 +90,7 @@ func runFixture(t *testing.T, name string) {
 	canary := v1.Canary{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "podinfo-test",
+			Name:      cmd.CleanupFilename(name),
 		},
 		Spec: config,
 	}

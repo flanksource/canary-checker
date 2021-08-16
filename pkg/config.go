@@ -28,17 +28,24 @@ func ParseConfig(configfile string) v1.CanarySpec {
 }
 
 func ApplyTemplates(config v1.CanarySpec) v1.CanarySpec {
+	return ApplyLocalTemplates(config, map[string]string{})
+}
+
+func ApplyLocalTemplates(config v1.CanarySpec, vars map[string]string) v1.CanarySpec {
 	var values = make(map[string]string)
 	for _, environ := range os.Environ() {
 		values[strings.Split(environ, "=")[0]] = strings.Split(environ, "=")[1]
 	}
-	k8sclient, err := NewK8sClient()
+	for k, v := range vars {
+		values[k] = v
+	}
+	k8sClient, err := NewK8sClient()
 	if err != nil {
 		logger.Warnf("Could not create k8s client for templating: %v", err)
 	}
 	if err := reflectwalk.Walk(&config, ktemplate.StructTemplater{
 		Values:    values,
-		Clientset: k8sclient,
+		Clientset: k8sClient,
 	}); err != nil {
 		fmt.Println(err)
 	}

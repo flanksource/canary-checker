@@ -381,6 +381,111 @@ spec:
                       - auth
                     type: object
                   type: array
+                ec2:
+                  description: Because the EC2 check attempts to clean up stale instances at the start of the check, only one EC2Check can be scoped per Canary instance
+                  properties:
+                    accessKeyID:
+                      properties:
+                        name:
+                          type: string
+                        value:
+                          type: string
+                        valueFrom:
+                          properties:
+                            configMapKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                                optional:
+                                  type: boolean
+                              required:
+                                - key
+                              type: object
+                            secretKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                                optional:
+                                  type: boolean
+                              required:
+                                - key
+                              type: object
+                          type: object
+                      type: object
+                    ami:
+                      type: string
+                    canaryRef:
+                      items:
+                        description: LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.
+                        properties:
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                        type: object
+                      type: array
+                    description:
+                      description: Description for the check
+                      type: string
+                    iconURL:
+                      description: IconURL for overwriting default icon on the dashboard
+                      type: string
+                    keepAlive:
+                      type: boolean
+                    name:
+                      description: Name of the check
+                      type: string
+                    region:
+                      type: string
+                    secretKey:
+                      properties:
+                        name:
+                          type: string
+                        value:
+                          type: string
+                        valueFrom:
+                          properties:
+                            configMapKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                                optional:
+                                  type: boolean
+                              required:
+                                - key
+                              type: object
+                            secretKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                                optional:
+                                  type: boolean
+                              required:
+                                - key
+                              type: object
+                          type: object
+                      type: object
+                    securityGroup:
+                      type: string
+                    skipTLSVerify:
+                      description: Skip TLS verify when connecting to aws
+                      type: boolean
+                    userData:
+                      type: string
+                    waitTime:
+                      type: integer
+                  required:
+                    - accessKeyID
+                    - region
+                    - secretKey
+                  type: object
                 env:
                   additionalProperties:
                     description: VarSource represents a source for a value

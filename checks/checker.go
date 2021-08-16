@@ -34,6 +34,7 @@ var All = []Checker{
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),
+	&EC2Checker{},
 }
 
 type SetsClient interface {

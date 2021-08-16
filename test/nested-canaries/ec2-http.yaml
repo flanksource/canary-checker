@@ -1,0 +1,12 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: nested-http
+  namespace: podinfo-test
+spec:
+  interval: 0
+  http:
+    - endpoint: "http://{{.PublicIpAddress}}"
+      thresholdMillis: 3000
+      responseCodes: [200]
+      responseContent: ""

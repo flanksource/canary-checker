@@ -958,6 +958,30 @@ type Smb struct {
 	SmbCheck `yaml:",inline" json:",inline"`
 }
 
+type EC2Check struct {
+	Description   `yaml:",inline" json:",inline"`
+	AccessKeyID   kommons.EnvVar            `yaml:"accessKeyID" json:"accessKeyID"`
+	SecretKey     kommons.EnvVar            `yaml:"secretKey" json:"secretKey"`
+	Region        string                    `yaml:"region" json:"region"`
+	AMI           string                    `yaml:"ami,omitempty" json:"ami,omitempty"`
+	UserData      string                    `yaml:"userData,omitempty" json:"userData,omitempty"`
+	SecurityGroup string                    `yaml:"securityGroup,omitempty" json:"securityGroup,omitempty"`
+	KeepAlive     bool                      `yaml:"keepAlive,omitempty" json:"keepAlive,omitempty"`
+	WaitTime      int                       `yaml:"waitTime,omitempty" json:"waitTime,omitempty"`
+	TimeOut		  int						`yaml:"timeOut,omitempty" json:"timeOut,omitempty"`
+	CanaryRef     []v1.LocalObjectReference `yaml:"canaryRef,omitempty" json:"canaryRef,omitempty"`
+	// Skip TLS verify when connecting to aws
+	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
+}
+
+func (c EC2Check) GetEndpoint() string {
+	return c.Region
+}
+
+func (c EC2Check) GetType() string {
+	return "ec2"
+}
+
 var AllChecks = []external.Check{
 	HTTPCheck{},
 	TCPCheck{},
@@ -980,4 +1004,5 @@ var AllChecks = []external.Check{
 	JmeterCheck{},
 	JunitCheck{},
 	SmbCheck{},
+	EC2Check{},
 }
