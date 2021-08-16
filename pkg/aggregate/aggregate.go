@@ -21,24 +21,24 @@ var PivotByNamespace bool
 var checkCache = cmap.New()
 
 type AggregateCheck struct { // nolint: golint
-	ServerURL   string                       `json:"serverURL"`
-	Key         string                       `json:"key"`
-	Type        string                       `json:"type"`
-	Name        string                       `json:"name"`
-	Namespace   string                       `json:"namespace"`
-  Labels       map[string]string            `json:"labels"`
-	RunnerLabels map[string]string 
-	CanaryName  string                       `json:"canaryName"`
-	Description string                       `json:"description"`
-	Endpoint    string                       `json:"endpoint"`
-	Health      map[string]CheckHealth       `json:"health"`
-	Statuses    map[string][]pkg.CheckStatus `json:"checkStatuses"`
-	Interval    uint64                       `json:"interval"`
-	Schedule    string                       `json:"schedule"`
-	Owner       string                       `json:"owner"`
-	Severity    string                       `json:"severity"`
-	IconURL     string                       `json:"iconURL"`
-	DisplayType string                       `json:"displayType"`
+	ServerURL    string            `json:"serverURL"`
+	Key          string            `json:"key"`
+	Type         string            `json:"type"`
+	Name         string            `json:"name"`
+	Namespace    string            `json:"namespace"`
+	Labels       map[string]string `json:"labels"`
+	RunnerLabels map[string]string
+	CanaryName   string                       `json:"canaryName"`
+	Description  string                       `json:"description"`
+	Endpoint     string                       `json:"endpoint"`
+	Health       map[string]CheckHealth       `json:"health"`
+	Statuses     map[string][]pkg.CheckStatus `json:"checkStatuses"`
+	Interval     uint64                       `json:"interval"`
+	Schedule     string                       `json:"schedule"`
+	Owner        string                       `json:"owner"`
+	Severity     string                       `json:"severity"`
+	IconURL      string                       `json:"iconURL"`
+	DisplayType  string                       `json:"displayType"`
 }
 
 type CheckHealth struct {
@@ -137,22 +137,22 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 				ac.Statuses[c.GetNamespace()] = c.Statuses
 			} else {
 				aggregateData[c.ID()] = &AggregateCheck{
-					Key:         c.Key,
-					Name:        c.GetName(),
-					Namespace:   "",
-          Labels:       c.CheckCanary.Labels,
+					Key:          c.Key,
+					Name:         c.GetName(),
+					Namespace:    "",
+					Labels:       c.CheckCanary.Labels,
 					RunnerLabels: pkg.RunnerLabels,
-					CanaryName:  c.CanaryName,
-					Type:        c.Type,
-					Description: c.Description,
-					Endpoint:    c.Endpoint,
-					Interval:    c.Interval,
-					Schedule:    c.Schedule,
-					Owner:       c.Owner,
-					Severity:    c.Severity,
-					ServerURL:   c.GetNamespace(),
-					IconURL:     c.IconURL,
-					DisplayType: c.DisplayType,
+					CanaryName:   c.CanaryName,
+					Type:         c.Type,
+					Description:  c.Description,
+					Endpoint:     c.Endpoint,
+					Interval:     c.Interval,
+					Schedule:     c.Schedule,
+					Owner:        c.Owner,
+					Severity:     c.Severity,
+					ServerURL:    c.GetNamespace(),
+					IconURL:      c.IconURL,
+					DisplayType:  c.DisplayType,
 					Health: map[string]CheckHealth{
 						c.GetNamespace(): {getLatenciesFromPrometheus(c.Key, latencyTime, c.Latency), getUptimeFromPrometheus(c.Key, uptime, c.Uptime)},
 					},
@@ -166,22 +166,22 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 		localServerID := api.RunnerName
 		for _, c := range data {
 			aggregateData[c.ID()] = &AggregateCheck{
-				Key:         c.Key,
-				Name:        c.GetName(),
-				Namespace:   c.GetNamespace(),
-        Labels:       c.CheckCanary.Labels,
+				Key:          c.Key,
+				Name:         c.GetName(),
+				Namespace:    c.GetNamespace(),
+				Labels:       c.CheckCanary.Labels,
 				RunnerLabels: pkg.RunnerLabels,
-				CanaryName:  c.CanaryName,
-				Type:        c.Type,
-				Description: c.Description,
-				Endpoint:    c.Endpoint,
-				Interval:    c.Interval,
-				Schedule:    c.Schedule,
-				Owner:       c.Owner,
-				Severity:    c.Severity,
-				IconURL:     c.IconURL,
-				DisplayType: c.DisplayType,
-				ServerURL:   "local",
+				CanaryName:   c.CanaryName,
+				Type:         c.Type,
+				Description:  c.Description,
+				Endpoint:     c.Endpoint,
+				Interval:     c.Interval,
+				Schedule:     c.Schedule,
+				Owner:        c.Owner,
+				Severity:     c.Severity,
+				IconURL:      c.IconURL,
+				DisplayType:  c.DisplayType,
+				ServerURL:    "local",
 				Health: map[string]CheckHealth{
 					localServerID: {getLatenciesFromPrometheus(c.Key, latencyTime, c.Latency), getUptimeFromPrometheus(c.Key, uptime, c.Uptime)},
 				},
@@ -203,22 +203,22 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 					ac.Statuses[serverID] = c.Statuses
 				} else {
 					aggregateData[c.ID()] = &AggregateCheck{
-						Key:         c.Key,
-						Name:        c.GetName(),
-						Namespace:   c.GetNamespace(),
-            Labels:       c.CheckCanary.Labels,
+						Key:          c.Key,
+						Name:         c.GetName(),
+						Namespace:    c.GetNamespace(),
+						Labels:       c.CheckCanary.Labels,
 						RunnerLabels: pkg.RunnerLabels,
-						CanaryName:  c.CanaryName,
-						Type:        c.Type,
-						Description: c.Description,
-						Endpoint:    c.Endpoint,
-						Interval:    c.Interval,
-						Schedule:    c.Schedule,
-						Owner:       c.Owner,
-						Severity:    c.Severity,
-						IconURL:     c.IconURL,
-						DisplayType: c.DisplayType,
-						ServerURL:   serverURL,
+						CanaryName:   c.CanaryName,
+						Type:         c.Type,
+						Description:  c.Description,
+						Endpoint:     c.Endpoint,
+						Interval:     c.Interval,
+						Schedule:     c.Schedule,
+						Owner:        c.Owner,
+						Severity:     c.Severity,
+						IconURL:      c.IconURL,
+						DisplayType:  c.DisplayType,
+						ServerURL:    serverURL,
 						Health: map[string]CheckHealth{
 							serverID: {getLatenciesFromPrometheus(c.Key, latencyTime, c.Latency), getUptimeFromPrometheus(c.Key, uptime, c.Uptime)},
 						},
