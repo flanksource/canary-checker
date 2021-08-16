@@ -30,4 +30,6 @@ jobs:
       - name: Test
         env:
           KUBERNETES_VERSION: ${{matrix.k8s}}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: ./test/e2e.sh
