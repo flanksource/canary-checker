@@ -241,6 +241,9 @@ func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 	if len(runOutput.Instances) != 1 {
 		return HandleFail(check, fmt.Sprintf("Expected 1 instance, got: %v", len(runOutput.Instances)))
 	}
+	if check.TimeOut == 0 {
+		check.TimeOut = 300
+	}
 
 	instanceID := runOutput.Instances[0].InstanceId
 	ip := ""
@@ -268,7 +271,7 @@ func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 			}
 			break
 		}
-		if timeTracker.Millis() > 300000 {
+		if timeTracker.Millis() > int64(check.TimeOut * 1000) {
 			return HandleFail(check, fmt.Sprintf("Instance did not start within 5 minutes: %v", *reason.Message))
 		}
 		time.Sleep(1 * time.Second)
@@ -327,7 +330,7 @@ func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 
 	timeTracker = NewTimer()
 	if !check.KeepAlive {
-		err = terminateInstances(client, []string{*instanceID}, 300000)
+		err = terminateInstances(client, []string{*instanceID}, int64(check.TimeOut*1000))
 		if err != nil {
 			return HandleFail(check, fmt.Sprintf("Could not terminate: %s", err))
 		}

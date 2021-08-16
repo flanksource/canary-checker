@@ -968,6 +968,7 @@ type EC2Check struct {
 	SecurityGroup string                    `yaml:"securityGroup,omitempty" json:"securityGroup,omitempty"`
 	KeepAlive     bool                      `yaml:"keepAlive,omitempty" json:"keepAlive,omitempty"`
 	WaitTime      int                       `yaml:"waitTime,omitempty" json:"waitTime,omitempty"`
+	TimeOut		  int						`yaml:"timeOut,omitempty" json:"timeOut,omitempty"`
 	CanaryRef     []v1.LocalObjectReference `yaml:"canaryRef,omitempty" json:"canaryRef,omitempty"`
 	// Skip TLS verify when connecting to aws
 	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
