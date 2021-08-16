@@ -194,4 +194,4 @@ YQ = $(realpath ./.bin/yq)
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources
-resources: fmt ui static
+resources: fmt static manifests
