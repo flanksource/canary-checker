@@ -59,9 +59,24 @@ type Check struct {
 	Schedule     string            `json:"schedule"`
 	Owner        string            `json:"owner"`
 	Severity     string            `json:"severity"`
-	IconURL      string            `json:"iconURL"`
+	Icon         string            `json:"icon"`
 	DisplayType  string            `json:"displayType"`
 	CheckCanary  *v1.Canary        `json:"-"`
+}
+
+func FromV1(checks v1.Canary) Check {
+	return Check{
+		Name:        checks.ID(),
+		Namespace:   checks.Namespace,
+		Labels:      checks.ObjectMeta.Labels,
+		CanaryName:  checks.Name,
+		Interval:    checks.Spec.Interval,
+		Schedule:    checks.Spec.Schedule,
+		Owner:       checks.Spec.Owner,
+		Severity:    checks.Spec.Severity,
+		CheckCanary: &checks,
+		Statuses:    []CheckStatus{},
+	}
 }
 
 func (c Check) ID() string {
