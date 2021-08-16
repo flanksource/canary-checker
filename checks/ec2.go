@@ -119,7 +119,7 @@ func NewAWS(kommonsClient *kommons.Client, canary v1.Canary, check v1.EC2Check) 
 	namespace := canary.GetNamespace()
 	_, accessKey, err := kommonsClient.GetEnvValue(check.AccessKeyID, namespace)
 	if err != nil {
-		return nil, fmt.Errorf("Could not parse EC2 access key: %v", err)
+		return nil, fmt.Errorf("could not parse EC2 access key: %v", err)
 	}
 	_, secretKey, err := kommonsClient.GetEnvValue(check.SecretKey, namespace)
 	if err != nil {
@@ -151,7 +151,7 @@ func (cfg *AWS) GetAMI(check v1.EC2Check) (*string, error) {
 	arnLookupInput := &ssm.GetParameterInput{Name: aws.String(defaultARN)}
 	arnLookupOutput, err := ssmClient.GetParameter(context.TODO(), arnLookupInput)
 	if err != nil {
-		return nil, fmt.Errorf("Could not look up amazon image arn: %v", err)
+		return nil, fmt.Errorf("could not look up amazon image arn: %v", err)
 	}
 	return arnLookupOutput.Parameter.Value, nil
 }
@@ -183,7 +183,7 @@ func (cfg *AWS) GetExistingInstanceIds(idString string) ([]string, error) {
 
 	describeOutput, err := cfg.EC2.DescribeInstances(context.TODO(), describeInput)
 	if err != nil {
-		return nil, fmt.Errorf("Could not perform prerun check: %v", err)
+		return nil, fmt.Errorf("could not perform prerun check: %v", err)
 	}
 
 	staleIds := []string{}
@@ -199,7 +199,7 @@ func (cfg *AWS) Launch(check v1.EC2Check, name, ami string) (string, *time.Durat
 	start := NewTimer()
 	userData, err := base64.Encode([]byte(check.UserData))
 	if err != nil {
-		return "", nil, fmt.Errorf("Error encoding userData: %s", err)
+		return "", nil, fmt.Errorf("error encoding userData: %s", err)
 	}
 	if check.SecurityGroup == "" {
 		check.SecurityGroup = "default"
@@ -233,11 +233,11 @@ func (cfg *AWS) Launch(check v1.EC2Check, name, ami string) (string, *time.Durat
 
 	runOutput, err := cfg.EC2.RunInstances(context.TODO(), runInput)
 	if err != nil {
-		return "", nil, fmt.Errorf("Could not create ec2 instance: %s", err)
+		return "", nil, fmt.Errorf("could not create ec2 instance: %s", err)
 	}
 
 	if len(runOutput.Instances) != 1 {
-		return "", nil, fmt.Errorf("Expected 1 instance, got: %v", len(runOutput.Instances))
+		return "", nil, fmt.Errorf("expected 1 instance, got: %v", len(runOutput.Instances))
 	}
 	if check.TimeOut == 0 {
 		check.TimeOut = 300
@@ -288,16 +288,15 @@ func (cfg *AWS) TerminateInstances(instanceIds []string, timeout time.Duration) 
 		}
 		time.Sleep(1 * time.Second)
 	}
-	return nil, nil
 }
 
-func (cfg *AWS) Describe(instanceId string, timeout time.Duration) (internalIp string, internalDNS string, err error) {
+func (cfg *AWS) Describe(instanceID string, timeout time.Duration) (internalIP string, internalDNS string, err error) {
 	timer := NewTimer()
 	for {
-		describeInput := &ec2.DescribeInstancesInput{InstanceIds: []string{instanceId}}
+		describeInput := &ec2.DescribeInstancesInput{InstanceIds: []string{instanceID}}
 		describeOutput, err := cfg.EC2.DescribeInstances(context.TODO(), describeInput)
 		if err != nil {
-			return "", "", fmt.Errorf("Could not retrieve instance health: %s", err)
+			return "", "", fmt.Errorf("could not retrieve instance health: %s", err)
 		}
 		instance := describeOutput.Reservations[0].Instances[0]
 		state := instance.State
@@ -305,7 +304,7 @@ func (cfg *AWS) Describe(instanceId string, timeout time.Duration) (internalIp s
 
 		if state.Name == types.InstanceStateNameRunning {
 			if describeOutput.Reservations[0].Instances[0].PublicIpAddress != nil {
-				internalIp = *describeOutput.Reservations[0].Instances[0].PublicIpAddress
+				internalIP = *describeOutput.Reservations[0].Instances[0].PublicIpAddress
 			}
 			if describeOutput.Reservations[0].Instances[0].PrivateDnsName != nil {
 				internalDNS = *describeOutput.Reservations[0].Instances[0].PrivateDnsName
@@ -313,11 +312,11 @@ func (cfg *AWS) Describe(instanceId string, timeout time.Duration) (internalIp s
 			break
 		}
 		if time.Since(timer.Start) > timeout {
-			return "", "", fmt.Errorf("Instance did not start within %v: %v", timeout, *reason.Message)
+			return "", "", fmt.Errorf("instance did not start within %v: %v", timeout, *reason.Message)
 		}
 		time.Sleep(1 * time.Second)
 	}
-	logger.Infof("Found IP for %s: %s (%s)", instanceId, internalIp, internalDNS)
+	logger.Infof("Found IP for %s: %s (%s)", instanceID, internalIP, internalDNS)
 	return
 }
 
@@ -328,7 +327,7 @@ func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 
 	kommonsClient := c.GetClient()
 	if kommonsClient == nil {
-		return Error(check, fmt.Errorf("Kommons client not configured for ec2 checker"))
+		return Error(check, fmt.Errorf("commons client not configured for ec2 checker"))
 	}
 
 	aws, err := NewAWS(kommonsClient, canary, check)
@@ -351,12 +350,12 @@ func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 		return Error(check, err)
 	}
 
-	instanceId, launchTime, err := aws.Launch(check, idString, *ami)
+	instanceID, launchTime, err := aws.Launch(check, idString, *ami)
 	if err != nil {
 		return Error(check, err)
 	}
 
-	ip, dns, err := aws.Describe(instanceId, 5*time.Minute)
+	ip, dns, err := aws.Describe(instanceID, 5*time.Minute)
 	if err != nil {
 		return Error(check, err)
 	}
@@ -392,7 +391,7 @@ func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 
 	ec2Vars := map[string]string{
 		"PublicIpAddress": ip,
-		"instanceId":      instanceId,
+		"instanceId":      instanceID,
 		"PrivateDnsName":  dns,
 	}
 
@@ -412,12 +411,11 @@ func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 
 	var stopTime time.Duration
 	if !check.KeepAlive {
-		stopTime, err := aws.TerminateInstances([]string{instanceId}, 60*time.Second)
+		stopTime, err := aws.TerminateInstances([]string{instanceID}, 60*time.Second)
 		if err != nil {
 			return Error(check, err)
 		}
 		prometheusTerminateTime.WithLabelValues(check.Region).Set(stopTime.Seconds() * 1000)
-
 	}
 
 	metricsList := []pkg.Metric{
