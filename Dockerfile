@@ -1,7 +1,7 @@
 FROM node:16 as node
 WORKDIR /app
 COPY ./ ./
-RUN make vue-dist
+RUN make ui
 
 FROM golang:1.16 as builder
 WORKDIR /app

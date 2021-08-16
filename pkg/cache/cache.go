@@ -70,7 +70,7 @@ func (c *cache) InitCheck(checks v1.Canary) {
 			Interval:     checks.Spec.Interval,
 			Schedule:     checks.Spec.Schedule,
 			Owner:        checks.Spec.Owner,
-			IconURL:      check.GetIconURL(),
+			Icon:         check.GetIcon(),
 			Severity:     checks.Spec.Severity,
 		}
 		c.CheckConfigs[key] = check
@@ -117,7 +117,7 @@ func Check(checks v1.Canary, result *pkg.CheckResult) pkg.Check {
 		Owner:        checks.Spec.Owner,
 		Severity:     checks.Spec.Severity,
 		CheckCanary:  &checks,
-		IconURL:      result.Check.GetIconURL(),
+		Icon:         result.Check.GetIcon(),
 		DisplayType:  result.DisplayType,
 		Statuses: []pkg.CheckStatus{
 			{
