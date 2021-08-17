@@ -35,7 +35,7 @@ var pushServers []string
 
 func init() {
 	Operator.Flags().IntVar(&httpPort, "httpPort", 8080, "Port to expose a health dashboard ")
-	Operator.Flags().Int("devGuiHttpPort", 8081, "Port used by a local npm server in development mode")
+	Operator.Flags().Int("devGuiHttpPort", 3004, "Port used by a local npm server in development mode")
 	Operator.Flags().IntVar(&metricsPort, "metricsPort", 8081, "Port to expose a health dashboard ")
 	Operator.Flags().IntVar(&webhookPort, "webhookPort", 8082, "Port for webhooks ")
 	Operator.Flags().BoolVar(&dev, "dev", false, "Run in development mode")

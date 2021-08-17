@@ -105,7 +105,7 @@ func serve(cmd *cobra.Command) {
 		staticRoot = nethttp.Dir("./ui/build")
 		allowedCors = fmt.Sprintf("http://localhost:%d", devGuiHTTPPort)
 	} else {
-		fs, err := fs.Sub(ui.StaticContent, "dist")
+		fs, err := fs.Sub(ui.StaticContent, "build")
 		if err != nil {
 			logger.Errorf("Error: %v", err)
 		}
@@ -125,7 +125,7 @@ func serve(cmd *cobra.Command) {
 	nethttp.HandleFunc("/api/push", simpleCors(push.Handler, allowedCors))
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
 	logger.Infof("Starting health dashboard at http://%s", addr)
-	logger.Infof("Metrics dashboard can be accessed at http://%s/metrics", addr)
+	logger.Infof("Metrics can be accessed at http://%s/metrics", addr)
 
 	if err := nethttp.ListenAndServe(addr, nil); err != nil {
 		logger.Fatalf("failed to start server: %v", err)
