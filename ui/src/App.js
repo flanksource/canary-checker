@@ -1,4 +1,4 @@
-import { Badge, Icon, Toggle, Button, Canary } from "@flanksource/flanksource-ui/dist/components"
+import { Canary } from "@flanksource/flanksource-ui/dist/components"
 import './index.css'
 function App() {
 
