@@ -115,7 +115,7 @@ windows: ui
 	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: release
-release: kustomize linux darwin-amd64 darwin-arm64 windows compress
+release: ui kustomize linux darwin-amd64 darwin-arm64 windows compress
 	cd config/base && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/ > ./.bin/release.yaml
 
