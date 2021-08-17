@@ -3,7 +3,6 @@
 .env
 .certs
 .kube
-/platform-cli*
 build/
 docs/cli/
 .DS_Store
