@@ -1,11 +1,7 @@
 FROM node:16 as node
 WORKDIR /app
-ARG GITHUB_TOKEN
 COPY ./ ./
-RUN echo //npm.pkg.github.com/:_authToken=$GITHUB_TOKEN >> ui/.npmrc
 RUN make ui
-RUN rm ui/.npmrc
-
 
 FROM golang:1.16 as builder
 WORKDIR /app
