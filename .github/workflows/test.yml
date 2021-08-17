@@ -4,7 +4,17 @@ on:
       - v*
     branches:
       - master
+    paths:
+      - "**.go"
+      - "Makefile"
+      - "**.yaml"
+      - '**.yml'
   pull_request:
+    paths:
+      - "**.go"
+      - "Makefile"
+      - "**.yaml"
+      - '**.yml'
 name: Test
 jobs:
   test:

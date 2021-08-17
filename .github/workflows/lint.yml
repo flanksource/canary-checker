@@ -3,11 +3,17 @@ on:
   push:
     branches:
       - master
+    paths:
+      - "**.go"
+      - "Makefile"
+      - "**.yaml"
+      - '**.yml'
   pull_request:
     paths:
       - "**.go"
       - "Makefile"
       - "**.yaml"
+      - '**.yml'
 jobs:
   golangci:
     name: lint
