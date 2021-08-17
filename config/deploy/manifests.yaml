@@ -140,8 +140,8 @@ spec:
                       expectedSize:
                         format: int64
                         type: integer
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       image:
                         type: string
@@ -156,8 +156,8 @@ spec:
                       description:
                         description: Description for the check
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       image:
                         type: string
@@ -180,8 +180,8 @@ spec:
                         items:
                           type: string
                         type: array
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       minrecords:
                         type: integer
@@ -283,8 +283,8 @@ spec:
                       expectedSize:
                         format: int64
                         type: integer
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       image:
                         type: string
@@ -369,8 +369,8 @@ spec:
                       description:
                         description: Description for the check
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       image:
                         type: string
@@ -382,110 +382,113 @@ spec:
                     type: object
                   type: array
                 ec2:
-                  description: Because the EC2 check attempts to clean up stale instances at the start of the check, only one EC2Check can be scoped per Canary instance
-                  properties:
-                    accessKeyID:
-                      properties:
-                        name:
-                          type: string
-                        value:
-                          type: string
-                        valueFrom:
-                          properties:
-                            configMapKeyRef:
-                              properties:
-                                key:
-                                  type: string
-                                name:
-                                  type: string
-                                optional:
-                                  type: boolean
-                              required:
-                                - key
-                              type: object
-                            secretKeyRef:
-                              properties:
-                                key:
-                                  type: string
-                                name:
-                                  type: string
-                                optional:
-                                  type: boolean
-                              required:
-                                - key
-                              type: object
-                          type: object
-                      type: object
-                    ami:
-                      type: string
-                    canaryRef:
-                      items:
-                        description: LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.
+                  items:
+                    properties:
+                      accessKeyID:
                         properties:
                           name:
-                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
                             type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
                         type: object
-                      type: array
-                    description:
-                      description: Description for the check
-                      type: string
-                    iconURL:
-                      description: IconURL for overwriting default icon on the dashboard
-                      type: string
-                    keepAlive:
-                      type: boolean
-                    name:
-                      description: Name of the check
-                      type: string
-                    region:
-                      type: string
-                    secretKey:
-                      properties:
-                        name:
-                          type: string
-                        value:
-                          type: string
-                        valueFrom:
+                      ami:
+                        type: string
+                      canaryRef:
+                        items:
+                          description: LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.
                           properties:
-                            configMapKeyRef:
-                              properties:
-                                key:
-                                  type: string
-                                name:
-                                  type: string
-                                optional:
-                                  type: boolean
-                              required:
-                                - key
-                              type: object
-                            secretKeyRef:
-                              properties:
-                                key:
-                                  type: string
-                                name:
-                                  type: string
-                                optional:
-                                  type: boolean
-                              required:
-                                - key
-                              type: object
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
                           type: object
-                      type: object
-                    securityGroup:
-                      type: string
-                    skipTLSVerify:
-                      description: Skip TLS verify when connecting to aws
-                      type: boolean
-                    userData:
-                      type: string
-                    waitTime:
-                      type: integer
-                  required:
-                    - accessKeyID
-                    - region
-                    - secretKey
-                  type: object
+                        type: array
+                      description:
+                        description: Description for the check
+                        type: string
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      keepAlive:
+                        type: boolean
+                      name:
+                        description: Name of the check
+                        type: string
+                      region:
+                        type: string
+                      secretKey:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
+                      securityGroup:
+                        type: string
+                      skipTLSVerify:
+                        description: Skip TLS verify when connecting to aws
+                        type: boolean
+                      timeOut:
+                        type: integer
+                      userData:
+                        type: string
+                      waitTime:
+                        type: integer
+                    required:
+                      - accessKeyID
+                      - region
+                      - secretKey
+                    type: object
+                  type: array
                 env:
                   additionalProperties:
                     description: VarSource represents a source for a value
@@ -616,8 +619,8 @@ spec:
                       description:
                         description: Description for the check
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       name:
                         description: Name of the check
@@ -747,8 +750,8 @@ spec:
                               type: object
                           type: object
                         type: array
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       maxSSLExpiry:
                         description: Maximum number of days until the SSL Certificate expires.
@@ -797,8 +800,8 @@ spec:
                         type: string
                       endpoint:
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       name:
                         description: Name of the check
@@ -813,7 +816,7 @@ spec:
                         type: integer
                     type: object
                   type: array
-                iconURL:
+                icon:
                   type: string
                 interval:
                   description: interval (in seconds) to run checks on Deprecated in favor of Schedule
@@ -828,8 +831,8 @@ spec:
                       host:
                         description: Host is the server against which test plan needs to be executed
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       jmx:
                         description: Jmx defines tge ConfigMap or Secret reference to get the JMX test plan
@@ -897,8 +900,8 @@ spec:
                       displayTemplate:
                         description: 'DisplayTemplate displays testResults results in text Default: ''Passed: [[.passed]], Failed: [[.failed]]'''
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       name:
                         description: Name of the check
@@ -4727,8 +4730,8 @@ spec:
                         type: string
                       host:
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       name:
                         description: Name of the check
@@ -4750,8 +4753,8 @@ spec:
                       displayTemplate:
                         description: 'DisplayTemplate displays query results in text (overrides default bar format for UI) Example: ''[[index .results 0]]'''
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       name:
                         description: Name of the check
@@ -4793,8 +4796,8 @@ spec:
                       httpTimeout:
                         format: int64
                         type: integer
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       ingressHost:
                         type: string
@@ -4859,8 +4862,8 @@ spec:
                       httpTimeout:
                         format: int64
                         type: integer
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       ingressHost:
                         type: string
@@ -4902,8 +4905,8 @@ spec:
                       displayTemplate:
                         description: 'DisplayTemplate displays query results in text (overrides default bar format for UI) Example: ''[[index .results 0]]'''
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       name:
                         description: Name of the check
@@ -4998,8 +5001,8 @@ spec:
                       description:
                         description: Description for the check
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       name:
                         description: Name of the check
@@ -5054,8 +5057,8 @@ spec:
                       description:
                         description: Description for the check
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       maxAge:
                         description: MaxAge for backup freshness
@@ -5155,8 +5158,8 @@ spec:
                       description:
                         description: Description for the check
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       name:
                         description: Name of the check
@@ -5185,8 +5188,8 @@ spec:
                         type: string
                       endpoint:
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       maxAge:
                         description: maximum allowed age of matched objects in seconds
@@ -5303,8 +5306,8 @@ spec:
                       domain:
                         description: Domain...
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       maxAge:
                         description: MaxAge the latest object should be younger than defined age
@@ -5346,8 +5349,8 @@ spec:
                         type: string
                       endpoint:
                         type: string
-                      iconURL:
-                        description: IconURL for overwriting default icon on the dashboard
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
                         type: string
                       name:
                         description: Name of the check
@@ -5639,6 +5642,8 @@ spec:
                 name: canary-checker
                 port:
                   number: 8080
+            path: /
+            pathType: ImplementationSpecific
   tls:
     - hosts:
         - canaries.{{.domain}}
