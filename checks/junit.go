@@ -89,7 +89,7 @@ func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Ch
 	pod.APIVersion = corev1.SchemeGroupVersion.Version
 	pod.Kind = podKind
 	pod.Labels = map[string]string{
-		junitCheckSelector: junitCheckLabelValue,
+		junitCheckSelector: getJunitCheckLabel(junitCheckLabelValue, name, namespace),
 	}
 	if namespace != "" {
 		pod.Namespace = namespace
@@ -101,7 +101,7 @@ func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Ch
 	} else {
 		pod.Name = strings.ToLower(rand.String(5))
 	}
-	existingPods := getJunitPods(c.kommons, pod.Namespace)
+	existingPods := getJunitPods(c.kommons, name, namespace)
 	for _, junitPod := range existingPods {
 		createTime := junitPod.CreationTimestamp.Time
 		wait, err := waitForExistingJunitCheck(interval, schedule, createTime)
@@ -239,13 +239,14 @@ func junitTemplateResult(template string, junitStatus JunitStatus) (message stri
 	return message
 }
 
-func getJunitPods(kommonsClient *kommons.Client, namespace string) []corev1.Pod {
+func getJunitPods(kommonsClient *kommons.Client, name, namespace string) []corev1.Pod {
 	client, err := kommonsClient.GetClientset()
 	if err != nil {
 		return nil
 	}
 	podList, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: junitCheckSelector,
+		FieldSelector: getJunitCheckLabel(junitCheckLabelValue, name, namespace),
 	})
 	if err != nil {
 		return nil
@@ -269,4 +270,8 @@ func waitForExistingJunitCheck(interval uint64, spec string, createTime time.Tim
 		return true, nil
 	}
 	return false, nil
+}
+
+func getJunitCheckLabel(label, name, namespace string) string {
+	return fmt.Sprintf("%v-%v-%v", label, name, namespace)
 }
