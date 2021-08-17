@@ -110,5 +110,5 @@ kubectl create secret generic aws-credentials --from-literal=AWS_ACCESS_KEY_ID=$
 cd test
 go test ./... -v -c
 # ICMP requires privileges so we run the tests with sudo
-sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG ./test.test  -test.v
+sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG,TEST_FOLDER ./test.test  -test.v
 echo "::endgroup::"

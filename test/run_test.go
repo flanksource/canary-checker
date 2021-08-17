@@ -48,10 +48,15 @@ var (
 			},
 		},
 	}
+	testFolder = ""
 )
 
 // nolint: errcheck
 func setup() {
+	testFolder = os.Getenv("TEST_FOLDER")
+	if testFolder == "" {
+		testFolder = "fixtures"
+	}
 	docker := deps.Binary("docker", "", "")
 	docker("pull docker.io/library/busybox:1.30")
 	docker("tag docker.io/library/busybox:1.30 ttl.sh/flanksource-busybox:1.30")
@@ -72,7 +77,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestRunChecks(t *testing.T) {
-	files, _ := ioutil.ReadDir("../fixtures")
+	files, _ := ioutil.ReadDir(fmt.Sprintf("../%s", testFolder))
+	t.Logf("Folder: %s", testFolder)
 	wg := sync.WaitGroup{}
 	for _, fixture := range files {
 		wg.Add(1)
@@ -86,7 +92,7 @@ func TestRunChecks(t *testing.T) {
 }
 
 func runFixture(t *testing.T, name string) {
-	config := pkg.ParseConfig(fmt.Sprintf("../fixtures/%s", name))
+	config := pkg.ParseConfig(fmt.Sprintf("../%s/%s", testFolder, name))
 	canary := v1.Canary{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "podinfo-test",
