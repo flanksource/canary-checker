@@ -9,12 +9,14 @@ on:
       - "Makefile"
       - "**.yaml"
       - '**.yml'
+      - 'test/**'
   pull_request:
     paths:
       - "**.go"
       - "Makefile"
       - "**.yaml"
       - '**.yml'
+      - 'test/**'
 name: Test
 jobs:
   test:
