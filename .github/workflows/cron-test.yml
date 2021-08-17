@@ -1,11 +1,7 @@
 on:
-  push:
-    tags:
-      - v*
-    branches:
-      - master
-  pull_request:
-name: Test
+  schedule:
+    - cron: '0 10 * * *'
+name: Cron Test
 jobs:
   test:
     strategy:
@@ -30,4 +26,7 @@ jobs:
       - name: Test
         env:
           KUBERNETES_VERSION: ${{matrix.k8s}}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TEST_FOLDER: fixtures-cron
         run: ./test/e2e.sh
