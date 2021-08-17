@@ -1,15 +1,20 @@
 FROM node:16 as node
 WORKDIR /app
-COPY ./ ./
-RUN make ui
+COPY "./ui/package.json" .
+COPY "./ui/package-lock.json" .
+RUN npm ci
+ADD ui/ .
+RUN  ls && npm run build
 
 FROM golang:1.16 as builder
 WORKDIR /app
 COPY ./ ./
 ARG NAME
 ARG VERSION
-COPY --from=node /app/ui/build /app/ui/build
-WORKDIR /app/ui/build
+COPY go.mod /app/go.mod
+COPY go.sum /app/go.sum
+RUN go mod download
+COPY --from=node /app/build /app/ui/build
 WORKDIR /app
 RUN go version
 RUN GOOS=linux GOARCH=amd64 go build -o canary-checker -ldflags "-X \"main.version=$VERSION\""  main.go
