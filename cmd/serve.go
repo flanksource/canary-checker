@@ -6,6 +6,8 @@ import (
 	nethttp "net/http"
 	_ "net/http/pprof" // required by serve
 
+	"github.com/flanksource/canary-checker/pkg/utils"
+
 	"github.com/flanksource/canary-checker/pkg/push"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -50,9 +52,13 @@ var Serve = &cobra.Command{
 			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
 		}
 		cron := cron.New()
+		cron.Start()
 		config.SetSQLDrivers()
 		for _, _c := range checks.All {
 			c := _c
+			if !utils.CheckerInChecks(canary.Spec.GetAllChecks(), c) {
+				continue
+			}
 			switch cs := c.(type) {
 			case checks.SetsClient:
 				cs.SetClient(kommonsClient)
@@ -70,20 +76,20 @@ var Serve = &cobra.Command{
 				})
 				logger.Infof("Running canary %v on %v schedule", canary, config.Schedule)
 			} else if config.Interval > 0 {
-				cron.AddFunc(fmt.Sprintf("@every %ds", config.Interval), func() { // nolint: errcheck
+				id, _ := cron.AddFunc(fmt.Sprintf("@every %ds", config.Interval), func() { // nolint: errcheck
 					go func() {
 						logger.Debugf("Running")
+						fmt.Println(c.Type())
 						for _, result := range c.Run(canary) {
 							cache.AddCheck(canary, result)
 							metrics.Record(canary, result)
 						}
 					}()
 				})
-				logger.Infof("Running canary %v every %v seconds", canary, config.Interval)
+				logger.Infof("Running canary %v every %v seconds, with id: %v", canary, config.Interval, id)
 			}
 		}
 		serve(cmd)
-		cron.Start()
 		logger.Infof("%+v", cron.Entries())
 
 	},
@@ -164,4 +170,5 @@ func init() {
 	Serve.Flags().StringVar(&prometheusURL, "prometheus-url", "", "location of the prometheus server")
 	Serve.Flags().String("canary-name", "", "Canary name")
 	Serve.Flags().String("canary-namespace", "", "Canary namespace")
+	Serve.MarkFlagRequired("configfile") // nolint: errcheck
 }
