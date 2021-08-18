@@ -177,7 +177,6 @@ func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Ch
 			switch test.Status {
 			case junit.StatusFailed:
 				junitStatus.failed++
-				failedTests[suite.Name+"/"+test.Name] = failedTests[test.Message]
 			case junit.StatusPassed:
 				junitStatus.passed++
 			case junit.StatusSkipped:
@@ -185,12 +184,12 @@ func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Ch
 			case junit.StatusError:
 				junitStatus.error++
 			}
-			if test.Status == junit.StatusFailed {
-				failedTests[suite.Name+"/"+test.Name] = failedTests[test.Message]
+			if test.Status == junit.StatusFailed || test.Status == junit.StatusError {
+				failedTests[suite.Name+"/"+test.Name] = fmt.Sprintf("message: %v \n error: %v \n stdout: %v \n stderr: %v", test.Message, test.Error, test.SystemOut, test.SystemErr)
 			}
 		}
 	}
-	if junitStatus.failed != 0 {
+	if junitStatus.failed != 0 || junitStatus.error != 0 {
 		failMessage := ""
 		for testName, testMessage := range failedTests {
 			failMessage = failMessage + "\n" + testName + ":" + testMessage
