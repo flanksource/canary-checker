@@ -70,6 +70,7 @@ chmod +x ./wait4x
 ./wait4x tcp 127.0.0.1:32432 || true
 ./wait4x tcp 127.0.0.1:32004 || true
 ./wait4x tcp 127.0.0.1:32010 || true
+./wait4x tcp 127.0.0.1:32018 || true
 
 #Install jmeter
 if ! which jmeter 2>&1 > /dev/null; then

@@ -46,22 +46,24 @@ func (c *PrometheusChecker) Check(canary v1.Canary, extConfig external.Check) *p
 		logger.Debugf("warnings when running the query: %v", warning)
 	}
 	var result = make([]interface{}, 0)
-	for _, value := range modelValue.(model.Vector) {
-		result = append(result, value.Metric)
+	if modelValue != nil {
+		for _, value := range modelValue.(model.Vector) {
+			result = append(result, value.Metric)
+		}
 	}
 	var results = map[string]interface{}{"results": result}
 	if check.ResultsFunction != "" {
-		success, err := text.TemplateWithDelims(check.ResultsFunction, "[[", "]]", result)
+		success, err := text.TemplateWithDelims(check.ResultsFunction, "[[", "]]", results)
 		if err != nil {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(prometheusTemplateResult(template, results)).ErrorMessage(err).StartTime(start)
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(prometheusTemplateResult(template, result)).ErrorMessage(err).StartTime(start)
 		}
 		if strings.ToLower(success) != "true" {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(prometheusTemplateResult(template, results)).ErrorMessage(fmt.Errorf("result function returned %v", success)).StartTime(start)
+			return pkg.Fail(check).TextResults(textResults).ResultMessage(prometheusTemplateResult(template, result)).ErrorMessage(fmt.Errorf("result function returned %v", success)).StartTime(start)
 		}
 	}
 	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
 	if err != nil {
-		return pkg.Fail(check).TextResults(textResults).ResultMessage(prometheusTemplateResult(template, results)).ErrorMessage(err).StartTime(start)
+		return pkg.Fail(check).TextResults(textResults).ResultMessage(prometheusTemplateResult(template, result)).ErrorMessage(err).StartTime(start)
 	}
 	return pkg.Success(check).TextResults(textResults).ResultMessage(message).StartTime(start)
 }
