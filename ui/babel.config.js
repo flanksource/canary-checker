@@ -1,3 +1,4 @@
+// eslint-disable-next-line func-names
 module.exports = function (api) {
   api.cache(true);
 
@@ -6,6 +7,6 @@ module.exports = function (api) {
 
   return {
     presets,
-    plugins
+    plugins,
   };
-}
+};
