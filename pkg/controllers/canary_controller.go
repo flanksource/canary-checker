@@ -22,6 +22,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/flanksource/canary-checker/pkg/utils"
+
 	"github.com/flanksource/canary-checker/pkg/push"
 
 	"github.com/flanksource/kommons"
@@ -241,7 +243,7 @@ func (c CanaryJob) GetNamespacedName() types.NamespacedName {
 }
 
 func (c CanaryJob) Run() {
-	spec, err := c.LoadSecrets()
+	canary, err := c.LoadSecrets()
 	if err != nil {
 		c.Error(err, "Failed to load secrets")
 		return
@@ -250,11 +252,14 @@ func (c CanaryJob) Run() {
 
 	var results []*pkg.CheckResult
 	for _, check := range checks.All {
+		if !utils.CheckerInChecks(canary.Spec.GetAllChecks(), check) {
+			continue
+		}
 		switch cs := check.(type) {
 		case checks.SetsClient:
 			cs.SetClient(c.Client.Kommons)
 		}
-		results = append(results, check.Run(spec)...)
+		results = append(results, check.Run(canary)...)
 	}
 
 	c.Client.Report(c.GetNamespacedName(), results)
