@@ -253,7 +253,6 @@ func (cfg *AWS) TerminateInstances(instanceIds []string, timeout time.Duration) 
 	if len(instanceIds) == 0 {
 		return nil, nil
 	}
-	logger.Infof("Found %v stale ec2 instances, terminating...", len(instanceIds))
 	timer := timer.NewTimer()
 	terminateInput := &ec2.TerminateInstancesInput{InstanceIds: instanceIds}
 	_, err := cfg.EC2.TerminateInstances(context.TODO(), terminateInput)
@@ -346,6 +345,7 @@ func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 	if err != nil {
 		return Error(check, err)
 	}
+	logger.Infof("Found %v stale ec2 instances (%s) - terminating", len(ids), strings.Join(ids, ","))
 	if _, err := aws.TerminateInstances(ids, 5*time.Minute); err != nil {
 		return Error(check, err)
 	}
@@ -411,6 +411,7 @@ func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 
 	var stopTime time.Duration
 	if !check.KeepAlive {
+		logger.Infof("Terminating instance id %s", instanceID)
 		stopTime, err := aws.TerminateInstances([]string{instanceID}, 60*time.Second)
 		if err != nil {
 			return Error(check, err)
