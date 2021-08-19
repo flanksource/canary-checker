@@ -215,8 +215,6 @@ type Canary struct {
 
 func (c Canary) GetAllLabels(extra map[string]string) map[string]string {
 	labels := make(map[string]string)
-	labels["_name"] = c.Name
-	labels["_namespace"] = c.Namespace
 	for k, v := range extra {
 		labels["__"+k] = v
 	}

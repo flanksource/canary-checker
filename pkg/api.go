@@ -43,6 +43,28 @@ type CheckStatus struct {
 	Error    string   `json:"error,omitempty"`
 }
 
+type Latency struct {
+	Percentile99 float64 `json:"p99,omitempty"`
+	Percentile97 float64 `json:"p97,omitempty"`
+	Percentile95 float64 `json:"p95,omitempty"`
+	Rolling1H    float64 `json:"rolling1h"`
+}
+
+func (l Latency) String() string {
+	return fmt.Sprintf("%0.1f", l.Rolling1H)
+}
+
+type Uptime struct {
+	Passed int     `json:"passed"`
+	Failed int     `json:"failed"`
+	P100   float64 `json:"p100,omitempty"`
+}
+
+func (u Uptime) String() string {
+	percentage := 100.0 * (1 - (float64(u.Failed) / float64(u.Passed+u.Failed)))
+	return fmt.Sprintf("%d/%d (%0.1f%%)", u.Passed, u.Passed+u.Failed, percentage)
+}
+
 type Check struct {
 	Key          string            `json:"key"`
 	Type         string            `json:"type"`
@@ -53,8 +75,8 @@ type Check struct {
 	CanaryName   string            `json:"canaryName"`
 	Description  string            `json:"description"`
 	Endpoint     string            `json:"endpoint"`
-	Uptime       string            `json:"uptime"`
-	Latency      string            `json:"latency"`
+	Uptime       Uptime            `json:"uptime"`
+	Latency      Latency           `json:"latency"`
 	Statuses     []CheckStatus     `json:"checkStatuses" mapstructure:"-"`
 	Interval     uint64            `json:"interval"`
 	Schedule     string            `json:"schedule"`
@@ -77,6 +99,7 @@ func FromResult(result CheckResult) CheckStatus {
 }
 func FromV1(check v1.Canary, ext external.Check, statuses ...CheckStatus) Check {
 	return Check{
+		Key:         check.GetKey(ext),
 		Name:        check.ID(),
 		Namespace:   check.Namespace,
 		Labels:      labels.FilterLabels(check.GetAllLabels(nil)),
@@ -200,10 +223,11 @@ func (result CheckResult) String() string {
 		checkType = result.Check.GetType()
 		endpoint = result.Check.GetEndpoint()
 	}
+
 	if result.Pass {
 		return fmt.Sprintf("[%s] [%s] %s duration=%d %s %s", console.Greenf("PASS"), checkType, endpoint, result.Duration, result.Metrics, result.Message)
 	}
-	return fmt.Sprintf("[%s] [%s] %s duration=%d %s %s", console.Redf("FAIL"), checkType, endpoint, result.Duration, result.Metrics, result.Message)
+	return fmt.Sprintf("[%s] [%s] %s duration=%d %s %s %s", console.Redf("FAIL"), checkType, endpoint, result.Duration, result.Metrics, result.Message, result.Error)
 }
 
 type MetricType string

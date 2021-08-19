@@ -1,14 +1,13 @@
 package metrics
 
 import (
-	"fmt"
-	"math"
 	"strconv"
 	"time"
 
 	"github.com/asecurityteam/rolling"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/commons/logger"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -102,26 +101,20 @@ func RemoveCheck(checks v1.Canary) {
 	}
 }
 
-func GetMetrics(key string) (rollingUptime string, rollingLatency time.Duration) {
+func GetMetrics(key string) (uptime pkg.Uptime, latency pkg.Latency) {
 	fail := failed[key]
 	pass := passed[key]
-	latency := latencies[key]
-	if fail == nil || pass == nil || latency == nil {
-		return "", time.Millisecond * 0
-	}
-	failCount := fail.Reduce(rolling.Sum)
-	passCount := pass.Reduce(rolling.Sum)
-	percentage := 100.0 * (1 - (failCount / (passCount + failCount)))
-	var uptime string
-	if percentage == (math.Round(percentage)) {
-		uptime = fmt.Sprintf("%.0f/%.0f (%0.f%%)", passCount, failCount+passCount, percentage)
+	uptime = pkg.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
+	_latency := latencies[key]
+	if _latency != nil {
+		latency = pkg.Latency{Rolling1H: _latency.Reduce(rolling.Percentile(95))}
 	} else {
-		uptime = fmt.Sprintf("%.0f/%.0f (%0.1f%%)", passCount, failCount+passCount, percentage)
+		latency = pkg.Latency{}
 	}
-	return uptime, time.Duration(latency.Reduce(rolling.Percentile(95))) * time.Millisecond
+	return
 }
 
-func Record(check v1.Canary, result *pkg.CheckResult) (rollingUptime string, rollingLatency time.Duration) {
+func Record(check v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _latency pkg.Latency) {
 	if result == nil || result.Check == nil {
 		logger.Warnf("%s/%s returned a nil result", check.Namespace, check.Name)
 		return
@@ -183,14 +176,47 @@ func Record(check v1.Canary, result *pkg.CheckResult) (rollingUptime string, rol
 		Gauge.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Set(1)
 		OpsFailedCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Inc()
 	}
-	failCount := fail.Reduce(rolling.Sum)
-	passCount := pass.Reduce(rolling.Sum)
-	percentage := 100.0 * (1 - (failCount / (passCount + failCount)))
-	var uptime string
-	if percentage == (math.Round(percentage)) {
-		uptime = fmt.Sprintf("%.0f/%.0f (%0.f%%)", passCount, failCount+passCount, percentage)
+
+	_uptime = pkg.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
+	if latencies[key] != nil {
+		_latency = pkg.Latency{Rolling1H: latencies[key].Reduce(rolling.Percentile(95))}
 	} else {
-		uptime = fmt.Sprintf("%.0f/%.0f (%0.1f%%)", passCount, failCount+passCount, percentage)
+		_latency = pkg.Latency{}
 	}
-	return uptime, time.Duration(latency.Reduce(rolling.Percentile(95))) * time.Millisecond
+	return _uptime, _latency
+}
+
+func FillLatencies(checkKey string, duration string, latency *pkg.Latency) error {
+	if runner.Prometheus == nil || duration == "" {
+		return nil
+	}
+	p95, err := runner.Prometheus.GetHistogramQuantileLatency("0.95", checkKey, duration)
+	if err != nil {
+		return err
+	}
+	latency.Percentile95 = p95
+
+	p97, err := runner.Prometheus.GetHistogramQuantileLatency("0.97", checkKey, duration)
+	if err != nil {
+		return err
+	}
+	latency.Percentile97 = p97
+	p99, err := runner.Prometheus.GetHistogramQuantileLatency("0.99", checkKey, duration)
+	if err != nil {
+		return err
+	}
+	latency.Percentile99 = p99
+	return nil
+}
+
+func FillUptime(checkKey, duration string, uptime *pkg.Uptime) error {
+	if runner.Prometheus == nil || duration == "" {
+		return nil
+	}
+	value, err := runner.Prometheus.GetUptime(checkKey, duration)
+	if err != nil {
+		return err
+	}
+	uptime.P100 = value
+	return nil
 }

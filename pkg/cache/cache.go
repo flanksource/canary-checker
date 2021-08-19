@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"sort"
 	"sync"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -36,8 +35,8 @@ func RemoveCheck(checks v1.Canary) {
 	Cache.RemoveCheck(checks)
 }
 
-func GetChecks() pkg.Checks {
-	return Cache.GetChecks()
+func GetChecks(duration string) pkg.Checks {
+	return Cache.GetChecks(duration)
 }
 
 func (c *cache) RemoveCheck(checks v1.Canary) {
@@ -85,7 +84,7 @@ func (c *cache) Add(check pkg.Check) *pkg.Check {
 	return &lastCheck
 }
 
-func (c *cache) GetChecks() pkg.Checks {
+func (c *cache) GetChecks(duration string) pkg.Checks {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 	result := pkg.Checks{}
@@ -93,10 +92,12 @@ func (c *cache) GetChecks() pkg.Checks {
 	for _, check := range c.Checks {
 		uptime, latency := metrics.GetMetrics(check.Key)
 		check.Uptime = uptime
-		check.Latency = latency.String()
+		check.Latency = latency
+		if duration != "" {
+			metrics.FillLatencies(check.Key, duration, &check.Latency)
+			metrics.FillUptime(check.Key, duration, &check.Uptime)
+		}
 		result = append(result, check)
 	}
-
-	sort.Sort(&result)
 	return result
 }
