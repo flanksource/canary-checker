@@ -13,6 +13,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
+	"github.com/flanksource/canary-checker/pkg/runner"
 	cmap "github.com/orcaman/concurrent-map"
 )
 
@@ -142,7 +143,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 					Name:         c.GetName(),
 					Namespace:    "",
 					Labels:       c.CheckCanary.Labels,
-					RunnerLabels: pkg.RunnerLabels,
+					RunnerLabels: runner.RunnerLabels,
 					CanaryName:   c.CanaryName,
 					Type:         c.Type,
 					Description:  c.Description,
@@ -164,14 +165,14 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 			}
 		}
 	} else {
-		localServerID := api.RunnerName
+		localServerID := runner.RunnerName
 		for _, c := range data {
 			aggregateData[c.ID()] = &AggregateCheck{
 				Key:          c.Key,
 				Name:         c.GetName(),
 				Namespace:    c.GetNamespace(),
 				Labels:       c.CheckCanary.Labels,
-				RunnerLabels: pkg.RunnerLabels,
+				RunnerLabels: runner.RunnerLabels,
 				CanaryName:   c.CanaryName,
 				Type:         c.Type,
 				Description:  c.Description,
@@ -208,7 +209,7 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 						Name:         c.GetName(),
 						Namespace:    c.GetNamespace(),
 						Labels:       c.CheckCanary.Labels,
-						RunnerLabels: pkg.RunnerLabels,
+						RunnerLabels: runner.RunnerLabels,
 						CanaryName:   c.CanaryName,
 						Type:         c.Type,
 						Description:  c.Description,
@@ -264,20 +265,20 @@ func Handler(w nethttp.ResponseWriter, req *nethttp.Request) {
 
 func getLatenciesFromPrometheus(checkKey string, duration string, rolling1hLatency string) (latency Latency) {
 	latency.Rolling1H = rolling1hLatency
-	if api.Prometheus != nil && duration != "" {
-		value, err := api.Prometheus.GetHistogramQuantileLatency("0.95", checkKey, duration)
+	if runner.Prometheus != nil && duration != "" {
+		value, err := runner.Prometheus.GetHistogramQuantileLatency("0.95", checkKey, duration)
 		if err != nil {
 			logger.Debugf("failed to execute query: %v", err)
 			return
 		}
 		latency.Percentile95 = value
-		value, err = api.Prometheus.GetHistogramQuantileLatency("0.97", checkKey, duration)
+		value, err = runner.Prometheus.GetHistogramQuantileLatency("0.97", checkKey, duration)
 		if err != nil {
 			logger.Debugf("failed to execute query: %v", err)
 			return
 		}
 		latency.Percentile97 = value
-		value, err = api.Prometheus.GetHistogramQuantileLatency("0.99", checkKey, duration)
+		value, err = runner.Prometheus.GetHistogramQuantileLatency("0.99", checkKey, duration)
 		if err != nil {
 			logger.Debugf("failed to execute query: %v", err)
 			return
@@ -289,8 +290,8 @@ func getLatenciesFromPrometheus(checkKey string, duration string, rolling1hLaten
 
 func getUptimeFromPrometheus(checkKey, duration, rolling1huptime string) (uptime Uptime) {
 	uptime.Rolling1H = rolling1huptime
-	if api.Prometheus != nil && duration != "" {
-		value, err := api.Prometheus.GetUptime(checkKey, duration)
+	if runner.Prometheus != nil && duration != "" {
+		value, err := runner.Prometheus.GetUptime(checkKey, duration)
 		if err != nil {
 			logger.Debugf("failed to execute query: %v", err)
 			return

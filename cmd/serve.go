@@ -9,6 +9,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 
 	"github.com/flanksource/canary-checker/pkg/push"
+	"github.com/flanksource/canary-checker/pkg/runner"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
@@ -67,19 +68,16 @@ var Serve = &cobra.Command{
 				cron.AddFunc(config.Schedule, func() { // nolint: errcheck
 
 					go func() {
-						logger.Debugf("Running")
 						for _, result := range c.Run(canary) {
 							cache.AddCheck(canary, result)
 							metrics.Record(canary, result)
 						}
 					}()
 				})
-				logger.Infof("Running canary %v on %v schedule", canary, config.Schedule)
+				logger.Infof("Running canary %v on %v schedule", canary.Name, config.Schedule)
 			} else if config.Interval > 0 {
 				id, _ := cron.AddFunc(fmt.Sprintf("@every %ds", config.Interval), func() { // nolint: errcheck
 					go func() {
-						logger.Debugf("Running")
-						fmt.Println(c.Type())
 						for _, result := range c.Run(canary) {
 							cache.AddCheck(canary, result)
 							metrics.Record(canary, result)
@@ -165,7 +163,7 @@ func init() {
 	Serve.Flags().IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
 	Serve.Flags().StringSliceVar(&aggregate.Servers, "aggregateServers", []string{}, "Aggregate check results from multiple servers in the status page")
 	Serve.Flags().StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
-	Serve.Flags().StringVar(&api.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
+	Serve.Flags().StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 	Serve.Flags().BoolVar(&aggregate.PivotByNamespace, "pivot-by-namespace", false, "Show the same check across namespaces in a different column")
 	Serve.Flags().StringVar(&prometheusURL, "prometheus-url", "", "location of the prometheus server")
 	Serve.Flags().String("canary-name", "", "Canary name")

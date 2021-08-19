@@ -2,7 +2,7 @@ FROM node:16 as node
 WORKDIR /app
 COPY "./ui/package.json" .
 COPY "./ui/package-lock.json" .
-RUN npm ci
+RUN npm i
 ADD ui/ .
 RUN  ls && npm run build
 

@@ -3,7 +3,6 @@ package cache
 import (
 	"sort"
 	"sync"
-	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -58,21 +57,7 @@ func (c *cache) InitCheck(checks v1.Canary) {
 	// initialize all checks so that they appear on the dashboard as pending
 	for _, check := range checks.Spec.GetAllChecks() {
 		key := checks.GetKey(check)
-		c.Checks[key] = pkg.Check{
-			Type:         check.GetType(),
-			Name:         checks.ID(),
-			Namespace:    checks.Namespace,
-			Labels:       checks.ObjectMeta.Labels,
-			RunnerLabels: pkg.RunnerLabels,
-			CanaryName:   checks.Name,
-			Description:  check.GetDescription(),
-			Endpoint:     check.GetEndpoint(),
-			Interval:     checks.Spec.Interval,
-			Schedule:     checks.Spec.Schedule,
-			Owner:        checks.Spec.Owner,
-			Icon:         check.GetIcon(),
-			Severity:     checks.Spec.Severity,
-		}
+		c.Checks[key] = pkg.FromV1(checks, check)
 		c.CheckConfigs[key] = check
 	}
 }
@@ -85,8 +70,7 @@ func (c *cache) AddCheck(checks v1.Canary, result *pkg.CheckResult) *pkg.Check {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
-	check := Check(checks, result)
-	return c.Add(check)
+	return c.Add(pkg.FromV1(checks, result.Check, pkg.FromResult(*result)))
 }
 
 func (c *cache) Add(check pkg.Check) *pkg.Check {
@@ -99,37 +83,6 @@ func (c *cache) Add(check pkg.Check) *pkg.Check {
 	}
 	c.Checks[check.Key] = check
 	return &lastCheck
-}
-
-func Check(checks v1.Canary, result *pkg.CheckResult) pkg.Check {
-	return pkg.Check{
-		Key:          checks.GetKey(result.Check),
-		Type:         result.Check.GetType(),
-		Name:         checks.ID(),
-		Namespace:    checks.Namespace,
-		Labels:       checks.ObjectMeta.Labels,
-		RunnerLabels: pkg.RunnerLabels,
-		CanaryName:   checks.Name,
-		Description:  checks.GetDescription(result.Check),
-		Endpoint:     result.Check.GetEndpoint(),
-		Interval:     checks.Spec.Interval,
-		Schedule:     checks.Spec.Schedule,
-		Owner:        checks.Spec.Owner,
-		Severity:     checks.Spec.Severity,
-		CheckCanary:  &checks,
-		Icon:         result.Check.GetIcon(),
-		DisplayType:  result.DisplayType,
-		Statuses: []pkg.CheckStatus{
-			{
-				Status:   result.Pass,
-				Invalid:  result.Invalid,
-				Duration: int(result.Duration),
-				Time:     pkg.JSONTime(time.Now().UTC()),
-				Message:  result.Message,
-				Error:    result.Error,
-			},
-		},
-	}
 }
 
 func (c *cache) GetChecks() pkg.Checks {

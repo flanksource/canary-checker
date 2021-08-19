@@ -7,6 +7,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/commons/console"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -64,18 +65,32 @@ type Check struct {
 	CheckCanary  *v1.Canary        `json:"-"`
 }
 
-func FromV1(checks v1.Canary) Check {
+func FromResult(result CheckResult) CheckStatus {
+	return CheckStatus{
+		Status:   result.Pass,
+		Invalid:  result.Invalid,
+		Duration: int(result.Duration),
+		Time:     JSONTime(time.Now().UTC()),
+		Message:  result.Message,
+		Error:    result.Error,
+	}
+}
+func FromV1(check v1.Canary, ext external.Check, statuses ...CheckStatus) Check {
 	return Check{
-		Name:        checks.ID(),
-		Namespace:   checks.Namespace,
-		Labels:      checks.ObjectMeta.Labels,
-		CanaryName:  checks.Name,
-		Interval:    checks.Spec.Interval,
-		Schedule:    checks.Spec.Schedule,
-		Owner:       checks.Spec.Owner,
-		Severity:    checks.Spec.Severity,
-		CheckCanary: &checks,
-		Statuses:    []CheckStatus{},
+		Name:        check.ID(),
+		Namespace:   check.Namespace,
+		Labels:      labels.FilterLabels(check.GetAllLabels(nil)),
+		CanaryName:  check.Name,
+		Interval:    check.Spec.Interval,
+		Schedule:    check.Spec.Schedule,
+		Owner:       check.Spec.Owner,
+		Severity:    check.Spec.Severity,
+		CheckCanary: &check,
+		Type:        ext.GetType(),
+		Description: ext.GetDescription(),
+		Endpoint:    ext.GetEndpoint(),
+		Icon:        ext.GetIcon(),
+		Statuses:    statuses,
 	}
 }
 
