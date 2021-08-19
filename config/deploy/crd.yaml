@@ -4914,6 +4914,35 @@ spec:
                         type: string
                     type: object
                   type: array
+                prometheus:
+                  items:
+                    properties:
+                      description:
+                        description: Description for the check
+                        type: string
+                      displayTemplate:
+                        description: 'DisplayTemplate displays testResults results in text Have access to the list of maps where each entry is equivalent to a row Example: for the given query: ''kubernetes_build_info{job!~"kube-dns|coredns"}'' the displayTemplate could be: ''[[ index .results 0 "git_version" ]]'''
+                        type: string
+                      host:
+                        description: Address of the prometheus server
+                        type: string
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      name:
+                        description: Name of the check
+                        type: string
+                      query:
+                        description: PromQL query
+                        type: string
+                      resultsFunction:
+                        description: ResultsFunction tests query output for pass/fail The check is only passed when ResultsFunction returns 'true'.
+                        type: string
+                    required:
+                      - host
+                      - query
+                    type: object
+                  type: array
                 redis:
                   items:
                     properties:

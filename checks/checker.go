@@ -31,10 +31,11 @@ var All = []Checker{
 	&RedisChecker{},
 	&JunitChecker{},
 	&SmbChecker{},
+	&EC2Checker{},
+	&PrometheusChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),
-	&EC2Checker{},
 }
 
 type SetsClient interface {

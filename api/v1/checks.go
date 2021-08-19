@@ -554,6 +554,33 @@ func (c SmbCheck) GetDisplayTemplate() string {
 	return "File Age: [[.age]]; File count: [[.count]]"
 }
 
+type PrometheusCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	// Address of the prometheus server
+	Host string `yaml:"host" json:"host"`
+	// PromQL query
+	Query string `yaml:"query" json:"query"`
+	// DisplayTemplate displays testResults results in text
+	// Have access to the list of maps where each entry is equivalent to a row
+	// Example: for the given query: 'kubernetes_build_info{job!~"kube-dns|coredns"}' the displayTemplate could be: '[[ index .results 0 "git_version" ]]'
+	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
+	// ResultsFunction tests query output for pass/fail
+	// The check is only passed when ResultsFunction returns 'true'.
+	ResultsFunction string `yaml:"resultsFunction,omitempty" json:"resultsFunction,omitempty"`
+}
+
+func (c PrometheusCheck) GetType() string {
+	return "prometheus"
+}
+
+func (c PrometheusCheck) GetEndpoint() string {
+	return fmt.Sprintf("%v/%v", c.Host, c.Description)
+}
+
+func (c PrometheusCheck) GetDisplayTemplate() string {
+	return c.DisplayTemplate
+}
+
 /*
 
 ```yaml
@@ -1005,4 +1032,5 @@ var AllChecks = []external.Check{
 	JunitCheck{},
 	SmbCheck{},
 	EC2Check{},
+	PrometheusCheck{},
 }
