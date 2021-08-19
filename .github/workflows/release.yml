@@ -64,7 +64,6 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '12'
-      - run: make vue-dist
       - run: make build-api-docs build-docs deploy-docs
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
