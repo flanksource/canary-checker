@@ -14,7 +14,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/aggregate"
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/metrics"
@@ -64,33 +63,27 @@ var Serve = &cobra.Command{
 			case checks.SetsClient:
 				cs.SetClient(kommonsClient)
 			}
-			if config.Schedule != "" {
-				cron.AddFunc(config.Schedule, func() { // nolint: errcheck
-
-					go func() {
-						for _, result := range c.Run(canary) {
-							cache.AddCheck(canary, result)
-							metrics.Record(canary, result)
-						}
-					}()
-				})
-				logger.Infof("Running canary %v on %v schedule", canary.Name, config.Schedule)
-			} else if config.Interval > 0 {
-				id, _ := cron.AddFunc(fmt.Sprintf("@every %ds", config.Interval), func() { // nolint: errcheck
-					go func() {
-						for _, result := range c.Run(canary) {
-							cache.AddCheck(canary, result)
-							metrics.Record(canary, result)
-						}
-					}()
-				})
-				logger.Infof("Running canary %v every %v seconds, with id: %v", canary, config.Interval, id)
+			schedule := config.Schedule
+			if schedule == "" {
+				schedule = fmt.Sprintf("@every %ds", config.Interval)
 			}
+
+			cron.AddFunc(schedule, func() { // nolint: errcheck
+				go func() {
+					runCheck(c, canary)
+				}()
+			})
 		}
 		serve(cmd)
-		logger.Infof("%+v", cron.Entries())
-
 	},
+}
+
+func runCheck(c checks.Checker, canary v1.Canary) {
+	for _, result := range c.Run(canary) {
+		logger.Infof(result.String())
+		cache.AddCheck(canary, result)
+		metrics.Record(canary, result)
+	}
 }
 
 func serve(cmd *cobra.Command) {
@@ -100,10 +93,6 @@ func serve(cmd *cobra.Command) {
 
 	var staticRoot nethttp.FileSystem
 	var allowedCors string
-
-	if aggregate.PivotByNamespace && len(aggregate.Servers) > 0 {
-		logger.Fatalf("pivot by namespace and aggregate servers cannot be enabled at the same time")
-	}
 
 	if dev {
 		staticRoot = nethttp.Dir("./ui/build")
@@ -125,7 +114,6 @@ func serve(cmd *cobra.Command) {
 	nethttp.HandleFunc("/api", simpleCors(api.Handler, allowedCors))
 	nethttp.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))
 	nethttp.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler(prometheusHost), allowedCors))
-	nethttp.HandleFunc("/api/aggregate", simpleCors(aggregate.Handler, allowedCors))
 	nethttp.HandleFunc("/api/push", simpleCors(push.Handler, allowedCors))
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
 	logger.Infof("Starting health dashboard at http://%s", addr)
@@ -161,10 +149,9 @@ func init() {
 	Serve.Flags().Bool("dev", false, "Run in development mode")
 	Serve.Flags().String("prometheus", "http://localhost:8080", "Prometheus address")
 	Serve.Flags().IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
-	Serve.Flags().StringSliceVar(&aggregate.Servers, "aggregateServers", []string{}, "Aggregate check results from multiple servers in the status page")
+	Serve.Flags().StringSliceVar(&pullServers, "pull-servers", []string{}, "Aggregate check results from multiple servers in the status page")
 	Serve.Flags().StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
 	Serve.Flags().StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
-	Serve.Flags().BoolVar(&aggregate.PivotByNamespace, "pivot-by-namespace", false, "Show the same check across namespaces in a different column")
 	Serve.Flags().StringVar(&prometheusURL, "prometheus-url", "", "location of the prometheus server")
 	Serve.Flags().String("canary-name", "", "Canary name")
 	Serve.Flags().String("canary-namespace", "", "Canary namespace")

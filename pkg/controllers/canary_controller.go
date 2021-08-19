@@ -90,7 +90,7 @@ func (r *CanaryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	err := r.Get(ctx, req.NamespacedName, check)
 
 	if !check.DeletionTimestamp.IsZero() {
-		logger.Info("removing")
+		logger.Info("removing %s", check)
 		cache.RemoveCheck(*check)
 		metrics.RemoveCheck(*check)
 		controllerutil.RemoveFinalizer(check, FinalizerName)
@@ -191,7 +191,7 @@ func (r *CanaryReconciler) Report(key types.NamespacedName, results []*pkg.Check
 		lastResult := cache.AddCheck(check, result)
 		//FIXME this needs to be aggregated across all
 		uptime, latency := metrics.Record(check, result)
-		check.Status.Uptime1H = uptime
+		check.Status.Uptime1H = uptime.String()
 		check.Status.Latency1H = latency.String()
 		if lastResult != nil && len(lastResult.Statuses) > 0 && (lastResult.Statuses[0].Status != result.Pass) {
 			transitioned = true

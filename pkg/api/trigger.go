@@ -7,12 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 
-	"github.com/flanksource/canary-checker/checks"
-	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/cache"
-	"github.com/flanksource/canary-checker/pkg/metrics"
 	vapi "github.com/hashicorp/vault/api"
 	"github.com/pkg/errors"
 )
@@ -57,58 +52,10 @@ func TriggerCheckHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	parsedServer := strings.Split(td.CheckServer, "@")
-	serverURL := parsedServer[1]
-	serverName := parsedServer[0]
-	if serverURL == "local" {
-		var check *pkg.Check
-		data := cache.GetChecks()
-		for _, _c := range data {
-			c := _c
-			if c.Key == td.CheckKey {
-				check = &c
-			}
-		}
+	// parsedServer := strings.Split(td.CheckServer, "@")
+	// serverURL := parsedServer[1]
+	// serverName := parsedServer[0]
 
-		if check == nil {
-			http.Error(w, "No check found", http.StatusNotFound)
-			return
-		}
-
-		var checker checks.Checker
-		for _, _c := range checks.All {
-			c := _c
-			if c.Type() == check.Type {
-				checker = c
-			}
-		}
-
-		if checker == nil {
-			http.Error(w, "No checker found", http.StatusNotFound)
-			return
-		}
-
-		conf := cache.GetConfig(td.CheckKey)
-		if conf == nil {
-			http.Error(w, "Check config not found", http.StatusNotFound)
-			return
-		}
-		result := checker.Check(*check.CheckCanary, conf)
-		cache.AddCheck(*check.CheckCanary, result)
-		metrics.Record(*check.CheckCanary, result)
-	} else {
-		td.CheckServer = fmt.Sprintf("%s@local", serverName)
-		_, err := triggerCheckOnServer(serverURL, td)
-		if err != nil {
-			http.Error(w,
-				fmt.Sprintf("Failed to trigger check on server %s: %v", serverURL, err),
-				http.StatusInternalServerError)
-			return
-		}
-	}
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte("{}"))
-	if err != nil {
-		return
-	}
+	http.Error(w, "Not implemented", http.StatusNotImplemented)
+	return
 }

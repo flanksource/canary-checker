@@ -20,7 +20,7 @@ type Response struct {
 func Handler(w http.ResponseWriter, req *http.Request) {
 	apiResponse := &Response{
 		RunnerName: runner.RunnerName,
-		Checks:     cache.GetChecks(),
+		Checks:     cache.GetChecks(""),
 	}
 	jsonData, err := json.Marshal(apiResponse)
 	if err != nil {
