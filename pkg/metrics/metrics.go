@@ -102,9 +102,15 @@ func RemoveCheck(checks v1.Canary) {
 }
 
 func GetMetrics(key string) (uptime pkg.Uptime, latency pkg.Latency) {
+	uptime = pkg.Uptime{}
 	fail := failed[key]
+	if fail != nil {
+		uptime.Failed = int(fail.Reduce(rolling.Sum))
+	}
 	pass := passed[key]
-	uptime = pkg.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
+	if pass != nil {
+		uptime.Passed = int(pass.Reduce(rolling.Sum))
+	}
 	_latency := latencies[key]
 	if _latency != nil {
 		latency = pkg.Latency{Rolling1H: _latency.Reduce(rolling.Percentile(95))}

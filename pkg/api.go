@@ -9,6 +9,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/commons/console"
+	"github.com/flanksource/commons/text"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -51,7 +52,7 @@ type Latency struct {
 }
 
 func (l Latency) String() string {
-	return fmt.Sprintf("%0.1f", l.Rolling1H)
+	return text.HumanizeDuration(time.Duration(l.Rolling1H) * time.Millisecond)
 }
 
 type Uptime struct {
