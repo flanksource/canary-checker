@@ -9,7 +9,7 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/text"
 	"github.com/prometheus/common/model"
@@ -34,7 +34,7 @@ func (c *PrometheusChecker) Check(canary v1.Canary, extConfig external.Check) *p
 	check := extConfig.(v1.PrometheusCheck)
 	template := check.GetDisplayTemplate()
 	textResults := template != ""
-	promClient, err := utils.NewPrometheusAPI(check.Host)
+	promClient, err := prometheus.NewPrometheusAPI(check.Host)
 	if err != nil {
 		pkg.Fail(check).TextResults(textResults).ErrorMessage(err).StartTime(start).ResultMessage(prometheusTemplateResult(template, nil))
 	}

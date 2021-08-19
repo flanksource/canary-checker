@@ -213,6 +213,25 @@ type Canary struct {
 	Status CanaryStatus `json:"status,omitempty"`
 }
 
+func (c Canary) GetAllLabels(extra map[string]string) map[string]string {
+	labels := make(map[string]string)
+	labels["_name"] = c.Name
+	labels["_namespace"] = c.Namespace
+	for k, v := range extra {
+		labels["__"+k] = v
+	}
+	for k, v := range c.GetLabels() {
+		labels[k] = v
+	}
+	if c.Spec.Severity != "" {
+		labels[c.Spec.Severity] = "true"
+	}
+	if c.Spec.Owner != "" {
+		labels[c.Spec.Owner] = "true"
+	}
+	return labels
+}
+
 func (c Canary) ID() string {
 	return fmt.Sprintf("%s/%s", c.Namespace, c.Name)
 }

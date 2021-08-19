@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/canary-checker/pkg/runner"
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
@@ -17,12 +17,9 @@ type Response struct {
 	Checks     pkg.Checks `json:"checks"`
 }
 
-var RunnerName string
-var Prometheus *utils.PrometheusClient
-
 func Handler(w http.ResponseWriter, req *http.Request) {
 	apiResponse := &Response{
-		RunnerName: RunnerName,
+		RunnerName: runner.RunnerName,
 		Checks:     cache.GetChecks(),
 	}
 	jsonData, err := json.Marshal(apiResponse)

@@ -5,15 +5,16 @@ import (
 	"os"
 	"strings"
 
+	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/canary-checker/pkg/push"
+	"github.com/flanksource/canary-checker/pkg/runner"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/aggregate"
-	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/controllers"
-	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/commons/logger"
 	"github.com/go-logr/zapr"
 	"github.com/spf13/cobra"
@@ -46,7 +47,7 @@ func init() {
 	Operator.Flags().IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
 	Operator.Flags().StringSliceVar(&aggregate.Servers, "aggregateServers", []string{}, "Aggregate check results from multiple servers in the status page")
 	Operator.Flags().StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
-	Operator.Flags().StringVar(&api.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
+	Operator.Flags().StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 	Operator.Flags().BoolVar(&aggregate.PivotByNamespace, "pivot-by-namespace", false, "Show the same check across namespaces in a different column")
 	Operator.Flags().StringVar(&prometheusURL, "prometheus-url", "", "location of the prometheus server")
 	// +kubebuilder:scaffold:scheme
@@ -89,17 +90,17 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	if api.RunnerName == "" {
-		api.RunnerName = pkg.GetClusterName(mgr.GetConfig())
+	if runner.RunnerName == "" {
+		runner.RunnerName = pkg.GetClusterName(mgr.GetConfig())
 	}
-	loggr.Sugar().Infof("Using runner name: %s", api.RunnerName)
+	loggr.Sugar().Infof("Using runner name: %s", runner.RunnerName)
 
 	includeNamespaces := []string{}
 	if includeNamespace != "" {
 		includeNamespaces = strings.Split(includeNamespace, ",")
 	}
 
-	pkg.RunnerLabels = pkg.LoadLabels("/etc/podinfo/labels")
+	runner.RunnerLabels = labels.LoadFromFile("/etc/podinfo/labels")
 
 	reconciler := &controllers.CanaryReconciler{
 		IncludeCheck:      includeCheck,
@@ -116,7 +117,7 @@ func run(cmd *cobra.Command, args []string) {
 	push.AddServers(pushServers)
 	go push.Start()
 
-	api.Prometheus, err = utils.NewPrometheusAPI(prometheusURL)
+	runner.Prometheus, err = prometheus.NewPrometheusAPI(prometheusURL)
 	if err != nil {
 		logger.Debugf("error getting prometheus client")
 		return

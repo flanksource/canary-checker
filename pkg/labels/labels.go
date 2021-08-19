@@ -1,4 +1,4 @@
-package pkg
+package labels
 
 import (
 	"bufio"
@@ -8,9 +8,26 @@ import (
 	"github.com/flanksource/commons/logger"
 )
 
-var RunnerLabels map[string]string = make(map[string]string)
+var IgnoreLabels = []string{
+	"pod-template-hash",
+	"kustomize.toolkit.fluxcd.io",
+}
 
-func LoadLabels(path string) map[string]string {
+func FilterLabels(labels map[string]string) map[string]string {
+	var new = make(map[string]string)
+outer:
+	for k, v := range labels {
+		for _, ignore := range IgnoreLabels {
+			if strings.HasPrefix(k, ignore) {
+				continue outer
+			}
+		}
+		new[k] = v
+	}
+	return new
+}
+
+func LoadFromFile(path string) map[string]string {
 	result := make(map[string]string)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		// No label metadata mounted into the operator pod

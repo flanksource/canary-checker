@@ -206,7 +206,7 @@ func (r *CanaryReconciler) Report(key types.NamespacedName, results []*pkg.Check
 		pass = pass && result.Pass
 		check.Status.Message = &result.Message
 		check.Status.ErrorMessage = &result.Error
-		push.Queue(cache.Check(check, result))
+		push.Queue(pkg.FromV1(check, result.Check, pkg.FromResult(*result)))
 	}
 	if pass {
 		check.Status.Status = &v1.Passed
