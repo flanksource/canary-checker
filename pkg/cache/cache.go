@@ -97,8 +97,8 @@ func (c *cache) GetChecks(duration string) pkg.Checks {
 		check.Uptime = uptime
 		check.Latency = latency
 		if duration != "" {
-			metrics.FillLatencies(check.Key, duration, &check.Latency)
-			metrics.FillUptime(check.Key, duration, &check.Uptime)
+			metrics.FillLatencies(check.Key, duration, &check.Latency) //nolint: errcheck
+			metrics.FillUptime(check.Key, duration, &check.Uptime)     //nolint: errcheck
 		}
 		result = append(result, check)
 	}

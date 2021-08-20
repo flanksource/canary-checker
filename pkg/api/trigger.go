@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func triggerCheckOnServer(serverURL string, triggerData TriggerData) (*vapi.Response, error) {
+func triggerCheckOnServer(serverURL string, triggerData TriggerData) (*vapi.Response, error) { //nolint: deadcode,unused
 	url := fmt.Sprintf("%s/api/triggerCheck", serverURL)
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -57,5 +57,4 @@ func TriggerCheckHandler(w http.ResponseWriter, req *http.Request) {
 	// serverName := parsedServer[0]
 
 	http.Error(w, "Not implemented", http.StatusNotImplemented)
-	return
 }
