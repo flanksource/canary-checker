@@ -200,9 +200,8 @@ type URL struct {
 }
 
 type CheckResult struct {
-	Pass    bool
-	Invalid bool
-	//timestamp   time.Time // generate unique id for every check result
+	Pass        bool
+	Invalid     bool
 	Detail      interface{}
 	Duration    int64
 	Description string

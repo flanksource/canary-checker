@@ -2,7 +2,6 @@ package checks
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -130,8 +129,6 @@ func (c *JunitChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	return results
 }
 
-// cache.AddDetail(checkkey string, obj interface{})
-
 func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	var textResults bool
@@ -139,8 +136,6 @@ func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Ch
 	if junitCheck.GetDisplayTemplate() != "" {
 		textResults = true
 	}
-	//
-	//canary.GetKey(junitCheck)
 	interval := canary.Spec.Interval
 	name := canary.Name
 	namespace := canary.Namespace
@@ -262,9 +257,6 @@ func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Ch
 	junitStatus.skipped = junitResults.Skipped
 	junitStatus.error = junitResults.Error
 
-	data, err := json.Marshal(junitResults)
-	fmt.Println(err)
-	fmt.Println(string(data))
 	if junitStatus.failed != 0 {
 		failMessage := getFailMessageFromTests(junitResults.Suites)
 		return pkg.Fail(junitCheck).TextResults(textResults).ResultMessage(junitTemplateResult(template, junitStatus)).ErrorMessage(fmt.Errorf(failMessage)).StartTime(start).AddDetails(junitResults)

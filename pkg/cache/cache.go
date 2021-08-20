@@ -23,7 +23,6 @@ type cache struct {
 var Cache = &cache{
 	Checks:       make(map[string]pkg.Check),
 	CheckConfigs: make(map[string]external.Check),
-	// Details:      make(map[string][]interface{}),
 }
 
 func GetConfig(key string) external.Check {
