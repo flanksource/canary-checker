@@ -94,7 +94,7 @@ func FromResult(result CheckResult) CheckStatus {
 		Status:   result.Pass,
 		Invalid:  result.Invalid,
 		Duration: int(result.Duration),
-		Time:     time.Now().UTC().Format("2006-01-02 15:04:05"),
+		Time:     time.Now().UTC().Format(time.RFC3339),
 		Message:  result.Message,
 		Error:    result.Error,
 		Detail:   result.Detail,
