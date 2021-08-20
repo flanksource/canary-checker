@@ -11,3 +11,4 @@ test.test
 *.tgz
 *.log
 wait4x
+.vscode/

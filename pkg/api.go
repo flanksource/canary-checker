@@ -36,12 +36,13 @@ func (t *JSONTime) UnmarshalJSON(b []byte) error {
 }
 
 type CheckStatus struct {
-	Status   bool     `json:"status"`
-	Invalid  bool     `json:"invalid"`
-	Time     JSONTime `json:"time"`
-	Duration int      `json:"duration"`
-	Message  string   `json:"message"`
-	Error    string   `json:"error,omitempty"`
+	Status   bool        `json:"status"`
+	Invalid  bool        `json:"invalid"`
+	Time     string      `json:"time"`
+	Duration int         `json:"duration"`
+	Message  string      `json:"message"`
+	Error    string      `json:"error,omitempty"`
+	Detail   interface{} `json:"-"`
 }
 
 type Latency struct {
@@ -93,9 +94,10 @@ func FromResult(result CheckResult) CheckStatus {
 		Status:   result.Pass,
 		Invalid:  result.Invalid,
 		Duration: int(result.Duration),
-		Time:     JSONTime(time.Now().UTC()),
+		Time:     time.Now().UTC().Format("2006-01-02 15:04:05"),
 		Message:  result.Message,
 		Error:    result.Error,
+		Detail:   result.Detail,
 	}
 }
 func FromV1(check v1.Canary, ext external.Check, statuses ...CheckStatus) Check {
@@ -198,8 +200,10 @@ type URL struct {
 }
 
 type CheckResult struct {
-	Pass        bool
-	Invalid     bool
+	Pass    bool
+	Invalid bool
+	//timestamp   time.Time // generate unique id for every check result
+	Detail      interface{}
 	Duration    int64
 	Description string
 	DisplayType string

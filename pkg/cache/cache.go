@@ -16,11 +16,14 @@ type cache struct {
 	Checks       map[string]pkg.Check
 	CheckConfigs map[string]external.Check
 	mtx          sync.Mutex
+	// the string is checkKey
+	Details map[string][]interface{}
 }
 
 var Cache = &cache{
 	Checks:       make(map[string]pkg.Check),
 	CheckConfigs: make(map[string]external.Check),
+	// Details:      make(map[string][]interface{}),
 }
 
 func GetConfig(key string) external.Check {
@@ -100,4 +103,15 @@ func (c *cache) GetChecks(duration string) pkg.Checks {
 		result = append(result, check)
 	}
 	return result
+}
+
+// GetDetails returns the details for a given check
+func (c *cache) GetDetails(checkkey string, time string) interface{} {
+	statuses := c.Checks[checkkey].Statuses
+	for _, status := range statuses {
+		if status.Time == time {
+			return status.Detail
+		}
+	}
+	return nil
 }
