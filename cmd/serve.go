@@ -6,6 +6,7 @@ import (
 	nethttp "net/http"
 	_ "net/http/pprof" // required by serve
 
+	"github.com/flanksource/canary-checker/pkg/details"
 	"github.com/flanksource/canary-checker/pkg/utils"
 
 	"github.com/flanksource/canary-checker/pkg/push"
@@ -115,6 +116,7 @@ func serve(cmd *cobra.Command) {
 	nethttp.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))
 	nethttp.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler(prometheusHost), allowedCors))
 	nethttp.HandleFunc("/api/push", simpleCors(push.Handler, allowedCors))
+	nethttp.HandleFunc("/api/details", simpleCors(details.Handler, allowedCors))
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
 	logger.Infof("Starting health dashboard at http://%s", addr)
 	logger.Infof("Metrics can be accessed at http://%s/metrics", addr)

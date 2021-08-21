@@ -47,3 +47,8 @@ func (result *CheckResult) TextResults(textResults bool) *CheckResult {
 	}
 	return result
 }
+
+func (result *CheckResult) AddDetails(detail interface{}) *CheckResult {
+	result.Detail = detail
+	return result
+}

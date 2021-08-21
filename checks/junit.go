@@ -35,10 +35,50 @@ const (
 	podKind              = "Pod"
 	junitCheckSelector   = "canary-checker.flanksource.com/check"
 	junitCheckLabelValue = "junit-check"
+	failTestCount        = 10
 )
 
 type JunitChecker struct {
 	kommons *kommons.Client `yaml:"-" json:"-"`
+}
+
+// Test represents the results of a single test run.
+type JunitTest struct {
+	// Name is a descriptor given to the test.
+	Name string `json:"name" yaml:"name"`
+
+	// Classname is an additional descriptor for the hierarchy of the test.
+	Classname string `json:"classname" yaml:"classname"`
+
+	// Duration is the total time taken to run the tests.
+	Duration float64 `json:"duration" yaml:"duration"`
+
+	// Status is the result of the test. Status values are passed, skipped,
+	// failure, & error.
+	Status junit.Status `json:"status" yaml:"status"`
+
+	// Message is an textual description optionally included with a skipped,
+	// failure, or error test case.
+	Message string `json:"message,omitempty" yaml:"message,omitempty"`
+
+	// Error is a record of the failure or error of a test, if applicable.
+	//
+	// The following relations should hold true.
+	//   Error == nil && (Status == Passed || Status == Skipped)
+	//   Error != nil && (Status == Failed || Status == Error)
+	Error error `json:"error,omitempty" yaml:"error,omitempty"`
+
+	// Additional properties from XML node attributes.
+	// Some tools use them to store additional information about test location.
+	Properties map[string]string `json:"properties,omitempty" yaml:"properties,omitempty"`
+
+	// SystemOut is textual output for the test case. Usually output that is
+	// written to stdout.
+	SystemOut string `json:"stdout,omitempty" yaml:"stdout,omitempty"`
+
+	// SystemErr is textual error output for the test case. Usually output that is
+	// written to stderr.
+	SystemErr string `json:"stderr,omitempty" yaml:"stderr,omitempty"`
 }
 
 type JunitStatus struct {
@@ -46,6 +86,24 @@ type JunitStatus struct {
 	failed  int
 	skipped int
 	error   int
+}
+
+type JunitResult struct {
+	JunitAggreate `json:",inline"`
+	Suites        []JunitTestSuite `json:"suites"`
+}
+
+type JunitTestSuite struct {
+	JunitAggreate `json:",inline"`
+	Name          string      `json:"name"`
+	Tests         []JunitTest `json:"tests"`
+}
+type JunitAggreate struct {
+	Passed   int     `json:"passed"`
+	Failed   int     `json:"failed"`
+	Skipped  int     `json:"skipped,omitempty"`
+	Error    int     `json:"error,omitempty"`
+	Duration float64 `json:"duration"`
 }
 
 func (c *JunitChecker) SetClient(client *kommons.Client) {
@@ -170,42 +228,48 @@ func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Ch
 		}
 		allTestSuite = append(allTestSuite, testSuite...)
 	}
-	//initializing results map with 0 values
-	var failedTests = make(map[string]string)
-	for _, suite := range allTestSuite {
-		for _, test := range suite.Tests {
-			switch test.Status {
-			case junit.StatusFailed:
-				junitStatus.failed++
-				failedTests[suite.Name+"/"+test.Name] = failedTests[test.Message]
-			case junit.StatusPassed:
-				junitStatus.passed++
-			case junit.StatusSkipped:
-				junitStatus.skipped++
-			case junit.StatusError:
-				junitStatus.error++
-			}
-			if test.Status == junit.StatusFailed {
-				failedTests[suite.Name+"/"+test.Name] = failedTests[test.Message]
-			}
-		}
+	var junitResults JunitResult
+	junitResults.Suites = make([]JunitTestSuite, len(allTestSuite))
+	for i, suite := range allTestSuite {
+		// Aggregate results
+		suite.Aggregate()
+
+		junitResults.Passed += suite.Totals.Passed
+		junitResults.Failed += suite.Totals.Failed
+		junitResults.Skipped += suite.Totals.Skipped
+		junitResults.Error += suite.Totals.Error
+		junitResults.Duration += suite.Totals.Duration.Seconds()
+
+		junitResults.Suites[i].Passed = suite.Totals.Passed
+		junitResults.Suites[i].Failed = suite.Totals.Failed
+		junitResults.Suites[i].Skipped = suite.Totals.Skipped
+		junitResults.Suites[i].Error = suite.Totals.Error
+		junitResults.Suites[i].Duration = suite.Totals.Duration.Seconds()
+		junitResults.Suites[i].Name = suite.Name
+
+		// remove duplicate properties form test cases
+		suite.Tests = removeDuplicateProperties(suite.Tests)
+		junitResults.Suites[i].Tests = getJunitTestsFromJunit(suite.Tests)
 	}
+	// update status for template results
+	junitStatus.passed = junitResults.Passed
+	junitStatus.failed = junitResults.Failed
+	junitStatus.skipped = junitResults.Skipped
+	junitStatus.error = junitResults.Error
+
 	if junitStatus.failed != 0 {
-		failMessage := ""
-		for testName, testMessage := range failedTests {
-			failMessage = failMessage + "\n" + testName + ":" + testMessage
-		}
-		return pkg.Fail(junitCheck).TextResults(textResults).ResultMessage(junitTemplateResult(template, junitStatus)).ErrorMessage(fmt.Errorf(failMessage)).StartTime(start)
+		failMessage := getFailMessageFromTests(junitResults.Suites)
+		return pkg.Fail(junitCheck).TextResults(textResults).ResultMessage(junitTemplateResult(template, junitStatus)).ErrorMessage(fmt.Errorf(failMessage)).StartTime(start).AddDetails(junitResults)
 	}
 
 	// Don't use junitTemplateResult since we also need to check if templating succeeds here if not we fail
 	var results = map[junit.Status]int{junit.StatusFailed: junitStatus.failed, junit.StatusPassed: junitStatus.passed, junit.StatusSkipped: junitStatus.skipped, junit.StatusError: junitStatus.error}
 	message, err := text.TemplateWithDelims(junitCheck.GetDisplayTemplate(), "[[", "]]", results)
 	if err != nil {
-		return pkg.Fail(junitCheck).TextResults(textResults).ResultMessage(junitTemplateResult(template, junitStatus)).ErrorMessage(err).StartTime(start)
+		return pkg.Fail(junitCheck).TextResults(textResults).ResultMessage(junitTemplateResult(template, junitStatus)).ErrorMessage(err).StartTime(start).AddDetails(junitResults)
 	}
 
-	return pkg.Success(junitCheck).TextResults(textResults).ResultMessage(message).StartTime(start)
+	return pkg.Success(junitCheck).TextResults(textResults).ResultMessage(message).StartTime(start).AddDetails(junitResults)
 }
 
 func getContainers() []corev1.Container {
@@ -274,4 +338,55 @@ func waitForExistingJunitCheck(interval uint64, spec string, createTime time.Tim
 
 func getJunitCheckLabel(label, name, namespace string) string {
 	return fmt.Sprintf("%v-%v-%v", label, name, namespace)
+}
+
+// remove duplicate properties from the tests
+func removeDuplicateProperties(tests []junit.Test) []junit.Test {
+	for _, test := range tests {
+		if test.Classname != "" {
+			delete(test.Properties, "classname")
+		}
+		if test.Name != "" {
+			delete(test.Properties, "name")
+		}
+		if test.Duration.String() != "" {
+			delete(test.Properties, "time")
+		}
+	}
+	return tests
+}
+
+func getFailMessageFromTests(suites []JunitTestSuite) string {
+	var message string
+	count := 0
+	for _, suite := range suites {
+		for _, test := range suite.Tests {
+			if test.Status == junit.StatusFailed {
+				message = message + "\n" + test.Name
+				count++
+			}
+			if count >= failTestCount {
+				return message
+			}
+		}
+	}
+	return message
+}
+
+func getJunitTestsFromJunit(tests []junit.Test) []JunitTest {
+	junitTests := make([]JunitTest, len(tests))
+	for i, test := range tests {
+		junitTests[i] = JunitTest{
+			Name:       test.Name,
+			Classname:  test.Classname,
+			Status:     test.Status,
+			Duration:   test.Duration.Seconds(),
+			Properties: test.Properties,
+			Message:    test.Message,
+			Error:      test.Error,
+			SystemOut:  test.SystemOut,
+			SystemErr:  test.SystemErr,
+		}
+	}
+	return junitTests
 }

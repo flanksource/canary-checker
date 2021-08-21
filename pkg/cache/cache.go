@@ -16,6 +16,8 @@ type cache struct {
 	Checks       map[string]pkg.Check
 	CheckConfigs map[string]external.Check
 	mtx          sync.Mutex
+	// the string is checkKey
+	Details map[string][]interface{}
 }
 
 var Cache = &cache{
@@ -94,10 +96,21 @@ func (c *cache) GetChecks(duration string) pkg.Checks {
 		check.Uptime = uptime
 		check.Latency = latency
 		if duration != "" {
-			metrics.FillLatencies(check.Key, duration, &check.Latency)
-			metrics.FillUptime(check.Key, duration, &check.Uptime)
+			metrics.FillLatencies(check.Key, duration, &check.Latency) //nolint: errcheck
+			metrics.FillUptime(check.Key, duration, &check.Uptime)     //nolint: errcheck
 		}
 		result = append(result, check)
 	}
 	return result
+}
+
+// GetDetails returns the details for a given check
+func (c *cache) GetDetails(checkkey string, time string) interface{} {
+	statuses := c.Checks[checkkey].Statuses
+	for _, status := range statuses {
+		if status.Time == time {
+			return status.Detail
+		}
+	}
+	return nil
 }
