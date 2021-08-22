@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/kommons"
@@ -17,7 +18,6 @@ import (
 
 	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/deps"
 	"github.com/flanksource/commons/logger"
 )
 
@@ -60,12 +60,13 @@ func setup() {
 	if testFolder == "" {
 		testFolder = "fixtures"
 	}
-	docker := deps.Binary("docker", "", "")
-	docker("pull docker.io/library/busybox:1.30")
-	docker("tag docker.io/library/busybox:1.30 ttl.sh/flanksource-busybox:1.30")
-	docker("tag docker.io/library/busybox:1.30 docker.io/flanksource/busybox:1.30")
-	os.Setenv("DOCKER_API_VERSION", "1.39")
-	prepareS3E2E(s3Fixtures)
+	logger.Infof("Testing %s", testFolder)
+	// docker := deps.Binary("docker", "", "")
+	// docker("pull docker.io/library/busybox:1.30")
+	// docker("tag docker.io/library/busybox:1.30 ttl.sh/flanksource-busybox:1.30")
+	// docker("tag docker.io/library/busybox:1.30 docker.io/flanksource/busybox:1.30")
+	// os.Setenv("DOCKER_API_VERSION", "1.39")
+	// prepareS3E2E(s3Fixtures)
 }
 
 func teardown() {
@@ -105,17 +106,26 @@ func TestRunChecks(t *testing.T) {
 }
 
 func runFixture(t *testing.T, name string) {
-	config := pkg.ParseConfig(fmt.Sprintf("../%s/%s", testFolder, name))
-	canary := v1.Canary{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "podinfo-test",
-			Name:      cmd.CleanupFilename(name),
-		},
-		Spec: config,
-	}
-
 	t.Run(name, func(t *testing.T) {
-		checkResults := checks.RunChecks(canary, kommonsClient)
+		config, err := pkg.ParseConfig(fmt.Sprintf("../%s/%s", testFolder, name))
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		if config == nil {
+			t.Errorf("%s did not parse into a spec", name)
+			return
+		}
+		canary := v1.Canary{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "podinfo-test",
+				Name:      cmd.CleanupFilename(name),
+			},
+			Spec: *config,
+		}
+		context := context.New(kommonsClient, canary)
+
+		checkResults := checks.RunChecks(context, canary)
 		for _, res := range checkResults {
 			if res == nil {
 				t.Errorf("Result in %v returned nil:\n", name)

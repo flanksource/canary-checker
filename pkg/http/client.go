@@ -197,8 +197,10 @@ func (h *HttpRequest) Do(body string) *HttpResponse {
 
 func NewHttpResponse(req *HttpRequest, resp *http.Response) *HttpResponse {
 	headers := make(map[string]string)
-	for header, values := range resp.Header {
-		headers[header] = strings.Join(values, " ")
+	if resp != nil {
+		for header, values := range resp.Header {
+			headers[header] = strings.Join(values, " ")
+		}
 	}
 	return &HttpResponse{
 		Request:  req,

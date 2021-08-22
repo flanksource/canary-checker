@@ -132,6 +132,9 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 
 	resp := req.Do(check.Body)
 	result.Duration = resp.Elapsed.Milliseconds()
+	if resp.Error != nil {
+		return result.ErrorMessage(resp.Error)
+	}
 	result.AddMetric(pkg.Metric{
 		Name: "response_code",
 		Type: metrics.CounterType,

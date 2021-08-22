@@ -54,6 +54,7 @@ func (c *NamespaceChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	for _, conf := range ctx.Canary.Spec.Namespace {
 		if c.k8s == nil {
 			c.k8s, err = ctx.Kommons.GetClientset()
+			c.ctx = ctx
 			if err != nil {
 				return []*pkg.CheckResult{pkg.Fail(conf).ErrorMessage(err)}
 			}
@@ -116,7 +117,7 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 
 	logger.Debugf("Running namespace check %s", check.CheckName)
 	five := int64(5)
-	if _, err := c.k8s.CoreV1().Nodes().List(c.ctx, metav1.ListOptions{TimeoutSeconds: &five}); err != nil {
+	if _, err := c.k8s.CoreV1().Nodes().List(ctx, metav1.ListOptions{TimeoutSeconds: &five}); err != nil {
 		return unexpectedErrorf(check, err, "cannot connect to API server")
 	}
 
@@ -130,7 +131,7 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 			Annotations: check.NamespaceAnnotations,
 		},
 	}
-	if _, err := namespaces.Create(c.ctx, ns, metav1.CreateOptions{}); err != nil {
+	if _, err := namespaces.Create(ctx, ns, metav1.CreateOptions{}); err != nil {
 		return unexpectedErrorf(check, err, "unable to create namespace")
 	}
 	defer func() {
@@ -144,7 +145,7 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 
 	pods := c.k8s.CoreV1().Pods(ns.Name)
 
-	if _, err := pods.Create(c.ctx, pod, metav1.CreateOptions{}); err != nil {
+	if _, err := pods.Create(ctx, pod, metav1.CreateOptions{}); err != nil {
 		return unexpectedErrorf(check, err, "unable to create pod")
 	}
 	pod, _ = c.WaitForPod(ns.Name, pod.Name, time.Millisecond*time.Duration(check.ScheduleTimeout), v1.PodRunning)

@@ -1,8 +1,6 @@
 package checks
 
 import (
-	"time"
-
 	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/flanksource/kommons"
@@ -41,27 +39,31 @@ func (c *RedisChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	start := time.Now()
 	redisCheck := extConfig.(v1.RedisCheck)
+	result := pkg.Success(redisCheck)
 	namespace := ctx.Canary.Namespace
 	var err error
 	auth, err := GetAuthValues(redisCheck.Auth, c.kommons, namespace)
 	if err != nil {
-		return Failf(redisCheck, "failed to fetch auth details: %v", err)
+		return result.Failf("failed to fetch auth details: %v", err)
 	}
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     redisCheck.Addr,
-		Password: auth.GetPassword(),
-		DB:       redisCheck.DB,
-		Username: auth.GetUsername(),
-	})
-	result, err := rdb.Ping(ctx).Result()
+	opts := &redis.Options{
+		Addr: redisCheck.Addr,
+		DB:   redisCheck.DB,
+	}
+	if auth != nil {
+		opts.Username = auth.GetUsername()
+		opts.Password = auth.GetPassword()
+	}
+
+	rdb := redis.NewClient(opts)
+	results, err := rdb.Ping(ctx).Result()
 
 	if err != nil {
-		return Failf(redisCheck, "failed to execute query %s", err)
+		return result.Failf("failed to execute query %s", err)
 	}
-	if result != "PONG" {
-		return Failf(redisCheck, "expected PONG as result, got %s", result)
+	if results != "PONG" {
+		return result.Failf("expected PONG as result, got %s", result)
 	}
-	return Success(redisCheck, start)
+	return result
 }

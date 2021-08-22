@@ -12,7 +12,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/exec"
-	"github.com/flanksource/kommons"
 	"github.com/jszwec/csvutil"
 	"k8s.io/apimachinery/pkg/util/rand"
 )
@@ -22,15 +21,6 @@ func init() {
 }
 
 type JmeterChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
-}
-
-func (c *JmeterChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
-}
-
-func (c JmeterChecker) GetClient() *kommons.Client {
-	return c.kommons
 }
 
 func (c *JmeterChecker) Type() string {
@@ -48,9 +38,8 @@ func (c *JmeterChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	jmeterCheck := extConfig.(v1.JmeterCheck)
-	client := c.GetClient()
 	namespace := ctx.Canary.Namespace
-	_, value, err := client.GetEnvValue(jmeterCheck.Jmx, namespace)
+	_, value, err := ctx.Kommons.GetEnvValue(jmeterCheck.Jmx, namespace)
 	if err != nil {
 		return Failf(jmeterCheck, "Failed to parse the jmx plan: %v", err)
 	}

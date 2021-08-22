@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"io"
 	"strings"
-	"time"
 
 	"github.com/flanksource/kommons"
 
@@ -92,37 +91,34 @@ func getDigestFromOutput(out io.ReadCloser) string {
 // Returns check result and metrics
 func (c *DockerPullChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DockerPullCheck)
-	start := time.Now()
 	namespace := ctx.Canary.Namespace
-	var err error
-	auth, err := GetAuthValues(check.Auth, c.kommons, namespace)
+	var result = pkg.Success(check)
+	var authStr string
+	auth, err := GetAuthValues(check.Auth, ctx.Kommons, namespace)
 	if err != nil {
 		return Failf(check, "failed to fetch auth details: %v", err)
 	}
-	authConfig := types.AuthConfig{
-		Username: auth.Username.Value,
-		Password: auth.Password.Value,
+	if auth != nil {
+		authConfig := types.AuthConfig{
+			Username: auth.GetUsername(),
+			Password: auth.GetPassword(),
+		}
+		encodedJSON, _ := json.Marshal(authConfig)
+		authStr = base64.URLEncoding.EncodeToString(encodedJSON)
 	}
-	encodedJSON, _ := json.Marshal(authConfig)
-	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 	out, err := dockerClient.ImagePull(ctx, check.Image, types.ImagePullOptions{RegistryAuth: authStr})
-	elapsed := time.Since(start)
 	if err != nil {
-		return Failf(check, "Failed to pull image: %s", err)
+		return result.Failf("Failed to pull image: %s", err)
 	}
 	digest := getDigestFromOutput(out)
 	if digest != check.ExpectedDigest {
-		return Failf(check, "digests do not match %s != %s", digest, check.ExpectedDigest)
+		return result.Failf("digests do not match %s != %s", digest, check.ExpectedDigest)
 	}
 
 	inspect, _, _ := dockerClient.ImageInspectWithRaw(ctx, check.Image)
 	if check.ExpectedSize > 0 && inspect.Size != check.ExpectedSize {
-		return Failf(check, "size does not match: %d != %d", inspect.Size, check.ExpectedSize)
+		return result.Failf("size does not match: %d != %d", inspect.Size, check.ExpectedSize)
 	}
 
-	return &pkg.CheckResult{
-		Check:    check,
-		Pass:     true,
-		Duration: elapsed.Milliseconds(),
-	}
+	return result
 }
