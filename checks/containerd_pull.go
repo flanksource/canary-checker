@@ -1,7 +1,8 @@
 package checks
 
 import (
-	"context"
+	"github.com/flanksource/canary-checker/api/context"
+
 	"fmt"
 	"os"
 	"time"
@@ -27,10 +28,10 @@ func init() {
 
 type ContainerdPullChecker struct{}
 
-func (c *ContainerdPullChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *ContainerdPullChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.ContainerdPull {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.ContainerdPull {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
@@ -42,7 +43,7 @@ func (c *ContainerdPullChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *ContainerdPullChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *ContainerdPullChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.ContainerdPullCheck)
 	start := time.Now()
 
@@ -51,9 +52,9 @@ func (c *ContainerdPullChecker) Check(canary v1.Canary, extConfig external.Check
 		return Failf(check, err.Error())
 	}
 
-	ctx := namespaces.WithNamespace(context.Background(), "default")
+	containerdCtx := namespaces.WithNamespace(ctx, "default")
 
-	image, err := containerdClient.Pull(ctx, check.Image, containerd.WithPullUnpack)
+	image, err := containerdClient.Pull(containerdCtx, check.Image, containerd.WithPullUnpack)
 	elapsed := time.Since(start)
 	if err != nil {
 		return Failf(check, "Failed to pull image: %s", err)
@@ -64,7 +65,7 @@ func (c *ContainerdPullChecker) Check(canary v1.Canary, extConfig external.Check
 		return Failf(check, "digests do not match %s != %s", digest, check.ExpectedDigest)
 	}
 
-	size, err := image.Size(ctx)
+	size, err := image.Size(containerdCtx)
 	if err != nil {
 		return Failf(check, "Failed to get image size: %s", err)
 	}

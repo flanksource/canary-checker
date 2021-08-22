@@ -1,25 +1,21 @@
 package checks
 
 import (
-	"crypto/tls"
-	"fmt"
-	"net/http"
+	"io/fs"
 	"regexp"
-	"strconv"
 	"time"
 
-	"github.com/flanksource/commons/text"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 
+	"github.com/flanksource/canary-checker/api/context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/flanksource/canary-checker/api/external"
-	"github.com/flanksource/canary-checker/pkg/dns"
-	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	awsUtil "github.com/flanksource/canary-checker/pkg/clients/aws"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -62,10 +58,10 @@ type BucketStatus struct {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *S3BucketChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *S3BucketChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.S3Bucket {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.S3Bucket {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
@@ -75,120 +71,113 @@ func (c *S3BucketChecker) Type() string {
 	return "s3Bucket"
 }
 
-func (c *S3BucketChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
-	start := time.Now()
-	bucket := extConfig.(v1.S3BucketCheck)
-	var textResults bool
-	var bucketStatus BucketStatus
-	if bucket.GetDisplayTemplate() != "" {
-		textResults = true
-	}
-	template := bucket.GetDisplayTemplate()
-	if _, err := dns.Lookup(bucket.Endpoint); err != nil {
-		return pkg.Fail(bucket).TextResults(textResults).ResultMessage(s3BucketTemplateResult(template, bucketStatus)).ErrorMessage(err).StartTime(start)
-	}
+type S3FileInfo struct {
+	obj types.Object
+}
 
-	cfg := aws.NewConfig().
-		WithRegion(bucket.Region).
-		WithEndpoint(bucket.Endpoint).
-		WithCredentials(
-			credentials.NewStaticCredentials(bucket.AccessKey, bucket.SecretKey, ""),
-		)
-	if bucket.SkipTLSVerify {
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		cfg = cfg.WithHTTPClient(&http.Client{Transport: tr})
-	}
-	ssn, err := session.NewSession(cfg)
-	if err != nil {
-		return pkg.Fail(bucket).TextResults(textResults).ResultMessage(s3BucketTemplateResult(template, bucketStatus)).ErrorMessage(err).StartTime(start)
-	}
-	client := s3.New(ssn)
-	client.Config.S3ForcePathStyle = aws.Bool(bucket.UsePathStyle)
+func (obj S3FileInfo) Name() string {
+	return *obj.obj.Key
+}
+func (obj S3FileInfo) Size() int64 {
+	return obj.obj.Size
+}
+
+func (obj S3FileInfo) Mode() fs.FileMode {
+	return fs.FileMode(0644)
+}
+
+func (obj S3FileInfo) ModTime() time.Time {
+	return *obj.obj.LastModified
+}
+
+func (obj S3FileInfo) IsDir() bool {
+	return false
+}
+
+func (obj S3FileInfo) Sys() interface{} {
+	return obj.obj
+}
+
+type S3 struct {
+	*s3.Client
+	Bucket string
+}
+
+func (conn *S3) CheckFolder(ctx *context.Context, path string) (*FolderCheck, error) {
+
+	result := FolderCheck{}
 
 	var marker *string = nil
 
-	var latestObject *s3.Object = nil
-	var objects int
-	var totalSize int64
 	var regex *regexp.Regexp
-	if bucket.ObjectPath != "" {
-		re, err := regexp.Compile(bucket.ObjectPath)
+	if path != "" {
+		re, err := regexp.Compile(path)
 		if err != nil {
-			return pkg.Fail(bucket).TextResults(textResults).ResultMessage(s3BucketTemplateResult(template, bucketStatus)).ErrorMessage(fmt.Errorf("failed to compile regex: %s error: %v", bucket.ObjectPath, err)).StartTime(start)
+			return nil, err
 		}
 		regex = re
 	}
 
 	for {
 		req := &s3.ListObjectsInput{
-			Bucket:  aws.String(bucket.Bucket),
+			Bucket:  aws.String(conn.Bucket),
 			Marker:  marker,
-			MaxKeys: aws.Int64(500),
+			MaxKeys: 500,
 		}
-		resp, err := client.ListObjects(req)
+		resp, err := conn.ListObjects(ctx, req)
 		if err != nil {
-			return pkg.Fail(bucket).TextResults(textResults).ResultMessage(s3BucketTemplateResult(template, bucketStatus)).ErrorMessage(fmt.Errorf("failed to list buckets %v", err)).StartTime(start)
+			return nil, err
 		}
 
 		for _, obj := range resp.Contents {
-			if regex != nil && !regex.Match([]byte(aws.StringValue(obj.Key))) {
+			if regex != nil && !regex.Match([]byte(*obj.Key)) {
 				continue
 			}
-			bucketScanTotalSize.WithLabelValues(bucket.Endpoint, bucket.Bucket).Add(float64(aws.Int64Value(obj.Size)))
-			if latestObject == nil || obj.LastModified.After(aws.TimeValue(latestObject.LastModified)) {
-				latestObject = obj
+
+			if result.Oldest.IsZero() || result.Oldest.Milliseconds() < timeSince(*obj.LastModified).Milliseconds() {
+				result.Oldest = timeSince(*obj.LastModified)
 			}
+			if result.Newest.IsZero() || result.Newest.Milliseconds() > timeSince(*obj.LastModified).Milliseconds() {
+				result.Newest = timeSince(*obj.LastModified)
+			}
+			result.Files = append(result.Files, S3FileInfo{obj})
 
-			objects++
-			totalSize += *obj.Size
-			bucketStatus.objects = objects
-			bucketStatus.totalSize = totalSize
+			if resp.IsTruncated && len(resp.Contents) > 0 {
+				marker = resp.Contents[len(resp.Contents)-1].Key
+			} else {
+				break
+			}
 		}
-
-		if resp.IsTruncated != nil && aws.BoolValue(resp.IsTruncated) && len(resp.Contents) > 0 {
-			marker = resp.Contents[len(resp.Contents)-1].Key
-		} else {
-			break
-		}
 	}
+	// bucketScanTotalSize.WithLabelValues(bucket.Endpoint, bucket.Bucket).Add(float64(aws.Int64Value(obj.Size)))
 
-	bucketScanObjectCount.WithLabelValues(bucket.Endpoint, bucket.Bucket).Set(float64(objects))
-
-	bucketScanTotalSize.WithLabelValues(bucket.Endpoint, bucket.Bucket).Set(float64(totalSize))
-
-	if latestObject == nil {
-		return pkg.Fail(bucket).TextResults(textResults).ResultMessage(s3BucketTemplateResult(template, bucketStatus)).ErrorMessage(fmt.Errorf("could not find any matching objects")).StartTime(start)
-	}
-
-	latestObjectAge := time.Since(aws.TimeValue(latestObject.LastModified))
-	bucketScanLastWrite.WithLabelValues(bucket.Endpoint, bucket.Bucket).Set(float64(latestObject.LastModified.Unix()))
-	latestObjectSize := aws.Int64Value(latestObject.Size)
-	bucketStatus.latestObjectSize = latestObjectSize
-	bucketStatus.latestObjectAge = latestObjectAge
-
-	if latestObjectAge.Seconds() > float64(bucket.MaxAge) {
-		return pkg.Fail(bucket).TextResults(textResults).ResultMessage(s3BucketTemplateResult(template, bucketStatus)).ErrorMessage(fmt.Errorf("latest object age is %s required at most %s", age(latestObjectAge), age(time.Second*time.Duration(bucket.MaxAge)))).StartTime(start)
-	}
-
-	if bucket.MinSize > 0 && latestObjectSize < bucket.MinSize {
-		return pkg.Fail(bucket).TextResults(textResults).ResultMessage(s3BucketTemplateResult(template, bucketStatus)).ErrorMessage(fmt.Errorf("latest object is %s required at least %s", mb(latestObjectSize), mb(bucket.MinSize))).StartTime(start)
-	}
-	// Don't use s3BucketTemplateResult since we also need to check if templating succeeds here if not we fail
-	var results = map[string]string{"maxAge": age(latestObjectAge), "size": mb(latestObjectSize), "count": strconv.Itoa(objects), "totalSize": mb(totalSize)}
-	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
-	if err != nil {
-		return pkg.Fail(bucket).TextResults(textResults).ResultMessage(s3BucketTemplateResult(template, bucketStatus)).ErrorMessage(err).StartTime(start)
-	}
-	return pkg.Success(bucket).TextResults(textResults).ResultMessage(message).StartTime(start)
+	return &result, nil
 }
 
-func s3BucketTemplateResult(template string, bucketState BucketStatus) (message string) {
-	var results = map[string]string{"maxAge": age(bucketState.latestObjectAge), "size": mb(bucketState.latestObjectSize), "count": strconv.Itoa(bucketState.objects), "totalSize": mb(bucketState.totalSize)}
-	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
+func (c *S3BucketChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+	bucket := extConfig.(v1.S3BucketCheck)
+	result := pkg.Success(bucket)
+
+	cfg, err := awsUtil.NewSession(ctx, bucket.AWSConnection)
 	if err != nil {
-		message = message + "\n" + err.Error()
+		return result.ErrorMessage(err)
 	}
-	return message
+	client := &S3{
+		Client: s3.NewFromConfig(*cfg, func(o *s3.Options) {
+			o.UsePathStyle = bucket.UsePathStyle
+		}),
+		Bucket: bucket.Bucket,
+	}
+	folders, err := client.CheckFolder(ctx, bucket.ObjectPath)
+
+	if err != nil {
+		return result.ErrorMessage(err)
+	}
+	result.AddDetails(folders)
+
+	if test := folders.Test(bucket.FolderTest); test != "" {
+		result.Failf(test)
+	}
+
+	return result
 }

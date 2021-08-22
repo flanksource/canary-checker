@@ -7,7 +7,33 @@ import (
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/commons/text"
 )
+
+type Size struct {
+	uint64
+}
+
+func (s Size) String() string {
+	return text.HumanizeBytes(s.uint64)
+}
+
+type Duration struct {
+	time.Duration
+}
+
+func (d Duration) String() string {
+	return utils.Age(d.Duration)
+}
+
+func (d Duration) IsZero() bool {
+	return d.Duration.Round(time.Millisecond).Milliseconds() == 0
+}
+
+func timeSince(start time.Time) Duration {
+	return Duration{time.Since(start)}
+}
 
 func unexpectedErrorf(check external.Check, err error, msg string, args ...interface{}) *pkg.CheckResult { //nolint: unparam
 	return &pkg.CheckResult{
@@ -118,15 +144,6 @@ func (n *NameGenerator) PodName(prefix string) string {
 	name := fmt.Sprintf("%s%d", prefix, n.podIndex)
 	n.podIndex = (n.PodsCount + 1) % n.PodsCount
 	return name
-}
-
-func age(duration time.Duration) string {
-	if duration.Hours() > 24 {
-		return fmt.Sprintf("%.1fd", duration.Hours()/24)
-	} else if duration.Minutes() > 60 {
-		return fmt.Sprintf("%.1fh", duration.Hours())
-	}
-	return fmt.Sprintf("%.1fm", duration.Minutes())
 }
 
 func mb(bytes int64) string {

@@ -3,8 +3,10 @@ package checks
 import (
 	"fmt"
 	"net"
+	"os"
 	"strings"
-	"time"
+
+	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/flanksource/kommons"
 
@@ -13,7 +15,6 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/text"
 	"github.com/hirochachacha/go-smb2"
 )
 
@@ -38,96 +39,102 @@ func (c *SmbChecker) Type() string {
 	return "smb"
 }
 
-func (c *SmbChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *SmbChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.Smb {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.Smb {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
 
-func (c *SmbChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
-	start := time.Now()
-	smbCheck := extConfig.(v1.SmbCheck)
-	template := smbCheck.GetDisplayTemplate()
-	port := smbCheck.GetPort()
-	namespace := canary.Namespace
-	var smbStatus SmbStatus
+type SMBSession struct {
+	net.Conn
+	*smb2.Session
+	*smb2.Share
+}
+
+type Filesystem interface {
+	Close()
+	ReadDir(name string) ([]os.FileInfo, error)
+	Stat(name string) (os.FileInfo, error)
+}
+
+func (s *SMBSession) Close() {
+	if s.Conn != nil {
+		_ = s.Conn.Close()
+	}
+	if s.Session != nil {
+		_ = s.Session.Logoff()
+	}
+	if s.Share != nil {
+		_ = s.Share.Umount()
+	}
+}
+
+func smbConnect(server string, share string, auth *v1.Authentication) (Filesystem, error) {
 	var err error
-	textResults := smbCheck.GetDisplayTemplate() != ""
-	var serverPath string
-	auth, err := GetAuthValues(smbCheck.Auth, c.kommons, namespace)
+	var smb *SMBSession
+
+	conn, err := net.Dial("tcp", server)
 	if err != nil {
-		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
+		return nil, err
 	}
-	if strings.Contains(smbCheck.Server, "\\") {
-		serverPath, smbCheck.Sharename, smbCheck.SearchPath, err = getServerDetails(smbCheck.Server, port)
-		if err != nil {
-			return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
-		}
-	} else {
-		serverPath = fmt.Sprintf("%s:%d", smbCheck.Server, port)
+	smb = &SMBSession{
+		Conn: conn,
 	}
-	if smbCheck.SearchPath == "" {
-		smbCheck.SearchPath = "."
-	}
-	conn, err := net.Dial("tcp", serverPath)
-	if err != nil {
-		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
-	}
-	defer conn.Close()
+
 	d := &smb2.Dialer{
 		Initiator: &smb2.NTLMInitiator{
-			User:        auth.Username.Value,
-			Password:    auth.Password.Value,
-			Domain:      smbCheck.Domain,
-			Workstation: smbCheck.Workstation,
+			User:     auth.GetUsername(),
+			Password: auth.GetPassword(),
+			Domain:   auth.GetDomain(),
 		},
 	}
 
 	s, err := d.Dial(conn)
 	if err != nil {
-		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
+		return nil, err
 	}
-	defer s.Logoff() //nolint: errcheck
-	fs, err := s.Mount(smbCheck.Sharename)
+	smb.Session = s
+	fs, err := s.Mount(share)
 	if err != nil {
-		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
+		return nil, err
 	}
-	defer fs.Umount() //nolint: errcheck
-	age, count, err := getLatestFileAgeAndCount(fs, smbCheck.SearchPath)
+	smb.Share = fs
+	return smb, nil
+
+}
+
+func (c *SmbChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+	smbCheck := extConfig.(v1.SmbCheck)
+	result := pkg.Success(smbCheck)
+	namespace := ctx.Canary.Namespace
+
+	server, sharename, path, err := getServerDetails(smbCheck.Server, 445)
 	if err != nil {
-		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
+		return result.ErrorMessage(err)
 	}
-	smbStatus.age = text.HumanizeDuration(age)
-	smbStatus.count = count
-	if smbCheck.MinAge != "" {
-		minAge, err := time.ParseDuration(smbCheck.MinAge)
-		if err != nil {
-			return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
-		}
-		if age < minAge {
-			return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(fmt.Errorf("age of latest object %v is less than the minimum age: %v ", age, minAge)).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
-		}
-	}
-	if smbCheck.MaxAge != "" {
-		maxAge, err := time.ParseDuration(smbCheck.MaxAge)
-		if err != nil {
-			return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
-		}
-		if age > maxAge {
-			return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(fmt.Errorf("age of latest object %v is more than the maximum age: %v ", age, maxAge)).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
-		}
-	}
-	if count < smbCheck.MinCount {
-		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(fmt.Errorf("file count: %v is less than specified minCount: %v", count, smbCheck.MinCount)).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
-	}
-	var results = map[string]interface{}{"age": smbStatus.age, "count": smbStatus.count}
-	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
+
+	auth, err := GetAuthValues(smbCheck.Auth, c.kommons, namespace)
 	if err != nil {
-		return pkg.Fail(smbCheck).TextResults(textResults).ErrorMessage(err).ResultMessage(smbTemplateResult(template, smbStatus)).StartTime(start)
+		return result.ErrorMessage(err)
 	}
-	return pkg.Success(smbCheck).TextResults(textResults).ResultMessage(message).StartTime(start)
+
+	session, err := smbConnect(server, sharename, auth)
+	if session != nil {
+		defer session.Close()
+	}
+
+	folders, err := getFolderCheck(session, path)
+	if err != nil {
+		return result.ErrorMessage(err)
+	}
+	result.AddDetails(folders)
+
+	if test := folders.Test(smbCheck.FolderTest); test != "" {
+		result.Failf(test)
+	}
+	return result
 }
 
 func getServerDetails(serverPath string, port int) (server, sharename, searchPath string, err error) {
@@ -152,37 +159,35 @@ func getServerDetails(serverPath string, port int) (server, sharename, searchPat
 	}
 }
 
-func getLatestFileAgeAndCount(fs *smb2.Share, searchPath string) (duration time.Duration, count int, err error) {
-	files, err := fs.ReadDir(searchPath)
+func getFolderCheck(fs Filesystem, dir string) (*FolderCheck, error) {
+	result := FolderCheck{}
+
+	files, err := fs.ReadDir(dir)
 	if err != nil {
-		return
+		return nil, err
 	}
+
 	if len(files) == 0 {
 		// directory is empty. returning duration of directory
-		info, err := fs.Stat(searchPath)
+		info, err := fs.Stat(dir)
 		if err != nil {
-			return duration, count, err
+			return nil, err
 		}
-		return time.Since(info.ModTime()), 0, nil
+		return &FolderCheck{Oldest: timeSince(info.ModTime()), Newest: timeSince(info.ModTime())}, nil
 	}
-	duration = time.Since(files[0].ModTime())
+
 	for _, file := range files {
 		if file.IsDir() {
 			continue
 		}
-		if duration >= time.Since(file.ModTime()) {
-			duration = time.Since(file.ModTime())
-		}
-		count++
-	}
-	return
-}
 
-func smbTemplateResult(template string, smbStatus SmbStatus) (message string) {
-	var results = map[string]interface{}{"age": smbStatus.age, "count": smbStatus.count}
-	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
-	if err != nil {
-		message = message + "\n" + err.Error()
+		if result.Oldest.IsZero() || result.Oldest.Milliseconds() < timeSince(file.ModTime()).Milliseconds() {
+			result.Oldest = timeSince(file.ModTime())
+		}
+		if result.Newest.IsZero() || result.Newest.Milliseconds() > timeSince(file.ModTime()).Milliseconds() {
+			result.Newest = timeSince(file.ModTime())
+		}
+		result.Files = append(result.Files, file)
 	}
-	return message
+	return &result, nil
 }

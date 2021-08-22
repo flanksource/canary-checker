@@ -203,6 +203,7 @@ type CheckResult struct {
 	Pass        bool
 	Invalid     bool
 	Detail      interface{}
+	Data        map[string]interface{}
 	Duration    int64
 	Description string
 	DisplayType string

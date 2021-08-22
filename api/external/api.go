@@ -20,3 +20,16 @@ type Check interface {
 	Describable
 	WithType
 }
+
+type Template struct {
+	Template string `yaml:"template,omitempty" json:"template,omitempty"`
+	JSONPath string `yaml:"jsonPath,omitempty" json:"jsonPath,omitempty"`
+}
+
+type DisplayTemplate interface {
+	GetDisplayTemplate() Template
+}
+
+type TestFunction interface {
+	GetTestFunction() Template
+}

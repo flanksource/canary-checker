@@ -2,7 +2,9 @@ package prometheus
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"time"
 
 	prometheusapi "github.com/prometheus/client_golang/api"
@@ -39,8 +41,13 @@ func NewPrometheusAPI(url string) (*PrometheusClient, error) {
 	if url == "" {
 		return nil, nil
 	}
+	transportConfig := prometheusapi.DefaultRoundTripper.(*http.Transport)
+	transportConfig.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: true,
+	}
 	cfg := prometheusapi.Config{
-		Address: url,
+		Address:      url,
+		RoundTripper: transportConfig,
 	}
 	client, err := prometheusapi.NewClient(cfg)
 	if err != nil {

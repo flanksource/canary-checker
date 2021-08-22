@@ -13,6 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
@@ -35,7 +36,12 @@ var Run = &cobra.Command{
 			},
 			Spec: config,
 		}
-		results := RunChecks(canary)
+		kommonsClient, err := pkg.NewKommonsClient()
+		if err != nil {
+			logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
+		}
+
+		results := checks.RunChecks(context.New(kommonsClient, canary), canary)
 		if junitFile != "" {
 			report := getJunitReport(results)
 			err := ioutil.WriteFile(junitFile, []byte(report), 0755)
@@ -59,10 +65,6 @@ func init() {
 	Run.Flags().StringP("configfile", "c", "", "Specify configfile")
 	Run.Flags().StringP("namespace", "n", "", "Specify namespace")
 	Run.Flags().StringP("junit", "j", "", "Export JUnit XML formatted results to this file e.g: junit.xml")
-}
-
-func RunChecks(config v1.Canary) []*pkg.CheckResult {
-	return checks.RunChecks(config)
 }
 
 func getJunitReport(results []*pkg.CheckResult) string {

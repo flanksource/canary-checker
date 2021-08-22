@@ -17,24 +17,22 @@ limitations under the License.
 package controllers
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
 
+	gocontext "context"
+
 	"github.com/flanksource/canary-checker/pkg/push"
 
-	"github.com/flanksource/kommons"
-
-	"github.com/flanksource/kommons/ktemplate"
-	"github.com/mitchellh/reflectwalk"
-
+	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/kommons"
 	"github.com/go-logr/logr"
 	"github.com/robfig/cron/v3"
 	corev1 "k8s.io/api/core/v1"
@@ -72,7 +70,7 @@ const FinalizerName = "canary.canaries.flanksource.com"
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=pods/exec,verbs=*
 // +kubebuilder:rbac:groups="",resources=pods/logs,verbs=*
-func (r *CanaryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (ctrl.Result, error) {
 	if len(r.IncludeNamespaces) > 0 && !r.includeNamespace(req.Namespace) {
 		r.Log.V(2).Info("namespace not included, skipping")
 		return ctrl.Result{}, nil
@@ -102,7 +100,13 @@ func (r *CanaryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 
-	defer r.Patch(check)
+	canaryCtx := &context.Context{
+		Kommons:   r.Kommons,
+		Namespace: check.GetNamespace(),
+		Context:   ctx,
+	}
+
+	defer r.Patch(canaryCtx, check)
 	// Add finalizer first if not exist to avoid the race condition between init and delete
 	if !controllerutil.ContainsFinalizer(check, FinalizerName) {
 		logger.Info("adding finalizer", "finalizers", check.GetFinalizers())
@@ -174,9 +178,9 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *CanaryReconciler) Report(key types.NamespacedName, results []*pkg.CheckResult) {
+func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName, results []*pkg.CheckResult) {
 	check := v1.Canary{}
-	if err := r.Get(context.TODO(), key, &check); err != nil {
+	if err := r.Get(ctx, key, &check); err != nil {
 		r.Log.Error(err, "unable to find canary", "key", key)
 		return
 	}
@@ -210,12 +214,12 @@ func (r *CanaryReconciler) Report(key types.NamespacedName, results []*pkg.Check
 	} else {
 		check.Status.Status = &v1.Failed
 	}
-	r.Patch(&check)
+	r.Patch(ctx, &check)
 }
 
-func (r *CanaryReconciler) Patch(canary *v1.Canary) {
+func (r *CanaryReconciler) Patch(ctx *context.Context, canary *v1.Canary) {
 	r.Log.V(1).Info("patching", "canary", canary.Name, "namespace", canary.Namespace, "status", canary.Status.Status)
-	if err := r.Status().Update(context.TODO(), canary, &client.UpdateOptions{}); err != nil {
+	if err := r.Status().Update(ctx, canary, &client.UpdateOptions{}); err != nil {
 		r.Log.Error(err, "failed to patch", "canary", canary.Name)
 	}
 }
@@ -230,8 +234,9 @@ func (r *CanaryReconciler) includeNamespace(namespace string) bool {
 }
 
 type CanaryJob struct {
-	Client CanaryReconciler
-	Check  v1.Canary
+	Client  CanaryReconciler
+	Check   v1.Canary
+	Context *context.Context
 	logr.Logger
 }
 
@@ -240,50 +245,10 @@ func (c CanaryJob) GetNamespacedName() types.NamespacedName {
 }
 
 func (c CanaryJob) Run() {
-	canary, err := c.LoadSecrets()
-	if err != nil {
-		c.Error(err, "Failed to load secrets")
-		return
-	}
 	c.V(2).Info("Starting")
+	results := checks.RunChecks(c.Context, c.Check)
 
-	var results []*pkg.CheckResult
-	for _, check := range checks.All {
-		if !checks.Checks(canary.Spec.GetAllChecks()).Includes(check) {
-			continue
-		}
-		switch cs := check.(type) {
-		case checks.SetsClient:
-			cs.SetClient(c.Client.Kommons)
-		}
-		results = append(results, check.Run(canary)...)
-	}
-
-	c.Client.Report(c.GetNamespacedName(), results)
+	c.Client.Report(c.Context, c.GetNamespacedName(), results)
 
 	c.V(3).Info("Ending")
-}
-
-func (c CanaryJob) LoadSecrets() (v1.Canary, error) {
-	var values = make(map[string]string)
-
-	for key, source := range c.Check.Spec.Env {
-		val, err := v1.GetEnvVarRefValue(c.Client.Kubernetes, c.Check.Namespace, &source, &c.Check)
-		if err != nil {
-			return c.Check, err
-		}
-		values[key] = val
-	}
-
-	var val = &c.Check.Spec
-	k8sclient, err := pkg.NewK8sClient()
-	if err != nil {
-		logger.Warnf("Could not create k8s client for templating: %v", err)
-	}
-	err = reflectwalk.Walk(val, ktemplate.StructTemplater{
-		Values:    values,
-		Clientset: k8sclient,
-	})
-	c.Check.Spec = *val
-	return c.Check, err
 }

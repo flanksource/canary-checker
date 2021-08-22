@@ -2,11 +2,12 @@ package checks
 
 import (
 	"bytes"
-	"context"
+
+	"github.com/flanksource/canary-checker/api/context"
+
 	"encoding/base64"
 	"encoding/json"
 	"strings"
-	"time"
 
 	"github.com/flanksource/kommons"
 
@@ -24,10 +25,10 @@ func (c *DockerPushChecker) SetClient(client *kommons.Client) {
 	c.kommons = client
 }
 
-func (c *DockerPushChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *DockerPushChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.DockerPush {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.DockerPush {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
@@ -39,11 +40,9 @@ func (c *DockerPushChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *DockerPushChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *DockerPushChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DockerPushCheck)
-	start := time.Now()
-	ctx := context.Background()
-	namespace := canary.Namespace
+	namespace := ctx.Canary.Namespace
 	var err error
 	auth, err := GetAuthValues(check.Auth, c.kommons, namespace)
 	if err != nil {
@@ -82,9 +81,8 @@ func (c *DockerPushChecker) Check(canary v1.Canary, extConfig external.Check) *p
 	}
 
 	return &pkg.CheckResult{
-		Check:    check,
-		Pass:     true,
-		Duration: time.Since(start).Milliseconds(),
-		Metrics:  []pkg.Metric{},
+		Check:   check,
+		Pass:    true,
+		Metrics: []pkg.Metric{},
 	}
 }

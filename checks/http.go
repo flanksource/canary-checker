@@ -1,32 +1,26 @@
 package checks
 
 import (
-	"context"
-	"crypto/tls"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net"
-	"net/http"
+	"math"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/flanksource/commons/text"
-
-	httpntlm "github.com/vadimi/go-http-ntlm"
-
+	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/pkg/errors"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/PaesslerAG/jsonpath"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/http"
 	"github.com/flanksource/canary-checker/pkg/metrics"
+	"github.com/flanksource/canary-checker/pkg/utils"
 )
 
 var (
@@ -76,345 +70,124 @@ func (c HTTPChecker) GetClient() *kommons.Client {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *HTTPChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *HTTPChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.HTTP {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.HTTP {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
 
-// CheckConfig : Check every record of DNS name against config information
-// Returns check result and metrics
-func (c *HTTPChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.HTTPCheck)
-	endpoint := check.Endpoint
-	namespace := check.Namespace
-	specNamespace := canary.Namespace
-	var textResults bool
-	if check.GetDisplayTemplate() != "" {
-		textResults = true
-	}
-	template := check.GetDisplayTemplate()
-	var httpStatus HTTPStatus
-	if endpoint == "" && namespace == "" {
-		return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("one of Namespace or Endpoint must be specified"))
-	} else if endpoint != "" && namespace != "" {
-		return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("namespace and endpoint are mutually exclusive, only one may be specified"))
-	}
-	if namespace == "*" {
-		namespace = metav1.NamespaceAll
-	}
-	var lookupResult []pkg.URL
-	if endpoint != "" {
-		var err error
-		lookupResult, err = DNSLookup(endpoint)
-		if err != nil {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
-		}
-	} else {
-		k8sClient, err := pkg.NewK8sClient()
-		if err != nil {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
-		}
-		serviceList, err := k8sClient.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{})
-		if err != nil {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("failed to obtain service list for namespace %v: %v", namespace, err))
-		}
-		for _, service := range serviceList.Items {
-			endPoints, err := k8sClient.CoreV1().Endpoints(namespace).Get(context.TODO(), service.Name, metav1.GetOptions{})
-			if err != nil {
-				return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("failed to obtain endpoints for service %v: %v", service.Name, err))
-			}
-
-			for _, endPoint := range endPoints.Subsets {
-				for _, port := range service.Spec.Ports {
-					if port.Port%1000 == 443 || port.TargetPort.IntVal%1000 == 443 {
-						for _, address := range endPoint.Addresses {
-							lookupResult = append(lookupResult, pkg.URL{
-								IP:     address.IP,
-								Port:   int(port.TargetPort.IntVal),
-								Host:   address.Hostname,
-								Scheme: "https",
-							})
-						}
-					}
-				}
-			}
-		}
-	}
-
-	username, password, err := c.ParseAuth(check, specNamespace)
-	if err != nil {
-		return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
-	}
-	var headers map[string]string
+func (c *HTTPChecker) configure(req *http.HttpRequest, namespace string, check v1.HTTPCheck) error {
 	kommons := c.GetClient()
 	for _, header := range check.Headers {
 		if kommons == nil {
-			headers[header.Name] = header.Value
-			continue
+			return fmt.Errorf("HTTP headers are not supported outside k8s")
 		}
-		key, value, err := kommons.GetEnvValue(header, specNamespace)
+		key, value, err := kommons.GetEnvValue(header, namespace)
 		if err != nil {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
+			return errors.WithMessagef(err, "failed getting header: %s", header)
 		}
-		if headers == nil {
-			headers = map[string]string{key: value}
-		} else {
-			headers[key] = value
-		}
+		req.Header(key, value)
 	}
 
-	for _, urlObj := range lookupResult {
-		if check.Method == "" {
-			urlObj.Method = "GET"
-		} else {
-			urlObj.Method = check.Method
-		}
-		urlObj.Headers = headers
-		urlObj.Body = check.Body
-		urlObj.Username = username
-		urlObj.Password = password
-		checkResults, err := c.checkHTTP(urlObj, check.NTLM)
-		if err != nil {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
-		}
-		httpStatus.headers = headers
-		httpStatus.responseCode = checkResults.ResponseCode
-		httpStatus.content = checkResults.Content
-		rcOK := false
-		for _, rc := range check.ResponseCodes {
-			if rc == checkResults.ResponseCode {
-				rcOK = true
-			}
-		}
-		if !rcOK {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("response code invalid %d != %v", checkResults.ResponseCode, check.ResponseCodes))
-		}
-
-		if check.ThresholdMillis > 0 && check.ThresholdMillis < int(checkResults.ResponseTime) {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("threshold exceeded %d > %d", checkResults.ResponseTime, check.ThresholdMillis))
-		}
-		if check.ResponseContent != "" && !strings.Contains(checkResults.Content, check.ResponseContent) {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("expected %v, found %v", check.ResponseContent, checkResults.Content))
-		}
-		if check.ResponseJSONContent.Path != "" {
-			var jsonContent interface{}
-			if err = json.Unmarshal([]byte(checkResults.Content), &jsonContent); err != nil {
-				return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
-			}
-
-			jsonResult, err := jsonpath.Get(check.ResponseJSONContent.Path, jsonContent)
-			if err != nil {
-				return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("could not extract path %v from response %v: %v", check.ResponseJSONContent.Path, jsonContent, err))
-			}
-			switch s := jsonResult.(type) {
-			case string:
-				if s != check.ResponseJSONContent.Value {
-					return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("%v not equal to %v", s, check.ResponseJSONContent.Value))
-				}
-			case fmt.Stringer:
-				if s.String() != check.ResponseJSONContent.Value {
-					return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("%v not equal to %v", s.String(), check.ResponseJSONContent.Value))
-				}
-			default:
-				return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("json response could not be parsed back to string"))
-			}
-		}
-		if urlObj.Scheme == "https" && check.MaxSSLExpiry > checkResults.SSLExpiry {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("SSL certificate expires soon %d > %d", checkResults.SSLExpiry, check.MaxSSLExpiry))
-		}
-
-		responseStatus.WithLabelValues(strconv.Itoa(checkResults.ResponseCode), statusCodeToClass(checkResults.ResponseCode), endpoint).Inc()
-		sslExpiration.WithLabelValues(endpoint).Set(float64(checkResults.SSLExpiry))
-		var results = map[string]interface{}{"code": checkResults.ResponseCode, "content": checkResults.Content, "header": headers}
-		message, err := text.TemplateWithDelims(template, "[[", "]]", results)
-		if err != nil {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(err)
-		}
-		if !textResults {
-			return &pkg.CheckResult{ // nolint: staticcheck
-				Check:    check,
-				Pass:     true,
-				Duration: checkResults.ResponseTime,
-				Invalid:  false,
-				Metrics: []pkg.Metric{
-					{
-						Name: "response_code",
-						Type: metrics.CounterType,
-						Labels: map[string]string{
-							"code":     strconv.Itoa(checkResults.ResponseCode),
-							"endpoint": endpoint,
-						},
-					},
-				},
-			}
-		}
-		return &pkg.CheckResult{ // nolint: staticcheck
-			Check:       check,
-			Pass:        true,
-			Duration:    checkResults.ResponseTime,
-			Invalid:     false,
-			DisplayType: "Text",
-			Message:     message,
-			Metrics: []pkg.Metric{
-				{
-					Name: "response_code",
-					Type: metrics.CounterType,
-					Labels: map[string]string{
-						"code":     strconv.Itoa(checkResults.ResponseCode),
-						"endpoint": endpoint,
-					},
-				},
-			},
-		}
+	auth, err := GetAuthValues(check.Authentication, kommons, namespace)
+	if err != nil {
+		return err
 	}
-	return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("no DNS results found"))
+	if auth != nil {
+		req.Auth(auth.Username.Name, auth.Password.Value)
+	}
+	req.NTLM(check.NTLM)
+
+	if logger.IsDebugEnabled() {
+		req.Debug(true)
+	} else if logger.IsTraceEnabled() {
+		req.Trace(true)
+	}
+	return nil
 }
 
-func (c *HTTPChecker) checkHTTP(urlObj pkg.URL, ntlm bool) (*HTTPCheckResult, error) {
-	var exp time.Time
-	start := time.Now()
-	var urlString string
-	if urlObj.Port > 0 {
-		urlString = fmt.Sprintf("%s://%s%s", urlObj.Scheme, net.JoinHostPort(urlObj.IP, strconv.Itoa(urlObj.Port)), urlObj.Path)
-	} else {
-		urlString = fmt.Sprintf("%s://%s%s", urlObj.Scheme, urlObj.IP, urlObj.Path)
-	}
-	client := getHTTPClient(urlObj, ntlm)
-	req, err := http.NewRequest(urlObj.Method, urlString, strings.NewReader(urlObj.Body))
-	if err != nil {
-		return nil, err
+func truncate(text string, max int) string {
+	return text[0:int(math.Min(float64(max), float64(len(text)-1)))]
+}
+
+// CheckConfig : Check every record of DNS name against config information
+// Returns check result and metrics
+
+func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+	check := extConfig.(v1.HTTPCheck)
+	result := pkg.Success(check)
+	if _, err := url.Parse(check.Endpoint); err != nil {
+		return result.ErrorMessage(err)
 	}
 
-	req.Host = urlObj.Host
-	for header, field := range urlObj.Headers {
-		req.Header.Add(header, field)
+	namespace := ctx.Canary.GetNamespace()
+	endpoint := check.Endpoint
+
+	req := http.NewRequest(check.Endpoint).Method(check.Method)
+	if err := c.configure(req, namespace, check); err != nil {
+		return result.ErrorMessage(err)
 	}
 
-	if req.Header.Get("Host") == "" {
-		req.Header.Add("Host", urlObj.Host)
+	resp := req.Do(check.Body)
+	result.Duration = resp.Elapsed.Milliseconds()
+	result.AddMetric(pkg.Metric{
+		Name: "response_code",
+		Type: metrics.CounterType,
+		Labels: map[string]string{
+			"code":     strconv.Itoa(resp.StatusCode),
+			"endpoint": endpoint,
+		},
+	})
+	responseStatus.WithLabelValues(strconv.Itoa(resp.StatusCode), statusCodeToClass(resp.StatusCode), endpoint).Inc()
+	age := resp.GetSSLAge()
+	if age != nil {
+		sslExpiration.WithLabelValues(endpoint).Set(float64(age.Hours() * 24))
 	}
 
-	if urlObj.Username != "" && urlObj.Password != "" {
-		req.SetBasicAuth(urlObj.Username, urlObj.Password)
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.TLS != nil {
-		certificates := resp.TLS.PeerCertificates
-		if len(certificates) > 0 {
-			exp = certificates[0].NotAfter
-		}
-	}
-	res, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	content := string(res)
-	sslExpireDays := int(exp.Sub(start).Hours() / 24.0)
-	var sslExpiryDaysRounded int
-	if sslExpireDays <= 0 {
-		sslExpiryDaysRounded = 0
-	} else {
-		sslExpiryDaysRounded = sslExpireDays
-	}
-
+	body, _ := resp.AsString()
 	defer resp.Body.Close()
-	elapsed := time.Since(start)
-	checkResult := HTTPCheckResult{
-		Endpoint:     urlObj.Host,
-		Record:       urlObj.IP,
-		ResponseCode: resp.StatusCode,
-		SSLExpiry:    sslExpiryDaysRounded,
-		Content:      content,
-		ResponseTime: elapsed.Milliseconds(),
+
+	data := map[string]interface{}{
+		"code":    resp.StatusCode,
+		"headers": resp.Header,
+		"elapsed": resp.Elapsed,
+		"sslAge":  age,
+		"content": body,
 	}
-	return &checkResult, nil
-}
-
-func (c *HTTPChecker) ParseAuth(check v1.HTTPCheck, namespace string) (string, string, error) {
-	if check.Authentication == nil {
-		return "", "", nil
-	}
-	var err error
-	auth, err := GetAuthValues(check.Authentication, c.kommons, namespace)
-	if err != nil {
-		return "", "", err
-	}
-	return auth.Username.Value, auth.Password.Value, nil
-}
-
-func getHTTPClient(url pkg.URL, ntlm bool) *http.Client {
-	var transport http.RoundTripper
-	transport = &http.Transport{
-		DisableKeepAlives: true,
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-			ServerName:         url.Host,
-		},
-	}
-
-	if ntlm {
-		parts := strings.Split(url.Username, "@")
-
-		domain := ""
-		if len(parts) > 1 {
-			domain = parts[1]
-		}
-
-		transport = &httpntlm.NtlmTransport{
-			Domain:   domain,
-			User:     parts[0],
-			Password: url.Password,
-			// RoundTripper: transport,
+	if resp.IsJSON() {
+		json, err := resp.AsJSON()
+		if err != nil {
+			result.ErrorMessage(err)
+		} else {
+			data["json"] = json.Value
 		}
 	}
 
-	return &http.Client{
-		Transport: transport,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return nil
-		},
-	}
-}
+	result.AddData(data)
 
-func DNSLookup(endpoint string) ([]pkg.URL, error) {
-	if net.ParseIP(endpoint) != nil {
-		return []pkg.URL{pkg.URL{IP: endpoint}}, nil
-	}
-	var result []pkg.URL
-	parsedURL, err := url.Parse(endpoint)
-	if err != nil {
-		return nil, err
-	}
-	ips, err := net.LookupIP(parsedURL.Hostname())
-	if err != nil {
-		return nil, err
-	}
-	for _, ip := range ips {
-		if ip.To4() == nil {
-			continue
-		}
-		port, _ := strconv.Atoi(parsedURL.Port())
-		path := parsedURL.Path
-		if parsedURL.RawQuery != "" {
-			path += "?" + parsedURL.RawQuery
-		}
-		urlObj := pkg.URL{
-			IP:     ip.String(),
-			Port:   port,
-			Host:   parsedURL.Hostname(),
-			Scheme: parsedURL.Scheme,
-			Path:   path,
-		}
-		result = append(result, urlObj)
+	if ok := resp.IsOK(check.ResponseCodes...); !ok {
+		return result.Failf("response code invalid %d != %v", resp.StatusCode, check.ResponseCodes)
 	}
 
-	return result, nil
+	if check.ThresholdMillis > 0 && check.ThresholdMillis < int(resp.Elapsed.Milliseconds()) {
+		return result.Failf("threshold exceeded %d > %d", utils.Age(resp.Elapsed), check.ThresholdMillis)
+	}
+
+	if check.ResponseContent != "" && !strings.Contains(body, check.ResponseContent) {
+		return result.Failf("expected %v, found %v", check.ResponseContent, truncate(body, 100))
+	}
+
+	if req.URL.Scheme == "https" && check.MaxSSLExpiry > 0 {
+		if age == nil {
+			return result.Failf("No certificate found to check age")
+		}
+		if *age < time.Duration(check.MaxSSLExpiry)*time.Hour*24 {
+			return result.Failf("SSL certificate expires soon %s > %d", utils.Age(*age), check.MaxSSLExpiry)
+		}
+	}
+	return result
 }
 
 func statusCodeToClass(statusCode int) string {
@@ -431,28 +204,4 @@ func statusCodeToClass(statusCode int) string {
 	} else {
 		return "unknown"
 	}
-}
-
-type HTTPCheckResult struct {
-	// Check is the configuration
-	Check        interface{}
-	Endpoint     string
-	Record       string
-	ResponseCode int
-	SSLExpiry    int
-	Content      string
-	ResponseTime int64
-}
-
-func (check HTTPCheckResult) String() string {
-	return fmt.Sprintf("%s ssl=%d code=%d time=%d", check.Endpoint, check.SSLExpiry, check.ResponseCode, check.ResponseTime)
-}
-
-func httpTemplateResult(template string, httpStatus HTTPStatus) (message string) {
-	var results = map[string]interface{}{"code": httpStatus.responseCode, "headers": httpStatus.headers, "content": httpStatus.content}
-	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
-	if err != nil {
-		message = message + "\n" + err.Error()
-	}
-	return message
 }

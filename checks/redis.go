@@ -1,8 +1,9 @@
 package checks
 
 import (
-	"context"
 	"time"
+
+	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/flanksource/kommons"
 
@@ -31,24 +32,31 @@ func (c *RedisChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *RedisChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *RedisChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.Redis {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.Redis {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
 
-func (c *RedisChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	redisCheck := extConfig.(v1.RedisCheck)
-	namespace := canary.Namespace
+	namespace := ctx.Canary.Namespace
 	var err error
 	auth, err := GetAuthValues(redisCheck.Auth, c.kommons, namespace)
 	if err != nil {
 		return Failf(redisCheck, "failed to fetch auth details: %v", err)
 	}
-	result, err := connectRedis(redisCheck.Addr, auth.Password.Value, auth.Username.Value, redisCheck.DB)
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     redisCheck.Addr,
+		Password: auth.GetPassword(),
+		DB:       redisCheck.DB,
+		Username: auth.GetUsername(),
+	})
+	result, err := rdb.Ping(ctx).Result()
+
 	if err != nil {
 		return Failf(redisCheck, "failed to execute query %s", err)
 	}
@@ -56,15 +64,4 @@ func (c *RedisChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Ch
 		return Failf(redisCheck, "expected PONG as result, got %s", result)
 	}
 	return Success(redisCheck, start)
-}
-
-func connectRedis(addr, password, username string, db int) (string, error) {
-	ctx := context.TODO()
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		Password: password,
-		DB:       db,
-		Username: username,
-	})
-	return rdb.Ping(ctx).Result()
 }

@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/context"
+
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -20,16 +22,16 @@ func NewTCPChecker() *TCPChecker {
 }
 
 // Run executes tcp checks for the given config, returning results
-func (t *TCPChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (t *TCPChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, c := range canary.Spec.TCP {
-		results = append(results, t.Check(canary, c))
+	for _, c := range ctx.Canary.Spec.TCP {
+		results = append(results, t.Check(ctx, c))
 	}
 	return results
 }
 
 // Check performs a single tcp check, returning a checkResult
-func (t *TCPChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (t *TCPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	c := extConfig.(v1.TCPCheck)
 	addr, port, err := extractAddrAndPort(c.Endpoint)
 	if err != nil {

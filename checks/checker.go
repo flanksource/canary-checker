@@ -1,8 +1,8 @@
 package checks
 
 import (
+	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
-	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/kommons"
 )
@@ -19,9 +19,9 @@ func (c Checks) Includes(checker Checker) bool {
 }
 
 type Checker interface {
-	Run(config v1.Canary) []*pkg.CheckResult
+	Run(ctx *context.Context) []*pkg.CheckResult
 	Type() string
-	Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult
+	Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult
 }
 
 var All = []Checker{

@@ -2,14 +2,13 @@ package api
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/pkg/errors"
-	prometheusapi "github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
 	log "github.com/sirupsen/logrus"
@@ -27,76 +26,62 @@ type Timeseries struct {
 	Value string  `json:"value"`
 }
 
-func PrometheusGraphHandler(prometheusHost string) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, req *http.Request) {
-		var pg PrometheusGraphData
-		err := json.NewDecoder(req.Body).Decode(&pg)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+func PrometheusGraphHandler(w http.ResponseWriter, req *http.Request) {
+	var pg PrometheusGraphData
+	err := json.NewDecoder(req.Body).Decode(&pg)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-		timeframe := time.Duration(pg.Timeframe) * time.Second
-		if timeframe == 0 {
-			timeframe = 3600 * time.Second
-		}
+	timeframe := time.Duration(pg.Timeframe) * time.Second
+	if timeframe == 0 {
+		timeframe = 3600 * time.Second
+	}
 
-		transportConfig := prometheusapi.DefaultRoundTripper.(*http.Transport)
-		transportConfig.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
-		}
+	if runner.Prometheus == nil {
+		http.Error(w, "Prometheus not configured", http.StatusInternalServerError)
+		return
+	}
 
-		client, err := prometheusapi.NewClient(prometheusapi.Config{
-			Address:      prometheusHost,
-			RoundTripper: transportConfig,
-		})
-		if err != nil {
-			log.Errorf("Failed to create prometheus client: %v", err)
-			http.Error(w, "Internal error", http.StatusInternalServerError)
-			return
-		}
+	canarySuccessCount, err := getCanarySuccess(runner.Prometheus, pg.CheckType, pg.CheckKey, pg.CanaryName, timeframe)
+	if err != nil {
+		log.Errorf("Failed to get canary success count: %v", err)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
 
-		v1api := v1.NewAPI(client)
+	canaryFailedCount, err := getCanaryFailed(runner.Prometheus, pg.CheckType, pg.CheckKey, pg.CanaryName, timeframe)
+	if err != nil {
+		log.Errorf("Failed to get canary success count: %v", err)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
 
-		canarySuccessCount, err := getCanarySuccess(v1api, pg.CheckType, pg.CheckKey, pg.CanaryName, timeframe)
-		if err != nil {
-			log.Errorf("Failed to get canary success count: %v", err)
-			http.Error(w, "Internal error", http.StatusInternalServerError)
-			return
-		}
+	canaryLatency, err := getCanaryLatency(runner.Prometheus, pg.CheckType, pg.CheckKey, pg.CanaryName, timeframe)
+	if err != nil {
+		log.Errorf("Failed to get canary success count: %v", err)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
 
-		canaryFailedCount, err := getCanaryFailed(v1api, pg.CheckType, pg.CheckKey, pg.CanaryName, timeframe)
-		if err != nil {
-			log.Errorf("Failed to get canary success count: %v", err)
-			http.Error(w, "Internal error", http.StatusInternalServerError)
-			return
-		}
+	response := map[string][]Timeseries{
+		"success": canarySuccessCount,
+		"failed":  canaryFailedCount,
+		"latency": canaryLatency,
+	}
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		log.Errorf("Failed to marshal response: %v", err)
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
 
-		canaryLatency, err := getCanaryLatency(v1api, pg.CheckType, pg.CheckKey, pg.CanaryName, timeframe)
-		if err != nil {
-			log.Errorf("Failed to get canary success count: %v", err)
-			http.Error(w, "Internal error", http.StatusInternalServerError)
-			return
-		}
-
-		response := map[string][]Timeseries{
-			"success": canarySuccessCount,
-			"failed":  canaryFailedCount,
-			"latency": canaryLatency,
-		}
-		jsonResponse, err := json.Marshal(response)
-		if err != nil {
-			log.Errorf("Failed to marshal response: %v", err)
-			http.Error(w, "Internal error", http.StatusInternalServerError)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		_, err = w.Write(jsonResponse)
-		if err != nil {
-			log.Errorf("Failed to write response: %v", err)
-			return
-		}
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(jsonResponse)
+	if err != nil {
+		log.Errorf("Failed to write response: %v", err)
+		return
 	}
 }
 

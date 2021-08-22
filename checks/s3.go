@@ -2,9 +2,12 @@ package checks
 
 import (
 	"bytes"
+
 	"crypto/tls"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -46,10 +49,10 @@ type S3Checker struct{}
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *S3Checker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *S3Checker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.S3 {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.S3 {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
@@ -59,7 +62,7 @@ func (c *S3Checker) Type() string {
 	return "s3"
 }
 
-func (c *S3Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.S3Check)
 	bucket := check.Bucket
 

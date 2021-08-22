@@ -11,11 +11,14 @@ import (
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/checks"
+	"github.com/flanksource/kommons"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/deps"
+	"github.com/flanksource/commons/logger"
 )
 
 var (
@@ -76,6 +79,16 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+var kommonsClient *kommons.Client
+
+func init() {
+	var err error
+	kommonsClient, err = pkg.NewKommonsClient()
+	if err != nil {
+		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
+	}
+}
+
 func TestRunChecks(t *testing.T) {
 	files, _ := ioutil.ReadDir(fmt.Sprintf("../%s", testFolder))
 	t.Logf("Folder: %s", testFolder)
@@ -100,8 +113,9 @@ func runFixture(t *testing.T, name string) {
 		},
 		Spec: config,
 	}
+
 	t.Run(name, func(t *testing.T) {
-		checkResults := cmd.RunChecks(canary)
+		checkResults := checks.RunChecks(canary, kommonsClient)
 		for _, res := range checkResults {
 			if res == nil {
 				t.Errorf("Result in %v returned nil:\n", name)

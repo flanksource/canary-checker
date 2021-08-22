@@ -6,6 +6,8 @@ import (
 	osExec "os/exec"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/context"
+
 	"github.com/flanksource/kommons"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -35,18 +37,18 @@ func (c *ResticChecker) Type() string {
 	return "restic"
 }
 
-func (c *ResticChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *ResticChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.Restic {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.Restic {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
 
-func (c *ResticChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	resticCheck := extConfig.(v1.ResticCheck)
-	envVars, err := c.getEnvVars(resticCheck, canary.Namespace)
+	envVars, err := c.getEnvVars(resticCheck, ctx.Canary.Namespace)
 	if err != nil {
 		return Failf(resticCheck, "error getting envVars %v", err)
 	}
