@@ -36,7 +36,10 @@ var Serve = &cobra.Command{
 	Short: "Start a server to execute checks ",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		config := pkg.ParseConfig(configFile)
+		config, err := pkg.ParseConfig(configFile)
+		if err != nil {
+			logger.Fatalf("could not parse %s: %v", configFile, err)
+		}
 		if config.Interval == 0 && config.Schedule == "" {
 			config.Schedule = schedule
 		}
@@ -46,7 +49,7 @@ var Serve = &cobra.Command{
 				Name:      runner.RunnerName,
 				Namespace: namespace,
 			},
-			Spec: config,
+			Spec: *config,
 		}
 		kommonsClient, err := pkg.NewKommonsClient()
 		if err != nil {

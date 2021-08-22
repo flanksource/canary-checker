@@ -27,14 +27,17 @@ var Run = &cobra.Command{
 		configfile, _ := cmd.Flags().GetString("configfile")
 		namespace, _ := cmd.Flags().GetString("namespace")
 		junitFile, _ := cmd.Flags().GetString("junit-file")
-		config := pkg.ParseConfig(configfile)
+		config, err := pkg.ParseConfig(configfile)
+		if err != nil {
+			logger.Fatalf("Could not parse %s: %v", configfile, err)
+		}
 		failed := 0
 		canary := v1.Canary{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespace,
 				Name:      CleanupFilename(configfile),
 			},
-			Spec: config,
+			Spec: *config,
 		}
 		kommonsClient, err := pkg.NewKommonsClient()
 		if err != nil {
