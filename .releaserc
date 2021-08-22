@@ -5,7 +5,7 @@ plugins:
         - { type: fix, release: patch }
         - { type: chore, release: patch }
         - { type: refactor, release: patch }
-        - { type: feat, release: minor }
+        - { type: feat, release: patch }
         - { type: ci, release: false }
         - { type: style, release: false }
       parserOpts:

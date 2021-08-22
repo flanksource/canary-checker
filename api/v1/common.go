@@ -4,7 +4,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/kommons"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -47,31 +46,44 @@ func (auth Authentication) GetDomain() string {
 }
 
 type Display struct {
-	external.Template `yaml:",inline" json:",inline"`
+	Template `yaml:",inline" json:",inline"`
 }
 
-func (d Display) GetDisplayTemplate() external.Template {
+func (d Display) GetDisplayTemplate() Template {
 	return d.Template
 }
 
 type Test struct {
-	external.Template `yaml:",inline" json:",inline"`
+	Template `yaml:",inline" json:",inline"`
 }
 
-func (t Test) GetTestTemplate() external.Template {
+func (t Test) GetTestTemplate() Template {
 	return t.Template
 }
 
-type Templatable struct {
-	Test    external.Template `yaml:"test,omitempty" json:"test,omitempty"`
-	Display external.Template `yaml:"display,omitempty" json:"display,omitempty"`
+type Template struct {
+	Template string `yaml:"template,omitempty" json:"template,omitempty"`
+	JSONPath string `yaml:"jsonPath,omitempty" json:"jsonPath,omitempty"`
 }
 
-func (t Templatable) GetTestFunction() external.Template {
+type DisplayTemplate interface {
+	GetDisplayTemplate() Template
+}
+
+type TestFunction interface {
+	GetTestFunction() Template
+}
+
+type Templatable struct {
+	Test    Template `yaml:"test,omitempty" json:"test,omitempty"`
+	Display Template `yaml:"display,omitempty" json:"display,omitempty"`
+}
+
+func (t Templatable) GetTestFunction() Template {
 	return t.Test
 }
 
-func (t Templatable) GetDisplayTemplate() external.Template {
+func (t Templatable) GetDisplayTemplate() Template {
 	return t.Display
 }
 

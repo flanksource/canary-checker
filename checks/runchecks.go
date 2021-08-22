@@ -24,8 +24,8 @@ func RunChecks(ctx *context.Context, canary v1.Canary) []*pkg.CheckResult {
 		for _, r := range result {
 			if r != nil {
 				switch r.Check.(type) {
-				case external.DisplayTemplate:
-					message, err := template(ctx.New(r.Data), r.Check, r.Check.(external.DisplayTemplate).GetDisplayTemplate())
+				case v1.DisplayTemplate:
+					message, err := template(ctx.New(r.Data), r.Check, r.Check.(v1.DisplayTemplate).GetDisplayTemplate())
 					if err != nil {
 						r.ErrorMessage(err)
 					} else {
@@ -33,8 +33,8 @@ func RunChecks(ctx *context.Context, canary v1.Canary) []*pkg.CheckResult {
 					}
 				}
 				switch r.Check.(type) {
-				case external.TestFunction:
-					tpl := r.Check.(external.TestFunction).GetTestFunction()
+				case v1.TestFunction:
+					tpl := r.Check.(v1.TestFunction).GetTestFunction()
 					message, err := template(ctx.New(r.Data), r.Check, tpl)
 					if err != nil {
 						r.ErrorMessage(err)
@@ -51,7 +51,7 @@ func RunChecks(ctx *context.Context, canary v1.Canary) []*pkg.CheckResult {
 	return results
 }
 
-func template(ctx *context.Context, check external.Check, template external.Template) (string, error) {
+func template(ctx *context.Context, check external.Check, template v1.Template) (string, error) {
 
 	if template.Template != "" {
 		tpl := gotemplate.New("")

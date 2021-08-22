@@ -113,7 +113,7 @@ type S3BucketCheck struct {
 	Templatable   `yaml:",inline" json:",inline"`
 	AWSConnection `yaml:",inline" json:",inline"`
 	FolderTest    `yaml:",inline" json:",inline"`
-	Bucket        string `yaml:"bucket", json:"bucket"`
+	Bucket        string `yaml:"bucket" json:"bucket"`
 	// glob path to restrict matches to a subset
 	ObjectPath string `yaml:"objectPath" json:"objectPath,omitempty"`
 	// Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY

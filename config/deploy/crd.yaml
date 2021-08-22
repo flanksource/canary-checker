@@ -423,6 +423,8 @@ spec:
                       description:
                         description: Description for the check
                         type: string
+                      endpoint:
+                        type: string
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
@@ -468,7 +470,6 @@ spec:
                       securityGroup:
                         type: string
                       skipTLSVerify:
-                        description: Skip TLS verify when connecting to aws
                         type: boolean
                       timeOut:
                         type: integer
@@ -702,9 +703,13 @@ spec:
                       description:
                         description: Description for the check
                         type: string
-                      displayTemplate:
-                        description: 'DisplayTemplate displays server response in text (overrides default bar format for UI). Example: ''Response Code: [[.code]]'''
-                        type: string
+                      display:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       endpoint:
                         description: HTTP endpoint to check.  Mutually exclusive with Namespace
                         type: string
@@ -779,6 +784,13 @@ spec:
                         required:
                           - path
                           - value
+                        type: object
+                      test:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
                         type: object
                       thresholdMillis:
                         description: Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.
@@ -5022,9 +5034,13 @@ spec:
                       description:
                         description: Description for the check
                         type: string
-                      displayTemplate:
-                        description: 'DisplayTemplate displays testResults results in text Have access to the list of maps where each entry is equivalent to a row Example: for the given query: ''kubernetes_build_info{job!~"kube-dns|coredns"}'' the displayTemplate could be: ''[[ index .results 0 "git_version" ]]'''
-                        type: string
+                      display:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       host:
                         description: Address of the prometheus server
                         type: string
@@ -5037,9 +5053,13 @@ spec:
                       query:
                         description: PromQL query
                         type: string
-                      resultsFunction:
-                        description: ResultsFunction tests query output for pass/fail The check is only passed when ResultsFunction returns 'true'.
-                        type: string
+                      test:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                     required:
                       - host
                       - query
@@ -5300,28 +5320,66 @@ spec:
                 s3Bucket:
                   items:
                     properties:
-                      accessKey:
-                        type: string
+                      accessKeyID:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       bucket:
                         type: string
                       description:
                         description: Description for the check
                         type: string
-                      displayTemplate:
-                        description: 'DisplayTemplate displays testResults results in text. Default: ''Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'''
-                        type: string
+                      display:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       endpoint:
                         type: string
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
                       maxAge:
-                        description: maximum allowed age of matched objects in seconds
-                        format: int64
+                        description: MaxAge the latest object should be younger than defined age
+                        type: string
+                      maxCount:
+                        description: MinCount the minimum number of files inside the searchPath
                         type: integer
-                      minSize:
-                        description: min size of of most recent matched object in bytes
-                        format: int64
+                      minAge:
+                        description: MinAge the latest object should be older than defined age
+                        type: string
+                      minCount:
+                        description: MinCount the minimum number of files inside the searchPath
                         type: integer
                       name:
                         description: Name of the check
@@ -5329,18 +5387,57 @@ spec:
                       objectPath:
                         description: glob path to restrict matches to a subset
                         type: string
-                      readWrite:
-                        type: boolean
                       region:
                         type: string
                       secretKey:
-                        type: string
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       skipTLSVerify:
-                        description: Skip TLS verify when connecting to s3
                         type: boolean
+                      test:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       usePathStyle:
                         description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                         type: boolean
+                    required:
+                      - accessKeyID
+                      - bucket
+                      - region
+                      - secretKey
                     type: object
                   type: array
                 schedule:
@@ -5424,9 +5521,13 @@ spec:
                       description:
                         description: Description for the check
                         type: string
-                      displayTemplate:
-                        description: 'DisplayTemplate displays check output in text Default: ''File Age: [[.age]]; File count: [[.count]]'''
-                        type: string
+                      display:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       domain:
                         description: Domain...
                         type: string
@@ -5436,6 +5537,9 @@ spec:
                       maxAge:
                         description: MaxAge the latest object should be younger than defined age
                         type: string
+                      maxCount:
+                        description: MinCount the minimum number of files inside the searchPath
+                        type: integer
                       minAge:
                         description: MinAge the latest object should be older than defined age
                         type: string
@@ -5457,6 +5561,13 @@ spec:
                       sharename:
                         description: Sharename to mount from the samba server
                         type: string
+                      test:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       workstation:
                         description: Workstation...
                         type: string
