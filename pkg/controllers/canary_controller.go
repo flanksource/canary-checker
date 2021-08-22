@@ -22,8 +22,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/flanksource/canary-checker/pkg/utils"
-
 	"github.com/flanksource/canary-checker/pkg/push"
 
 	"github.com/flanksource/kommons"
@@ -251,7 +249,7 @@ func (c CanaryJob) Run() {
 
 	var results []*pkg.CheckResult
 	for _, check := range checks.All {
-		if !utils.CheckerInChecks(canary.Spec.GetAllChecks(), check) {
+		if !checks.Checks(canary.Spec.GetAllChecks()).Includes(check) {
 			continue
 		}
 		switch cs := check.(type) {

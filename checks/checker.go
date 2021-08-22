@@ -7,6 +7,17 @@ import (
 	"github.com/flanksource/kommons"
 )
 
+type Checks []external.Check
+
+func (c Checks) Includes(checker Checker) bool {
+	for _, check := range c {
+		if check.GetType() == checker.Type() {
+			return true
+		}
+	}
+	return false
+}
+
 type Checker interface {
 	Run(config v1.Canary) []*pkg.CheckResult
 	Type() string

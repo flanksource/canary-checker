@@ -1,15 +1,15 @@
 package utils
 
 import (
-	"github.com/flanksource/canary-checker/api/external"
-	"github.com/flanksource/canary-checker/checks"
+	"fmt"
+	"time"
+
+	"k8s.io/apimachinery/pkg/util/duration"
 )
 
-func CheckerInChecks(allChecks []external.Check, checker checks.Checker) bool {
-	for _, check := range allChecks {
-		if check.GetType() == checker.Type() {
-			return true
-		}
+func Age(d time.Duration) string {
+	if d.Milliseconds() < 1000 {
+		return fmt.Sprintf("%0.dms", d.Milliseconds())
 	}
-	return false
+	return duration.HumanDuration(d)
 }

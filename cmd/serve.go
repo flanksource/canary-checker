@@ -7,7 +7,6 @@ import (
 	_ "net/http/pprof" // required by serve
 
 	"github.com/flanksource/canary-checker/pkg/details"
-	"github.com/flanksource/canary-checker/pkg/utils"
 
 	"github.com/flanksource/canary-checker/pkg/push"
 	"github.com/flanksource/canary-checker/pkg/runner"
@@ -57,7 +56,7 @@ var Serve = &cobra.Command{
 		config.SetSQLDrivers()
 		for _, _c := range checks.All {
 			c := _c
-			if !utils.CheckerInChecks(canary.Spec.GetAllChecks(), c) {
+			if !checks.Checks(canary.Spec.GetAllChecks()).Includes(c) {
 				continue
 			}
 			switch cs := c.(type) {
