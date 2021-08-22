@@ -67,7 +67,7 @@ type Templatable struct {
 	Display external.Template `yaml:"display,omitempty" json:"display,omitempty"`
 }
 
-func (t Templatable) GetTestTemplate() external.Template {
+func (t Templatable) GetTestFunction() external.Template {
 	return t.Test
 }
 

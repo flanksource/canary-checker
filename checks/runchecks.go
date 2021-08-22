@@ -31,12 +31,17 @@ func RunChecks(ctx *context.Context, canary v1.Canary) []*pkg.CheckResult {
 					} else {
 						r.ResultMessage(message)
 					}
+				}
+				switch r.Check.(type) {
 				case external.TestFunction:
-					message, err := template(ctx.New(r.Data), r.Check, r.Check.(external.TestFunction).GetTestFunction())
+					tpl := r.Check.(external.TestFunction).GetTestFunction()
+					message, err := template(ctx.New(r.Data), r.Check, tpl)
 					if err != nil {
 						r.ErrorMessage(err)
 					} else if message != "true" {
 						r.Failf("")
+					} else {
+						ctx.Logger.Tracef("%s return %s", tpl, message)
 					}
 				}
 				results = append(results, r)

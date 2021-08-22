@@ -51,10 +51,9 @@ func (c *NamespaceChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 
 	var err error
 	var results []*pkg.CheckResult
-	for _, conf := range c.ctx.Canary.Spec.Namespace {
+	for _, conf := range ctx.Canary.Spec.Namespace {
 		if c.k8s == nil {
-			c.k8s, err = c.ctx.Kommons.GetClientset()
-			c.ctx = ctx
+			c.k8s, err = ctx.Kommons.GetClientset()
 			if err != nil {
 				return []*pkg.CheckResult{pkg.Fail(conf).ErrorMessage(err)}
 			}

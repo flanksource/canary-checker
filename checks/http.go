@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
 	"github.com/pkg/errors"
 
@@ -78,7 +77,7 @@ func (c *HTTPChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	return results
 }
 
-func (c *HTTPChecker) configure(req *http.HttpRequest, namespace string, check v1.HTTPCheck) error {
+func (c *HTTPChecker) configure(req *http.HttpRequest, ctx *context.Context, namespace string, check v1.HTTPCheck) error {
 	kommons := c.GetClient()
 	for _, header := range check.Headers {
 		if kommons == nil {
@@ -100,11 +99,12 @@ func (c *HTTPChecker) configure(req *http.HttpRequest, namespace string, check v
 	}
 	req.NTLM(check.NTLM)
 
-	if logger.IsDebugEnabled() {
+	if ctx.Canary.GetAnnotations()["trace"] == "true" {
 		req.Debug(true)
-	} else if logger.IsTraceEnabled() {
+	} else if ctx.Canary.GetAnnotations()["trace"] == "true" {
 		req.Trace(true)
 	}
+
 	return nil
 }
 
@@ -126,7 +126,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	endpoint := check.Endpoint
 
 	req := http.NewRequest(check.Endpoint).Method(check.Method)
-	if err := c.configure(req, namespace, check); err != nil {
+	if err := c.configure(req, ctx, namespace, check); err != nil {
 		return result.ErrorMessage(err)
 	}
 
