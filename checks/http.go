@@ -15,9 +15,9 @@ import (
 
 	"github.com/flanksource/commons/text"
 
-	"github.com/Azure/go-ntlmssp"
+	httpntlm "github.com/vadimi/go-http-ntlm"
+
 	"github.com/flanksource/kommons"
-	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -152,7 +152,8 @@ func (c *HTTPChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Che
 	kommons := c.GetClient()
 	for _, header := range check.Headers {
 		if kommons == nil {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(httpTemplateResult(template, httpStatus)).ErrorMessage(fmt.Errorf("kommons client not set for HTTPChecker instance"))
+			headers[header.Name] = header.Value
+			continue
 		}
 		key, value, err := kommons.GetEnvValue(header, specNamespace)
 		if err != nil {
@@ -281,17 +282,21 @@ func (c *HTTPChecker) checkHTTP(urlObj pkg.URL, ntlm bool) (*HTTPCheckResult, er
 	} else {
 		urlString = fmt.Sprintf("%s://%s%s", urlObj.Scheme, urlObj.IP, urlObj.Path)
 	}
-	client := getHTTPClient(urlObj.Host, ntlm)
+	client := getHTTPClient(urlObj, ntlm)
 	req, err := http.NewRequest(urlObj.Method, urlString, strings.NewReader(urlObj.Body))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Host = urlObj.Host
-	req.Header.Add("Host", urlObj.Host)
 	for header, field := range urlObj.Headers {
 		req.Header.Add(header, field)
 	}
+
+	if req.Header.Get("Host") == "" {
+		req.Header.Add("Host", urlObj.Host)
+	}
+
 	if urlObj.Username != "" && urlObj.Password != "" {
 		req.SetBasicAuth(urlObj.Username, urlObj.Password)
 	}
@@ -310,7 +315,6 @@ func (c *HTTPChecker) checkHTTP(urlObj pkg.URL, ntlm bool) (*HTTPCheckResult, er
 		return nil, err
 	}
 	content := string(res)
-	// logger.Tracef("GET %s => %s", urlString, content)
 	sslExpireDays := int(exp.Sub(start).Hours() / 24.0)
 	var sslExpiryDaysRounded int
 	if sslExpireDays <= 0 {
@@ -333,10 +337,6 @@ func (c *HTTPChecker) checkHTTP(urlObj pkg.URL, ntlm bool) (*HTTPCheckResult, er
 }
 
 func (c *HTTPChecker) ParseAuth(check v1.HTTPCheck, namespace string) (string, string, error) {
-	kommons := c.GetClient()
-	if kommons == nil {
-		return "", "", errors.New("Kommons client not set for HTTPChecker instance")
-	}
 	if check.Authentication == nil {
 		return "", "", nil
 	}
@@ -348,28 +348,37 @@ func (c *HTTPChecker) ParseAuth(check v1.HTTPCheck, namespace string) (string, s
 	return auth.Username.Value, auth.Password.Value, nil
 }
 
-func getHTTPClient(urlHost string, ntlm bool) *http.Client {
-	transport := &http.Transport{
+func getHTTPClient(url pkg.URL, ntlm bool) *http.Client {
+	var transport http.RoundTripper
+	transport = &http.Transport{
 		DisableKeepAlives: true,
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
-			ServerName:         urlHost,
+			ServerName:         url.Host,
 		},
 	}
-	checkRedirect := func(req *http.Request, via []*http.Request) error {
-		return http.ErrUseLastResponse
-	}
+
 	if ntlm {
-		return &http.Client{
-			Transport: ntlmssp.Negotiator{
-				RoundTripper: transport,
-			},
-			CheckRedirect: checkRedirect,
+		parts := strings.Split(url.Username, "@")
+
+		domain := ""
+		if len(parts) > 1 {
+			domain = parts[1]
+		}
+
+		transport = &httpntlm.NtlmTransport{
+			Domain:   domain,
+			User:     parts[0],
+			Password: url.Password,
+			// RoundTripper: transport,
 		}
 	}
+
 	return &http.Client{
-		Transport:     transport,
-		CheckRedirect: checkRedirect,
+		Transport: transport,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return nil
+		},
 	}
 }
 

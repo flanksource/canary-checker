@@ -6,6 +6,10 @@ import (
 )
 
 func GetAuthValues(auth *v1.Authentication, client *kommons.Client, namespace string) (v1.Authentication, error) {
+	if client == nil {
+		return *auth, nil
+	}
+
 	authentication := &v1.Authentication{
 		Username: kommons.EnvVar{
 			Value: "",
