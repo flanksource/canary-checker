@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/canary-checker/pkg/dns"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sparrc/go-ping"
 
@@ -48,7 +49,7 @@ func (c *IcmpChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Che
 	check := extConfig.(v1.ICMPCheck)
 	endpoint := check.Endpoint
 
-	lookupResult, err := DNSLookup(endpoint)
+	lookupResult, err := dns.Lookup(endpoint)
 	if err != nil {
 		return invalidErrorf(check, err, "unable to resolve dns")
 	}

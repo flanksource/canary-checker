@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/canary-checker/pkg/dns"
 	"github.com/prometheus/client_golang/prometheus"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -62,7 +63,7 @@ func (c *S3Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Check
 	check := extConfig.(v1.S3Check)
 	bucket := check.Bucket
 
-	if _, err := DNSLookup(bucket.Endpoint); err != nil {
+	if _, err := dns.Lookup(bucket.Endpoint); err != nil {
 		return Failf(check, "Failed to resolve DNS for %s", bucket.Endpoint)
 	}
 

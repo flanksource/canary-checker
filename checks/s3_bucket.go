@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/commons/text"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/canary-checker/pkg/dns"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -83,7 +84,7 @@ func (c *S3BucketChecker) Check(canary v1.Canary, extConfig external.Check) *pkg
 		textResults = true
 	}
 	template := bucket.GetDisplayTemplate()
-	if _, err := DNSLookup(bucket.Endpoint); err != nil {
+	if _, err := dns.Lookup(bucket.Endpoint); err != nil {
 		return pkg.Fail(bucket).TextResults(textResults).ResultMessage(s3BucketTemplateResult(template, bucketStatus)).ErrorMessage(err).StartTime(start)
 	}
 
