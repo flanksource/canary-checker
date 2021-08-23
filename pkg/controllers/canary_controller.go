@@ -90,7 +90,7 @@ func (r *CanaryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	err := r.Get(ctx, req.NamespacedName, check)
 
 	if !check.DeletionTimestamp.IsZero() {
-		logger.Info("removing", "name", check.Name, "namespace", check.Namespace)
+		logger.Info("removing", "check", check)
 		cache.RemoveCheck(*check)
 		metrics.RemoveCheck(*check)
 		controllerutil.RemoveFinalizer(check, FinalizerName)
@@ -109,7 +109,6 @@ func (r *CanaryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	if !controllerutil.ContainsFinalizer(check, FinalizerName) {
 		logger.Info("adding finalizer", "finalizers", check.GetFinalizers())
 		controllerutil.AddFinalizer(check, FinalizerName)
-		logger.Info("added finalizer", "finalizers", check.GetFinalizers())
 		if err := r.Update(ctx, check); err != nil {
 			return ctrl.Result{}, err
 		}
