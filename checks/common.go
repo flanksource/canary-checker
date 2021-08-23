@@ -41,8 +41,8 @@ func GetAuthValues(auth *v1.Authentication, client *kommons.Client, namespace st
 type FolderCheck struct {
 	Oldest  Duration
 	Newest  Duration
-	MinSize Size
-	MaxSize Size
+	MinSize int64
+	MaxSize int64
 	Files   []os.FileInfo
 }
 
@@ -58,6 +58,12 @@ func (f FolderCheck) Test(test v1.FolderTest) string {
 	}
 	if test.MaxCount != nil && len(f.Files) > *test.MaxCount {
 		return fmt.Sprintf("too many files %d > %d", len(f.Files), *test.MaxCount)
+	}
+	if test.MinSize != nil && f.MinSize < *test.MinSize {
+		return fmt.Sprintf("min size is too small: %d < %d", f.MinSize, test.MinSize)
+	}
+	if test.MaxSize != nil && f.MaxSize < *test.MaxSize {
+		return fmt.Sprintf("max size is too large: %d > %d", f.MaxSize, test.MaxSize)
 	}
 	return ""
 }

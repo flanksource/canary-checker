@@ -48,7 +48,6 @@ func NewNamespaceChecker() *NamespaceChecker {
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
 func (c *NamespaceChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-
 	var err error
 	var results []*pkg.CheckResult
 	for _, conf := range ctx.Canary.Spec.Namespace {

@@ -30,11 +30,6 @@ func (c SmbChecker) GetClient() *kommons.Client {
 	return c.kommons
 }
 
-type SmbStatus struct {
-	age   string
-	count int
-}
-
 func (c *SmbChecker) Type() string {
 	return "smb"
 }
@@ -102,7 +97,6 @@ func smbConnect(server string, share string, auth *v1.Authentication) (Filesyste
 	}
 	smb.Share = fs
 	return smb, nil
-
 }
 
 func (c *SmbChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
@@ -121,6 +115,9 @@ func (c *SmbChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	}
 
 	session, err := smbConnect(server, sharename, auth)
+	if err != nil {
+		return result.ErrorMessage(err)
+	}
 	if session != nil {
 		defer session.Close()
 	}
@@ -188,6 +185,12 @@ func getFolderCheck(fs Filesystem, dir string) (*FolderCheck, error) {
 			result.Newest = timeSince(file.ModTime())
 		}
 		result.Files = append(result.Files, file)
+		if result.MaxSize < file.Size() {
+			result.MaxSize = file.Size()
+		}
+		if result.MinSize > file.Size() {
+			result.MinSize = file.Size()
+		}
 	}
 	return &result, nil
 }

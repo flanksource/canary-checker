@@ -5371,15 +5371,23 @@ spec:
                         type: string
                       maxAge:
                         description: MaxAge the latest object should be younger than defined age
-                        type: string
+                        type: Any
                       maxCount:
                         description: MinCount the minimum number of files inside the searchPath
                         type: integer
+                      maxSize:
+                        description: MaxSize of the files inside the searchPath
+                        format: int64
+                        type: integer
                       minAge:
                         description: MinAge the latest object should be older than defined age
-                        type: string
+                        type: Any
                       minCount:
                         description: MinCount the minimum number of files inside the searchPath
+                        type: integer
+                      minSize:
+                        description: MinSize of the files inside the searchPath
+                        format: int64
                         type: integer
                       name:
                         description: Name of the check
@@ -5536,15 +5544,23 @@ spec:
                         type: string
                       maxAge:
                         description: MaxAge the latest object should be younger than defined age
-                        type: string
+                        type: Any
                       maxCount:
                         description: MinCount the minimum number of files inside the searchPath
                         type: integer
+                      maxSize:
+                        description: MaxSize of the files inside the searchPath
+                        format: int64
+                        type: integer
                       minAge:
                         description: MinAge the latest object should be older than defined age
-                        type: string
+                        type: Any
                       minCount:
                         description: MinCount the minimum number of files inside the searchPath
+                        type: integer
+                      minSize:
+                        description: MinSize of the files inside the searchPath
+                        format: int64
                         type: integer
                       name:
                         description: Name of the check

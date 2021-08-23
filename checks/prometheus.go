@@ -48,5 +48,5 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 			results = append(results, value.Metric)
 		}
 	}
-	return result.AddData(map[string]interface{}{"results": result})
+	return result.AddData(map[string]interface{}{"results": results})
 }

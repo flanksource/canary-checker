@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
 	"github.com/pkg/errors"
 
@@ -48,12 +49,6 @@ type HTTPChecker struct {
 	kommons *kommons.Client `yaml:"-" json:"-"`
 }
 
-type HTTPStatus struct {
-	responseCode int
-	content      string
-	headers      map[string]string
-}
-
 // Type: returns checker type
 func (c *HTTPChecker) Type() string {
 	return "http"
@@ -77,7 +72,7 @@ func (c *HTTPChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	return results
 }
 
-func (c *HTTPChecker) configure(req *http.HttpRequest, ctx *context.Context, namespace string, check v1.HTTPCheck) error {
+func (c *HTTPChecker) configure(req *http.HTTPRequest, namespace string, check v1.HTTPCheck) error {
 	kommons := c.GetClient()
 	for _, header := range check.Headers {
 		if kommons == nil {
@@ -85,7 +80,7 @@ func (c *HTTPChecker) configure(req *http.HttpRequest, ctx *context.Context, nam
 		}
 		key, value, err := kommons.GetEnvValue(header, namespace)
 		if err != nil {
-			return errors.WithMessagef(err, "failed getting header: %s", header)
+			return errors.WithMessagef(err, "failed getting header: %v", header)
 		}
 		req.Header(key, value)
 	}
@@ -99,12 +94,11 @@ func (c *HTTPChecker) configure(req *http.HttpRequest, ctx *context.Context, nam
 	}
 	req.NTLM(check.NTLM)
 
-	if ctx.Canary.GetAnnotations()["trace"] == "true" {
+	if logger.IsDebugEnabled() {
 		req.Debug(true)
-	} else if ctx.Canary.GetAnnotations()["trace"] == "true" {
+	} else if logger.IsTraceEnabled() {
 		req.Trace(true)
 	}
-
 	return nil
 }
 
@@ -126,15 +120,12 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	endpoint := check.Endpoint
 
 	req := http.NewRequest(check.Endpoint).Method(check.Method)
-	if err := c.configure(req, ctx, namespace, check); err != nil {
+	if err := c.configure(req, namespace, check); err != nil {
 		return result.ErrorMessage(err)
 	}
 
 	resp := req.Do(check.Body)
 	result.Duration = resp.Elapsed.Milliseconds()
-	if resp.Error != nil {
-		return result.ErrorMessage(resp.Error)
-	}
 	result.AddMetric(pkg.Metric{
 		Name: "response_code",
 		Type: metrics.CounterType,
@@ -146,7 +137,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	responseStatus.WithLabelValues(strconv.Itoa(resp.StatusCode), statusCodeToClass(resp.StatusCode), endpoint).Inc()
 	age := resp.GetSSLAge()
 	if age != nil {
-		sslExpiration.WithLabelValues(endpoint).Set(float64(age.Hours() * 24))
+		sslExpiration.WithLabelValues(endpoint).Set(age.Hours() * 24)
 	}
 
 	body, _ := resp.AsString()
@@ -175,7 +166,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	}
 
 	if check.ThresholdMillis > 0 && check.ThresholdMillis < int(resp.Elapsed.Milliseconds()) {
-		return result.Failf("threshold exceeded %d > %d", utils.Age(resp.Elapsed), check.ThresholdMillis)
+		return result.Failf("threshold exceeded %s > %d", utils.Age(resp.Elapsed), check.ThresholdMillis)
 	}
 
 	if check.ResponseContent != "" && !strings.Contains(body, check.ResponseContent) {

@@ -18,6 +18,10 @@ type FolderTest struct {
 	MinCount *int `yaml:"minCount,omitempty" json:"minCount,omitempty"`
 	//MinCount the minimum number of files inside the searchPath
 	MaxCount *int `yaml:"maxCount,omitempty" json:"maxCount,omitempty"`
+	//MinSize of the files inside the searchPath
+	MinSize *int64 `yaml:"minSize,omitempty" json:"minSize,omitempty"`
+	//MaxSize of the files inside the searchPath
+	MaxSize *int64 `yaml:"maxSize,omitempty" json:"maxSize,omitempty"`
 }
 
 // Duration is a wrapper around time.Duration which supports correct
@@ -57,11 +61,11 @@ func (d Duration) ToUnstructured() interface{} {
 // the OpenAPI spec of this type.
 //
 // See: https://github.com/kubernetes/kube-openapi/tree/master/pkg/generators
-func (_ Duration) OpenAPISchemaType() []string { return []string{"string"} }
+func (Duration) OpenAPISchemaType() []string { return []string{"string"} }
 
 // OpenAPISchemaFormat is used by the kube-openapi generator when constructing
 // the OpenAPI spec of this type.
-func (_ Duration) OpenAPISchemaFormat() string { return "" }
+func (Duration) OpenAPISchemaFormat() string { return "" }
 
 type JSONCheck struct {
 	Path  string `yaml:"path" json:"path"`

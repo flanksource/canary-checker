@@ -15,7 +15,7 @@ import (
 	httpntlm "github.com/vadimi/go-http-ntlm/v2"
 )
 
-type HttpRequest struct {
+type HTTPRequest struct {
 	Username                string
 	Password                string
 	method                  string
@@ -26,13 +26,13 @@ type HttpRequest struct {
 	headers                 map[string]string
 	insecure                bool
 	ntlm                    bool
-	tr                      *http.Transport
+	tr                      *http.Transport //nolint:structcheck,unused
 	traceHeaders, traceBody bool
 }
 
-func NewRequest(endpoint string) *HttpRequest {
+func NewRequest(endpoint string) *HTTPRequest {
 	url, _ := url.Parse(endpoint)
-	return &HttpRequest{
+	return &HTTPRequest{
 		host:    url.Host,
 		URL:     url,
 		start:   time.Now(),
@@ -40,59 +40,59 @@ func NewRequest(endpoint string) *HttpRequest {
 	}
 }
 
-func (h *HttpRequest) Method(method string) *HttpRequest {
+func (h *HTTPRequest) Method(method string) *HTTPRequest {
 	h.method = method
 	return h
 }
 
-func (h *HttpRequest) UseHost(host string) *HttpRequest {
+func (h *HTTPRequest) UseHost(host string) *HTTPRequest {
 	h.host = host
 	return h
 }
 
-func (h *HttpRequest) Debug(debug bool) *HttpRequest {
+func (h *HTTPRequest) Debug(debug bool) *HTTPRequest {
 	h.traceHeaders = debug
 	return h
 }
 
-func (h *HttpRequest) Trace(trace bool) *HttpRequest {
+func (h *HTTPRequest) Trace(trace bool) *HTTPRequest {
 	h.Debug(trace)
 	h.traceBody = trace
 	return h
 }
 
-func (h *HttpRequest) Host(host string) *HttpRequest {
+func (h *HTTPRequest) Host(host string) *HTTPRequest {
 	h.host = host
 	return h
 }
 
-func (h *HttpRequest) Header(header, value string) *HttpRequest {
+func (h *HTTPRequest) Header(header, value string) *HTTPRequest {
 	h.headers[header] = value
 	return h
 }
 
-func (h *HttpRequest) Auth(username, password string) *HttpRequest {
+func (h *HTTPRequest) Auth(username, password string) *HTTPRequest {
 	h.Username = username
 	h.Password = password
 	return h
 }
 
-func (h *HttpRequest) NTLM(ntlm bool) *HttpRequest {
+func (h *HTTPRequest) NTLM(ntlm bool) *HTTPRequest {
 	h.ntlm = ntlm
 	return h
 }
 
-func (h *HttpRequest) Insecure(skip bool) *HttpRequest {
+func (h *HTTPRequest) Insecure(skip bool) *HTTPRequest {
 	h.insecure = skip
 	return h
 }
 
-func (h *HttpRequest) Headers(headers map[string]string) *HttpRequest {
+func (h *HTTPRequest) Headers(headers map[string]string) *HTTPRequest {
 	h.headers = headers
 	return h
 }
 
-func (h *HttpRequest) getHttpClient() *http.Client {
+func (h *HTTPRequest) getHTTPClient() *http.Client {
 	var transport http.RoundTripper
 	transport = &http.Transport{
 		DisableKeepAlives: true,
@@ -125,7 +125,7 @@ func (h *HttpRequest) getHttpClient() *http.Client {
 	}
 }
 
-func (h *HttpRequest) GetRequestLine() string {
+func (h *HTTPRequest) GetRequestLine() string {
 	s := fmt.Sprintf("%s %s", h.method, h.URL)
 	if h.host != h.URL.Hostname() {
 		s += fmt.Sprintf(" (%s)", h.host)
@@ -133,7 +133,7 @@ func (h *HttpRequest) GetRequestLine() string {
 	return s
 }
 
-func (h *HttpRequest) GetString() string {
+func (h *HTTPRequest) GetString() string {
 	s := h.GetRequestLine()
 	if h.traceHeaders {
 		s += "\n"
@@ -144,7 +144,7 @@ func (h *HttpRequest) GetString() string {
 	return s
 }
 
-func (h *HttpResponse) IsOK(responseCodes ...int) bool {
+func (h *HTTPResponse) IsOK(responseCodes ...int) bool {
 	code := h.Response.StatusCode
 	if h.Error != nil {
 		return false
@@ -160,7 +160,7 @@ func (h *HttpResponse) IsOK(responseCodes ...int) bool {
 	return false
 }
 
-func (h *HttpRequest) Do(body string) *HttpResponse {
+func (h *HTTPRequest) Do(body string) *HTTPResponse {
 	if h.host != h.URL.Hostname() {
 		// If specified, replace the hostname in the URL, with the actual host/IP connect to
 		// and move the Virtual Hostname to a Header
@@ -174,6 +174,9 @@ func (h *HttpRequest) Do(body string) *HttpResponse {
 	}
 
 	req, err := http.NewRequest(h.method, h.URL.String(), strings.NewReader(body))
+	if err != nil {
+		return nil
+	}
 	if logger.IsTraceEnabled() {
 		logger.Tracef(h.GetString())
 	}
@@ -185,24 +188,23 @@ func (h *HttpRequest) Do(body string) *HttpResponse {
 		req.SetBasicAuth(h.Username, h.Password)
 	}
 
-	resp, err := h.getHttpClient().Do(req)
-	r := NewHttpResponse(h, resp).SetError(err)
+	resp, err := h.getHTTPClient().Do(req)
+	r := NewHTTPResponse(h, resp).SetError(err)
 
 	if logger.IsTraceEnabled() {
 		logger.Tracef(r.String())
 	}
 	return r
-
 }
 
-func NewHttpResponse(req *HttpRequest, resp *http.Response) *HttpResponse {
+func NewHTTPResponse(req *HTTPRequest, resp *http.Response) *HTTPResponse {
 	headers := make(map[string]string)
 	if resp != nil {
 		for header, values := range resp.Header {
 			headers[header] = strings.Join(values, " ")
 		}
 	}
-	return &HttpResponse{
+	return &HTTPResponse{
 		Request:  req,
 		Headers:  headers,
 		Response: resp,
@@ -210,8 +212,8 @@ func NewHttpResponse(req *HttpRequest, resp *http.Response) *HttpResponse {
 	}
 }
 
-type HttpResponse struct {
-	Request *HttpRequest
+type HTTPResponse struct {
+	Request *HTTPRequest
 	Headers map[string]string
 	*http.Response
 	Elapsed time.Duration
@@ -219,17 +221,17 @@ type HttpResponse struct {
 	body    string
 }
 
-func (h *HttpResponse) SetError(err error) *HttpResponse {
+func (h *HTTPResponse) SetError(err error) *HTTPResponse {
 	h.Error = err
 	return h
 }
 
-func (h *HttpResponse) Start(start time.Time) *HttpResponse {
+func (h *HTTPResponse) Start(start time.Time) *HTTPResponse {
 	h.Elapsed = time.Since(start)
 	return h
 }
 
-func (h *HttpResponse) String() string {
+func (h *HTTPResponse) String() string {
 	s := fmt.Sprintf("%s [%s] %d", h.Request.GetRequestLine(), utils.Age(h.Elapsed), h.StatusCode)
 	if h.Request.traceHeaders {
 		s += "\n"
@@ -244,7 +246,7 @@ func (h *HttpResponse) String() string {
 	return s
 }
 
-func (h *HttpResponse) GetSSLAge() *time.Duration {
+func (h *HTTPResponse) GetSSLAge() *time.Duration {
 	if h.TLS == nil {
 		return nil
 	}
@@ -257,11 +259,11 @@ func (h *HttpResponse) GetSSLAge() *time.Duration {
 	return &age
 }
 
-func (h *HttpResponse) IsJSON() bool {
+func (h *HTTPResponse) IsJSON() bool {
 	return strings.HasPrefix(h.Headers["Content-Type"], "application/json")
 }
 
-func (h *HttpResponse) AsJSON() (*JSON, error) {
+func (h *HTTPResponse) AsJSON() (*JSON, error) {
 	var jsonContent interface{}
 	s, err := h.AsString()
 	if err != nil {
@@ -273,7 +275,7 @@ func (h *HttpResponse) AsJSON() (*JSON, error) {
 	return &JSON{Value: jsonContent}, nil
 }
 
-func (h *HttpResponse) AsString() (string, error) {
+func (h *HTTPResponse) AsString() (string, error) {
 	if h.body != "" {
 		return h.body, nil
 	}

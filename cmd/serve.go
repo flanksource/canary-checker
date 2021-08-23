@@ -73,11 +73,11 @@ var Serve = &cobra.Command{
 				}()
 			})
 		}
-		serve(cmd)
+		serve()
 	},
 }
 
-func serve(cmd *cobra.Command) {
+func serve() {
 	var staticRoot nethttp.FileSystem
 	var allowedCors string
 

@@ -49,13 +49,6 @@ func init() {
 type S3BucketChecker struct {
 }
 
-type BucketStatus struct {
-	latestObjectAge  time.Duration
-	latestObjectSize int64
-	objects          int
-	totalSize        int64
-}
-
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
 func (c *S3BucketChecker) Run(ctx *context.Context) []*pkg.CheckResult {
@@ -104,7 +97,6 @@ type S3 struct {
 }
 
 func (conn *S3) CheckFolder(ctx *context.Context, path string) (*FolderCheck, error) {
-
 	result := FolderCheck{}
 
 	var marker *string = nil
@@ -141,12 +133,11 @@ func (conn *S3) CheckFolder(ctx *context.Context, path string) (*FolderCheck, er
 				result.Newest = timeSince(*obj.LastModified)
 			}
 			result.Files = append(result.Files, S3FileInfo{obj})
-
-			if resp.IsTruncated && len(resp.Contents) > 0 {
-				marker = resp.Contents[len(resp.Contents)-1].Key
-			} else {
-				break
-			}
+		}
+		if resp.IsTruncated && len(resp.Contents) > 0 {
+			marker = resp.Contents[len(resp.Contents)-1].Key
+		} else {
+			break
 		}
 	}
 	// bucketScanTotalSize.WithLabelValues(bucket.Endpoint, bucket.Bucket).Add(float64(aws.Int64Value(obj.Size)))
