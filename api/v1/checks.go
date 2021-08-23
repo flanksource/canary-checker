@@ -581,6 +581,38 @@ func (c PrometheusCheck) GetDisplayTemplate() string {
 	return c.DisplayTemplate
 }
 
+type MongoDBCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	// Address of the mongodb server
+	URL string `yaml:"url" json:"url"`
+	// Port of the mongodb server. Defaults to 27017
+	Port        int                  `yaml:"port,omitempty" json:"port,omitempty"`
+	Credentials *MongoDBCrendentials `yaml:"credentials,omitempty" json:"credentials,omitempty"`
+}
+
+type MongoDBCrendentials struct {
+	AuthMechanism           string            `yaml:"authMechanism,omitempty" json:"authMechanism,omitempty"`
+	AuthMechanismProperties map[string]string `yaml:"authMechanismProperties,omitempty" json:"authMechanismProperties,omitempty"`
+	AuthSource              string            `yaml:"authSource,omitempty" json:"authSource,omitempty"`
+	*Authentication         `yaml:",inline" json:",inline"`
+	PasswordSet             bool `yaml:"passswordSet,omitempty" json:"passwordSet,omitempty"`
+}
+
+func (c MongoDBCheck) GetType() string {
+	return "mongodb"
+}
+
+func (c MongoDBCheck) GetEndpoint() string {
+	return fmt.Sprintf("%s:%d - %v", c.URL, c.GetPort(), c.GetDescription())
+}
+
+func (c MongoDBCheck) GetPort() int {
+	if c.Port != 0 {
+		return c.Port
+	}
+	return 27017
+}
+
 /*
 
 ```yaml
@@ -1033,4 +1065,5 @@ var AllChecks = []external.Check{
 	SmbCheck{},
 	EC2Check{},
 	PrometheusCheck{},
+	MongoDBCheck{},
 }

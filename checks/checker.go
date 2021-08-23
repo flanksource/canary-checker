@@ -33,6 +33,7 @@ var All = []Checker{
 	&SmbChecker{},
 	&EC2Checker{},
 	&PrometheusChecker{},
+	&MongoDBChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),

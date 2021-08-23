@@ -46,6 +46,7 @@ require (
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/spf13/cobra v1.1.1
 	github.com/vadimi/go-http-ntlm v1.0.3 // indirect
+	go.mongodb.org/mongo-driver v1.7.1 // indirect
 	golang.org/x/mod v0.4.1 // indirect
 	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
