@@ -34,6 +34,9 @@ func RunChecks(ctx *context.Context, canary v1.Canary) []*pkg.CheckResult {
 				switch r.Check.(type) {
 				case v1.TestFunction:
 					tpl := r.Check.(v1.TestFunction).GetTestFunction()
+					if tpl.Template == "" {
+						break
+					}
 					message, err := template(ctx.New(r.Data), tpl)
 					if err != nil {
 						r.ErrorMessage(err)

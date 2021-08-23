@@ -5371,7 +5371,7 @@ spec:
                         type: string
                       maxAge:
                         description: MaxAge the latest object should be younger than defined age
-                        type: Any
+                        type: string
                       maxCount:
                         description: MinCount the minimum number of files inside the searchPath
                         type: integer
@@ -5381,7 +5381,7 @@ spec:
                         type: integer
                       minAge:
                         description: MinAge the latest object should be older than defined age
-                        type: Any
+                        type: string
                       minCount:
                         description: MinCount the minimum number of files inside the searchPath
                         type: integer
@@ -5544,7 +5544,7 @@ spec:
                         type: string
                       maxAge:
                         description: MaxAge the latest object should be younger than defined age
-                        type: Any
+                        type: string
                       maxCount:
                         description: MinCount the minimum number of files inside the searchPath
                         type: integer
@@ -5554,7 +5554,7 @@ spec:
                         type: integer
                       minAge:
                         description: MinAge the latest object should be older than defined age
-                        type: Any
+                        type: string
                       minCount:
                         description: MinCount the minimum number of files inside the searchPath
                         type: integer

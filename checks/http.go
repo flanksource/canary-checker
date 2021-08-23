@@ -46,20 +46,11 @@ func init() {
 }
 
 type HTTPChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
 }
 
 // Type: returns checker type
 func (c *HTTPChecker) Type() string {
 	return "http"
-}
-
-func (c *HTTPChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
-}
-
-func (c HTTPChecker) GetClient() *kommons.Client {
-	return c.kommons
 }
 
 // Run: Check every entry from config according to Checker interface
@@ -72,8 +63,7 @@ func (c *HTTPChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	return results
 }
 
-func (c *HTTPChecker) configure(req *http.HTTPRequest, namespace string, check v1.HTTPCheck) error {
-	kommons := c.GetClient()
+func (c *HTTPChecker) configure(req *http.HTTPRequest, namespace string, check v1.HTTPCheck, kommons *kommons.Client) error {
 	for _, header := range check.Headers {
 		if kommons == nil {
 			return fmt.Errorf("HTTP headers are not supported outside k8s")
@@ -119,8 +109,8 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	namespace := ctx.Canary.GetNamespace()
 	endpoint := check.Endpoint
 
-	req := http.NewRequest(check.Endpoint).Method(check.Method)
-	if err := c.configure(req, namespace, check); err != nil {
+	req := http.NewRequest(check.Endpoint).Method(check.GetMethod())
+	if err := c.configure(req, namespace, check, ctx.Kommons); err != nil {
 		return result.ErrorMessage(err)
 	}
 

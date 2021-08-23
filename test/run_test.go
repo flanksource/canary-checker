@@ -18,6 +18,7 @@ import (
 
 	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/commons/deps"
 	"github.com/flanksource/commons/logger"
 )
 
@@ -61,12 +62,12 @@ func setup() {
 		testFolder = "fixtures"
 	}
 	logger.Infof("Testing %s", testFolder)
-	// docker := deps.Binary("docker", "", "")
-	// docker("pull docker.io/library/busybox:1.30")
-	// docker("tag docker.io/library/busybox:1.30 ttl.sh/flanksource-busybox:1.30")
-	// docker("tag docker.io/library/busybox:1.30 docker.io/flanksource/busybox:1.30")
-	// os.Setenv("DOCKER_API_VERSION", "1.39")
-	// prepareS3E2E(s3Fixtures)
+	docker := deps.Binary("docker", "", "")
+	docker("pull docker.io/library/busybox:1.30")
+	docker("tag docker.io/library/busybox:1.30 ttl.sh/flanksource-busybox:1.30")
+	docker("tag docker.io/library/busybox:1.30 docker.io/flanksource/busybox:1.30")
+	os.Setenv("DOCKER_API_VERSION", "1.39")
+	prepareS3E2E(s3Fixtures)
 }
 
 func teardown() {

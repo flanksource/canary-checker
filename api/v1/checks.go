@@ -46,6 +46,13 @@ func (c HTTPCheck) GetType() string {
 	return "http"
 }
 
+func (c HTTPCheck) GetMethod() string {
+	if c.Method != "" {
+		return c.Method
+	}
+	return "GET"
+}
+
 type TCPCheck struct {
 	Description     `yaml:",inline" json:",inline"`
 	Endpoint        string `yaml:"endpoint" json:"endpoint,omitempty"`

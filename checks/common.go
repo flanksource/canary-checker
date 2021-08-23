@@ -19,7 +19,7 @@ func GetAuthValues(auth *v1.Authentication, client *kommons.Client, namespace st
 	}
 	// in case nil we are sending empty string values for username and password
 	if auth == nil {
-		return nil, nil
+		return authentication, nil
 	}
 	_, username, err := client.GetEnvValue(auth.Username, namespace)
 	if err != nil {

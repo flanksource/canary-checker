@@ -1,19 +1,19 @@
 package v1
 
 import (
-	"encoding/json"
 	"regexp"
 	"strings"
-	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/flanksource/kommons"
 )
 
 type FolderTest struct {
 	//MinAge the latest object should be older than defined age
-	MinAge *Duration `yaml:"minAge,omitempty" json:"minAge,omitempty"`
+	MinAge *metav1.Duration `yaml:"minAge,omitempty" json:"minAge,omitempty"`
 	//MaxAge the latest object should be younger than defined age
-	MaxAge *Duration `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
+	MaxAge *metav1.Duration `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
 	//MinCount the minimum number of files inside the searchPath
 	MinCount *int `yaml:"minCount,omitempty" json:"minCount,omitempty"`
 	//MinCount the minimum number of files inside the searchPath
@@ -23,49 +23,6 @@ type FolderTest struct {
 	//MaxSize of the files inside the searchPath
 	MaxSize *int64 `yaml:"maxSize,omitempty" json:"maxSize,omitempty"`
 }
-
-// Duration is a wrapper around time.Duration which supports correct
-// marshaling to YAML and JSON. In particular, it marshals into strings, which
-// can be used as map keys in json.
-type Duration struct {
-	time.Duration `protobuf:"varint,1,opt,name=duration,casttype=time.Duration"`
-}
-
-// UnmarshalJSON implements the json.Unmarshaller interface.
-func (d *Duration) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err != nil {
-		return err
-	}
-
-	pd, err := time.ParseDuration(str)
-	if err != nil {
-		return err
-	}
-	d.Duration = pd
-	return nil
-}
-
-// MarshalJSON implements the json.Marshaler interface.
-func (d Duration) MarshalJSON() ([]byte, error) {
-	return json.Marshal(d.Duration.String())
-}
-
-// ToUnstructured implements the value.UnstructuredConverter interface.
-func (d Duration) ToUnstructured() interface{} {
-	return d.Duration.String()
-}
-
-// OpenAPISchemaType is used by the kube-openapi generator when constructing
-// the OpenAPI spec of this type.
-//
-// See: https://github.com/kubernetes/kube-openapi/tree/master/pkg/generators
-func (Duration) OpenAPISchemaType() []string { return []string{"string"} }
-
-// OpenAPISchemaFormat is used by the kube-openapi generator when constructing
-// the OpenAPI spec of this type.
-func (Duration) OpenAPISchemaFormat() string { return "" }
 
 type JSONCheck struct {
 	Path  string `yaml:"path" json:"path"`

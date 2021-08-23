@@ -32,7 +32,7 @@ require (
 	github.com/jszwec/csvutil v1.5.0
 	github.com/lib/pq v1.9.0
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
-	github.com/ncw/swift v1.0.50
+	github.com/ncw/swift v1.0.47
 	github.com/onsi/ginkgo v1.15.0
 	github.com/onsi/gomega v1.10.5
 	github.com/opencontainers/selinux v1.6.0 // indirect

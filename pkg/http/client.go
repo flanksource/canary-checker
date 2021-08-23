@@ -145,7 +145,7 @@ func (h *HTTPRequest) GetString() string {
 }
 
 func (h *HTTPResponse) IsOK(responseCodes ...int) bool {
-	code := h.Response.StatusCode
+	code := h.StatusCode
 	if h.Error != nil {
 		return false
 	}

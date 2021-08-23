@@ -1,20 +1,55 @@
 package test
 
 import (
+	"bytes"
 	"crypto/tls"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/flanksource/commons/logger"
-
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/pkg/errors"
+	"github.com/flanksource/commons/utils"
+	"github.com/ncw/swift"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/pkg/errors"
 )
+
+func prepareS3E2E(fixture S3Fixture) error {
+	client, err := getS3Client()
+	if err != nil {
+		return errors.Wrap(err, "failed to get s3 client")
+	}
+
+	for _, bucket := range fixture.CreateBuckets {
+		req := &s3.CreateBucketInput{
+			Bucket: aws.String(bucket),
+		}
+		if _, err := client.CreateBucket(req); err != nil {
+			return errors.Wrapf(err, "failed to create bucket %s", bucket)
+		}
+	}
+
+	for _, file := range fixture.Files {
+		body := utils.RandomString(int(file.Size))
+		_, err = client.PutObject(&s3.PutObjectInput{
+			Bucket:      aws.String(file.Bucket),
+			Key:         aws.String(file.Filename),
+			Body:        bytes.NewReader([]byte(body)),
+			ContentType: aws.String(file.ContentType),
+			Metadata: map[string]*string{
+				"Last-Modified": aws.String(swift.TimeToFloatString(time.Now().Add(-1 * file.Age))),
+			},
+		})
+		if err != nil {
+			return errors.Wrapf(err, "failed to put object %s to bucket %s", file.Filename, file.Bucket)
+		}
+	}
+	return nil
+}
 
 func cleanupS3E2E(fixture S3Fixture) {
 	client, err := getS3Client()
