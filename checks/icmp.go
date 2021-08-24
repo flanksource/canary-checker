@@ -3,7 +3,10 @@ package checks
 import (
 	"time"
 
+	"github.com/flanksource/canary-checker/api/context"
+
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/canary-checker/pkg/dns"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sparrc/go-ping"
 
@@ -34,21 +37,21 @@ func (c *IcmpChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *IcmpChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *IcmpChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.ICMP {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.ICMP {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
 
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
-func (c *IcmpChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.ICMPCheck)
 	endpoint := check.Endpoint
 
-	lookupResult, err := DNSLookup(endpoint)
+	lookupResult, err := dns.Lookup(endpoint)
 	if err != nil {
 		return invalidErrorf(check, err, "unable to resolve dns")
 	}

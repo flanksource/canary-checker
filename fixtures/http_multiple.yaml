@@ -1,19 +1,26 @@
 http:
-  - endpoint: https://httpstat.us/200
-    thresholdMillis: 3000
-    responseCodes: [201, 200, 301]
-    responseContent: ""
-    maxSSLExpiry: 1
-  - endpoint: https://httpstat.us/301
-    thresholdMillis: 3000
-    responseCodes: [201, 200, 301]
-    responseContent: ""
-    maxSSLExpiry: 7
-  - endpoint: https://httpstat.us/500
-    thresholdMillis: 3000
-    responseCodes: [500]
-    responseContent: ""
-    maxSSLExpiry: 7
+  # - endpoint: https://httpstat.us/200
+  #   thresholdMillis: 3000
+  #   responseCodes: [201, 200, 301]
+  #   responseContent: ""
+  #   maxSSLExpiry: 1
+  # - endpoint: https://httpstat.us/301
+  #   thresholdMillis: 3000
+  #   responseCodes: [201, 200, 301]
+  #   responseContent: ""
+  #   maxSSLExpiry: 7
+  # - endpoint: https://httpstat.us/500
+  #   thresholdMillis: 3000
+  #   responseCodes: [500]
+  #   responseContent: ""
+  #   maxSSLExpiry: 7
+
+  - endpoint: https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd.json
+    display:
+      template: "{{ .json.usd.zar | conv.ToInt}}: {{ lt (conv.ToFloat64 15) (conv.ToFloat64 .json.usd.zar)  }}"
+    test:
+      template: "{{ lt  (conv.ToFloat64 .json.usd.zar) (conv.ToFloat64 16)  }}"
+
 # quarantine due failing tests on GH Actions
 # icmp:
 #   - endpoint: https://google.com

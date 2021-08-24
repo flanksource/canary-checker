@@ -6,11 +6,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/context"
+
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/exec"
-	"github.com/flanksource/kommons"
 	"github.com/jszwec/csvutil"
 	"k8s.io/apimachinery/pkg/util/rand"
 )
@@ -20,35 +21,25 @@ func init() {
 }
 
 type JmeterChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
-}
-
-func (c *JmeterChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
-}
-
-func (c JmeterChecker) GetClient() *kommons.Client {
-	return c.kommons
 }
 
 func (c *JmeterChecker) Type() string {
 	return "jmeter"
 }
 
-func (c *JmeterChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *JmeterChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.Jmeter {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.Jmeter {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
 
-func (c *JmeterChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	jmeterCheck := extConfig.(v1.JmeterCheck)
-	client := c.GetClient()
-	namespace := canary.Namespace
-	_, value, err := client.GetEnvValue(jmeterCheck.Jmx, namespace)
+	namespace := ctx.Canary.Namespace
+	_, value, err := ctx.Kommons.GetEnvValue(jmeterCheck.Jmx, namespace)
 	if err != nil {
 		return Failf(jmeterCheck, "Failed to parse the jmx plan: %v", err)
 	}

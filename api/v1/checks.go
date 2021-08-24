@@ -3,41 +3,15 @@ package v1
 import (
 	"fmt"
 
-	v1 "k8s.io/api/core/v1"
-
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/kommons"
+	v1 "k8s.io/api/core/v1"
 )
-
-type JSONCheck struct {
-	Path  string `yaml:"path" json:"path"`
-	Value string `yaml:"value" json:"value"`
-}
-
-type Authentication struct {
-	Username kommons.EnvVar `yaml:"username" json:"username"`
-	Password kommons.EnvVar `yaml:"password" json:"password"`
-}
-
-type Description struct {
-	// Description for the check
-	Description string `yaml:"description,omitempty" json:"description,omitempty"`
-	// Name of the check
-	Name string `yaml:"name,omitempty" json:"name,omitempty"`
-	// Icon for overwriting default icon on the dashboard
-	Icon string `yaml:"icon,omitempty" json:"icon,omitempty"`
-}
-
-func (d Description) GetDescription() string {
-	return d.Description
-}
-
-func (d Description) GetIcon() string {
-	return d.Icon
-}
 
 type HTTPCheck struct {
 	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+
 	// HTTP endpoint to check.  Mutually exclusive with Namespace
 	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty"`
 	// Namespace to crawl for TLS endpoints.  Mutually exclusive with Endpoint
@@ -62,13 +36,6 @@ type HTTPCheck struct {
 	Headers []kommons.EnvVar `yaml:"headers,omitempty" json:"headers,omitempty"`
 	// Credentials for authentication headers:
 	Authentication *Authentication `yaml:"authentication,omitempty" json:"authentication,omitempty"`
-	// DisplayTemplate displays server response in text (overrides default bar format for UI).
-	// Example: 'Response Code: [[.code]]'
-	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
-}
-
-func (c HTTPCheck) GetDisplayTemplate() string {
-	return c.DisplayTemplate
 }
 
 func (c HTTPCheck) GetEndpoint() string {
@@ -77,6 +44,13 @@ func (c HTTPCheck) GetEndpoint() string {
 
 func (c HTTPCheck) GetType() string {
 	return "http"
+}
+
+func (c HTTPCheck) GetMethod() string {
+	if c.Method != "" {
+		return c.Method
+	}
+	return "GET"
 }
 
 type TCPCheck struct {
@@ -133,37 +107,32 @@ func (c S3Check) GetType() string {
 	return "s3"
 }
 
-type S3BucketCheck struct {
-	Description `yaml:",inline" json:",inline"`
-	Bucket      string `yaml:"bucket" json:"bucket,omitempty"`
-	AccessKey   string `yaml:"accessKey" json:"accessKey,omitempty"`
-	SecretKey   string `yaml:"secretKey" json:"secretKey,omitempty"`
-	Region      string `yaml:"region" json:"region,omitempty"`
-	Endpoint    string `yaml:"endpoint" json:"endpoint,omitempty"`
-	// glob path to restrict matches to a subset
-	ObjectPath string `yaml:"objectPath" json:"objectPath,omitempty"`
-	ReadWrite  bool   `yaml:"readWrite" json:"readWrite,omitempty"`
-	// maximum allowed age of matched objects in seconds
-	MaxAge int64 `yaml:"maxAge" json:"maxAge,omitempty"`
-	// min size of of most recent matched object in bytes
-	MinSize int64 `yaml:"minSize" json:"minSize,omitempty"`
-	// Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY
-	UsePathStyle bool `yaml:"usePathStyle" json:"usePathStyle,omitempty"`
-	// Skip TLS verify when connecting to s3
-	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
-	// DisplayTemplate displays testResults results in text.
-	// Default: 'Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]'
-	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
+type AWSConnection struct {
+	AccessKey     kommons.EnvVar `yaml:"accessKey" json:"accessKey"`
+	SecretKey     kommons.EnvVar `yaml:"secretKey" json:"secretKey"`
+	Region        string         `yaml:"region" json:"region"`
+	Endpoint      string         `yaml:"endpoint" json:"endpoint,omitempty"`
+	SkipTLSVerify bool           `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
 }
 
-func (c S3BucketCheck) GetDisplayTemplate() string {
-	if c.DisplayTemplate != "" {
-		return c.DisplayTemplate
-	}
-	return "Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]"
+type S3BucketCheck struct {
+	Description   `yaml:",inline" json:",inline"`
+	Templatable   `yaml:",inline" json:",inline"`
+	AWSConnection `yaml:",inline" json:",inline"`
+	FolderTest    `yaml:",inline" json:",inline"`
+	Bucket        string `yaml:"bucket" json:"bucket"`
+	// glob path to restrict matches to a subset
+	ObjectPath string `yaml:"objectPath" json:"objectPath,omitempty"`
+	// Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY
+	UsePathStyle bool `yaml:"usePathStyle" json:"usePathStyle,omitempty"`
 }
+
 func (c S3BucketCheck) GetEndpoint() string {
-	return fmt.Sprintf("%s/%s", c.Endpoint, c.Bucket)
+	if c.AWSConnection.Endpoint != "" {
+		return fmt.Sprintf("%s/%s", c.AWSConnection.Endpoint, c.Bucket)
+	} else {
+		return c.Bucket
+	}
 }
 
 func (c S3BucketCheck) GetType() string {
@@ -506,6 +475,9 @@ func (c JunitCheck) GetType() string {
 }
 
 type SmbCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	FolderTest  `yaml:",inline" json:",inline"`
 	//Server location of smb server. Can be hostname/ip or in '\\server\e$\a\b\c' syntax
 	//Where server is the hostname e$ is the sharename and a/b/c is the searchPath location
 	Server string `yaml:"server" json:"server"`
@@ -520,16 +492,6 @@ type SmbCheck struct {
 	Sharename string `yaml:"sharename,omitempty" json:"sharename,omitempty"`
 	//SearchPath sub-path inside the mount location
 	SearchPath string `yaml:"searchPath,omitempty" json:"searchPath,omitempty" `
-	//MinAge the latest object should be older than defined age
-	MinAge string `yaml:"minAge,omitempty" json:"minAge,omitempty"`
-	//MaxAge the latest object should be younger than defined age
-	MaxAge string `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
-	//MinCount the minimum number of files inside the searchPath
-	MinCount    int `yaml:"minCount,omitempty" json:"minCount,omitempty"`
-	Description `yaml:",inline" json:",inline"`
-	// DisplayTemplate displays check output in text
-	// Default: 'File Age: [[.age]]; File count: [[.count]]'
-	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
 }
 
 func (c SmbCheck) GetEndpoint() string {
@@ -547,26 +509,13 @@ func (c SmbCheck) GetPort() int {
 	return 445
 }
 
-func (c SmbCheck) GetDisplayTemplate() string {
-	if c.DisplayTemplate != "" {
-		return c.DisplayTemplate
-	}
-	return "File Age: [[.age]]; File count: [[.count]]"
-}
-
 type PrometheusCheck struct {
 	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
 	// Address of the prometheus server
 	Host string `yaml:"host" json:"host"`
 	// PromQL query
 	Query string `yaml:"query" json:"query"`
-	// DisplayTemplate displays testResults results in text
-	// Have access to the list of maps where each entry is equivalent to a row
-	// Example: for the given query: 'kubernetes_build_info{job!~"kube-dns|coredns"}' the displayTemplate could be: '[[ index .results 0 "git_version" ]]'
-	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
-	// ResultsFunction tests query output for pass/fail
-	// The check is only passed when ResultsFunction returns 'true'.
-	ResultsFunction string `yaml:"resultsFunction,omitempty" json:"resultsFunction,omitempty"`
 }
 
 func (c PrometheusCheck) GetType() string {
@@ -575,10 +524,6 @@ func (c PrometheusCheck) GetType() string {
 
 func (c PrometheusCheck) GetEndpoint() string {
 	return fmt.Sprintf("%v/%v", c.Host, c.Description)
-}
-
-func (c PrometheusCheck) GetDisplayTemplate() string {
-	return c.DisplayTemplate
 }
 
 type MongoDBCheck struct {
@@ -1019,9 +964,7 @@ type Smb struct {
 
 type EC2Check struct {
 	Description   `yaml:",inline" json:",inline"`
-	AccessKeyID   kommons.EnvVar            `yaml:"accessKeyID" json:"accessKeyID"`
-	SecretKey     kommons.EnvVar            `yaml:"secretKey" json:"secretKey"`
-	Region        string                    `yaml:"region" json:"region"`
+	AWSConnection `yaml:",inline" json:",inline"`
 	AMI           string                    `yaml:"ami,omitempty" json:"ami,omitempty"`
 	UserData      string                    `yaml:"userData,omitempty" json:"userData,omitempty"`
 	SecurityGroup string                    `yaml:"securityGroup,omitempty" json:"securityGroup,omitempty"`

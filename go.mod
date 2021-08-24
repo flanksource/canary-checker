@@ -3,14 +3,14 @@ module github.com/flanksource/canary-checker
 go 1.16
 
 require (
-	github.com/Azure/go-ntlmssp v0.0.0-20200615164410-66371956d46c
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/aws/aws-sdk-go v1.29.25
-	github.com/aws/aws-sdk-go-v2 v1.8.0
+	github.com/aws/aws-sdk-go-v2 v1.8.1
 	github.com/aws/aws-sdk-go-v2/config v1.5.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.3.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.12.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.8.1
 	github.com/chartmuseum/helm-push v0.8.1
 	github.com/containerd/cgroups v0.0.0-20200824123100-0b889c03f102 // indirect
@@ -31,12 +31,11 @@ require (
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
 	github.com/lib/pq v1.9.0
-	github.com/mitchellh/reflectwalk v1.0.1
-	github.com/ncw/swift v1.0.50
+	github.com/mitchellh/reflectwalk v1.0.1 // indirect
+	github.com/ncw/swift v1.0.47
 	github.com/onsi/ginkgo v1.15.0
 	github.com/onsi/gomega v1.10.5
 	github.com/opencontainers/selinux v1.6.0 // indirect
-	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
 	github.com/phf/go-queue v0.0.0-20170504031614-9abe38d0371d
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.1
@@ -45,8 +44,9 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/spf13/cobra v1.1.1
-	github.com/vadimi/go-http-ntlm v1.0.3 // indirect
-	go.mongodb.org/mongo-driver v1.7.1 // indirect
+	github.com/spf13/pflag v1.0.5
+	github.com/vadimi/go-http-ntlm/v2 v2.4.1
+	go.mongodb.org/mongo-driver v1.7.1
 	golang.org/x/mod v0.4.1 // indirect
 	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9

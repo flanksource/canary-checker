@@ -1,30 +1,77 @@
 package checks
 
 import (
+	"bytes"
+	"fmt"
+	"strings"
+
+	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/logger"
+	"gopkg.in/flanksource/yaml.v3"
+
+	gotemplate "text/template"
+
+	"github.com/hairyhenderson/gomplate/v3"
 )
 
-func RunChecks(canary v1.Canary) []*pkg.CheckResult {
+func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	kommonsClient, err := pkg.NewKommonsClient()
-	if err != nil {
-		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
-	}
-
-	canary.Spec.SetSQLDrivers()
+	ctx.Canary.Spec.SetSQLDrivers()
 	for _, c := range All {
-		switch cs := c.(type) {
-		case SetsClient:
-			cs.SetClient(kommonsClient)
-		}
-		result := c.Run(canary)
+		result := c.Run(ctx)
 		for _, r := range result {
 			if r != nil {
+				switch r.Check.(type) {
+				case v1.DisplayTemplate:
+					message, err := template(ctx.New(r.Data), r.Check.(v1.DisplayTemplate).GetDisplayTemplate())
+					if err != nil {
+						r.ErrorMessage(err)
+					} else {
+						r.ResultMessage(message)
+					}
+				}
+				switch r.Check.(type) {
+				case v1.TestFunction:
+					tpl := r.Check.(v1.TestFunction).GetTestFunction()
+					if tpl.Template == "" {
+						break
+					}
+					message, err := template(ctx.New(r.Data), tpl)
+					if err != nil {
+						r.ErrorMessage(err)
+					} else if message != "true" {
+						r.Failf("")
+					} else {
+						ctx.Logger.Tracef("%s return %s", tpl, message)
+					}
+				}
 				results = append(results, r)
 			}
 		}
 	}
 	return results
+}
+
+func template(ctx *context.Context, template v1.Template) (string, error) {
+	if template.Template != "" {
+		tpl := gotemplate.New("")
+
+		tpl, err := tpl.Funcs(gomplate.Funcs(nil)).Parse(template.Template)
+		if err != nil {
+			return "", err
+		}
+
+		var buf bytes.Buffer
+		data, _ := yaml.Marshal(ctx.Environment)
+		unstructured := make(map[string]interface{})
+		if err := yaml.Unmarshal(data, &unstructured); err != nil {
+			return "", err
+		}
+		if err := tpl.Execute(&buf, unstructured); err != nil {
+			return "", fmt.Errorf("error executing template %s: %v", strings.Split(template.Template, "\n")[0], err)
+		}
+		return buf.String(), nil
+	}
+	return "", nil
 }

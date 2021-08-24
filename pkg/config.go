@@ -1,53 +1,22 @@
 package pkg
 
 import (
-	"fmt"
 	"io/ioutil"
-	"os"
-	"strings"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/kommons/ktemplate"
-	"github.com/mitchellh/reflectwalk"
 	"gopkg.in/flanksource/yaml.v3"
 )
 
 // ParseConfig : Read config file
-func ParseConfig(configfile string) v1.CanarySpec {
+func ParseConfig(configfile string) (*v1.CanarySpec, error) {
 	config := v1.CanarySpec{}
 	data, err := ioutil.ReadFile(configfile)
 	if err != nil {
-		logger.Infof("yamlFile.Get err   #%v ", err)
+		return nil, err
 	}
 	yamlerr := yaml.Unmarshal(data, &config)
 	if yamlerr != nil {
-		logger.Fatalf("error: %v", yamlerr)
+		return nil, yamlerr
 	}
-	return ApplyTemplates(config)
-}
-
-func ApplyTemplates(config v1.CanarySpec) v1.CanarySpec {
-	return ApplyLocalTemplates(config, map[string]string{})
-}
-
-func ApplyLocalTemplates(config v1.CanarySpec, vars map[string]string) v1.CanarySpec {
-	var values = make(map[string]string)
-	for _, environ := range os.Environ() {
-		values[strings.Split(environ, "=")[0]] = strings.Split(environ, "=")[1]
-	}
-	for k, v := range vars {
-		values[k] = v
-	}
-	k8sClient, err := NewK8sClient()
-	if err != nil {
-		logger.Warnf("Could not create k8s client for templating: %v", err)
-	}
-	if err := reflectwalk.Walk(&config, ktemplate.StructTemplater{
-		Values:    values,
-		Clientset: k8sClient,
-	}); err != nil {
-		fmt.Println(err)
-	}
-	return config
+	return &config, nil
 }

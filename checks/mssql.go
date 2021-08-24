@@ -1,6 +1,8 @@
 package checks
 
 import (
+	"github.com/flanksource/canary-checker/api/context"
+
 	_ "github.com/denisenkom/go-mssqldb" // required by mssql
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -20,10 +22,10 @@ func (c *MssqlChecker) Type() string {
 
 // Run - Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *MssqlChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *MssqlChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.Mssql {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.Mssql {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
@@ -31,6 +33,6 @@ func (c *MssqlChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 // Check CheckConfig : Attempts to connect to a DB using the specified
 //               driver and connection string
 // Returns check result and metrics
-func (c *MssqlChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *MssqlChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	return CheckSQL(extConfig.(v1.MssqlCheck).SQLCheck)
 }

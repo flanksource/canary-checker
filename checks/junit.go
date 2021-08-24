@@ -1,11 +1,12 @@
 package checks
 
 import (
-	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/robfig/cron/v3"
 
@@ -39,7 +40,6 @@ const (
 )
 
 type JunitChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
 }
 
 // Test represents the results of a single test run.
@@ -106,22 +106,14 @@ type JunitAggreate struct {
 	Duration float64 `json:"duration"`
 }
 
-func (c *JunitChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
-}
-
-func (c JunitChecker) GetClient() *kommons.Client {
-	return c.kommons
-}
-
 func (c *JunitChecker) Type() string {
 	return "junit"
 }
 
-func (c *JunitChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *JunitChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.Junit {
-		result := c.Check(canary, conf)
+	for _, conf := range ctx.Canary.Spec.Junit {
+		result := c.Check(ctx, conf)
 		if result != nil {
 			results = append(results, result)
 		}
@@ -129,17 +121,17 @@ func (c *JunitChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	return results
 }
 
-func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	var textResults bool
 	junitCheck := extConfig.(v1.JunitCheck)
 	if junitCheck.GetDisplayTemplate() != "" {
 		textResults = true
 	}
-	interval := canary.Spec.Interval
-	name := canary.Name
-	namespace := canary.Namespace
-	schedule := canary.Spec.Schedule
+	interval := ctx.Canary.Spec.Interval
+	name := ctx.Canary.Name
+	namespace := ctx.Canary.Namespace
+	schedule := ctx.Canary.Spec.Schedule
 	timeout := junitCheck.GetTimeout()
 	var junitStatus JunitStatus
 	template := junitCheck.GetDisplayTemplate()
@@ -159,7 +151,7 @@ func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Ch
 	} else {
 		pod.Name = strings.ToLower(rand.String(5))
 	}
-	existingPods := getJunitPods(c.kommons, name, namespace)
+	existingPods := getJunitPods(ctx, name, namespace)
 	for _, junitPod := range existingPods {
 		createTime := junitPod.CreationTimestamp.Time
 		wait, err := waitForExistingJunitCheck(interval, schedule, createTime)
@@ -170,7 +162,7 @@ func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Ch
 			logger.Tracef("junit check already in progress, skipping")
 			return nil
 		}
-		if err := c.kommons.DeleteByKind(podKind, junitPod.Namespace, junitPod.Name); err != nil {
+		if err := ctx.Kommons.DeleteByKind(podKind, junitPod.Namespace, junitPod.Name); err != nil {
 			return pkg.Fail(junitCheck).TextResults(textResults).ResultMessage(junitTemplateResult(template, junitStatus)).ErrorMessage(err).StartTime(start)
 		}
 	}
@@ -188,13 +180,13 @@ func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Ch
 	pod.Spec.RestartPolicy = corev1.RestartPolicyNever
 	pod.Spec.InitContainers[0].VolumeMounts = getVolumeMount(volumeName, filepath.Dir(junitCheck.TestResults))
 	pod.Spec.Containers[0].VolumeMounts = getVolumeMount(volumeName, mounthPath)
-	err := c.kommons.Apply(pod.Namespace, pod)
+	err := ctx.Kommons.Apply(pod.Namespace, pod)
 	if err != nil {
 		return pkg.Fail(junitCheck).TextResults(textResults).ResultMessage(junitTemplateResult(template, junitStatus)).ErrorMessage(err).StartTime(start)
 	}
-	defer c.kommons.DeleteByKind(podKind, pod.Namespace, pod.Name) // nolint: errcheck
+	defer ctx.Kommons.DeleteByKind(podKind, pod.Namespace, pod.Name) // nolint: errcheck
 	logger.Tracef("waiting for pod to be ready")
-	err = c.kommons.WaitForPod(pod.Namespace, pod.Name, time.Duration(timeout)*time.Minute, corev1.PodRunning)
+	err = ctx.Kommons.WaitForPod(pod.Namespace, pod.Name, time.Duration(timeout)*time.Minute, corev1.PodRunning)
 	if err != nil {
 		return pkg.Fail(junitCheck).TextResults(textResults).ResultMessage(junitTemplateResult(template, junitStatus)).ErrorMessage(fmt.Errorf("timeout waiting for pod: %v", err)).StartTime(start)
 	}
@@ -203,22 +195,22 @@ func (c *JunitChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.Ch
 			Kind: podKind,
 		},
 	}
-	err = c.kommons.Get(pod.Namespace, pod.Name, &podObj)
+	err = ctx.Kommons.Get(pod.Namespace, pod.Name, &podObj)
 	if err != nil {
 		return pkg.Fail(junitCheck).TextResults(textResults).ResultMessage(junitTemplateResult(template, junitStatus)).ErrorMessage(err).StartTime(start)
 	}
 	if !kommons.IsPodHealthy(podObj) {
-		message, _ := c.kommons.GetPodLogs(pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
+		message, _ := ctx.Kommons.GetPodLogs(pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
 		return pkg.Fail(junitCheck).TextResults(textResults).ResultMessage(junitTemplateResult(template, junitStatus)).ErrorMessage(fmt.Errorf("pod is not healthy \n Logs : %v", message)).StartTime(start)
 	}
-	files, stderr, err := c.kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", fmt.Sprintf("find %v -name \\*.xml -type f", mounthPath))
+	files, stderr, err := ctx.Kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", fmt.Sprintf("find %v -name \\*.xml -type f", mounthPath))
 	if stderr != "" || err != nil {
 		return pkg.Fail(junitCheck).TextResults(textResults).ResultMessage(junitTemplateResult(template, junitStatus)).ErrorMessage(fmt.Errorf("error fetching test files: %v %v", stderr, err)).StartTime(start)
 	}
 	files = strings.TrimSpace(files)
 	var allTestSuite []junit.Suite
 	for _, file := range strings.Split(files, "\n") {
-		output, stderr, err := c.kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "cat", file)
+		output, stderr, err := ctx.Kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "cat", file)
 		if stderr != "" || err != nil {
 			return pkg.Fail(junitCheck).TextResults(textResults).ResultMessage(junitTemplateResult(template, junitStatus)).ErrorMessage(fmt.Errorf("error reading results: %v %v", stderr, err)).StartTime(start)
 		}
@@ -303,12 +295,12 @@ func junitTemplateResult(template string, junitStatus JunitStatus) (message stri
 	return message
 }
 
-func getJunitPods(kommonsClient *kommons.Client, name, namespace string) []corev1.Pod {
-	client, err := kommonsClient.GetClientset()
+func getJunitPods(ctx *context.Context, name, namespace string) []corev1.Pod {
+	k8s, err := ctx.Kommons.GetClientset()
 	if err != nil {
 		return nil
 	}
-	podList, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
+	podList, err := k8s.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: junitCheckSelector,
 		FieldSelector: getJunitCheckLabel(junitCheckLabelValue, name, namespace),
 	})

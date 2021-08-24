@@ -2,14 +2,13 @@ package checks
 
 import (
 	"bytes"
-	"context"
+
+	"github.com/flanksource/canary-checker/api/context"
+
 	"encoding/base64"
 	"encoding/json"
 	"io"
 	"strings"
-	"time"
-
-	"github.com/flanksource/kommons"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -51,17 +50,12 @@ func init() {
 }
 
 type DockerPullChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
 }
 
-func (c *DockerPullChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
-}
-
-func (c *DockerPullChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *DockerPullChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.DockerPull {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.DockerPull {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
@@ -88,40 +82,36 @@ func getDigestFromOutput(out io.ReadCloser) string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *DockerPullChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *DockerPullChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DockerPullCheck)
-	start := time.Now()
-	ctx := context.Background()
-	namespace := canary.Namespace
-	var err error
-	auth, err := GetAuthValues(check.Auth, c.kommons, namespace)
+	namespace := ctx.Canary.Namespace
+	var result = pkg.Success(check)
+	var authStr string
+	auth, err := GetAuthValues(check.Auth, ctx.Kommons, namespace)
 	if err != nil {
 		return Failf(check, "failed to fetch auth details: %v", err)
 	}
-	authConfig := types.AuthConfig{
-		Username: auth.Username.Value,
-		Password: auth.Password.Value,
+	if auth != nil {
+		authConfig := types.AuthConfig{
+			Username: auth.GetUsername(),
+			Password: auth.GetPassword(),
+		}
+		encodedJSON, _ := json.Marshal(authConfig)
+		authStr = base64.URLEncoding.EncodeToString(encodedJSON)
 	}
-	encodedJSON, _ := json.Marshal(authConfig)
-	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 	out, err := dockerClient.ImagePull(ctx, check.Image, types.ImagePullOptions{RegistryAuth: authStr})
-	elapsed := time.Since(start)
 	if err != nil {
-		return Failf(check, "Failed to pull image: %s", err)
+		return result.Failf("Failed to pull image: %s", err)
 	}
 	digest := getDigestFromOutput(out)
 	if digest != check.ExpectedDigest {
-		return Failf(check, "digests do not match %s != %s", digest, check.ExpectedDigest)
+		return result.Failf("digests do not match %s != %s", digest, check.ExpectedDigest)
 	}
 
 	inspect, _, _ := dockerClient.ImageInspectWithRaw(ctx, check.Image)
 	if check.ExpectedSize > 0 && inspect.Size != check.ExpectedSize {
-		return Failf(check, "size does not match: %d != %d", inspect.Size, check.ExpectedSize)
+		return result.Failf("size does not match: %d != %d", inspect.Size, check.ExpectedSize)
 	}
 
-	return &pkg.CheckResult{
-		Check:    check,
-		Pass:     true,
-		Duration: elapsed.Milliseconds(),
-	}
+	return result
 }

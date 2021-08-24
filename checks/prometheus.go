@@ -1,17 +1,15 @@
 package checks
 
 import (
-	"context"
-	"fmt"
-	"strings"
 	"time"
+
+	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/commons/text"
 	"github.com/prometheus/common/model"
 )
 
@@ -21,58 +19,34 @@ func (c *PrometheusChecker) Type() string {
 	return "prometheus"
 }
 
-func (c *PrometheusChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *PrometheusChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.Prometheus {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.Prometheus {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
 
-func (c *PrometheusChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
-	start := time.Now()
+func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.PrometheusCheck)
-	template := check.GetDisplayTemplate()
-	textResults := template != ""
+	result := pkg.Success(check)
+
 	promClient, err := prometheus.NewPrometheusAPI(check.Host)
 	if err != nil {
-		pkg.Fail(check).TextResults(textResults).ErrorMessage(err).StartTime(start).ResultMessage(prometheusTemplateResult(template, nil))
+		return result.ErrorMessage(err)
 	}
-	modelValue, warning, err := promClient.Query(context.TODO(), check.Query, time.Now())
+	modelValue, warning, err := promClient.Query(ctx.Context, check.Query, time.Now())
 	if err != nil {
-		pkg.Fail(check).TextResults(textResults).ErrorMessage(err).StartTime(start).ResultMessage(prometheusTemplateResult(template, nil))
+		return result.ErrorMessage(err)
 	}
 	if warning != nil {
 		logger.Debugf("warnings when running the query: %v", warning)
 	}
-	var result = make([]interface{}, 0)
+	var results = make([]interface{}, 0)
 	if modelValue != nil {
 		for _, value := range modelValue.(model.Vector) {
-			result = append(result, value.Metric)
+			results = append(results, value.Metric)
 		}
 	}
-	var results = map[string]interface{}{"results": result}
-	if check.ResultsFunction != "" {
-		success, err := text.TemplateWithDelims(check.ResultsFunction, "[[", "]]", results)
-		if err != nil {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(prometheusTemplateResult(template, result)).ErrorMessage(err).StartTime(start)
-		}
-		if strings.ToLower(success) != "true" {
-			return pkg.Fail(check).TextResults(textResults).ResultMessage(prometheusTemplateResult(template, result)).ErrorMessage(fmt.Errorf("result function returned %v", success)).StartTime(start)
-		}
-	}
-	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
-	if err != nil {
-		return pkg.Fail(check).TextResults(textResults).ResultMessage(prometheusTemplateResult(template, result)).ErrorMessage(err).StartTime(start)
-	}
-	return pkg.Success(check).TextResults(textResults).ResultMessage(message).StartTime(start)
-}
-
-func prometheusTemplateResult(template string, result interface{}) string {
-	var results = map[string]interface{}{"results": result}
-	message, err := text.TemplateWithDelims(template, "[[", "]]", results)
-	if err != nil {
-		message = message + "\n" + err.Error()
-	}
-	return message
+	return result.AddData(map[string]interface{}{"results": results})
 }

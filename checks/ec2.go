@@ -1,12 +1,13 @@
 package checks
 
 import (
-	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/flanksource/canary-checker/pkg/metrics"
@@ -17,8 +18,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"net/http"
-
-	"github.com/flanksource/kommons"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -83,23 +82,14 @@ func init() {
 }
 
 type EC2Checker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
-}
-
-func (c *EC2Checker) SetClient(client *kommons.Client) {
-	c.kommons = client
-}
-
-func (c EC2Checker) GetClient() *kommons.Client {
-	return c.kommons
 }
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *EC2Checker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *EC2Checker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, ec2 := range canary.Spec.EC2 {
-		results = append(results, c.Check(canary, ec2))
+	for _, ec2 := range ctx.Canary.Spec.EC2 {
+		results = append(results, c.Check(ctx, ec2))
 	}
 
 	return results
@@ -113,15 +103,16 @@ func (c *EC2Checker) Type() string {
 type AWS struct {
 	EC2    *ec2.Client
 	Config aws.Config
+	ctx    *context.Context
 }
 
-func NewAWS(kommonsClient *kommons.Client, canary v1.Canary, check v1.EC2Check) (*AWS, error) {
-	namespace := canary.GetNamespace()
-	_, accessKey, err := kommonsClient.GetEnvValue(check.AccessKeyID, namespace)
+func NewAWS(ctx *context.Context, check v1.EC2Check) (*AWS, error) {
+	namespace := ctx.Canary.GetNamespace()
+	_, accessKey, err := ctx.Kommons.GetEnvValue(check.AccessKey, namespace)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse EC2 access key: %v", err)
 	}
-	_, secretKey, err := kommonsClient.GetEnvValue(check.SecretKey, namespace)
+	_, secretKey, err := ctx.Kommons.GetEnvValue(check.SecretKey, namespace)
 	if err != nil {
 		return nil, fmt.Errorf(fmt.Sprintf("Could not parse EC2 secret key: %v", err))
 	}
@@ -129,7 +120,7 @@ func NewAWS(kommonsClient *kommons.Client, canary v1.Canary, check v1.EC2Check) 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: check.SkipTLSVerify},
 	}
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
+	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
 		config.WithRegion(check.Region),
 		config.WithHTTPClient(&http.Client{Transport: tr}),
@@ -140,6 +131,7 @@ func NewAWS(kommonsClient *kommons.Client, canary v1.Canary, check v1.EC2Check) 
 	return &AWS{
 		EC2:    ec2.NewFromConfig(cfg),
 		Config: cfg,
+		ctx:    ctx,
 	}, nil
 }
 
@@ -149,7 +141,7 @@ func (cfg *AWS) GetAMI(check v1.EC2Check) (*string, error) {
 	}
 	ssmClient := ssm.NewFromConfig(cfg.Config)
 	arnLookupInput := &ssm.GetParameterInput{Name: aws.String(defaultARN)}
-	arnLookupOutput, err := ssmClient.GetParameter(context.TODO(), arnLookupInput)
+	arnLookupOutput, err := ssmClient.GetParameter(cfg.ctx, arnLookupInput)
 	if err != nil {
 		return nil, fmt.Errorf("could not look up amazon image arn: %v", err)
 	}
@@ -181,7 +173,7 @@ func (cfg *AWS) GetExistingInstanceIds(idString string) ([]string, error) {
 		},
 	}
 
-	describeOutput, err := cfg.EC2.DescribeInstances(context.TODO(), describeInput)
+	describeOutput, err := cfg.EC2.DescribeInstances(cfg.ctx, describeInput)
 	if err != nil {
 		return nil, fmt.Errorf("could not perform prerun check: %v", err)
 	}
@@ -231,7 +223,7 @@ func (cfg *AWS) Launch(check v1.EC2Check, name, ami string) (string, *time.Durat
 		},
 	}
 
-	runOutput, err := cfg.EC2.RunInstances(context.TODO(), runInput)
+	runOutput, err := cfg.EC2.RunInstances(cfg.ctx, runInput)
 	if err != nil {
 		return "", nil, fmt.Errorf("could not create ec2 instance: %s", err)
 	}
@@ -255,7 +247,7 @@ func (cfg *AWS) TerminateInstances(instanceIds []string, timeout time.Duration) 
 	}
 	timer := timer.NewTimer()
 	terminateInput := &ec2.TerminateInstancesInput{InstanceIds: instanceIds}
-	_, err := cfg.EC2.TerminateInstances(context.TODO(), terminateInput)
+	_, err := cfg.EC2.TerminateInstances(cfg.ctx, terminateInput)
 
 	if err != nil {
 		return nil, fmt.Errorf("terminate call error: %w", err)
@@ -263,7 +255,7 @@ func (cfg *AWS) TerminateInstances(instanceIds []string, timeout time.Duration) 
 
 	for {
 		describeInput := &ec2.DescribeInstancesInput{InstanceIds: instanceIds}
-		describeOutput, err := cfg.EC2.DescribeInstances(context.TODO(), describeInput)
+		describeOutput, err := cfg.EC2.DescribeInstances(cfg.ctx, describeInput)
 		if err != nil {
 			return nil, fmt.Errorf("describe call error: %w", err)
 		}
@@ -293,7 +285,7 @@ func (cfg *AWS) Describe(instanceID string, timeout time.Duration) (internalIP s
 	timer := NewTimer()
 	for {
 		describeInput := &ec2.DescribeInstancesInput{InstanceIds: []string{instanceID}}
-		describeOutput, err := cfg.EC2.DescribeInstances(context.TODO(), describeInput)
+		describeOutput, err := cfg.EC2.DescribeInstances(cfg.ctx, describeInput)
 		if err != nil {
 			return "", "", fmt.Errorf("could not retrieve instance health: %s", err)
 		}
@@ -319,17 +311,17 @@ func (cfg *AWS) Describe(instanceID string, timeout time.Duration) (internalIP s
 	return
 }
 
-func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.EC2Check)
 	prometheusCount.WithLabelValues(check.Region).Inc()
-	namespace := canary.Namespace
+	namespace := ctx.Canary.Namespace
 
-	kommonsClient := c.GetClient()
+	kommonsClient := ctx.Kommons
 	if kommonsClient == nil {
 		return Error(check, fmt.Errorf("commons client not configured for ec2 checker"))
 	}
 
-	aws, err := NewAWS(kommonsClient, canary, check)
+	aws, err := NewAWS(ctx, check)
 	if err != nil {
 		return Error(check, err)
 	}
@@ -339,7 +331,7 @@ func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 		return Error(check, err)
 	}
 
-	idString := fmt.Sprintf("%v/%v/%v", canary.ClusterName, namespace, canary.Name)
+	idString := fmt.Sprintf("%v/%v/%v", ctx.Canary.ClusterName, namespace, ctx.Canary.Name)
 
 	ids, err := aws.GetExistingInstanceIds(idString)
 	if err != nil {
@@ -389,18 +381,17 @@ func (c *EC2Checker) Check(canary v1.Canary, extConfig external.Check) *pkg.Chec
 		innerCanaries = append(innerCanaries, innerCanary)
 	}
 
-	ec2Vars := map[string]string{
+	ec2Vars := map[string]interface{}{
 		"PublicIpAddress": ip,
 		"instanceId":      instanceID,
 		"PrivateDnsName":  dns,
 	}
 
 	for _, inner := range innerCanaries {
-		inner.Spec = pkg.ApplyLocalTemplates(inner.Spec, ec2Vars)
 		if len(inner.Spec.EC2) > 0 {
 			return Error(check, fmt.Errorf("EC2 checks may not be nested to avoid potential recursion.  Skipping inner EC2"))
 		}
-		innerResults := RunChecks(inner)
+		innerResults := RunChecks(ctx.New(ec2Vars))
 		for _, result := range innerResults {
 			if !result.Pass {
 				innerFail = true

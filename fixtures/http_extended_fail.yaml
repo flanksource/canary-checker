@@ -6,7 +6,7 @@ http:
           name: podinfo-header
           key: value
     responseJSONContent:
-      path: "$.value[0]"
+      path: "$.Value[0]"
       value: bar
     endpoint: http://podinfo.127.0.0.1.nip.io/headers
   - headers:

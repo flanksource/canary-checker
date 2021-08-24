@@ -1,36 +1,31 @@
 package checks
 
 import (
-	"context"
+	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/api/external"
+
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/kommons"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type MongoDBChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
-}
-
-func (c *MongoDBChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
 }
 
 func (c *MongoDBChecker) Type() string {
 	return "mongodb"
 }
 
-func (c *MongoDBChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *MongoDBChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.MongoDB {
-		result := c.Check(canary, conf)
+	for _, conf := range ctx.Canary.Spec.MongoDB {
+		result := c.Check(ctx, conf)
 		if result != nil {
 			results = append(results, result)
 		}
@@ -38,16 +33,14 @@ func (c *MongoDBChecker) Run(canary v1.Canary) []*pkg.CheckResult {
 	return results
 }
 
-func (c *MongoDBChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *MongoDBChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	check := extConfig.(v1.MongoDBCheck)
 	endpoint := getMongoDBEndpoint(check.URL, check.GetPort())
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	var client *mongo.Client
 	var err error
 	if check.Credentials != nil {
-		auth, err := GetAuthValues(check.Credentials.Authentication, c.kommons, canary.Namespace)
+		auth, err := GetAuthValues(check.Credentials.Authentication, ctx.Kommons, ctx.Canary.Namespace)
 		if err != nil {
 			return pkg.Fail(check).ErrorMessage(err).StartTime(start)
 		}
@@ -71,8 +64,6 @@ func (c *MongoDBChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.
 	}
 
 	defer client.Disconnect(ctx) //nolint: errcheck
-	ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
 		return pkg.Fail(check).ErrorMessage(err).StartTime(start)

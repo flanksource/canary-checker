@@ -11,10 +11,10 @@ import (
 	"path"
 	"time"
 
-	"github.com/flanksource/kommons"
-
 	pusher "github.com/chartmuseum/helm-push/pkg/chartmuseum"
+	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
+
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
@@ -24,11 +24,6 @@ import (
 )
 
 type HelmChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
-}
-
-func (c *HelmChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
 }
 
 type ResultWriter struct{}
@@ -38,23 +33,23 @@ func (c *HelmChecker) Type() string {
 	return "helm"
 }
 
-func (c *HelmChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *HelmChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.Helm {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.Helm {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
 
-func (c *HelmChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	config := extConfig.(v1.HelmCheck)
 	start := time.Now()
 	var uploadOK, downloadOK = true, true
 	chartmuseum := fmt.Sprintf("%s/chartrepo/%s/", config.Chartmuseum, config.Project)
 	logger.Tracef("Uploading test chart")
-	namespace := canary.Namespace
+	namespace := ctx.Canary.Namespace
 	var err error
-	auth, err := GetAuthValues(config.Auth, c.kommons, namespace)
+	auth, err := GetAuthValues(config.Auth, ctx.Kommons, namespace)
 	if err != nil {
 		return Failf(config, "failed to fetch auth details: %v", err)
 	}

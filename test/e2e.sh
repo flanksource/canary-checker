@@ -52,6 +52,8 @@ echo "::endgroup::"
 echo "::group::Deploying Stubs"
 $KARINA deploy apacheds
 echo "::endgroup::"
+echo "::deploy monitoring::"
+$KARINA deploy monitoring
 #$KARINA test stubs --wait=480 -v 5
 echo "::group::Setting up test environment"
 kubectl -n ldap delete svc apacheds

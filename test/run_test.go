@@ -10,12 +10,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/checks"
+	"github.com/flanksource/kommons"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/deps"
+	"github.com/flanksource/commons/logger"
 )
 
 var (
@@ -57,6 +61,7 @@ func setup() {
 	if testFolder == "" {
 		testFolder = "fixtures"
 	}
+	logger.Infof("Testing %s", testFolder)
 	docker := deps.Binary("docker", "", "")
 	docker("pull docker.io/library/busybox:1.30")
 	docker("tag docker.io/library/busybox:1.30 ttl.sh/flanksource-busybox:1.30")
@@ -76,6 +81,16 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+var kommonsClient *kommons.Client
+
+func init() {
+	var err error
+	kommonsClient, err = pkg.NewKommonsClient()
+	if err != nil {
+		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
+	}
+}
+
 func TestRunChecks(t *testing.T) {
 	files, _ := ioutil.ReadDir(fmt.Sprintf("../%s", testFolder))
 	t.Logf("Folder: %s", testFolder)
@@ -92,16 +107,26 @@ func TestRunChecks(t *testing.T) {
 }
 
 func runFixture(t *testing.T, name string) {
-	config := pkg.ParseConfig(fmt.Sprintf("../%s/%s", testFolder, name))
-	canary := v1.Canary{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "podinfo-test",
-			Name:      cmd.CleanupFilename(name),
-		},
-		Spec: config,
-	}
 	t.Run(name, func(t *testing.T) {
-		checkResults := cmd.RunChecks(canary)
+		config, err := pkg.ParseConfig(fmt.Sprintf("../%s/%s", testFolder, name))
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		if config == nil {
+			t.Errorf("%s did not parse into a spec", name)
+			return
+		}
+		canary := v1.Canary{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "podinfo-test",
+				Name:      cmd.CleanupFilename(name),
+			},
+			Spec: *config,
+		}
+		context := context.New(kommonsClient, canary)
+
+		checkResults := checks.RunChecks(context)
 		for _, res := range checkResults {
 			if res == nil {
 				t.Errorf("Result in %v returned nil:\n", name)

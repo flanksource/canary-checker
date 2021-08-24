@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	canaryContext "github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -21,15 +22,15 @@ func (c *DNSChecker) Type() string {
 	return "dns"
 }
 
-func (c *DNSChecker) Run(canary v1.Canary) []*pkg.CheckResult {
+func (c *DNSChecker) Run(ctx *canaryContext.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	for _, conf := range canary.Spec.DNS {
-		results = append(results, c.Check(canary, conf))
+	for _, conf := range ctx.Canary.Spec.DNS {
+		results = append(results, c.Check(ctx, conf))
 	}
 	return results
 }
 
-func (c *DNSChecker) Check(canary v1.Canary, extConfig external.Check) *pkg.CheckResult {
+func (c *DNSChecker) Check(canaryCtx *canaryContext.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DNSCheck)
 	ctx := context.Background()
 	dialer, err := getDialer(check, check.Timeout)

@@ -5,13 +5,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/flanksource/canary-checker/pkg/prometheus"
-	"github.com/flanksource/canary-checker/pkg/push"
 	"github.com/flanksource/canary-checker/pkg/runner"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/controllers"
 	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/commons/logger"
@@ -23,29 +20,19 @@ import (
 	ctrlzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
+var webhookPort int
+var enableLeaderElection bool
+
 var Operator = &cobra.Command{
 	Use:   "operator",
 	Short: "Start the kubernetes operator",
 	Run:   run,
 }
-var enableLeaderElection, dev bool
-var httpPort, metricsPort, webhookPort int
-var includeNamespace, includeCheck, prometheusURL string
-var pushServers, pullServers []string
 
 func init() {
-	Operator.Flags().IntVar(&httpPort, "httpPort", 8080, "Port to expose a health dashboard ")
-	Operator.Flags().Int("devGuiHttpPort", 3004, "Port used by a local npm server in development mode")
-	Operator.Flags().IntVar(&metricsPort, "metricsPort", 8081, "Port to expose a health dashboard ")
+	ServerFlags(Operator.Flags())
 	Operator.Flags().IntVar(&webhookPort, "webhookPort", 8082, "Port for webhooks ")
-	Operator.Flags().BoolVar(&dev, "dev", false, "Run in development mode")
-	Operator.Flags().StringVar(&includeNamespace, "include-namespace", "", "Watch only specified namespaces, otherwise watch all")
-	Operator.Flags().StringVar(&includeCheck, "include-check", "", "Run matching canaries - useful for debugging")
 	Operator.Flags().BoolVar(&enableLeaderElection, "enable-leader-election", false, "Enabling this will ensure there is only one active controller manager")
-	Operator.Flags().IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
-	Operator.Flags().StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
-	Operator.Flags().StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
-	Operator.Flags().StringVar(&prometheusURL, "prometheus-url", "", "location of the prometheus server")
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -68,7 +55,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	_ = clientgoscheme.AddToScheme(scheme)
 	_ = canaryv1.AddToScheme(scheme)
-	go serve(cmd)
+	go serve()
 
 	ctrl.SetLogger(zapr.NewLogger(loggr))
 	setupLog := ctrl.Log.WithName("setup")
@@ -92,8 +79,8 @@ func run(cmd *cobra.Command, args []string) {
 	loggr.Sugar().Infof("Using runner name: %s", runner.RunnerName)
 
 	includeNamespaces := []string{}
-	if includeNamespace != "" {
-		includeNamespaces = strings.Split(includeNamespace, ",")
+	if namespace != "" {
+		includeNamespaces = strings.Split(namespace, ",")
 	}
 
 	runner.RunnerLabels = labels.LoadFromFile("/etc/podinfo/labels")
@@ -110,15 +97,11 @@ func run(cmd *cobra.Command, args []string) {
 		setupLog.Error(err, "unable to create controller", "controller", "Canary")
 		os.Exit(1)
 	}
-	push.AddServers(pushServers)
-	go push.Start()
 
-	runner.Prometheus, err = prometheus.NewPrometheusAPI(prometheusURL)
 	if err != nil {
 		logger.Debugf("error getting prometheus client")
 		return
 	}
-	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
