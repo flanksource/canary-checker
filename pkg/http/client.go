@@ -229,7 +229,6 @@ func (h *HTTPResponse) GetStatusCode() int {
 		return -1
 	}
 	return h.Response.StatusCode
-
 }
 
 func getMapFromHeader(header http.Header) map[string]string {
@@ -238,8 +237,8 @@ func getMapFromHeader(header http.Header) map[string]string {
 		m[k] = strings.Join(v, " ")
 	}
 	return m
-
 }
+
 func (h *HTTPResponse) GetHeaders() map[string]string {
 	if h.Response == nil {
 		return make(map[string]string)
