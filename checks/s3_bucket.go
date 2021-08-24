@@ -132,6 +132,12 @@ func (conn *S3) CheckFolder(ctx *context.Context, path string) (*FolderCheck, er
 			if result.Newest.IsZero() || result.Newest.Milliseconds() > timeSince(*obj.LastModified).Milliseconds() {
 				result.Newest = timeSince(*obj.LastModified)
 			}
+			if result.MinSize == 0 || result.MinSize > obj.Size {
+				result.MinSize = obj.Size
+			}
+			if result.MaxSize < obj.Size {
+				result.MaxSize = obj.Size
+			}
 			result.Files = append(result.Files, S3FileInfo{obj})
 		}
 		if resp.IsTruncated && len(resp.Contents) > 0 {
