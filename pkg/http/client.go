@@ -147,7 +147,7 @@ func (h *HTTPRequest) GetString() string {
 }
 
 func (h *HTTPResponse) IsOK(responseCodes ...int) bool {
-	code := h.StatusCode
+	code := h.GetStatusCode()
 	if h.Error != nil {
 		return false
 	}
@@ -215,12 +215,36 @@ func NewHTTPResponse(req *HTTPRequest, resp *http.Response) *HTTPResponse {
 }
 
 type HTTPResponse struct {
-	Request *HTTPRequest
-	Headers map[string]string
-	*http.Response
-	Elapsed time.Duration
-	Error   error
-	body    string
+	Request  *HTTPRequest
+	Headers  map[string]string
+	Response *http.Response
+	Elapsed  time.Duration
+	Error    error
+	body     string
+}
+
+// GetStatusCode returns the HTTP Status Code or -1 if there was a network error
+func (h *HTTPResponse) GetStatusCode() int {
+	if h.Response == nil {
+		return -1
+	}
+	return h.Response.StatusCode
+
+}
+
+func getMapFromHeader(header http.Header) map[string]string {
+	m := make(map[string]string)
+	for k, v := range header {
+		m[k] = strings.Join(v, " ")
+	}
+	return m
+
+}
+func (h *HTTPResponse) GetHeaders() map[string]string {
+	if h.Response == nil {
+		return make(map[string]string)
+	}
+	return getMapFromHeader(h.Response.Header)
 }
 
 func (h *HTTPResponse) SetError(err error) *HTTPResponse {
@@ -234,10 +258,10 @@ func (h *HTTPResponse) Start(start time.Time) *HTTPResponse {
 }
 
 func (h *HTTPResponse) String() string {
-	s := fmt.Sprintf("%s [%s] %d", h.Request.GetRequestLine(), utils.Age(h.Elapsed), h.StatusCode)
+	s := fmt.Sprintf("%s [%s] %d", h.Request.GetRequestLine(), utils.Age(h.Elapsed), h.GetStatusCode())
 	if h.Request.traceHeaders {
 		s += "\n"
-		for k, values := range h.Header {
+		for k, values := range h.Response.Header {
 			s += k + ": " + strings.Join(values, " ") + "\n"
 		}
 	}
@@ -249,10 +273,13 @@ func (h *HTTPResponse) String() string {
 }
 
 func (h *HTTPResponse) GetSSLAge() *time.Duration {
-	if h.TLS == nil {
+	if h.Response == nil {
 		return nil
 	}
-	certificates := h.TLS.PeerCertificates
+	if h.Response.TLS == nil {
+		return nil
+	}
+	certificates := h.Response.TLS.PeerCertificates
 	if len(certificates) == 0 {
 		return nil
 	}
@@ -266,6 +293,10 @@ func (h *HTTPResponse) IsJSON() bool {
 }
 
 func (h *HTTPResponse) AsJSON() (*JSON, error) {
+	if h.Response == nil {
+		return nil, fmt.Errorf("request did not complete with a body")
+	}
+
 	var jsonContent interface{}
 	s, err := h.AsString()
 	if err != nil {
@@ -278,10 +309,14 @@ func (h *HTTPResponse) AsJSON() (*JSON, error) {
 }
 
 func (h *HTTPResponse) AsString() (string, error) {
+	if h.Response == nil {
+		return "", fmt.Errorf("request did not complete with a body")
+	}
 	if h.body != "" {
 		return h.body, nil
 	}
-	res, err := ioutil.ReadAll(h.Body)
+	res, err := ioutil.ReadAll(h.Response.Body)
+	defer h.Response.Body.Close() //nolint
 	if err != nil {
 		return "", err
 	}
