@@ -145,3 +145,14 @@ func (n *NameGenerator) PodName(prefix string) string {
 	n.podIndex = (n.PodsCount + 1) % n.PodsCount
 	return name
 }
+
+func mb(bytes int64) string {
+	if bytes > 1024*1024*1024 {
+		return fmt.Sprintf("%dGB", bytes/1024/1024/1024)
+	} else if bytes > 1024*1024 {
+		return fmt.Sprintf("%dMB", bytes/1024/1024)
+	} else if bytes > 1024 {
+		return fmt.Sprintf("%dKB", bytes/1024)
+	}
+	return fmt.Sprintf("%dB", bytes)
+}

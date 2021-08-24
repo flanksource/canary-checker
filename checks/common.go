@@ -60,10 +60,10 @@ func (f FolderCheck) Test(test v1.FolderTest) string {
 		return fmt.Sprintf("too many files %d > %d", len(f.Files), *test.MaxCount)
 	}
 	if test.MinSize != nil && f.MinSize < *test.MinSize {
-		return fmt.Sprintf("min size is too small: %d < %d", f.MinSize, test.MinSize)
+		return fmt.Sprintf("min size is too small: %v < %v", mb(f.MinSize), mb(*test.MinSize))
 	}
 	if test.MaxSize != nil && f.MaxSize < *test.MaxSize {
-		return fmt.Sprintf("max size is too large: %d > %d", f.MaxSize, test.MaxSize)
+		return fmt.Sprintf("max size is too large: %v > %v", mb(f.MaxSize), mb(*test.MaxSize))
 	}
 	return ""
 }
