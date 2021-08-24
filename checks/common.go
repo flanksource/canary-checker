@@ -47,11 +47,11 @@ type FolderCheck struct {
 }
 
 func (f FolderCheck) Test(test v1.FolderTest) string {
-	if test.MinAge != nil && f.Newest.Duration < test.MinAge.Duration {
-		return fmt.Sprintf("newest file is too old: %s < %s", f.Newest, test.MinAge)
+	if test.MinAge != nil && f.Newest.Duration < *test.GetMinAge() {
+		return fmt.Sprintf("newest file is too old: %s < %s", f.Newest, *test.GetMinAge())
 	}
-	if test.MaxAge != nil && f.Oldest.Duration > test.MaxAge.Duration {
-		return fmt.Sprintf("oldest file is too old: %s > %s", f.Oldest, test.MaxAge)
+	if test.MaxAge != nil && f.Oldest.Duration > *test.GetMaxAge() {
+		return fmt.Sprintf("oldest file is too old: %s > %s", f.Oldest, *test.GetMaxAge())
 	}
 	if test.MinCount != nil && len(f.Files) < *test.MinCount {
 		return fmt.Sprintf("too few files %d < %d", len(f.Files), *test.MinCount)

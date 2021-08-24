@@ -3,17 +3,16 @@ package v1
 import (
 	"regexp"
 	"strings"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"time"
 
 	"github.com/flanksource/kommons"
 )
 
 type FolderTest struct {
 	//MinAge the latest object should be older than defined age
-	MinAge *metav1.Duration `yaml:"minAge,omitempty" json:"minAge,omitempty"`
+	MinAge *string `yaml:"minAge,omitempty" json:"minAge,omitempty"`
 	//MaxAge the latest object should be younger than defined age
-	MaxAge *metav1.Duration `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
+	MaxAge *string `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
 	//MinCount the minimum number of files inside the searchPath
 	MinCount *int `yaml:"minCount,omitempty" json:"minCount,omitempty"`
 	//MinCount the minimum number of files inside the searchPath
@@ -22,6 +21,28 @@ type FolderTest struct {
 	MinSize *int64 `yaml:"minSize,omitempty" json:"minSize,omitempty"`
 	//MaxSize of the files inside the searchPath
 	MaxSize *int64 `yaml:"maxSize,omitempty" json:"maxSize,omitempty"`
+}
+
+func (f FolderTest) GetMinAge() *time.Duration {
+	if f.MinAge == nil {
+		return nil
+	}
+	d, err := time.ParseDuration(*f.MinAge)
+	if err != nil {
+		return nil
+	}
+	return &d
+}
+
+func (f FolderTest) GetMaxAge() *time.Duration {
+	if f.MaxAge == nil {
+		return nil
+	}
+	d, err := time.ParseDuration(*f.MaxAge)
+	if err != nil {
+		return nil
+	}
+	return &d
 }
 
 type JSONCheck struct {
