@@ -36,6 +36,9 @@ kind: Prometheus
 metadata:
   name: k8s
   namespace: monitoring
+  labels:
+    app: prometheus
+    prometheus: k8s
 spec:
   replicas: 1
   storage:

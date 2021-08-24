@@ -133,7 +133,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 
 	if check.Spec.Interval > 0 || check.Spec.Schedule != "" {
-		job := CanaryJob{Client: *r, Check: *check, Logger: logger}
+		job := CanaryJob{Client: *r, Check: *check, Logger: logger, Context: context.New(r.Kommons, *check)}
 		if !run {
 			// check each job on startup
 			go job.Run()
@@ -246,7 +246,7 @@ func (c CanaryJob) GetNamespacedName() types.NamespacedName {
 
 func (c CanaryJob) Run() {
 	c.V(2).Info("Starting")
-	results := checks.RunChecks(c.Context, c.Check)
+	results := checks.RunChecks(c.Context)
 
 	c.Client.Report(c.Context, c.GetNamespacedName(), results)
 

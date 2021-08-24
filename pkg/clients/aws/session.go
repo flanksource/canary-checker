@@ -15,7 +15,7 @@ import (
 
 func NewSession(ctx *context.Context, conn v1.AWSConnection) (*aws.Config, error) {
 	namespace := ctx.Canary.GetNamespace()
-	_, accessKey, err := ctx.Kommons.GetEnvValue(conn.AccessKeyID, namespace)
+	_, accessKey, err := ctx.Kommons.GetEnvValue(conn.AccessKey, namespace)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse EC2 access key: %v", err)
 	}

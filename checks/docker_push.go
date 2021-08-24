@@ -9,8 +9,6 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/flanksource/kommons"
-
 	"github.com/docker/docker/api/types"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -18,11 +16,6 @@ import (
 )
 
 type DockerPushChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
-}
-
-func (c *DockerPushChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
 }
 
 func (c *DockerPushChecker) Run(ctx *context.Context) []*pkg.CheckResult {
@@ -44,7 +37,7 @@ func (c *DockerPushChecker) Check(ctx *context.Context, extConfig external.Check
 	check := extConfig.(v1.DockerPushCheck)
 	namespace := ctx.Canary.Namespace
 	var err error
-	auth, err := GetAuthValues(check.Auth, c.kommons, namespace)
+	auth, err := GetAuthValues(check.Auth, ctx.Kommons, namespace)
 	if err != nil {
 		return Failf(check, "failed to fetch auth details: %v", err)
 	}

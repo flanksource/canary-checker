@@ -35,7 +35,7 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	if err != nil {
 		return result.ErrorMessage(err)
 	}
-	modelValue, warning, err := promClient.Query(ctx, check.Query, time.Now())
+	modelValue, warning, err := promClient.Query(ctx.Context, check.Query, time.Now())
 	if err != nil {
 		return result.ErrorMessage(err)
 	}

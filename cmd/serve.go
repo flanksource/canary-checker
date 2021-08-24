@@ -66,7 +66,7 @@ var Serve = &cobra.Command{
 
 			cron.AddFunc(schedule, func() { // nolint: errcheck
 				go func() {
-					for _, result := range checks.RunChecks(context.New(kommonsClient, canary), canary) {
+					for _, result := range checks.RunChecks(context.New(kommonsClient, canary)) {
 						cache.AddCheck(canary, result)
 						metrics.Record(canary, result)
 					}

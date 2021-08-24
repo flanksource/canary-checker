@@ -384,7 +384,7 @@ spec:
                 ec2:
                   items:
                     properties:
-                      accessKeyID:
+                      accessKey:
                         properties:
                           name:
                             type: string
@@ -485,7 +485,7 @@ spec:
                       waitTime:
                         type: integer
                     required:
-                      - accessKeyID
+                      - accessKey
                       - region
                       - secretKey
                     type: object
@@ -5327,7 +5327,7 @@ spec:
                 s3Bucket:
                   items:
                     properties:
-                      accessKeyID:
+                      accessKey:
                         properties:
                           name:
                             type: string
@@ -5449,7 +5449,7 @@ spec:
                         description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                         type: boolean
                     required:
-                      - accessKeyID
+                      - accessKey
                       - bucket
                       - region
                       - secretKey

@@ -1,6 +1,6 @@
 http:
   - headers:
-    - name: value
+    - name: test
       valueFrom:
         secretKeyRef:
           name: podinfo-header
@@ -24,4 +24,4 @@ http:
     responseContent: bar
     endpoint: http://podinfo.127.0.0.1.nip.io/echo
     responseCodes:
-      - 202
+      - 205

@@ -19,8 +19,6 @@ import (
 
 	"net/http"
 
-	"github.com/flanksource/kommons"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -84,15 +82,6 @@ func init() {
 }
 
 type EC2Checker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
-}
-
-func (c *EC2Checker) SetClient(client *kommons.Client) {
-	c.kommons = client
-}
-
-func (c EC2Checker) GetClient() *kommons.Client {
-	return c.kommons
 }
 
 // Run: Check every entry from config according to Checker interface
@@ -119,7 +108,7 @@ type AWS struct {
 
 func NewAWS(ctx *context.Context, check v1.EC2Check) (*AWS, error) {
 	namespace := ctx.Canary.GetNamespace()
-	_, accessKey, err := ctx.Kommons.GetEnvValue(check.AccessKeyID, namespace)
+	_, accessKey, err := ctx.Kommons.GetEnvValue(check.AccessKey, namespace)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse EC2 access key: %v", err)
 	}
@@ -327,7 +316,7 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	prometheusCount.WithLabelValues(check.Region).Inc()
 	namespace := ctx.Canary.Namespace
 
-	kommonsClient := c.GetClient()
+	kommonsClient := ctx.Kommons
 	if kommonsClient == nil {
 		return Error(check, fmt.Errorf("commons client not configured for ec2 checker"))
 	}
@@ -402,7 +391,7 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 		if len(inner.Spec.EC2) > 0 {
 			return Error(check, fmt.Errorf("EC2 checks may not be nested to avoid potential recursion.  Skipping inner EC2"))
 		}
-		innerResults := RunChecks(ctx.New(ec2Vars), inner)
+		innerResults := RunChecks(ctx.New(ec2Vars))
 		for _, result := range innerResults {
 			if !result.Pass {
 				innerFail = true

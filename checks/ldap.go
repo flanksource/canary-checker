@@ -5,8 +5,6 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 
-	"github.com/flanksource/kommons"
-
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -14,11 +12,6 @@ import (
 )
 
 type LdapChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
-}
-
-func (c *LdapChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
 }
 
 // Type: returns checker type
@@ -47,7 +40,7 @@ func (c *LdapChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 		return Failf(check, "Failed to connect %v", err)
 	}
 	namespace := ctx.Canary.Namespace
-	auth, err := GetAuthValues(check.Auth, c.kommons, namespace)
+	auth, err := GetAuthValues(check.Auth, ctx.Kommons, namespace)
 	if err != nil {
 		return Failf(check, "failed to fetch auth details: %v", err)
 	}

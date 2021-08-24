@@ -44,7 +44,7 @@ var Run = &cobra.Command{
 			logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
 		}
 
-		results := checks.RunChecks(context.New(kommonsClient, canary), canary)
+		results := checks.RunChecks(context.New(kommonsClient, canary))
 		if junitFile != "" {
 			report := getJunitReport(results)
 			err := ioutil.WriteFile(junitFile, []byte(report), 0755)

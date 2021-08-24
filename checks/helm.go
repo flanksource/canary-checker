@@ -11,8 +11,6 @@ import (
 	"path"
 	"time"
 
-	"github.com/flanksource/kommons"
-
 	pusher "github.com/chartmuseum/helm-push/pkg/chartmuseum"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -26,11 +24,6 @@ import (
 )
 
 type HelmChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
-}
-
-func (c *HelmChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
 }
 
 type ResultWriter struct{}
@@ -56,7 +49,7 @@ func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	logger.Tracef("Uploading test chart")
 	namespace := ctx.Canary.Namespace
 	var err error
-	auth, err := GetAuthValues(config.Auth, c.kommons, namespace)
+	auth, err := GetAuthValues(config.Auth, ctx.Kommons, namespace)
 	if err != nil {
 		return Failf(config, "failed to fetch auth details: %v", err)
 	}

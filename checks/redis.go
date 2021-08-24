@@ -3,8 +3,6 @@ package checks
 import (
 	"github.com/flanksource/canary-checker/api/context"
 
-	"github.com/flanksource/kommons"
-
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -16,11 +14,6 @@ func init() {
 }
 
 type RedisChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
-}
-
-func (c *RedisChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
 }
 
 // Type: returns checker type
@@ -43,7 +36,7 @@ func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) *pk
 	result := pkg.Success(redisCheck)
 	namespace := ctx.Canary.Namespace
 	var err error
-	auth, err := GetAuthValues(redisCheck.Auth, c.kommons, namespace)
+	auth, err := GetAuthValues(redisCheck.Auth, ctx.Kommons, namespace)
 	if err != nil {
 		return result.Failf("failed to fetch auth details: %v", err)
 	}

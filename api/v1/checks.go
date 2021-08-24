@@ -108,7 +108,7 @@ func (c S3Check) GetType() string {
 }
 
 type AWSConnection struct {
-	AccessKeyID   kommons.EnvVar `yaml:"accessKey" json:"accessKeyID"`
+	AccessKey     kommons.EnvVar `yaml:"accessKey" json:"accessKey"`
 	SecretKey     kommons.EnvVar `yaml:"secretKey" json:"secretKey"`
 	Region        string         `yaml:"region" json:"region"`
 	Endpoint      string         `yaml:"endpoint" json:"endpoint,omitempty"`

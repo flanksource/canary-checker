@@ -126,7 +126,7 @@ func runFixture(t *testing.T, name string) {
 		}
 		context := context.New(kommonsClient, canary)
 
-		checkResults := checks.RunChecks(context, canary)
+		checkResults := checks.RunChecks(context)
 		for _, res := range checkResults {
 			if res == nil {
 				t.Errorf("Result in %v returned nil:\n", name)

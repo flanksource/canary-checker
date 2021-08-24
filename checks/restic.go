@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
-
 	"github.com/flanksource/kommons"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -27,12 +26,8 @@ const (
 )
 
 type ResticChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
 }
 
-func (c *ResticChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
-}
 func (c *ResticChecker) Type() string {
 	return "restic"
 }
@@ -48,7 +43,7 @@ func (c *ResticChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
 	resticCheck := extConfig.(v1.ResticCheck)
-	envVars, err := c.getEnvVars(resticCheck, ctx.Canary.Namespace)
+	envVars, err := c.getEnvVars(resticCheck, ctx.Canary.Namespace, ctx.Kommons)
 	if err != nil {
 		return Failf(resticCheck, "error getting envVars %v", err)
 	}
@@ -106,21 +101,21 @@ func checkBackupFreshness(repository, maxAge, caCert string, envVars map[string]
 	return nil
 }
 
-func (c *ResticChecker) getEnvVars(r v1.ResticCheck, namespace string) (map[string]string, error) {
+func (c *ResticChecker) getEnvVars(r v1.ResticCheck, namespace string, kommons *kommons.Client) (map[string]string, error) {
 	var password, secretKey, accessKey string
 	var err error
-	_, password, err = c.kommons.GetEnvValue(*r.Password, namespace)
+	_, password, err = kommons.GetEnvValue(*r.Password, namespace)
 	if err != nil {
 		return nil, err
 	}
 	if r.SecretKey != nil {
-		_, secretKey, err = c.kommons.GetEnvValue(*r.SecretKey, namespace)
+		_, secretKey, err = kommons.GetEnvValue(*r.SecretKey, namespace)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if r.AccessKey != nil {
-		_, accessKey, err = c.kommons.GetEnvValue(*r.AccessKey, namespace)
+		_, accessKey, err = kommons.GetEnvValue(*r.AccessKey, namespace)
 		if err != nil {
 			return nil, err
 		}

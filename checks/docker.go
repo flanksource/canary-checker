@@ -10,8 +10,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/flanksource/kommons"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/flanksource/canary-checker/api/external"
@@ -52,11 +50,6 @@ func init() {
 }
 
 type DockerPullChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
-}
-
-func (c *DockerPullChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
 }
 
 func (c *DockerPullChecker) Run(ctx *context.Context) []*pkg.CheckResult {

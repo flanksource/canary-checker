@@ -15,7 +15,7 @@ import (
 	"github.com/hairyhenderson/gomplate/v3"
 )
 
-func RunChecks(ctx *context.Context, canary v1.Canary) []*pkg.CheckResult {
+func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
 	ctx.Canary.Spec.SetSQLDrivers()
 	for _, c := range All {

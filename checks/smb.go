@@ -8,8 +8,6 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 
-	"github.com/flanksource/kommons"
-
 	"github.com/flanksource/commons/logger"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -19,15 +17,6 @@ import (
 )
 
 type SmbChecker struct {
-	kommons *kommons.Client `yaml:"-" json:"-"`
-}
-
-func (c *SmbChecker) SetClient(client *kommons.Client) {
-	c.kommons = client
-}
-
-func (c SmbChecker) GetClient() *kommons.Client {
-	return c.kommons
 }
 
 func (c *SmbChecker) Type() string {
@@ -109,7 +98,7 @@ func (c *SmbChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 		return result.ErrorMessage(err)
 	}
 
-	auth, err := GetAuthValues(smbCheck.Auth, c.kommons, namespace)
+	auth, err := GetAuthValues(smbCheck.Auth, ctx.Kommons, namespace)
 	if err != nil {
 		return result.ErrorMessage(err)
 	}
