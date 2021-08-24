@@ -158,7 +158,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	result.AddData(data)
 
 	if status == -1 {
-		return result.Failf("%v", truncate(resp.Error(), 250))
+		return result.Failf("%v", truncate(resp.Error.Error(), 250))
 	}
 
 	if ok := resp.IsOK(check.ResponseCodes...); !ok {
