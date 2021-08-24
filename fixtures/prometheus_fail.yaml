@@ -1,4 +1,5 @@
 prometheus:
   - host: http://127.0.0.1:32018
     query: kubernetes_build_info{job!~"kube-dns|coredns"}
-    resultsFunction: "false"
+    test:
+      template: "false"

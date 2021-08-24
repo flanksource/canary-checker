@@ -7,8 +7,8 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
-
 	"github.com/flanksource/canary-checker/pkg"
+	"gopkg.in/flanksource/yaml.v3"
 
 	gotemplate "text/template"
 
@@ -63,7 +63,12 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 		}
 
 		var buf bytes.Buffer
-		if err := tpl.Execute(&buf, ctx.Environment); err != nil {
+		data, _ := yaml.Marshal(ctx.Environment)
+		unstructured := make(map[string]interface{})
+		if err := yaml.Unmarshal(data, &unstructured); err != nil {
+			return "", err
+		}
+		if err := tpl.Execute(&buf, unstructured); err != nil {
 			return "", fmt.Errorf("error executing template %s: %v", strings.Split(template.Template, "\n")[0], err)
 		}
 		return buf.String(), nil

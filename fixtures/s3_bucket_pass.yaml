@@ -8,7 +8,6 @@ s3Bucket:
     region: "minio"
     endpoint: "https://minio.127.0.0.1.nip.io"
     objectPath: "(.*)backup.zip$"
-    readWrite: true
     maxAge: 10800m # 7 days
     minSize: 25
     usePathStyle: true
@@ -22,7 +21,6 @@ s3Bucket:
     region: "minio"
     endpoint: "https://minio.127.0.0.1.nip.io"
     objectPath: "mysql\\/backups\\/(.*)\\/mysql.zip$"
-    readWrite: true
     maxAge: 10800m # 7 days
     minSize: 25
     usePathStyle: true
@@ -36,7 +34,6 @@ s3Bucket:
     region: "minio"
     endpoint: "https://minio.127.0.0.1.nip.io"
     objectPath: "pg\\/backups\\/(.*)\\/backup.zip$"
-    readWrite: true
     maxAge: 10800m # 7 days
     minSize: 25
     usePathStyle: true
