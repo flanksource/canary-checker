@@ -93,7 +93,7 @@ func (c *SmbChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	result := pkg.Success(smbCheck)
 	namespace := ctx.Canary.Namespace
 
-	server, sharename, path, err := getServerDetails(smbCheck.Server, 445)
+	server, sharename, path, err := getServerDetails(smbCheck.Server, smbCheck.GetPort())
 	if err != nil {
 		return result.ErrorMessage(err)
 	}

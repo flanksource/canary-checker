@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PaesslerAG/jsonpath"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	httpntlm "github.com/vadimi/go-http-ntlm/v2"
@@ -285,4 +287,25 @@ func (h *HTTPResponse) AsString() (string, error) {
 	}
 	h.body = string(res)
 	return h.body, nil
+}
+
+func (h *HTTPResponse) CheckJSONContent(jsonContent interface{}, jsonCheck v1.JSONCheck) error {
+	jsonResult, err := jsonpath.Get(jsonCheck.Path, jsonContent)
+	if err != nil {
+		logger.Errorf("Error checking JSON content: %s", err)
+		return err
+	}
+	switch s := jsonResult.(type) {
+	case string:
+		if s != jsonCheck.Value {
+			return fmt.Errorf("%v not equal to %v", s, jsonCheck.Value)
+		}
+	case fmt.Stringer:
+		if s.String() != jsonCheck.Value {
+			return fmt.Errorf("%v not equal to %v", s.String(), jsonCheck.Value)
+		}
+	default:
+		return fmt.Errorf("json response could not be parsed back to string")
+	}
+	return nil
 }

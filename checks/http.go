@@ -143,9 +143,15 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	if resp.IsJSON() {
 		json, err := resp.AsJSON()
 		if err != nil {
-			result.ErrorMessage(err)
+			return result.ErrorMessage(err)
 		} else {
 			data["json"] = json.Value
+			if check.ResponseJSONContent.Path != "" {
+				err := resp.CheckJSONContent(json.Value, check.ResponseJSONContent)
+				if err != nil {
+					return result.ErrorMessage(err)
+				}
+			}
 		}
 	}
 
