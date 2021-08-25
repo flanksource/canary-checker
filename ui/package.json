@@ -26,8 +26,8 @@
   },
   "proxy": "http://localhost:8080",
   "scripts": {
-    "start": "craco start",
-    "build": "craco build",
+    "start": "DISABLE_ESLINT_PLUGIN=true craco start",
+    "build": "DISABLE_ESLINT_PLUGIN=true craco build",
     "test": "craco test",
     "eject": "react-scripts eject",
     "lint:eslint": "eslint --ext .js,.jsx,.ts,.tsx .",
