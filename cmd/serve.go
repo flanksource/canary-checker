@@ -12,7 +12,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/push"
 
 	"github.com/flanksource/canary-checker/api/context"
-	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/api"
@@ -26,7 +25,6 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/robfig/cron/v3"
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var schedule, configFile string
@@ -36,21 +34,14 @@ var Serve = &cobra.Command{
 	Short: "Start a server to execute checks ",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		config, err := pkg.ParseConfig(configFile)
+		canary, err := pkg.ParseConfig(configFile)
 		if err != nil {
 			logger.Fatalf("could not parse %s: %v", configFile, err)
 		}
-		if config.Interval == 0 && config.Schedule == "" {
-			config.Schedule = schedule
+		if canary.Spec.Interval == 0 && canary.Spec.Schedule == "" {
+			canary.Spec.Schedule = schedule
 		}
 
-		canary := v1.Canary{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      runner.RunnerName,
-				Namespace: namespace,
-			},
-			Spec: *config,
-		}
 		kommonsClient, err := pkg.NewKommonsClient()
 		if err != nil {
 			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
@@ -62,13 +53,13 @@ var Serve = &cobra.Command{
 			if !checks.Checks(canary.Spec.GetAllChecks()).Includes(c) {
 				continue
 			}
-			schedule := config.Schedule
+			schedule := canary.Spec.Schedule
 
 			cron.AddFunc(schedule, func() { // nolint: errcheck
 				go func() {
-					for _, result := range checks.RunChecks(context.New(kommonsClient, canary)) {
-						cache.AddCheck(canary, result)
-						metrics.Record(canary, result)
+					for _, result := range checks.RunChecks(context.New(kommonsClient, *canary)) {
+						cache.AddCheck(*canary, result)
+						metrics.Record(*canary, result)
 					}
 				}()
 			})

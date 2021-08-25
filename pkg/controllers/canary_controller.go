@@ -86,7 +86,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	err := r.Get(ctx, req.NamespacedName, check)
 
 	if !check.DeletionTimestamp.IsZero() {
-		logger.Info("removing", "check", check)
+		logger.Info("removing", "check", check.Name)
 		cache.RemoveCheck(*check)
 		metrics.RemoveCheck(*check)
 		controllerutil.RemoveFinalizer(check, FinalizerName)

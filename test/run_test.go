@@ -11,10 +11,8 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
-	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/kommons"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg"
@@ -108,23 +106,22 @@ func TestRunChecks(t *testing.T) {
 
 func runFixture(t *testing.T, name string) {
 	t.Run(name, func(t *testing.T) {
-		config, err := pkg.ParseConfig(fmt.Sprintf("../%s/%s", testFolder, name))
+		canary, err := pkg.ParseConfig(fmt.Sprintf("../%s/%s", testFolder, name))
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		if config == nil {
+		if canary == nil {
 			t.Errorf("%s did not parse into a spec", name)
 			return
 		}
-		canary := v1.Canary{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "podinfo-test",
-				Name:      cmd.CleanupFilename(name),
-			},
-			Spec: *config,
+		if canary.Namespace == "" {
+			canary.Namespace = "podinfo-test"
 		}
-		context := context.New(kommonsClient, canary)
+		if canary.Name == "" {
+			canary.Name = cmd.CleanupFilename(name)
+		}
+		context := context.New(kommonsClient, *canary)
 
 		checkResults := checks.RunChecks(context)
 		for _, res := range checkResults {

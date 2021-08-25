@@ -183,11 +183,6 @@ func (h *HTTPRequest) Do(body string) *HTTPResponse {
 		// and move the Virtual Hostname to a Header
 		h.headers["Host"] = h.URL.Hostname()
 		h.URL.Host = h.host
-		if h.URL.Port() == "" {
-			h.URL.Host = h.host
-		} else {
-			h.URL.Host = h.host + ":" + h.URL.Port()
-		}
 	}
 
 	req, err := http.NewRequest(h.method, h.URL.String(), strings.NewReader(body))
@@ -275,8 +270,8 @@ func (h *HTTPResponse) String() string {
 	s := fmt.Sprintf("%s [%s] %d", h.Request.GetRequestLine(), utils.Age(h.Elapsed), h.GetStatusCode())
 	if h.Request.traceHeaders {
 		s += "\n"
-		for k, values := range h.Response.Header {
-			s += k + ": " + strings.Join(values, " ") + "\n"
+		for k, values := range h.GetHeaders() {
+			s += k + ": " + values + "\n"
 		}
 	}
 	if h.Request.traceBody {
