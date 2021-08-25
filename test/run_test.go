@@ -121,7 +121,7 @@ func runFixture(t *testing.T, name string) {
 		if canary.Name == "" {
 			canary.Name = cmd.CleanupFilename(name)
 		}
-		context := context.New(kommonsClient, canary)
+		context := context.New(kommonsClient, *canary)
 
 		checkResults := checks.RunChecks(context)
 		for _, res := range checkResults {
