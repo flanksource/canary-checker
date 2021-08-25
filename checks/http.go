@@ -116,26 +116,26 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 
 	resp := req.Do(check.Body)
 	result.Duration = resp.Elapsed.Milliseconds()
+	status := resp.GetStatusCode()
 	result.AddMetric(pkg.Metric{
 		Name: "response_code",
 		Type: metrics.CounterType,
 		Labels: map[string]string{
-			"code":     strconv.Itoa(resp.StatusCode),
+			"code":     strconv.Itoa(status),
 			"endpoint": endpoint,
 		},
 	})
-	responseStatus.WithLabelValues(strconv.Itoa(resp.StatusCode), statusCodeToClass(resp.StatusCode), endpoint).Inc()
+	responseStatus.WithLabelValues(strconv.Itoa(status), statusCodeToClass(status), endpoint).Inc()
 	age := resp.GetSSLAge()
 	if age != nil {
 		sslExpiration.WithLabelValues(endpoint).Set(age.Hours() * 24)
 	}
 
 	body, _ := resp.AsString()
-	defer resp.Body.Close()
 
 	data := map[string]interface{}{
-		"code":    resp.StatusCode,
-		"headers": resp.Header,
+		"code":    status,
+		"headers": resp.GetHeaders(),
 		"elapsed": resp.Elapsed,
 		"sslAge":  age,
 		"content": body,
@@ -157,8 +157,12 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 
 	result.AddData(data)
 
+	if status == -1 {
+		return result.Failf("%v", truncate(resp.Error.Error(), 250))
+	}
+
 	if ok := resp.IsOK(check.ResponseCodes...); !ok {
-		return result.Failf("response code invalid %d != %v", resp.StatusCode, check.ResponseCodes)
+		return result.Failf("response code invalid %d != %v", status, check.ResponseCodes)
 	}
 
 	if check.ThresholdMillis > 0 && check.ThresholdMillis < int(resp.Elapsed.Milliseconds()) {
