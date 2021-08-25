@@ -196,6 +196,8 @@ type CanaryStatus struct {
 
 	// Average latency to complete all checks
 	Latency1H string `json:"latency1h,omitempty"`
+
+	CheckKeys []string `json:"checkKeys,omitempty"`
 }
 
 // +kubebuilder:object:root=true

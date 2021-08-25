@@ -95,10 +95,14 @@ func init() {
 func RemoveCheck(checks v1.Canary) {
 	for _, check := range checks.Spec.GetAllChecks() {
 		key := checks.GetKey(check)
-		delete(failed, key)
-		delete(passed, key)
-		delete(latencies, key)
+		RemoveCheckByKey(key)
 	}
+}
+
+func RemoveCheckByKey(key string) {
+	delete(failed, key)
+	delete(passed, key)
+	delete(latencies, key)
 }
 
 func GetMetrics(key string) (uptime pkg.Uptime, latency pkg.Latency) {

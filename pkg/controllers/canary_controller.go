@@ -84,7 +84,16 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 
 	check := &v1.Canary{}
 	err := r.Get(ctx, req.NamespacedName, check)
-
+	if check.Status.CheckKeys != nil {
+		specKeys := getAllCheckKeys(check)
+		for _, statusKey := range check.Status.CheckKeys {
+			if !contains(specKeys, statusKey) {
+				//delete old checkkey from cache and metrics
+				cache.RemoveCheckByKey(statusKey)
+				metrics.RemoveCheckByKey(statusKey)
+			}
+		}
+	}
 	if !check.DeletionTimestamp.IsZero() {
 		logger.Info("removing", "check", check)
 		cache.RemoveCheck(*check)
@@ -155,7 +164,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 
 	check.Status.ObservedGeneration = check.Generation
-
+	check.Status.CheckKeys = getAllCheckKeys(check)
 	return ctrl.Result{}, nil
 }
 

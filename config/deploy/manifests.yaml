@@ -5622,6 +5622,10 @@ spec:
             status:
               description: CanaryStatus defines the observed state of Canary
               properties:
+                checkKeys:
+                  items:
+                    type: string
+                  type: array
                 errorMessage:
                   type: string
                 lastCheck:
