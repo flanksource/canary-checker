@@ -28,8 +28,10 @@ type HTTPCheck struct {
 	MaxSSLExpiry int `yaml:"maxSSLExpiry" json:"maxSSLExpiry,omitempty"`
 	// HTTP method to call - defaults to GET
 	Method string `yaml:"method,omitempty" json:"method,omitempty"`
-	//NTLM when set to true will do authentication using NTLM protocol
+	//NTLM when set to true will do authentication using NTLM v1 protocol
 	NTLM bool `yaml:"ntlm,omitempty" json:"ntlm,omitempty"`
+	//NTLM when set to true will do authentication using NTLM v2 protocol
+	NTLMv2 bool `yaml:"ntlmv2,omitempty" json:"ntlmv2,omitempty"`
 	// HTTP request body contents
 	Body string `yaml:"body,omitempty" json:"body,omitempty"`
 	// HTTP Header fields to be used in the query
