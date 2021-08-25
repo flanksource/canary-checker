@@ -82,24 +82,25 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 
 	logger := r.Log.WithValues("canary", req.NamespacedName)
 
-	check := &v1.Canary{}
-	err := r.Get(ctx, req.NamespacedName, check)
-	if check.Status.CheckKeys != nil {
-		specKeys := getAllCheckKeys(check)
-		for _, statusKey := range check.Status.CheckKeys {
+	canary := &v1.Canary{}
+	err := r.Get(ctx, req.NamespacedName, canary)
+	var update bool
+	if canary.Status.ChecksStatus != nil {
+		specKeys := getAllCheckKeys(canary)
+		for statusKey := range canary.Status.ChecksStatus {
 			if !contains(specKeys, statusKey) {
-				//delete old checkkey from cache and metrics
 				cache.RemoveCheckByKey(statusKey)
 				metrics.RemoveCheckByKey(statusKey)
+				update = true
 			}
 		}
 	}
-	if !check.DeletionTimestamp.IsZero() {
-		logger.Info("removing", "check", check)
-		cache.RemoveCheck(*check)
-		metrics.RemoveCheck(*check)
-		controllerutil.RemoveFinalizer(check, FinalizerName)
-		if err := r.Update(ctx, check); err != nil {
+	if !canary.DeletionTimestamp.IsZero() {
+		logger.Info("removing", "check", canary)
+		cache.RemoveCheck(*canary)
+		metrics.RemoveCheck(*canary)
+		controllerutil.RemoveFinalizer(canary, FinalizerName)
+		if err := r.Update(ctx, canary); err != nil {
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
@@ -111,28 +112,28 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 
 	canaryCtx := &context.Context{
 		Kommons:   r.Kommons,
-		Namespace: check.GetNamespace(),
+		Namespace: canary.GetNamespace(),
 		Context:   ctx,
 	}
 
-	defer r.Patch(canaryCtx, check)
+	defer r.Patch(canaryCtx, canary)
 	// Add finalizer first if not exist to avoid the race condition between init and delete
-	if !controllerutil.ContainsFinalizer(check, FinalizerName) {
-		logger.Info("adding finalizer", "finalizers", check.GetFinalizers())
-		controllerutil.AddFinalizer(check, FinalizerName)
-		if err := r.Update(ctx, check); err != nil {
+	if !controllerutil.ContainsFinalizer(canary, FinalizerName) {
+		logger.Info("adding finalizer", "finalizers", canary.GetFinalizers())
+		controllerutil.AddFinalizer(canary, FinalizerName)
+		if err := r.Update(ctx, canary); err != nil {
 			return ctrl.Result{}, err
 		}
 	}
-	check.Spec.SetSQLDrivers()
+	canary.Spec.SetSQLDrivers()
 	_, run := observed.Load(req.NamespacedName)
-	if run && check.Status.ObservedGeneration == check.Generation {
+	if run && canary.Status.ObservedGeneration == canary.Generation && !update {
 		logger.V(2).Info("check already up to date")
 		return ctrl.Result{}, nil
 	}
 
 	observed.Store(req.NamespacedName, true)
-	cache.Cache.InitCheck(*check)
+	cache.Cache.InitCheck(*canary)
 	for _, entry := range r.Cron.Entries() {
 		if entry.Job.(CanaryJob).GetNamespacedName() == req.NamespacedName {
 			logger.V(2).Info("unscheduled", "id", entry.ID)
@@ -141,19 +142,19 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		}
 	}
 
-	if check.Spec.Interval > 0 || check.Spec.Schedule != "" {
-		job := CanaryJob{Client: *r, Check: *check, Logger: logger, Context: context.New(r.Kommons, *check)}
+	if canary.Spec.Interval > 0 || canary.Spec.Schedule != "" {
+		job := CanaryJob{Client: *r, Check: *canary, Logger: logger, Context: context.New(r.Kommons, *canary)}
 		if !run {
 			// check each job on startup
 			go job.Run()
 		}
 		var id cron.EntryID
 		var schedule string
-		if check.Spec.Schedule != "" {
-			schedule = check.Spec.Schedule
+		if canary.Spec.Schedule != "" {
+			schedule = canary.Spec.Schedule
 			id, err = r.Cron.AddJob(schedule, job)
-		} else if check.Spec.Interval > 0 {
-			schedule = fmt.Sprintf("@every %ds", check.Spec.Interval)
+		} else if canary.Spec.Interval > 0 {
+			schedule = fmt.Sprintf("@every %ds", canary.Spec.Interval)
 			id, err = r.Cron.AddJob(schedule, job)
 		}
 		if err != nil {
@@ -163,8 +164,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		}
 	}
 
-	check.Status.ObservedGeneration = check.Generation
-	check.Status.CheckKeys = getAllCheckKeys(check)
+	canary.Status.ObservedGeneration = canary.Generation
 	return ctrl.Result{}, nil
 }
 
@@ -188,42 +188,47 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName, results []*pkg.CheckResult) {
-	check := v1.Canary{}
-	if err := r.Get(ctx, key, &check); err != nil {
+	canary := v1.Canary{}
+	if err := r.Get(ctx, key, &canary); err != nil {
 		r.Log.Error(err, "unable to find canary", "key", key)
 		return
 	}
 
-	check.Status.LastCheck = &metav1.Time{Time: time.Now()}
+	canary.Status.LastCheck = &metav1.Time{Time: time.Now()}
 	transitioned := false
 	pass := true
+	var checkStatus = make(map[string]*v1.CheckStatus)
 	for _, result := range results {
-		lastResult := cache.AddCheck(check, result)
+		lastResult := cache.AddCheck(canary, result)
 		//FIXME this needs to be aggregated across all
-		uptime, latency := metrics.Record(check, result)
-		check.Status.Uptime1H = uptime.String()
-		check.Status.Latency1H = latency.String()
+		uptime, latency := metrics.Record(canary, result)
+		checkKey := canary.GetKey(result.Check)
+		checkStatus[checkKey] = &v1.CheckStatus{}
+		checkStatus[checkKey].Uptime1H = uptime.String()
+		checkStatus[checkKey].Latency1H = latency.String()
+
 		if lastResult != nil && len(lastResult.Statuses) > 0 && (lastResult.Statuses[0].Status != result.Pass) {
 			transitioned = true
 		}
 		if !result.Pass {
-			r.Events.Event(&check, corev1.EventTypeWarning, "Failed", fmt.Sprintf("%s-%s: %s", result.Check.GetType(), result.Check.GetEndpoint(), result.Message))
+			r.Events.Event(&canary, corev1.EventTypeWarning, "Failed", fmt.Sprintf("%s-%s: %s", result.Check.GetType(), result.Check.GetEndpoint(), result.Message))
 		}
 
 		if transitioned {
-			check.Status.LastTransitionedTime = &metav1.Time{Time: time.Now()}
+			checkStatus[checkKey].LastTransitionedTime = &metav1.Time{Time: time.Now()}
 		}
 		pass = pass && result.Pass
-		check.Status.Message = &result.Message
-		check.Status.ErrorMessage = &result.Error
-		push.Queue(pkg.FromV1(check, result.Check, pkg.FromResult(*result)))
+		checkStatus[checkKey].Message = &result.Message
+		checkStatus[checkKey].ErrorMessage = &result.Error
+		canary.Status.ChecksStatus = checkStatus
+		push.Queue(pkg.FromV1(canary, result.Check, pkg.FromResult(*result)))
 	}
 	if pass {
-		check.Status.Status = &v1.Passed
+		canary.Status.Status = &v1.Passed
 	} else {
-		check.Status.Status = &v1.Failed
+		canary.Status.Status = &v1.Failed
 	}
-	r.Patch(ctx, &check)
+	r.Patch(ctx, &canary)
 }
 
 func (r *CanaryReconciler) Patch(ctx *context.Context, canary *v1.Canary) {

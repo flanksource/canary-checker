@@ -21,18 +21,6 @@ spec:
         - jsonPath: .status.status
           name: Status
           type: string
-        - jsonPath: .status.message
-          name: Message
-          type: string
-        - jsonPath: .status.uptime1h
-          name: Uptime 1H
-          type: string
-        - jsonPath: .status.latency1h
-          name: Latency 1H
-          type: string
-        - jsonPath: .status.lastTransitionedTime
-          name: Last Transitioned
-          type: date
         - jsonPath: .status.lastCheck
           name: Last Check
           type: date
@@ -5615,31 +5603,34 @@ spec:
             status:
               description: CanaryStatus defines the observed state of Canary
               properties:
-                checkKeys:
-                  items:
-                    type: string
-                  type: array
-                errorMessage:
-                  type: string
+                checkStatus:
+                  additionalProperties:
+                    properties:
+                      errorMessage:
+                        type: string
+                      lastCheck:
+                        format: date-time
+                        type: string
+                      lastTransitionedTime:
+                        format: date-time
+                        type: string
+                      latency1h:
+                        description: Average latency to complete all checks
+                        type: string
+                      message:
+                        type: string
+                      uptime1h:
+                        description: Availibility over a rolling 1h period
+                        type: string
+                    type: object
+                  type: object
                 lastCheck:
                   format: date-time
                   type: string
-                lastTransitionedTime:
-                  format: date-time
-                  type: string
-                latency1h:
-                  description: Average latency to complete all checks
-                  type: string
-                message:
-                  type: string
                 observedGeneration:
-                  description: If set, this represents the .metadata.generation that the status was set for
                   format: int64
                   type: integer
                 status:
-                  type: string
-                uptime1h:
-                  description: Availibility over a rolling 1h period
                   type: string
               type: object
           type: object
