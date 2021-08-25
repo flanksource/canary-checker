@@ -24,6 +24,15 @@ spec:
         - jsonPath: .status.lastCheck
           name: Last Check
           type: date
+        - jsonPath: .status.uptime1h
+          name: Uptime 1H
+          type: string
+        - jsonPath: .status.latency1h
+          name: Latency 1H
+          type: string
+        - jsonPath: .status.lastTransitionedTime
+          name: Last Transitioned
+          type: date
       name: v1
       schema:
         openAPIV3Schema:
@@ -5627,10 +5636,19 @@ spec:
                 lastCheck:
                   format: date-time
                   type: string
+                lastTransitionedTime:
+                  format: date-time
+                  type: string
+                latency1h:
+                  description: Average latency to complete all checks
+                  type: string
                 observedGeneration:
                   format: int64
                   type: integer
                 status:
+                  type: string
+                uptime1h:
+                  description: Availibility over a rolling 1h period
                   type: string
               type: object
           type: object

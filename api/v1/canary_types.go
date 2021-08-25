@@ -177,7 +177,9 @@ var (
 
 // CanaryStatus defines the observed state of Canary
 type CanaryStatus struct {
-	// +optionals
+	// +optional
+	LastTransitionedTime *metav1.Time `json:"lastTransitionedTime,omitempty"`
+	// +optional
 	LastCheck *metav1.Time `json:"lastCheck,omitempty"`
 	// +optional
 	Status *CanaryStatusCondition `json:"status,omitempty"`
@@ -185,6 +187,10 @@ type CanaryStatus struct {
 	ObservedGeneration int64 `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`
 	// +optional
 	ChecksStatus map[string]*CheckStatus `json:"checkStatus,omitempty"`
+	// Availibility over a rolling 1h period
+	Uptime1H string `json:"uptime1h,omitempty"`
+	// Average latency to complete all checks
+	Latency1H string `json:"latency1h,omitempty"`
 }
 
 type CheckStatus struct {
@@ -208,6 +214,9 @@ type CheckStatus struct {
 // +kubebuilder:printcolumn:name="Interval",type=string,JSONPath=`.spec.interval`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
 // +kubebuilder:printcolumn:name="Last Check",type=date,JSONPath=`.status.lastCheck`
+// +kubebuilder:printcolumn:name="Uptime 1H",type=string,JSONPath=`.status.uptime1h`
+// +kubebuilder:printcolumn:name="Latency 1H",type=string,JSONPath=`.status.latency1h`
+// +kubebuilder:printcolumn:name="Last Transitioned",type=date,JSONPath=`.status.lastTransitionedTime`
 // +kubebuilder:subresource:status
 type Canary struct {
 	metav1.TypeMeta   `json:",inline"`

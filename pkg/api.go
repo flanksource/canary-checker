@@ -56,6 +56,14 @@ func (l Latency) String() string {
 	return text.HumanizeDuration(time.Duration(l.Rolling1H) * time.Millisecond)
 }
 
+func (l Latency) Add(k Latency) Latency {
+	l.Percentile99 += k.Percentile99
+	l.Percentile97 += k.Percentile97
+	l.Percentile95 += k.Percentile95
+	l.Rolling1H += k.Rolling1H
+	return l
+}
+
 type Uptime struct {
 	Passed int     `json:"passed"`
 	Failed int     `json:"failed"`
@@ -65,6 +73,14 @@ type Uptime struct {
 func (u Uptime) String() string {
 	percentage := 100.0 * (1 - (float64(u.Failed) / float64(u.Passed+u.Failed)))
 	return fmt.Sprintf("%d/%d (%0.1f%%)", u.Passed, u.Passed+u.Failed, percentage)
+}
+
+// Add t uptime to u
+func (u Uptime) Add(t Uptime) Uptime {
+	u.Passed += t.Passed
+	u.Failed += t.Failed
+	u.P100 += t.P100
+	return u
 }
 
 type Check struct {

@@ -198,10 +198,14 @@ func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName
 	transitioned := false
 	pass := true
 	var checkStatus = make(map[string]*v1.CheckStatus)
+	var totalUptime pkg.Uptime
+	var totalLatency pkg.Latency
 	for _, result := range results {
 		lastResult := cache.AddCheck(canary, result)
 		//FIXME this needs to be aggregated across all
 		uptime, latency := metrics.Record(canary, result)
+		totalUptime = totalUptime.Add(uptime)
+		totalLatency = totalLatency.Add(latency)
 		checkKey := canary.GetKey(result.Check)
 		checkStatus[checkKey] = &v1.CheckStatus{}
 		checkStatus[checkKey].Uptime1H = uptime.String()
@@ -213,9 +217,9 @@ func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName
 		if !result.Pass {
 			r.Events.Event(&canary, corev1.EventTypeWarning, "Failed", fmt.Sprintf("%s-%s: %s", result.Check.GetType(), result.Check.GetEndpoint(), result.Message))
 		}
-
 		if transitioned {
 			checkStatus[checkKey].LastTransitionedTime = &metav1.Time{Time: time.Now()}
+			canary.Status.LastTransitionedTime = &metav1.Time{Time: time.Now()}
 		}
 		pass = pass && result.Pass
 		checkStatus[checkKey].Message = &result.Message
@@ -223,6 +227,8 @@ func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName
 		canary.Status.ChecksStatus = checkStatus
 		push.Queue(pkg.FromV1(canary, result.Check, pkg.FromResult(*result)))
 	}
+	canary.Status.Uptime1H = totalUptime.String()
+	canary.Status.Latency1H = totalLatency.String()
 	if pass {
 		canary.Status.Status = &v1.Passed
 	} else {
