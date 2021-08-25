@@ -80,8 +80,9 @@ func (c *HTTPChecker) configure(req *http.HTTPRequest, namespace string, check v
 		return err
 	}
 	if auth != nil {
-		req.Auth(auth.Username.Name, auth.Password.Value)
+		req.Auth(auth.Username.Value, auth.Password.Value)
 	}
+
 	req.NTLM(check.NTLM)
 
 	if logger.IsDebugEnabled() {
@@ -158,7 +159,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	result.AddData(data)
 
 	if status == -1 {
-		return result.Failf("%v", truncate(resp.Error.Error(), 250))
+		return result.Failf("%v", truncate(resp.Error.Error(), 500))
 	}
 
 	if ok := resp.IsOK(check.ResponseCodes...); !ok {

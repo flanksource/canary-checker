@@ -14,7 +14,8 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
-	httpntlm "github.com/vadimi/go-http-ntlm/v2"
+	httpntlm "github.com/vadimi/go-http-ntlm"
+	httpntlmv2 "github.com/vadimi/go-http-ntlm/v2"
 )
 
 type HTTPRequest struct {
@@ -28,6 +29,7 @@ type HTTPRequest struct {
 	headers                 map[string]string
 	insecure                bool
 	ntlm                    bool
+	ntlmv2                  bool
 	tr                      *http.Transport //nolint:structcheck,unused
 	traceHeaders, traceBody bool
 }
@@ -84,6 +86,11 @@ func (h *HTTPRequest) NTLM(ntlm bool) *HTTPRequest {
 	return h
 }
 
+func (h *HTTPRequest) NTLMv2(ntlm bool) *HTTPRequest {
+	h.ntlmv2 = ntlm
+	return h
+}
+
 func (h *HTTPRequest) Insecure(skip bool) *HTTPRequest {
 	h.insecure = skip
 	return h
@@ -104,18 +111,26 @@ func (h *HTTPRequest) getHTTPClient() *http.Client {
 		},
 	}
 
-	if h.ntlm {
+	if h.ntlm || h.ntlmv2 {
 		parts := strings.Split(h.Username, "@")
 		domain := ""
 		if len(parts) > 1 {
 			domain = parts[1]
 		}
 
-		transport = &httpntlm.NtlmTransport{
-			Domain:       domain,
-			User:         parts[0],
-			Password:     h.Password,
-			RoundTripper: transport,
+		if h.ntlmv2 {
+			transport = &httpntlmv2.NtlmTransport{
+				Domain:       domain,
+				User:         parts[0],
+				Password:     h.Password,
+				RoundTripper: transport,
+			}
+		} else {
+			transport = &httpntlm.NtlmTransport{
+				Domain:   domain,
+				User:     parts[0],
+				Password: h.Password,
+			}
 		}
 	}
 
