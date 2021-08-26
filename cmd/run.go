@@ -1,11 +1,13 @@
 package cmd
 
 import (
-	"fmt"
 	"io/ioutil"
+	"log"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/flanksource/commons/console"
 
@@ -18,29 +20,61 @@ import (
 )
 
 var Run = &cobra.Command{
-	Use:   "run",
+	Use:   "run <canary.yaml>",
 	Short: "Execute checks and return",
-	Run: func(cmd *cobra.Command, args []string) {
-		configfile, _ := cmd.Flags().GetString("configfile")
+	Run: func(cmd *cobra.Command, configFiles []string) {
 		namespace, _ := cmd.Flags().GetString("namespace")
 		junitFile, _ := cmd.Flags().GetString("junit-file")
-		config, err := pkg.ParseConfig(configfile)
-		if err != nil {
-			logger.Fatalf("Could not parse %s: %v", configfile, err)
+		if len(configFiles) == 0 {
+			log.Fatalln("Must specify at least one canary")
 		}
-		if namespace != "" {
-			config.Namespace = namespace
-		}
-		if config.Name == "" {
-			config.Name = CleanupFilename(configfile)
-		}
-		failed := 0
 		kommonsClient, err := pkg.NewKommonsClient()
 		if err != nil {
 			logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
 		}
+		var results = []*pkg.CheckResult{}
 
-		results := checks.RunChecks(context.New(kommonsClient, *config))
+		wg := sync.WaitGroup{}
+		queue := make(chan []*pkg.CheckResult, 1)
+
+		for _, configfile := range configFiles {
+			logger.Infof("Checking %s", configfile)
+			config, err := pkg.ParseConfig(configfile)
+			if err != nil {
+				logger.Errorf("Could not parse %s: %v", configfile, err)
+				continue
+			}
+			if namespace != "" {
+				config.Namespace = namespace
+			}
+			if config.Name == "" {
+				config.Name = CleanupFilename(configfile)
+			}
+			wg.Add(1)
+			go func() {
+				queue <- checks.RunChecks(context.New(kommonsClient, *config))
+				wg.Done()
+			}()
+		}
+		failed := 0
+		passed := 0
+
+		go func() {
+			wg.Wait()
+			close(queue)
+		}()
+
+		for item := range queue {
+			for _, result := range item {
+				if !result.Pass {
+					failed++
+				} else {
+					passed++
+				}
+				results = append(results, result)
+			}
+		}
+
 		if junitFile != "" {
 			report := getJunitReport(results)
 			err := ioutil.WriteFile(junitFile, []byte(report), 0755)
@@ -48,20 +82,16 @@ var Run = &cobra.Command{
 				logger.Fatalf("%d checks failed", failed)
 			}
 		}
-		for _, result := range results {
-			fmt.Println(result)
-			if !result.Pass {
-				failed++
-			}
-		}
+
+		logger.Infof("%d passed, %d failed", passed, failed)
+
 		if failed > 0 {
-			logger.Fatalf("%d checks failed", failed)
+			os.Exit(1)
 		}
 	},
 }
 
 func init() {
-	Run.Flags().StringP("configfile", "c", "", "Specify configfile")
 	Run.Flags().StringP("namespace", "n", "", "Specify namespace")
 	Run.Flags().StringP("junit", "j", "", "Export JUnit XML formatted results to this file e.g: junit.xml")
 }

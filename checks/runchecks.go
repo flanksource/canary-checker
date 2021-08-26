@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -46,6 +47,7 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 						ctx.Logger.Tracef("%s return %s", tpl, message)
 					}
 				}
+				fmt.Printf("%s \t%s\t\n", time.Now().Format(time.RFC3339), r.String())
 				results = append(results, r)
 			}
 		}
