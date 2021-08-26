@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/flanksource/canary-checker/api/external"
-	"github.com/flanksource/canary-checker/pkg/dns"
 	"github.com/prometheus/client_golang/prometheus"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -65,10 +64,6 @@ func (c *S3Checker) Type() string {
 func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.S3Check)
 	bucket := check.Bucket
-
-	if _, err := dns.Lookup(bucket.Endpoint); err != nil {
-		return Failf(check, "Failed to resolve DNS for %s", bucket.Endpoint)
-	}
 
 	cfg := aws.NewConfig().
 		WithRegion(bucket.Region).

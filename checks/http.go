@@ -2,7 +2,6 @@ package checks
 
 import (
 	"fmt"
-	"math"
 	"net/url"
 	"strconv"
 	"strings"
@@ -94,7 +93,11 @@ func (c *HTTPChecker) configure(req *http.HTTPRequest, namespace string, check v
 }
 
 func truncate(text string, max int) string {
-	return text[0:int(math.Min(float64(max), float64(len(text)-1)))]
+	length := len(text)
+	if length <= max {
+		return text
+	}
+	return text[0:max]
 }
 
 // CheckConfig : Check every record of DNS name against config information

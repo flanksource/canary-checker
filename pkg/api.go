@@ -230,9 +230,9 @@ func (result CheckResult) String() string {
 	}
 
 	if result.Pass {
-		return fmt.Sprintf("[%s] [%s] %s duration=%d %s", console.Greenf("PASS"), checkType, endpoint, result.Duration, result.Message)
+		return fmt.Sprintf("%s [%s] %s duration=%d %s", console.Greenf("PASS"), checkType, endpoint, result.Duration, result.Message)
 	}
-	return fmt.Sprintf("[%s] [%s] %s duration=%d %s %s", console.Redf("FAIL"), checkType, endpoint, result.Duration, result.Message, result.Error)
+	return fmt.Sprintf("%s [%s] %s duration=%d %s %s", console.Redf("FAIL"), checkType, endpoint, result.Duration, result.Message, result.Error)
 }
 
 type MetricType string
