@@ -199,9 +199,10 @@ func (h *HTTPRequest) Do(body string) *HTTPResponse {
 		if len(ips) == 0 {
 			return &HTTPResponse{Error: err}
 		}
+		port := h.URL.Port()
 		h.URL.Host = ips[0].String()
-		if h.URL.Port() != "" {
-			h.URL.Host += ":" + h.URL.Port()
+		if port != "" {
+			h.URL.Host += ":" + port
 		}
 	}
 
