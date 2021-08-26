@@ -12,6 +12,7 @@ import (
 
 	"github.com/PaesslerAG/jsonpath"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg/dns"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	httpntlm "github.com/vadimi/go-http-ntlm"
@@ -30,6 +31,7 @@ type HTTPRequest struct {
 	insecure                bool
 	ntlm                    bool
 	ntlmv2                  bool
+	dnsCache                bool
 	tr                      *http.Transport //nolint:structcheck,unused
 	traceHeaders, traceBody bool
 }
@@ -37,10 +39,11 @@ type HTTPRequest struct {
 func NewRequest(endpoint string) *HTTPRequest {
 	url, _ := url.Parse(endpoint)
 	return &HTTPRequest{
-		host:    url.Host,
-		URL:     url,
-		start:   time.Now(),
-		headers: make(map[string]string),
+		host:     url.Host,
+		URL:      url,
+		dnsCache: true,
+		start:    time.Now(),
+		headers:  make(map[string]string),
 	}
 }
 
@@ -56,6 +59,11 @@ func (h *HTTPRequest) UseHost(host string) *HTTPRequest {
 
 func (h *HTTPRequest) Debug(debug bool) *HTTPRequest {
 	h.traceHeaders = debug
+	return h
+}
+
+func (h *HTTPRequest) DNSCache(cache bool) *HTTPRequest {
+	h.dnsCache = cache
 	return h
 }
 
@@ -178,17 +186,30 @@ func (h *HTTPResponse) IsOK(responseCodes ...int) bool {
 }
 
 func (h *HTTPRequest) Do(body string) *HTTPResponse {
-	if h.host != h.URL.Hostname() {
+	if h.host == "" {
+		h.host = h.URL.Hostname()
+	} else if h.host != h.URL.Hostname() {
 		// If specified, replace the hostname in the URL, with the actual host/IP connect to
 		// and move the Virtual Hostname to a Header
-		h.headers["Host"] = h.URL.Hostname()
 		h.URL.Host = h.host
+	}
+
+	if h.dnsCache {
+		ips, err := dns.CacheLookup("A", h.URL.Hostname())
+		if len(ips) == 0 {
+			return &HTTPResponse{Error: err}
+		}
+		h.URL.Host = ips[0].String()
+		if h.URL.Port() != "" {
+			h.URL.Host += ":" + h.URL.Port()
+		}
 	}
 
 	req, err := http.NewRequest(h.method, h.URL.String(), strings.NewReader(body))
 	if err != nil {
 		return nil
 	}
+	req.Host = h.host
 	if logger.IsTraceEnabled() {
 		logger.Tracef(h.GetString())
 	}

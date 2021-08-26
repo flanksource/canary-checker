@@ -71,9 +71,6 @@ func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 		}
 	}
 	response, err := client.UploadChartPackage(*chartPath, false)
-	defer func() {
-		response.Close = true
-	}()
 	if err != nil {
 		return &pkg.CheckResult{
 			Check:    config,
@@ -83,6 +80,10 @@ func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 			Message:  fmt.Sprintf("Failed to check: %v", err),
 		}
 	}
+
+	defer func() {
+		response.Close = true
+	}()
 
 	if response.StatusCode != 201 {
 		return &pkg.CheckResult{

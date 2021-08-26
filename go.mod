@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
+	github.com/allegro/bigcache v1.2.1 // indirect
 	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/aws/aws-sdk-go v1.29.25
 	github.com/aws/aws-sdk-go-v2 v1.8.1
@@ -18,12 +19,14 @@ require (
 	github.com/denisenkom/go-mssqldb v0.9.0
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
+	github.com/eko/gocache v1.2.0 // indirect
 	github.com/flanksource/commons v1.5.8
 	github.com/flanksource/kommons v0.21.1
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/go-logr/logr v0.3.0
 	github.com/go-logr/zapr v0.2.0
-	github.com/go-redis/redis/v8 v8.8.0
+	github.com/go-redis/redis/v7 v7.0.0-beta.4 // indirect
+	github.com/go-redis/redis/v8 v8.8.2
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/hairyhenderson/gomplate/v3 v3.6.0
 	github.com/hashicorp/vault/api v1.0.4
@@ -38,8 +41,8 @@ require (
 	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/phf/go-queue v0.0.0-20170504031614-9abe38d0371d
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.7.1
-	github.com/prometheus/common v0.10.0
+	github.com/prometheus/client_golang v1.10.0
+	github.com/prometheus/common v0.18.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sirupsen/logrus v1.7.0
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
@@ -50,8 +53,7 @@ require (
 	go.mongodb.org/mongo-driver v1.7.1
 	golang.org/x/mod v0.4.1 // indirect
 	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb
-	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
-	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
+	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
 	golang.org/x/tools v0.1.0 // indirect
 	gopkg.in/flanksource/yaml.v3 v3.1.1
 	helm.sh/helm/v3 v3.1.2
