@@ -90,6 +90,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		specKeys := getAllCheckKeys(canary)
 		for statusKey := range canary.Status.ChecksStatus {
 			if !contains(specKeys, statusKey) {
+				logger.Info("removing stale check", "key", statusKey)
 				cache.RemoveCheckByKey(statusKey)
 				metrics.RemoveCheckByKey(statusKey)
 				update = true
