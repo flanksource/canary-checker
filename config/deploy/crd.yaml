@@ -33,6 +33,14 @@ spec:
         - jsonPath: .status.lastTransitionedTime
           name: Last Transitioned
           type: date
+        - jsonPath: .status.message
+          name: Message
+          priority: 1
+          type: string
+        - jsonPath: .status.errorMessage
+          name: Error
+          priority: 1
+          type: string
       name: v1
       schema:
         openAPIV3Schema:
@@ -5633,6 +5641,8 @@ spec:
                         type: string
                     type: object
                   type: object
+                errorMessage:
+                  type: string
                 lastCheck:
                   format: date-time
                   type: string
@@ -5641,6 +5651,8 @@ spec:
                   type: string
                 latency1h:
                   description: Average latency to complete all checks
+                  type: string
+                message:
                   type: string
                 observedGeneration:
                   format: int64
