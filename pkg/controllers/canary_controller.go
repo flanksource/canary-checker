@@ -197,19 +197,19 @@ func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName
 
 	canary.Status.LastCheck = &metav1.Time{Time: time.Now()}
 	transitioned := false
-	pass := true
+	var messages, errors []string
 	var checkStatus = make(map[string]*v1.CheckStatus)
-	var totalUptime pkg.Uptime
-	var totalLatency pkg.Latency
+
+	var duration int64
+	var pass = true
+	var passed int
 	for _, result := range results {
 		if r.LogPass && result.Pass || r.LogFail && !result.Pass {
 			r.Log.Info(result.String())
 		}
+		duration += result.Duration
 		lastResult := cache.AddCheck(canary, result)
-		//FIXME this needs to be aggregated across all
 		uptime, latency := metrics.Record(canary, result)
-		totalUptime = totalUptime.Add(uptime)
-		totalLatency = totalLatency.Add(latency)
 		checkKey := canary.GetKey(result.Check)
 		checkStatus[checkKey] = &v1.CheckStatus{}
 		checkStatus[checkKey].Uptime1H = uptime.String()
@@ -220,19 +220,54 @@ func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName
 		}
 		if !result.Pass {
 			r.Events.Event(&canary, corev1.EventTypeWarning, "Failed", fmt.Sprintf("%s-%s: %s", result.Check.GetType(), result.Check.GetEndpoint(), result.Message))
+		} else {
+			passed++
 		}
 		if transitioned {
 			checkStatus[checkKey].LastTransitionedTime = &metav1.Time{Time: time.Now()}
 			canary.Status.LastTransitionedTime = &metav1.Time{Time: time.Now()}
 		}
+
 		pass = pass && result.Pass
+		if result.Message != "" {
+			messages = append(messages, result.Message)
+		}
+		if result.Error != "" {
+			errors = append(errors, result.Error)
+		}
 		checkStatus[checkKey].Message = &result.Message
 		checkStatus[checkKey].ErrorMessage = &result.Error
-		canary.Status.ChecksStatus = checkStatus
+
 		push.Queue(pkg.FromV1(canary, result.Check, pkg.FromResult(*result)))
 	}
-	canary.Status.Uptime1H = totalUptime.String()
-	canary.Status.Latency1H = totalLatency.String()
+
+	uptime, latency := metrics.Record(canary, &pkg.CheckResult{
+		Check: v1.Check{
+			Type: "canary",
+		},
+		Pass:     pass,
+		Duration: duration,
+	})
+	canary.Status.Latency1H = latency.String()
+	canary.Status.Uptime1H = uptime.String()
+
+	msg := ""
+	errorMsg := ""
+	if len(messages) == 1 {
+		msg = messages[0]
+	} else if len(messages) > 1 {
+		msg = fmt.Sprintf("%s, (%d more)", messages[0], len(messages)-1)
+	}
+	if len(errors) == 1 {
+		errorMsg = errors[0]
+	} else if len(errors) > 1 {
+		errorMsg = fmt.Sprintf("%s, (%d more)", errors[0], len(errors)-1)
+	}
+
+	canary.Status.Message = &msg
+	canary.Status.ErrorMessage = &errorMsg
+
+	canary.Status.ChecksStatus = checkStatus
 	if pass {
 		canary.Status.Status = &v1.Passed
 	} else {

@@ -321,6 +321,16 @@ func (in *CanaryStatus) DeepCopyInto(out *CanaryStatus) {
 		in, out := &in.LastCheck, &out.LastCheck
 		*out = (*in).DeepCopy()
 	}
+	if in.Message != nil {
+		in, out := &in.Message, &out.Message
+		*out = new(string)
+		**out = **in
+	}
+	if in.ErrorMessage != nil {
+		in, out := &in.ErrorMessage, &out.ErrorMessage
+		*out = new(string)
+		**out = **in
+	}
 	if in.Status != nil {
 		in, out := &in.Status, &out.Status
 		*out = new(CanaryStatusCondition)

@@ -182,6 +182,10 @@ type CanaryStatus struct {
 	// +optional
 	LastCheck *metav1.Time `json:"lastCheck,omitempty"`
 	// +optional
+	Message *string `json:"message,omitempty"`
+	// +optional
+	ErrorMessage *string `json:"errorMessage,omitempty"`
+	// +optional
 	Status *CanaryStatusCondition `json:"status,omitempty"`
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`
@@ -217,6 +221,8 @@ type CheckStatus struct {
 // +kubebuilder:printcolumn:name="Uptime 1H",type=string,JSONPath=`.status.uptime1h`
 // +kubebuilder:printcolumn:name="Latency 1H",type=string,JSONPath=`.status.latency1h`
 // +kubebuilder:printcolumn:name="Last Transitioned",type=date,JSONPath=`.status.lastTransitionedTime`
+// +kubebuilder:printcolumn:name="Message",type=string,priority=1,JSONPath=`.status.message`
+// +kubebuilder:printcolumn:name="Error",type=string,priority=1,JSONPath=`.status.errorMessage`
 // +kubebuilder:subresource:status
 type Canary struct {
 	metav1.TypeMeta   `json:",inline"`

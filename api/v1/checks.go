@@ -8,6 +8,26 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+type Check struct {
+	Type, Endpoint, Description, Icon string
+}
+
+func (c Check) GetType() string {
+	return c.Type
+}
+
+func (c Check) GetEndpoint() string {
+	return c.Endpoint
+}
+
+func (c Check) GetDescription() string {
+	return c.Description
+}
+
+func (c Check) GetIcon() string {
+	return c.Icon
+}
+
 type HTTPCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
