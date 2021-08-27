@@ -28,6 +28,14 @@ func New(client *kommons.Client, canary v1.Canary) *Context {
 	}
 }
 
+func (ctx *Context) IsDebug() bool {
+	return ctx.Canary.Annotations != nil && ctx.Canary.Annotations["debug"] == "true"
+}
+
+func (ctx *Context) IsTrace() bool {
+	return ctx.Canary.Annotations != nil && ctx.Canary.Annotations["trace"] == "true"
+}
+
 func (ctx *Context) New(environment map[string]interface{}) *Context {
 	return &Context{
 		Context:     ctx.Context,

@@ -8,8 +8,8 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/labels"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/console"
-	"github.com/flanksource/commons/text"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -53,15 +53,7 @@ type Latency struct {
 }
 
 func (l Latency) String() string {
-	return text.HumanizeDuration(time.Duration(l.Rolling1H) * time.Millisecond)
-}
-
-func (l Latency) Add(k Latency) Latency {
-	l.Percentile99 += k.Percentile99
-	l.Percentile97 += k.Percentile97
-	l.Percentile95 += k.Percentile95
-	l.Rolling1H += k.Rolling1H
-	return l
+	return utils.Age(time.Duration(l.Rolling1H) * time.Millisecond)
 }
 
 type Uptime struct {
@@ -71,16 +63,14 @@ type Uptime struct {
 }
 
 func (u Uptime) String() string {
+	if u.Passed == 0 && u.Failed == 0 {
+		return ""
+	}
+	if u.Passed == 0 {
+		return fmt.Sprintf("0/%d 0%%", u.Failed)
+	}
 	percentage := 100.0 * (1 - (float64(u.Failed) / float64(u.Passed+u.Failed)))
 	return fmt.Sprintf("%d/%d (%0.1f%%)", u.Passed, u.Passed+u.Failed, percentage)
-}
-
-// Add t uptime to u
-func (u Uptime) Add(t Uptime) Uptime {
-	u.Passed += t.Passed
-	u.Failed += t.Failed
-	u.P100 += t.P100
-	return u
 }
 
 type Check struct {

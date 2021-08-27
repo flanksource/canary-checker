@@ -190,7 +190,6 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	running := diff(conditions, v1.ContainersReady, v1.PodReady)
 
 	logger.Debugf("%s created=%s, scheduled=%d, started=%d, running=%d wall=%s nodeName=%s", pod.Name, created, scheduled, started, running, startTimer, nextNode)
-	logger.Tracef("%v", conditions)
 
 	if err := c.createServiceAndIngress(podCheck, pod); err != nil {
 		return unexpectedErrorf(podCheck, err, "failed to create ingress")

@@ -21,12 +21,15 @@ var httpPort, metricsPort, devGuiPort int
 var namespace, includeCheck, prometheusURL string
 var pushServers, pullServers []string
 var exposeEnv bool
+var logPass, logFail bool
 
 func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&httpPort, "httpPort", 8080, "Port to expose a health dashboard ")
 	flags.IntVar(&devGuiPort, "devGuiPort", 3004, "Port used by a local npm server in development mode")
 	flags.IntVar(&metricsPort, "metricsPort", 8081, "Port to expose a health dashboard ")
 	flags.BoolVar(&dev, "dev", false, "Run in development mode")
+	flags.BoolVar(&logFail, "log-fail", true, "Log every failing check")
+	flags.BoolVar(&logPass, "log-pass", false, "Log every passing check")
 	flags.StringVarP(&namespace, "namespace", "n", "", "Watch only specified namespaces, otherwise watch all")
 	flags.StringVar(&includeCheck, "include-check", "", "Run matching canaries - useful for debugging")
 	flags.IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")

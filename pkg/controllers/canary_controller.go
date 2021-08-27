@@ -51,6 +51,7 @@ import (
 type CanaryReconciler struct {
 	IncludeCheck      string
 	IncludeNamespaces []string
+	LogPass, LogFail  bool
 	client.Client
 	Kubernetes kubernetes.Interface
 	Kommons    *kommons.Client
@@ -96,7 +97,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		}
 	}
 	if !canary.DeletionTimestamp.IsZero() {
-		logger.Info("removing", "check", canary)
+		logger.Info("removing", "check", canary.Name)
 		cache.RemoveCheck(*canary)
 		metrics.RemoveCheck(*canary)
 		controllerutil.RemoveFinalizer(canary, FinalizerName)
@@ -160,7 +161,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		if err != nil {
 			logger.Error(err, "failed to schedule job", "schedule", schedule)
 		} else {
-			logger.Info("scheduled", "id", id, "next", r.Cron.Entry(id).Next)
+			logger.V(2).Info("scheduled", "id", id, "next", r.Cron.Entry(id).Next)
 		}
 	}
 
@@ -201,6 +202,9 @@ func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName
 	var totalUptime pkg.Uptime
 	var totalLatency pkg.Latency
 	for _, result := range results {
+		if r.LogPass && result.Pass || r.LogFail && !result.Pass {
+			r.Log.Info(result.String())
+		}
 		lastResult := cache.AddCheck(canary, result)
 		//FIXME this needs to be aggregated across all
 		uptime, latency := metrics.Record(canary, result)
@@ -238,7 +242,7 @@ func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName
 }
 
 func (r *CanaryReconciler) Patch(ctx *context.Context, canary *v1.Canary) {
-	r.Log.V(1).Info("patching", "canary", canary.Name, "namespace", canary.Namespace, "status", canary.Status.Status)
+	r.Log.V(2).Info("patching", "canary", canary.Name, "namespace", canary.Namespace, "status", canary.Status.Status)
 	if err := r.Status().Update(ctx, canary, &client.UpdateOptions{}); err != nil {
 		r.Log.Error(err, "failed to patch", "canary", canary.Name)
 	}
