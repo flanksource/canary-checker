@@ -27,6 +27,9 @@ jobs:
         run: |
           sudo curl -L https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64 -o /usr/bin/yq
           sudo chmod +x /usr/bin/yq
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "16"
       - run: make release
         env:
           VERSION: v${{ needs.semantic-release.outputs.release-version }}
@@ -63,7 +66,7 @@ jobs:
       - name: setup node
         uses: actions/setup-node@v2
         with:
-          node-version: '12'
+          node-version: "12"
       - run: make build-api-docs build-docs deploy-docs
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
