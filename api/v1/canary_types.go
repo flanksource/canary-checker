@@ -179,21 +179,35 @@ var (
 type CanaryStatus struct {
 	// +optional
 	LastTransitionedTime *metav1.Time `json:"lastTransitionedTime,omitempty"`
-	// +optionals
-	LastCheck *metav1.Time `json:"lastCheck,omitempty"`
 	// +optional
-	Status *CanaryStatusCondition `json:"status,omitempty"`
+	LastCheck *metav1.Time `json:"lastCheck,omitempty"`
 	// +optional
 	Message *string `json:"message,omitempty"`
 	// +optional
 	ErrorMessage *string `json:"errorMessage,omitempty"`
-	// If set, this represents the .metadata.generation that the status was set for
+	// +optional
+	Status *CanaryStatusCondition `json:"status,omitempty"`
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`
-
+	// +optional
+	ChecksStatus map[string]*CheckStatus `json:"checkStatus,omitempty"`
 	// Availibility over a rolling 1h period
 	Uptime1H string `json:"uptime1h,omitempty"`
+	// Average latency to complete all checks
+	Latency1H string `json:"latency1h,omitempty"`
+}
 
+type CheckStatus struct {
+	// +optional
+	LastTransitionedTime *metav1.Time `json:"lastTransitionedTime,omitempty"`
+	// +optionals
+	LastCheck *metav1.Time `json:"lastCheck,omitempty"`
+	// +optional
+	Message *string `json:"message,omitempty"`
+	// +optional
+	ErrorMessage *string `json:"errorMessage,omitempty"`
+	// Availibility over a rolling 1h period
+	Uptime1H string `json:"uptime1h,omitempty"`
 	// Average latency to complete all checks
 	Latency1H string `json:"latency1h,omitempty"`
 }
@@ -203,11 +217,12 @@ type CanaryStatus struct {
 // Canary is the Schema for the canaries API
 // +kubebuilder:printcolumn:name="Interval",type=string,JSONPath=`.spec.interval`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
-// +kubebuilder:printcolumn:name="Message",type=string,JSONPath=`.status.message`
+// +kubebuilder:printcolumn:name="Last Check",type=date,JSONPath=`.status.lastCheck`
 // +kubebuilder:printcolumn:name="Uptime 1H",type=string,JSONPath=`.status.uptime1h`
 // +kubebuilder:printcolumn:name="Latency 1H",type=string,JSONPath=`.status.latency1h`
 // +kubebuilder:printcolumn:name="Last Transitioned",type=date,JSONPath=`.status.lastTransitionedTime`
-// +kubebuilder:printcolumn:name="Last Check",type=date,JSONPath=`.status.lastCheck`
+// +kubebuilder:printcolumn:name="Message",type=string,priority=1,JSONPath=`.status.message`
+// +kubebuilder:printcolumn:name="Error",type=string,priority=1,JSONPath=`.status.errorMessage`
 // +kubebuilder:subresource:status
 type Canary struct {
 	metav1.TypeMeta   `json:",inline"`

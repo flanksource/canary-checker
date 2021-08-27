@@ -37,19 +37,26 @@ func RemoveCheck(checks v1.Canary) {
 	Cache.RemoveCheck(checks)
 }
 
+func RemoveCheckByKey(key string) {
+	Cache.RemoveCheckByKey(key)
+}
+
 func GetChecks(duration string) pkg.Checks {
 	return Cache.GetChecks(duration)
 }
 
 func (c *cache) RemoveCheck(checks v1.Canary) {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
 	for _, check := range checks.Spec.GetAllChecks() {
 		key := checks.GetKey(check)
 		logger.Errorf("removing %s", key)
-		delete(c.Checks, key)
-		delete(c.CheckConfigs, key)
+		c.RemoveCheckByKey(key)
 	}
+}
+
+func (c *cache) RemoveCheckByKey(key string) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	delete(c.Checks, key)
 }
 
 func (c *cache) InitCheck(checks v1.Canary) {

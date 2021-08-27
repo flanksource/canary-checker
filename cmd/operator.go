@@ -89,6 +89,8 @@ func run(cmd *cobra.Command, args []string) {
 		IncludeCheck:      includeCheck,
 		IncludeNamespaces: includeNamespaces,
 		Client:            mgr.GetClient(),
+		LogPass:           logPass,
+		LogFail:           logFail,
 		Log:               ctrl.Log.WithName("controllers").WithName("canary"),
 		Scheme:            mgr.GetScheme(),
 	}

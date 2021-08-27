@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
 	"github.com/pkg/errors"
 
@@ -62,19 +61,19 @@ func (c *HTTPChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 	return results
 }
 
-func (c *HTTPChecker) configure(req *http.HTTPRequest, namespace string, check v1.HTTPCheck, kommons *kommons.Client) error {
+func (c *HTTPChecker) configure(req *http.HTTPRequest, ctx *context.Context, check v1.HTTPCheck, kommons *kommons.Client) error {
 	for _, header := range check.Headers {
 		if kommons == nil {
 			return fmt.Errorf("HTTP headers are not supported outside k8s")
 		}
-		key, value, err := kommons.GetEnvValue(header, namespace)
+		key, value, err := kommons.GetEnvValue(header, ctx.Canary.GetNamespace())
 		if err != nil {
 			return errors.WithMessagef(err, "failed getting header: %v", header)
 		}
 		req.Header(key, value)
 	}
 
-	auth, err := GetAuthValues(check.Authentication, kommons, namespace)
+	auth, err := GetAuthValues(check.Authentication, kommons, ctx.Canary.GetNamespace())
 	if err != nil {
 		return err
 	}
@@ -84,11 +83,7 @@ func (c *HTTPChecker) configure(req *http.HTTPRequest, namespace string, check v
 
 	req.NTLM(check.NTLM)
 
-	if logger.IsDebugEnabled() {
-		req.Debug(true)
-	} else if logger.IsTraceEnabled() {
-		req.Trace(true)
-	}
+	req.Trace(ctx.IsTrace()).Debug(ctx.IsDebug())
 	return nil
 }
 
@@ -110,11 +105,11 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 		return result.ErrorMessage(err)
 	}
 
-	namespace := ctx.Canary.GetNamespace()
 	endpoint := check.Endpoint
 
 	req := http.NewRequest(check.Endpoint).Method(check.GetMethod())
-	if err := c.configure(req, namespace, check, ctx.Kommons); err != nil {
+
+	if err := c.configure(req, ctx, check, ctx.Kommons); err != nil {
 		return result.ErrorMessage(err)
 	}
 

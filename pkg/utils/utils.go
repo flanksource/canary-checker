@@ -8,6 +8,9 @@ import (
 )
 
 func Age(d time.Duration) string {
+	if d.Milliseconds() == 0 {
+		return "0ms"
+	}
 	if d.Milliseconds() < 1000 {
 		return fmt.Sprintf("%0.dms", d.Milliseconds())
 	}

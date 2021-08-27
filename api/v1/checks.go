@@ -8,6 +8,26 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+type Check struct {
+	Type, Endpoint, Description, Icon string
+}
+
+func (c Check) GetType() string {
+	return c.Type
+}
+
+func (c Check) GetEndpoint() string {
+	return c.Endpoint
+}
+
+func (c Check) GetDescription() string {
+	return c.Description
+}
+
+func (c Check) GetIcon() string {
+	return c.Icon
+}
+
 type HTTPCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
@@ -110,11 +130,12 @@ func (c S3Check) GetType() string {
 }
 
 type AWSConnection struct {
-	AccessKey     kommons.EnvVar `yaml:"accessKey" json:"accessKey"`
-	SecretKey     kommons.EnvVar `yaml:"secretKey" json:"secretKey"`
-	Region        string         `yaml:"region" json:"region"`
-	Endpoint      string         `yaml:"endpoint" json:"endpoint,omitempty"`
-	SkipTLSVerify bool           `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
+	AccessKey kommons.EnvVar `yaml:"accessKey" json:"accessKey"`
+	SecretKey kommons.EnvVar `yaml:"secretKey" json:"secretKey"`
+	Region    string         `yaml:"region" json:"region"`
+	Endpoint  string         `yaml:"endpoint" json:"endpoint,omitempty"`
+	// Skip TLS verify when connecting to aws
+	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
 }
 
 type S3BucketCheck struct {
@@ -974,8 +995,6 @@ type EC2Check struct {
 	WaitTime      int                       `yaml:"waitTime,omitempty" json:"waitTime,omitempty"`
 	TimeOut       int                       `yaml:"timeOut,omitempty" json:"timeOut,omitempty"`
 	CanaryRef     []v1.LocalObjectReference `yaml:"canaryRef,omitempty" json:"canaryRef,omitempty"`
-	// Skip TLS verify when connecting to aws
-	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
 }
 
 func (c EC2Check) GetEndpoint() string {

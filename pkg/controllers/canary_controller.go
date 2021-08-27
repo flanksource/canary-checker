@@ -51,6 +51,7 @@ import (
 type CanaryReconciler struct {
 	IncludeCheck      string
 	IncludeNamespaces []string
+	LogPass, LogFail  bool
 	client.Client
 	Kubernetes kubernetes.Interface
 	Kommons    *kommons.Client
@@ -82,15 +83,26 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 
 	logger := r.Log.WithValues("canary", req.NamespacedName)
 
-	check := &v1.Canary{}
-	err := r.Get(ctx, req.NamespacedName, check)
-
-	if !check.DeletionTimestamp.IsZero() {
-		logger.Info("removing", "check", check.Name)
-		cache.RemoveCheck(*check)
-		metrics.RemoveCheck(*check)
-		controllerutil.RemoveFinalizer(check, FinalizerName)
-		if err := r.Update(ctx, check); err != nil {
+	canary := &v1.Canary{}
+	err := r.Get(ctx, req.NamespacedName, canary)
+	var update bool
+	if canary.Status.ChecksStatus != nil {
+		specKeys := getAllCheckKeys(canary)
+		for statusKey := range canary.Status.ChecksStatus {
+			if !contains(specKeys, statusKey) {
+				logger.Info("removing stale check", "key", statusKey)
+				cache.RemoveCheckByKey(statusKey)
+				metrics.RemoveCheckByKey(statusKey)
+				update = true
+			}
+		}
+	}
+	if !canary.DeletionTimestamp.IsZero() {
+		logger.Info("removing", "check", canary.Name)
+		cache.RemoveCheck(*canary)
+		metrics.RemoveCheck(*canary)
+		controllerutil.RemoveFinalizer(canary, FinalizerName)
+		if err := r.Update(ctx, canary); err != nil {
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
@@ -102,28 +114,28 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 
 	canaryCtx := &context.Context{
 		Kommons:   r.Kommons,
-		Namespace: check.GetNamespace(),
+		Namespace: canary.GetNamespace(),
 		Context:   ctx,
 	}
 
-	defer r.Patch(canaryCtx, check)
+	defer r.Patch(canaryCtx, canary)
 	// Add finalizer first if not exist to avoid the race condition between init and delete
-	if !controllerutil.ContainsFinalizer(check, FinalizerName) {
-		logger.Info("adding finalizer", "finalizers", check.GetFinalizers())
-		controllerutil.AddFinalizer(check, FinalizerName)
-		if err := r.Update(ctx, check); err != nil {
+	if !controllerutil.ContainsFinalizer(canary, FinalizerName) {
+		logger.Info("adding finalizer", "finalizers", canary.GetFinalizers())
+		controllerutil.AddFinalizer(canary, FinalizerName)
+		if err := r.Update(ctx, canary); err != nil {
 			return ctrl.Result{}, err
 		}
 	}
-	check.Spec.SetSQLDrivers()
+	canary.Spec.SetSQLDrivers()
 	_, run := observed.Load(req.NamespacedName)
-	if run && check.Status.ObservedGeneration == check.Generation {
+	if run && canary.Status.ObservedGeneration == canary.Generation && !update {
 		logger.V(2).Info("check already up to date")
 		return ctrl.Result{}, nil
 	}
 
 	observed.Store(req.NamespacedName, true)
-	cache.Cache.InitCheck(*check)
+	cache.Cache.InitCheck(*canary)
 	for _, entry := range r.Cron.Entries() {
 		if entry.Job.(CanaryJob).GetNamespacedName() == req.NamespacedName {
 			logger.V(2).Info("unscheduled", "id", entry.ID)
@@ -132,30 +144,29 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		}
 	}
 
-	if check.Spec.Interval > 0 || check.Spec.Schedule != "" {
-		job := CanaryJob{Client: *r, Check: *check, Logger: logger, Context: context.New(r.Kommons, *check)}
+	if canary.Spec.Interval > 0 || canary.Spec.Schedule != "" {
+		job := CanaryJob{Client: *r, Check: *canary, Logger: logger, Context: context.New(r.Kommons, *canary)}
 		if !run {
 			// check each job on startup
 			go job.Run()
 		}
 		var id cron.EntryID
 		var schedule string
-		if check.Spec.Schedule != "" {
-			schedule = check.Spec.Schedule
+		if canary.Spec.Schedule != "" {
+			schedule = canary.Spec.Schedule
 			id, err = r.Cron.AddJob(schedule, job)
-		} else if check.Spec.Interval > 0 {
-			schedule = fmt.Sprintf("@every %ds", check.Spec.Interval)
+		} else if canary.Spec.Interval > 0 {
+			schedule = fmt.Sprintf("@every %ds", canary.Spec.Interval)
 			id, err = r.Cron.AddJob(schedule, job)
 		}
 		if err != nil {
 			logger.Error(err, "failed to schedule job", "schedule", schedule)
 		} else {
-			logger.Info("scheduled", "id", id, "next", r.Cron.Entry(id).Next)
+			logger.V(2).Info("scheduled", "id", id, "next", r.Cron.Entry(id).Next)
 		}
 	}
 
-	check.Status.ObservedGeneration = check.Generation
-
+	canary.Status.ObservedGeneration = canary.Generation
 	return ctrl.Result{}, nil
 }
 
@@ -179,46 +190,95 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName, results []*pkg.CheckResult) {
-	check := v1.Canary{}
-	if err := r.Get(ctx, key, &check); err != nil {
+	canary := v1.Canary{}
+	if err := r.Get(ctx, key, &canary); err != nil {
 		r.Log.Error(err, "unable to find canary", "key", key)
 		return
 	}
 
-	check.Status.LastCheck = &metav1.Time{Time: time.Now()}
+	canary.Status.LastCheck = &metav1.Time{Time: time.Now()}
 	transitioned := false
-	pass := true
+	var messages, errors []string
+	var checkStatus = make(map[string]*v1.CheckStatus)
+
+	var duration int64
+	var pass = true
+	var passed int
 	for _, result := range results {
-		lastResult := cache.AddCheck(check, result)
-		//FIXME this needs to be aggregated across all
-		uptime, latency := metrics.Record(check, result)
-		check.Status.Uptime1H = uptime.String()
-		check.Status.Latency1H = latency.String()
+		if r.LogPass && result.Pass || r.LogFail && !result.Pass {
+			r.Log.Info(result.String())
+		}
+		duration += result.Duration
+		lastResult := cache.AddCheck(canary, result)
+		uptime, latency := metrics.Record(canary, result)
+		checkKey := canary.GetKey(result.Check)
+		checkStatus[checkKey] = &v1.CheckStatus{}
+		checkStatus[checkKey].Uptime1H = uptime.String()
+		checkStatus[checkKey].Latency1H = latency.String()
+
 		if lastResult != nil && len(lastResult.Statuses) > 0 && (lastResult.Statuses[0].Status != result.Pass) {
 			transitioned = true
 		}
 		if !result.Pass {
-			r.Events.Event(&check, corev1.EventTypeWarning, "Failed", fmt.Sprintf("%s-%s: %s", result.Check.GetType(), result.Check.GetEndpoint(), result.Message))
+			r.Events.Event(&canary, corev1.EventTypeWarning, "Failed", fmt.Sprintf("%s-%s: %s", result.Check.GetType(), result.Check.GetEndpoint(), result.Message))
+		} else {
+			passed++
+		}
+		if transitioned {
+			checkStatus[checkKey].LastTransitionedTime = &metav1.Time{Time: time.Now()}
+			canary.Status.LastTransitionedTime = &metav1.Time{Time: time.Now()}
 		}
 
-		if transitioned {
-			check.Status.LastTransitionedTime = &metav1.Time{Time: time.Now()}
-		}
 		pass = pass && result.Pass
-		check.Status.Message = &result.Message
-		check.Status.ErrorMessage = &result.Error
-		push.Queue(pkg.FromV1(check, result.Check, pkg.FromResult(*result)))
+		if result.Message != "" {
+			messages = append(messages, result.Message)
+		}
+		if result.Error != "" {
+			errors = append(errors, result.Error)
+		}
+		checkStatus[checkKey].Message = &result.Message
+		checkStatus[checkKey].ErrorMessage = &result.Error
+
+		push.Queue(pkg.FromV1(canary, result.Check, pkg.FromResult(*result)))
 	}
+
+	uptime, latency := metrics.Record(canary, &pkg.CheckResult{
+		Check: v1.Check{
+			Type: "canary",
+		},
+		Pass:     pass,
+		Duration: duration,
+	})
+	canary.Status.Latency1H = latency.String()
+	canary.Status.Uptime1H = uptime.String()
+
+	msg := ""
+	errorMsg := ""
+	if len(messages) == 1 {
+		msg = messages[0]
+	} else if len(messages) > 1 {
+		msg = fmt.Sprintf("%s, (%d more)", messages[0], len(messages)-1)
+	}
+	if len(errors) == 1 {
+		errorMsg = errors[0]
+	} else if len(errors) > 1 {
+		errorMsg = fmt.Sprintf("%s, (%d more)", errors[0], len(errors)-1)
+	}
+
+	canary.Status.Message = &msg
+	canary.Status.ErrorMessage = &errorMsg
+
+	canary.Status.ChecksStatus = checkStatus
 	if pass {
-		check.Status.Status = &v1.Passed
+		canary.Status.Status = &v1.Passed
 	} else {
-		check.Status.Status = &v1.Failed
+		canary.Status.Status = &v1.Failed
 	}
-	r.Patch(ctx, &check)
+	r.Patch(ctx, &canary)
 }
 
 func (r *CanaryReconciler) Patch(ctx *context.Context, canary *v1.Canary) {
-	r.Log.V(1).Info("patching", "canary", canary.Name, "namespace", canary.Namespace, "status", canary.Status.Status)
+	r.Log.V(2).Info("patching", "canary", canary.Name, "namespace", canary.Namespace, "status", canary.Status.Status)
 	if err := r.Status().Update(ctx, canary, &client.UpdateOptions{}); err != nil {
 		r.Log.Error(err, "failed to patch", "canary", canary.Name)
 	}
