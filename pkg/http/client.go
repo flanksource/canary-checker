@@ -12,9 +12,11 @@ import (
 
 	"github.com/PaesslerAG/jsonpath"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg/dns"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
-	httpntlm "github.com/vadimi/go-http-ntlm/v2"
+	httpntlm "github.com/vadimi/go-http-ntlm"
+	httpntlmv2 "github.com/vadimi/go-http-ntlm/v2"
 )
 
 type HTTPRequest struct {
@@ -28,6 +30,8 @@ type HTTPRequest struct {
 	headers                 map[string]string
 	insecure                bool
 	ntlm                    bool
+	ntlmv2                  bool
+	dnsCache                bool
 	tr                      *http.Transport //nolint:structcheck,unused
 	traceHeaders, traceBody bool
 }
@@ -35,10 +39,11 @@ type HTTPRequest struct {
 func NewRequest(endpoint string) *HTTPRequest {
 	url, _ := url.Parse(endpoint)
 	return &HTTPRequest{
-		host:    url.Host,
-		URL:     url,
-		start:   time.Now(),
-		headers: make(map[string]string),
+		host:     url.Host,
+		URL:      url,
+		dnsCache: true,
+		start:    time.Now(),
+		headers:  make(map[string]string),
 	}
 }
 
@@ -54,6 +59,11 @@ func (h *HTTPRequest) UseHost(host string) *HTTPRequest {
 
 func (h *HTTPRequest) Debug(debug bool) *HTTPRequest {
 	h.traceHeaders = debug
+	return h
+}
+
+func (h *HTTPRequest) DNSCache(cache bool) *HTTPRequest {
+	h.dnsCache = cache
 	return h
 }
 
@@ -84,6 +94,11 @@ func (h *HTTPRequest) NTLM(ntlm bool) *HTTPRequest {
 	return h
 }
 
+func (h *HTTPRequest) NTLMv2(ntlm bool) *HTTPRequest {
+	h.ntlmv2 = ntlm
+	return h
+}
+
 func (h *HTTPRequest) Insecure(skip bool) *HTTPRequest {
 	h.insecure = skip
 	return h
@@ -104,18 +119,26 @@ func (h *HTTPRequest) getHTTPClient() *http.Client {
 		},
 	}
 
-	if h.ntlm {
+	if h.ntlm || h.ntlmv2 {
 		parts := strings.Split(h.Username, "@")
 		domain := ""
 		if len(parts) > 1 {
 			domain = parts[1]
 		}
 
-		transport = &httpntlm.NtlmTransport{
-			Domain:       domain,
-			User:         parts[0],
-			Password:     h.Password,
-			RoundTripper: transport,
+		if h.ntlmv2 {
+			transport = &httpntlmv2.NtlmTransport{
+				Domain:       domain,
+				User:         parts[0],
+				Password:     h.Password,
+				RoundTripper: transport,
+			}
+		} else {
+			transport = &httpntlm.NtlmTransport{
+				Domain:   domain,
+				User:     parts[0],
+				Password: h.Password,
+			}
 		}
 	}
 
@@ -163,15 +186,23 @@ func (h *HTTPResponse) IsOK(responseCodes ...int) bool {
 }
 
 func (h *HTTPRequest) Do(body string) *HTTPResponse {
-	if h.host != h.URL.Hostname() {
+	if h.host == "" {
+		h.host = h.URL.Hostname()
+	} else if h.host != h.URL.Hostname() {
 		// If specified, replace the hostname in the URL, with the actual host/IP connect to
 		// and move the Virtual Hostname to a Header
-		h.headers["Host"] = h.URL.Hostname()
 		h.URL.Host = h.host
-		if h.URL.Port() == "" {
-			h.URL.Host = h.host
-		} else {
-			h.URL.Host = h.host + ":" + h.URL.Port()
+	}
+
+	if h.dnsCache {
+		ips, err := dns.CacheLookup("A", h.URL.Hostname())
+		if len(ips) == 0 {
+			return &HTTPResponse{Error: err}
+		}
+		port := h.URL.Port()
+		h.URL.Host = ips[0].String()
+		if port != "" {
+			h.URL.Host += ":" + port
 		}
 	}
 
@@ -179,6 +210,7 @@ func (h *HTTPRequest) Do(body string) *HTTPResponse {
 	if err != nil {
 		return nil
 	}
+	req.Host = h.host
 	if logger.IsTraceEnabled() {
 		logger.Tracef(h.GetString())
 	}
@@ -260,8 +292,8 @@ func (h *HTTPResponse) String() string {
 	s := fmt.Sprintf("%s [%s] %d", h.Request.GetRequestLine(), utils.Age(h.Elapsed), h.GetStatusCode())
 	if h.Request.traceHeaders {
 		s += "\n"
-		for k, values := range h.Response.Header {
-			s += k + ": " + strings.Join(values, " ") + "\n"
+		for k, values := range h.GetHeaders() {
+			s += k + ": " + values + "\n"
 		}
 	}
 	if h.Request.traceBody {

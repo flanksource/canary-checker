@@ -2,7 +2,6 @@ package checks
 
 import (
 	"fmt"
-	"math"
 	"net/url"
 	"strconv"
 	"strings"
@@ -79,8 +78,9 @@ func (c *HTTPChecker) configure(req *http.HTTPRequest, ctx *context.Context, che
 		return err
 	}
 	if auth != nil {
-		req.Auth(auth.Username.Name, auth.Password.Value)
+		req.Auth(auth.Username.Value, auth.Password.Value)
 	}
+
 	req.NTLM(check.NTLM)
 
 	req.Trace(ctx.IsTrace()).Debug(ctx.IsDebug())
@@ -88,7 +88,11 @@ func (c *HTTPChecker) configure(req *http.HTTPRequest, ctx *context.Context, che
 }
 
 func truncate(text string, max int) string {
-	return text[0:int(math.Min(float64(max), float64(len(text)-1)))]
+	length := len(text)
+	if length <= max {
+		return text
+	}
+	return text[0:max]
 }
 
 // CheckConfig : Check every record of DNS name against config information
@@ -153,7 +157,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	result.AddData(data)
 
 	if status == -1 {
-		return result.Failf("%v", truncate(resp.Error.Error(), 250))
+		return result.Failf("%v", truncate(resp.Error.Error(), 500))
 	}
 
 	if ok := resp.IsOK(check.ResponseCodes...); !ok {

@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"net"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -51,29 +52,34 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	check := extConfig.(v1.ICMPCheck)
 	endpoint := check.Endpoint
 
-	lookupResult, err := dns.Lookup(endpoint)
+	result := pkg.Success(check)
+
+	ips, err := dns.Lookup("A", endpoint)
 	if err != nil {
-		return invalidErrorf(check, err, "unable to resolve dns")
+		return result.ErrorMessage(err)
 	}
-	for _, urlObj := range lookupResult {
+	if len(ips) == 0 {
+		return result.Failf("no IP found for %s", endpoint)
+	}
+	for _, urlObj := range ips {
 		pingerStats, err := c.checkICMP(urlObj, check.PacketCount)
 		if err != nil {
-			return Failf(check, "Failed to check icmp: %v", err)
+			return result.ErrorMessage(err)
 		}
 		if pingerStats.PacketsSent == 0 {
-			return Failf(check, "Failed to check icmp, no packets sent")
+			return result.Failf("Failed to check icmp, no packets sent")
 		}
 		latency := pingerStats.AvgRtt.Milliseconds()
 		loss := pingerStats.PacketLoss
 
 		if check.ThresholdMillis < latency {
-			return Failf(check, "timeout after %d ", latency)
+			return result.Failf("timeout after %d ", latency)
 		}
 		if check.PacketLossThreshold < int64(loss*100) {
-			return Failf(check, "packet loss of %fs> than threshold of %d", loss, check.PacketLossThreshold)
+			return result.Failf("packet loss of %0.0f > than threshold of %d", loss, check.PacketLossThreshold)
 		}
 
-		packetLoss.WithLabelValues(endpoint, urlObj.IP).Set(loss)
+		packetLoss.WithLabelValues(endpoint, ips[0].String()).Set(loss)
 
 		return &pkg.CheckResult{ // nolint: staticcheck
 			Pass:     true,
@@ -81,13 +87,11 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 			Duration: latency,
 		}
 	}
-
-	return Failf(check, "No results found")
+	return result
 }
 
-func (c *IcmpChecker) checkICMP(urlObj pkg.URL, packetCount int) (*ping.Statistics, error) {
-	ip := urlObj.IP
-	pinger, err := ping.NewPinger(ip)
+func (c *IcmpChecker) checkICMP(ip net.IP, packetCount int) (*ping.Statistics, error) {
+	pinger, err := ping.NewPinger(ip.String())
 	if err != nil {
 		return nil, err
 	}

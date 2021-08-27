@@ -4,7 +4,7 @@
   "dependencies": {
     "@babel/plugin-syntax-jsx": "^7.14.5",
     "@craco/craco": "^6.2.0",
-    "@flanksource/flanksource-ui": "^0.1.10",
+    "@flanksource/flanksource-ui": "^0.1.12",
     "@headlessui/react": "^1.4.0",
     "@heroicons/react": "^1.0.3",
     "@tailwindcss/forms": "^0.3.3",
@@ -26,8 +26,8 @@
   },
   "proxy": "http://localhost:8080",
   "scripts": {
-    "start": "craco start",
-    "build": "craco build",
+    "start": "DISABLE_ESLINT_PLUGIN=true craco start",
+    "build": "DISABLE_ESLINT_PLUGIN=true craco build",
     "test": "craco test",
     "eject": "react-scripts eject",
     "lint:eslint": "eslint --ext .js,.jsx,.ts,.tsx .",

@@ -10,6 +10,7 @@ module.exports = {
       version: "27",
     },
   },
+  ignorePatterns: ["node_modules", "build"],
   root: true,
   extends: [
     "eslint:recommended",
