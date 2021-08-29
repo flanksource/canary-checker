@@ -1,10 +1,12 @@
 package http
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,6 +17,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/dns"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
+	"github.com/henvic/httpretty"
 	httpntlm "github.com/vadimi/go-http-ntlm"
 	httpntlmv2 "github.com/vadimi/go-http-ntlm/v2"
 )
@@ -23,7 +26,7 @@ type HTTPRequest struct {
 	Username                string
 	Password                string
 	method                  string
-	host                    string
+	connectTo               string
 	Port                    int
 	URL                     *url.URL
 	start                   time.Time
@@ -39,7 +42,6 @@ type HTTPRequest struct {
 func NewRequest(endpoint string) *HTTPRequest {
 	url, _ := url.Parse(endpoint)
 	return &HTTPRequest{
-		host:     url.Host,
 		URL:      url,
 		dnsCache: true,
 		start:    time.Now(),
@@ -53,7 +55,7 @@ func (h *HTTPRequest) Method(method string) *HTTPRequest {
 }
 
 func (h *HTTPRequest) UseHost(host string) *HTTPRequest {
-	h.host = host
+	h.connectTo = host
 	return h
 }
 
@@ -73,8 +75,8 @@ func (h *HTTPRequest) Trace(trace bool) *HTTPRequest {
 	return h
 }
 
-func (h *HTTPRequest) Host(host string) *HTTPRequest {
-	h.host = host
+func (h *HTTPRequest) ConnectTo(host string) *HTTPRequest {
+	h.connectTo = host
 	return h
 }
 
@@ -112,13 +114,25 @@ func (h *HTTPRequest) Headers(headers map[string]string) *HTTPRequest {
 func (h *HTTPRequest) getHTTPClient() *http.Client {
 	var transport http.RoundTripper
 	transport = &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			if h.connectTo == "" {
+				return (&net.Dialer{}).DialContext(ctx, network, addr)
+			}
+			// implment --connect-to logic to connect to a specific IP irrespective of URL host
+			port := h.URL.Port()
+			if port == "" && h.URL.Scheme == "http" {
+				port = "80"
+			} else if port == "" && h.URL.Scheme == "https" {
+				port = "443"
+			}
+			return (&net.Dialer{}).DialContext(ctx, "tcp", h.connectTo+":"+port)
+		},
 		DisableKeepAlives: true,
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
-			ServerName:         h.host,
+			ServerName:         h.connectTo,
 		},
 	}
-
 	if h.ntlm || h.ntlmv2 {
 		parts := strings.Split(h.Username, "@")
 		domain := ""
@@ -142,6 +156,20 @@ func (h *HTTPRequest) getHTTPClient() *http.Client {
 		}
 	}
 
+	if h.traceBody || h.traceHeaders {
+		logger := &httpretty.Logger{
+			Time:           true,
+			TLS:            true,
+			RequestHeader:  true,
+			RequestBody:    h.traceBody,
+			ResponseHeader: true,
+			ResponseBody:   h.traceBody,
+			Colors:         true, // erase line if you don't like colors
+			Formatters:     []httpretty.Formatter{&httpretty.JSONFormatter{}},
+		}
+		transport = logger.RoundTripper(transport)
+	}
+
 	return &http.Client{
 		Transport: transport,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -152,8 +180,8 @@ func (h *HTTPRequest) getHTTPClient() *http.Client {
 
 func (h *HTTPRequest) GetRequestLine() string {
 	s := fmt.Sprintf("%s %s", h.method, h.URL)
-	if h.host != h.URL.Hostname() {
-		s += fmt.Sprintf(" (%s)", h.host)
+	if h.connectTo != h.URL.Hostname() {
+		s += fmt.Sprintf(" (%s)", h.connectTo)
 	}
 	return s
 }
@@ -186,31 +214,36 @@ func (h *HTTPResponse) IsOK(responseCodes ...int) bool {
 }
 
 func (h *HTTPRequest) Do(body string) *HTTPResponse {
-	if h.host == "" {
-		h.host = h.URL.Hostname()
-	} else if h.host != h.URL.Hostname() {
+	if h.connectTo == "" {
+		h.connectTo = h.URL.Hostname()
+	} else if h.connectTo != h.URL.Hostname() {
 		// If specified, replace the hostname in the URL, with the actual host/IP connect to
 		// and move the Virtual Hostname to a Header
-		h.URL.Host = h.host
+		h.URL.Host = h.connectTo
+	}
+	if h.headers["Host"] != "" {
+		h.connectTo = h.URL.Hostname()
+		port := h.URL.Port()
+		h.URL.Host = h.headers["Host"]
+		if port != "" {
+			h.URL.Host += ":" + port
+		}
+		delete(h.headers, "Host")
 	}
 
-	if h.dnsCache {
+	if h.connectTo == "" && h.dnsCache {
 		ips, err := dns.CacheLookup("A", h.URL.Hostname())
 		if len(ips) == 0 {
 			return &HTTPResponse{Error: err}
 		}
-		port := h.URL.Port()
-		h.URL.Host = ips[0].String()
-		if port != "" {
-			h.URL.Host += ":" + port
-		}
+		h.connectTo = ips[0].String()
 	}
 
 	req, err := http.NewRequest(h.method, h.URL.String(), strings.NewReader(body))
 	if err != nil {
 		return nil
 	}
-	req.Host = h.host
+
 	if logger.IsTraceEnabled() {
 		logger.Tracef(h.GetString())
 	}

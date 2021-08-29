@@ -82,6 +82,7 @@ func (c *HTTPChecker) configure(req *http.HTTPRequest, ctx *context.Context, che
 	}
 
 	req.NTLM(check.NTLM)
+	req.NTLMv2(check.NTLMv2)
 
 	req.Trace(ctx.IsTrace()).Debug(ctx.IsDebug())
 	return nil
