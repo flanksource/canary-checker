@@ -482,6 +482,7 @@ spec:
                       securityGroup:
                         type: string
                       skipTLSVerify:
+                        description: Skip TLS verify when connecting to aws
                         type: boolean
                       timeOut:
                         type: integer
@@ -5445,6 +5446,7 @@ spec:
                             type: object
                         type: object
                       skipTLSVerify:
+                        description: Skip TLS verify when connecting to aws
                         type: boolean
                       test:
                         properties:
