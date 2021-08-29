@@ -143,7 +143,8 @@ type S3BucketCheck struct {
 	Templatable   `yaml:",inline" json:",inline"`
 	AWSConnection `yaml:",inline" json:",inline"`
 	FolderTest    `yaml:",inline" json:",inline"`
-	Bucket        string `yaml:"bucket" json:"bucket"`
+	Filter        FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
+	Bucket        string       `yaml:"bucket" json:"bucket"`
 	// glob path to restrict matches to a subset
 	ObjectPath string `yaml:"objectPath" json:"objectPath,omitempty"`
 	// Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY
@@ -500,6 +501,7 @@ func (c JunitCheck) GetType() string {
 type SmbCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	Filter      FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
 	FolderTest  `yaml:",inline" json:",inline"`
 	//Server location of smb server. Can be hostname/ip or in '\\server\e$\a\b\c' syntax
 	//Where server is the hostname e$ is the sharename and a/b/c is the searchPath location

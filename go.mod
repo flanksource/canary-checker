@@ -13,12 +13,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.8.1
+	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2 // indirect
 	github.com/chartmuseum/helm-push v0.8.1
 	github.com/containerd/cgroups v0.0.0-20200824123100-0b889c03f102 // indirect
 	github.com/containerd/containerd v1.4.0
 	github.com/denisenkom/go-mssqldb v0.9.0
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
+	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/eko/gocache v1.2.0 // indirect
 	github.com/flanksource/commons v1.5.8
 	github.com/flanksource/kommons v0.21.1
@@ -30,6 +32,7 @@ require (
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/hairyhenderson/gomplate/v3 v3.6.0
 	github.com/hashicorp/vault/api v1.0.4
+	github.com/henvic/httpretty v0.0.6 // indirect
 	github.com/hirochachacha/go-smb2 v1.0.10
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
@@ -60,6 +63,7 @@ require (
 	k8s.io/api v0.20.4
 	k8s.io/apimachinery v0.20.4
 	k8s.io/client-go v11.0.0+incompatible
+	maze.io/x/duration v0.0.0-20160924141736-faac084b6075 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/controller-runtime v0.8.3
 	sigs.k8s.io/yaml v1.2.0

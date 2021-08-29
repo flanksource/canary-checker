@@ -5375,6 +5375,19 @@ spec:
                         type: object
                       endpoint:
                         type: string
+                      filter:
+                        properties:
+                          maxAge:
+                            type: string
+                          maxSize:
+                            type: string
+                          minAge:
+                            type: string
+                          minSize:
+                            type: string
+                          regex:
+                            type: string
+                        type: object
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
@@ -5386,8 +5399,7 @@ spec:
                         type: integer
                       maxSize:
                         description: MaxSize of the files inside the searchPath
-                        format: int64
-                        type: integer
+                        type: string
                       minAge:
                         description: MinAge the latest object should be older than defined age
                         type: string
@@ -5396,8 +5408,7 @@ spec:
                         type: integer
                       minSize:
                         description: MinSize of the files inside the searchPath
-                        format: int64
-                        type: integer
+                        type: string
                       name:
                         description: Name of the check
                         type: string
@@ -5549,6 +5560,19 @@ spec:
                       domain:
                         description: Domain...
                         type: string
+                      filter:
+                        properties:
+                          maxAge:
+                            type: string
+                          maxSize:
+                            type: string
+                          minAge:
+                            type: string
+                          minSize:
+                            type: string
+                          regex:
+                            type: string
+                        type: object
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
@@ -5560,8 +5584,7 @@ spec:
                         type: integer
                       maxSize:
                         description: MaxSize of the files inside the searchPath
-                        format: int64
-                        type: integer
+                        type: string
                       minAge:
                         description: MinAge the latest object should be older than defined age
                         type: string
@@ -5570,8 +5593,7 @@ spec:
                         type: integer
                       minSize:
                         description: MinSize of the files inside the searchPath
-                        format: int64
-                        type: integer
+                        type: string
                       name:
                         description: Name of the check
                         type: string

@@ -1,48 +1,154 @@
 package v1
 
 import (
+	"os"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/c2h5oh/datasize"
 	"github.com/flanksource/kommons"
+	"maze.io/x/duration"
 )
+
+type Duration string
+
+func (d Duration) GetHours() (*time.Duration, error) {
+	v, err := duration.ParseDuration(string(d))
+	if err != nil {
+		return nil, err
+	}
+	_d := time.Duration(v.Hours()) * time.Hour
+	return &_d, nil
+}
+
+type Size string
+
+func (s Size) String() string {
+	var v datasize.ByteSize
+	_ = v.UnmarshalText([]byte(s))
+	return v.HumanReadable()
+}
+
+func (s Size) Value() (*int64, error) {
+	var v datasize.ByteSize
+	err := v.UnmarshalText([]byte(s))
+	_v := int64(v.Bytes())
+	return &_v, err
+}
+
+type FolderFilter struct {
+	MinAge  Duration `json:"minAge,omitempty"`
+	MaxAge  Duration `json:"maxAge,omitempty"`
+	MinSize Size     `json:"minSize,omitempty"`
+	MaxSize Size     `json:"maxSize,omitempty"`
+	Regex   string   `json:"regex,omitempty"`
+}
+
+// +k8s:deepcopy-gen=false
+type FolderFilterContext struct {
+	FolderFilter
+	minAge, maxAge   *time.Duration
+	minSize, maxSize *int64
+	// kubebuilder:object:generate=false
+	regex *regexp.Regexp
+}
+
+func (f FolderFilter) New() (*FolderFilterContext, error) {
+	ctx := &FolderFilterContext{}
+	var err error
+
+	if f.MaxAge != "" {
+		d, err := f.MaxAge.GetHours()
+		if err != nil {
+			return nil, err
+		}
+		ctx.maxAge = d
+	}
+	if f.MinAge != "" {
+		d, err := f.MinAge.GetHours()
+		if err != nil {
+			return nil, err
+		}
+		ctx.minAge = d
+	}
+	if f.Regex != "" {
+		re, err := regexp.Compile(f.Regex)
+		if err != nil {
+			return nil, err
+		}
+		ctx.regex = re
+	}
+	if f.MinSize != "" {
+		if ctx.minSize, err = f.MinSize.Value(); err != nil {
+			return nil, err
+		}
+	}
+	if f.MaxSize != "" {
+		if ctx.maxSize, err = f.MaxSize.Value(); err != nil {
+			return nil, err
+		}
+	}
+	return ctx, nil
+}
+
+func (f *FolderFilterContext) Filter(i os.FileInfo) bool {
+	if i.IsDir() {
+		return false
+	}
+	if f.maxAge != nil && time.Since(i.ModTime()) > *f.maxAge {
+		return false
+	}
+	if f.minAge != nil && time.Since(i.ModTime()) < *f.minAge {
+		return false
+	}
+	if f.minSize != nil && i.Size() < *f.minSize {
+		return false
+	}
+	if f.maxSize != nil && i.Size() > *f.maxSize {
+		return false
+	}
+	if f.regex != nil && !f.regex.MatchString(i.Name()) {
+		return false
+	}
+	return true
+}
 
 type FolderTest struct {
 	//MinAge the latest object should be older than defined age
-	MinAge *string `yaml:"minAge,omitempty" json:"minAge,omitempty"`
+	MinAge Duration `yaml:"minAge,omitempty" json:"minAge,omitempty"`
 	//MaxAge the latest object should be younger than defined age
-	MaxAge *string `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
+	MaxAge Duration `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
 	//MinCount the minimum number of files inside the searchPath
 	MinCount *int `yaml:"minCount,omitempty" json:"minCount,omitempty"`
 	//MinCount the minimum number of files inside the searchPath
 	MaxCount *int `yaml:"maxCount,omitempty" json:"maxCount,omitempty"`
 	//MinSize of the files inside the searchPath
-	MinSize *int64 `yaml:"minSize,omitempty" json:"minSize,omitempty"`
+	MinSize Size `yaml:"minSize,omitempty" json:"minSize,omitempty"`
 	//MaxSize of the files inside the searchPath
-	MaxSize *int64 `yaml:"maxSize,omitempty" json:"maxSize,omitempty"`
+	MaxSize Size `yaml:"maxSize,omitempty" json:"maxSize,omitempty"`
 }
 
-func (f FolderTest) GetMinAge() *time.Duration {
-	if f.MinAge == nil {
-		return nil
+func (f FolderTest) GetMinAge() (*time.Duration, error) {
+	if f.MinAge == "" {
+		return nil, nil
 	}
-	d, err := time.ParseDuration(*f.MinAge)
+	d, err := f.MinAge.GetHours()
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return &d
+	return d, nil
 }
 
-func (f FolderTest) GetMaxAge() *time.Duration {
-	if f.MaxAge == nil {
-		return nil
+func (f FolderTest) GetMaxAge() (*time.Duration, error) {
+	if f.MaxAge == "" {
+		return nil, nil
 	}
-	d, err := time.ParseDuration(*f.MaxAge)
+	d, err := f.MaxAge.GetHours()
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return &d
+	return d, nil
 }
 
 type JSONCheck struct {
