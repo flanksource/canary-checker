@@ -24,7 +24,7 @@
     "timeago.js": "^4.0.2",
     "web-vitals": "^1.0.1"
   },
-  "proxy": "http://localhost:8080",
+  "proxy": "https://canaries.canary.lab.flanksource.com/",
   "scripts": {
     "start": "DISABLE_ESLINT_PLUGIN=true craco start",
     "build": "DISABLE_ESLINT_PLUGIN=true craco build",
