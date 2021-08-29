@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"gopkg.in/flanksource/yaml.v3"
 
 	gotemplate "text/template"
 
@@ -55,22 +55,34 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 	return results
 }
 
+func humanizeBytes(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	switch v.(type) {
+	case int64:
+		return humanize.Bytes(uint64(v.(int64)))
+	case uint64:
+		return humanize.Bytes(v.(uint64))
+	}
+	return fmt.Sprintf("%0.1f", v)
+}
+
 func template(ctx *context.Context, template v1.Template) (string, error) {
 	if template.Template != "" {
 		tpl := gotemplate.New("")
 
-		tpl, err := tpl.Funcs(gomplate.Funcs(nil)).Parse(template.Template)
+		funcs := gomplate.Funcs(nil)
+		funcs["humanizeBytes"] = mb
+		funcs["humanizeTime"] = humanize.Time
+		funcs["ftoa"] = humanize.Ftoa
+		tpl, err := tpl.Funcs(funcs).Parse(template.Template)
 		if err != nil {
 			return "", err
 		}
 
 		var buf bytes.Buffer
-		data, _ := yaml.Marshal(ctx.Environment)
-		unstructured := make(map[string]interface{})
-		if err := yaml.Unmarshal(data, &unstructured); err != nil {
-			return "", err
-		}
-		if err := tpl.Execute(&buf, unstructured); err != nil {
+		if err := tpl.Execute(&buf, ctx.Environment); err != nil {
 			return "", fmt.Errorf("error executing template %s: %v", strings.Split(template.Template, "\n")[0], err)
 		}
 		return buf.String(), nil

@@ -7,33 +7,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/flanksource/commons/text"
 )
-
-type Size struct {
-	uint64
-}
-
-func (s Size) String() string {
-	return text.HumanizeBytes(s.uint64)
-}
-
-type Duration struct {
-	time.Duration
-}
-
-func (d Duration) String() string {
-	return utils.Age(d.Duration)
-}
-
-func (d Duration) IsZero() bool {
-	return d.Duration.Round(time.Millisecond).Milliseconds() == 0
-}
-
-func timeSince(start time.Time) Duration {
-	return Duration{time.Since(start)}
-}
 
 func unexpectedErrorf(check external.Check, err error, msg string, args ...interface{}) *pkg.CheckResult { //nolint: unparam
 	return &pkg.CheckResult{

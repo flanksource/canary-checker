@@ -1,13 +1,17 @@
 package checks
 
 import (
+	"crypto/tls"
+	"fmt"
 	"io/fs"
-	"regexp"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/commons/logger"
+	"github.com/henvic/httpretty"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -71,6 +75,7 @@ type S3FileInfo struct {
 func (obj S3FileInfo) Name() string {
 	return *obj.obj.Key
 }
+
 func (obj S3FileInfo) Size() int64 {
 	return obj.obj.Size
 }
@@ -84,7 +89,7 @@ func (obj S3FileInfo) ModTime() time.Time {
 }
 
 func (obj S3FileInfo) IsDir() bool {
-	return false
+	return strings.HasSuffix(obj.Name(), "/")
 }
 
 func (obj S3FileInfo) Sys() interface{} {
@@ -96,49 +101,40 @@ type S3 struct {
 	Bucket string
 }
 
-func (conn *S3) CheckFolder(ctx *context.Context, path string) (*FolderCheck, error) {
+func (conn *S3) CheckFolder(ctx *context.Context, path string, filter v1.FolderFilter) (*FolderCheck, error) {
 	result := FolderCheck{}
 
 	var marker *string = nil
-
-	var regex *regexp.Regexp
-	if path != "" {
-		re, err := regexp.Compile(path)
-		if err != nil {
-			return nil, err
-		}
-		regex = re
+	parts := strings.Split(conn.Bucket, "/")
+	bucket := parts[0]
+	prefix := ""
+	if len(parts) > 0 {
+		prefix = strings.Join(parts[1:], "/")
 	}
-
+	maxKeys := 500
 	for {
+		logger.Debugf("%s fetching %d, prefix%s, marker=%s", bucket, maxKeys, prefix, marker)
 		req := &s3.ListObjectsInput{
 			Bucket:  aws.String(conn.Bucket),
 			Marker:  marker,
-			MaxKeys: 500,
+			MaxKeys: int32(maxKeys),
+			Prefix:  &prefix,
 		}
 		resp, err := conn.ListObjects(ctx, req)
 		if err != nil {
 			return nil, err
 		}
 
+		_filter, err := filter.New()
+		if err != nil {
+			return nil, err
+		}
 		for _, obj := range resp.Contents {
-			if regex != nil && !regex.Match([]byte(*obj.Key)) {
+			file := S3FileInfo{obj}
+			if !_filter.Filter(file) {
 				continue
 			}
-
-			if result.Oldest.IsZero() || result.Oldest.Milliseconds() < timeSince(*obj.LastModified).Milliseconds() {
-				result.Oldest = timeSince(*obj.LastModified)
-			}
-			if result.Newest.IsZero() || result.Newest.Milliseconds() > timeSince(*obj.LastModified).Milliseconds() {
-				result.Newest = timeSince(*obj.LastModified)
-			}
-			if result.MinSize == 0 || result.MinSize > obj.Size {
-				result.MinSize = obj.Size
-			}
-			if result.MaxSize < obj.Size {
-				result.MaxSize = obj.Size
-			}
-			result.Files = append(result.Files, S3FileInfo{obj})
+			result.Append(file)
 		}
 		if resp.IsTruncated && len(resp.Contents) > 0 {
 			marker = resp.Contents[len(resp.Contents)-1].Key
@@ -147,7 +143,6 @@ func (conn *S3) CheckFolder(ctx *context.Context, path string) (*FolderCheck, er
 		}
 	}
 	// bucketScanTotalSize.WithLabelValues(bucket.Endpoint, bucket.Bucket).Add(float64(aws.Int64Value(obj.Size)))
-
 	return &result, nil
 }
 
@@ -155,25 +150,44 @@ func (c *S3BucketChecker) Check(ctx *context.Context, extConfig external.Check) 
 	bucket := extConfig.(v1.S3BucketCheck)
 	result := pkg.Success(bucket)
 
-	cfg, err := awsUtil.NewSession(ctx, bucket.AWSConnection)
+	var tr http.RoundTripper
+	tr = &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: bucket.AWSConnection.SkipTLSVerify},
+	}
+
+	if ctx.IsTrace() {
+		logger := &httpretty.Logger{
+			Time:           true,
+			TLS:            true,
+			RequestHeader:  true,
+			RequestBody:    true,
+			ResponseHeader: true,
+			ResponseBody:   true,
+			Colors:         true, // erase line if you don't like colors
+			Formatters:     []httpretty.Formatter{&httpretty.JSONFormatter{}},
+		}
+		tr = logger.RoundTripper(tr)
+	}
+
+	cfg, err := awsUtil.NewSession(ctx, bucket.AWSConnection, tr)
 	if err != nil {
 		return result.ErrorMessage(err)
 	}
+
 	client := &S3{
 		Client: s3.NewFromConfig(*cfg, func(o *s3.Options) {
 			o.UsePathStyle = bucket.UsePathStyle
 		}),
 		Bucket: bucket.Bucket,
 	}
-	folders, err := client.CheckFolder(ctx, bucket.ObjectPath)
-
+	folders, err := client.CheckFolder(ctx, bucket.ObjectPath, bucket.Filter)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return result.ErrorMessage(fmt.Errorf("failed to retrieve s3://%s: %v", bucket.Bucket, err))
 	}
 	result.AddDetails(folders)
 
 	if test := folders.Test(bucket.FolderTest); test != "" {
-		result.Failf(test)
+		return result.Failf(test)
 	}
 
 	return result

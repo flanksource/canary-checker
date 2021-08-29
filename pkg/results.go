@@ -18,6 +18,7 @@ func Success(check external.Check) *CheckResult {
 	return &CheckResult{
 		Pass:  true,
 		Check: check,
+		Data:  make(map[string]interface{}),
 	}
 }
 
@@ -60,6 +61,7 @@ func (result *CheckResult) Failf(message string, args ...interface{}) *CheckResu
 
 func (result *CheckResult) AddDetails(detail interface{}) *CheckResult {
 	result.Detail = detail
+	result.Data["results"] = detail
 	return result
 }
 

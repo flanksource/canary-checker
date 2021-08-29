@@ -1,0 +1,25 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: s3-bucket-pass
+  annotations:
+    trace: "false"
+spec:
+  interval: 30
+  s3Bucket:
+    # Check for any backup not older than 7 days and min size 25 bytes
+    - bucket: flanksource-public
+      region: eu-central-1
+      minSize: 50M
+      maxAge: 10d
+      filter:
+        regex: .*.ova
+        minSize: 100M
+        # maxAge: 18760h
+      display:
+        template: |
+          {{-  range $f := .results.Files   }}
+          {{- if gt $f.Size 0 }}
+            Name: {{$f.Name}} {{$f.ModTime | humanizeTime }} {{ $f.Size | humanizeBytes}}
+          {{- end}}
+          {{- end  }}

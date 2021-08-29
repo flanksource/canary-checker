@@ -111,14 +111,14 @@ func (c *SmbChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 		defer session.Close()
 	}
 
-	folders, err := getFolderCheck(session, path)
+	folders, err := getFolderCheck(session, path, smbCheck.Filter)
 	if err != nil {
 		return result.ErrorMessage(err)
 	}
 	result.AddDetails(folders)
 
 	if test := folders.Test(smbCheck.FolderTest); test != "" {
-		result.Failf(test)
+		return result.Failf(test)
 	}
 	return result
 }
@@ -145,9 +145,12 @@ func getServerDetails(serverPath string, port int) (server, sharename, searchPat
 	}
 }
 
-func getFolderCheck(fs Filesystem, dir string) (*FolderCheck, error) {
+func getFolderCheck(fs Filesystem, dir string, filter v1.FolderFilter) (*FolderCheck, error) {
 	result := FolderCheck{}
-
+	_filter, err := filter.New()
+	if err != nil {
+		return nil, err
+	}
 	files, err := fs.ReadDir(dir)
 	if err != nil {
 		return nil, err
@@ -159,27 +162,15 @@ func getFolderCheck(fs Filesystem, dir string) (*FolderCheck, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &FolderCheck{Oldest: timeSince(info.ModTime()), Newest: timeSince(info.ModTime())}, nil
+		return &FolderCheck{Oldest: info, Newest: info}, nil
 	}
 
 	for _, file := range files {
-		if file.IsDir() {
+		if file.IsDir() || !_filter.Filter(file) {
 			continue
 		}
 
-		if result.Oldest.IsZero() || result.Oldest.Milliseconds() < timeSince(file.ModTime()).Milliseconds() {
-			result.Oldest = timeSince(file.ModTime())
-		}
-		if result.Newest.IsZero() || result.Newest.Milliseconds() > timeSince(file.ModTime()).Milliseconds() {
-			result.Newest = timeSince(file.ModTime())
-		}
-		result.Files = append(result.Files, file)
-		if result.MaxSize < file.Size() {
-			result.MaxSize = file.Size()
-		}
-		if result.MinSize > file.Size() {
-			result.MinSize = file.Size()
-		}
+		result.Append(file)
 	}
 	return &result, nil
 }
