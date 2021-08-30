@@ -39,22 +39,25 @@ var Run = &cobra.Command{
 
 		for _, configfile := range configFiles {
 			logger.Infof("Checking %s", configfile)
-			config, err := pkg.ParseConfig(configfile)
+			configs, err := pkg.ParseConfig(configfile)
 			if err != nil {
 				logger.Errorf("Could not parse %s: %v", configfile, err)
 				continue
 			}
-			if namespace != "" {
-				config.Namespace = namespace
+			for _, config := range configs {
+				if namespace != "" {
+					config.Namespace = namespace
+				}
+				if config.Name == "" {
+					config.Name = CleanupFilename(configfile)
+				}
+				wg.Add(1)
+				_config := config
+				go func() {
+					queue <- checks.RunChecks(context.New(kommonsClient, _config))
+					wg.Done()
+				}()
 			}
-			if config.Name == "" {
-				config.Name = CleanupFilename(configfile)
-			}
-			wg.Add(1)
-			go func() {
-				queue <- checks.RunChecks(context.New(kommonsClient, *config))
-				wg.Done()
-			}()
 		}
 		failed := 0
 		passed := 0

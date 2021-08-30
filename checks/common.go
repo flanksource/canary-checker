@@ -8,6 +8,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/kommons"
+	"github.com/robfig/cron/v3"
 )
 
 func GetAuthValues(auth *v1.Authentication, client *kommons.Client, namespace string) (*v1.Authentication, error) {
@@ -111,4 +112,17 @@ func (f FolderCheck) Test(test v1.FolderTest) string {
 		}
 	}
 	return ""
+}
+
+func getNextRuntime(canary v1.Canary, lastRuntime time.Time) (*time.Time, error) {
+	if canary.Spec.Schedule != "" {
+		schedule, err := cron.ParseStandard(canary.Spec.Schedule)
+		if err != nil {
+			return nil, err
+		}
+		t := schedule.Next(time.Now())
+		return &t, nil
+	}
+	t := lastRuntime.Add(time.Duration(canary.Spec.Interval) + time.Second)
+	return &t, nil
 }

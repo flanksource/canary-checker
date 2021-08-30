@@ -61,6 +61,9 @@ func (result *CheckResult) Failf(message string, args ...interface{}) *CheckResu
 
 func (result *CheckResult) AddDetails(detail interface{}) *CheckResult {
 	result.Detail = detail
+	if result.Data == nil {
+		result.Data = make(map[string]interface{})
+	}
 	result.Data["results"] = detail
 	return result
 }

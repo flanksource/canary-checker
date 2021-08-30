@@ -867,6 +867,7 @@ func (in *Junit) DeepCopy() *Junit {
 func (in *JunitCheck) DeepCopyInto(out *JunitCheck) {
 	*out = *in
 	out.Description = in.Description
+	out.Templatable = in.Templatable
 	in.Spec.DeepCopyInto(&out.Spec)
 }
 

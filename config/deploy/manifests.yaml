@@ -918,9 +918,13 @@ spec:
                       description:
                         description: Description for the check
                         type: string
-                      displayTemplate:
-                        description: 'DisplayTemplate displays testResults results in text Default: ''Passed: [[.passed]], Failed: [[.failed]]'''
-                        type: string
+                      display:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
@@ -4661,10 +4665,17 @@ spec:
                         required:
                           - containers
                         type: object
+                      test:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       testResults:
                         type: string
                       timeout:
-                        description: timeout in minutes to wait for specified container to finish its job. Defaults to 5 minutes
+                        description: Timeout in minutes to wait for specified container to finish its job. Defaults to 5 minutes
                         type: integer
                     required:
                       - spec
