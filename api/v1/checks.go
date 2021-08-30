@@ -467,24 +467,25 @@ func (c HelmCheck) GetType() string {
 type JunitCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	TestResults string `yaml:"testResults" json:"testResults"`
-	//timeout in minutes to wait for specified container to finish its job.
-	// Defaults to 5 minutes
+	Templatable `yaml:",inline" json:",inline"`
+	// Timeout in minutes to wait for specified container to finish its job. Defaults to 5 minutes
 	Timeout int        `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 	Spec    v1.PodSpec `yaml:"spec" json:"spec"`
-	// DisplayTemplate displays testResults results in text
-	// Default: 'Passed: [[.passed]], Failed: [[.failed]]'
-	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
-}
-
-func (c JunitCheck) GetDisplayTemplate() string {
-	if c.DisplayTemplate != "" {
-		return c.DisplayTemplate
-	}
-	return "Passed: [[.passed]], Failed: [[.failed]]"
 }
 
 func (c JunitCheck) GetEndpoint() string {
-	return fmt.Sprintf("file://%s", c.TestResults)
+	if c.Description.String() != "" {
+		return c.Description.String()
+	}
+	if len(c.Spec.Containers) > 0 {
+		if c.Spec.Containers[0].Name != "" {
+			return c.Spec.Containers[0].Name
+		}
+		if c.Spec.Containers[0].Image != "" {
+			return c.Spec.Containers[0].Image
+		}
+	}
+	return c.TestResults
 }
 
 func (c JunitCheck) GetTimeout() int {
