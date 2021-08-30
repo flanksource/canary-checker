@@ -2,6 +2,7 @@ package context
 
 import (
 	gocontext "context"
+	"fmt"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/logger"
@@ -15,6 +16,10 @@ type Context struct {
 	Canary      v1.Canary
 	Environment map[string]interface{}
 	logger.Logger
+}
+
+func (ctx *Context) String() string {
+	return fmt.Sprintf("%s/%s", ctx.Canary.Namespace, ctx.Canary.Name)
 }
 
 func New(client *kommons.Client, canary v1.Canary) *Context {

@@ -1,9 +1,10 @@
 package pkg
 
 import (
-	"bytes"
 	"io/ioutil"
 	"os"
+	"regexp"
+	"strings"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 
@@ -12,8 +13,7 @@ import (
 )
 
 // ParseConfig : Read config file
-func ParseConfig(configfile string) (*v1.Canary, error) {
-	config := v1.Canary{}
+func ParseConfig(configfile string) ([]v1.Canary, error) {
 	var data []byte
 	var err error
 	if configfile == "-" {
@@ -26,21 +26,27 @@ func ParseConfig(configfile string) (*v1.Canary, error) {
 		}
 	}
 
-	decoder := yamlutil.NewYAMLOrJSONDecoder(bytes.NewReader(data), 1024)
+	var canaries []v1.Canary
+	re := regexp.MustCompile(`(?m)^---\n`)
+	for _, chunk := range re.Split(string(data), -1) {
+		config := v1.Canary{}
+		decoder := yamlutil.NewYAMLOrJSONDecoder(strings.NewReader(chunk), 1024)
 
-	if err := decoder.Decode(&config); err != nil {
-		return nil, err
-	}
-
-	if len(config.Spec.GetAllChecks()) == 0 {
-		// try just the specs:
-		spec := v1.CanarySpec{}
-
-		if yamlerr := yaml.Unmarshal(data, &spec); yamlerr != nil {
-			return nil, yamlerr
+		if err := decoder.Decode(&config); err != nil {
+			return nil, err
 		}
-		config.Spec = spec
+
+		if len(config.Spec.GetAllChecks()) == 0 {
+			// try just the specs:
+			spec := v1.CanarySpec{}
+
+			if yamlerr := yaml.Unmarshal(data, &spec); yamlerr != nil {
+				return nil, yamlerr
+			}
+			config.Spec = spec
+		}
+		canaries = append(canaries, config)
 	}
 
-	return &config, nil
+	return canaries, nil
 }

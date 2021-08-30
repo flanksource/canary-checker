@@ -230,6 +230,13 @@ type Description struct {
 	Icon string `yaml:"icon,omitempty" json:"icon,omitempty"`
 }
 
+func (d Description) String() string {
+	if d.Description != "" {
+		return d.Description
+	}
+	return d.Name
+}
+
 func (d Description) GetDescription() string {
 	return d.Description
 }

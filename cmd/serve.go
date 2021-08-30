@@ -34,38 +34,41 @@ var Serve = &cobra.Command{
 	Short: "Start a server to execute checks ",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		canary, err := pkg.ParseConfig(configFile)
+		configs, err := pkg.ParseConfig(configFile)
 		if err != nil {
 			logger.Fatalf("could not parse %s: %v", configFile, err)
 		}
-		if canary.Spec.Interval == 0 && canary.Spec.Schedule == "" {
-			canary.Spec.Schedule = schedule
-		}
-
 		kommonsClient, err := pkg.NewKommonsClient()
 		if err != nil {
 			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
 		}
 		cron := cron.New()
 		cron.Start()
-		for _, _c := range checks.All {
-			c := _c
-			if !checks.Checks(canary.Spec.GetAllChecks()).Includes(c) {
-				continue
-			}
-			schedule := canary.Spec.Schedule
 
-			cron.AddFunc(schedule, func() { // nolint: errcheck
-				go func() {
-					for _, result := range checks.RunChecks(context.New(kommonsClient, *canary)) {
-						if logPass && result.Pass || logFail && !result.Pass {
-							logger.Infof(result.String())
+		for _, canary := range configs {
+			if canary.Spec.Interval == 0 && canary.Spec.Schedule == "" {
+				canary.Spec.Schedule = schedule
+			}
+
+			for _, _c := range checks.All {
+				c := _c
+				if !checks.Checks(canary.Spec.GetAllChecks()).Includes(c) {
+					continue
+				}
+				schedule := canary.Spec.Schedule
+
+				cron.AddFunc(schedule, func() { // nolint: errcheck
+					go func() {
+						for _, result := range checks.RunChecks(context.New(kommonsClient, canary)) {
+							if logPass && result.Pass || logFail && !result.Pass {
+								logger.Infof(result.String())
+							}
+							cache.AddCheck(canary, result)
+							metrics.Record(canary, result)
 						}
-						cache.AddCheck(*canary, result)
-						metrics.Record(*canary, result)
-					}
-				}()
-			})
+					}()
+				})
+			}
 		}
 		serve()
 	},
