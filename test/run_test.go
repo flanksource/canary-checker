@@ -106,34 +106,34 @@ func TestRunChecks(t *testing.T) {
 
 func runFixture(t *testing.T, name string) {
 	t.Run(name, func(t *testing.T) {
-		canary, err := pkg.ParseConfig(fmt.Sprintf("../%s/%s", testFolder, name))
+		canaries, err := pkg.ParseConfig(fmt.Sprintf("../%s/%s", testFolder, name))
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		if canary == nil {
-			t.Errorf("%s did not parse into a spec", name)
-			return
-		}
-		if canary.Namespace == "" {
-			canary.Namespace = "podinfo-test"
-		}
-		if canary.Name == "" {
-			canary.Name = cmd.CleanupFilename(name)
-		}
-		context := context.New(kommonsClient, *canary)
 
-		checkResults := checks.RunChecks(context)
-		for _, res := range checkResults {
-			if res == nil {
-				t.Errorf("Result in %v returned nil:\n", name)
-			} else {
-				if strings.Contains(name, "fail") && res.Pass {
-					t.Errorf("Expected test to fail, but it passed: %s", res)
-				} else if !strings.Contains(name, "fail") && !res.Pass {
-					t.Errorf("Expected test to pass but it failed %s", res)
+		for _, canary := range canaries {
+
+			if canary.Namespace == "" {
+				canary.Namespace = "podinfo-test"
+			}
+			if canary.Name == "" {
+				canary.Name = cmd.CleanupFilename(name)
+			}
+			context := context.New(kommonsClient, canary)
+
+			checkResults := checks.RunChecks(context)
+			for _, res := range checkResults {
+				if res == nil {
+					t.Errorf("Result in %v returned nil:\n", name)
 				} else {
-					t.Logf("%v: %v", name, res.String())
+					if strings.Contains(name, "fail") && res.Pass {
+						t.Errorf("Expected test to fail, but it passed: %s", res)
+					} else if !strings.Contains(name, "fail") && !res.Pass {
+						t.Errorf("Expected test to pass but it failed %s", res)
+					} else {
+						t.Logf("%v: %v", name, res.String())
+					}
 				}
 			}
 		}
