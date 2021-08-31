@@ -33,6 +33,7 @@ func (c *DNSChecker) Run(ctx *canaryContext.Context) []*pkg.CheckResult {
 func (c *DNSChecker) Check(canaryCtx *canaryContext.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DNSCheck)
 	ctx := context.Background()
+	result := pkg.Success(check)
 	dialer, err := getDialer(check, check.Timeout)
 	if err != nil {
 		return Failf(check, "Failed to get dialer, %v", err)
@@ -42,11 +43,14 @@ func (c *DNSChecker) Check(canaryCtx *canaryContext.Context, extConfig external.
 		Dial:     dialer,
 	}
 
+	timeout := check.Timeout
+	if timeout == 0 {
+		timeout = 10
+	}
+
 	resultCh := make(chan *pkg.CheckResult, 1)
 
 	switch qs := check.QueryType; qs {
-	case "A":
-		go checkA(ctx, &r, check, resultCh)
 	case "PTR":
 		go checkPTR(ctx, &r, check, resultCh)
 	case "CNAME":
@@ -60,16 +64,17 @@ func (c *DNSChecker) Check(canaryCtx *canaryContext.Context, extConfig external.
 	case "NS":
 		go checkNS(ctx, &r, check, resultCh)
 	default:
-		return Failf(check, "unknown query type: %s", check.QueryType)
+		go checkA(ctx, &r, check, resultCh)
 	}
 
 	select {
 	case res := <-resultCh:
+		if res.Duration > int64(check.ThresholdMillis) {
+			return result.Failf("%dms > %dms", res.Duration, check.ThresholdMillis)
+		}
 		return res
-	case <-time.After(time.Millisecond * time.Duration(check.ThresholdMillis)):
-		return Failf(check, fmt.Sprintf(
-			"%s %s on [%s:%d]\ntimed out with threshold: %d ms",
-			check.QueryType, check.Query, check.Server, check.Port, check.ThresholdMillis))
+	case <-time.After(time.Second * time.Duration(timeout)):
+		return result.Failf(fmt.Sprintf("timed out after %d seconds", timeout))
 	}
 }
 
@@ -212,7 +217,11 @@ func getDialer(check v1.DNSCheck, timeout int) (func(ctx context.Context, networ
 		d := net.Dialer{
 			Timeout: time.Second * time.Duration(timeout),
 		}
-		return d.DialContext(ctx, "udp", fmt.Sprintf("%s:%d", check.Server, check.Port))
+		port := check.Port
+		if port == 0 {
+			port = 53
+		}
+		return d.DialContext(ctx, "udp", fmt.Sprintf("%s:%d", check.Server, port))
 	}, nil
 }
 
