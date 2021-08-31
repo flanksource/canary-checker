@@ -58,9 +58,7 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	if err != nil {
 		return result.ErrorMessage(err)
 	}
-	if len(ips) == 0 {
-		return result.Failf("no IP found for %s", endpoint)
-	}
+
 	for _, urlObj := range ips {
 		pingerStats, err := c.checkICMP(urlObj, check.PacketCount)
 		if err != nil {
@@ -70,6 +68,11 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 			return result.Failf("Failed to check icmp, no packets sent")
 		}
 		latency := pingerStats.AvgRtt.Milliseconds()
+		if latency == 0 && pingerStats.AvgRtt.Microseconds() > 0 {
+			// For submillisecond response times, round up to 1ms
+			latency = 1
+		}
+		result.Duration = latency
 		loss := pingerStats.PacketLoss
 
 		if check.ThresholdMillis < latency {
@@ -80,14 +83,9 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 		}
 
 		packetLoss.WithLabelValues(endpoint, ips[0].String()).Set(loss)
-
-		return &pkg.CheckResult{ // nolint: staticcheck
-			Pass:     true,
-			Check:    check,
-			Duration: latency,
-		}
+		return result //nolint
 	}
-	return result
+	return result.Failf("no IP found for %s", endpoint)
 }
 
 func (c *IcmpChecker) checkICMP(ip net.IP, packetCount int) (*ping.Statistics, error) {
