@@ -30,9 +30,18 @@ func (c *DNSChecker) Run(ctx *canaryContext.Context) []*pkg.CheckResult {
 	return results
 }
 
-func (c *DNSChecker) Check(canaryCtx *canaryContext.Context, extConfig external.Check) *pkg.CheckResult {
+var resolvers = map[string]func(ctx context.Context, r *net.Resolver, check v1.DNSCheck) (bool, string, error){
+	"A":     checkA,
+	"CNAME": checkCNAME,
+	"SRV":   checkSRV,
+	"MX":    checkMX,
+	"PTR":   checkPTR,
+	"TXT":   checkTXT,
+	"NS":    checkNS,
+}
+
+func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DNSCheck)
-	ctx := context.Background()
 	result := pkg.Success(check)
 	dialer, err := getDialer(check, check.Timeout)
 	if err != nil {
@@ -50,170 +59,118 @@ func (c *DNSChecker) Check(canaryCtx *canaryContext.Context, extConfig external.
 
 	resultCh := make(chan *pkg.CheckResult, 1)
 
-	switch qs := check.QueryType; qs {
-	case "PTR":
-		go checkPTR(ctx, &r, check, resultCh)
-	case "CNAME":
-		go checkCNAME(ctx, &r, check, resultCh)
-	case "SRV":
-		go checkSRV(ctx, &r, check, resultCh)
-	case "MX":
-		go checkMX(ctx, &r, check, resultCh)
-	case "TXT":
-		go checkTXT(ctx, &r, check, resultCh)
-	case "NS":
-		go checkNS(ctx, &r, check, resultCh)
-	default:
-		go checkA(ctx, &r, check, resultCh)
+	queryType := check.QueryType
+	if queryType == "" {
+		queryType = "A"
+	}
+	if fn, ok := resolvers[strings.ToUpper(queryType)]; !ok {
+		return result.Failf("unkown query type: %s", queryType)
+	} else {
+		go func() {
+			pass, message, err := fn(ctx, &r, check)
+			result.ErrorMessage(err)
+			if !pass {
+				result.Failf(message)
+			}
+			resultCh <- result
+		}()
 	}
 
 	select {
 	case res := <-resultCh:
-		if res.Duration > int64(check.ThresholdMillis) {
-			return result.Failf("%dms > %dms", res.Duration, check.ThresholdMillis)
-		}
+		res.Duration = res.GetDuration()
 		if res.Duration == 0 {
 			// round up submillisecond response times to 1ms
 			res.Duration = 1
 		}
+		if res.Duration > int64(check.ThresholdMillis) {
+			return result.Failf("%dms > %dms", res.Duration, check.ThresholdMillis)
+		}
 		return res
 	case <-time.After(time.Second * time.Duration(timeout)):
+		result.Duration = result.GetDuration()
 		return result.Failf(fmt.Sprintf("timed out after %d seconds", timeout))
 	}
 }
 
-func checkA(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
-	start := time.Now()
+func checkA(ctx context.Context, r *net.Resolver, check v1.DNSCheck) (pass bool, message string, err error) {
 	result, err := r.LookupHost(ctx, check.Query)
 	if err != nil {
-		resultCh <- Failf(check, "Failed to lookup: %v", err)
+		return pass, "", err
 	}
 
-	elapsed := time.Since(start)
-
-	pass, message := checkResult(result, check)
-
-	resultCh <- &pkg.CheckResult{
-		Check:    check,
-		Pass:     pass,
-		Invalid:  false,
-		Duration: elapsed.Milliseconds(),
-		Message:  message,
-	}
+	pass, message = checkResult(result, check)
+	return
 }
 
-func checkPTR(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
-	start := time.Now()
+func checkPTR(ctx context.Context, r *net.Resolver, check v1.DNSCheck) (pass bool, message string, err error) {
 	result, err := r.LookupAddr(ctx, check.Query)
 	if err != nil {
-		resultCh <- Failf(check, "Failed to lookup: %v", err)
+		return pass, "", err
 	}
 
-	elapsed := time.Since(start)
-
-	pass, message := checkResult(result, check)
-	resultCh <- &pkg.CheckResult{
-		Check:    check,
-		Pass:     pass,
-		Invalid:  false,
-		Duration: elapsed.Milliseconds(),
-		Message:  message,
-	}
+	pass, message = checkResult(result, check)
+	return
 }
 
-func checkCNAME(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
-	start := time.Now()
+func checkCNAME(ctx context.Context, r *net.Resolver, check v1.DNSCheck) (pass bool, message string, err error) {
 	result, err := r.LookupCNAME(ctx, check.Query)
 	if err != nil {
-		resultCh <- Failf(check, "Failed to lookup: %v", err)
+		return pass, "", err
 	}
-	elapsed := time.Since(start)
 
-	pass, message := checkResult([]string{result}, check)
-	resultCh <- &pkg.CheckResult{
-		Check:    check,
-		Pass:     pass,
-		Invalid:  false,
-		Duration: elapsed.Milliseconds(),
-		Message:  message,
-	}
+	pass, message = checkResult([]string{result}, check)
+	return
 }
 
-func checkSRV(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
+func checkSRV(ctx context.Context, r *net.Resolver, check v1.DNSCheck) (pass bool, message string, err error) {
+
 	service, proto, name, err := srvInfo(check.Query)
-	if err != nil {
-		resultCh <- Failf(check, "Wrong SRV query %s", check.Query)
-	}
 	cname, addr, err := r.LookupSRV(ctx, service, proto, name)
 	if err != nil {
-		resultCh <- Failf(check, "Failed to lookup: %v", err)
+		return pass, "", err
 	}
-	resultCh <- Passf(check, "got: %s %v", cname, addr)
+	pass = true
+	message = fmt.Sprintf("got: %s %v", cname, addr)
+	return
 }
 
-func checkMX(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
-	start := time.Now()
+func checkMX(ctx context.Context, r *net.Resolver, check v1.DNSCheck) (pass bool, message string, err error) {
 	result, err := r.LookupMX(ctx, check.Query)
 	if err != nil {
-		resultCh <- Failf(check, "Failed to lookup: %v", err)
+		return pass, "", err
 	}
-	elapsed := time.Since(start)
+
 	var resultString []string
 	for _, reply := range result {
 		resultString = append(resultString, fmt.Sprintf("%s %d", reply.Host, reply.Pref))
 	}
-	pass, message := checkResult(resultString, check)
-	resultCh <- &pkg.CheckResult{
-		Pass:     pass,
-		Invalid:  false,
-		Duration: elapsed.Milliseconds(),
-		Check:    check,
-		Message:  message,
-	}
+	pass, message = checkResult(resultString, check)
+	return
 }
 
-func checkTXT(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
-	start := time.Now()
+func checkTXT(ctx context.Context, r *net.Resolver, check v1.DNSCheck) (pass bool, message string, err error) {
 	result, err := r.LookupTXT(ctx, check.Query)
 	if err != nil {
-		resultCh <- Failf(check, "Failed to lookup: %v", err)
+		return pass, "", err
 	}
-	elapsed := time.Since(start)
-	pass, message := checkResult(result, check)
-	resultCh <- &pkg.CheckResult{
-		Check:    check,
-		Pass:     pass,
-		Invalid:  false,
-		Duration: elapsed.Milliseconds(),
-		Message:  message,
-	}
+
+	pass, message = checkResult(result, check)
+	return
 }
 
-func checkNS(ctx context.Context, r *net.Resolver, check v1.DNSCheck, resultCh chan *pkg.CheckResult) {
-	start := time.Now()
+func checkNS(ctx context.Context, r *net.Resolver, check v1.DNSCheck) (pass bool, message string, err error) {
 	result, err := r.LookupNS(ctx, check.Query)
-	elapsed := time.Since(start)
 	if err != nil {
-		resultCh <- &pkg.CheckResult{
-			Check:    check,
-			Pass:     false,
-			Invalid:  false,
-			Duration: elapsed.Milliseconds(),
-			Message:  err.Error(),
-		}
+		return pass, "", err
 	}
+
 	var resultString []string
 	for _, reply := range result {
 		resultString = append(resultString, reply.Host)
 	}
-	pass, message := checkResult(resultString, check)
-	resultCh <- &pkg.CheckResult{
-		Check:    check,
-		Pass:     pass,
-		Invalid:  false,
-		Duration: elapsed.Milliseconds(),
-		Message:  message,
-	}
+	pass, message = checkResult(resultString, check)
+	return
 }
 
 func getDialer(check v1.DNSCheck, timeout int) (func(ctx context.Context, network, address string) (net.Conn, error), error) { // nolint: unparam

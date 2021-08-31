@@ -206,6 +206,7 @@ type URL struct {
 }
 
 type CheckResult struct {
+	Start       time.Time
 	Pass        bool
 	Invalid     bool
 	Detail      interface{}
