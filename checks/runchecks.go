@@ -23,6 +23,9 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 		result := c.Run(ctx)
 		for _, r := range result {
 			if r != nil {
+				if r.Duration == 0 && r.GetDuration() > 0 {
+					r.Duration = r.GetDuration()
+				}
 				switch r.Check.(type) {
 				case v1.DisplayTemplate:
 					message, err := template(ctx.New(r.Data), r.Check.(v1.DisplayTemplate).GetDisplayTemplate())

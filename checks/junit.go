@@ -124,6 +124,24 @@ func waitForInitContainer(ctx *context.Context, k8s kubernetes.Interface, timeou
 	}
 }
 
+func podExecf(ctx *context.Context, k8s kubernetes.Interface, pod corev1.Pod, result *pkg.CheckResult, cmd string, args ...interface{}) (string, bool) {
+	_cmd := fmt.Sprintf(cmd, args...)
+	stdout, stderr, err := ctx.Kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", _cmd)
+	if stderr != "" || err != nil {
+		podFail(ctx, k8s, pod, result.Failf("error running %s: %v %v %v", _cmd, stdout, stderr, err))
+		return "", false
+	}
+	return stdout, true
+}
+
+func podFail(ctx *context.Context, k8s kubernetes.Interface, pod corev1.Pod, result *pkg.CheckResult) *pkg.CheckResult {
+	message, _ := ctx.Kommons.GetPodLogs(pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
+	if len(message) > 3000 {
+		message = message[len(message)-3000:]
+	}
+	return result.ErrorMessage(fmt.Errorf("pod is not healthy: \n %v", message))
+}
+
 func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 
 	junitCheck := extConfig.(v1.JunitCheck)
@@ -180,31 +198,28 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) *pk
 
 	podObj, err := pods.Get(ctx, pod.Name, metav1.GetOptions{})
 	if err != nil {
-		logger.Infof("error getting pod")
-
 		return result.ErrorMessage(err)
 	}
 
 	if !kommons.IsPodHealthy(*podObj) {
-		message, _ := ctx.Kommons.GetPodLogs(pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
-		if len(message) > 3000 {
-			message = message[len(message)-3000:]
-		}
-		return result.ErrorMessage(fmt.Errorf("pod is not healthy: \n %v", message))
+		return podFail(ctx, k8s, *pod, result)
 	}
 
-	logger.Tracef("[%s/%s] pod is %s", ctx.Namespace, ctx.Canary.Name, &podObj.Status.Phase)
+	logger.Tracef("[%s/%s] pod is %s", ctx, &podObj.Status.Phase)
 
 	var suites JunitTestSuites
-	files, stderr, err := ctx.Kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", fmt.Sprintf("find %v -name \\*.xml -type f", mountPath))
-	if stderr != "" || err != nil {
-		return result.ErrorMessage(fmt.Errorf("error fetching test files: %v %v", stderr, err))
+	files, ok := podExecf(ctx, k8s, *pod, result, fmt.Sprintf("find %v -name \\*.xml -type f", mountPath))
+	if !ok {
+		return result
 	}
-
-	for _, file := range strings.Split(strings.TrimSpace(files), "\n") {
-		output, _, err := ctx.Kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "cat", file)
-		if err != nil {
-			return result.ErrorMessage(err)
+	files = strings.TrimSpace(files)
+	if files == "" {
+		return result.Failf("No junit files found")
+	}
+	for _, file := range strings.Split(files, "\n") {
+		output, ok := podExecf(ctx, k8s, *pod, result, "cat %v", file)
+		if !ok {
+			return result
 		}
 		suites, err = suites.Ingest(output)
 	}
