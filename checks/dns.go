@@ -86,6 +86,10 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 		if res.Duration > int64(check.ThresholdMillis) {
 			return result.Failf("%dms > %dms", res.Duration, check.ThresholdMillis)
 		}
+		if res.Duration == 0 {
+			// round up submillisecond response times to 1ms
+			res.Duration = 1
+		}
 		return res
 	case <-time.After(time.Second * time.Duration(timeout)):
 		result.Duration = result.GetDuration()
