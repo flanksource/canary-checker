@@ -21,8 +21,6 @@ name: Test
 jobs:
   test:
     runs-on: ubuntu-latest
-    container:
-      image: flanksource/build-tools:v0.15.0
     steps:
       - name: Install Go
         uses: actions/setup-go@v2
