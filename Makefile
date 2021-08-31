@@ -2,6 +2,8 @@
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= ""
 NAME=canary-checker
+OS   = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ARCH = $(shell uname -m | sed 's/x86_64/amd64/')
 
 ifeq ($(VERSION),)
   VERSION_TAG=$(shell git describe --abbrev=0 --tags --exact-match 2>/dev/null || echo latest)
@@ -119,6 +121,10 @@ release: ui kustomize linux darwin-amd64 darwin-arm64 windows compress
 	cd config/base && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/ > ./.bin/release.yaml
 
+.PHONY: lint
+lint:
+	golangci-lint run
+
 .PHONY: serve-docs
 serve-docs:
 	docker run --rm -it -p 8000:8000 -v $(PWD):/docs -w /docs squidfunk/mkdocs-material
@@ -151,6 +157,10 @@ build:
 install: build
 	cp ./.bin/$(NAME) /usr/local/bin/
 
+.PHONY: test-e2e
+test-e2e: bin
+	./test/e2e.sh
+
 # find or download controller-gen
 # download controller-gen if necessary
 controller-gen:
@@ -168,6 +178,7 @@ else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
 
+
 # find or download kustomize if necessary
 kustomize:
 ifeq (, $(shell which kustomize))
@@ -184,13 +195,43 @@ else
 KUSTOMIZE=$(shell which kustomize)
 endif
 
-OS   = $(shell uname -s | tr '[:upper:]' '[:lower:]')
-ARCH = $(shell uname -m | sed 's/x86_64/amd64/')
+.bin/go-junit-report:
+	mkdir -p .bin
+	# set -e ;\
+	_TMP_DIR=$$(mktemp -d) ;\
+	cd $$_TMP_DIR ;\
+	go mod init tmp   ;\
+	go get github.com/jstemmer/go-junit-report   ;\
+	rm -rf $$_TMP_DIR
+	cp $(GOBIN)/go-junit-report .bin/go-junit-report ;\
+
+.bin/jmeter:
+	curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmeter-5.4.1.tgz -o apache-jmeter-5.4.1.tgz && \
+    sudo tar xf apache-jmeter-5.4.1.tgz -C .bin/ && \
+    rm apache-jmeter-5.4.1.tgz && \
+		ln -s apache-jmeter-5.4.1/bin/jmeter .bin/jmeter
+
+.bin/restic:
+	wget -nv  https://github.com/restic/restic/releases/download/v0.12.0/restic_0.12.0_$(OS)_$(ARCH).bz2 -O .bin/restic.bz2 && \
+    bunzip2  .bin/restic.bz2 && \
+    chmod +x .bin/restic
+
+.bin/wait4x:
+	wget -nv https://github.com/atkrad/wait4x/releases/download/v0.3.0/wait4x-$(OS)-$(ARCH) -O .bin/wait4x && \
+  chmod +x .bin/wait4x
+
+.bin/karina:
+	wget -q https://github.com/flanksource/karina/releases/download/v0.50.0/karina_$(OS)-$(ARCH) -O .bin/karina && \
+	chmod +x .bin/karina
 
 .bin/yq:
-	mkdir -p .bin
 	curl -sSLo .bin/yq https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_$(OS)_$(ARCH) && chmod +x .bin/yq
 YQ = $(realpath ./.bin/yq)
+
+.bin:
+	mkdir -p .bin
+
+bin: .bin .bin/wait4x .bin/yq .bin/karina .bin/go-junit-report .bin/restic .bin/jmeter
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources
