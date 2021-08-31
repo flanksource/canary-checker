@@ -8,6 +8,14 @@ export KUBECONFIG=~/.kube/config
 export DOCKER_API_VERSION=1.39
 export CLUSTER_NAME=kind-test
 
+if which yq 2>&1 > /dev/null; then
+    sudo curl -L https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64 -o /usr/bin/yq
+    sudo chmod +x /usr/bin/yq
+fi
+
+if which go-junit-report 2>&1 > /dev/null; then
+  go get -u github.com/jstemmer/go-junit-report
+fi
 
 if which karina 2>&1 > /dev/null; then
   KARINA="karina -c test/config.yaml"
@@ -64,8 +72,12 @@ echo "::group::Testing"
 export DOCKER_USERNAME=test
 export DOCKER_PASSWORD=password
 
-wget -q https://github.com/atkrad/wait4x/releases/download/v0.3.0/wait4x-linux-amd64  -O ./wait4x
-chmod +x ./wait4x
+
+
+if ! which wait4x 2>&1 > /dev/null; then
+  wget -q https://github.com/atkrad/wait4x/releases/download/v0.3.0/wait4x-linux-amd64  -O ./wait4x
+  chmod +x ./wait4x
+fi
 
 ./wait4x tcp 127.0.0.1:30636 -t 120s -i 5s || true
 ./wait4x tcp 127.0.0.1:30389 || true
@@ -112,7 +124,7 @@ kubectl apply -R -f test/nested-canaries/
 kubectl create secret generic aws-credentials --from-literal=AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --from-literal=AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -n podinfo-test
 
 cd test
-go test ./... -v -c
+go test ./... -v -c 2>&1 | go-junit-report > test-results.xml
 # ICMP requires privileges so we run the tests with sudo
 sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG,TEST_FOLDER ./test.test  -test.v
 echo "::endgroup::"
