@@ -10,12 +10,15 @@ import (
 func Fail(check external.Check) *CheckResult {
 	return &CheckResult{
 		Check: check,
+		Data:  make(map[string]interface{}),
+		Start: time.Now(),
 		Pass:  false,
 	}
 }
 
 func Success(check external.Check) *CheckResult {
 	return &CheckResult{
+		Start: time.Now(),
 		Pass:  true,
 		Check: check,
 		Data:  make(map[string]interface{}),
@@ -23,6 +26,9 @@ func Success(check external.Check) *CheckResult {
 }
 
 func (result *CheckResult) ErrorMessage(err error) *CheckResult {
+	if err == nil {
+		return result
+	}
 	result.Error = err.Error()
 	result.Pass = false
 	return result
@@ -34,8 +40,19 @@ func (result *CheckResult) ResultMessage(message string, args ...interface{}) *C
 }
 
 func (result *CheckResult) StartTime(start time.Time) *CheckResult {
+	result.Start = start
 	result.Duration = time.Since(start).Milliseconds()
 	return result
+}
+
+func (result *CheckResult) GetDuration() int64 {
+	if result.Duration > 0 {
+		return result.Duration
+	}
+	if !result.Start.IsZero() {
+		return int64(time.Since(result.Start).Milliseconds())
+	}
+	return 0
 }
 
 func (result *CheckResult) ResultDescription(description string) *CheckResult {
