@@ -119,6 +119,11 @@ release: ui kustomize linux darwin-amd64 darwin-arm64 windows compress
 	cd config/base && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/ > ./.bin/release.yaml
 
+
+.PHONY: lint
+lint:
+	golangci-lint run
+
 .PHONY: serve-docs
 serve-docs:
 	docker run --rm -it -p 8000:8000 -v $(PWD):/docs -w /docs squidfunk/mkdocs-material
@@ -151,6 +156,12 @@ build:
 install: build
 	cp ./.bin/$(NAME) /usr/local/bin/
 
+.PHONY: test-e2e
+test-e2e: go-junit-report
+# ICMP requires privileges so we run the tests with sudo
+	cd test && \
+	sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG,TEST_FOLDER go test ./... -run TestRunChecks/dns.* -v -test.v 2>&1 | tee test.out; cat test.out | $(JUNIT_REPORT) > test-results.xml
+
 # find or download controller-gen
 # download controller-gen if necessary
 controller-gen:
@@ -167,6 +178,24 @@ CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
+
+
+go-junit-report:
+ifeq (, $(shell which go-junit-report))
+	@{ \
+	echo downloading go-junit-report; \
+	set -e ;\
+	_TMP_DIR=$$(mktemp -d) ;\
+	cd $$_TMP_DIR ;\
+	go mod init tmp ;\
+	go get github.com/jstemmer/go-junit-report ;\
+	rm -rf $$_TMP_DIR ;\
+	}
+JUNIT_REPORT=$(GOBIN)/go-junit-report
+else
+JUNIT_REPORT=$(shell which go-junit-report)
+endif
+
 
 # find or download kustomize if necessary
 kustomize:
