@@ -2,7 +2,7 @@
 
 set -e
 
-export KARINA="./karina -c test/config.yaml"
+export KARINA="karina -c test/config.yaml"
 export KUBECONFIG=~/.kube/config
 export DOCKER_API_VERSION=1.39
 export CLUSTER_NAME=kind-test
