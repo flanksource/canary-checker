@@ -1,6 +1,7 @@
 package test
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -80,6 +81,7 @@ func TestMain(m *testing.M) {
 }
 
 var kommonsClient *kommons.Client
+var verbosity = 0
 
 func init() {
 	var err error
@@ -87,9 +89,12 @@ func init() {
 	if err != nil {
 		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
 	}
+	flag.IntVar(&verbosity, "verbose", 0, "Add verbose logging")
 }
 
 func TestRunChecks(t *testing.T) {
+	logger.StandardLogger().SetLogLevel(verbosity)
+
 	files, _ := ioutil.ReadDir(fmt.Sprintf("../%s", testFolder))
 	t.Logf("Folder: %s", testFolder)
 	wg := sync.WaitGroup{}
@@ -113,7 +118,6 @@ func runFixture(t *testing.T, name string) {
 		}
 
 		for _, canary := range canaries {
-
 			if canary.Namespace == "" {
 				canary.Namespace = "podinfo-test"
 			}
