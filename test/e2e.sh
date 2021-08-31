@@ -2,10 +2,31 @@
 
 set -ex
 
-export KARINA="karina -c test/config.yaml"
+export KARINA_VERSION=v0.50.0
+export KARINA="./karina -c test/config.yaml"
 export KUBECONFIG=~/.kube/config
 export DOCKER_API_VERSION=1.39
 export CLUSTER_NAME=kind-test
+
+
+if which karina 2>&1 > /dev/null; then
+  KARINA="karina -c test/config.yaml"
+else
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  export KARINA_VERSION=v0.50.0
+
+    wget -q https://github.com/flanksource/karina/releases/download/$KARINA_VERSION/karina
+    chmod +x karina
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    wget -q https://github.com/flanksource/karina/releases/download/$KARINA_VERSION/karina_osx
+    cp karina_osx karina
+    chmod +x karina
+  else
+    echo "OS $OSTYPE not supported"
+    exit 1
+  fi
+fi
+
 
 echo "$(kubectl config current-context) != kind-$CLUSTER_NAME"
 
@@ -47,13 +68,19 @@ export DOCKER_USERNAME=test
 export DOCKER_PASSWORD=password
 
 
-wait4x tcp 127.0.0.1:30636 -t 120s -i 5s || true
-wait4x tcp 127.0.0.1:30389 || true
-wait4x tcp 127.0.0.1:32432 || true
-wait4x tcp 127.0.0.1:32004 || true
-wait4x tcp 127.0.0.1:32010 || true
-wait4x tcp 127.0.0.1:32018 || true
-wait4x tcp 127.0.0.1:32015 || true
+
+if ! which wait4x 2>&1 > /dev/null; then
+  wget -q https://github.com/atkrad/wait4x/releases/download/v0.3.0/wait4x-linux-amd64  -O ./wait4x
+  chmod +x ./wait4x
+fi
+
+./wait4x tcp 127.0.0.1:30636 -t 120s -i 5s || true
+./wait4x tcp 127.0.0.1:30389 || true
+./wait4x tcp 127.0.0.1:32432 || true
+./wait4x tcp 127.0.0.1:32004 || true
+./wait4x tcp 127.0.0.1:32010 || true
+./wait4x tcp 127.0.0.1:32018 || true
+./wait4x tcp 127.0.0.1:32015 || true
 
 #Install jmeter
 if ! which jmeter 2>&1 > /dev/null; then
@@ -84,15 +111,10 @@ RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="mi
 #take some backup in restic
 RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="minio123" restic --cacert .certs/ingress-ca.crt -r s3:https://minio.127.0.0.1.nip.io/restic-canary-checker backup $(pwd)
 
-# don't build UI as that requires an NPM token
-mkdir ui/build
-touch ui/build/robots.txt
+make ui
 
 kubectl apply -R -f test/nested-canaries/
 kubectl create secret generic aws-credentials --from-literal=AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --from-literal=AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -n podinfo-test
 
-cd test
-go test ./... -v -c 2>&1 | go-junit-report > test-results.xml
-# ICMP requires privileges so we run the tests with sudo
-sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG,TEST_FOLDER ./test.test  -test.v
+make test-e2e
 echo "::endgroup::"
