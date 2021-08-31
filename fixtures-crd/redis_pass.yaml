@@ -5,6 +5,6 @@ metadata:
 spec:
   interval: 30
   redis:
-    - addr: "redis.platform-system:32004"
+    - addr: "redis.platform-system:33679"
       db: 0
       description: "The redis pass test"

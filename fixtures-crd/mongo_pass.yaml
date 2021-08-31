@@ -1,0 +1,15 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: mongo
+spec:
+  interval: 30
+  mongodb:
+    - url: mongo
+      description: mongo ping
+      port: 33017
+      credentials:
+        username:
+          value: mongoadmin
+        password:
+          value: secret

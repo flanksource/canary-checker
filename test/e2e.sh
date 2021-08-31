@@ -6,34 +6,21 @@ export KARINA="karina -c test/config.yaml"
 export KUBECONFIG=~/.kube/config
 export DOCKER_API_VERSION=1.39
 export CLUSTER_NAME=kind-test
-export PATH=.bin/$PATH
+export PATH=$(pwd)/.bin:$PATH
 
-SKIP_K8S_SETUP=${SKIP_K8S_SETUP:-false}
+KARINA_SETUP=${KARINA_SETUP:-true}
 WAIT=${WAIT:-true}
 RESTIC=${RESTIC:-true}
 UI=${UI:-true}
 
 
-if ! $SKIP_K8S_SETUP ; then
-  echo "$(kubectl config current-context) != kind-$CLUSTER_NAME"
-  if [[ "$(kubectl config current-context)" != "kind-$CLUSTER_NAME" ]] ; then
-    echo "::group::Provisioning"
-    if [[ ! -e .certs/root-ca.key ]]; then
-      $KARINA ca generate --name root-ca --cert-path .certs/root-ca.crt --private-key-path .certs/root-ca.key --password foobar  --expiry 1
-      $KARINA ca generate --name ingress-ca --cert-path .certs/ingress-ca.crt --private-key-path .certs/ingress-ca.key --password foobar  --expiry 1
-      $KARINA ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.pem --private-key-path .certs/sealed-secrets-key.pem --password foobar  --expiry 1
-    fi
-    if $KARINA provision kind-cluster --trace -vv ; then
-      echo "::endgroup::"
-    else
-      echo "::endgroup::"
-      exit 1
-    fi
+if ! $KARINA_SETUP ; then
+  echo "::group::Provisioning"
+  if [[ ! -e .certs/root-ca.key ]]; then
+    $KARINA ca generate --name root-ca --cert-path .certs/root-ca.crt --private-key-path .certs/root-ca.key --password foobar  --expiry 1
+    $KARINA ca generate --name ingress-ca --cert-path .certs/ingress-ca.crt --private-key-path .certs/ingress-ca.key --password foobar  --expiry 1
+    $KARINA ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.pem --private-key-path .certs/sealed-secrets-key.pem --password foobar  --expiry 1
   fi
-
-  kubectl config use-context kind-$CLUSTER_NAME
-
-  export PATH=$(pwd)/.bin:$PATH
 
   echo "::group::Deploying Base"
   $KARINA deploy bootstrap -vv
@@ -48,22 +35,25 @@ if ! $SKIP_K8S_SETUP ; then
   kubectl -n ldap delete svc apacheds
   $KARINA apply setup.yml
   echo "::endgroup::"
+  echo "::endgroup::"
 fi
 
-echo "::group::Testing"
+echo "::group::Waiting for environment"
+
 export DOCKER_USERNAME=test
 export DOCKER_PASSWORD=password
 
+kubectl port-forward -n podinfo-test svc/podinfo 33898:9898 &
+kubectl port-forward -n platform-system svc/postgres 33432:5432 &
+kubectl port-forward -n platform-system svc/redis 33379:6379 &
+kubectl port-forward -n platform-system svc/mssql 33143:1433 &
+kubectl port-forward -n platform-system svc/mongo 33017:27017 &
+kubectl port-forward -n podinfo-test svc/podinfo 33999:9999 &
+kubectl port-forward -n minio svc/minio 33000:9000 &
+kubectl port-forward -n monitoring svc/prometheus-k8s 33090:9090 &
+kubectl port-forward -n ldap svc/apacheds 33389:10389 &
+kubectl port-forward -n ldap svc/apacheds 33636:10636 &
 
-if $WAIT ; then
-  wait4x tcp 127.0.0.1:30636 -t 120s -i 5s || true
-  wait4x tcp 127.0.0.1:30389 || true
-  wait4x tcp 127.0.0.1:32432 || true
-  wait4x tcp 127.0.0.1:32004 || true
-  wait4x tcp 127.0.0.1:32010 || true
-  wait4x tcp 127.0.0.1:32018 || true
-  wait4x tcp 127.0.0.1:32015 || true
-fi
 
 if $RESTIC ; then
   #Verify
@@ -74,15 +64,19 @@ if $RESTIC ; then
   #take some backup in restic
   RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="minio123" restic --cacert .certs/ingress-ca.crt -r s3:https://minio.127.0.0.1.nip.io/restic-canary-checker backup $(pwd)
 fi;
+echo "::endgroup::"
 
 if $UI ; then
+  echo "::group::Building UI"
   make ui
+  echo "::endgroup::"
 fi
 
 
 kubectl apply -R -f test/nested-canaries/
 kubectl create secret generic aws-credentials --from-literal=AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --from-literal=AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -n podinfo-test -o yaml --dry-run | kubectl apply -n podinfo-test -f -
 
+echo "::group::Testing"
 cd test
 # first compile the test binary
 go test ./... -v -c
