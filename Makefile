@@ -230,7 +230,7 @@ endif
 YQ = $(realpath ./.bin/yq)
 
 .bin:
-	mkdir -p bin
+	mkdir -p .bin
 
 bin: .bin .bin/wait4x .bin/yq .bin/karina .bin/go-junit-report .bin/restic .bin/jmeter
 
