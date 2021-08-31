@@ -28,6 +28,9 @@ jobs:
           go-version: 1.16.x
       - name: Checkout code
         uses: actions/checkout@v2
+      - run: |
+          apt-get update && apt-get install -y openjdk-11-jre-headless
+          make .bin
       - name: Test
         env:
           KUBERNETES_VERSION: v1.20.7
