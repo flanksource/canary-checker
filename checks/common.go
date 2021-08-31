@@ -75,6 +75,19 @@ func (f FolderCheck) Test(test v1.FolderTest) string {
 		return fmt.Sprintf("invalid duration %s: %v", test.MinAge, err)
 	}
 	maxAge, err := test.GetMaxAge()
+
+	if test.MinCount != nil && len(f.Files) < *test.MinCount {
+		return fmt.Sprintf("too few files %d < %d", len(f.Files), *test.MinCount)
+	}
+	if test.MaxCount != nil && len(f.Files) > *test.MaxCount {
+		return fmt.Sprintf("too many files %d > %d", len(f.Files), *test.MaxCount)
+	}
+
+	if len(f.Files) == 0 {
+		// nothing run age/size checks on
+		return ""
+	}
+
 	if err != nil {
 		return fmt.Sprintf("invalid duration %s: %v", test.MaxAge, err)
 	}
@@ -83,12 +96,6 @@ func (f FolderCheck) Test(test v1.FolderTest) string {
 	}
 	if maxAge != nil && time.Since(f.Oldest.ModTime()) > *maxAge {
 		return fmt.Sprintf("%s is too old %s > %s", f.Oldest.Name(), age(f.Oldest.ModTime()), test.MaxAge)
-	}
-	if test.MinCount != nil && len(f.Files) < *test.MinCount {
-		return fmt.Sprintf("too few files %d < %d", len(f.Files), *test.MinCount)
-	}
-	if test.MaxCount != nil && len(f.Files) > *test.MaxCount {
-		return fmt.Sprintf("too many files %d > %d", len(f.Files), *test.MaxCount)
 	}
 
 	if test.MinSize != "" {
