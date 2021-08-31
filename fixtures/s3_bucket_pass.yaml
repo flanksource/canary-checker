@@ -6,7 +6,7 @@ s3Bucket:
     secretKey:
       value: "minio123"
     region: "minio"
-    endpoint: "https://minio.127.0.0.1.nip.io"
+    endpoint: "http://localhost:33000"
     objectPath: "(.*)backup.zip$"
     maxAge: 10800m # 7 days
     minSize: 25
@@ -19,7 +19,7 @@ s3Bucket:
     secretKey:
       value: "minio123"
     region: "minio"
-    endpoint: "https://minio.127.0.0.1.nip.io"
+    endpoint: "http://localhost:33000"
     objectPath: "mysql\\/backups\\/(.*)\\/mysql.zip$"
     maxAge: 10800m # 7 days
     minSize: 25
@@ -32,7 +32,7 @@ s3Bucket:
     secretKey:
       value: "minio123"
     region: "minio"
-    endpoint: "https://minio.127.0.0.1.nip.io"
+    endpoint: "http://localhost:33000"
     objectPath: "pg\\/backups\\/(.*)\\/backup.zip$"
     maxAge: 10800m # 7 days
     minSize: 25

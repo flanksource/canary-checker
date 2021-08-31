@@ -14,7 +14,7 @@ RESTIC=${RESTIC:-true}
 UI=${UI:-true}
 
 
-if ! $KARINA_SETUP ; then
+if $KARINA_SETUP ; then
   echo "::group::Provisioning"
   if [[ ! -e .certs/root-ca.key ]]; then
     $KARINA ca generate --name root-ca --cert-path .certs/root-ca.crt --private-key-path .certs/root-ca.key --password foobar  --expiry 1
@@ -78,10 +78,13 @@ kubectl create secret generic aws-credentials --from-literal=AWS_ACCESS_KEY_ID=$
 
 echo "::group::Testing"
 cd test
+if [[ "$1" != "" ]]; then
+  EXTRA=" -test.run TestRunChecks/${1}.* "
+fi
 # first compile the test binary
 go test ./... -v -c
 USER=$(whoami)
-sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG,TEST_FOLDER ./test.test  -test.v  2>&1 | tee test.out
+sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG,TEST_FOLDER ./test.test  -test.v $EXTRA 2>&1 | tee test.out
 sudo chown $USER test.out
 cat test.out | go-junit-report > test-results.xml
 

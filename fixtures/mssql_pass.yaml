@@ -1,4 +1,4 @@
 mssql:
-  - connection: 'server=127.0.0.1;user id=sa;password=S0m3p@sswd;port=32010;database=master'
+  - connection: "server=127.0.0.1;user id=sa;password=S0m3p@sswd;port=33443;database=master"
     query: "SELECT 1"
     results: 1
