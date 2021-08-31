@@ -20,25 +20,15 @@ on:
 name: Test
 jobs:
   test:
-    strategy:
-      matrix:
-        go-version: [1.16.x]
-        platform: [ubuntu-latest]
-        k8s:
-          - v1.18.6
-          - v1.20.7
-    runs-on: ${{ matrix.platform }}
+    runs-on: ubuntu-latest
+    container:
+      image: flanksource/build-tools:v0.15.0
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{ matrix.go-version }}
       - name: Checkout code
         uses: actions/checkout@v2
-
       - name: Test
         env:
-          KUBERNETES_VERSION: ${{matrix.k8s}}
+          KUBERNETES_VERSION: v1.20.7
         run: ./test/e2e.sh
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1

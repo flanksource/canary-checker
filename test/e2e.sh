@@ -2,36 +2,10 @@
 
 set -ex
 
-export KARINA_VERSION=v0.50.0
 export KARINA="./karina -c test/config.yaml"
 export KUBECONFIG=~/.kube/config
 export DOCKER_API_VERSION=1.39
 export CLUSTER_NAME=kind-test
-
-if which yq 2>&1 > /dev/null; then
-    sudo curl -L https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_linux_amd64 -o /usr/bin/yq
-    sudo chmod +x /usr/bin/yq
-fi
-
-if which go-junit-report 2>&1 > /dev/null; then
-  go get -u github.com/jstemmer/go-junit-report
-fi
-
-if which karina 2>&1 > /dev/null; then
-  KARINA="karina -c test/config.yaml"
-else
-  if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    wget -q https://github.com/flanksource/karina/releases/download/$KARINA_VERSION/karina
-    chmod +x karina
-  elif [[ "$OSTYPE" == "darwin"* ]]; then
-    wget -q https://github.com/flanksource/karina/releases/download/$KARINA_VERSION/karina_osx
-    cp karina_osx karina
-    chmod +x karina
-  else
-    echo "OS $OSTYPE not supported"
-    exit 1
-  fi
-fi
 
 echo "$(kubectl config current-context) != kind-$CLUSTER_NAME"
 
@@ -73,19 +47,13 @@ export DOCKER_USERNAME=test
 export DOCKER_PASSWORD=password
 
 
-
-if ! which wait4x 2>&1 > /dev/null; then
-  wget -q https://github.com/atkrad/wait4x/releases/download/v0.3.0/wait4x-linux-amd64  -O ./wait4x
-  chmod +x ./wait4x
-fi
-
-./wait4x tcp 127.0.0.1:30636 -t 120s -i 5s || true
-./wait4x tcp 127.0.0.1:30389 || true
-./wait4x tcp 127.0.0.1:32432 || true
-./wait4x tcp 127.0.0.1:32004 || true
-./wait4x tcp 127.0.0.1:32010 || true
-./wait4x tcp 127.0.0.1:32018 || true
-./wait4x tcp 127.0.0.1:32015 || true
+wait4x tcp 127.0.0.1:30636 -t 120s -i 5s || true
+wait4x tcp 127.0.0.1:30389 || true
+wait4x tcp 127.0.0.1:32432 || true
+wait4x tcp 127.0.0.1:32004 || true
+wait4x tcp 127.0.0.1:32010 || true
+wait4x tcp 127.0.0.1:32018 || true
+wait4x tcp 127.0.0.1:32015 || true
 
 #Install jmeter
 if ! which jmeter 2>&1 > /dev/null; then
