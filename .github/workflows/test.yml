@@ -24,10 +24,11 @@ jobs:
       fail-fast: false
       matrix:
         suite:
-          - minimal --skip-setup
+          - minimal --skip-all
           - k8s
           - datasources
           - quarantine
+          - restic
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
