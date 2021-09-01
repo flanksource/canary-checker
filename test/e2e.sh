@@ -38,6 +38,7 @@ if [[ "$SKIP_SETUP" != "--skip-setup" ]] ; then
 
   echo "::group::Deploying Base"
   $KARINA deploy bootstrap -vv
+  kubectl apply -f $ROOT/test/setup.yaml
   echo "::endgroup::"
 fi
 
@@ -63,5 +64,8 @@ go test ./... -v -c
 echo "::endgroup::"
 echo "::group::Testing"
 USER=$(whoami)
-sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG,TEST_FOLDER ./test.test -test.v --test-folder $TEST_FOLDER $EXTRA  2>&1
+sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG,TEST_FOLDER ./test.test -test.v --test-folder $TEST_FOLDER $EXTRA  2>&1 | tee test.out
+sudo chown $USER test.out
+cat test.out | go-junit-report > test-results.xml
+
 echo "::endgroup::"
