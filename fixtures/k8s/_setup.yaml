@@ -18,3 +18,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: platform-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: podinfo-test
