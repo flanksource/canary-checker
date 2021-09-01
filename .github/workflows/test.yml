@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         suite:
-          - minimal
+          - minimal --skip-setup
           - k8s
           - datasources
           - quarantine
