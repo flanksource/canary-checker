@@ -55,3 +55,4 @@ jobs:
         if: always()
         with:
           files: test/test-results.xml
+          check_name: E2E - ${{matrix.suite}}
