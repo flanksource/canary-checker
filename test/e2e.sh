@@ -10,6 +10,10 @@ export PATH=$(pwd)/.bin:$PATH
 export ROOT=$(pwd)
 export TEST_FOLDER=${TEST_FOLDER:-$1}
 export TEST_REGEX=${TEST_REGEX:-$3}
+export DOMAIN=${DOMAIN:-127.0.0.1.nip.io}
+
+
+
 SKIP_SETUP=${SKIP_SETUP:-$2}
 
 if [[ "$1" == "" ]]; then
@@ -38,8 +42,13 @@ if [[ "$SKIP_SETUP" != "--skip-setup" ]] ; then
 
   echo "::group::Deploying Base"
   $KARINA deploy bootstrap -vv
-  kubectl apply -f $ROOT/test/setup.yaml
   echo "::endgroup::"
+fi
+
+_DOMAIN=$(kubectl get cm -n quack quack-config -o json | jq -r ".data.domain" || echo)
+if [[ "$_DOMAIN" != "" ]]; then
+  echo Using domain: $_DOMAIN
+  export DOMAIN=$_DOMAIN
 fi
 
 if [ -e $TEST_FOLDER/_setup.yaml ]; then

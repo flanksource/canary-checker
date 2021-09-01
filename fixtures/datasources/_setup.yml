@@ -17,16 +17,13 @@ metadata:
   name: apacheds
   namespace: ldap
 spec:
-  type: NodePort
   ports:
     - name: ldap
       port: 10389
       protocol: TCP
-      nodePort: 30389
     - name: ldaps
       port: 10636
       protocol: TCP
-      nodePort: 30636
   selector:
     app: apacheds
 ---
@@ -98,13 +95,11 @@ metadata:
   name: mssql
   namespace: platform-system
 spec:
-  type: NodePort
   ports:
     - name: mssql
       port: 1433
       targetPort: 1433
       protocol: TCP
-      nodePort: 32010
   selector:
     app: mssql
 
@@ -115,13 +110,11 @@ metadata:
   name: postgres
   namespace: platform-system
 spec:
-  type: NodePort
   ports:
     - name: psql
       port: 5432
       targetPort: 5432
       protocol: TCP
-      nodePort: 32432
   selector:
     app: postgres
 ---
@@ -155,13 +148,11 @@ metadata:
   name: redis
   namespace: platform-system
 spec:
-  type: NodePort
   ports:
     - name: redis
       port: 6379
       targetPort: 6379
       protocol: TCP
-      nodePort: 32004
   selector:
     app: redis
 ---

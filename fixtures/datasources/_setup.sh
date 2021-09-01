@@ -1,4 +1,3 @@
-WAIT=${WAIT:-true}
 RESTIC=${RESTIC:-true}
 
 if $RESTIC ; then
@@ -20,15 +19,17 @@ if $RESTIC ; then
   kubectl -n ldap delete svc apacheds
   echo "::endgroup::"
 fi
-if $WAIT ; then
-  wait4x tcp 127.0.0.1:30636 -t 120s -i 5s || true
-  wait4x tcp 127.0.0.1:30389 || true
-  wait4x tcp 127.0.0.1:32432 || true
-  wait4x tcp 127.0.0.1:32004 || true
-  wait4x tcp 127.0.0.1:32010 || true
-  wait4x tcp 127.0.0.1:32018 || true
-  wait4x tcp 127.0.0.1:32015 || true
-fi
+
+kubectl port-forward -n podinfo-test svc/podinfo 33898:9898 &
+kubectl port-forward -n platform-system svc/postgres 33432:5432 &
+kubectl port-forward -n platform-system svc/redis 33379:6379 &
+kubectl port-forward -n platform-system svc/mssql 33143:1433 &
+kubectl port-forward -n platform-system svc/mongo 33017:27017 &
+kubectl port-forward -n podinfo-test svc/podinfo 33999:9999 &
+kubectl port-forward -n minio svc/minio 33000:9000 &
+kubectl port-forward -n monitoring svc/prometheus-k8s 33090:9090 &
+kubectl port-forward -n ldap svc/apacheds 33389:10389 &
+kubectl port-forward -n ldap svc/apacheds 33636:10636 &
 
 kubectl create secret generic aws-credentials --from-literal=AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --from-literal=AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -n podinfo-test -o yaml --dry-run | kubectl apply -n podinfo-test -f -
 

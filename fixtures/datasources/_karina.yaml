@@ -1,3 +1,5 @@
+configFrom:
+  - ../../test/karina.yaml
 ldap:
   adminGroup: NA1
   username: uid=admin,ou=system

@@ -1,7 +1,7 @@
 name: !!env CLUSTER_NAME
 patches:
   - ./patch1.yaml
-domain: 127.0.0.1.nip.io
+domain: !!env DOMAIN
 ca:
   cert: ../.certs/root-ca.crt
   privateKey: ../.certs/root-ca.key
