@@ -27,7 +27,7 @@ spec:
       ingressHost: "test-namespace-pod.127.0.0.1.nip.io"
       scheduleTimeout: 2000
       readyTimeout: 5000
-      httpTimeout: 7000
+      httpTimeout: 15000
       deleteTimeout: 12000
       ingressTimeout: 10000
       deadline: 29000
