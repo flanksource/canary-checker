@@ -3,6 +3,7 @@
 set -e
 
 export KUBECONFIG=~/.kube/config
+KARINA="karina -c test/karina.yaml"
 export DOCKER_API_VERSION=1.39
 export CLUSTER_NAME=kind-test
 export PATH=$(pwd)/.bin:$PATH
@@ -20,11 +21,11 @@ fi
 if [[ "$SKIP_SETUP" != "--skip-setup" ]] ; then
   echo "::group::Provisioning"
   if [[ ! -e .certs/root-ca.key ]]; then
-    karina ca generate --name root-ca --cert-path .certs/root-ca.crt --private-key-path .certs/root-ca.key --password foobar  --expiry 1
-    karina ca generate --name ingress-ca --cert-path .certs/ingress-ca.crt --private-key-path .certs/ingress-ca.key --password foobar  --expiry 1
-    karina ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.pem --private-key-path .certs/sealed-secrets-key.pem --password foobar  --expiry 1
+    $KARINA ca generate --name root-ca --cert-path .certs/root-ca.crt --private-key-path .certs/root-ca.key --password foobar  --expiry 1
+    $KARINA ca generate --name ingress-ca --cert-path .certs/ingress-ca.crt --private-key-path .certs/ingress-ca.key --password foobar  --expiry 1
+    $KARINA ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.pem --private-key-path .certs/sealed-secrets-key.pem --password foobar  --expiry 1
   fi
-  if karina provision kind-cluster -v ; then
+  if $KARINA provision kind-cluster -v ; then
     echo "::endgroup::"
   else
     echo "::endgroup::"
@@ -34,7 +35,7 @@ if [[ "$SKIP_SETUP" != "--skip-setup" ]] ; then
   kubectl config use-context kind-$CLUSTER_NAME
 
   echo "::group::Deploying Base"
-  karina deploy bootstrap -vv
+  $KARINA deploy bootstrap -vv
   echo "::endgroup::"
 fi
 
@@ -42,7 +43,7 @@ if [ -e $TEST_FOLDER/_setup.sh ]; then
   sh $TEST_FOLDER/_setup.sh || echo Setup failed, attempting tests anyway
 fi
 if [ -e $TEST_FOLDER/_setup.yaml ]; then
-  karina apply $TEST_FOLDER/_setup.yaml -c test/karina.yaml
+  $KARINA apply $TEST_FOLDER/_setup.yaml -c
 fi
 if [ -e $TEST_FOLDER/main.go ]; then
   go run $TEST_FOLDER/main.go

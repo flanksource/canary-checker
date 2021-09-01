@@ -10,7 +10,6 @@ ingressCA:
   cert: ../.certs/ingress-ca.crt
   privateKey: ../.certs/ingress-ca.key
   password: foobar
-
 kind:
   portMappings:
     30389: 30389
@@ -23,11 +22,10 @@ kind:
 kubernetes:
   auditing:
     policyFile: ""
-  version: !!env KUBERNETES_VERSION
+  version: v1.20.7
   kubeletExtraArgs:
     node-labels: "ingress-ready=true"
     authorization-mode: "AlwaysAllow"
-  masterIP: localhost
 podSubnet: 100.200.0.0/16
 serviceSubnet: 100.100.0.0/16
 calico:
