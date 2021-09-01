@@ -42,12 +42,14 @@ if [[ "$SKIP_SETUP" != "--skip-setup" ]] ; then
   echo "::endgroup::"
 fi
 
-if [ -e $TEST_FOLDER/_setup.sh ]; then
-  sh $TEST_FOLDER/_setup.sh || echo Setup failed, attempting tests anyway
-fi
 if [ -e $TEST_FOLDER/_setup.yaml ]; then
   kubectl apply -f $TEST_FOLDER/_setup.yaml
 fi
+
+if [ -e $TEST_FOLDER/_setup.sh ]; then
+  sh $TEST_FOLDER/_setup.sh || echo Setup failed, attempting tests anyway
+fi
+
 if [ -e $TEST_FOLDER/main.go ]; then
   go run $TEST_FOLDER/main.go
 fi

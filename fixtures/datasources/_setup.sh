@@ -10,10 +10,10 @@ if $RESTIC ; then
   RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="minio123" restic --cacert .certs/ingress-ca.crt -r s3:https://minio.127.0.0.1.nip.io/restic-canary-checker backup $(pwd)
 
   echo "::group::Deploying Stubs"
-  karina deploy apacheds
+  $KARINA deploy apacheds
   echo "::endgroup::"
   echo "::deploy monitoring::"
-  karina deploy monitoring
+  $KARINA deploy monitoring
   echo "::endgroup::"
   #karina test stubs --wait=480 -v 5
   echo "::group::Setting up test environment"
