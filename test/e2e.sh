@@ -45,7 +45,7 @@ if [ -e $TEST_FOLDER/_setup.sh ]; then
   sh $TEST_FOLDER/_setup.sh || echo Setup failed, attempting tests anyway
 fi
 if [ -e $TEST_FOLDER/_setup.yaml ]; then
-  $KARINA apply $TEST_FOLDER/_setup.yaml
+  kubectl apply -f $TEST_FOLDER/_setup.yaml
 fi
 if [ -e $TEST_FOLDER/main.go ]; then
   go run $TEST_FOLDER/main.go
