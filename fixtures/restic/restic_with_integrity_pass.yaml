@@ -1,0 +1,17 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: restic-pass-inegrity
+spec:
+  interval: 30
+  restic:
+    - repository: s3:https://minio.minio.svc/restic-canary-checker
+      password:
+        value: S0m3p@sswd
+      maxAge: 1h
+      accessKey:
+        value: minio
+      secretKey:
+        value: minio123
+      checkIntegrity: true
+      caCert: /home/runner/work/canary-checker/canary-checker/.certs/ingress-ca.crt
