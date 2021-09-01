@@ -1,6 +1,0 @@
-# quarantine due failing tests on GH Actions
-# icmp:
-#   - endpoint: https://google.com
-#     thresholdMillis: 600
-#     packetLossThreshold: 0.01
-#     packetCount: 2

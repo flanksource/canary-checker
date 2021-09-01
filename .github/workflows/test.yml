@@ -22,21 +22,21 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.16.x]
-        platform: [ubuntu-latest]
-        k8s:
-          - v1.18.6
-          - v1.20.7
-    runs-on: ${{ matrix.platform }}
+        suite:
+          - minimal
+          - k8s
+          - datasources
+          - quarantine
+    runs-on: ubuntu-latest
     steps:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: 1.16.x
       - name: Checkout code
         uses: actions/checkout@v2
       - run: make bin
       - name: Test
         env:
-          KUBERNETES_VERSION: ${{matrix.k8s}}
-        run: ./test/e2e.sh
+          KUBERNETES_VERSION: v1.20.7
+        run: ./test/e2e.sh fixtures/${{matrix.suite}}

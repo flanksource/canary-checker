@@ -1,4 +1,0 @@
-redis:
-  - addr: "127.0.0.1:32004"
-    db: 0
-    description: "The redis pass test"
