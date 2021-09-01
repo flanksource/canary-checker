@@ -19,7 +19,7 @@ if [[ "$1" == "" ]]; then
   exit 1
 fi
 
-if [[ "$*" == *"--skip-setup"*  || ]]; then
+if [[ "$*" == *"--skip-setup"* ]]; then
   SKIP_SETUP=true
 fi
 if [[ "$*" == *"--skip-karina"* ]]; then
