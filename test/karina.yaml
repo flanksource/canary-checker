@@ -10,20 +10,7 @@ ingressCA:
   cert: ../.certs/ingress-ca.crt
   privateKey: ../.certs/ingress-ca.key
   password: foobar
-ldap:
-  adminGroup: NA1
-  username: uid=admin,ou=system
-  password: secret
-  port: 10636
-  host: apacheds.ldap
-  userDN: ou=users,dc=example,dc=com
-  groupDN: ou=groups,dc=example,dc=com
-  groupObjectClass: groupOfNames
-  groupNameAttr: DN
-  e2e:
-    mock: true
-    username: test
-    password: secret
+
 kind:
   portMappings:
     30389: 30389
@@ -47,20 +34,3 @@ calico:
   ipip: Never
   vxlan: Never
   version: v3.8.2
-s3:
-  endpoint: http://minio.minio.svc:9000
-  access_key: minio
-  secret_key: minio123
-  region: us-east1
-  usePathStyle: true
-  skipTLSVerify: true
-minio:
-  version: RELEASE.2020-09-02T18-19-50Z
-  access_key: minio
-  secret_key: minio123
-  replicas: 1
-monitoring:
-  disabled: false
-  prometheus:
-    persistence:
-      capacity: 2Gi
