@@ -3,7 +3,7 @@
 set -e
 
 export KUBECONFIG=~/.kube/config
-KARINA="karina -c test/karina.yaml"
+export KARINA="karina -c $(pwd)/test/karina.yaml"
 export DOCKER_API_VERSION=1.39
 export CLUSTER_NAME=kind-test
 export PATH=$(pwd)/.bin:$PATH
@@ -16,6 +16,8 @@ if [[ "$1" == "" ]]; then
   echo "Usage ./test/e2e.sh TEST_FOLDER [--skip-setup] [RunRegex] "
   exit 1
 fi
+
+echo "Testing $TEST_FOLDER with $SKIP_SETUP"
 
 
 if [[ "$SKIP_SETUP" != "--skip-setup" ]] ; then
@@ -43,7 +45,7 @@ if [ -e $TEST_FOLDER/_setup.sh ]; then
   sh $TEST_FOLDER/_setup.sh || echo Setup failed, attempting tests anyway
 fi
 if [ -e $TEST_FOLDER/_setup.yaml ]; then
-  $KARINA apply $TEST_FOLDER/_setup.yaml -c
+  $KARINA apply $TEST_FOLDER/_setup.yaml
 fi
 if [ -e $TEST_FOLDER/main.go ]; then
   go run $TEST_FOLDER/main.go
