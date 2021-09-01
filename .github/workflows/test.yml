@@ -29,6 +29,7 @@ jobs:
           - datasources
           - quarantine
           - restic
+          - s3
     runs-on: ubuntu-latest
     steps:
       - name: Install Go

@@ -68,7 +68,7 @@ func runFixture(t *testing.T, name string) {
 
 		for _, canary := range canaries {
 			if canary.Namespace == "" {
-				canary.Namespace = "podinfo-test"
+				canary.Namespace = "default"
 			}
 			if canary.Name == "" {
 				canary.Name = cmd.CleanupFilename(name)

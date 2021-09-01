@@ -35,8 +35,6 @@ if [[ "$*" == *"--skip-all"* ]]; then
   SKIP_SETUP=true
 fi
 
-
-
 echo "Testing $TEST_FOLDER with setup=$SKIP_SETUP karina=$SKIP_KARINA"
 
 if [[ "$SKIP_KARINA" != "true" ]] ; then
@@ -67,9 +65,7 @@ if [[ "$_DOMAIN" != "" ]]; then
 fi
 
 if [ "$SKIP_SETUP" != "true" ]; then
-  if [ -e $TEST_FOLDER/_setup.yaml ]; then
-    $KARINA apply $(pwd)/$TEST_FOLDER/_setup.yaml -v
-  fi
+  echo "::group::Setting up"
 
   if [ -e $TEST_FOLDER/_karina.yaml ]; then
     $KARINA deploy phases --stubs --monitoring --apacheds --minio -c $(pwd)/$TEST_FOLDER/_karina.yaml -vv
@@ -79,9 +75,14 @@ if [ "$SKIP_SETUP" != "true" ]; then
     sh $TEST_FOLDER/_setup.sh || echo Setup failed, attempting tests anyway
   fi
 
+  if [ -e $TEST_FOLDER/_setup.yaml ]; then
+    $KARINA apply $(pwd)/$TEST_FOLDER/_setup.yaml -v
+  fi
+
   if [ -e $TEST_FOLDER/main.go ]; then
     go run $TEST_FOLDER/main.go
   fi
+  echo "::endgroup::"
 fi
 
 cd $ROOT/test
@@ -98,7 +99,7 @@ echo "::group::Testing"
 USER=$(whoami)
 
 if [[ "$SKIP_TELEPRESENCE" != "true" ]]; then
-  telepresence="telepresence -m vpn-tcp --run"
+  telepresence="telepresence -m vpn-tcp --namespace default --run"
 fi
 cmd="$telepresence ./test.test -test.v --test-folder $TEST_FOLDER $EXTRA"
 echo $cmd
