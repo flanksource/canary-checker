@@ -7,6 +7,15 @@ globalDefault: false
 description: "This priority class should be used for canary pods only."
 ---
 apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-credentials
+  namespace: platform-system
+stringData:
+  AWS_ACCESS_KEY_ID: minio
+  AWS_SECRET_ACCESS_KEY: minio123
+---
+apiVersion: v1
 kind: Namespace
 metadata:
   name: platform-system

@@ -9,22 +9,36 @@ export CLUSTER_NAME=kind-test
 export PATH=$(pwd)/.bin:$PATH
 export ROOT=$(pwd)
 export TEST_FOLDER=${TEST_FOLDER:-$1}
-export TEST_REGEX=${TEST_REGEX:-$3}
 export DOMAIN=${DOMAIN:-127.0.0.1.nip.io}
-
-
-
-SKIP_SETUP=${SKIP_SETUP:-$2}
+SKIP_SETUP=${SKIP_SETUP:-false}
+SKIP_KARINA=${SKIP_KARINA:-false}
+SKIP_TELEPRESENCE=${SKIP_TELEPRESENCE:-false}
 
 if [[ "$1" == "" ]]; then
-  echo "Usage ./test/e2e.sh TEST_FOLDER [--skip-setup] [RunRegex] "
+  echo "Usage ./test/e2e.sh TEST_FOLDER  [RunRegex] [--skip-setup] [--skip-karina] [--skip-telepresence] [--skip-all] "
   exit 1
 fi
 
-echo "Testing $TEST_FOLDER with $SKIP_SETUP"
+if [[ "$*" == *"--skip-setup"*  || ]]; then
+  SKIP_SETUP=true
+fi
+if [[ "$*" == *"--skip-karina"* ]]; then
+  SKIP_KARINA=true
+fi
+if [[ "$*" == *"--skip-telepresence"* ]]; then
+  SKIP_TELEPRESENCE=true
+fi
+if [[ "$*" == *"--skip-all"* ]]; then
+  SKIP_TELEPRESENCE=true
+  SKIP_KARINA=true
+  SKIP_SETUP=true
+fi
 
 
-if [[ "$SKIP_SETUP" != "--skip-setup" ]] ; then
+
+echo "Testing $TEST_FOLDER with setup=$SKIP_SETUP karina=$SKIP_KARINA"
+
+if [[ "$SKIP_KARINA" != "true" ]] ; then
   echo "::group::Provisioning"
   if [[ ! -e .certs/root-ca.key ]]; then
     $KARINA ca generate --name root-ca --cert-path .certs/root-ca.crt --private-key-path .certs/root-ca.key --password foobar  --expiry 1
@@ -51,16 +65,22 @@ if [[ "$_DOMAIN" != "" ]]; then
   export DOMAIN=$_DOMAIN
 fi
 
-if [ -e $TEST_FOLDER/_setup.yaml ]; then
-  kubectl apply -f $TEST_FOLDER/_setup.yaml
-fi
+if [ "$SKIP_SETUP" != "true" ]; then
+  if [ -e $TEST_FOLDER/_setup.yaml ]; then
+    $KARINA apply $(pwd)/$TEST_FOLDER/_setup.yaml -v
+  fi
 
-if [ -e $TEST_FOLDER/_setup.sh ]; then
-  sh $TEST_FOLDER/_setup.sh || echo Setup failed, attempting tests anyway
-fi
+  if [ -e $TEST_FOLDER/_karina.yaml ]; then
+    $KARINA deploy phases --stubs --monitoring --apacheds --minio -c $(pwd)/$TEST_FOLDER/_karina.yaml -vv
+  fi
 
-if [ -e $TEST_FOLDER/main.go ]; then
-  go run $TEST_FOLDER/main.go
+  if [ -e $TEST_FOLDER/_setup.sh ]; then
+    sh $TEST_FOLDER/_setup.sh || echo Setup failed, attempting tests anyway
+  fi
+
+  if [ -e $TEST_FOLDER/main.go ]; then
+    go run $TEST_FOLDER/main.go
+  fi
 fi
 
 cd $ROOT/test
@@ -75,8 +95,17 @@ go test ./... -v -c
 echo "::endgroup::"
 echo "::group::Testing"
 USER=$(whoami)
-sudo DOCKER_API_VERSION=1.39 --preserve-env=KUBECONFIG,TEST_FOLDER ./test.test -test.v --test-folder $TEST_FOLDER $EXTRA  2>&1 | tee test.out
+
+if [[ "$SKIP_TELEPRESENCE" != "true" ]]; then
+  telepresence="telepresence -m vpn-tcp --run"
+fi
+cmd="$telepresence ./test.test -test.v --test-folder $TEST_FOLDER $EXTRA"
+echo $cmd
+DOCKER_API_VERSION=1.39
+sudo --preserve-env=KUBECONFIG,TEST_FOLDER,DOCKER_API_VERSION $cmd  2>&1 | tee test.out
+code=$?
+echo "return=$code"
 sudo chown $USER test.out
 cat test.out | go-junit-report > test-results.xml
-
 echo "::endgroup::"
+exit $code

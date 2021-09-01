@@ -5,6 +5,6 @@ metadata:
 spec:
   interval: 30
   mssql:
-    - connection: "server=mssql.platform-system;user id=sa;password=S0m3p@sswd;port=32010;database=master"
+    - connection: "server=mssql;user id=sa;password=S0m3p@sswd;port=1433;database=master"
       query: "SELECT 1"
       results: 1

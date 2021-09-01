@@ -1,5 +1,5 @@
 configFrom:
-  - ../../test/karina.yaml
+  - file: ../../test/karina.yaml
 ldap:
   adminGroup: NA1
   username: uid=admin,ou=system
@@ -28,6 +28,8 @@ minio:
   replicas: 1
 monitoring:
   disabled: false
+  grafana:
+    disabled: true
   prometheus:
     persistence:
       capacity: 2Gi

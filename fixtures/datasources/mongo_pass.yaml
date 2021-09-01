@@ -1,7 +1,7 @@
 mongodb:
-  - url: 127.0.0.1
+  - url: mongo
     description: test mongo instance
-    port: 32015
+    port: 27017
     credentials:
       username:
         value: mongoadmin
