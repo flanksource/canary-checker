@@ -9,7 +9,7 @@ description: "This priority class should be used for canary pods only."
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: platform-system
+  name: default
 ---
 apiVersion: v1
 kind: Namespace
@@ -20,7 +20,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: aws-credentials
-  namespace: platform-system
+  namespace: default
 stringData:
   AWS_ACCESS_KEY_ID: minio
   AWS_SECRET_ACCESS_KEY: minio123
@@ -48,7 +48,7 @@ metadata:
   labels:
     app: postgres
   name: postgres
-  namespace: platform-system
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -80,7 +80,7 @@ metadata:
   labels:
     app: mssql
   name: mssql
-  namespace: platform-system
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -108,7 +108,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mssql
-  namespace: platform-system
+  namespace: default
 spec:
   ports:
     - name: mssql
@@ -123,7 +123,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres
-  namespace: platform-system
+  namespace: default
 spec:
   ports:
     - name: psql
@@ -139,7 +139,7 @@ metadata:
   labels:
     app: redis
   name: redis
-  namespace: platform-system
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -161,7 +161,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: redis
-  namespace: platform-system
+  namespace: default
 spec:
   ports:
     - name: redis
@@ -177,7 +177,7 @@ metadata:
   labels:
     app: mongo
   name: mongo
-  namespace: platform-system
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -204,15 +204,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mongo
-  namespace: platform-system
+  namespace: default
 spec:
-  type: NodePort
   ports:
     - name: mongo
       port: 27017
       targetPort: 27017
       protocol: TCP
-      nodePort: 32015
   selector:
     app: mongo
 ---

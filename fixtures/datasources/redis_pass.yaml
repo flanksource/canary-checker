@@ -5,6 +5,6 @@ metadata:
 spec:
   interval: 30
   redis:
-    - addr: "redis:6379"
+    - addr: "redis.default.svc:6379"
       db: 0
       description: "The redis pass test"

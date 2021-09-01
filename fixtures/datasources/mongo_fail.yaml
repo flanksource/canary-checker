@@ -1,9 +1,15 @@
-mongodb:
-  - url: 127.0.0.1
-    description: test mongo instance
-    port: 32015
-    credentials:
-      username:
-        value: mongoadmin
-      password:
-        value: wronghere
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: mongo-fail
+spec:
+  interval: 30
+  mongodb:
+    - url: 127.0.0.1
+      description: test mongo instance
+      port: 32015
+      credentials:
+        username:
+          value: mongoadmin
+        password:
+          value: wronghere
