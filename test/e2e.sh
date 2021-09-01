@@ -10,6 +10,7 @@ export PATH=$(pwd)/.bin:$PATH
 export ROOT=$(pwd)
 export TEST_FOLDER=${TEST_FOLDER:-$1}
 export DOMAIN=${DOMAIN:-127.0.0.1.nip.io}
+
 SKIP_SETUP=${SKIP_SETUP:-false}
 SKIP_KARINA=${SKIP_KARINA:-false}
 SKIP_TELEPRESENCE=${SKIP_TELEPRESENCE:-false}
@@ -45,7 +46,7 @@ if [[ "$SKIP_KARINA" != "true" ]] ; then
     $KARINA ca generate --name ingress-ca --cert-path .certs/ingress-ca.crt --private-key-path .certs/ingress-ca.key --password foobar  --expiry 1
     $KARINA ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.pem --private-key-path .certs/sealed-secrets-key.pem --password foobar  --expiry 1
   fi
-  if $KARINA provision kind-cluster -v ; then
+  if $KARINA provision kind-cluster -e name=$CLUSTER_NAME -v ; then
     echo "::endgroup::"
   else
     echo "::endgroup::"
