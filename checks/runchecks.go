@@ -20,6 +20,9 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
 	ctx.Canary.Spec.SetSQLDrivers()
 	for _, c := range All {
+		time := GetDeadline(ctx.Canary)
+		ctx, cancel := ctx.WithDeadline(time)
+		defer cancel()
 		result := c.Run(ctx)
 		for _, r := range result {
 			if r != nil {
@@ -50,7 +53,6 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 						ctx.Logger.Tracef("%s return %s", tpl, message)
 					}
 				}
-				// fmt.Printf("%s \t%s\t\n", time.Now().Format(time.RFC3339), r.String())
 				results = append(results, r)
 			}
 		}

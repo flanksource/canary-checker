@@ -121,6 +121,18 @@ func (f FolderCheck) Test(test v1.FolderTest) string {
 	return ""
 }
 
+func GetDeadline(canary v1.Canary) time.Time {
+	if canary.Spec.Schedule != "" {
+		schedule, err := cron.ParseStandard(canary.Spec.Schedule)
+		if err != nil {
+			// cron syntax errors are handled elsewhere, default to a 10 second timeout
+			return time.Now().Add(10 * time.Second)
+		}
+		return schedule.Next(time.Now())
+	}
+	return time.Now().Add(time.Duration(canary.Spec.Interval) * time.Second)
+}
+
 func getNextRuntime(canary v1.Canary, lastRuntime time.Time) (*time.Time, error) {
 	if canary.Spec.Schedule != "" {
 		schedule, err := cron.ParseStandard(canary.Spec.Schedule)
@@ -130,6 +142,6 @@ func getNextRuntime(canary v1.Canary, lastRuntime time.Time) (*time.Time, error)
 		t := schedule.Next(time.Now())
 		return &t, nil
 	}
-	t := lastRuntime.Add(time.Duration(canary.Spec.Interval) + time.Second)
+	t := lastRuntime.Add(time.Duration(canary.Spec.Interval) * time.Second)
 	return &t, nil
 }

@@ -3,6 +3,7 @@ package context
 import (
 	gocontext "context"
 	"fmt"
+	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/logger"
@@ -20,6 +21,16 @@ type Context struct {
 
 func (ctx *Context) String() string {
 	return fmt.Sprintf("%s/%s", ctx.Canary.Namespace, ctx.Canary.Name)
+}
+
+func (ctx *Context) WithTimeout(timeout time.Duration) (*Context, gocontext.CancelFunc) {
+	return ctx.WithDeadline(time.Now().Add(timeout))
+}
+
+func (ctx *Context) WithDeadline(deadline time.Time) (*Context, gocontext.CancelFunc) {
+	_ctx, fn := gocontext.WithDeadline(ctx.Context, deadline)
+	ctx.Context = _ctx
+	return ctx, fn
 }
 
 func New(client *kommons.Client, canary v1.Canary) *Context {
