@@ -8,6 +8,6 @@ spec:
     - host: http://prometheus-k8s.monitoring.svc:9090
       query: kubernetes_build_info{job!~"kube-dns|coredns"}
       display:
-        template: "{{ .results.git_version }}"
+        template: "{{ (index .results 0).git_version }}"
       test:
         template: "true"
