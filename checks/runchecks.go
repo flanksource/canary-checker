@@ -2,9 +2,9 @@ package checks
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/flanksource/canary-checker/api/context"
@@ -50,7 +50,7 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 						ctx.Logger.Tracef("%s return %s", tpl, message)
 					}
 				}
-				fmt.Printf("%s \t%s\t\n", time.Now().Format(time.RFC3339), r.String())
+				// fmt.Printf("%s \t%s\t\n", time.Now().Format(time.RFC3339), r.String())
 				results = append(results, r)
 			}
 		}
@@ -84,8 +84,15 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 			return "", err
 		}
 
+		// marshal data from interface{} to map[string]interface{}
+		data, _ := json.Marshal(ctx.Environment)
+		unstructured := make(map[string]interface{})
+		if err := json.Unmarshal(data, &unstructured); err != nil {
+			return "", err
+		}
+
 		var buf bytes.Buffer
-		if err := tpl.Execute(&buf, ctx.Environment); err != nil {
+		if err := tpl.Execute(&buf, unstructured); err != nil {
 			return "", fmt.Errorf("error executing template %s: %v", strings.Split(template.Template, "\n")[0], err)
 		}
 		return buf.String(), nil
