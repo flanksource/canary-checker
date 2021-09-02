@@ -1,14 +1,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- _setup.yaml
-- containerd_pull_pass.yaml
-- docker_fail.yaml
-- docker_pass.yaml
-- docker_push_fail.yaml
-- docker_push_pass.yaml
-- junit_fail.yaml
-- junit_pass.yaml
-- namespace_pass.yaml
-- pod_fail.yaml
-- pod_pass.yaml
+  - _setup.yaml
+  - containerd_pull_pass.yaml
+  - docker_fail.yaml
+  - docker_pass.yaml
+  - docker_push_fail.yaml
+  - docker_push_pass.yaml
+  - junit_fail.yaml
+  - junit_pass.yaml
+  - namespace_pass.yaml
+  - pod_fail.yaml
+  - pod_pass.yaml

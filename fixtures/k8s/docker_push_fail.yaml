@@ -1,7 +1,7 @@
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
-  name: docker-pass
+  name: docker-push-fail
 spec:
   interval: 30
   dockerPush:

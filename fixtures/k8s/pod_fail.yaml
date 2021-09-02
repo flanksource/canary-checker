@@ -6,13 +6,13 @@ spec:
   interval: 30
   pod:
     - name: fail
-      namespace: platform-system
+      namespace: default
       spec: |
         apiVersion: v1
         kind: Pod
         metadata:
           name: hello-world-fail
-          namespace: platform-system
+          namespace: default
           labels:
             app: hello-world-fail
         spec:
