@@ -257,11 +257,11 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	}
 }
 
-func (c *PodChecker) Cleanup(ctx *context.Context, podCheck canaryv1.PodCheck) error {
+func (c *PodChecker) Cleanup(ctx *context.Context, podCheck canaryv1.PodCheck) {
 	listOptions := metav1.ListOptions{LabelSelector: c.podCheckSelector(podCheck)}
 
 	if c.k8s == nil {
-		return fmt.Errorf("connection to k8s not established")
+		logger.Warnf("connection to k8s not established")
 	}
 	err := c.k8s.CoreV1().Pods(podCheck.Namespace).DeleteCollection(gocontext.TODO(), metav1.DeleteOptions{}, listOptions)
 	if err != nil && !errors.IsNotFound(err) {
@@ -278,7 +278,6 @@ func (c *PodChecker) Cleanup(ctx *context.Context, podCheck canaryv1.PodCheck) e
 			logger.Warnf("Failed delete services %s in namespace %s : %v", s.Name, podCheck.Namespace, err)
 		}
 	}
-	return nil
 }
 
 func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (ingressTime float64, requestTime float64, result *pkg.CheckResult) {
