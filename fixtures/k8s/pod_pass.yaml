@@ -32,7 +32,7 @@ spec:
       httpRetryInterval: 200
       expectedContent: bar
       expectedHttpStatuses: [200, 201, 202]
-      priorityClass: canary
+      priorityClass: canary-checker-priority
     - name: ruby
       namespace: default
       spec: |
@@ -61,4 +61,3 @@ spec:
       httpRetryInterval: 200
       expectedContent: hello, you've hit /foo/bar
       expectedHttpStatuses: [200, 201, 202]
-      priorityClass: canary

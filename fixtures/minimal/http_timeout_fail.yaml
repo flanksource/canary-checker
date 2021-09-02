@@ -1,7 +1,7 @@
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
-  name: http-fail
+  name: http-fail-timeout
 spec:
   interval: 30
   http:

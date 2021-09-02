@@ -2,7 +2,7 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: nested-http
-  namespace: podinfo-test
+  namespace: default
 spec:
   interval: 0
   http:
