@@ -4777,86 +4777,9 @@ spec:
                 mongodb:
                   items:
                     properties:
-                      credentials:
-                        properties:
-                          authMechanism:
-                            type: string
-                          authMechanismProperties:
-                            additionalProperties:
-                              type: string
-                            type: object
-                          authSource:
-                            type: string
-                          password:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                      optional:
-                                        type: boolean
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                      optional:
-                                        type: boolean
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          passwordSet:
-                            type: boolean
-                          username:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                      optional:
-                                        type: boolean
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                      optional:
-                                        type: boolean
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                        required:
-                          - password
-                          - username
-                        type: object
+                      connection:
+                        description: Monogodb connection string, e.g.  mongodb://:27017/?authSource=admin, See https://docs.mongodb.com/manual/reference/connection-string/
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -4866,14 +4789,73 @@ spec:
                       name:
                         description: Name of the check
                         type: string
-                      port:
-                        description: Port of the mongodb server. Defaults to 27017
-                        type: integer
-                      url:
-                        description: Address of the mongodb server
-                        type: string
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                     required:
-                      - url
+                      - password
+                      - username
                     type: object
                   type: array
                 mssql:

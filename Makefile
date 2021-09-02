@@ -228,10 +228,19 @@ endif
 	curl -sSLo .bin/yq https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_$(OS)_$(ARCH) && chmod +x .bin/yq
 YQ = $(realpath ./.bin/yq)
 
+.PHONY: telepresence
+telepresence:
+ifeq ("darwin", $(OS))
+	brew install --cask macfuse
+	brew install datawire/blackbird/telepresence-legacy
+else
+	curl -s https://packagecloud.io/install/repositories/datawireio/telepresence/script.deb.sh | sudo bash
+	sudo apt install --no-install-recommends -y telepresence
+endif
 .bin:
 	mkdir -p .bin
 
-bin: .bin .bin/wait4x .bin/yq .bin/karina .bin/go-junit-report .bin/restic .bin/jmeter
+bin: .bin .bin/wait4x .bin/yq .bin/karina .bin/go-junit-report .bin/restic .bin/jmeter telepresence
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources

@@ -1,0 +1,14 @@
+configFrom:
+  - file: ../../test/karina.yaml
+s3:
+  endpoint: http://minio.minio.svc:9000
+  access_key: minio
+  secret_key: minio123
+  region: us-east1
+  usePathStyle: true
+  skipTLSVerify: true
+minio:
+  version: RELEASE.2020-09-02T18-19-50Z
+  access_key: minio
+  secret_key: minio123
+  replicas: 1

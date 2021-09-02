@@ -21,22 +21,40 @@ name: Test
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
-        go-version: [1.16.x]
-        platform: [ubuntu-latest]
-        k8s:
-          - v1.18.6
-          - v1.20.7
-    runs-on: ${{ matrix.platform }}
+        suite:
+          - minimal --skip-all
+          - k8s
+          - datasources
+          - quarantine
+          - restic
+          - s3
+    runs-on: ubuntu-latest
     steps:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: 1.16.x
       - name: Checkout code
         uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            .bin
+          key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
+          restore-keys: |
+            cache-
       - run: make bin
       - name: Test
         env:
-          KUBERNETES_VERSION: ${{matrix.k8s}}
-        run: ./test/e2e.sh
+          KUBERNETES_VERSION: v1.20.7
+        run: ./test/e2e.sh fixtures/${{matrix.suite}}
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: test/test-results.xml
+          check_name: E2E - ${{matrix.suite}}

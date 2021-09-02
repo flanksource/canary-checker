@@ -1,0 +1,9 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: docker-pass
+spec:
+  interval: 30
+  dockerPush:
+    - image: docker.io/flanksource/busybox:1.30
+    - image: ttl.sh/flanksource-busybox:not-found-tag

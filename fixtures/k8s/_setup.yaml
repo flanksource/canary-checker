@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secrets
+  namespace: default
+stringData:
+  DOCKER_USERNAME: test
+  DOCKER_PASSWORD: password
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: canary
+value: -1
+globalDefault: false
+description: "This priority class should be used for canary pods only."
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: platform-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: podinfo-test

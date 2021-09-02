@@ -1,0 +1,10 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: postgres-succeed
+spec:
+  interval: 30
+  postgres:
+    - connection: "postgres://postgresadmin:admin123@postgres.default.svc:5432/postgres?sslmode=disable"
+      query: "SELECT 1"
+      results: 1

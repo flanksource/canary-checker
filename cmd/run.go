@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/flanksource/commons/console"
 
@@ -74,6 +76,7 @@ var Run = &cobra.Command{
 				} else {
 					passed++
 				}
+				fmt.Printf("%s \t%s\t\n", time.Now().Format(time.RFC3339), result.String())
 				results = append(results, result)
 			}
 		}

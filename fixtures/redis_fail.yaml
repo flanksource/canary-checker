@@ -1,4 +1,0 @@
-redis:
-  - addr: "localhost:6379" # wrong port for test failure
-    db: 0
-    description: "The redis fail test"

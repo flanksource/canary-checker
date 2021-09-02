@@ -3,6 +3,7 @@ package checks
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"sort"
 	"strings"
@@ -32,7 +33,7 @@ import (
 )
 
 const (
-	podLabelSelector   = "canary-checker.flanksource.com/podName"
+	nameLabel          = "kubernetes.io/metadata.name"
 	podCheckSelector   = "canary-checker.flanksource.com/podCheck"
 	podGeneralSelector = "canary-checker.flanksource.com/generated"
 )
@@ -101,7 +102,7 @@ func (c *PodChecker) newPod(podCheck canaryv1.PodCheck, nodeName string) (*v1.Po
 	}
 
 	pod.Name = c.ng.PodName(pod.Name + "-")
-	pod.Labels[podLabelSelector] = pod.Name
+	pod.Labels[nameLabel] = pod.Name
 	pod.Labels[podCheckSelector] = c.podCheckSelectorValue(podCheck)
 	pod.Labels[podGeneralSelector] = "true"
 	pod.Spec.NodeSelector = map[string]string{
@@ -145,13 +146,19 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	}
 	defer func() { c.lock.Release(1) }()
 
-	if err := c.Cleanup(podCheck); err != nil {
-		return unexpectedErrorf(podCheck, err, "failed to cleanup old artifacts")
+	result := pkg.Success(podCheck)
+	startTimer := NewTimer()
+	pods := c.k8s.CoreV1().Pods(ctx.Namespace)
+
+	if skip, err := cleanupExistingPods(ctx, c.k8s, c.podCheckSelector(podCheck)); err != nil {
+		return result.ErrorMessage(err)
+	} else if skip {
+		return nil
 	}
 
-	startTimer := NewTimer()
+	c.Cleanup(ctx, podCheck)       // cleanup existing resources
+	defer c.Cleanup(ctx, podCheck) // cleanup resources created during test
 
-	logger.Debugf("Running pod check %s", podCheck.Name)
 	five := int64(5)
 	nodes, err := c.k8s.CoreV1().Nodes().List(ctx, metav1.ListOptions{TimeoutSeconds: &five})
 	if err != nil {
@@ -165,14 +172,9 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 		return invalidErrorf(podCheck, err, "invalid pod spec")
 	}
 
-	pods := c.k8s.CoreV1().Pods(podCheck.Namespace)
-
-	if _, err := pods.Create(ctx, pod, metav1.CreateOptions{}); err != nil {
-		return unexpectedErrorf(podCheck, err, "unable to create pod")
+	if err := ctx.Kommons.Apply(ctx.Namespace, pod); err != nil {
+		return result.ErrorMessage(err)
 	}
-	defer func() {
-		c.Cleanup(podCheck) // nolint: errcheck
-	}()
 
 	pod, err = c.WaitForPod(podCheck.Namespace, pod.Name, time.Millisecond*time.Duration(podCheck.ScheduleTimeout), v1.PodRunning)
 	if err != nil {
@@ -255,41 +257,50 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	}
 }
 
-func (c *PodChecker) Cleanup(podCheck canaryv1.PodCheck) error {
+func (c *PodChecker) Cleanup(ctx *context.Context, podCheck canaryv1.PodCheck) {
 	listOptions := metav1.ListOptions{LabelSelector: c.podCheckSelector(podCheck)}
 
 	if c.k8s == nil {
-		return fmt.Errorf("connection to k8s not established")
+		logger.Warnf("connection to k8s not established")
 	}
 	err := c.k8s.CoreV1().Pods(podCheck.Namespace).DeleteCollection(gocontext.TODO(), metav1.DeleteOptions{}, listOptions)
 	if err != nil && !errors.IsNotFound(err) {
-		return perrors.Wrapf(err, "Failed to delete pods for check %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
+		logger.Warnf("Failed to delete pods for check %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
 	}
 
 	services, err := c.k8s.CoreV1().Services(podCheck.Namespace).List(gocontext.TODO(), listOptions)
 	if err != nil {
-		return perrors.Wrapf(err, "Failed to get services for check %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
+		logger.Warnf("Failed to get services to cleanup %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
 	}
+
 	for _, s := range services.Items {
-		err = c.k8s.CoreV1().Services(podCheck.Namespace).Delete(gocontext.TODO(), s.Name, metav1.DeleteOptions{})
-		if err != nil && !errors.IsNotFound(err) {
-			return perrors.Wrapf(err, "Failed to delete service %s in namespace %s : %v", s.Name, podCheck.Namespace, err)
+		if err := ctx.Kommons.DeleteByKind(s.Kind, s.GetNamespace(), s.Name); err != nil && !errors.IsNotFound(err) {
+			logger.Warnf("Failed delete services %s in namespace %s : %v", s.Name, podCheck.Namespace, err)
 		}
 	}
-	return nil
 }
 
 func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (ingressTime float64, requestTime float64, result *pkg.CheckResult) {
-	var hardDeadline time.Time
-	ingressTimeout := time.Now().Add(time.Duration(podCheck.IngressTimeout) * time.Millisecond)
-	if ingressTimeout.After(deadline) {
-		hardDeadline = deadline
-	} else {
-		hardDeadline = ingressTimeout
+	httpTimeout := podCheck.HTTPTimeout
+	if httpTimeout == 0 {
+		httpTimeout = 5000
+	}
+	ingressTimeout := podCheck.IngressTimeout
+	if ingressTimeout == 0 {
+		ingressTimeout = 5000
+	}
+	retryInterval := podCheck.HTTPRetryInterval
+	if retryInterval == 0 {
+		retryInterval = 200
+	}
+	retry := time.Duration(retryInterval) * time.Millisecond
+	hardTimeout := int64(math.Max(float64(httpTimeout), float64(ingressTimeout)))
+
+	if deadline2 := time.Now().Add(time.Duration(hardTimeout) * time.Second); deadline2.Before(deadline) {
+		deadline = deadline2
 	}
 
 	timer := NewTimer()
-	retryInterval := time.Duration(podCheck.HTTPRetryInterval) * time.Millisecond
 
 	for {
 		url := fmt.Sprintf("http://%s%s", podCheck.IngressHost, podCheck.Path)
@@ -297,23 +308,22 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 			return 0, 0, Failf(podCheck, "invalid url: %v", err)
 		}
 		httpTimer := NewTimer()
-		response, responseCode, err := c.getHTTP(url, podCheck.HTTPTimeout, hardDeadline)
+		response, responseCode, err := c.getHTTP(url, podCheck.HTTPTimeout, deadline)
 		if err != nil && perrors.Is(err, gocontext.DeadlineExceeded) {
-			if timer.Millis() > podCheck.HTTPTimeout && time.Now().Before(hardDeadline) {
-				logger.Debugf("[%s] request completed in %s, above threshold of %d", podCheck, httpTimer, podCheck.HTTPTimeout)
-				time.Sleep(retryInterval)
+			if timer.Millis() > podCheck.HTTPTimeout && time.Now().Before(deadline) {
+				logger.Debugf("[%s] request completed in %s, above threshold of %d", podCheck, httpTimer, httpTimeout)
+				time.Sleep(retry)
 				continue
-			} else if timer.Millis() > podCheck.HTTPTimeout && time.Now().After(hardDeadline) {
-				return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HTTPTimeout)
-			} else if time.Now().After(hardDeadline) {
+			} else if timer.Millis() > httpTimeout && time.Now().After(deadline) {
+				return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, httpTimeout)
+			} else if time.Now().After(deadline) {
 				return timer.Elapsed(), 0, Failf(podCheck, "ingress timeout exceeded %s > %d", timer, podCheck.IngressTimeout)
 			} else {
-				logger.Debugf("now=%s deadline=%s", time.Now(), hardDeadline)
 				continue
 			}
 		} else if err != nil {
 			logger.Debugf("[%s] failed to get http URL %s: %v", podCheck, url, err)
-			time.Sleep(retryInterval)
+			time.Sleep(retry)
 			continue
 		}
 
@@ -326,7 +336,7 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 		}
 
 		if !found && responseCode == http.StatusServiceUnavailable || responseCode == 404 {
-			time.Sleep(retryInterval)
+			time.Sleep(retry)
 			continue
 		} else if !found {
 			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "status code %d not expected %v ", responseCode, podCheck.ExpectedHTTPStatuses)
@@ -334,8 +344,8 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 		if !strings.Contains(response, podCheck.ExpectedContent) {
 			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "content check failed")
 		}
-		if int64(httpTimer.Elapsed()) > podCheck.HTTPTimeout {
-			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, podCheck.HTTPTimeout)
+		if int64(httpTimer.Elapsed()) > httpTimeout {
+			return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, httpTimeout)
 		}
 		return timer.Elapsed(), httpTimer.Elapsed(), Passf(podCheck, "")
 	}
@@ -368,7 +378,7 @@ func (c *PodChecker) createServiceAndIngress(podCheck canaryv1.PodCheck, pod *v1
 				},
 			},
 			Selector: map[string]string{
-				podLabelSelector: pod.Name,
+				nameLabel: pod.Name,
 			},
 		},
 	}
@@ -405,6 +415,9 @@ func (c *PodChecker) newIngress(podCheck canaryv1.PodCheck, svc string) *v1beta1
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podCheck.IngressName,
 			Namespace: podCheck.Namespace,
+			Labels: map[string]string{
+				podCheckSelector: c.podCheckSelectorValue(podCheck),
+			},
 		},
 		Spec: v1beta1.IngressSpec{
 			Rules: []v1beta1.IngressRule{

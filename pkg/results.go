@@ -50,7 +50,7 @@ func (result *CheckResult) GetDuration() int64 {
 		return result.Duration
 	}
 	if !result.Start.IsZero() {
-		return int64(time.Since(result.Start).Milliseconds())
+		return time.Since(result.Start).Milliseconds()
 	}
 	return 0
 }

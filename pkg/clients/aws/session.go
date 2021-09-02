@@ -14,7 +14,7 @@ import (
 )
 
 func isEmpty(val kommons.EnvVar) bool {
-	return val.Value == "" && val.ValueFrom == nil
+	return val.Value == "" || val.ValueFrom == nil
 }
 
 func NewSession(ctx *context.Context, conn v1.AWSConnection, tr http.RoundTripper) (*aws.Config, error) {
@@ -31,6 +31,7 @@ func NewSession(ctx *context.Context, conn v1.AWSConnection, tr http.RoundTrippe
 		if err != nil {
 			return nil, fmt.Errorf(fmt.Sprintf("Could not parse EC2 secret key: %v", err))
 		}
+
 		cfg.Credentials = credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")
 	}
 	if conn.Region != "" {

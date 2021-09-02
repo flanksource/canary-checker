@@ -1,9 +1,0 @@
-s3:
-  - bucket:
-      name: "test-bucket"
-      region: "us-east-1"
-      endpoint: "https://test-bucket.s3.us-east-1.amazonaws.com"
-    secretKey: "****************"
-    accessKey: "~~~~~~~~~~~~~~~~"
-    objectPath: "path/to/object"
-    skipTLSVerify: true

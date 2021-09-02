@@ -79,7 +79,7 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 			return result.Failf("timeout after %d ", latency)
 		}
 		if check.PacketLossThreshold < int64(loss*100) {
-			return result.Failf("packet loss of %0.0f > than threshold of %d", loss, check.PacketLossThreshold)
+			return result.Failf("%s packet loss of %0.0f%% > than threshold of %d%%", urlObj.To4(), loss, check.PacketLossThreshold)
 		}
 
 		packetLoss.WithLabelValues(endpoint, ips[0].String()).Set(loss)
@@ -97,6 +97,9 @@ func (c *IcmpChecker) checkICMP(ip net.IP, packetCount int) (*ping.Statistics, e
 	// sysctl -w net.ipv4.ping_group_range="0   2147483647" which doesn't require root, but does require kubelet changes
 	// whitelist the sysctl's for use
 	pinger.SetPrivileged(true)
+	if packetCount == 0 {
+		packetCount = 5
+	}
 	pinger.Count = packetCount
 	pinger.Timeout = time.Second * 10
 	pinger.Run()

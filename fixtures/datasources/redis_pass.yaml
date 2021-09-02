@@ -1,0 +1,10 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: redis-succeed
+spec:
+  interval: 30
+  redis:
+    - addr: "redis.default.svc:6379"
+      db: 0
+      description: "The redis pass test"

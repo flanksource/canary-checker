@@ -1,7 +1,0 @@
-junit:
-  - testResults: "/tmp/junit-results/"
-    spec:
-      containers:
-        - name: jes
-          image: docker.io/tarun18/junit-test-fail
-          command: ["/start.sh"]

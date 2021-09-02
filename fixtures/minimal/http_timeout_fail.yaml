@@ -1,0 +1,10 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-fail
+spec:
+  interval: 30
+  http:
+    - endpoint: http://httpstat.us/200?sleep=200
+      thresholdMillis: 100
+      responseCodes: [200]

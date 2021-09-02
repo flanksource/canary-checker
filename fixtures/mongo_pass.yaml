@@ -1,9 +1,0 @@
-mongodb:
-  - url: 127.0.0.1
-    description: test mongo instance
-    port: 32015
-    credentials:
-      username:
-        value: mongoadmin
-      password:
-        value: secret

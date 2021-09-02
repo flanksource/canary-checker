@@ -43,13 +43,19 @@ var resolvers = map[string]func(ctx context.Context, r *net.Resolver, check v1.D
 func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DNSCheck)
 	result := pkg.Success(check)
-	dialer, err := getDialer(check, check.Timeout)
-	if err != nil {
-		return Failf(check, "Failed to get dialer, %v", err)
-	}
-	r := net.Resolver{
-		PreferGo: true,
-		Dial:     dialer,
+
+	var r net.Resolver
+	if check.Server != "" {
+		dialer, err := getDialer(check, check.Timeout)
+		if err != nil {
+			return Failf(check, "Failed to get dialer, %v", err)
+		}
+		r = net.Resolver{
+			PreferGo: true,
+			Dial:     dialer,
+		}
+	} else {
+		r = net.Resolver{}
 	}
 
 	timeout := check.Timeout
@@ -64,7 +70,7 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 		queryType = "A"
 	}
 	if fn, ok := resolvers[strings.ToUpper(queryType)]; !ok {
-		return result.Failf("unkown query type: %s", queryType)
+		return result.Failf("unknown query type: %s", queryType)
 	} else {
 		go func() {
 			pass, message, err := fn(ctx, &r, check)
@@ -83,8 +89,12 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 			// round up submillisecond response times to 1ms
 			res.Duration = 1
 		}
-		if res.Duration > int64(check.ThresholdMillis) {
+		if check.ThresholdMillis > 0 && res.Duration > int64(check.ThresholdMillis) {
 			return result.Failf("%dms > %dms", res.Duration, check.ThresholdMillis)
+		}
+		if res.Duration == 0 {
+			// round up submillisecond response times to 1ms
+			res.Duration = 1
 		}
 		return res
 	case <-time.After(time.Second * time.Duration(timeout)):
@@ -124,8 +134,10 @@ func checkCNAME(ctx context.Context, r *net.Resolver, check v1.DNSCheck) (pass b
 }
 
 func checkSRV(ctx context.Context, r *net.Resolver, check v1.DNSCheck) (pass bool, message string, err error) {
-
 	service, proto, name, err := srvInfo(check.Query)
+	if err != nil {
+		return false, "", err
+	}
 	cname, addr, err := r.LookupSRV(ctx, service, proto, name)
 	if err != nil {
 		return pass, "", err
