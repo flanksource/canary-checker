@@ -78,6 +78,7 @@ if [ "$SKIP_SETUP" != "true" ]; then
 
   if [ -e $TEST_FOLDER/_setup.yaml ]; then
     $KARINA apply $(pwd)/$TEST_FOLDER/_setup.yaml -v
+    $KARINA apply $(pwd)/test/_setup.yaml -v
   fi
 
   if [ -e $TEST_FOLDER/main.go ]; then

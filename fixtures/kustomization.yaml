@@ -4,3 +4,4 @@ resources:
   - datasources
   - k8s
   - minimal
+  - _setup.yaml
