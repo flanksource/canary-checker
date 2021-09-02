@@ -70,7 +70,7 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 		queryType = "A"
 	}
 	if fn, ok := resolvers[strings.ToUpper(queryType)]; !ok {
-		return result.Failf("unkown query type: %s", queryType)
+		return result.Failf("unknown query type: %s", queryType)
 	} else {
 		go func() {
 			pass, message, err := fn(ctx, &r, check)
@@ -134,8 +134,10 @@ func checkCNAME(ctx context.Context, r *net.Resolver, check v1.DNSCheck) (pass b
 }
 
 func checkSRV(ctx context.Context, r *net.Resolver, check v1.DNSCheck) (pass bool, message string, err error) {
-
 	service, proto, name, err := srvInfo(check.Query)
+	if err != nil {
+		return false, "", err
+	}
 	cname, addr, err := r.LookupSRV(ctx, service, proto, name)
 	if err != nil {
 		return pass, "", err

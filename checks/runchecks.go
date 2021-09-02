@@ -29,18 +29,18 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 				if r.Duration == 0 && r.GetDuration() > 0 {
 					r.Duration = r.GetDuration()
 				}
-				switch r.Check.(type) {
+				switch v := r.Check.(type) {
 				case v1.DisplayTemplate:
-					message, err := template(ctx.New(r.Data), r.Check.(v1.DisplayTemplate).GetDisplayTemplate())
+					message, err := template(ctx.New(r.Data), v.GetDisplayTemplate())
 					if err != nil {
 						r.ErrorMessage(err)
 					} else {
 						r.ResultMessage(message)
 					}
 				}
-				switch r.Check.(type) {
+				switch v := r.Check.(type) {
 				case v1.TestFunction:
-					tpl := r.Check.(v1.TestFunction).GetTestFunction()
+					tpl := v.GetTestFunction()
 					if tpl.Template == "" {
 						break
 					}
@@ -58,19 +58,6 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 		}
 	}
 	return results
-}
-
-func humanizeBytes(v interface{}) string {
-	if v == nil {
-		return ""
-	}
-	switch v.(type) {
-	case int64:
-		return humanize.Bytes(uint64(v.(int64)))
-	case uint64:
-		return humanize.Bytes(v.(uint64))
-	}
-	return fmt.Sprintf("%0.1f", v)
 }
 
 func template(ctx *context.Context, template v1.Template) (string, error) {

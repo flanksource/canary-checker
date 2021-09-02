@@ -49,20 +49,20 @@ type FolderCheck struct {
 	Files   []os.FileInfo
 }
 
-func (result *FolderCheck) Append(file os.FileInfo) {
-	if result.Oldest == nil || result.Oldest.ModTime().After(file.ModTime()) {
-		result.Oldest = file
+func (f *FolderCheck) Append(file os.FileInfo) {
+	if f.Oldest == nil || f.Oldest.ModTime().After(file.ModTime()) {
+		f.Oldest = file
 	}
-	if result.Newest == nil || result.Newest.ModTime().Before(file.ModTime()) {
-		result.Newest = file
+	if f.Newest == nil || f.Newest.ModTime().Before(file.ModTime()) {
+		f.Newest = file
 	}
-	if result.MinSize == nil || result.MinSize.Size() > file.Size() {
-		result.MinSize = file
+	if f.MinSize == nil || f.MinSize.Size() > file.Size() {
+		f.MinSize = file
 	}
-	if result.MaxSize == nil || result.MaxSize.Size() < file.Size() {
-		result.MaxSize = file
+	if f.MaxSize == nil || f.MaxSize.Size() < file.Size() {
+		f.MaxSize = file
 	}
-	result.Files = append(result.Files, file)
+	f.Files = append(f.Files, file)
 }
 
 func age(t time.Time) string {
@@ -112,7 +112,6 @@ func (f FolderCheck) Test(test v1.FolderTest) string {
 		size, err := test.MaxSize.Value()
 		if err != nil {
 			return fmt.Sprintf("%s is an invalid size: %s", test.MinSize, err)
-
 		}
 		if f.MaxSize.Size() < *size {
 			return fmt.Sprintf("%s is too large: %v > %v", f.MaxSize.Name(), mb(f.MaxSize.Size()), test.MaxSize)
