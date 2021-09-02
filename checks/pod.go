@@ -165,13 +165,13 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	if err := ctx.Kommons.Apply(podCheck.Namespace, pod); err != nil {
 		return result.ErrorMessage(err)
 	}
-	defer c.Cleanup(podCheck)
+	defer c.Cleanup(podCheck) //nolint
 
 	timeout := podCheck.ScheduleTimeout
 	if timeout == 0 {
 		timeout = 30000
 	}
-	if err := ctx.Kommons.WaitForPod(pod.Namespace, pod.Name, time.Millisecond*time.Duration(podCheck.ScheduleTimeout), v1.PodRunning); err != nil {
+	if err := ctx.Kommons.WaitForPod(pod.Namespace, pod.Name, time.Millisecond*time.Duration(timeout), v1.PodRunning); err != nil {
 		return result.ErrorMessage(err)
 	}
 

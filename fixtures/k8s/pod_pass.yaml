@@ -6,13 +6,13 @@ spec:
   interval: 30
   pod:
     - name: golang
-      namespace: platform-system
+      namespace: default
       spec: |
         apiVersion: v1
         kind: Pod
         metadata:
           name: hello-world-golang
-          namespace: platform-system
+          namespace: default
           labels:
             app: hello-world-golang
         spec:
@@ -23,7 +23,7 @@ spec:
       path: /foo/bar
       ingressName: hello-world-golang
       ingressHost: "hello-world-golang.127.0.0.1.nip.io"
-      scheduleTimeout: 2000
+      scheduleTimeout: 10000
       readyTimeout: 5000
       httpTimeout: 7000
       deleteTimeout: 12000
@@ -34,13 +34,13 @@ spec:
       expectedHttpStatuses: [200, 201, 202]
       priorityClass: canary
     - name: ruby
-      namespace: platform-system
+      namespace: default
       spec: |
         apiVersion: v1
         kind: Pod
         metadata:
           name: hello-world-ruby
-          namespace: platform-system
+          namespace: default
           labels:
             app: hello-world-ruby
         spec:
@@ -52,7 +52,7 @@ spec:
       path: /foo/bar
       ingressName: hello-world-ruby
       ingressHost: "hello-world-ruby.127.0.0.1.nip.io"
-      scheduleTimeout: 3000
+      scheduleTimeout: 10000
       readyTimeout: 12000
       httpTimeout: 7000
       deleteTimeout: 12000

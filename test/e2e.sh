@@ -10,6 +10,7 @@ export PATH=$(pwd)/.bin:$PATH
 export ROOT=$(pwd)
 export TEST_FOLDER=${TEST_FOLDER:-$1}
 export DOMAIN=${DOMAIN:-127.0.0.1.nip.io}
+export TELEPRESENCE_USE_DEPLOYMENT=0
 
 SKIP_SETUP=${SKIP_SETUP:-false}
 SKIP_KARINA=${SKIP_KARINA:-false}
@@ -99,7 +100,7 @@ echo "::group::Testing"
 USER=$(whoami)
 
 if [[ "$SKIP_TELEPRESENCE" != "true" ]]; then
-  telepresence="telepresence -m vpn-tcp --namespace default --run"
+  telepresence="telepresence --mount false -m vpn-tcp --namespace default --run"
 fi
 cmd="$telepresence ./test.test -test.v --test-folder $TEST_FOLDER $EXTRA"
 echo $cmd
