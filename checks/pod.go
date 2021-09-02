@@ -139,19 +139,16 @@ func diff(times map[v1.PodConditionType]metav1.Time, c1 v1.PodConditionType, c2 
 
 func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	podCheck := extConfig.(canaryv1.PodCheck)
+
 	if !c.lock.TryAcquire(1) {
 		logger.Tracef("Check already in progress, skipping")
 		return nil
 	}
 	defer func() { c.lock.Release(1) }()
-
-	if err := c.Cleanup(podCheck); err != nil {
-		return unexpectedErrorf(podCheck, err, "failed to cleanup old artifacts")
-	}
+	result := pkg.Success(podCheck)
 
 	startTimer := NewTimer()
 
-	logger.Debugf("Running pod check %s", podCheck.Name)
 	five := int64(5)
 	nodes, err := c.k8s.CoreV1().Nodes().List(ctx, metav1.ListOptions{TimeoutSeconds: &five})
 	if err != nil {
@@ -165,19 +162,19 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 		return invalidErrorf(podCheck, err, "invalid pod spec")
 	}
 
-	pods := c.k8s.CoreV1().Pods(podCheck.Namespace)
-
-	if _, err := pods.Create(ctx, pod, metav1.CreateOptions{}); err != nil {
-		return unexpectedErrorf(podCheck, err, "unable to create pod")
+	if err := ctx.Kommons.Apply(podCheck.Namespace, pod); err != nil {
+		return result.ErrorMessage(err)
 	}
-	defer func() {
-		c.Cleanup(podCheck) // nolint: errcheck
-	}()
+	defer c.Cleanup(podCheck)
 
-	pod, err = c.WaitForPod(podCheck.Namespace, pod.Name, time.Millisecond*time.Duration(podCheck.ScheduleTimeout), v1.PodRunning)
-	if err != nil {
-		return unexpectedErrorf(podCheck, err, "unable to fetch pod details")
+	timeout := podCheck.ScheduleTimeout
+	if timeout == 0 {
+		timeout = 30000
 	}
+	if err := ctx.Kommons.WaitForPod(pod.Namespace, pod.Name, time.Millisecond*time.Duration(podCheck.ScheduleTimeout), v1.PodRunning); err != nil {
+		return result.ErrorMessage(err)
+	}
+
 	created := pod.GetCreationTimestamp()
 
 	conditions, err := c.getConditionTimes(podCheck, pod)
@@ -211,10 +208,10 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	}
 
 	deletion := NewTimer()
-	if err := pods.Delete(ctx, pod.Name, metav1.DeleteOptions{}); err != nil {
-		return unexpectedErrorf(podCheck, err, "failed to delete pod")
-	}
 
+	if err := ctx.Kommons.DeleteByKind(podKind, pod.Namespace, pod.Name); err != nil {
+		return result.ErrorMessage(err)
+	}
 	return &pkg.CheckResult{
 		Check:    podCheck,
 		Pass:     ingressResult.Pass,
