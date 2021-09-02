@@ -441,7 +441,14 @@ type DNSCheck struct {
 }
 
 func (c DNSCheck) GetEndpoint() string {
-	return fmt.Sprintf("%s/%s@%s:%d", c.QueryType, c.Query, c.Server, c.Port)
+	s := fmt.Sprintf("%s/%s", c.QueryType, c.Query)
+	if c.Server != "" {
+		s += "@" + c.Server
+		if c.Port != 0 {
+			s += fmt.Sprintf(":%d", c.Port)
+		}
+	}
+	return s
 }
 
 func (c DNSCheck) GetType() string {
@@ -554,34 +561,17 @@ func (c PrometheusCheck) GetEndpoint() string {
 
 type MongoDBCheck struct {
 	Description `yaml:",inline" json:",inline"`
-	// Address of the mongodb server
-	URL string `yaml:"url" json:"url"`
-	// Port of the mongodb server. Defaults to 27017
-	Port        int                  `yaml:"port,omitempty" json:"port,omitempty"`
-	Credentials *MongoDBCrendentials `yaml:"credentials,omitempty" json:"credentials,omitempty"`
+	// Monogodb connection string, e.g.  mongodb://:27017/?authSource=admin, See https://docs.mongodb.com/manual/reference/connection-string/
+	Connection      string `yaml:"connection" json:"connection,omitempty"`
+	*Authentication `yaml:",inline" json:",inline"`
 }
 
-type MongoDBCrendentials struct {
-	AuthMechanism           string            `yaml:"authMechanism,omitempty" json:"authMechanism,omitempty"`
-	AuthMechanismProperties map[string]string `yaml:"authMechanismProperties,omitempty" json:"authMechanismProperties,omitempty"`
-	AuthSource              string            `yaml:"authSource,omitempty" json:"authSource,omitempty"`
-	*Authentication         `yaml:",inline" json:",inline"`
-	PasswordSet             bool `yaml:"passswordSet,omitempty" json:"passwordSet,omitempty"`
+func (c MongoDBCheck) GetEndpoint() string {
+	return sanitizeEndpoints(c.Connection)
 }
 
 func (c MongoDBCheck) GetType() string {
 	return "mongodb"
-}
-
-func (c MongoDBCheck) GetEndpoint() string {
-	return fmt.Sprintf("%s:%d - %v", c.URL, c.GetPort(), c.GetDescription())
-}
-
-func (c MongoDBCheck) GetPort() int {
-	if c.Port != 0 {
-		return c.Port
-	}
-	return 27017
 }
 
 /*

@@ -43,13 +43,19 @@ var resolvers = map[string]func(ctx context.Context, r *net.Resolver, check v1.D
 func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DNSCheck)
 	result := pkg.Success(check)
-	dialer, err := getDialer(check, check.Timeout)
-	if err != nil {
-		return Failf(check, "Failed to get dialer, %v", err)
-	}
-	r := net.Resolver{
-		PreferGo: true,
-		Dial:     dialer,
+
+	var r net.Resolver
+	if check.Server != "" {
+		dialer, err := getDialer(check, check.Timeout)
+		if err != nil {
+			return Failf(check, "Failed to get dialer, %v", err)
+		}
+		r = net.Resolver{
+			PreferGo: true,
+			Dial:     dialer,
+		}
+	} else {
+		r = net.Resolver{}
 	}
 
 	timeout := check.Timeout
@@ -83,7 +89,7 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 			// round up submillisecond response times to 1ms
 			res.Duration = 1
 		}
-		if res.Duration > int64(check.ThresholdMillis) {
+		if check.ThresholdMillis > 0 && res.Duration > int64(check.ThresholdMillis) {
 			return result.Failf("%dms > %dms", res.Duration, check.ThresholdMillis)
 		}
 		if res.Duration == 0 {

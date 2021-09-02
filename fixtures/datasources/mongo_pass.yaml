@@ -5,15 +5,12 @@ metadata:
 spec:
   interval: 30
   mongodb:
-    - url: mongo.default.svc
+    - connection: mongodb://mongo.default.svc:27017/?authSource=admin
       description: mongo ping
-      port: 27017
       credentials:
         username:
           value: mongoadmin
         password:
           value: secret
-  icmp:
-    - endpoint: mongo.default.svc
   dns:
-    - endpoint: mongo.default.svc
+    - query: mongo.default.svc
