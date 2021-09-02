@@ -80,7 +80,7 @@ func (c *NamespaceChecker) newPod(check canaryv1.NamespaceCheck, ns *v1.Namespac
 
 	pod.Name = "canary-check-pod"
 	pod.Namespace = ns.Name
-	pod.Labels[podLabelSelector] = pod.Name
+	pod.Labels[nameLabel] = pod.Name
 	pod.Labels[podCheckSelector] = c.podCheckSelectorValue(check, ns)
 	pod.Labels[podGeneralSelector] = "true" //nolint: goconst
 	if check.PriorityClass != "" {
@@ -311,7 +311,7 @@ func (c *NamespaceChecker) createServiceAndIngress(check canaryv1.NamespaceCheck
 				},
 			},
 			Selector: map[string]string{
-				podLabelSelector: pod.Name,
+				nameLabel: pod.Name,
 			},
 		},
 	}
