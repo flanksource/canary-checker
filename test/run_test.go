@@ -46,7 +46,7 @@ func TestRunChecks(t *testing.T) {
 	wg := sync.WaitGroup{}
 	for _, fixture := range files {
 		name := path.Base(fixture.Name())
-		if strings.HasPrefix(name, "_") || !strings.HasSuffix(name, ".yaml") {
+		if strings.HasPrefix(name, "_") || !strings.HasSuffix(name, ".yaml") || name == "kustomization.yaml" {
 			continue
 		}
 		wg.Add(1)
