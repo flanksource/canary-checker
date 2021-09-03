@@ -232,6 +232,10 @@ type Canary struct {
 	Status CanaryStatus `json:"status,omitempty"`
 }
 
+func (c Canary) String() string {
+	return fmt.Sprintf("%s/%s", c.Namespace, c.Name)
+}
+
 func (c Canary) GetAllLabels(extra map[string]string) map[string]string {
 	labels := make(map[string]string)
 	for k, v := range extra {

@@ -44,9 +44,14 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 	check := extConfig.(v1.DNSCheck)
 	result := pkg.Success(check)
 
+	timeout := check.Timeout
+	if timeout == 0 {
+		timeout = 10
+	}
+
 	var r net.Resolver
 	if check.Server != "" {
-		dialer, err := getDialer(check, check.Timeout)
+		dialer, err := getDialer(check, timeout)
 		if err != nil {
 			return Failf(check, "Failed to get dialer, %v", err)
 		}
@@ -56,11 +61,6 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 		}
 	} else {
 		r = net.Resolver{}
-	}
-
-	timeout := check.Timeout
-	if timeout == 0 {
-		timeout = 10
 	}
 
 	resultCh := make(chan *pkg.CheckResult, 1)
