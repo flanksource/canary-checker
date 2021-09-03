@@ -8,10 +8,8 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/logger"
 
 	gotemplate "text/template"
 
@@ -26,13 +24,6 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 		// t := GetDeadline(ctx.Canary)
 		// ctx, cancel := ctx.WithDeadline(t)
 		// defer cancel()
-
-		switch v := c.(type) {
-		case external.Endpointer:
-			logger.Tracef("[%s/%s] running", ctx.Canary, v.GetEndpoint())
-		default:
-			logger.Tracef("[%s] running", ctx.Canary)
-		}
 
 		result := c.Run(ctx)
 		for _, r := range result {

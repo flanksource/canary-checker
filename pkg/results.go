@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/commons/logger"
 )
 
 func Fail(check external.Check) *CheckResult {
@@ -17,6 +18,17 @@ func Fail(check external.Check) *CheckResult {
 }
 
 func Success(check external.Check) *CheckResult {
+	switch v := check.(type) {
+	case external.Endpointer:
+		logger.Tracef("running %s", v.GetEndpoint())
+	case external.Describable:
+		logger.Tracef("running %s", v.GetDescription())
+	case fmt.Stringer:
+		logger.Tracef("running %s", v)
+	default:
+		logger.Tracef("running  %s", check)
+	}
+
 	return &CheckResult{
 		Start: time.Now(),
 		Pass:  true,

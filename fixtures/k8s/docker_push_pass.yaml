@@ -4,17 +4,10 @@ metadata:
   name: docker-push0-pass
 spec:
   interval: 30
-  env:
-    DOCKER_USERNAME:
-      secretKeyRef:
-        name: secrets
-        key: DOCKER_USERNAME
-    DOCKER_PASSWORD:
-      secretKeyRef:
-        name: secrets
-        key: DOCKER_PASSWORD
-
   dockerPush:
     - image: ttl.sh/flanksource-busybox:1.30
-      username: $DOCKER_USERNAME
-      password: $DOCKER_PASSWORD
+      auth:
+        username:
+          value: test
+        password:
+          value: pass
