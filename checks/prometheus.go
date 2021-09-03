@@ -42,11 +42,26 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	if warning != nil {
 		logger.Debugf("warnings when running the query: %v", warning)
 	}
-	var results = make([]interface{}, 0)
+	var results = make([]map[string]interface{}, 0)
+	var data = map[string]interface{}{
+		"value":       0,
+		"firstResult": make(map[string]interface{}),
+	}
 	if modelValue != nil {
-		for _, value := range modelValue.(model.Vector) {
-			results = append(results, value.Metric)
+		for i, value := range modelValue.(model.Vector) {
+
+			val := make(map[string]interface{})
+			val["value"] = value.Value
+			if i == 0 {
+				data["firstResult"] = val
+				data["value"] = value.Value
+			}
+			for k, v := range value.Metric {
+				val[string(k)] = v
+			}
+			results = append(results, val)
 		}
 	}
-	return result.AddDetails(results)
+	data["results"] = results
+	return result.AddData(data)
 }
