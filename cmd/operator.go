@@ -61,11 +61,13 @@ func run(cmd *cobra.Command, args []string) {
 	setupLog := ctrl.Log.WithName("setup")
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: fmt.Sprintf("0.0.0.0:%d", metricsPort),
-		Port:               webhookPort,
-		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "bc88107d.flanksource.com",
+		Scheme:                  scheme,
+		MetricsBindAddress:      fmt.Sprintf("0.0.0.0:%d", metricsPort),
+		Namespace:               namespace,
+		Port:                    webhookPort,
+		LeaderElection:          enableLeaderElection,
+		LeaderElectionNamespace: namespace,
+		LeaderElectionID:        "bc88107d.flanksource.com",
 	})
 
 	if err != nil {
