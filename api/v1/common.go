@@ -223,11 +223,11 @@ func (t Templatable) GetDisplayTemplate() Template {
 
 type Description struct {
 	// Description for the check
-	Description string `yaml:"description,omitempty" json:"description,omitempty"`
+	Description string `yaml:"description,omitempty" json:"description,omitempty" template:"true"`
 	// Name of the check
-	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+	Name string `yaml:"name,omitempty" json:"name,omitempty" template:"true"`
 	// Icon for overwriting default icon on the dashboard
-	Icon string `yaml:"icon,omitempty" json:"icon,omitempty"`
+	Icon string `yaml:"icon,omitempty" json:"icon,omitempty" template:"true"`
 }
 
 func (d Description) String() string {
