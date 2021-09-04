@@ -31,11 +31,10 @@ func (c Check) GetIcon() string {
 type HTTPCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
-
 	// HTTP endpoint to check.  Mutually exclusive with Namespace
-	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty"`
+	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty" template:"true"`
 	// Namespace to crawl for TLS endpoints.  Mutually exclusive with Endpoint
-	Namespace string `yaml:"namespace" json:"namespace,omitempty"`
+	Namespace string `yaml:"namespace" json:"namespace,omitempty" template:"true"`
 	// Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.
 	ThresholdMillis int `yaml:"thresholdMillis" json:"thresholdMillis,omitempty"`
 	// Expected response codes for the HTTP Request.
@@ -53,7 +52,7 @@ type HTTPCheck struct {
 	//NTLM when set to true will do authentication using NTLM v2 protocol
 	NTLMv2 bool `yaml:"ntlmv2,omitempty" json:"ntlmv2,omitempty"`
 	// HTTP request body contents
-	Body string `yaml:"body,omitempty" json:"body,omitempty"`
+	Body string `yaml:"body,omitempty" json:"body,omitempty" template:"true"`
 	// HTTP Header fields to be used in the query
 	Headers []kommons.EnvVar `yaml:"headers,omitempty" json:"headers,omitempty"`
 	// Credentials for authentication headers:
@@ -276,7 +275,7 @@ func (c ContainerdPushCheck) GetType() string {
 
 type RedisCheck struct {
 	Description `yaml:",inline" json:",inline"`
-	Addr        string          `yaml:"addr" json:"addr"`
+	Addr        string          `yaml:"addr" json:"addr" template:"true"`
 	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 	DB          int             `yaml:"db" json:"db"`
 }
@@ -292,8 +291,8 @@ func (c RedisCheck) GetEndpoint() string {
 type SQLCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	driver      string `yaml:"-" json:"-"`
-	Connection  string `yaml:"connection" json:"connection,omitempty"`
-	Query       string `yaml:"query" json:"query,omitempty"`
+	Connection  string `yaml:"connection" json:"connection,omitempty" template:"true"`
+	Query       string `yaml:"query" json:"query,omitempty" template:"true"`
 	// Number rows to check for
 	Result int `yaml:"results" json:"results,omitempty"`
 	// ResultsFunction tests query output for pass/fail (must return boolean)
@@ -345,7 +344,7 @@ type MssqlCheck struct {
 
 type PodCheck struct {
 	Description          `yaml:",inline" json:",inline"`
-	Namespace            string `yaml:"namespace" json:"namespace,omitempty"`
+	Namespace            string `yaml:"namespace" json:"namespace,omitempty" template:"true"`
 	Spec                 string `yaml:"spec" json:"spec,omitempty"`
 	ScheduleTimeout      int64  `yaml:"scheduleTimeout" json:"scheduleTimeout,omitempty"`
 	ReadyTimeout         int64  `yaml:"readyTimeout" json:"readyTimeout,omitempty"`
@@ -355,10 +354,10 @@ type PodCheck struct {
 	HTTPRetryInterval    int64  `yaml:"httpRetryInterval" json:"httpRetryInterval,omitempty"`
 	Deadline             int64  `yaml:"deadline" json:"deadline,omitempty"`
 	Port                 int64  `yaml:"port" json:"port,omitempty"`
-	Path                 string `yaml:"path" json:"path,omitempty"`
-	IngressName          string `yaml:"ingressName" json:"ingressName,omitempty"`
-	IngressHost          string `yaml:"ingressHost" json:"ingressHost,omitempty"`
-	ExpectedContent      string `yaml:"expectedContent" json:"expectedContent,omitempty"`
+	Path                 string `yaml:"path" json:"path,omitempty" template:"true"`
+	IngressName          string `yaml:"ingressName" json:"ingressName,omitempty" template:"true" `
+	IngressHost          string `yaml:"ingressHost" json:"ingressHost,omitempty" template:"true"`
+	ExpectedContent      string `yaml:"expectedContent" json:"expectedContent,omitempty" template:"true"`
 	ExpectedHTTPStatuses []int  `yaml:"expectedHttpStatuses" json:"expectedHttpStatuses,omitempty"`
 	PriorityClass        string `yaml:"priorityClass" json:"priorityClass,omitempty"`
 }
@@ -377,7 +376,7 @@ func (c PodCheck) GetType() string {
 
 type LDAPCheck struct {
 	Description   `yaml:",inline" json:",inline"`
-	Host          string          `yaml:"host" json:"host,omitempty"`
+	Host          string          `yaml:"host" json:"host,omitempty" template:"true"`
 	Auth          *Authentication `yaml:"auth" json:"auth,omitempty"`
 	BindDN        string          `yaml:"bindDN" json:"bindDN,omitempty"`
 	UserSearch    string          `yaml:"userSearch" json:"userSearch,omitempty"`
@@ -394,7 +393,7 @@ func (c LDAPCheck) GetType() string {
 
 type NamespaceCheck struct {
 	Description          `yaml:",inline" json:",inline"`
-	CheckName            string            `yaml:"checkName" json:"checkName,omitempty"`
+	CheckName            string            `yaml:"checkName" json:"checkName,omitempty" template:"true"`
 	NamespaceNamePrefix  string            `yaml:"namespaceNamePrefix" json:"namespaceNamePrefix,omitempty"`
 	NamespaceLabels      map[string]string `yaml:"namespaceLabels" json:"namespaceLabels,omitempty"`
 	NamespaceAnnotations map[string]string `yaml:"namespaceAnnotations" json:"namespaceAnnotations,omitempty"`
@@ -408,9 +407,9 @@ type NamespaceCheck struct {
 	Deadline             int64             `yaml:"deadline" json:"deadline,omitempty"`
 	Port                 int64             `yaml:"port" json:"port,omitempty"`
 	Path                 string            `yaml:"path" json:"path,omitempty"`
-	IngressName          string            `yaml:"ingressName" json:"ingressName,omitempty"`
-	IngressHost          string            `yaml:"ingressHost" json:"ingressHost,omitempty"`
-	ExpectedContent      string            `yaml:"expectedContent" json:"expectedContent,omitempty"`
+	IngressName          string            `yaml:"ingressName" json:"ingressName,omitempty" template:"true"`
+	IngressHost          string            `yaml:"ingressHost" json:"ingressHost,omitempty" template:"true"`
+	ExpectedContent      string            `yaml:"expectedContent" json:"expectedContent,omitempty" template:"true"`
 	ExpectedHTTPStatuses []int64           `yaml:"expectedHttpStatuses" json:"expectedHttpStatuses,omitempty"`
 	PriorityClass        string            `yaml:"priorityClass" json:"priorityClass,omitempty"`
 }
@@ -546,9 +545,9 @@ type PrometheusCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 	// Address of the prometheus server
-	Host string `yaml:"host" json:"host"`
+	Host string `yaml:"host" json:"host" template:"true" `
 	// PromQL query
-	Query string `yaml:"query" json:"query"`
+	Query string `yaml:"query" json:"query" template:"true"`
 }
 
 func (c PrometheusCheck) GetType() string {
@@ -562,7 +561,7 @@ func (c PrometheusCheck) GetEndpoint() string {
 type MongoDBCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	// Monogodb connection string, e.g.  mongodb://:27017/?authSource=admin, See https://docs.mongodb.com/manual/reference/connection-string/
-	Connection      string `yaml:"connection" json:"connection,omitempty"`
+	Connection      string `yaml:"connection" json:"connection,omitempty" template:"true"`
 	*Authentication `yaml:",inline" json:",inline"`
 }
 
