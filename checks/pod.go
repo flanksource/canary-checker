@@ -102,6 +102,7 @@ func (c *PodChecker) newPod(podCheck canaryv1.PodCheck, nodeName string) (*v1.Po
 	}
 
 	pod.Name = c.ng.PodName(pod.Name + "-")
+	pod.Namespace = podCheck.Namespace
 	pod.Labels[nameLabel] = pod.Name
 	pod.Labels[podCheckSelector] = c.podCheckSelectorValue(podCheck)
 	pod.Labels[podGeneralSelector] = "true"
@@ -146,9 +147,13 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	}
 	defer func() { c.lock.Release(1) }()
 
+	if podCheck.Namespace == "" {
+		podCheck.Namespace = ctx.Namespace
+	}
+
 	result := pkg.Success(podCheck)
 	startTimer := NewTimer()
-	pods := c.k8s.CoreV1().Pods(ctx.Namespace)
+	pods := c.k8s.CoreV1().Pods(podCheck.Namespace)
 
 	if skip, err := cleanupExistingPods(ctx, c.k8s, c.podCheckSelector(podCheck)); err != nil {
 		return result.ErrorMessage(err)
@@ -172,7 +177,7 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 		return invalidErrorf(podCheck, err, "invalid pod spec")
 	}
 
-	if err := ctx.Kommons.Apply(ctx.Namespace, pod); err != nil {
+	if err := ctx.Kommons.Apply(podCheck.Namespace, pod); err != nil {
 		return result.ErrorMessage(err)
 	}
 
@@ -274,7 +279,7 @@ func (c *PodChecker) Cleanup(ctx *context.Context, podCheck canaryv1.PodCheck) {
 	}
 
 	for _, s := range services.Items {
-		if err := ctx.Kommons.DeleteByKind(s.Kind, s.GetNamespace(), s.Name); err != nil && !errors.IsNotFound(err) {
+		if err := ctx.Kommons.DeleteByKind("Service", podCheck.Namespace, s.Name); err != nil && !errors.IsNotFound(err) {
 			logger.Warnf("Failed delete services %s in namespace %s : %v", s.Name, podCheck.Namespace, err)
 		}
 	}
@@ -291,7 +296,7 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 	}
 	retryInterval := podCheck.HTTPRetryInterval
 	if retryInterval == 0 {
-		retryInterval = 200
+		retryInterval = 750
 	}
 	retry := time.Duration(retryInterval) * time.Millisecond
 	hardTimeout := int64(math.Max(float64(httpTimeout), float64(ingressTimeout)))
