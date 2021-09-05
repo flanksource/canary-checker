@@ -5,9 +5,9 @@ metadata:
 spec:
   interval: 30
   mongodb:
-    - connection: mongodb://mongo.default.svc:27017/?authSource=admin
+    - connection: mongodb://$(username):$(password)@mongo.default.svc:27017/?authSource=admin
       description: mongo ping
-      credentials:
+      auth:
         username:
           value: mongoadmin
         password:

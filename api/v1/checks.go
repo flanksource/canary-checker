@@ -189,6 +189,7 @@ func (c ResticCheck) GetType() string {
 }
 
 type JmeterCheck struct {
+	Description `yaml:",inline" json:",inline"`
 	// Jmx defines tge ConfigMap or Secret reference to get the JMX test plan
 	Jmx kommons.EnvVar `yaml:"jmx" json:"jmx"`
 	// Host is the server against which test plan needs to be executed
@@ -199,7 +200,6 @@ type JmeterCheck struct {
 	Properties []string `yaml:"properties,omitempty" json:"properties,omitempty"`
 	// SystemProperties defines the java system property
 	SystemProperties []string `yaml:"systemProperties,omitempty" json:"systemProperties,omitempty"`
-	Description      `yaml:",inline" json:",inline"`
 	// ResponseDuration under which the all the test should pass
 	ResponseDuration string `yaml:"responseDuration,omitempty" json:"responseDuration,omitempty"`
 }
@@ -290,21 +290,12 @@ func (c RedisCheck) GetEndpoint() string {
 
 type SQLCheck struct {
 	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	Connection  `yaml:",inline" json:",inline"`
 	driver      string `yaml:"-" json:"-"`
-	Connection  string `yaml:"connection" json:"connection,omitempty" template:"true"`
 	Query       string `yaml:"query" json:"query,omitempty" template:"true"`
 	// Number rows to check for
 	Result int `yaml:"results" json:"results,omitempty"`
-	// ResultsFunction tests query output for pass/fail (must return boolean)
-	// Example: '[[ if index .results 0 "surname" | eq "khandelwal" ]]true[[else]]false[[end]]'
-	ResultsFunction string `yaml:"resultsFunction,omitempty" json:"resultsFunction,omitempty"`
-	// DisplayTemplate displays query results in text (overrides default bar format for UI)
-	// Example: '[[index .results 0]]'
-	DisplayTemplate string `yaml:"displayTemplate,omitempty" json:"displayTemplate,omitempty"`
-}
-
-func (c SQLCheck) GetDisplayTemplate() string {
-	return c.DisplayTemplate
 }
 
 func (c *SQLCheck) GetQuery() string {
@@ -314,20 +305,12 @@ func (c *SQLCheck) GetQuery() string {
 	return c.Query
 }
 
-func (c *SQLCheck) GetConnection() string {
-	return c.Connection
-}
-
 func (c SQLCheck) GetDriver() string {
 	return c.driver
 }
 
 func (c *SQLCheck) SetDriver(driver string) {
 	c.driver = driver
-}
-
-func (c SQLCheck) GetEndpoint() string {
-	return sanitizeEndpoints(c.Connection)
 }
 
 func (c SQLCheck) GetType() string {
@@ -561,12 +544,7 @@ func (c PrometheusCheck) GetEndpoint() string {
 type MongoDBCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	// Monogodb connection string, e.g.  mongodb://:27017/?authSource=admin, See https://docs.mongodb.com/manual/reference/connection-string/
-	Connection      string `yaml:"connection" json:"connection,omitempty" template:"true"`
-	*Authentication `yaml:",inline" json:",inline"`
-}
-
-func (c MongoDBCheck) GetEndpoint() string {
-	return sanitizeEndpoints(c.Connection)
+	Connection `yaml:",inline" json:",inline"`
 }
 
 func (c MongoDBCheck) GetType() string {

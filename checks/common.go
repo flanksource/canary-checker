@@ -5,11 +5,64 @@ import (
 	"os"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/kommons"
+	"github.com/flanksource/kommons/ktemplate"
 	"github.com/robfig/cron/v3"
 )
+
+func GetConnection(ctx *context.Context, conn *v1.Connection, namespace string) (string, error) {
+	// TODO: this function should not be necessary, each check should be templated out individual
+	// however, the walk method only support high level values, not values from siblings.
+
+	if conn.Authentication.IsEmpty() {
+		return conn.Connection, nil
+	}
+	client, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return "", err
+	}
+
+	auth, err := GetAuthValues(&conn.Authentication, ctx.Kommons, namespace)
+	if err != nil {
+		return "", err
+	}
+
+	clone := conn.DeepCopy()
+
+	data := map[string]string{
+		"name":      ctx.Canary.Name,
+		"namespace": namespace,
+		"username":  auth.GetUsername(),
+		"password":  auth.GetPassword(),
+		"domain":    auth.GetDomain(),
+	}
+	templater := ktemplate.StructTemplater{
+		Clientset: client,
+		Values:    data,
+		// access go values in template requires prefix everything with .
+		// to support $(username) instead of $(.username) we add a function for each var
+		Funcs: map[string]interface{}{
+			"name":      ctx.Canary.GetName,
+			"namespace": func() string { return namespace },
+			"username":  auth.GetUsername,
+			"password":  auth.GetPassword,
+			"domain":    auth.GetDomain,
+		},
+		DelimSets: []ktemplate.Delims{
+			{Left: "{{", Right: "}}"},
+			{Left: "$(", Right: ")"},
+		},
+		RequiredTag: "template",
+	}
+	if err := templater.Walk(clone); err != nil {
+		return "", err
+	}
+
+	return clone.Connection, nil
+}
 
 func GetAuthValues(auth *v1.Authentication, client *kommons.Client, namespace string) (*v1.Authentication, error) {
 	authentication := &v1.Authentication{
