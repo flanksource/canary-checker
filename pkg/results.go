@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/logger"
 )
 
@@ -15,6 +16,21 @@ func Fail(check external.Check) *CheckResult {
 		Start: time.Now(),
 		Pass:  false,
 	}
+}
+
+func SetupError(canary v1.Canary, err error) []*CheckResult {
+	var results []*CheckResult
+	for _, check := range canary.Spec.GetAllChecks() {
+		results = append(results, &CheckResult{
+			Start:   time.Now(),
+			Pass:    false,
+			Invalid: true,
+			Error:   err.Error(),
+			Check:   check,
+			Data:    make(map[string]interface{}),
+		})
+	}
+	return results
 }
 
 func Success(check external.Check) *CheckResult {

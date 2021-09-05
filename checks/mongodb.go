@@ -1,10 +1,11 @@
 package checks
 
 import (
+	gocontext "context"
+	"time"
+
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
-
-	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -32,34 +33,30 @@ func (c *MongoDBChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *MongoDBChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	start := time.Now()
 	check := extConfig.(v1.MongoDBCheck)
-	var client *mongo.Client
+	result := pkg.Success(check)
 	var err error
-	if check.Authentication != nil {
-		auth, err := GetAuthValues(check.Authentication, ctx.Kommons, ctx.Canary.Namespace)
-		if err != nil {
-			return pkg.Fail(check).ErrorMessage(err).StartTime(start)
-		}
-		credential := options.Credential{
-			Username: auth.Username.Value,
-			Password: auth.Password.Value,
-		}
-		client, err = mongo.Connect(ctx, options.Client().ApplyURI(check.Connection).SetAuth(credential))
-		if err != nil {
-			return pkg.Fail(check).ErrorMessage(err).StartTime(start)
-		}
-	} else {
-		client, err = mongo.Connect(ctx, options.Client().ApplyURI(check.Connection))
-		if err != nil {
-			return pkg.Fail(check).ErrorMessage(err).StartTime(start)
-		}
+
+	connection, err := GetConnection(ctx, &check.Connection, ctx.Namespace)
+	if err != nil {
+		return result.ErrorMessage(err)
 	}
 
-	defer client.Disconnect(ctx) //nolint: errcheck
-	err = client.Ping(ctx, readpref.Primary())
+	opts := options.Client().
+		ApplyURI(connection).
+		SetConnectTimeout(3 * time.Second).
+		SetSocketTimeout(3 * time.Second)
+
+	_ctx, cancel := gocontext.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(_ctx, opts)
 	if err != nil {
-		return pkg.Fail(check).ErrorMessage(err).StartTime(start)
+		return result.ErrorMessage(err)
 	}
-	return pkg.Success(check).StartTime(start)
+	defer client.Disconnect(ctx) //nolint: errcheck
+	err = client.Ping(_ctx, readpref.Primary())
+	if err != nil {
+		return result.ErrorMessage(err)
+	}
+	return result
 }

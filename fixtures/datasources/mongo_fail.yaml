@@ -7,7 +7,7 @@ spec:
   mongodb:
     - connection: mongodb://mongo2.default.svc:27017/?authSource=admin
       description: test mongo instance
-      credentials:
+      auth:
         username:
           value: mongoadmin
         password:

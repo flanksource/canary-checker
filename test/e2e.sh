@@ -84,7 +84,6 @@ if [ "$SKIP_SETUP" != "true" ]; then
     $KARINA apply $(pwd)/$TEST_FOLDER/../_setup.yaml -v
   fi
 
-
   if [ -e $TEST_FOLDER/main.go ]; then
     go run $TEST_FOLDER/main.go
   fi
@@ -110,9 +109,8 @@ fi
 cmd="$telepresence ./test.test -test.v --test-folder $TEST_FOLDER $EXTRA"
 echo $cmd
 DOCKER_API_VERSION=1.39
+set +e -o pipefail
 sudo --preserve-env=KUBECONFIG,TEST_FOLDER,DOCKER_API_VERSION $cmd  2>&1 | tee test.out
-code=$?
-echo "return=$code"
 sudo chown $USER test.out
 cat test.out | go-junit-report > test-results.xml
 echo "::endgroup::"

@@ -49,7 +49,6 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	}
 	if modelValue != nil {
 		for i, value := range modelValue.(model.Vector) {
-
 			val := make(map[string]interface{})
 			val["value"] = value.Value
 			if i == 0 {
