@@ -44,13 +44,7 @@ func GetConnection(ctx *context.Context, conn *v1.Connection, namespace string) 
 		Values:    data,
 		// access go values in template requires prefix everything with .
 		// to support $(username) instead of $(.username) we add a function for each var
-		Funcs: map[string]interface{}{
-			"name":      ctx.Canary.GetName,
-			"namespace": func() string { return namespace },
-			"username":  auth.GetUsername,
-			"password":  auth.GetPassword,
-			"domain":    auth.GetDomain,
-		},
+		ValueFunctions: true,
 		DelimSets: []ktemplate.Delims{
 			{Left: "{{", Right: "}}"},
 			{Left: "$(", Right: ")"},
