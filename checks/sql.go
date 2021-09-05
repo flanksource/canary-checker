@@ -40,7 +40,9 @@ func querySQL(driver string, connection string, query string) (*SQLDetails, erro
 			s := ""
 			rowValues[i] = &s
 		}
-		err = rows.Scan(rowValues...)
+		if err := rows.Scan(rowValues...); err != nil {
+			return nil, err
+		}
 		var row = make(map[string]interface{})
 		for i, val := range rowValues {
 			row[columns[i]] = *val.(*string)
