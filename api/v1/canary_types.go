@@ -141,6 +141,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	for _, check := range spec.MongoDB {
 		checks = append(checks, check)
 	}
+	for _, check := range spec.GCSBucket {
+		checks = append(checks, check)
+	}
 	return checks
 }
 
