@@ -546,6 +546,103 @@ spec:
                         type: string
                     type: object
                   type: object
+                gcsBucket:
+                  items:
+                    properties:
+                      bucket:
+                        type: string
+                      credentials:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
+                      description:
+                        description: Description for the check
+                        type: string
+                      display:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      endpoint:
+                        type: string
+                      filter:
+                        properties:
+                          maxAge:
+                            type: string
+                          maxSize:
+                            type: string
+                          minAge:
+                            type: string
+                          minSize:
+                            type: string
+                          regex:
+                            type: string
+                        type: object
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      maxAge:
+                        description: MaxAge the latest object should be younger than defined age
+                        type: string
+                      maxCount:
+                        description: MinCount the minimum number of files inside the searchPath
+                        type: integer
+                      maxSize:
+                        description: MaxSize of the files inside the searchPath
+                        type: string
+                      minAge:
+                        description: MinAge the latest object should be older than defined age
+                        type: string
+                      minCount:
+                        description: MinCount the minimum number of files inside the searchPath
+                        type: integer
+                      minSize:
+                        description: MinSize of the files inside the searchPath
+                        type: string
+                      name:
+                        description: Name of the check
+                        type: string
+                      test:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                    required:
+                      - bucket
+                    type: object
+                  type: array
                 helm:
                   items:
                     properties:

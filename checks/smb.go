@@ -111,10 +111,11 @@ func (c *SmbChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 		defer session.Close()
 	}
 
-	folders, err := getFolderCheck(session, path, smbCheck.Filter)
+	folders, err := getSMBFolderCheck(session, path, smbCheck.Filter)
 	if err != nil {
 		return result.ErrorMessage(err)
 	}
+
 	result.AddDetails(folders)
 
 	if test := folders.Test(smbCheck.FolderTest); test != "" {
@@ -145,7 +146,7 @@ func getServerDetails(serverPath string, port int) (server, sharename, searchPat
 	}
 }
 
-func getFolderCheck(fs Filesystem, dir string, filter v1.FolderFilter) (*FolderCheck, error) {
+func getSMBFolderCheck(fs Filesystem, dir string, filter v1.FolderFilter) (*FolderCheck, error) {
 	result := FolderCheck{}
 	_filter, err := filter.New()
 	if err != nil {
@@ -155,7 +156,6 @@ func getFolderCheck(fs Filesystem, dir string, filter v1.FolderFilter) (*FolderC
 	if err != nil {
 		return nil, err
 	}
-
 	if len(files) == 0 {
 		// directory is empty. returning duration of directory
 		info, err := fs.Stat(dir)

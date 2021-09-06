@@ -3,6 +3,8 @@ module github.com/flanksource/canary-checker
 go 1.16
 
 require (
+	cloud.google.com/go v0.93.3 // indirect
+	cloud.google.com/go/storage v1.16.0
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/allegro/bigcache v1.2.1
 	github.com/asecurityteam/rolling v2.0.4+incompatible
@@ -29,6 +31,7 @@ require (
 	github.com/go-logr/zapr v0.2.0
 	github.com/go-redis/redis/v8 v8.8.2
 	github.com/gogo/googleapis v1.4.0 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/hairyhenderson/gomplate/v3 v3.6.0
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/henvic/httpretty v0.0.6
@@ -52,10 +55,14 @@ require (
 	github.com/vadimi/go-http-ntlm v1.0.3
 	github.com/vadimi/go-http-ntlm/v2 v2.4.1
 	go.mongodb.org/mongo-driver v1.7.1
-	golang.org/x/mod v0.4.1 // indirect
-	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb
-	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
-	golang.org/x/tools v0.1.0 // indirect
+	golang.org/x/mod v0.5.0 // indirect
+	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
+	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf // indirect
+	golang.org/x/text v0.3.7 // indirect
+	google.golang.org/api v0.54.0
+	google.golang.org/genproto v0.0.0-20210821163610-241b8fcbd6c8 // indirect
 	gopkg.in/flanksource/yaml.v3 v3.1.1
 	helm.sh/helm/v3 v3.1.2
 	k8s.io/api v0.20.4
@@ -69,6 +76,7 @@ require (
 
 replace (
 	github.com/docker/docker => github.com/moby/moby v17.12.0-ce-rc1.0.20210128214336-420b1d36250f+incompatible
+	google.golang.org/grpc => google.golang.org/grpc v1.29.1
 	helm.sh/helm/v3 => helm.sh/helm/v3 v3.5.1
 	k8s.io/api => k8s.io/api v0.19.4
 	k8s.io/client-go => k8s.io/client-go v0.19.4
