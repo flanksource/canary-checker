@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/flanksource/commons/console"
+	"github.com/flanksource/commons/timer"
 
 	"github.com/spf13/cobra"
 
@@ -27,6 +28,7 @@ var Run = &cobra.Command{
 	Run: func(cmd *cobra.Command, configFiles []string) {
 		namespace, _ := cmd.Flags().GetString("namespace")
 		junitFile, _ := cmd.Flags().GetString("junit-file")
+		timer := timer.NewTimer()
 		if len(configFiles) == 0 {
 			log.Fatalln("Must specify at least one canary")
 		}
@@ -89,7 +91,7 @@ var Run = &cobra.Command{
 			}
 		}
 
-		logger.Infof("%d passed, %d failed", passed, failed)
+		logger.Infof("%d passed, %d failed in %s", passed, failed, timer)
 
 		if failed > 0 {
 			os.Exit(1)

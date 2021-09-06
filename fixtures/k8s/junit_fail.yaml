@@ -8,6 +8,28 @@ spec:
   severity: high
   junit:
     - testResults: "/tmp/junit-results/"
+      display:
+        template: |
+          ✅ {{.results.passed}} ❌ {{.results.failed}} in 🕑 {{.results.duration}}
+          {{-  range $r := .results.suites}}
+          {{- if gt (conv.ToInt $r.failed)  0 }}
+          {{$r.name}} ✅ {{$r.passed}} ❌ {{$r.failed}} in 🕑 {{$r.duration}}
+          {{- range $t := $r.tests }}
+          {{- if not (eq $t.status "passed")}}
+          ❌ {{$t.classname}}/{{$t.name}} in 🕑 {{$t.duration}}
+          {{- if $t.message}}
+            {{ $t.message }}
+          {{- end }}
+          {{- if $t.stdout}}
+            {{$t.stdout}}
+          {{- end }}
+          {{- if $t.sterr}}
+            {{$t.stderr}}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
       spec:
         containers:
           - name: jes

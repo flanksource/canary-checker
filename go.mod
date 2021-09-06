@@ -25,7 +25,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eko/gocache v1.2.0
 	github.com/flanksource/commons v1.5.8
-	github.com/flanksource/kommons v0.24.0
+	github.com/flanksource/kommons v0.25.0
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/go-logr/logr v0.3.0
 	github.com/go-logr/zapr v0.2.0

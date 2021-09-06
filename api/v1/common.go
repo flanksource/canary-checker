@@ -203,6 +203,10 @@ type Template struct {
 	JSONPath string `yaml:"jsonPath,omitempty" json:"jsonPath,omitempty"`
 }
 
+func (t Template) IsEmpty() bool {
+	return t.Template == "" && t.JSONPath == ""
+}
+
 // +k8s:deepcopy-gen=false
 type DisplayTemplate interface {
 	GetDisplayTemplate() Template
