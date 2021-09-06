@@ -224,7 +224,7 @@ endif
 	wget -q https://github.com/flanksource/karina/releases/download/v0.50.0/karina_$(OS)-$(ARCH) -O .bin/karina && \
 	chmod +x .bin/karina
 
-.bin/yq:
+.bin/yq: .bin
 	curl -sSLo .bin/yq https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_$(OS)_$(ARCH) && chmod +x .bin/yq
 YQ = $(realpath ./.bin/yq)
 
