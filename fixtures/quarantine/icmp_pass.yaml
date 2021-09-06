@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 30
   icmp:
-    - endpoint: https://google.com
+    - endpoint: https://api.github.com
       thresholdMillis: 600
       packetLossThreshold: 10
       packetCount: 2
