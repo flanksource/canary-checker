@@ -39,6 +39,7 @@ type CanarySpec struct {
 	ContainerdPush []ContainerdPushCheck `yaml:"containerdPush,omitempty" json:"containerdPush,omitempty"`
 	S3             []S3Check             `yaml:"s3,omitempty" json:"s3,omitempty"`
 	S3Bucket       []S3BucketCheck       `yaml:"s3Bucket,omitempty" json:"s3Bucket,omitempty"`
+	GCSBucket      []GCSBucketCheck      `yaml:"gcsBucket,omitempty" json:"gcsBucket,omitempty"`
 	TCP            []TCPCheck            `yaml:"tcp,omitempty" json:"tcp,omitempty"`
 	Pod            []PodCheck            `yaml:"pod,omitempty" json:"pod,omitempty"`
 	LDAP           []LDAPCheck           `yaml:"ldap,omitempty" json:"ldap,omitempty"`

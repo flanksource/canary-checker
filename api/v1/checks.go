@@ -162,6 +162,28 @@ func (c S3BucketCheck) GetType() string {
 	return "s3Bucket"
 }
 
+type GCPConnection struct {
+	Endpoint    string          `yaml:"endpoint" json:"endpoint,omitempty"`
+	Credentials *kommons.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
+}
+
+type GCSBucketCheck struct {
+	Description   `yaml:",inline" json:",inline"`
+	Templatable   `yaml:",inline" json:",inline"`
+	FolderTest    `yaml:",inline" json:",inline"`
+	GCPConnection `yaml:",inline" json:",inline"`
+	Filter        FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
+	Bucket        string       `yaml:"bucket" json:"bucket"`
+}
+
+func (c GCSBucketCheck) GetEndpoint() string {
+	return c.Bucket
+}
+
+func (c GCSBucketCheck) GetType() string {
+	return "gcsBucket"
+}
+
 type ResticCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	// Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name
@@ -999,5 +1021,6 @@ var AllChecks = []external.Check{
 	SmbCheck{},
 	EC2Check{},
 	PrometheusCheck{},
+	GCSBucketCheck{},
 	MongoDBCheck{},
 }
