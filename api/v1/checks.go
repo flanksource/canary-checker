@@ -464,7 +464,7 @@ type HelmCheck struct {
 	Chartmuseum string          `yaml:"chartmuseum" json:"chartmuseum,omitempty"`
 	Project     string          `yaml:"project,omitempty" json:"project,omitempty"`
 	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
-	CaFile      *string         `yaml:"cafile,omitempty" json:"cafile,omitempty"`
+	CaFile      string          `yaml:"cafile,omitempty" json:"cafile,omitempty"`
 }
 
 func (c HelmCheck) GetEndpoint() string {

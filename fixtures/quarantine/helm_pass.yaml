@@ -5,8 +5,10 @@ metadata:
 spec:
   interval: 30
   helm:
-    - chartmuseum: https://harbor.blue.lab.flanksource.com
+    - chartmuseum: http://chartmuseum.default:8080/
       project: library
-      username: admin
-      password: ""
-      cafile: ""
+      auth:
+        username:
+          value: admin
+        password:
+          value: passwd

@@ -44,8 +44,8 @@ func (c *HelmChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	config := extConfig.(v1.HelmCheck)
 	start := time.Now()
+	result := pkg.Success(config)
 	var uploadOK, downloadOK = true, true
-	chartmuseum := fmt.Sprintf("%s/chartrepo/%s/", config.Chartmuseum, config.Project)
 	logger.Tracef("Uploading test chart")
 	namespace := ctx.Canary.Namespace
 	var err error
@@ -54,95 +54,50 @@ func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 		return Failf(config, "failed to fetch auth details: %v", err)
 	}
 	client, _ := pusher.NewClient(
-		pusher.URL(chartmuseum),
+		pusher.URL(config.Chartmuseum),
 		pusher.Username(auth.Username.Value),
 		pusher.Password(auth.Password.Value),
 		pusher.ContextPath(""),
 		pusher.Timeout(60),
-		pusher.CAFile(*config.CaFile))
+		pusher.CAFile(config.CaFile))
 	chartPath, err := createTestChart()
 	if err != nil {
-		return &pkg.CheckResult{
-			Pass:     false,
-			Check:    config,
-			Invalid:  true,
-			Duration: 0,
-			Message:  fmt.Sprintf("Failed to create test chart: %v", err),
-		}
+		return result.ErrorMessage(err).StartTime(start)
 	}
 	response, err := client.UploadChartPackage(*chartPath, false)
 	if err != nil {
-		return &pkg.CheckResult{
-			Check:    config,
-			Pass:     false,
-			Invalid:  true,
-			Duration: 0,
-			Message:  fmt.Sprintf("Failed to check: %v", err),
-		}
+		return result.ErrorMessage(err).StartTime(start)
 	}
-
 	defer func() {
 		response.Close = true
 	}()
-
 	if response.StatusCode != 201 {
-		return &pkg.CheckResult{
-			Check:    config,
-			Pass:     false,
-			Invalid:  false,
-			Duration: 0,
-			Message:  "Failed to push test chart",
-		}
-	}
-
-	if err != nil {
-		return &pkg.CheckResult{
-			Check:    config,
-			Pass:     false,
-			Invalid:  true,
-			Duration: 0,
-			Message:  fmt.Sprintf("Failed to get user: %v", err),
-		}
+		return result.ErrorMessage(fmt.Errorf("failed to upload test chart. Error code: %d", response.StatusCode)).StartTime(start)
 	}
 
 	defer os.RemoveAll("./test-chart-0.1.0.tgz") // nolint: errcheck
 
 	iCli := action.NewPull()
-	if config.CaFile != nil {
-		iCli.CaFile = *config.CaFile
+	if config.CaFile != "" {
+		iCli.CaFile = config.CaFile
 	}
 	kubeconfigPath := pkg.GetKubeconfig()
 	iCli.Settings = &cli.EnvSettings{
 		KubeConfig: kubeconfigPath,
 	}
-
 	logger.Tracef("Pulling test chart")
-	url, err := url.Parse(chartmuseum)
+	url, err := url.Parse(config.Chartmuseum)
 	if err != nil {
-		return &pkg.CheckResult{
-			Check:    config,
-			Pass:     false,
-			Invalid:  true,
-			Duration: 0,
-			Message:  fmt.Sprintf("Failed to parse chartmuseum url: %v", err),
-		}
+		return result.ErrorMessage(err).StartTime(start)
 	}
 	url.Path = path.Join(url.Path, "charts/test-chart-0.1.0.tgz")
 	_, err = iCli.Run(url.String())
 	if err != nil {
-		return &pkg.CheckResult{
-			Check:    config,
-			Pass:     false,
-			Invalid:  false,
-			Duration: 0,
-		}
+		return result.ErrorMessage(err).StartTime(start)
 	}
 
-	defer cleanUp("test-chart", chartmuseum, config, auth.Username.Value, auth.Password.Value) // nolint: errcheck
+	defer cleanUp("test-chart", config.Chartmuseum, config, auth.Username.Value, auth.Password.Value) // nolint: errcheck
 
-	if err != nil {
-		logger.Warnf("Failed to perform cleanup: %v", err)
-	}
 	elapsed := time.Since(start)
 	return &pkg.CheckResult{
 		Check:    config,
@@ -153,7 +108,7 @@ func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 }
 
 func cleanUp(chartname string, chartmuseum string, config v1.HelmCheck, username, password string) error {
-	caCert, err := ioutil.ReadFile(*config.CaFile)
+	caCert, err := ioutil.ReadFile(config.CaFile)
 	if err != nil {
 		return fmt.Errorf("failed to read certificate file: %v", err)
 	}

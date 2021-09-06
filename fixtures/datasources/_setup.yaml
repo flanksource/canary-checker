@@ -548,3 +548,56 @@ kind: ConfigMap
 metadata:
   name: jmeter-fail-test
   namespace: default
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: chartmuseum
+  name: chartmuseum
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chartmuseum
+  template:
+    metadata:
+      labels:
+        app: chartmuseum
+    spec:
+      containers:
+        - image: ghcr.io/helm/chartmuseum:v0.13.1
+          name: chartmuseum
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: STORAGE
+              value: local
+            - name: STORAGE_LOCAL_ROOTDIR
+              value: /tmp/charts
+            - name: BASIC_AUTH_USER
+              value: admin
+            - name: BASIC_AUTH_PASS
+              value: passwd
+            - name: ALLOW_OVERWRITE
+              value: "true"
+            - name: AUTH_ANONYMOUS_GET
+              value: "true"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chartmuseum
+  namespace: default
+spec:
+  ports:
+    - name: chartmuseum
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: chartmuseum
