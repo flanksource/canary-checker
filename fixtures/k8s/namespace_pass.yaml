@@ -6,8 +6,6 @@ spec:
   interval: 30
   namespace:
     - checkName: check
-      labels:
-        foo: bar
       namespaceNamePrefix: "test-foo-"
       podSpec: |
         apiVersion: v1
@@ -25,7 +23,6 @@ spec:
       path: /foo/bar
       ingressName: test-namespace-pod
       ingressHost: "test-namespace-pod.127.0.0.1.nip.io"
-      scheduleTimeout: 2000
       readyTimeout: 5000
       httpTimeout: 15000
       deleteTimeout: 12000
