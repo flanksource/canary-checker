@@ -2,6 +2,7 @@ package checks
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/joshdk/go-junit"
 )
@@ -56,7 +57,7 @@ type JunitTestSuite struct {
 func (suites JunitTestSuites) GetMessages() string {
 	var message string
 	count := 0
-	for _, suite := range suites {
+	for _, suite := range suites.Suites {
 		for _, test := range suite.Tests {
 			if test.Status == junit.StatusFailed {
 				message = message + "\n" + test.Name
@@ -70,7 +71,10 @@ func (suites JunitTestSuites) GetMessages() string {
 	return message
 }
 
-type JunitTestSuites []JunitTestSuite
+type JunitTestSuites struct {
+	Suites []JunitTestSuite `json:"suites,omitempty"`
+	Totals `json:",inline"`
+}
 
 type Totals struct {
 	Passed   int     `json:"passed"`
@@ -104,6 +108,13 @@ func (t Totals) String() string {
 			s += ", "
 		}
 		s += fmt.Sprintf("%d skipped", t.Skipped)
+	}
+
+	if t.Duration > 0 {
+		if s != "" {
+			s += " "
+		}
+		s += fmt.Sprintf(" in %s", time.Duration(t.Duration)*time.Second)
 	}
 
 	return s
@@ -143,12 +154,13 @@ func FromTest(test junit.Test) JunitTest {
 	}
 }
 
-func (t *Totals) Add(other Totals) {
+func (t Totals) Add(other Totals) Totals {
 	t.Duration += other.Duration
 	t.Passed += other.Passed
 	t.Error += other.Error
 	t.Failed += other.Failed
 	t.Skipped += other.Skipped
+	return t
 }
 
 func (suites JunitTestSuites) Append(suite junit.Suite) JunitTestSuites {
@@ -160,7 +172,9 @@ func (suites JunitTestSuites) Append(suite junit.Suite) JunitTestSuites {
 	for _, test := range suite.Tests {
 		_suite.Tests = append(_suite.Tests, FromTest(test))
 	}
-	return append(suites, _suite)
+	suites.Suites = append(suites.Suites, _suite)
+	suites.Totals = suites.Totals.Add(_suite.Totals)
+	return suites
 }
 
 func (suites JunitTestSuites) Ingest(xml string) (JunitTestSuites, error) {
@@ -172,12 +186,4 @@ func (suites JunitTestSuites) Ingest(xml string) (JunitTestSuites, error) {
 		suites = suites.Append(suite)
 	}
 	return suites, nil
-}
-
-func (suites *JunitTestSuites) Aggregate() Totals {
-	totals := &Totals{}
-	for _, suite := range *suites {
-		totals.Add(suite.Totals)
-	}
-	return *totals
 }

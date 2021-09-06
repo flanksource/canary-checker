@@ -86,7 +86,7 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 		if err := tpl.Execute(&buf, unstructured); err != nil {
 			return "", fmt.Errorf("error executing template %s: %v", strings.Split(template.Template, "\n")[0], err)
 		}
-		return buf.String(), nil
+		return strings.TrimSpace(buf.String()), nil
 	}
 	return "", nil
 }

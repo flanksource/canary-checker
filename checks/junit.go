@@ -63,7 +63,21 @@ func newPod(ctx *context.Context, check v1.JunitCheck) *corev1.Pod {
 	pod.Namespace = ctx.Namespace
 	pod.Name = ctx.Canary.Name + "-" + strings.ToLower(rand.String(5))
 	pod.Spec = check.Spec
-	pod.Spec.InitContainers = pod.Spec.Containers
+	for _, container := range pod.Spec.Containers {
+		if len(container.Command) > 0 {
+			// attemp to wrap the command so that it always completes, allowing for access to junit results
+			container.Args = []string{fmt.Sprintf(`
+			set -e
+			EXIT_CODE=0
+			%s %s || EXIT_CODE=$?
+			echo "Completed with exit code of $EXIT_CODE"
+			echo $EXIT_CODE > %s/exit-code
+			exit 0
+			`, strings.Join(container.Command, " "), strings.Join(container.Args, " "), filepath.Dir(check.TestResults))}
+			container.Command = []string{"bash", "-c"}
+		}
+		pod.Spec.InitContainers = append(pod.Spec.InitContainers, container)
+	}
 	pod.Spec.Containers = []corev1.Container{
 		{
 			Name:  containerName,
@@ -101,6 +115,9 @@ func newPod(ctx *context.Context, check v1.JunitCheck) *corev1.Pod {
 }
 
 func deletePod(ctx *context.Context, pod *corev1.Pod) {
+	if ctx.Canary.Annotations["skipDelete"] == "true" {
+		return
+	}
 	if err := ctx.Kommons.DeleteByKind(podKind, pod.Namespace, pod.Name); err != nil {
 		logger.Warnf("failed to delete pod %s/%s: %v", pod.Namespace, pod.Name, err)
 	}
@@ -113,15 +130,15 @@ func podExecf(ctx *context.Context, pod corev1.Pod, result *pkg.CheckResult, cmd
 		podFail(ctx, pod, result.Failf("error running %s: %v %v %v", _cmd, stdout, stderr, err))
 		return "", false
 	}
-	return stdout, true
+	return strings.TrimSpace(stdout), true
 }
 
 func podFail(ctx *context.Context, pod corev1.Pod, result *pkg.CheckResult) *pkg.CheckResult {
 	message, _ := ctx.Kommons.GetPodLogs(pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
-	if len(message) > 3000 {
+	if !ctx.IsTrace() && !ctx.IsDebug() && len(message) > 3000 {
 		message = message[len(message)-3000:]
 	}
-	return result.ErrorMessage(fmt.Errorf("pod is not healthy: \n %v", message))
+	return result.ErrorMessage(fmt.Errorf("%s is %s\n %v", pod.Name, pod.Status.Phase, message))
 }
 
 func cleanupExistingPods(ctx *context.Context, k8s kubernetes.Interface, selector string) (bool, error) {
@@ -161,7 +178,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) *pk
 		return result.ErrorMessage(err)
 	}
 
-	timeout := junitCheck.GetTimeout()
+	timeout := time.Duration(junitCheck.GetTimeout()) * time.Minute
 	pod := newPod(ctx, junitCheck)
 	pods := k8s.CoreV1().Pods(ctx.Namespace)
 
@@ -180,11 +197,13 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) *pk
 	logger.Tracef("[%s/%s] waiting for tests to complete", ctx.Namespace, ctx.Canary.Name)
 	if ctx.IsTrace() {
 		go func() {
-			_ = ctx.Kommons.StreamLogs(ctx.Namespace, pod.Name)
+			if err := ctx.Kommons.StreamLogsV2(ctx.Namespace, pod.Name, timeout, pod.Spec.InitContainers[0].Name); err != nil {
+				logger.Errorf("error streaming: %s", err)
+			}
 		}()
 	}
 
-	if err := ctx.Kommons.WaitForPod(ctx.Namespace, pod.Name, time.Duration(timeout)*time.Minute, corev1.PodRunning, corev1.PodSucceeded, corev1.PodFailed); err != nil {
+	if err := ctx.Kommons.WaitForPod(ctx.Namespace, pod.Name, timeout, corev1.PodRunning, corev1.PodSucceeded, corev1.PodFailed); err != nil {
 		result.ErrorMessage(err)
 	}
 
@@ -197,9 +216,12 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) *pk
 		return podFail(ctx, *pod, result)
 	}
 
-	logger.Tracef("[%s/%s] pod is %s", ctx, &podObj.Status.Phase)
-
 	var suites JunitTestSuites
+	exitCode, _ := podExecf(ctx, *pod, result, "cat %v/exit-code", mountPath)
+
+	if exitCode != "" && exitCode != "0" {
+		result.ErrorMessage(fmt.Errorf("process exited with: '%s'", exitCode))
+	}
 	files, ok := podExecf(ctx, *pod, result, fmt.Sprintf("find %v -name \\*.xml -type f", mountPath))
 	if !ok {
 		return result
@@ -217,13 +239,16 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) *pk
 			return result.ErrorMessage(err)
 		}
 	}
+
 	// signal container to exit
 	_, _ = podExecf(ctx, *pod, result, "touch %s/done", mountPath)
 	result.AddDetails(suites)
-	totals := suites.Aggregate()
-	result.Duration = int64(totals.Duration * 1000)
-	if totals.Failed > 0 {
-		return result.Failf(totals.String())
+	result.Duration = int64(suites.Duration * 1000)
+	if junitCheck.Test.IsEmpty() && suites.Failed > 0 {
+		if junitCheck.Display.IsEmpty() {
+			return result.Failf(suites.Totals.String())
+		}
+		return result.Failf("")
 	}
 	return result
 }
