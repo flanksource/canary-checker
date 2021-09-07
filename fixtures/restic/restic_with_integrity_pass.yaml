@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 30
   restic:
-    - repository: s3:https://minio.minio.svc/restic-canary-checker
+    - repository: s3:https://minio.127.0.0.1.nip.io/restic-canary-checker
       password:
         value: S0m3p@sswd
       maxAge: 1h

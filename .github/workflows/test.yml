@@ -48,6 +48,10 @@ jobs:
           restore-keys: |
             cache-
       - run: make bin
+      - name: Install restic
+        run: |
+          sudo apt-get install restic
+          sudo restic self-update
       - name: Test
         env:
           KUBERNETES_VERSION: v1.20.7

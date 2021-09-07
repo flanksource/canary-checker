@@ -212,7 +212,7 @@ endif
 		ln -s apache-jmeter-5.4.1/bin/jmeter .bin/jmeter
 
 .bin/restic:
-	wget -nv  https://github.com/restic/restic/releases/download/v0.12.0/restic_0.12.0_$(OS)_$(ARCH).bz2 -O .bin/restic.bz2 && \
+	wget -nv  https://github.com/restic/restic/releases/download/v0.12.1/restic_0.12.1_$(OS)_$(ARCH).bz2 -O .bin/restic.bz2 && \
     bunzip2  .bin/restic.bz2 && \
     chmod +x .bin/restic
 
