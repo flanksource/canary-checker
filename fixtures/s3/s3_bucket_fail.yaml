@@ -7,7 +7,7 @@ spec:
   s3Bucket:
     # Check for any mysql backup not older than 7 days and min size 100 bytes
     - bucket: tests-e2e-1
-      accessKeyID:
+      accessKey:
         valueFrom:
           secretKeyRef:
             name: aws-credentials
@@ -18,16 +18,16 @@ spec:
             name: aws-credentials
             key: AWS_SECRET_ACCESS_KEY
       region: "minio"
-      endpoint: "https://minio.minio.svc"
-      objectPath: "^mysql\\/backups\\/(.*)\\/mysql.zip$"
-      readWrite: true
+      endpoint: "https://minio.127.0.0.1.nip.io"
+      filter:
+        regex: "^mysql\\/backups\\/(.*)\\/mysql.zip$"
       maxAge: 7d
       minSize: 100b
       usePathStyle: true
       skipTLSVerify: true
     # Check for any pg backup not older than 3 days and min size 20 bytes
     - bucket: tests-e2e-1
-      accessKeyID:
+      accessKey:
         valueFrom:
           secretKeyRef:
             name: aws-credentials
@@ -38,30 +38,10 @@ spec:
             name: aws-credentials
             key: AWS_SECRET_ACCESS_KEY
       region: "minio"
-      endpoint: "https://minio.minio.svc"
-      objectPath: "pg\\/backups\\/(.*)\\/backup.zip$"
-      readWrite: true
+      endpoint: "https://minio.127.0.0.1.nip.io"
+      filter:
+        regex: "pg\\/backups\\/(.*)\\/backup.zip$"
       maxAge: 3d
       minSize: 100b
-      usePathStyle: true
-      skipTLSVerify: true
-    # Check for any pg backup not older than 3 days and min size 20 bytes
-    - bucket: tests-e2e-2
-      accessKeyID:
-        valueFrom:
-          secretKeyRef:
-            name: aws-credentials
-            key: AWS_ACCESS_KEY_ID
-      secretKey:
-        valueFrom:
-          secretKeyRef:
-            name: aws-credentials
-            key: AWS_SECRET_ACCESS_KEY
-      region: "minio"
-      endpoint: "https://minio.minio.svc"
-      objectPath: "pg\\/backups\\/(.*)\\/backup.zip$"
-      readWrite: true
-      maxAge: 3d
-      minSize: 20b
       usePathStyle: true
       skipTLSVerify: true

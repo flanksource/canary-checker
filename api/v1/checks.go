@@ -144,8 +144,6 @@ type S3BucketCheck struct {
 	FolderTest    `yaml:",inline" json:",inline"`
 	Filter        FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
 	Bucket        string       `yaml:"bucket" json:"bucket"`
-	// glob path to restrict matches to a subset
-	ObjectPath string `yaml:"objectPath" json:"objectPath,omitempty"`
 	// Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY
 	UsePathStyle bool `yaml:"usePathStyle" json:"usePathStyle,omitempty"`
 }
