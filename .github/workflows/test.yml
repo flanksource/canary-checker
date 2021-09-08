@@ -30,7 +30,6 @@ jobs:
           - quarantine
           - restic
           - s3
-          - helm
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
