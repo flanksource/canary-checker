@@ -170,7 +170,7 @@ ifeq (, $(shell which controller-gen))
 	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$CONTROLLER_GEN_TMP_DIR ;\
 	go mod init tmp ;\
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.0 ;\
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.0 ;\
 	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
 	}
 CONTROLLER_GEN=$(GOBIN)/controller-gen
@@ -187,7 +187,7 @@ ifeq (, $(shell which kustomize))
 	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
 	go mod init tmp ;\
-	go get sigs.k8s.io/kustomize/kustomize/v4@v4.0.3 ;\
+	go install sigs.k8s.io/kustomize/kustomize/v4@v4.0.3 ;\
 	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
 	}
 KUSTOMIZE=$(GOBIN)/kustomize
@@ -201,7 +201,7 @@ endif
 	_TMP_DIR=$$(mktemp -d) ;\
 	cd $$_TMP_DIR ;\
 	go mod init tmp   ;\
-	go get github.com/jstemmer/go-junit-report   ;\
+	go install github.com/jstemmer/go-junit-report   ;\
 	rm -rf $$_TMP_DIR
 	cp $(GOBIN)/go-junit-report .bin/go-junit-report ;\
 
