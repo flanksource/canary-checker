@@ -160,6 +160,34 @@ func (c S3BucketCheck) GetType() string {
 	return "s3Bucket"
 }
 
+type CloudWatchCheck struct {
+	Description   `yaml:",inline" json:",inline"`
+	AWSConnection `yaml:",inline" json:",inline"`
+	Filter        CloudWatchFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
+}
+
+type CloudWatchFilter struct {
+	ActionPrefix *string  `yaml:"actionPrefix,omitempty" json:"actionPrefix,omitempty"`
+	AlarmPrefix  *string  `yaml:"alarmPrefix,omitempty" json:"alarmPrefix,omitempty"`
+	Alarms       []string `yaml:"alarms,omitempty" json:"alarms,omitempty"`
+	State        string   `yaml:"state,omitempty" json:"state,omitempty"`
+}
+
+func (c CloudWatchCheck) GetEndpoint() string {
+	endpoint := c.Region
+	if c.Filter.ActionPrefix != nil {
+		endpoint += "-" + *c.Filter.ActionPrefix
+	}
+	if c.Filter.AlarmPrefix != nil {
+		endpoint += "-" + *c.Filter.AlarmPrefix
+	}
+	return endpoint
+}
+
+func (c CloudWatchCheck) GetType() string {
+	return "cloudwatch"
+}
+
 type GCPConnection struct {
 	Endpoint    string          `yaml:"endpoint" json:"endpoint,omitempty"`
 	Credentials *kommons.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
@@ -1021,4 +1049,5 @@ var AllChecks = []external.Check{
 	PrometheusCheck{},
 	GCSBucketCheck{},
 	MongoDBCheck{},
+	CloudWatchCheck{},
 }
