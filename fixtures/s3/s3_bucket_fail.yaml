@@ -18,7 +18,7 @@ spec:
             name: aws-credentials
             key: AWS_SECRET_ACCESS_KEY
       region: "minio"
-      endpoint: "https://minio.127.0.0.1.nip.io"
+      endpoint: "http://minio.minio:9000"
       filter:
         regex: "^mysql\\/backups\\/(.*)\\/mysql.zip$"
       maxAge: 7d
@@ -38,7 +38,7 @@ spec:
             name: aws-credentials
             key: AWS_SECRET_ACCESS_KEY
       region: "minio"
-      endpoint: "https://minio.127.0.0.1.nip.io"
+      endpoint: "http://minio.minio:9000"
       filter:
         regex: "pg\\/backups\\/(.*)\\/backup.zip$"
       maxAge: 3d
