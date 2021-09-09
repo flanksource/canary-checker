@@ -14,7 +14,7 @@ import (
 )
 
 func isEmpty(val kommons.EnvVar) bool {
-	return val.Value == "" || val.ValueFrom == nil
+	return val.Value == "" && val.ValueFrom == nil
 }
 
 func NewSession(ctx *context.Context, conn v1.AWSConnection, tr http.RoundTripper) (*aws.Config, error) {

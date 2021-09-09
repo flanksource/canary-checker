@@ -5666,9 +5666,6 @@ spec:
                       name:
                         description: Name of the check
                         type: string
-                      objectPath:
-                        description: glob path to restrict matches to a subset
-                        type: string
                       region:
                         type: string
                       secretKey:

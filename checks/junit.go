@@ -65,7 +65,7 @@ func newPod(ctx *context.Context, check v1.JunitCheck) *corev1.Pod {
 	pod.Spec = check.Spec
 	for _, container := range pod.Spec.Containers {
 		if len(container.Command) > 0 {
-			// attemp to wrap the command so that it always completes, allowing for access to junit results
+			// attempt to wrap the command so that it always completes, allowing for access to junit results
 			container.Args = []string{fmt.Sprintf(`
 			set -e
 			EXIT_CODE=0
@@ -115,7 +115,7 @@ func newPod(ctx *context.Context, check v1.JunitCheck) *corev1.Pod {
 }
 
 func deletePod(ctx *context.Context, pod *corev1.Pod) {
-	if ctx.Canary.Annotations["skipDelete"] == "true" {
+	if ctx.Canary.Annotations["skipDelete"] == "true" { // nolint: goconst
 		return
 	}
 	if err := ctx.Kommons.DeleteByKind(podKind, pod.Namespace, pod.Name); err != nil {

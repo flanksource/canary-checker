@@ -101,7 +101,7 @@ type S3 struct {
 	Bucket string
 }
 
-func (conn *S3) CheckFolder(ctx *context.Context, path string, filter v1.FolderFilter) (*FolderCheck, error) {
+func (conn *S3) CheckFolder(ctx *context.Context, filter v1.FolderFilter) (*FolderCheck, error) {
 	result := FolderCheck{}
 
 	var marker *string = nil
@@ -180,7 +180,7 @@ func (c *S3BucketChecker) Check(ctx *context.Context, extConfig external.Check) 
 		}),
 		Bucket: bucket.Bucket,
 	}
-	folders, err := client.CheckFolder(ctx, bucket.ObjectPath, bucket.Filter)
+	folders, err := client.CheckFolder(ctx, bucket.Filter)
 	if err != nil {
 		return result.ErrorMessage(fmt.Errorf("failed to retrieve s3://%s: %v", bucket.Bucket, err))
 	}

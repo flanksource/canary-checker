@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 30
   restic:
-    - repository: s3:https://minio.minio.svc/restic-canary-checker
+    - repository: s3:http://minio.minio:9000/restic-canary-checker
       password:
         value: S0m3p@sswd
       maxAge: 1h
@@ -14,4 +14,3 @@ spec:
       secretKey:
         value: minio123
       checkIntegrity: true
-      caCert: /home/runner/work/canary-checker/canary-checker/.certs/ingress-ca.crt

@@ -27,9 +27,6 @@ jobs:
           - minimal --skip-all
           - k8s
           - datasources
-          - quarantine
-          - restic
-          - s3
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
@@ -48,6 +45,10 @@ jobs:
           restore-keys: |
             cache-
       - run: make bin
+      - name: Install restic
+        run: |
+          sudo apt-get install restic
+          sudo restic self-update
       - name: Test
         env:
           KUBERNETES_VERSION: v1.20.7

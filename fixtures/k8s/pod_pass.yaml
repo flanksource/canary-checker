@@ -52,7 +52,7 @@ spec:
       path: /foo/bar
       ingressName: hello-world-ruby
       ingressHost: "hello-world-ruby.127.0.0.1.nip.io"
-      scheduleTimeout: 10000
+      scheduleTimeout: 30000
       readyTimeout: 12000
       httpTimeout: 7000
       deleteTimeout: 12000

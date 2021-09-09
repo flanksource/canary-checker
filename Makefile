@@ -170,7 +170,7 @@ ifeq (, $(shell which controller-gen))
 	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$CONTROLLER_GEN_TMP_DIR ;\
 	go mod init tmp ;\
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.0 ;\
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.0 ;\
 	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
 	}
 CONTROLLER_GEN=$(GOBIN)/controller-gen
@@ -187,7 +187,7 @@ ifeq (, $(shell which kustomize))
 	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
 	go mod init tmp ;\
-	go get sigs.k8s.io/kustomize/kustomize/v4@v4.0.3 ;\
+	go install sigs.k8s.io/kustomize/kustomize/v4@v4.0.3 ;\
 	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
 	}
 KUSTOMIZE=$(GOBIN)/kustomize
@@ -201,7 +201,7 @@ endif
 	_TMP_DIR=$$(mktemp -d) ;\
 	cd $$_TMP_DIR ;\
 	go mod init tmp   ;\
-	go get github.com/jstemmer/go-junit-report   ;\
+	go install github.com/jstemmer/go-junit-report   ;\
 	rm -rf $$_TMP_DIR
 	cp $(GOBIN)/go-junit-report .bin/go-junit-report ;\
 
@@ -212,7 +212,7 @@ endif
 		ln -s apache-jmeter-5.4.1/bin/jmeter .bin/jmeter
 
 .bin/restic:
-	wget -nv  https://github.com/restic/restic/releases/download/v0.12.0/restic_0.12.0_$(OS)_$(ARCH).bz2 -O .bin/restic.bz2 && \
+	wget -nv  https://github.com/restic/restic/releases/download/v0.12.1/restic_0.12.1_$(OS)_$(ARCH).bz2 -O .bin/restic.bz2 && \
     bunzip2  .bin/restic.bz2 && \
     chmod +x .bin/restic
 
@@ -224,7 +224,7 @@ endif
 	wget -q https://github.com/flanksource/karina/releases/download/v0.50.0/karina_$(OS)-$(ARCH) -O .bin/karina && \
 	chmod +x .bin/karina
 
-.bin/yq:
+.bin/yq: .bin
 	curl -sSLo .bin/yq https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_$(OS)_$(ARCH) && chmod +x .bin/yq
 YQ = $(realpath ./.bin/yq)
 
