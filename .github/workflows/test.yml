@@ -27,9 +27,6 @@ jobs:
           - minimal --skip-all
           - k8s
           - datasources
-          - quarantine
-          - restic
-          - s3
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
