@@ -64,6 +64,122 @@ spec:
             spec:
               description: CanarySpec defines the desired state of Canary
               properties:
+                cloudwatch:
+                  items:
+                    properties:
+                      accessKey:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
+                      description:
+                        description: Description for the check
+                        type: string
+                      display:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      endpoint:
+                        type: string
+                      filter:
+                        properties:
+                          actionPrefix:
+                            type: string
+                          alarmPrefix:
+                            type: string
+                          alarms:
+                            items:
+                              type: string
+                            type: array
+                          state:
+                            type: string
+                        type: object
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      name:
+                        description: Name of the check
+                        type: string
+                      region:
+                        type: string
+                      secretKey:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
+                      skipTLSVerify:
+                        description: Skip TLS verify when connecting to aws
+                        type: boolean
+                      test:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                    required:
+                      - accessKey
+                      - region
+                      - secretKey
+                    type: object
+                  type: array
                 containerd:
                   items:
                     properties:

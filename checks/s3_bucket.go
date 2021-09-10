@@ -1,17 +1,14 @@
 package checks
 
 import (
-	"crypto/tls"
 	"fmt"
 	"io/fs"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/commons/logger"
-	"github.com/henvic/httpretty"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -150,26 +147,7 @@ func (c *S3BucketChecker) Check(ctx *context.Context, extConfig external.Check) 
 	bucket := extConfig.(v1.S3BucketCheck)
 	result := pkg.Success(bucket)
 
-	var tr http.RoundTripper
-	tr = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: bucket.AWSConnection.SkipTLSVerify},
-	}
-
-	if ctx.IsTrace() {
-		logger := &httpretty.Logger{
-			Time:           true,
-			TLS:            true,
-			RequestHeader:  true,
-			RequestBody:    true,
-			ResponseHeader: true,
-			ResponseBody:   true,
-			Colors:         true, // erase line if you don't like colors
-			Formatters:     []httpretty.Formatter{&httpretty.JSONFormatter{}},
-		}
-		tr = logger.RoundTripper(tr)
-	}
-
-	cfg, err := awsUtil.NewSession(ctx, bucket.AWSConnection, tr)
+	cfg, err := awsUtil.NewSession(ctx, bucket.AWSConnection)
 	if err != nil {
 		return result.ErrorMessage(err)
 	}

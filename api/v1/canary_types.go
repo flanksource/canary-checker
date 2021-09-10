@@ -56,6 +56,7 @@ type CanarySpec struct {
 	EC2            []EC2Check            `yaml:"ec2,omitempty" json:"ec2,omitempty"`
 	Prometheus     []PrometheusCheck     `yaml:"prometheus,omitempty" json:"prometheus,omitempty"`
 	MongoDB        []MongoDBCheck        `yaml:"mongodb,omitempty" json:"mongodb,omitempty"`
+	CloudWatch     []CloudWatchCheck     `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
 	// interval (in seconds) to run checks on
 	// Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
@@ -142,6 +143,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.GCSBucket {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.CloudWatch {
 		checks = append(checks, check)
 	}
 	return checks
