@@ -163,6 +163,7 @@ func (c S3BucketCheck) GetType() string {
 type CloudWatchCheck struct {
 	Description   `yaml:",inline" json:",inline"`
 	AWSConnection `yaml:",inline" json:",inline"`
+	Templatable   `yaml:",inline" json:",inline"`
 	Filter        CloudWatchFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
 }
 
@@ -1001,6 +1002,29 @@ smb:
 */
 type Smb struct {
 	SmbCheck `yaml:",inline" json:",inline"`
+}
+
+/*
+This checks the cloudwatch for all the Active alarm and response with the reason
+
+```yaml
+cloudwatch:
+    - accessKey:
+        valueFrom:
+			secretKeyRef:
+			key: aws
+			name: access-key
+      secretKey:
+        valueFrom:
+			secretKeyRef:
+			key: aws
+			name: secrey-key
+      region: "us-east-1"
+      #skipTLSVerify: true
+```
+*/
+type CloudWatch struct {
+	CloudWatchCheck `yaml:",inline" json:",inline"`
 }
 
 type EC2Check struct {

@@ -102,6 +102,13 @@ spec:
                       description:
                         description: Description for the check
                         type: string
+                      display:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       endpoint:
                         type: string
                       filter:
@@ -160,6 +167,13 @@ spec:
                       skipTLSVerify:
                         description: Skip TLS verify when connecting to aws
                         type: boolean
+                      test:
+                        properties:
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                     required:
                       - accessKey
                       - region

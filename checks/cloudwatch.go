@@ -2,7 +2,6 @@ package checks
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
@@ -34,10 +33,9 @@ func (c *CloudWatchChecker) Type() string {
 func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.CloudWatchCheck)
 	result := pkg.Success(check)
-	start := time.Now()
 	cfg, err := awsUtil.NewSession(ctx, check.AWSConnection)
 	if err != nil {
-		return result.ErrorMessage(err).StartTime(start)
+		return result.ErrorMessage(err)
 	}
 	client := cloudwatch.NewFromConfig(*cfg)
 	maxRecords := int32(100)
@@ -49,8 +47,9 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 		MaxRecords:      &maxRecords,
 	})
 	if err != nil {
-		return result.ErrorMessage(err).StartTime(start)
+		return result.ErrorMessage(err)
 	}
+	result.AddDetails(alarms)
 	message := ""
 	for _, alarm := range alarms.MetricAlarms {
 		if alarm.StateValue == types.StateValueAlarm {
@@ -63,7 +62,7 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 		}
 	}
 	if message != "" {
-		return result.Failf(message).StartTime(start)
+		return result.Failf(message)
 	}
-	return result.StartTime(start)
+	return result
 }
