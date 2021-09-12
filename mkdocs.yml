@@ -1,17 +1,57 @@
 repo_url: https://github.com/flanksource/canary-checker/
 repo_name: Canary Checker
 site_name: Canary Checker
-theme: material
+theme:
+  logo: ./images/cc-white.svg
+  favicon: ./images/cc-blue.svg
+  name: material
+  features:
+    - navigation.instant
+    - navigation.sections
+    # - navigation.expand
+    - navigation.top
 markdown_extensions:
   - admonition
   - fenced_code
   - pymdownx.smartsymbols
+  - toc:
+      permalink: False
+      anchorlink: True
   - pymdownx.superfences
+  - pymdownx.snippets
+  - pymdownx.details
+  - pymdownx.tabbed
   - codehilite:
       linenums: true
 nav:
   - Installation: ./installation.md
-  - CLI:
-      - run: ./cli/canary-checker_run.md
-      - serve: ./cli/canary-checker_serve.md
-  - Checks: ./reference.md
+  - Modes:
+      - CLI: ./run.md
+      - Standalone Server: ./server.md
+      - Kubernetes Operator: ./operator.md
+  - Canary Types:
+      - Cloudwatch: ./API#cloudwatch
+      - Containerd Pull: ./API#containerdpull
+      - Containerd Push: ./API#containerdpush
+      - DNS: ./API#dns
+      - Docker Pull: ./API#dockerpull
+      - Docker Push: ./API#dockerpush
+      - EC2: ./API#ec2
+      - GCS: ./API#gcsbucket
+      - Helm: ./API#helm
+      - HTTP: ./API#http
+      - ICMP: ./API#icmp
+      - JMeter: ./API#jmeter
+      - JUnit: ./API#junit
+      - LDAP: ./API#ldap
+      - Mongo: ./API#mongo
+      - Namespace: ./API#namespace
+      - Pod: ./API#pod
+      - Postgres: ./API#postgres
+      - Prometheus: ./API#prometheus
+      - Redis: ./API#redis
+      - Restic: ./API#restic
+      - S3 Bucket: ./API#s3bucket
+      - S3: ./API#s3
+      - SMB / CIFS: ./API#smb
+      - SQL Server: ./API#mssql
