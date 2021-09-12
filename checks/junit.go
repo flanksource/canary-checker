@@ -123,6 +123,14 @@ func deletePod(ctx *context.Context, pod *corev1.Pod) {
 	}
 }
 
+func getLogs(ctx *context.Context, pod corev1.Pod) string {
+	message, _ := ctx.Kommons.GetPodLogs(pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
+	if !ctx.IsTrace() && !ctx.IsDebug() && len(message) > 3000 {
+		message = message[len(message)-3000:]
+	}
+	return message
+}
+
 func podExecf(ctx *context.Context, pod corev1.Pod, result *pkg.CheckResult, cmd string, args ...interface{}) (string, bool) {
 	_cmd := fmt.Sprintf(cmd, args...)
 	stdout, stderr, err := ctx.Kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", _cmd)
@@ -134,11 +142,7 @@ func podExecf(ctx *context.Context, pod corev1.Pod, result *pkg.CheckResult, cmd
 }
 
 func podFail(ctx *context.Context, pod corev1.Pod, result *pkg.CheckResult) *pkg.CheckResult {
-	message, _ := ctx.Kommons.GetPodLogs(pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
-	if !ctx.IsTrace() && !ctx.IsDebug() && len(message) > 3000 {
-		message = message[len(message)-3000:]
-	}
-	return result.ErrorMessage(fmt.Errorf("%s is %s\n %v", pod.Name, pod.Status.Phase, message))
+	return result.ErrorMessage(fmt.Errorf("%s is %s\n %v", pod.Name, pod.Status.Phase, getLogs(ctx, pod)))
 }
 
 func cleanupExistingPods(ctx *context.Context, k8s kubernetes.Interface, selector string) (bool, error) {
@@ -220,14 +224,15 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) *pk
 	exitCode, _ := podExecf(ctx, *pod, result, "cat %v/exit-code", mountPath)
 
 	if exitCode != "" && exitCode != "0" {
-		result.ErrorMessage(fmt.Errorf("process exited with: '%s'", exitCode))
+		// we don't exit early as junit files may have been generated in addition to a failing exit code
+		result.Failf("process exited with: %s:\n%s", exitCode, getLogs(ctx, *pod))
 	}
 	files, ok := podExecf(ctx, *pod, result, fmt.Sprintf("find %v -name \\*.xml -type f", mountPath))
 	if !ok {
 		return result
 	}
 	files = strings.TrimSpace(files)
-	if files == "" {
+	if files == "" && exitCode != "" && exitCode != "0" {
 		return result.Failf("No junit files found")
 	}
 	for _, file := range strings.Split(files, "\n") {
