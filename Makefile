@@ -167,10 +167,8 @@ CONTROLLER_GEN=$(GOBIN)/controller-gen
     tar xf kustomize.tar.gz -C .bin/ && \
 		rm kustomize.tar.gz
 
-.bin/go-junit-report:
-	mkdir -p .bin
-	go install github.com/jstemmer/go-junit-report   ;\
-	cp $(GOBIN)/go-junit-report .bin/go-junit-report ;\
+.bin/go-junit-report: .bin
+	GOBIN=$(PWD)/.bin GOFLAGS="-mod=mod"  go install github.com/jstemmer/go-junit-report
 
 .bin/jmeter:
 	curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmeter-5.4.1.tgz -o apache-jmeter-5.4.1.tgz && \
