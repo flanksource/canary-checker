@@ -29,28 +29,28 @@ nav:
   - Standalone Server: ./server.md
   - Kubernetes Operator: ./operator.md
   - Canary Types:
-      - Cloudwatch: ./api#cloudwatch
-      - Containerd Pull: ./api#containerdpull
-      - Containerd Push: ./api#containerdpush
-      - DNS: ./api#dns
-      - Docker Pull: ./api#dockerpull
-      - Docker Push: ./api#dockerpush
-      - EC2: ./api#ec2
-      - GCS: ./api#gcsbucket
-      - Helm: ./api#helm
-      - HTTP: ./api#http
-      - ICMP: ./api#icmp
-      - JMeter: ./api#jmeter
-      - JUnit: ./api#junit
-      - LDAP: ./api#ldap
-      - Mongo: ./api#mongo
-      - Namespace: ./api#namespace
-      - Pod: ./api#pod
-      - Postgres: ./api#postgres
-      - Prometheus: ./api#prometheus
-      - Redis: ./api#redis
-      - Restic: ./api#restic
-      - S3 Bucket: ./api#s3bucket
-      - S3: ./api#s3
-      - SMB / CIFS: ./api#smb
-      - SQL Server: ./api#mssql
+      - Cloudwatch: ./api/#cloudwatch
+      - Containerd Pull: ./api/#containerdpull
+      - Containerd Push: ./api/#containerdpush
+      - DNS: ./api/#dns
+      - Docker Pull: ./api/#dockerpull
+      - Docker Push: ./api/#dockerpush
+      - EC2: ./api/#ec2
+      - GCS: ./api/#gcsbucket
+      - Helm: ./api/#helm
+      - HTTP: ./api/#http
+      - ICMP: ./api/#icmp
+      - JMeter: ./api/#jmeter
+      - JUnit: ./api/#junit
+      - LDAP: ./api/#ldap
+      - Mongo: ./api/#mongo
+      - Namespace: ./api/#namespace
+      - Pod: ./api/#pod
+      - Postgres: ./api/#postgres
+      - Prometheus: ./api/#prometheus
+      - Redis: ./api/#redis
+      - Restic: ./api/#restic
+      - S3 Bucket: ./api/#s3bucket
+      - S3: ./api/#s3
+      - SMB / CIFS: ./api/#smb
+      - SQL Server: ./api/#mssql

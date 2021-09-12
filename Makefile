@@ -97,18 +97,18 @@ docker-push:
 compress:
 	# upx 3.95 has issues compressing darwin binaries - https://github.com/upx/upx/issues/301
 	which upx 2>&1 >  /dev/null  || (sudo apt-get update && sudo apt-get install -y xz-utils && wget -nv -O upx.tar.xz https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz; tar xf upx.tar.xz; mv upx-3.96-amd64_linux/upx /usr/bin )
-	upx -5 ./.bin/$(NAME)_linux-amd64 ./.bin/$(NAME)_linux-arm64 ./.bin/$(NAME)_darwin-amd64 ./.bin/$(NAME)_darwin-arm64 ./.bin/$(NAME).exe
+	upx -5 ./.bin/$(NAME)_linux_amd64 ./.bin/$(NAME)_linux_arm64 ./.bin/$(NAME)_darwin_amd64 ./.bin/$(NAME)_darwin_arm64 ./.bin/$(NAME).exe
 
 
 .PHONY: linux
 linux: ui
-	GOOS=linux GOARCH=amd64 go build -o ./.bin/$(NAME)_linux-amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
-	GOOS=linux GOARCH=arm64 go build -o ./.bin/$(NAME)_linux-arm64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=linux GOARCH=amd64 go build -o ./.bin/$(NAME)_linux_amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=linux GOARCH=arm64 go build -o ./.bin/$(NAME)_linux_arm64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: darwin
 darwin: ui
-	GOOS=darwin GOARCH=amd64 go build -o ./.bin/$(NAME)_darwin-amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
-	GOOS=darwin GOARCH=arm64 go build -o ./.bin/$(NAME)_darwin-arm64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=darwin GOARCH=amd64 go build -o ./.bin/$(NAME)_darwin_amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=darwin GOARCH=arm64 go build -o ./.bin/$(NAME)_darwin_arm64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: windows
 windows: ui
@@ -119,8 +119,10 @@ binaries: linux darwin windows compress
 
 .PHONY: release
 release: ui .bin/kustomize binaries
+	mkdir -p .release
 	cd config/base && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/ > ./.bin/release.yaml
+	$(KUSTOMIZE) build config/ > .release/release.yaml
+	cp .bin/canary-checker* .release/
 
 .PHONY: lint
 lint:
