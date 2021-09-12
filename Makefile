@@ -4,6 +4,7 @@ CRD_OPTIONS ?= ""
 NAME=canary-checker
 OS   = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH = $(shell uname -m | sed 's/x86_64/amd64/')
+KUSTOMIZE=$(PWD)/.bin/kustomize
 
 ifeq ($(VERSION),)
   VERSION_TAG=$(shell git describe --abbrev=0 --tags --exact-match 2>/dev/null || echo latest)
@@ -117,8 +118,8 @@ windows: ui
 
 .PHONY: release
 release: ui .bin/kustomize linux darwin-amd64 darwin-arm64 windows compress
-	cd config/base && .bin/kustomize edit set image controller=${IMG}
-	.bin/kustomize build config/ > ./.bin/release.yaml
+	cd config/base && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/ > ./.bin/release.yaml
 
 .PHONY: lint
 lint:
