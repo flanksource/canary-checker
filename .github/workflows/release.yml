@@ -66,3 +66,4 @@ jobs:
       - run: make build-api-docs build-docs deploy-docs
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          MKDOCS_INSIDERS: ${{secrets.MKDOCS_INSIDERS}}
