@@ -5,7 +5,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/commons/logger"
 	"github.com/spf13/cobra"
-	"github.com/spf13/cobra/doc"
 	"github.com/spf13/pflag"
 )
 
@@ -43,24 +42,6 @@ func init() {
 	logger.BindFlags(Root.PersistentFlags())
 
 	Root.PersistentFlags().BoolVar(&exposeEnv, "expose-env", false, "Expose environment variables for use in all templates. Note this has serious security implications with untrusted canaries")
-	docs := &cobra.Command{
-		Use:   "docs",
-		Short: "generate documentation",
-	}
-
-	docs.AddCommand(&cobra.Command{
-		Use:   "cli [PATH]",
-		Short: "generate CLI documentation",
-		Args:  cobra.MinimumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			err := doc.GenMarkdownTree(Root, args[0])
-			if err != nil {
-				logger.Fatalf("error creating docs", err)
-			}
-		},
-	})
-
-	Root.AddCommand(APIDocs)
-	Root.AddCommand(docs)
+	Root.AddCommand(Docs)
 	Root.AddCommand(Run, Serve, Operator)
 }

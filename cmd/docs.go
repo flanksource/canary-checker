@@ -32,10 +32,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var APIDocs = &cobra.Command{
-	Use:   "api",
-	Short: "Generate docs ",
-	Args:  cobra.MinimumNArgs(0),
+var Docs = &cobra.Command{
+	Use:    "docs",
+	Short:  "Generate docs ",
+	Hidden: true,
+	Args:   cobra.MinimumNArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		printAPIDocs(args)
 	},
@@ -44,7 +45,7 @@ var APIDocs = &cobra.Command{
 var out string
 
 func init() {
-	APIDocs.Flags().StringVar(&out, "output-file", "API.md", "")
+	Docs.Flags().StringVar(&out, "output-file", "docs/API.md", "")
 }
 
 var (

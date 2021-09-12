@@ -130,7 +130,7 @@ serve-docs:
 
 .PHONY: build-api-docs
 build-api-docs:
-	go run main.go docs api  api/v1/*.go --output-file docs/api.md
+	go run main.go docs  api/v1/*.go --output-file docs/api.md
 
 .PHONY: build-docs
 build-docs:
