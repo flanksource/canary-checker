@@ -2,16 +2,15 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: canary-checker
-  namespace: platform-system
   annotations:
     kubernetes.io/tls-acme: "true"
 spec:
   tls:
     - hosts:
-        - canaries.{{.domain}}
+        - canary-checker
       secretName: canary-tls
   rules:
-    - host: canaries.{{.domain}}
+    - host: canary-checker
       http:
         paths:
           - path: /

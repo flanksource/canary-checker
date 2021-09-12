@@ -39,7 +39,6 @@ run: generate fmt vet manifests
 install-crd: manifests
 	kubectl apply -f config/deploy/crd.yaml
 
-
 kind-install: docker-build
 	kind load docker-image --name=kind-kind ${IMG}
 
@@ -48,19 +47,19 @@ uninstall: manifests
 	kubectl delete -f config/deploy/crd.yaml
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: kustomize manifests
-	cd config && $(KUSTOMIZE) edit set image controller=${IMG}
+deploy: .bin/kustomize manifests
+	cd config && .bin/kustomize edit set image controller=${IMG}
 	kubectl $(KUSTOMIZE) config | kubectl apply -f -
 
-static: kustomize manifests generate .bin/yq
-	$(KUSTOMIZE) build ./config | $(YQ) eval -P '' - > config/deploy/manifests.yaml
-	$(KUSTOMIZE) build ./config/base | $(YQ) eval -P '' - > config/deploy/base.yaml
+static: .bin/kustomize manifests generate .bin/yq
+	.bin/kustomize build ./config | $(YQ) eval -P '' - > config/deploy/manifests.yaml
+	.bin/kustomize build ./config/base | $(YQ) eval -P '' - > config/deploy/base.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests: controller-gen .bin/yq
-	$(CONTROLLER_GEN) crd:trivialVersions=false paths="./..." output:stdout > config/deploy/crd.yaml
-	$(YQ) eval -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.junit.items.properties.spec.properties.containers.items.properties.ports.items.required=["containerPort", "protocol"]' config/deploy/crd.yaml
-	$(YQ) eval -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.junit.items.properties.spec.properties.initContainers.items.properties.ports.items.required=["containerPort", "protocol"]' config/deploy/crd.yaml
+manifests: .bin/controller-gen .bin/yq
+	.bin/controller-gen crd:trivialVersions=false paths="./..." output:stdout > config/deploy/crd.yaml
+	.bin/yq eval -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.junit.items.properties.spec.properties.containers.items.properties.ports.items.required=["containerPort", "protocol"]' config/deploy/crd.yaml
+	.bin/yq eval -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.junit.items.properties.spec.properties.initContainers.items.properties.ports.items.required=["containerPort", "protocol"]' config/deploy/crd.yaml
 
 # Run go fmt against code
 fmt:
@@ -71,8 +70,8 @@ vet:
 	# go vet ./...
 
 # Generate code
-generate: controller-gen
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+generate: .bin/controller-gen
+	.bin/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
 docker:
@@ -131,9 +130,7 @@ serve-docs:
 
 .PHONY: build-api-docs
 build-api-docs:
-	go run main.go docs api  api/v1/checks.go  > docs/reference.md
-	mkdir -p docs/cli
-	go run main.go docs cli "docs/cli"
+	go run main.go docs api  api/v1/*.go --output-file docs/api.md
 
 .PHONY: build-docs
 build-docs:
@@ -161,53 +158,23 @@ install: build
 test-e2e: bin
 	./test/e2e.sh
 
-# find or download controller-gen
-# download controller-gen if necessary
-controller-gen:
-ifeq (, $(shell which controller-gen))
-	@{ \
-	set -e ;\
-	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$CONTROLLER_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.0 ;\
-	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
-	}
+.bin/controller-gen:
+	GOBIN=$(PWD)/.bin go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.0
 CONTROLLER_GEN=$(GOBIN)/controller-gen
-else
-CONTROLLER_GEN=$(shell which controller-gen)
-endif
 
-
-# find or download kustomize if necessary
-kustomize:
-ifeq (, $(shell which kustomize))
-	@{ \
-	set -e ;\
-	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go install sigs.k8s.io/kustomize/kustomize/v4@v4.0.3 ;\
-	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
-	}
-KUSTOMIZE=$(GOBIN)/kustomize
-else
-KUSTOMIZE=$(shell which kustomize)
-endif
+.bin/kustomize:
+		curl -L https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv4.3.0/kustomize_v4.3.0_$(OS)_$(ARCH).tar.gz -o kustomize.tar.gz && \
+    tar xf kustomize.tar.gz -C .bin/ && \
+		rm kustomize.tar.gz
 
 .bin/go-junit-report:
 	mkdir -p .bin
-	# set -e ;\
-	_TMP_DIR=$$(mktemp -d) ;\
-	cd $$_TMP_DIR ;\
-	go mod init tmp   ;\
 	go install github.com/jstemmer/go-junit-report   ;\
-	rm -rf $$_TMP_DIR
 	cp $(GOBIN)/go-junit-report .bin/go-junit-report ;\
 
 .bin/jmeter:
 	curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmeter-5.4.1.tgz -o apache-jmeter-5.4.1.tgz && \
-    sudo tar xf apache-jmeter-5.4.1.tgz -C .bin/ && \
+    tar xf apache-jmeter-5.4.1.tgz -C .bin/ && \
     rm apache-jmeter-5.4.1.tgz && \
 		ln -s apache-jmeter-5.4.1/bin/jmeter .bin/jmeter
 
@@ -230,17 +197,25 @@ YQ = $(realpath ./.bin/yq)
 
 .PHONY: telepresence
 telepresence:
-ifeq ("darwin", $(OS))
+ifeq (, $(shell which telepresence))
+ifeq ($(OS), darwin)
 	brew install --cask macfuse
 	brew install datawire/blackbird/telepresence-legacy
 else
 	curl -s https://packagecloud.io/install/repositories/datawireio/telepresence/script.deb.sh | sudo bash
 	sudo apt install --no-install-recommends -y telepresence
 endif
+endif
+
 .bin:
 	mkdir -p .bin
 
-bin: .bin .bin/wait4x .bin/yq .bin/karina .bin/go-junit-report .bin/restic .bin/jmeter telepresence
+.bin/octopilot:
+	curl -sSLo .bin/octopilot https://github.com/dailymotion-oss/octopilot/releases/download/v1.0.7/octopilot_1.0.7_$(OS)_$(ARCH) && \
+	chmod +x .bin/octopilot
+
+bin: .bin .bin/wait4x .bin/yq .bin/karina .bin/go-junit-report .bin/restic .bin/jmeter telepresence .bin/octopilot .bin/kustomize
+
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources

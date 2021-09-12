@@ -3,4 +3,4 @@ kind: Namespace
 metadata:
   labels:
     control-plane: canary-checker
-  name: platform-system
+  name: canary-checker

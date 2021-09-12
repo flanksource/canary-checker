@@ -1,11 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: platform-system
+namespace: canary-checker
 resources:
-- ./base
-- ./namespace.yaml
-- ./deploy/crd.yaml
+  - ./base
+  - ./namespace.yaml
+  - ./deploy/crd.yaml
 images:
-- name: controller
-  newName: docker.io/flanksource/canary-checker
-  newTag: latest
+  - name: controller
+    newName: docker.io/flanksource/canary-checker
+    newTag: latest
