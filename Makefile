@@ -162,7 +162,7 @@ test-e2e: bin
 	GOBIN=$(PWD)/.bin go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.0
 CONTROLLER_GEN=$(GOBIN)/controller-gen
 
-.bin/kustomize:
+.bin/kustomize: .bin
 		curl -L https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv4.3.0/kustomize_v4.3.0_$(OS)_$(ARCH).tar.gz -o kustomize.tar.gz && \
     tar xf kustomize.tar.gz -C .bin/ && \
 		rm kustomize.tar.gz
