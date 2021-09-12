@@ -34,28 +34,28 @@ type HTTPCheck struct {
 	// HTTP endpoint to check.  Mutually exclusive with Namespace
 	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty" template:"true"`
 	// Namespace to crawl for TLS endpoints.  Mutually exclusive with Endpoint
-	Namespace string `yaml:"namespace" json:"namespace,omitempty" template:"true"`
+	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty" template:"true"`
 	// Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.
-	ThresholdMillis int `yaml:"thresholdMillis" json:"thresholdMillis,omitempty"`
+	ThresholdMillis int `yaml:"thresholdMillis,omitempty" json:"thresholdMillis,omitempty"`
 	// Expected response codes for the HTTP Request.
-	ResponseCodes []int `yaml:"responseCodes" json:"responseCodes,omitempty"`
+	ResponseCodes []int `yaml:"responseCodes,omitempty" json:"responseCodes,omitempty"`
 	// Exact response content expected to be returned by the endpoint.
-	ResponseContent string `yaml:"responseContent" json:"responseContent,omitempty"`
+	ResponseContent string `yaml:"responseContent,omitempty" json:"responseContent,omitempty"`
 	// Path and value to of expect JSON response by the endpoint
 	ResponseJSONContent JSONCheck `yaml:"responseJSONContent,omitempty" json:"responseJSONContent,omitempty"`
 	// Maximum number of days until the SSL Certificate expires.
-	MaxSSLExpiry int `yaml:"maxSSLExpiry" json:"maxSSLExpiry,omitempty"`
-	// HTTP method to call - defaults to GET
+	MaxSSLExpiry int `yaml:"maxSSLExpiry,omitempty" json:"maxSSLExpiry,omitempty"`
+	// Method to use - defaults to GET
 	Method string `yaml:"method,omitempty" json:"method,omitempty"`
-	//NTLM when set to true will do authentication using NTLM v1 protocol
+	// NTLM when set to true will do authentication using NTLM v1 protocol
 	NTLM bool `yaml:"ntlm,omitempty" json:"ntlm,omitempty"`
-	//NTLM when set to true will do authentication using NTLM v2 protocol
+	// NTLM when set to true will do authentication using NTLM v2 protocol
 	NTLMv2 bool `yaml:"ntlmv2,omitempty" json:"ntlmv2,omitempty"`
-	// HTTP request body contents
+	// Request Body Contents
 	Body string `yaml:"body,omitempty" json:"body,omitempty" template:"true"`
-	// HTTP Header fields to be used in the query
+	// Header fields to be used in the query
 	Headers []kommons.EnvVar `yaml:"headers,omitempty" json:"headers,omitempty"`
-	// Credentials for authentication headers:
+	// Credentials for authentication headers
 	Authentication *Authentication `yaml:"authentication,omitempty" json:"authentication,omitempty"`
 }
 
@@ -77,7 +77,7 @@ func (c HTTPCheck) GetMethod() string {
 type TCPCheck struct {
 	Description     `yaml:",inline" json:",inline"`
 	Endpoint        string `yaml:"endpoint" json:"endpoint,omitempty"`
-	ThresholdMillis int64  `yaml:"thresholdMillis" json:"thresholdMillis,omitempty"`
+	ThresholdMillis int64  `yaml:"thresholdMillis,omitempty" json:"thresholdMillis,omitempty"`
 }
 
 func (t TCPCheck) GetEndpoint() string {
@@ -91,9 +91,9 @@ func (t TCPCheck) GetType() string {
 type ICMPCheck struct {
 	Description         `yaml:",inline" json:",inline"`
 	Endpoint            string `yaml:"endpoint" json:"endpoint,omitempty"`
-	ThresholdMillis     int64  `yaml:"thresholdMillis" json:"thresholdMillis,omitempty"`
-	PacketLossThreshold int64  `yaml:"packetLossThreshold" json:"packetLossThreshold,omitempty"`
-	PacketCount         int    `yaml:"packetCount" json:"packetCount,omitempty"`
+	ThresholdMillis     int64  `yaml:"thresholdMillis,omitempty" json:"thresholdMillis,omitempty"`
+	PacketLossThreshold int64  `yaml:"packetLossThreshold,omitempty" json:"packetLossThreshold,omitempty"`
+	PacketCount         int    `yaml:"packetCount,omitempty" json:"packetCount,omitempty"`
 }
 
 func (c ICMPCheck) GetEndpoint() string {
@@ -117,7 +117,7 @@ type S3Check struct {
 	SecretKey   string `yaml:"secretKey" json:"secretKey,omitempty"`
 	ObjectPath  string `yaml:"objectPath" json:"objectPath,omitempty"`
 	// Skip TLS verify when connecting to s3
-	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
+	SkipTLSVerify bool `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
 }
 
 func (c S3Check) GetEndpoint() string {
@@ -131,10 +131,10 @@ func (c S3Check) GetType() string {
 type AWSConnection struct {
 	AccessKey kommons.EnvVar `yaml:"accessKey" json:"accessKey"`
 	SecretKey kommons.EnvVar `yaml:"secretKey" json:"secretKey"`
-	Region    string         `yaml:"region" json:"region"`
-	Endpoint  string         `yaml:"endpoint" json:"endpoint,omitempty"`
+	Region    string         `yaml:"region,omitempty" json:"region"`
+	Endpoint  string         `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
 	// Skip TLS verify when connecting to aws
-	SkipTLSVerify bool `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
+	SkipTLSVerify bool `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
 }
 
 type S3BucketCheck struct {
@@ -144,8 +144,10 @@ type S3BucketCheck struct {
 	FolderTest    `yaml:",inline" json:",inline"`
 	Filter        FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
 	Bucket        string       `yaml:"bucket" json:"bucket"`
+	// glob path to restrict matches to a subset
+	ObjectPath string `yaml:"objectPath,omitempty" json:"objectPath,omitempty"`
 	// Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY
-	UsePathStyle bool `yaml:"usePathStyle" json:"usePathStyle,omitempty"`
+	UsePathStyle bool `yaml:"usePathStyle,omitempty" json:"usePathStyle,omitempty"`
 }
 
 func (c S3BucketCheck) GetEndpoint() string {
@@ -263,7 +265,7 @@ func (c JmeterCheck) GetType() string {
 
 type DockerPullCheck struct {
 	Description    `yaml:",inline" json:",inline"`
-	Image          string          `yaml:"image" json:"image,omitempty"`
+	Image          string          `yaml:"image" json:"image"`
 	Auth           *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 	ExpectedDigest string          `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
 	ExpectedSize   int64           `yaml:"expectedSize" json:"expectedSize,omitempty"`
@@ -279,8 +281,8 @@ func (c DockerPullCheck) GetType() string {
 
 type DockerPushCheck struct {
 	Description `yaml:",inline" json:",inline"`
-	Image       string          `yaml:"image" json:"image,omitempty"`
-	Auth        *Authentication `yaml:"auth" json:"auth"`
+	Image       string          `yaml:"image" json:"image"`
+	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 }
 
 func (c DockerPushCheck) GetEndpoint() string {
@@ -293,10 +295,10 @@ func (c DockerPushCheck) GetType() string {
 
 type ContainerdPullCheck struct {
 	Description    `yaml:",inline" json:",inline"`
-	Image          string         `yaml:"image" json:"image,omitempty"`
+	Image          string         `yaml:"image" json:"image"`
 	Auth           Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
-	ExpectedDigest string         `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
-	ExpectedSize   int64          `yaml:"expectedSize" json:"expectedSize,omitempty"`
+	ExpectedDigest string         `yaml:"expectedDigest,omitempty" json:"expectedDigest,omitempty"`
+	ExpectedSize   int64          `yaml:"expectedSize,omitempty" json:"expectedSize,omitempty"`
 }
 
 func (c ContainerdPullCheck) GetEndpoint() string {
@@ -309,7 +311,7 @@ func (c ContainerdPullCheck) GetType() string {
 
 type ContainerdPushCheck struct {
 	Description `yaml:",inline" json:",inline"`
-	Image       string `yaml:"image" json:"image,omitempty"`
+	Image       string `yaml:"image" json:"image"`
 	Username    string `yaml:"username" json:"username,omitempty"`
 	Password    string `yaml:"password" json:"password,omitempty"`
 }
@@ -370,28 +372,43 @@ type PostgresCheck struct {
 	SQLCheck `yaml:",inline" json:",inline"`
 }
 
+func (p PostgresCheck) GetType() string {
+	return "postgres"
+}
+
 type MssqlCheck struct {
 	SQLCheck `yaml:",inline" json:",inline"`
+}
+
+/*
+[include:datasources/mongo_pass.yaml]
+*/
+type Mongo struct {
+	MongoDBCheck `yaml:",inline" json:",inline"`
+}
+
+func (m MssqlCheck) GetType() string {
+	return "mssql"
 }
 
 type PodCheck struct {
 	Description          `yaml:",inline" json:",inline"`
 	Namespace            string `yaml:"namespace" json:"namespace,omitempty" template:"true"`
 	Spec                 string `yaml:"spec" json:"spec,omitempty"`
-	ScheduleTimeout      int64  `yaml:"scheduleTimeout" json:"scheduleTimeout,omitempty"`
-	ReadyTimeout         int64  `yaml:"readyTimeout" json:"readyTimeout,omitempty"`
-	HTTPTimeout          int64  `yaml:"httpTimeout" json:"httpTimeout,omitempty"`
-	DeleteTimeout        int64  `yaml:"deleteTimeout" json:"deleteTimeout,omitempty"`
-	IngressTimeout       int64  `yaml:"ingressTimeout" json:"ingressTimeout,omitempty"`
-	HTTPRetryInterval    int64  `yaml:"httpRetryInterval" json:"httpRetryInterval,omitempty"`
-	Deadline             int64  `yaml:"deadline" json:"deadline,omitempty"`
-	Port                 int64  `yaml:"port" json:"port,omitempty"`
-	Path                 string `yaml:"path" json:"path,omitempty" template:"true"`
+	ScheduleTimeout      int64  `yaml:"scheduleTimeout,omitempty" json:"scheduleTimeout,omitempty"`
+	ReadyTimeout         int64  `yaml:"readyTimeout,omitempty" json:"readyTimeout,omitempty"`
+	HTTPTimeout          int64  `yaml:"httpTimeout,omitempty" json:"httpTimeout,omitempty"`
+	DeleteTimeout        int64  `yaml:"deleteTimeout,omitempty" json:"deleteTimeout,omitempty"`
+	IngressTimeout       int64  `yaml:"ingressTimeout,omitempty" json:"ingressTimeout,omitempty"`
+	HTTPRetryInterval    int64  `yaml:"httpRetryInterval,omitempty" json:"httpRetryInterval,omitempty"`
+	Deadline             int64  `yaml:"deadline,omitempty" json:"deadline,omitempty"`
+	Port                 int64  `yaml:"port,omitempty" json:"port,omitempty"`
+	Path                 string `yaml:"path,omitempty" json:"path,omitempty" template:"true"`
 	IngressName          string `yaml:"ingressName" json:"ingressName,omitempty" template:"true" `
 	IngressHost          string `yaml:"ingressHost" json:"ingressHost,omitempty" template:"true"`
-	ExpectedContent      string `yaml:"expectedContent" json:"expectedContent,omitempty" template:"true"`
-	ExpectedHTTPStatuses []int  `yaml:"expectedHttpStatuses" json:"expectedHttpStatuses,omitempty"`
-	PriorityClass        string `yaml:"priorityClass" json:"priorityClass,omitempty"`
+	ExpectedContent      string `yaml:"expectedContent,omitempty" json:"expectedContent,omitempty" template:"true"`
+	ExpectedHTTPStatuses []int  `yaml:"expectedHttpStatuses,omitempty" json:"expectedHttpStatuses,omitempty"`
+	PriorityClass        string `yaml:"priorityClass,omitempty" json:"priorityClass,omitempty"`
 }
 
 func (c PodCheck) GetEndpoint() string {
@@ -408,11 +425,11 @@ func (c PodCheck) GetType() string {
 
 type LDAPCheck struct {
 	Description   `yaml:",inline" json:",inline"`
-	Host          string          `yaml:"host" json:"host,omitempty" template:"true"`
-	Auth          *Authentication `yaml:"auth" json:"auth,omitempty"`
-	BindDN        string          `yaml:"bindDN" json:"bindDN,omitempty"`
-	UserSearch    string          `yaml:"userSearch" json:"userSearch,omitempty"`
-	SkipTLSVerify bool            `yaml:"skipTLSVerify" json:"skipTLSVerify,omitempty"`
+	Host          string          `yaml:"host" json:"host" template:"true"`
+	Auth          *Authentication `yaml:"auth" json:"auth"`
+	BindDN        string          `yaml:"bindDN" json:"bindDN"`
+	UserSearch    string          `yaml:"userSearch,omitempty" json:"userSearch,omitempty"`
+	SkipTLSVerify bool            `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
 }
 
 func (c LDAPCheck) GetEndpoint() string {
@@ -426,24 +443,24 @@ func (c LDAPCheck) GetType() string {
 type NamespaceCheck struct {
 	Description          `yaml:",inline" json:",inline"`
 	CheckName            string            `yaml:"checkName" json:"checkName,omitempty" template:"true"`
-	NamespaceNamePrefix  string            `yaml:"namespaceNamePrefix" json:"namespaceNamePrefix,omitempty"`
-	NamespaceLabels      map[string]string `yaml:"namespaceLabels" json:"namespaceLabels,omitempty"`
-	NamespaceAnnotations map[string]string `yaml:"namespaceAnnotations" json:"namespaceAnnotations,omitempty"`
-	PodSpec              string            `yaml:"podSpec" json:"podSpec,omitempty"`
-	ScheduleTimeout      int64             `yaml:"scheduleTimeout" json:"schedule_timeout,omitempty"`
-	ReadyTimeout         int64             `yaml:"readyTimeout" json:"readyTimeout,omitempty"`
-	HTTPTimeout          int64             `yaml:"httpTimeout" json:"httpTimeout,omitempty"`
-	DeleteTimeout        int64             `yaml:"deleteTimeout" json:"deleteTimeout,omitempty"`
-	IngressTimeout       int64             `yaml:"ingressTimeout" json:"ingressTimeout,omitempty"`
-	HTTPRetryInterval    int64             `yaml:"httpRetryInterval" json:"httpRetryInterval,omitempty"`
-	Deadline             int64             `yaml:"deadline" json:"deadline,omitempty"`
-	Port                 int64             `yaml:"port" json:"port,omitempty"`
-	Path                 string            `yaml:"path" json:"path,omitempty"`
-	IngressName          string            `yaml:"ingressName" json:"ingressName,omitempty" template:"true"`
-	IngressHost          string            `yaml:"ingressHost" json:"ingressHost,omitempty" template:"true"`
-	ExpectedContent      string            `yaml:"expectedContent" json:"expectedContent,omitempty" template:"true"`
-	ExpectedHTTPStatuses []int64           `yaml:"expectedHttpStatuses" json:"expectedHttpStatuses,omitempty"`
-	PriorityClass        string            `yaml:"priorityClass" json:"priorityClass,omitempty"`
+	NamespaceNamePrefix  string            `yaml:"namespaceNamePrefix,omitempty" json:"namespaceNamePrefix,omitempty"`
+	NamespaceLabels      map[string]string `yaml:"namespaceLabels,omitempty" json:"namespaceLabels,omitempty"`
+	NamespaceAnnotations map[string]string `yaml:"namespaceAnnotations,omitempty" json:"namespaceAnnotations,omitempty"`
+	PodSpec              string            `yaml:"podSpec" json:"podSpec"`
+	ScheduleTimeout      int64             `yaml:"scheduleTimeout,omitempty" json:"schedule_timeout,omitempty"`
+	ReadyTimeout         int64             `yaml:"readyTimeout,omitempty" json:"readyTimeout,omitempty"`
+	HTTPTimeout          int64             `yaml:"httpTimeout,omitempty" json:"httpTimeout,omitempty"`
+	DeleteTimeout        int64             `yaml:"deleteTimeout,omitempty" json:"deleteTimeout,omitempty"`
+	IngressTimeout       int64             `yaml:"ingressTimeout,omitempty" json:"ingressTimeout,omitempty"`
+	HTTPRetryInterval    int64             `yaml:"httpRetryInterval,omitempty" json:"httpRetryInterval,omitempty"`
+	Deadline             int64             `yaml:"deadline,omitempty" json:"deadline,omitempty"`
+	Port                 int64             `yaml:"port,omitempty" json:"port,omitempty"`
+	Path                 string            `yaml:"path,omitempty" json:"path,omitempty"`
+	IngressName          string            `yaml:"ingressName,omitempty" json:"ingressName,omitempty" template:"true"`
+	IngressHost          string            `yaml:"ingressHost,omitempty" json:"ingressHost,omitempty" template:"true"`
+	ExpectedContent      string            `yaml:"expectedContent,omitempty" json:"expectedContent,omitempty" template:"true"`
+	ExpectedHTTPStatuses []int64           `yaml:"expectedHttpStatuses,omitempty" json:"expectedHttpStatuses,omitempty"`
+	PriorityClass        string            `yaml:"priorityClass,omitempty" json:"priorityClass,omitempty"`
 }
 
 func (c NamespaceCheck) GetEndpoint() string {
@@ -461,13 +478,13 @@ func (c NamespaceCheck) GetType() string {
 type DNSCheck struct {
 	Description     `yaml:",inline" json:",inline"`
 	Server          string   `yaml:"server" json:"server,omitempty"`
-	Port            int      `yaml:"port" json:"port,omitempty"`
+	Port            int      `yaml:"port,omitempty" json:"port,omitempty"`
 	Query           string   `yaml:"query,omitempty" json:"query,omitempty"`
-	QueryType       string   `yaml:"querytype" json:"querytype,omitempty"`
+	QueryType       string   `yaml:"querytype,omitempty" json:"querytype,omitempty"`
 	MinRecords      int      `yaml:"minrecords,omitempty" json:"minrecords,omitempty"`
 	ExactReply      []string `yaml:"exactreply,omitempty" json:"exactreply,omitempty"`
-	Timeout         int      `yaml:"timeout" json:"timeout,omitempty"`
-	ThresholdMillis int      `yaml:"thresholdMillis" json:"thresholdMillis,omitempty"`
+	Timeout         int      `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+	ThresholdMillis int      `yaml:"thresholdMillis,omitempty" json:"thresholdMillis,omitempty"`
 	// SrvReply    SrvReply `yaml:"srvReply,omitempty" json:"srvReply,omitempty"`
 }
 
@@ -542,8 +559,8 @@ type SmbCheck struct {
 	Templatable `yaml:",inline" json:",inline"`
 	Filter      FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
 	FolderTest  `yaml:",inline" json:",inline"`
-	//Server location of smb server. Can be hostname/ip or in '\\server\e$\a\b\c' syntax
-	//Where server is the hostname e$ is the sharename and a/b/c is the searchPath location
+	//Server location of smb server. Can be `hostname/ip` or in `\\server\e$\a\b\c` syntax
+	//Where server is the `hostname` `e$`` is the sharename and `a/b/c` is the searchPath location
 	Server string `yaml:"server" json:"server"`
 	//Port on which smb server is running. Defaults to 445
 	Port int             `yaml:"port,omitempty" json:"port,omitempty"`
@@ -573,6 +590,13 @@ func (c SmbCheck) GetPort() int {
 	return 445
 }
 
+/*
+[include:datasources/prometheus.yaml]
+
+*/
+type Prometheus struct {
+	PrometheusCheck `yaml:",inline" json:",inline"`
+}
 type PrometheusCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
@@ -601,29 +625,7 @@ func (c MongoDBCheck) GetType() string {
 }
 
 /*
-
-```yaml
-http:
-  - endpoints:
-      - https://httpstat.us/200
-      - https://httpstat.us/301
-    thresholdMillis: 3000
-    responseCodes: [201,200,301]
-    responseContent: ""
-    maxSSLExpiry: 60
-  - endpoints:
-      - https://httpstat.us/500
-    thresholdMillis: 3000
-    responseCodes: [500]
-    responseContent: ""
-    maxSSLExpiry: 60
-  - endpoints:
-      - https://httpstat.us/500
-    thresholdMillis: 3000
-    responseCodes: [302]
-    responseContent: ""
-    maxSSLExpiry: 60
-```
+[include:minimal/http_pass.yaml]
 */
 type HTTP struct {
 	HTTPCheck `yaml:",inline" json:"inline"`
@@ -631,37 +633,15 @@ type HTTP struct {
 
 /*
 
-```yaml
-dns:
-  - server: 8.8.8.8
-    port: 53
-    query: "flanksource.com"
-    querytype: "A"
-    minrecords: 1
-    exactreply: ["34.65.228.161"]
-    timeout: 10
-```
+[include:minimal/dns_pass.yaml]
+
 */
 type DNS struct {
 	DNSCheck `yaml:",inline" json:"inline"`
 }
 
 /*
-DockerPull check will try to pull a Docker image from specified registry, verify it's checksum and size.
-
-```yaml
-
-docker:
-  - image: docker.io/library/busybox:1.31.1
-    auth:
-		username:
-			value: some-user
-		password:
-			value: some-password
-    expectedDigest: 6915be4043561d64e0ab0f8f098dc2ac48e077fe23f488ac24b665166898115a
-    expectedSize: 1219782
-```
-
+[include:k8s/docker_pass.yaml]
 */
 type DockerPull struct {
 	DockerPullCheck `yaml:",inline" json:"inline"`
@@ -669,18 +649,8 @@ type DockerPull struct {
 
 /*
 DockerPush check will try to push a Docker image to specified registry.
-
-```yaml
-
-dockerPush:
-  - image: ttl.sh/flanksource-busybox:1.30
-    auth:
-      username:
-        value: $DOCKER_USERNAME
-      password:
-        value: $DOCKER_PASSWORD
-```
-
+/*
+[include:k8s/docker_push_pass.yaml]
 */
 type DockerPush struct {
 	DockerPushCheck `yaml:",inline" json:"inline"`
@@ -693,17 +663,7 @@ S3 check will:
 * PUT an object into the bucket for Write permissions
 * download previous uploaded object to check for Get permissions
 
-```yaml
-
-s3:
-  - buckets:
-      - name: "test-bucket"
-        region: "us-east-1"
-        endpoint: "https://test-bucket.s3.us-east-1.amazonaws.com"
-    secretKey: "<access-key>"
-    accessKey: "<secret-key>"
-    objectPath: "path/to/object"
-```
+[include:aws/s3_bucket_pass.yaml]
 */
 type S3 struct {
 	S3Check `yaml:",inline" json:"inline"`
@@ -716,18 +676,8 @@ This check will
 - check that latest object is no older than provided MaxAge value in seconds
 - check that latest object size is not smaller than provided MinSize value in bytes.
 
-```yaml
-s3Bucket:
-  - bucket: foo
-    accessKey: "<access-key>"
-    secretKey: "<secret-key>"
-    region: "us-east-2"
-    endpoint: "https://s3.us-east-2.amazonaws.com"
-    objectPath: "(.*)archive.zip$"
-    readWrite: true
-    maxAge: 5000000
-    minSize: 50000
-```
+[include:datasources/s3_bucket_pass.yaml]
+
 */
 type S3Bucket struct {
 	S3BucketCheck `yaml:",inline" json:"inline"`
@@ -738,36 +688,7 @@ type TCP struct {
 }
 
 /*
-```yaml
-pod:
-  - name: golang
-    namespace: default
-    spec: |
-      apiVersion: v1
-      kind: Pod
-      metadata:
-        name: hello-world-golang
-        namespace: default
-        labels:
-          app: hello-world-golang
-      spec:
-        containers:
-          - name: hello
-            image: quay.io/toni0/hello-webserver-golang:latest
-    port: 8080
-    path: /foo/bar
-    ingressName: hello-world-golang
-    ingressHost: "hello-world-golang.127.0.0.1.nip.io"
-    scheduleTimeout: 2000
-    readyTimeout: 5000
-    httpTimeout: 2000
-    deleteTimeout: 12000
-    ingressTimeout: 5000
-    deadline: 29000
-    httpRetryInterval: 200
-    expectedContent: bar
-    expectedHttpStatuses: [200, 201, 202]
-```
+[include:k8s/pod_pass.yaml]
 */
 type Pod struct {
 	PodCheck `yaml:",inline" json:"inline"`
@@ -780,26 +701,8 @@ The LDAP check will:
 * bind using provided user/password to the ldap host. Supports ldap/ldaps protocols.
 * search an object type in the provided bind DN.s
 
-```yaml
+[include:datasources/ldap_pass.yaml]
 
-ldap:
-  - host: ldap://127.0.0.1:10389
-    auth:
-      username:
-        value: uid=admin,ou=system
-      password:
-        value: secret
-    bindDN: ou=users,dc=example,dc=com
-    userSearch: "(&(objectClass=organizationalPerson))"
-  - host: ldap://127.0.0.1:10389
-    auth:
-      username:
-        value: uid=admin,ou=system
-      password:
-        value: secret
-    bindDN: ou=groups,dc=example,dc=com
-    userSearch: "(&(objectClass=groupOfNames))"
-```
 */
 type LDAP struct {
 	LDAPCheck `yaml:",inline" json:"inline"`
@@ -811,15 +714,8 @@ The Namespace check will:
 
 * create a new namespace using the labels/annotations provided
 
-```yaml
+[include:k8s/namespace_pass.yaml]
 
-namespace:
-  - namePrefix: "test-name-prefix-"
-		labels:
-			team: test
-		annotations:
-			"foo.baz.com/foo": "bar"
-```
 */
 type Namespace struct {
 	NamespaceCheck `yaml:",inline" json:"inline"`
@@ -828,16 +724,8 @@ type Namespace struct {
 /*
 This test will check ICMP packet loss and duration.
 
-```yaml
+[include:quarantine/icmp_pass.yaml]
 
-icmp:
-  - endpoints:
-      - https://google.com
-      - https://yahoo.com
-    thresholdMillis: 400
-    packetLossThreshold: 0.5
-    packetCount: 2
-```
 */
 type ICMP struct {
 	ICMPCheck `yaml:",inline" json:"inline"`
@@ -846,13 +734,7 @@ type ICMP struct {
 /*
 This check will try to connect to a specified Postgresql database, run a query against it and verify the results.
 
-```yaml
-
-postgres:
-  - connection: "user=postgres password=mysecretpassword host=192.168.0.103 port=15432 dbname=postgres sslmode=disable"
-    query:  "SELECT 1"
-		results: 1
-```
+[include:datasources/postgres_pass.yaml]
 */
 type Postgres struct {
 	PostgresCheck `yaml:",inline" json:"inline"`
@@ -861,18 +743,18 @@ type Postgres struct {
 /*
 This check will try to connect to a specified MsSQL database, run a query against it and verify the results.
 
-```yaml
+[include:datasources/mssql_pass.yaml]
 
-mssql:
-  - connection: 'server=localhost;user id=sa;password=Some_S3cure_p@sswd;port=1433;database=test'
-    query: "SELECT 1"
-	results: 1
-```
 */
 type MsSQL struct {
 	MssqlCheck `yaml:",inline" json:"inline"`
 }
 
+/*
+
+[include:datasources/helm_pass.yaml]
+
+*/
 type Helm struct {
 	HelmCheck `yaml:",inline" json:"inline"`
 }
@@ -887,13 +769,8 @@ type SrvReply struct {
 /*
 This check will try to connect to a specified Redis instance, run a ping against it and verify the pong response.
 
-```yaml
+[include:datasources/redis_pass.yaml]
 
-redis:
-  - addr: "redis-service.default:6379"
-	db: 0
-	description: "The redis test"
-```
 */
 
 type Redis struct {
@@ -902,20 +779,10 @@ type Redis struct {
 
 /*
 
-This check will connect to a restic repository and perform Integrity and backupFreshness Tests
-```yaml
-restic:
-	- repository: s3:http://minio.infra/restic-repo
-      password:
-        value: S0M3p@sswd
-      maxAge: 5h30m
-      checkIntegrity: true
-      accessKey:
-        value: some-access-key
-      secretKey:
-        value: some-secret-key
-      description: The restic test
-```
+This check will connect to a restic repository and perform Integrity and backup Freshness Tests
+
+[include:datasources/restic_pass.yaml]
+
 */
 
 type Restic struct {
@@ -924,22 +791,7 @@ type Restic struct {
 
 /*
 Jmeter check will run jmeter cli against the supplied host
-```yaml
-jmeter:
-    - jmx:
-        name: jmx-test-plan
-        valueFrom:
-          configMapKeyRef:
-             key: jmeter-test.xml
-             name: jmeter
-      host: "some-host"
-      port: 8080
-      properties:
-        - remote_hosts=127.0.0.1
-      systemProperties:
-        - user.dir=/home/mstover/jmeter_stuff
-      description: The Jmeter test
-```
+[include:k8s/jmeter_pass.yaml]
 */
 type Jmeter struct {
 	JmeterCheck `yaml:",inline" json:",inline"`
@@ -947,16 +799,8 @@ type Jmeter struct {
 
 /*
 Junit check will wait for the given pod to be completed than parses all the xml files present in the defined testResults directory
-```yaml
-junit:
-  - testResults: "/tmp/junit-results/"
-	description: "junit demo test"
-    spec:
-      containers:
-        - name: jes
-          image: docker.io/tarun18/junit-test-pass
-          command: ["/start.sh"]
-```
+
+[include:k8s/junit_pass.yaml]
 */
 type Junit struct {
 	JunitCheck `yaml:",inline" json:",inline"`
@@ -966,39 +810,9 @@ type Junit struct {
 Smb check will connect to the given samba server with given credentials
 find the age of the latest updated file and compare it with minAge
 count the number of file present and compare with minCount if defined
-```yaml
-smb:
-   - server: 192.168.1.9
-	 auth:
-       username:
-          value: samba
-       password:
-           value: password
-     sharename: "Some Public Folder"
-     minAge: 10h
-	 maxAge: 20h
-	 searchPath: a/b/c
-     description: "Success SMB server"
-```
 
-User can define server in `\\server\e$\a\b\c` format where `server` is the host
-`e$` is the sharename and `a/b/c` represent the sub-dir inside mount location where the test will run to verify
-```yaml
-smb:
-   - server: '\\192.168.1.5\Some Public Folder\somedir'
-     auth:
-		 username:
-		   value: samba
-		 password:
-		   valueFrom:
-			 secretKeyRef:
-			   key: smb-password
-			   name: smb
-     sharename: "Tarun Khandelwal’s Public Folder"
-     minAge: 10h
-     maxAge: 100h
-     description: "Success SMB server"
-```
+[include:quarantine/smb_pass.yaml]
+
 */
 type Smb struct {
 	SmbCheck `yaml:",inline" json:",inline"`
@@ -1006,27 +820,39 @@ type Smb struct {
 
 /*
 This checks the cloudwatch for all the Active alarm and response with the reason
-
-```yaml
-cloudwatch:
-    - accessKey:
-        valueFrom:
-			secretKeyRef:
-			key: aws
-			name: access-key
-      secretKey:
-        valueFrom:
-			secretKeyRef:
-			key: aws
-			name: secrey-key
-      region: "us-east-1"
-      #skipTLSVerify: true
-```
+[include:aws/cloudwatch_pass.yaml]
 */
 type CloudWatch struct {
 	CloudWatchCheck `yaml:",inline" json:",inline"`
 }
 
+/*
+[include:k8s/containerd_pull_pass.yaml]
+*/
+type ContainerdPull struct {
+	ContainerdPullCheck `yaml:",inline" json:",inline"`
+}
+
+/*
+[include:k8s/containerd_push_pass.yaml]
+*/
+type ContainerdPush struct {
+	ContainerdPushCheck `yaml:",inline" json:",inline"`
+}
+
+/*
+[include:gcs/bucket_pass.yaml]
+*/
+type GCSBucket struct {
+	GCSBucketCheck `yaml:",inline" json:",inline"`
+}
+
+/*
+[include:aws/ec2_pass.yaml]
+*/
+type EC2 struct {
+	EC2Check `yaml:",inline" json:",inline"`
+}
 type EC2Check struct {
 	Description   `yaml:",inline" json:",inline"`
 	AWSConnection `yaml:",inline" json:",inline"`

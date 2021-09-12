@@ -57,11 +57,10 @@ type CanarySpec struct {
 	Prometheus     []PrometheusCheck     `yaml:"prometheus,omitempty" json:"prometheus,omitempty"`
 	MongoDB        []MongoDBCheck        `yaml:"mongodb,omitempty" json:"mongodb,omitempty"`
 	CloudWatch     []CloudWatchCheck     `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
-	// interval (in seconds) to run checks on
-	// Deprecated in favor of Schedule
+	// interval (in seconds) to run checks on Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
 	// Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
-	// Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.
+	//  Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.
 	Schedule string `yaml:"schedule,omitempty" json:"schedule,omitempty"`
 	Icon     string `yaml:"icon,omitempty" json:"icon,omitempty"`
 	Severity string `yaml:"severity,omitempty" json:"severity,omitempty"`

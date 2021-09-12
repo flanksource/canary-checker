@@ -39,11 +39,11 @@ func (s Size) Value() (*int64, error) {
 }
 
 type FolderFilter struct {
-	MinAge  Duration `json:"minAge,omitempty"`
-	MaxAge  Duration `json:"maxAge,omitempty"`
-	MinSize Size     `json:"minSize,omitempty"`
-	MaxSize Size     `json:"maxSize,omitempty"`
-	Regex   string   `json:"regex,omitempty"`
+	MinAge  Duration `yaml:"minAge,omitempty" json:"minAge,omitempty"`
+	MaxAge  Duration `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
+	MinSize Size     `yaml:"minSize,omitempty" json:"minSize,omitempty"`
+	MaxSize Size     `yaml:"maxSize,omitempty" json:"maxSize,omitempty"`
+	Regex   string   `yaml:"regex,omitempty" json:"regex,omitempty"`
 }
 
 // +k8s:deepcopy-gen=false

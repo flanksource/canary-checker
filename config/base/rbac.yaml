@@ -9,7 +9,6 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: canary-checker-sa
-    namespace: platform-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole

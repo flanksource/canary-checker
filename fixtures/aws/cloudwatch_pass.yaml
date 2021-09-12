@@ -1,0 +1,13 @@
+cloudwatch:
+  - accessKey:
+      valueFrom:
+    secretKeyRef:
+    key: aws
+    name: access-key
+    secretKey:
+      valueFrom:
+    secretKeyRef:
+    key: aws
+    name: secrey-key
+    region: "us-east-1"
+    #skipTLSVerify: true
