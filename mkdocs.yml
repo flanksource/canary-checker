@@ -24,11 +24,9 @@ markdown_extensions:
   - codehilite:
       linenums: true
 nav:
-  - Installation: ./installation.md
-  - Modes:
-      - CLI: ./run.md
-      - Standalone Server: ./server.md
-      - Kubernetes Operator: ./operator.md
+  - CLI: ./run.md
+  - Standalone Server: ./server.md
+  - Kubernetes Operator: ./operator.md
   - Canary Types:
       - Cloudwatch: ./API#cloudwatch
       - Containerd Pull: ./API#containerdpull

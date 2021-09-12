@@ -116,9 +116,9 @@ windows: ui
 	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: release
-release: ui kustomize linux darwin-amd64 darwin-arm64 windows compress
-	cd config/base && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/ > ./.bin/release.yaml
+release: ui bin linux darwin-amd64 darwin-arm64 windows compress
+	cd config/base && .bin/kustomize edit set image controller=${IMG}
+	.bin/kustomize build config/ > ./.bin/release.yaml
 
 .PHONY: lint
 lint:
@@ -134,7 +134,7 @@ build-api-docs:
 
 .PHONY: build-docs
 build-docs:
-	which mkdocs 2>&1 > /dev/null || pip install mkdocs mkdocs-material
+	pip3 install $(MKDOCS_INSIDERS)
 	mkdocs build -d build/docs
 
 .PHONY: deploy-docs
