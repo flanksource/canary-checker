@@ -90,7 +90,7 @@ func smbConnect(server string, share string, auth *v1.Authentication) (Filesyste
 
 func (c *SmbChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	smbCheck := extConfig.(v1.SmbCheck)
-	result := pkg.Success(smbCheck)
+	result := pkg.Success(smbCheck, ctx.Canary)
 	namespace := ctx.Canary.Namespace
 
 	server, sharename, path, err := getServerDetails(smbCheck.Server, smbCheck.GetPort())

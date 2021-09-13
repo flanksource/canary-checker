@@ -34,7 +34,7 @@ type GCS struct {
 
 func (c *GCSBucketChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.GCSBucketCheck)
-	result := pkg.Success(check)
+	result := pkg.Success(check, ctx.Canary)
 	cfg, err := gcp.NewSession(ctx, check.GCPConnection)
 	if err != nil {
 		return result.ErrorMessage(err)

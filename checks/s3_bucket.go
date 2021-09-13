@@ -145,7 +145,7 @@ func (conn *S3) CheckFolder(ctx *context.Context, filter v1.FolderFilter) (*Fold
 
 func (c *S3BucketChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	bucket := extConfig.(v1.S3BucketCheck)
-	result := pkg.Success(bucket)
+	result := pkg.Success(bucket, ctx.Canary)
 
 	cfg, err := awsUtil.NewSession(ctx, bucket.AWSConnection)
 	if err != nil {

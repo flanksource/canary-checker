@@ -44,7 +44,7 @@ func (c *HelmChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	config := extConfig.(v1.HelmCheck)
 	start := time.Now()
-	result := pkg.Success(config)
+	result := pkg.Success(config, ctx.Canary)
 	var uploadOK, downloadOK = true, true
 	logger.Tracef("Uploading test chart")
 	namespace := ctx.Canary.Namespace

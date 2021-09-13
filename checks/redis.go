@@ -33,7 +33,7 @@ func (c *RedisChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 
 func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	redisCheck := extConfig.(v1.RedisCheck)
-	result := pkg.Success(redisCheck)
+	result := pkg.Success(redisCheck, ctx.Canary)
 	namespace := ctx.Canary.Namespace
 	var err error
 	auth, err := GetAuthValues(redisCheck.Auth, ctx.Kommons, namespace)

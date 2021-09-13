@@ -42,7 +42,7 @@ var resolvers = map[string]func(ctx context.Context, r *net.Resolver, check v1.D
 
 func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DNSCheck)
-	result := pkg.Success(check)
+	result := pkg.Success(check, ctx.Canary)
 
 	timeout := check.Timeout
 	if timeout == 0 {

@@ -57,7 +57,7 @@ func querySQL(driver string, connection string, query string) (*SQLDetails, erro
 //               driver and connection string
 // Returns check result and metrics
 func CheckSQL(ctx *context.Context, check v1.SQLCheck) *pkg.CheckResult { // nolint: golint
-	result := pkg.Success(check)
+	result := pkg.Success(check, ctx.Canary)
 	connection, err := GetConnection(ctx, &check.Connection, ctx.Namespace)
 	if err != nil {
 		return result.ErrorMessage(err)

@@ -85,7 +85,7 @@ func getDigestFromOutput(out io.ReadCloser) string {
 func (c *DockerPullChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.DockerPullCheck)
 	namespace := ctx.Canary.Namespace
-	var result = pkg.Success(check)
+	var result = pkg.Success(check, ctx.Canary)
 	var authStr string
 	auth, err := GetAuthValues(check.Auth, ctx.Kommons, namespace)
 	if err != nil {
