@@ -8,9 +8,12 @@ import (
 )
 
 type CSVResult struct {
+	Name        string `csv:"name"`
+	Namespace   string `csv:"namespace"`
+	Endpoint    string `csv:"endpoint"`
 	CheckType   string `csv:"checkType"`
 	Pass        bool   `csv:"pass"`
-	Time        string `csv:"time"`
+	Duration    string `csv:"duration"`
 	Description string `csv:"description,omitempty"`
 	Message     string `csv:"message,omitempty"`
 	Error       string `csv:"error,omitempty"`
@@ -21,10 +24,13 @@ func GetCSVReport(checkResults []*pkg.CheckResult) (string, error) {
 	var results []CSVResult
 	for _, checkResult := range checkResults {
 		result := CSVResult{
+			Name:        checkResult.Canary.Name,
+			Namespace:   checkResult.Canary.Namespace,
+			Endpoint:    checkResult.Check.GetEndpoint(),
 			CheckType:   checkResult.Check.GetType(),
 			Pass:        checkResult.Pass,
 			Invalid:     checkResult.Invalid,
-			Time:        strconv.Itoa(int(checkResult.Duration)),
+			Duration:    strconv.Itoa(int(checkResult.Duration)),
 			Description: checkResult.Check.GetDescription(),
 			Message:     checkResult.Message,
 			Error:       checkResult.Error,

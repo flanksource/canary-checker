@@ -29,7 +29,7 @@ func (c *PrometheusChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 
 func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	check := extConfig.(v1.PrometheusCheck)
-	result := pkg.Success(check)
+	result := pkg.Success(check, ctx.Canary)
 
 	promClient, err := prometheus.NewPrometheusAPI(check.Host)
 	if err != nil {

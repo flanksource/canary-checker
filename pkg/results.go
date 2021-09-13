@@ -9,12 +9,13 @@ import (
 	"github.com/flanksource/commons/logger"
 )
 
-func Fail(check external.Check) *CheckResult {
+func Fail(check external.Check, canary v1.Canary) *CheckResult {
 	return &CheckResult{
-		Check: check,
-		Data:  make(map[string]interface{}),
-		Start: time.Now(),
-		Pass:  false,
+		Check:  check,
+		Data:   make(map[string]interface{}),
+		Start:  time.Now(),
+		Pass:   false,
+		Canary: canary,
 	}
 }
 
@@ -33,7 +34,7 @@ func SetupError(canary v1.Canary, err error) []*CheckResult {
 	return results
 }
 
-func Success(check external.Check) *CheckResult {
+func Success(check external.Check, canary v1.Canary) *CheckResult {
 	switch v := check.(type) {
 	case external.Endpointer:
 		logger.Tracef("running %s", v.GetEndpoint())
@@ -46,10 +47,11 @@ func Success(check external.Check) *CheckResult {
 	}
 
 	return &CheckResult{
-		Start: time.Now(),
-		Pass:  true,
-		Check: check,
-		Data:  make(map[string]interface{}),
+		Start:  time.Now(),
+		Pass:   true,
+		Check:  check,
+		Data:   make(map[string]interface{}),
+		Canary: canary,
 	}
 }
 

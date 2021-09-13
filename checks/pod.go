@@ -151,7 +151,7 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 		podCheck.Namespace = ctx.Namespace
 	}
 
-	result := pkg.Success(podCheck)
+	result := pkg.Success(podCheck, ctx.Canary)
 	startTimer := NewTimer()
 	pods := c.k8s.CoreV1().Pods(podCheck.Namespace)
 

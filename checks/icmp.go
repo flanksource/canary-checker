@@ -52,7 +52,7 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	check := extConfig.(v1.ICMPCheck)
 	endpoint := check.Endpoint
 
-	result := pkg.Success(check)
+	result := pkg.Success(check, ctx.Canary)
 
 	ips, err := dns.Lookup("A", endpoint)
 	if err != nil {

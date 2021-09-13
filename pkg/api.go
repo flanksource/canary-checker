@@ -218,7 +218,8 @@ type CheckResult struct {
 	Error       string
 	Metrics     []Metric
 	// Check is the configuration
-	Check external.Check
+	Check  external.Check
+	Canary v1.Canary
 }
 
 func (result CheckResult) GetDescription() string {
