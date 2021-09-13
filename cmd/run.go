@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -85,13 +84,8 @@ var Run = &cobra.Command{
 
 		if junit {
 			report := output.GetJunitReport(results)
-			if outputFile != "" {
-				err := ioutil.WriteFile(outputFile, []byte(report), 0755)
-				if err != nil {
-					logger.Fatalf("error writing output file: %v", err)
-				}
-			} else {
-				fmt.Println(report)
+			if err := output.HandleOutput(report, outputFile); err != nil {
+				logger.Fatalf("error writing output file: %v", err)
 			}
 		}
 		if csv {
@@ -99,13 +93,8 @@ var Run = &cobra.Command{
 			if err != nil {
 				logger.Fatalf("error generating CSV file: %v", err)
 			}
-			if outputFile != "" {
-				err := ioutil.WriteFile(outputFile, []byte(report), 0755)
-				if err != nil {
-					logger.Fatalf("error writing output file: %v", err)
-				}
-			} else {
-				fmt.Println(report)
+			if err := output.HandleOutput(report, outputFile); err != nil {
+				logger.Fatalf("error writing output file: %v", err)
 			}
 		}
 
