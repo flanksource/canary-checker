@@ -7,6 +7,7 @@ require (
 	cloud.google.com/go/storage v1.16.0
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/allegro/bigcache v1.2.1
+	github.com/antonmedv/expr v1.9.0
 	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/aws/aws-sdk-go v1.29.25
 	github.com/aws/aws-sdk-go-v2 v1.9.0
