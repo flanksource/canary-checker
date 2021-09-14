@@ -97,7 +97,7 @@ spec:
                         type: string
                       display:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -164,7 +164,7 @@ spec:
                         type: boolean
                       test:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -707,7 +707,7 @@ spec:
                         type: string
                       display:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -755,7 +755,7 @@ spec:
                         type: string
                       test:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -938,7 +938,7 @@ spec:
                         type: string
                       display:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -1025,7 +1025,7 @@ spec:
                         type: object
                       test:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -1144,7 +1144,7 @@ spec:
                         type: string
                       display:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -4893,7 +4893,7 @@ spec:
                         type: object
                       test:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -5174,7 +5174,7 @@ spec:
                         type: string
                       display:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -5194,7 +5194,7 @@ spec:
                         type: integer
                       test:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -5412,7 +5412,7 @@ spec:
                         type: string
                       display:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -5432,7 +5432,7 @@ spec:
                         type: integer
                       test:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -5451,7 +5451,7 @@ spec:
                         type: string
                       display:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -5472,7 +5472,7 @@ spec:
                         type: string
                       test:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -5778,7 +5778,7 @@ spec:
                         type: string
                       display:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -5866,7 +5866,7 @@ spec:
                         type: boolean
                       test:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -5966,7 +5966,7 @@ spec:
                         type: string
                       display:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string
@@ -6027,7 +6027,7 @@ spec:
                         type: string
                       test:
                         properties:
-                          expression:
+                          expr:
                             type: string
                           jsonPath:
                             type: string

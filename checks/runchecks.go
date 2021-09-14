@@ -33,7 +33,7 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 				switch v := r.Check.(type) {
 				case v1.TestFunction:
 					tpl := v.GetTestFunction()
-					if tpl.Template == "" && tpl.Expression == "" {
+					if tpl.IsEmpty() {
 						break
 					}
 					message, err := template(ctx.New(r.Data), tpl)

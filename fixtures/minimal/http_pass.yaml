@@ -10,6 +10,8 @@ spec:
       responseCodes: [201, 200, 301]
       responseContent: ""
       maxSSLExpiry: 7
+      test:
+        expr: 'sprint(code) == "200"'
     - endpoint: http://status.savanttools.com/?code=404
       thresholdMillis: 3000
       responseCodes: [404]
