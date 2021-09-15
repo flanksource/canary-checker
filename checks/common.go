@@ -6,18 +6,18 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	gotemplate "text/template"
 	"time"
+
+	gotemplate "text/template"
 
 	"github.com/antonmedv/expr"
 
-	"github.com/dustin/go-humanize"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/commons/text"
 	"github.com/flanksource/kommons"
 	"github.com/flanksource/kommons/ktemplate"
-	"github.com/hairyhenderson/gomplate/v3"
 	"github.com/robfig/cron/v3"
 )
 
@@ -203,12 +203,7 @@ func getNextRuntime(canary v1.Canary, lastRuntime time.Time) (*time.Time, error)
 func template(ctx *context.Context, template v1.Template) (string, error) {
 	if template.Template != "" {
 		tpl := gotemplate.New("")
-
-		funcs := gomplate.Funcs(nil)
-		funcs["humanizeBytes"] = mb
-		funcs["humanizeTime"] = humanize.Time
-		funcs["ftoa"] = humanize.Ftoa
-		tpl, err := tpl.Funcs(funcs).Parse(template.Template)
+		tpl, err := tpl.Funcs(text.GetTemplateFuncs()).Parse(template.Template)
 		if err != nil {
 			return "", err
 		}
@@ -229,6 +224,9 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 	if template.Expression != "" {
 		ctx.Environment["sprintf"] = fmt.Sprintf
 		ctx.Environment["sprint"] = fmt.Sprint
+		for name, funcMap := range text.GetTemplateFuncs() {
+			ctx.Environment[name] = funcMap
+		}
 		program, err := expr.Compile(template.Expression, expr.Env(ctx.Environment))
 		if err != nil {
 			return "", err
