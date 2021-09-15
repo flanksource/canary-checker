@@ -40,7 +40,11 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 					if err != nil {
 						r.ErrorMessage(err)
 					} else if message != "true" {
-						r.Failf("expected test expression to be 'true' but got '%v'", message)
+						if message != "false" {
+							r.Failf("expecting either 'true' or 'false' but got '%v'", message)
+						} else {
+							r.Failf("")
+						}
 					} else {
 						ctx.Logger.Tracef("%s return %s", tpl, message)
 					}
