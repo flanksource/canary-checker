@@ -1,9 +1,14 @@
-restic:
-  - repository: s3:http://minio.minio:9000/restic-canary-checker
-    password:
-      value: S0m3p@sswd
-    maxAge: 10s
-    accessKey:
-      value: minio
-    secretLKey:
-      value: minio123
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: restic-fail
+spec:
+  restic:
+    - repository: s3:http://minio.minio:9000/restic-canary-checker
+      password:
+        value: S0m3p@sswd
+      maxAge: 10s
+      accessKey:
+        value: minio
+      secretLKey:
+        value: minio123
