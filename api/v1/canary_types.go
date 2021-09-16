@@ -17,9 +17,13 @@ limitations under the License.
 package v1
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/commons/logger"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -164,7 +168,12 @@ func (spec CanarySpec) SetSQLDrivers() {
 }
 
 func (c Canary) GetKey(check external.Check) string {
-	return fmt.Sprintf("%s/%s:%s", c.ID(), check.GetType(), c.GetDescription(check))
+	data, err := json.Marshal(check)
+	if err != nil {
+		logger.Debugf("error marshalling the check")
+	}
+	var hash = md5.Sum(data)
+	return fmt.Sprintf("%s/%s:%s/%s:%s", c.ID(), check.GetType(), check.GetName(), c.GetDescription(check), hex.EncodeToString(hash[:]))
 }
 
 func (c Canary) GetDescription(check external.Check) string {

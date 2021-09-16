@@ -9,7 +9,7 @@ import (
 )
 
 type Check struct {
-	Type, Endpoint, Description, Icon string
+	Name, Type, Endpoint, Description, Icon string
 }
 
 func (c Check) GetType() string {
@@ -26,6 +26,10 @@ func (c Check) GetDescription() string {
 
 func (c Check) GetIcon() string {
 	return c.Icon
+}
+
+func (c Check) GetName() string {
+	return c.Name
 }
 
 type HTTPCheck struct {
