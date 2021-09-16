@@ -254,6 +254,10 @@ func (d Description) GetIcon() string {
 	return d.Icon
 }
 
+func (d Description) GetName() string {
+	return d.Name
+}
+
 type Connection struct {
 	Connection     string         `yaml:"connection" json:"connection" template:"true"`
 	Authentication Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
