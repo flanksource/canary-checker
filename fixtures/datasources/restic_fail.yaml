@@ -2,6 +2,8 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: restic-fail
+  labels:
+    "Expected Fail": "true"
 spec:
   restic:
     - repository: s3:http://minio.minio:9000/restic-canary-checker

@@ -4,7 +4,6 @@ metadata:
   name: redis-fail
   labels:
     "Expected Fail": "true"
-
 spec:
   interval: 30
   redis:
