@@ -199,12 +199,13 @@ func (t Test) GetTestTemplate() Template {
 }
 
 type Template struct {
-	Template string `yaml:"template,omitempty" json:"template,omitempty"`
-	JSONPath string `yaml:"jsonPath,omitempty" json:"jsonPath,omitempty"`
+	Template   string `yaml:"template,omitempty" json:"template,omitempty"`
+	JSONPath   string `yaml:"jsonPath,omitempty" json:"jsonPath,omitempty"`
+	Expression string `yaml:"expr,omitempty" json:"expr,omitempty"`
 }
 
 func (t Template) IsEmpty() bool {
-	return t.Template == "" && t.JSONPath == ""
+	return t.Template == "" && t.JSONPath == "" && t.Expression == ""
 }
 
 // +k8s:deepcopy-gen=false

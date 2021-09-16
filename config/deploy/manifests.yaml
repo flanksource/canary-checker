@@ -104,6 +104,8 @@ spec:
                         type: string
                       display:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -169,6 +171,8 @@ spec:
                         type: boolean
                       test:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -710,6 +714,8 @@ spec:
                         type: string
                       display:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -756,6 +762,8 @@ spec:
                         type: string
                       test:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -937,6 +945,8 @@ spec:
                         type: string
                       display:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -1022,6 +1032,8 @@ spec:
                         type: object
                       test:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -1139,6 +1151,8 @@ spec:
                         type: string
                       display:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -4886,6 +4900,8 @@ spec:
                         type: object
                       test:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -5165,6 +5181,8 @@ spec:
                         type: string
                       display:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -5183,6 +5201,8 @@ spec:
                         type: integer
                       test:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -5399,6 +5419,8 @@ spec:
                         type: string
                       display:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -5417,6 +5439,8 @@ spec:
                         type: integer
                       test:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -5434,6 +5458,8 @@ spec:
                         type: string
                       display:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -5453,6 +5479,8 @@ spec:
                         type: string
                       test:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -5757,6 +5785,8 @@ spec:
                         type: string
                       display:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -5843,6 +5873,8 @@ spec:
                         type: boolean
                       test:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -5941,6 +5973,8 @@ spec:
                         type: string
                       display:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -6000,6 +6034,8 @@ spec:
                         type: string
                       test:
                         properties:
+                          expr:
+                            type: string
                           jsonPath:
                             type: string
                           template:

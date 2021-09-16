@@ -1,13 +1,21 @@
 package checks
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
+
+	gotemplate "text/template"
+
+	"github.com/antonmedv/expr"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/commons/text"
 	"github.com/flanksource/kommons"
 	"github.com/flanksource/kommons/ktemplate"
 	"github.com/robfig/cron/v3"
@@ -190,4 +198,44 @@ func getNextRuntime(canary v1.Canary, lastRuntime time.Time) (*time.Time, error)
 	}
 	t := lastRuntime.Add(time.Duration(canary.Spec.Interval) * time.Second)
 	return &t, nil
+}
+
+func template(ctx *context.Context, template v1.Template) (string, error) {
+	if template.Template != "" {
+		tpl := gotemplate.New("")
+		tpl, err := tpl.Funcs(text.GetTemplateFuncs()).Parse(template.Template)
+		if err != nil {
+			return "", err
+		}
+
+		// marshal data from interface{} to map[string]interface{}
+		data, _ := json.Marshal(ctx.Environment)
+		unstructured := make(map[string]interface{})
+		if err := json.Unmarshal(data, &unstructured); err != nil {
+			return "", err
+		}
+
+		var buf bytes.Buffer
+		if err := tpl.Execute(&buf, unstructured); err != nil {
+			return "", fmt.Errorf("error executing template %s: %v", strings.Split(template.Template, "\n")[0], err)
+		}
+		return strings.TrimSpace(buf.String()), nil
+	}
+	if template.Expression != "" {
+		ctx.Environment["sprintf"] = fmt.Sprintf
+		ctx.Environment["sprint"] = fmt.Sprint
+		for name, funcMap := range text.GetTemplateFuncs() {
+			ctx.Environment[name] = funcMap
+		}
+		program, err := expr.Compile(template.Expression, expr.Env(ctx.Environment))
+		if err != nil {
+			return "", err
+		}
+		output, err := expr.Run(program, ctx.Environment)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprint(output), nil
+	}
+	return "", nil
 }

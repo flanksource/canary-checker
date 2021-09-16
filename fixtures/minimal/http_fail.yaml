@@ -7,3 +7,7 @@ spec:
   http:
     - endpoint: http://status.savanttools.com/?code=500
       responseCodes: [200]
+    - endpoint: http://status.savanttools.com/?code=200
+      responseCodes: [200]
+      test:
+        expr: 'sprint(code) == "500"'

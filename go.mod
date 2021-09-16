@@ -7,6 +7,7 @@ require (
 	cloud.google.com/go/storage v1.16.0
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/allegro/bigcache v1.2.1
+	github.com/antonmedv/expr v1.9.0
 	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/aws/aws-sdk-go v1.29.25
 	github.com/aws/aws-sdk-go-v2 v1.9.0
@@ -25,7 +26,7 @@ require (
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eko/gocache v1.2.0
-	github.com/flanksource/commons v1.5.8
+	github.com/flanksource/commons v1.5.9
 	github.com/flanksource/kommons v0.25.0
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/go-logr/logr v0.3.0
