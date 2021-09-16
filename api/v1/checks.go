@@ -372,6 +372,16 @@ func (c SQLCheck) GetType() string {
 	return c.GetDriver()
 }
 
+func (c SQLCheck) GetEndpoint() string {
+	if c.Name != "" {
+		return c.Name
+	}
+	if c.Description.Description != "" {
+		return c.Description.Description
+	}
+	return c.Connection.GetEndpoint()
+}
+
 type PostgresCheck struct {
 	SQLCheck `yaml:",inline" json:",inline"`
 }
