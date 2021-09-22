@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/kommons"
@@ -638,6 +639,27 @@ func (c MongoDBCheck) GetType() string {
 	return "mongodb"
 }
 
+// Git executes a SQL style query against a github repo using https://github.com/askgitdev/askgit
+type Git struct {
+	GitHubCheck `yaml:",inline" json:",inline"`
+}
+
+type GitHubCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	// Query to be executed. Please see https://github.com/askgitdev/askgit for more details regarding syntax
+	Query       string          `yaml:"query" json:"query"`
+	GithubToken *kommons.EnvVar `yaml:"githubToken,omitempty" json:"githubToken,omitempty"`
+}
+
+func (c GitHubCheck) GetType() string {
+	return "github"
+}
+
+func (c GitHubCheck) GetEndpoint() string {
+	return strings.ReplaceAll(c.Query, " ", "-")
+}
+
 /*
 [include:minimal/http_pass.yaml]
 */
@@ -914,4 +936,5 @@ var AllChecks = []external.Check{
 	GCSBucketCheck{},
 	MongoDBCheck{},
 	CloudWatchCheck{},
+	GitHubCheck{},
 }
