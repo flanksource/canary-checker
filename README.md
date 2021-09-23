@@ -18,33 +18,33 @@
 - [Comparisons](#comparisons)
 - [Quick Start](#quick-start)
 - [Check Types](#check-types)
-  - [DNS - Query a DNS server](#dns---query-a-dns-server)
-  - [Containerd Pull - Pull an image using containerd](#containerd-pull---pull-an-image-using-containerd)
-  - [Docker Pull - Pull an image using docker](#docker-pull---pull-an-image-using-docker)
-  - [Docker Push - Create and push a docker image](#docker-push---create-and-push-a-docker-image)
-  - [HTTP - Query an HTTP endpoint or namespace](#http---query-an-http-endpoint-or-namespace)
+  - [DNS: Query a DNS server](#dns-query-a-dns-server)
+  - [Containerd Pull: Pull an image using containerd](#containerd-pull-pull-an-image-using-containerd)
+  - [Docker Pull: Pull an image using Docker](#docker-pull-pull-an-image-using-docker)
+  - [Docker Push: Create and push a Docker image](#docker-push-create-and-push-a-docker-image)
+  - [HTTP: Query an HTTP endpoint or namespace](#http-query-an-http-endpoint-or-namespace)
     - [displayTemplate](#displaytemplate)
-  - [Helm - Build and push a helm chart](#helm---build-and-push-a-helm-chart)
-  - [ICMP - Ping a destination and check for packet loss](#icmp---ping-a-destination-and-check-for-packet-loss)
-  - [LDAP - Query a ldap(s) server](#ldap---query-a-ldaps-server)
-  - [Namespace - Create a new kubernetes namespace and pod](#namespace---create-a-new-kubernetes-namespace-and-pod)
-  - [Pod - Create a new pod and verify reachability](#pod---create-a-new-pod-and-verify-reachability)
-  - [Postgres - Query a Postgresql DB using SQL](#postgres---query-a-postgresql-db-using-sql)
+  - [Helm: Build and push a Helm chart](#helm-build-and-push-a-helm-chart)
+  - [ICMP: Ping a destination and check for packet loss](#icmp-ping-a-destination-and-check-for-packet-loss)
+  - [LDAP: Query LDAP server](#ldap-query-ldap-servers)
+  - [Namespace: Create a new Kubernetes namespace and pod](#namespace-create-a-new-kubernetes-namespace-and-pod)
+  - [Pod: Create a new pod and verify reachability](#pod-create-a-new-pod-and-verify-reachability)
+  - [Postgres: Query a PostgreSQL DB using SQL](#postgres-query-a-postgresql-db-using-sql)
     - [displayTemplate](#displaytemplate-1)
-  - [Mssql - Query a Mssql DB using SQL](#mssql---query-a-mssql-db-using-sql)
+  - [MS SQL: Query a MS SQL DB using SQL](#ms-sql-query-a-ms-sql-db-using-sql)
     - [displayTemplate](#displaytemplate-2)
-  - [Redis - Execute ping against redis instance](#redis---execute-ping-against-redis-instance)
-  - [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
-  - [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
+  - [Redis: Execute ping against Redis instance](#redis-execute-ping-against-redis-instance)
+  - [S3: Verify reachability and correctness of an S3-compatible store](#s3-verify-reachability-and-correctness-of-an-s3-compatible-store)
+  - [S3 Bucket: Query the contents of an S3 bucket for freshness](#s3-bucket-query-the-contents-of-an-s3-bucket-for-freshness)
     - [displayTemplate](#displaytemplate-3)
-  - [Restic - Query the contents of a Restic repository for backup freshness and integrity](#restic---query-the-contents-of-a-restic-repository-for-backup-freshness-and-integrity)
-  - [Jmeter - Run the supplied JMX test plan against the specified host](#jmeter---run-the-supplied-jmx-test-plan-against-the-specified-host)
-  - [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
+  - [Restic: Query the contents of a Restic repository for backup freshness and integrity](#restic-query-the-contents-of-a-restic-repository-for-backup-freshness-and-integrity)
+  - [Jmeter: Run the supplied JMX test plan against the specified host](#jmeter-run-the-supplied-jmx-test-plan-against-the-specified-host)
+  - [SSL: Verify the expiry date of a SSL cert](#ssl-verify-the-expiry-date-of-a-ssl-cert)
   - [TCP](#tcp)
-  - [Junit](#junit)
+  - [JUnit](#junit)
     - [displayTemplate](#displaytemplate-4)
-  - [Smb - Verify Folder Freshness](#smb---verify-folder-freshness)
-    - [server](#server)
+  - [SMB: Verify folder freshness](#smb-verify-folder-freshness)
+    - [Server](#server)
     - [displayTemplate](#displaytemplate-5)
   - [Display Types](#display-types)
     - [displayTemplate](#displaytemplate-6)
@@ -53,29 +53,30 @@
 
 ## Introduction
 
-Canary Checker is a Kubernetes native multi-tenant synthetic monitoring system.  To learn more, please see the [official documentation](https://canary-checker.docs.flanksource.com).
+Canary checker is a Kubernetes native multi-tenant synthetic monitoring system. To learn more, please see the [official documentation](https://canary-checker.docs.flanksource.com).
 
 ## Features
 
 * Built-in UI/Dashboard with multi-cluster aggregation
-* CRD based configuration and status reporting
+* CRD-based configuration and status reporting
 * Prometheus Integration
-* Runnable as a CLI for once-off checks or as a standalone server outside kubernetes
+* Runs via CLI for once-off checks or as a standalone server outside Kubernetes
 * Many built-in check types
 
 ![dashboard](docs/images/ui01.png)
+
 ## Comparisons
 
 | App                                                     | Comparison                                                   |
 | ------------------------------------------------------- | ------------------------------------------------------------ |
-| Prometheus                                              | canary-checker is not a replacement for prometheus, rather a companion. While prometheus provides persistent time series storage, canary-checker only has a small in-memory cache of recent checks.  Canary-checker also exposes metrics via `/metrics` that are scraped by prometheus. |
-| Grafana                                                 | The built-in UI provides a mechanism to display check results across 1 or more instances without a dependency on grafana/prometheus running. The UI  will also display long-term graphs of check results by quering prometheus. |
+| Prometheus                                              | Canary checker is not a replacement for Prometheus, rather a companion. While Prometheus provides persistent time series storage, Canary checker only has a small in-memory cache of recent checks.  Canary checker also exposes metrics via `/metrics` that are scraped by Prometheus. |
+| Grafana                                                 | The built-in UI provides a mechanism to display check results across 1 or more instances without a dependency on Grafana/Prometheus running. The UI  will also display long-term graphs of check results by quering Prometheus. |
 | [Kuberhealthy](https://github.com/Comcast/kuberhealthy) | Very similar goals, but Kuberhealthy relies on external containers to implement checks and does not provide a UI or multi-cluster/instance aggregation. |
 | [Cloudprober](https://cloudprober.org/)                 | Very similar goals, but Cloudprober is designed for very high scale, not multi-tenancy. Only has ICMP,DNS,HTTP,UDP built-in checks. |
 
 ## Quick Start
 
-Before installing the Canary Checker, please ensure you have the [prerequisites installed](docs/prereqs.md) on your Kubernetes cluster.
+Before installing Canary checker, please ensure you have the [prerequisites installed](docs/prereqs.md) on your Kubernetes cluster.
 
 
 ```bash
@@ -117,7 +118,7 @@ spec:
 
 ## Check Types
 
-### DNS - Query a DNS server
+### DNS: Query a DNS server
 
 ```yaml
 dns:
@@ -142,7 +143,7 @@ dns:
 | timeout |  | int | Yes |
 | thresholdMillis |  | int | Yes |
 
-### Containerd Pull - Pull an image using containerd
+### Containerd Pull: Pull an image using containerd
 
 This check will try to pull a Docker image from specified registry using containers and then verify its checksum and size.
 
@@ -163,7 +164,7 @@ containerdPull:
 | expectedDigest |             | string | Yes      |
 | expectedSize   |             | int64  | Yes      |
 
-### Docker Pull - Pull an image using docker
+### Docker Pull: Pull an image using Docker
 
 This check will try to pull a Docker image from specified registry, verify it's checksum and size.
 
@@ -188,7 +189,7 @@ docker:
 | expectedSize |  | int64 | Yes |
 
 
-### Docker Push - Create and push a docker image
+### Docker Push: Create and push a Docker image
 
 ```yaml
 dockerPush:
@@ -206,7 +207,7 @@ dockerPush:
 | auth | username and password value, configMapKeyRef or SecretKeyRef for registry | Object | Yes |
 
 
-### HTTP - Query an HTTP endpoint or namespace
+### HTTP: Query an HTTP endpoint or namespace
 
 ```yaml
 http:
@@ -293,7 +294,7 @@ The fields for `displayTemplate` (see [Display Types]((#display-types))) are :
 - `.headers`: response headers
 - `.content`: content from the http request
 
-### Helm - Build and push a helm chart
+### Helm: Build and push a Helm chart
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -304,7 +305,7 @@ The fields for `displayTemplate` (see [Display Types]((#display-types))) are :
 | cafile |  | *string |  |
 
 
-### ICMP - Ping a destination and check for packet loss
+### ICMP: Ping a destination and check for packet loss
 
 This test will check ICMP packet loss and duration.
 
@@ -327,11 +328,11 @@ icmp:
 | packetCount |  | int | Yes |
 
 
-### LDAP - Query a ldap(s) server
+### LDAP: Query LDAP server/s
 
 The LDAP check will:
 
-* bind using provided user/password to the ldap host. Supports ldap/ldaps protocols.
+* bind using provided user/password to the LDAP host. Supports LDAP/ldaps protocols.
 * search an object type in the provided bind DN.s
 
 ```yaml
@@ -364,7 +365,7 @@ ldap:
 | skipTLSVerify |  | bool | Yes |
 
 
-### Namespace - Create a new kubernetes namespace and pod
+### Namespace: Create a new Kubernetes namespace and pod
 
 The namespace check will:
 
@@ -403,7 +404,7 @@ namespace:
 | priorityClass |  | string | Yes |
 
 
-### Pod - Create a new pod and verify reachability
+### Pod: Create a new pod and verify reachability
 
 ```yaml
 pod:
@@ -458,9 +459,9 @@ pod:
 | priorityClass |  | string | Yes |
 
 
-### Postgres - Query a Postgresql DB using SQL
+### Postgres: Query a PostgreSQL DB using SQL
 
-This check will try to connect to a specified Postgresql database, run a query against it and verify the results.
+This check will try to connect to a specified PostgreSQL database, run a query against it and verify the results.
 
 ```yaml
 postgres:
@@ -484,9 +485,9 @@ The fields for `displayTemplate` are:
 
 - `.results`: rows returned by the query
 
-### Mssql - Query a Mssql DB using SQL
+### MS SQL: Query a MS SQL DB using SQL
 
-This check will try to connect to a specified Mssql database, run a query against it and verify the results.
+This check will try to connect to a specified MS SQL database, run a query against it and verify the results.
 
 ```yaml
 mssql:
@@ -511,9 +512,9 @@ The fields for `displayTemplate` (see [Display Types]((#display-types))) are:
 
 - `.results`: rows returned by the query
 
-### Redis - Execute ping against redis instance
+### Redis: Execute ping against Redis instance
 
-This check will execute ping against the specified redis instance and check its availability
+This check will execute ping against the specified Redis instance and check its availability
 
 ```yaml
 
@@ -531,7 +532,7 @@ redis:
 | auth | username and password value, configMapKeyRef or SecretKeyRef for redis server | Object | No |
 
 
-### S3 - Verify reachability and correctness of an S3 compatible store
+### S3: Verify reachability and correctness of an S3-compatible store
 
 This check will:
 
@@ -561,7 +562,7 @@ s3:
 | skipTLSVerify | skip TLS verify when connecting to s3 | bool | Yes |
 
 
-### S3 Bucket - Query the contents of an S3 bucket for freshness
+### S3 Bucket: Query the contents of an S3 bucket for freshness
 
 This check will:
 
@@ -607,7 +608,7 @@ The fields for `displayTemplate` (see [Display Types]((#display-types))) are:
 - `.count`: number of objects
 - `.totalSize`: total size of objects
 
-### Restic - Query the contents of a Restic repository for backup freshness and integrity
+### Restic: Query the contents of a Restic repository for backup freshness and integrity
 
 This check will:
 
@@ -631,7 +632,7 @@ restic:
   
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| reposiory | the location of your restic repository | string | Yes |
+| repository | the location of your restic repository | string | Yes |
 | password | password value or valueFrom configMapKeyRef or SecretKeyRef to access your restic repository | string | Yes |
 | maxAge   | the max age for backup allowed..eg: 5h30m | string | Yes |
 | accessKey | access key value or valueFrom configMapKeyRef or SecretKeyRef to access your s3/minio bucket | string | No |
@@ -640,11 +641,11 @@ restic:
 | checkIntegrity | whether to check integrity for the specified repo | bool | No |
 | caCert | path to ca-root crt in case of self-signed certificates is used | string | No |
 
-### Jmeter - Run the supplied JMX test plan against the specified host
+### JMeter: Run the supplied JMX test plan against the specified host
 
-This check will execute the jmeter cli to execute the JMX test plan on the specified host.
+This check will execute the JMeter CLI to execute the JMX test plan on the specified host.
 
-> **Note:** JMeter is a memory hungry Java application and you will likely need to increase the default memory limit from 512Mi to 1-2Gi or higher depending on the complexity, count, and frequency of jmeter tests
+> **Note:** JMeter is a memory hungry Java application and you will likely need to increase the default memory limit from 512Mi to 1–2Gi or higher depending on the complexity, count, and frequency of JMeter tests.
 
 ```yaml
 jmeter:
@@ -673,7 +674,7 @@ jmeter:
 | description | the description of the canary | String | Yes |
 | responseDuration | the duration under which all the test should pass | String | No |
 
-### SSL - Verify the expiry date of a SSL cert
+### SSL: Verify the expiry date of a SSL cert
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
@@ -689,9 +690,9 @@ jmeter:
 | endpoint |  | string | Yes |
 | thresholdMillis |  | int64 | Yes |
 
-### Junit
+### JUnit
 
-The check occurs on the specified container's completion and parses any junit test reports in the container (at the `testResults` path):
+The check occurs on the specified container's completion and parses any JUnit test reports in the container (at the `testResults` path):
 
 ```yaml
 junit:
@@ -723,7 +724,7 @@ The fields for `displayTemplate` (see [Display Types]((#display-types))) are:
 - `.skipped`: number of tests skipped
 - `.error`: number of tests errored
 
-### Smb - Verify Folder Freshness
+### SMB: Verify folder freshness
 
 This check connects to a samba server to check folder freshness. This check will:
 
@@ -782,9 +783,9 @@ smb:
 | description | description about the test | string | No |
 | displayTemplate | template to display check output in text (default `File Age: [[.age]]; File count: [[.count]]`). | string | No |
 
-#### server
+#### Server
 
-The user can define server in two formats:
+The user can define the server in two formats:
 
 - host: `192.168.1.9`, `www.server.com`
 - path: `\\www.server.com\e$\a\b\c`
@@ -811,14 +812,14 @@ Most checks display a bar/historgram on the UI. Some checks display text data. S
 Where display is text, the `displayTemplate` field allows a user to configure the output format. The `displayTemplate` field accepts a template with delimiter `[[` `]]` and supports all the functions of [gomplate](https://docs.gomplate.ca/).
 
 Checks that currently have support for `displayTemplate` are:
-- [s3Bucket](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
-- sql
-  - [postgres](#postgres---query-a-postgresql-db-using-sql)
-  - [mssql](#mssql---query-a-mssql-db-using-sql)
-- [http](#http---query-an-http-endpoint-or-namespace)    
-- [junit](#junit)
-- [smb](#smb---verify-folder-freshness)
+- [S3Bucket](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
+- SQL
+  - [PostgresSQL](#postgres---query-a-postgresql-db-using-sql)
+  - [MS SQL](#ms-sql---query-a-ms-sql-db-using-sql)
+- [HTTP](#http---query-an-http-endpoint-or-namespace)
+- [JUnit](#junit)
+- [SMB](#smb---verify-folder-freshness)
 
 ### Guide for Developers
 
-This guide provides a step-by-step process for creating your local setup with the canary-checker: [dev Guide](docs/dev-guide.md).
+[This guide](docs/dev-guide.md) provides a step-by-step process for creating your local setup with the Canary checker.
