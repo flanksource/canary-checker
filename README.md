@@ -53,7 +53,7 @@
 
 ## Introduction
 
-Canary checker is a Kubernetes native multi-tenant synthetic monitoring system. To learn more, please see the [official documentation](https://canary-checker.docs.flanksource.com).
+Canary Checker is a Kubernetes native multi-tenant synthetic monitoring system. To learn more, please see the [official documentation](https://canary-checker.docs.flanksource.com).
 
 ## Features
 
@@ -69,14 +69,14 @@ Canary checker is a Kubernetes native multi-tenant synthetic monitoring system. 
 
 | App                                                     | Comparison                                                   |
 | ------------------------------------------------------- | ------------------------------------------------------------ |
-| Prometheus                                              | Canary checker is not a replacement for Prometheus, rather a companion. While Prometheus provides persistent time series storage, Canary checker only has a small in-memory cache of recent checks.  Canary checker also exposes metrics via `/metrics` that are scraped by Prometheus. |
+| Prometheus                                              | Canary Checker is not a replacement for Prometheus, rather a companion. While Prometheus provides persistent time series storage, Canary Checker only has a small in-memory cache of recent checks.  Canary Checker also exposes metrics via `/metrics` that are scraped by Prometheus. |
 | Grafana                                                 | The built-in UI provides a mechanism to display check results across 1 or more instances without a dependency on Grafana/Prometheus running. The UI  will also display long-term graphs of check results by querying Prometheus. |
 | [Kuberhealthy](https://github.com/Comcast/kuberhealthy) | Very similar goals, but Kuberhealthy relies on external containers to implement checks and does not provide a UI or multi-cluster/instance aggregation. |
 | [Cloudprober](https://cloudprober.org/)                 | Very similar goals, but Cloudprober is designed for very high scale, not multi-tenancy. Only has ICMP,DNS,HTTP,UDP built-in checks. |
 
 ## Quick Start
 
-Before installing Canary checker, please ensure you have the [prerequisites installed](docs/prereqs.md) on your Kubernetes cluster.
+Before installing Canary Checker, please ensure you have the [prerequisites installed](docs/prereqs.md) on your Kubernetes cluster.
 
 
 ```bash
@@ -822,4 +822,4 @@ Checks that currently have support for `displayTemplate` are:
 
 ### Guide for Developers
 
-[This guide](docs/dev-guide.md) provides a step-by-step process for creating your local setup with the Canary checker.
+[This guide](docs/dev-guide.md) provides a step-by-step process for creating your local setup with the Canary Checker.
