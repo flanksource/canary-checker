@@ -27,6 +27,7 @@ jobs:
           - minimal --skip-all
           - k8s
           - datasources
+          - git
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
@@ -52,9 +53,10 @@ jobs:
       - name: Test
         env:
           KUBERNETES_VERSION: v1.20.7
+          GH_TOKEN: ${{ secrets.CHECKRUNS_TOKEN }}
         run: ./test/e2e.sh fixtures/${{matrix.suite}}
-      - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
         if: always()
         with:
           files: test/test-results.xml
