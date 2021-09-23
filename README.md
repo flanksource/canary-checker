@@ -160,7 +160,7 @@ containerdPull:
 | -------------- | ----------- | ------ | -------- |
 | description    |             | string | Yes      |
 | image          |             | string | Yes      |
-| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | Object | No |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | object | No |
 | expectedDigest |             | string | Yes      |
 | expectedSize   |             | int64  | Yes      |
 
@@ -184,7 +184,7 @@ docker:
 | ----- | ----------- | ------ | -------- |
 | description |  | string | Yes |
 | image |  | string | Yes |
-| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | Object | No |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | object | No |
 | expectedDigest |  | string | Yes |
 | expectedSize |  | int64 | Yes |
 
@@ -204,7 +204,7 @@ dockerPush:
 | ----- | ----------- | ------ | -------- |
 | description |  | string | Yes |
 | image |  | string | Yes |
-| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | Object | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | object | Yes |
 
 
 ### HTTP: Query an HTTP endpoint or namespace
@@ -301,7 +301,7 @@ The fields for `displayTemplate` (see [Display Types]((#display-types))) are :
 | description |  | string | Yes |
 | chartmuseum |  | string | Yes |
 | project |  | string |  |
-| auth | username and password value, configMapKeyRef or SecretKeyRef for helm | Object | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for helm | object | Yes |
 | cafile |  | *string |  |
 
 
@@ -359,7 +359,7 @@ ldap:
 | ----- | ----------- | ------ | -------- |
 | description |  | string | Yes |
 | host |  | string | Yes |
-| auth | username and password value, configMapKeyRef or SecretKeyRef for LDAP server | Object | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for LDAP server | object | Yes |
 | bindDN |  | string | Yes |
 | userSearch |  | string | Yes |
 | skipTLSVerify |  | bool | Yes |
@@ -529,7 +529,7 @@ redis:
 | addr | host:port address. | string | Yes |
 | db | database to be selected after connecting to the server. | int | Yes |
 | description | description for canary | string | No |
-| auth | username and password value, configMapKeyRef or SecretKeyRef for redis server | Object | No |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for redis server | object | No |
 
 
 ### S3: Verify reachability and correctness of an S3-compatible store
@@ -666,13 +666,13 @@ jmeter:
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| jmx | configmap or Secret reference to get the JMX test plan | Object | Yes |
-| host | the server against which test plan needs to be executed | String | No |
+| jmx | configmap or Secret reference to get the JMX test plan | object | Yes |
+| host | the server against which test plan needs to be executed | string | No |
 | port | the port on which the server is running | Int | No |
-| properties | defines the local Jmeter properties | []String | No |
-| systemProperties | defines the java system property | []String | No |
-| description | the description of the canary | String | Yes |
-| responseDuration | the duration under which all the test should pass | String | No |
+| properties | defines the local Jmeter properties | []string | No |
+| systemProperties | defines the java system property | []string | No |
+| description | the description of the canary | string | Yes |
+| responseDuration | the duration under which all the test should pass | string | No |
 
 ### SSL: Verify the expiry date of a SSL cert
 
@@ -772,7 +772,7 @@ smb:
 | ----- | ----------- | ------ | -------- |
 | server | path to the server (host and path format supported) | string | Yes |
 | port | port on which smb is running. Defaults to 443 | int | No |
-| auth | username and password value, configMapKeyRef or SecretKeyRef for smb | Object | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for smb | object | Yes |
 | domain | domain for smb | string | No |
 | workstation | workstation for smb | string | No |
 | sharename | sharename for smb (overridden in `server` path format) | string | No |
