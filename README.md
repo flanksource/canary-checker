@@ -31,7 +31,7 @@
   - [Pod: Create a new pod and verify reachability](#pod-create-a-new-pod-and-verify-reachability)
   - [Postgres: Query a PostgreSQL DB using SQL](#postgres-query-a-postgresql-db-using-sql)
     - [displayTemplate](#displaytemplate-1)
-  - [MS SQL: Query a MS SQL DB using SQL](#ms-sql-query-a-ms-sql-db-using-sql)
+  - [MS SQL: Query an MS SQL DB using SQL](#ms-sql-query-a-ms-sql-db-using-sql)
     - [displayTemplate](#displaytemplate-2)
   - [Redis: Execute ping against Redis instance](#redis-execute-ping-against-redis-instance)
   - [S3: Verify reachability and correctness of an S3-compatible store](#s3-verify-reachability-and-correctness-of-an-s3-compatible-store)
@@ -39,7 +39,7 @@
     - [displayTemplate](#displaytemplate-3)
   - [Restic: Query the contents of a Restic repository for backup freshness and integrity](#restic-query-the-contents-of-a-restic-repository-for-backup-freshness-and-integrity)
   - [Jmeter: Run the supplied JMX test plan against the specified host](#jmeter-run-the-supplied-jmx-test-plan-against-the-specified-host)
-  - [SSL: Verify the expiry date of a SSL cert](#ssl-verify-the-expiry-date-of-a-ssl-cert)
+  - [SSL: Verify the expiry date of an SSL cert](#ssl-verify-the-expiry-date-of-a-ssl-cert)
   - [TCP](#tcp)
   - [JUnit](#junit)
     - [displayTemplate](#displaytemplate-4)
@@ -70,7 +70,7 @@ Canary checker is a Kubernetes native multi-tenant synthetic monitoring system. 
 | App                                                     | Comparison                                                   |
 | ------------------------------------------------------- | ------------------------------------------------------------ |
 | Prometheus                                              | Canary checker is not a replacement for Prometheus, rather a companion. While Prometheus provides persistent time series storage, Canary checker only has a small in-memory cache of recent checks.  Canary checker also exposes metrics via `/metrics` that are scraped by Prometheus. |
-| Grafana                                                 | The built-in UI provides a mechanism to display check results across 1 or more instances without a dependency on Grafana/Prometheus running. The UI  will also display long-term graphs of check results by quering Prometheus. |
+| Grafana                                                 | The built-in UI provides a mechanism to display check results across 1 or more instances without a dependency on Grafana/Prometheus running. The UI  will also display long-term graphs of check results by querying Prometheus. |
 | [Kuberhealthy](https://github.com/Comcast/kuberhealthy) | Very similar goals, but Kuberhealthy relies on external containers to implement checks and does not provide a UI or multi-cluster/instance aggregation. |
 | [Cloudprober](https://cloudprober.org/)                 | Very similar goals, but Cloudprober is designed for very high scale, not multi-tenancy. Only has ICMP,DNS,HTTP,UDP built-in checks. |
 
@@ -485,7 +485,7 @@ The fields for `displayTemplate` are:
 
 - `.results`: rows returned by the query
 
-### MS SQL: Query a MS SQL DB using SQL
+### MS SQL: Query an MS SQL DB using SQL
 
 This check will try to connect to a specified MS SQL database, run a query against it and verify the results.
 
@@ -538,7 +538,7 @@ This check will:
 
 * list objects in the bucket to check for Read permissions
 * PUT an object into the bucket for Write permissions
-* download previous uploaded object to check for Get permissions
+* download previously uploaded object to check for Get permissions
 
 ```yaml
 
@@ -614,7 +614,7 @@ This check will:
 
 - query a Restic Repository for contents
 - check the integrity and consistency of repo and data-blobs
-- check bakup freshness
+- check backup freshness
 
 ```yaml
 restic:
@@ -645,7 +645,7 @@ restic:
 
 This check will execute the JMeter CLI to execute the JMX test plan on the specified host.
 
-> **Note:** JMeter is a memory hungry Java application and you will likely need to increase the default memory limit from 512Mi to 1–2Gi or higher depending on the complexity, count, and frequency of JMeter tests.
+> **Note:** JMeter is a memory-hungry Java application. You will likely need to increase the default memory limit from 512Mi to 1–2Gi or higher depending on the complexity, count, and frequency of JMeter tests.
 
 ```yaml
 jmeter:
@@ -672,9 +672,9 @@ jmeter:
 | properties | defines the local Jmeter properties | []string | No |
 | systemProperties | defines the java system property | []string | No |
 | description | the description of the canary | string | Yes |
-| responseDuration | the duration under which all the test should pass | string | No |
+| responseDuration | the duration under which all the tests should pass | string | No |
 
-### SSL: Verify the expiry date of a SSL cert
+### SSL: Verify the expiry date of an SSL cert
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
