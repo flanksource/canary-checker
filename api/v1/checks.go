@@ -660,6 +660,36 @@ func (c GitHubCheck) GetEndpoint() string {
 	return strings.ReplaceAll(c.Query, " ", "-")
 }
 
+type ResourceSelector struct {
+	Name          string `yaml:"name,omitempty" json:"name,omitempty"`
+	LabelSelector string `json:"labelSelector,omitempty" yaml:"labelSelector,omitempty"`
+	FieldSelector string `json:"fieldSelector,omitempty" yaml:"fieldSelector,omitempty"`
+}
+
+type KubernetesCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	Namespace   ResourceSelector `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Resource    ResourceSelector `yaml:"resource,omitempty" json:"resource,omitempty"`
+	Kind        string           `yaml:"kind" json:"kind"`
+	Ready       *bool            `yaml:"ready,omitempty" json:"ready,omitempty"`
+}
+
+func (c KubernetesCheck) GetType() string {
+	return "kubernetes"
+}
+
+func (c KubernetesCheck) GetEndpoint() string {
+	return fmt.Sprintf("%v/%v/%v", c.Kind, c.Description.Description, c.Namespace.Name)
+}
+
+func (c KubernetesCheck) CheckReady() bool {
+	if c.Ready == nil {
+		return true
+	}
+	return *c.Ready
+}
+
 /*
 [include:minimal/http_pass.yaml]
 */
@@ -884,6 +914,13 @@ type GCSBucket struct {
 }
 
 /*
+[include:k8s/kuberenetes_pass.yaml]
+*/
+type Kubernetes struct {
+	KubernetesCheck `yaml:",inline" json:",inline"`
+}
+
+/*
 [include:aws/ec2_pass.yaml]
 */
 type EC2 struct {
@@ -937,4 +974,5 @@ var AllChecks = []external.Check{
 	MongoDBCheck{},
 	CloudWatchCheck{},
 	GitHubCheck{},
+	Kubernetes{},
 }
