@@ -55,8 +55,8 @@ jobs:
           KUBERNETES_VERSION: v1.20.7
           GH_TOKEN: ${{ secrets.CHECKRUNS_TOKEN }}
         run: ./test/e2e.sh fixtures/${{matrix.suite}}
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
         if: always()
         with:
           files: test/test-results.xml
