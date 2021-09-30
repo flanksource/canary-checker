@@ -47,7 +47,6 @@ spec:
       query: "flanksource.com"
       querytype: "TXT"
       minrecords: 1
-      exactreply: ["google-site-verification=IIE1aJuvqseLUKSXSIhu2O2lgdU_d8csfJjjIQVc-q0"]
       timeout: 10
       thresholdMillis: 1000
     - server: 8.8.8.8
