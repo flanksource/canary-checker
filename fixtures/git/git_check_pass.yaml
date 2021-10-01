@@ -1,0 +1,21 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: github-pass
+  namespace: default
+spec:
+  interval: 30
+  github:
+    - query: "SELECT * FROM github_repo_checks('flanksource/template-operator') where branch='master' and conclusion='FAILURE'"
+      test:
+        template: |
+          {{- if (eq (len .results) 0) }}
+           true
+          {{- else }}
+           fase
+          {{- end }}
+      githubToken:
+        valueFrom:
+          secretKeyRef:
+            name: github-token
+            key: GITHUB_TOKEN

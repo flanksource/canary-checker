@@ -38,6 +38,12 @@ RUN curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmete
 
 ENV PATH /apache-jmeter-5.4.1/bin/:$PATH
 
+# Install askgit binaries
+RUN curl -L https://github.com/flanksource/askgit/releases/download/v0.4.8-flanksource/askgit-linux-amd64.tar.gz -o askgit.tar.gz && \
+    tar xf askgit.tar.gz && \
+    mv askgit /usr/local/bin/askgit && \
+    rm askgit.tar.gz
+
 # install CA certificates
 RUN apt-get update && \
   apt-get install -y ca-certificates && \

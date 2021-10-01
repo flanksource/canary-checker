@@ -46,6 +46,7 @@ var All = []Checker{
 	&MongoDBChecker{},
 	&GCSBucketChecker{},
 	&CloudWatchChecker{},
+	&GitHubChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),
