@@ -1,0 +1,18 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: kube-pass
+spec:
+  interval: 30
+  kubernetes:
+   - namespace:
+       name: default
+     kind: Pod
+     resource:
+      labelSelector: app=k8s-ready
+   - namespace:
+       name: default
+     kind: Pod
+     ready: false
+     resource:
+       labelSelector: app=k8s-not-ready

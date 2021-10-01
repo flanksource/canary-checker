@@ -47,6 +47,7 @@ var All = []Checker{
 	&GCSBucketChecker{},
 	&CloudWatchChecker{},
 	&GitHubChecker{},
+	&KubernetesChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),

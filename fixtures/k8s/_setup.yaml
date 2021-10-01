@@ -6,3 +6,31 @@ metadata:
 stringData:
   DOCKER_USERNAME: test
   DOCKER_PASSWORD: password
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: k8s-check-ready
+  namespace: default
+  labels:
+    app: k8s-ready
+spec:
+  containers:
+  - name: hello
+    image: busybox
+    command: ['sh', '-c', 'echo "Hello, Kubernetes!" && sleep 3600']
+  restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: k8s-check-not-ready
+  namespace: default
+  labels:
+    app: k8s-not-ready
+spec:
+  containers:
+  - name: hello
+    image: busybox-random
+    command: ['sh', '-c', 'echo "Hello, Kubernetes!" && sleep 3600']
+  restartPolicy: OnFailure
