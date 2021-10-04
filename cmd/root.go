@@ -43,5 +43,5 @@ func init() {
 
 	Root.PersistentFlags().BoolVar(&exposeEnv, "expose-env", false, "Expose environment variables for use in all templates. Note this has serious security implications with untrusted canaries")
 	Root.AddCommand(Docs)
-	Root.AddCommand(Run, Serve, Operator)
+	Root.AddCommand(Run, Serve, Operator, InstallService, UninstallService)
 }

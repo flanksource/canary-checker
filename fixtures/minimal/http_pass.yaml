@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: http-pass
 spec:
-  interval: 30
+  interval: 3
   http:
     - endpoint: http://status.savanttools.com/?code=200
       thresholdMillis: 3000

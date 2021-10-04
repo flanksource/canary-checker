@@ -40,6 +40,7 @@ require (
 	github.com/hirochachacha/go-smb2 v1.0.10
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
+	github.com/kardianos/service v1.2.0 // indirect
 	github.com/lib/pq v1.9.0
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/onsi/ginkgo v1.15.0

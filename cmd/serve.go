@@ -32,46 +32,51 @@ var schedule, configFile string
 var Serve = &cobra.Command{
 	Use:   "serve",
 	Short: "Start a server to execute checks ",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run:   serverRun,
+}
 
-		configs, err := pkg.ParseConfig(configFile)
-		if err != nil {
-			logger.Fatalf("could not parse %s: %v", configFile, err)
-		}
-		kommonsClient, err := pkg.NewKommonsClient()
-		if err != nil {
-			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
-		}
-		cron := cron.New()
-		cron.Start()
+func serverRun(cmd *cobra.Command, args []string) {
 
-		for _, canary := range configs {
-			if canary.Spec.Interval == 0 && canary.Spec.Schedule == "" {
-				canary.Spec.Schedule = schedule
+	configs, err := pkg.ParseConfig(configFile)
+	if err != nil {
+		logger.Fatalf("could not parse %s: %v", configFile, err)
+	}
+	kommonsClient, err := pkg.NewKommonsClient()
+	if err != nil {
+		logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
+	}
+	cron := cron.New()
+	cron.Start()
+
+	for _, canary := range configs {
+		// if canary.Spec.Interval == 0 && canary.Spec.Schedule == "" {
+		// 	canary.Spec.Schedule = schedule
+		// }
+		if canary.Spec.Schedule != "" {
+			schedule = canary.Spec.Schedule
+		} else {
+			schedule = fmt.Sprintf("@every %ds", canary.Spec.Interval)
+		}
+		for _, _c := range checks.All {
+			c := _c
+			if !checks.Checks(canary.Spec.GetAllChecks()).Includes(c) {
+				continue
 			}
-
-			for _, _c := range checks.All {
-				c := _c
-				if !checks.Checks(canary.Spec.GetAllChecks()).Includes(c) {
-					continue
-				}
-				schedule := canary.Spec.Schedule
-
-				cron.AddFunc(schedule, func() { // nolint: errcheck
-					go func() {
-						for _, result := range checks.RunChecks(context.New(kommonsClient, canary)) {
-							if logPass && result.Pass || logFail && !result.Pass {
-								logger.Infof(result.String())
-							}
-							cache.AddCheck(canary, result)
-							metrics.Record(canary, result)
+			cron.AddFunc(schedule, func() { // nolint: errcheck
+				go func() {
+					for _, result := range checks.RunChecks(context.New(kommonsClient, canary)) {
+						if logPass && result.Pass || logFail && !result.Pass {
+							logger.Infof(result.String())
 						}
-					}()
-				})
-			}
+						cache.AddCheck(canary, result)
+						metrics.Record(canary, result)
+					}
+				}()
+			})
 		}
-		serve()
-	},
+		fmt.Println("added checks to the serve")
+	}
+	serve()
 }
 
 func serve() {
@@ -129,7 +134,7 @@ func simpleCors(f nethttp.HandlerFunc, allowedOrigin string) nethttp.HandlerFunc
 
 func init() {
 	ServerFlags(Serve.Flags())
-	Serve.Flags().StringP("configfile", "c", "", "Specify configfile")
-	Serve.MarkFlagRequired("configfile") // nolint: errcheck
+	Serve.Flags().StringVarP(&configFile, "configfile", "c", "canary-checker.yaml", "Path to the config file")
+	// Serve.MarkFlagRequired("configfile") // nolint: errcheck
 	Serve.Flags().StringP("schedule", "s", "", "schedule to run checks on. Supports all cron expression and golang duration support in format: '@every duration'")
 }
