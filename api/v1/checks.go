@@ -937,6 +937,9 @@ type Kubernetes struct {
 	KubernetesCheck `yaml:",inline" json:",inline"`
 }
 
+/*
+[include:datasource/folder_pass.yaml]
+*/
 type Folder struct {
 	FolderCheck `yaml:",inline" json:",inline"`
 }

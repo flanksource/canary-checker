@@ -1,0 +1,9 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: folder-pass
+spec:
+  interval: 30
+  folder:
+    - path: /etc/
+      minCount: 10
