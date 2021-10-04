@@ -690,6 +690,23 @@ func (c KubernetesCheck) CheckReady() bool {
 	return *c.Ready
 }
 
+type FolderCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	// Absolute Path to the folder to be checked
+	Path       string       `yaml:"path" json:"path"`
+	Filter     FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
+	FolderTest `yaml:",inline" json:",inline"`
+}
+
+func (c FolderCheck) GetType() string {
+	return "folder"
+}
+
+func (c FolderCheck) GetEndpoint() string {
+	return c.Path
+}
+
 /*
 [include:minimal/http_pass.yaml]
 */
@@ -920,6 +937,10 @@ type Kubernetes struct {
 	KubernetesCheck `yaml:",inline" json:",inline"`
 }
 
+type Folder struct {
+	FolderCheck `yaml:",inline" json:",inline"`
+}
+
 /*
 [include:aws/ec2_pass.yaml]
 */
@@ -975,4 +996,5 @@ var AllChecks = []external.Check{
 	CloudWatchCheck{},
 	GitHubCheck{},
 	Kubernetes{},
+	FolderCheck{},
 }

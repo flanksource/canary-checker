@@ -665,6 +665,74 @@ spec:
                         type: string
                     type: object
                   type: object
+                folder:
+                  items:
+                    properties:
+                      description:
+                        description: Description for the check
+                        type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      filter:
+                        properties:
+                          maxAge:
+                            type: string
+                          maxSize:
+                            type: string
+                          minAge:
+                            type: string
+                          minSize:
+                            type: string
+                          regex:
+                            type: string
+                        type: object
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      maxAge:
+                        description: MaxAge the latest object should be younger than defined age
+                        type: string
+                      maxCount:
+                        description: MinCount the minimum number of files inside the searchPath
+                        type: integer
+                      maxSize:
+                        description: MaxSize of the files inside the searchPath
+                        type: string
+                      minAge:
+                        description: MinAge the latest object should be older than defined age
+                        type: string
+                      minCount:
+                        description: MinCount the minimum number of files inside the searchPath
+                        type: integer
+                      minSize:
+                        description: MinSize of the files inside the searchPath
+                        type: string
+                      name:
+                        description: Name of the check
+                        type: string
+                      path:
+                        description: Absolute Path to the folder to be checked
+                        type: string
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                    required:
+                      - path
+                    type: object
+                  type: array
                 gcsBucket:
                   items:
                     properties:
