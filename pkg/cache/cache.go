@@ -77,7 +77,6 @@ func (c *cache) AddCheck(checks v1.Canary, result *pkg.CheckResult) *pkg.Check {
 	}
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
-
 	return c.Add(pkg.FromV1(checks, result.Check, pkg.FromResult(*result)))
 }
 
@@ -109,6 +108,19 @@ func (c *cache) GetChecks(duration string) pkg.Checks {
 		result = append(result, check)
 	}
 	return result
+}
+
+func (c *cache) GetCheckFromKey(checkkey string) pkg.Check {
+	return c.Checks[checkkey]
+}
+
+func (c *cache) GetCheckFromLocation(location string) *pkg.Check {
+	for _, check := range c.Checks {
+		if check.Location == location {
+			return &check
+		}
+	}
+	return nil
 }
 
 // GetDetails returns the details for a given check

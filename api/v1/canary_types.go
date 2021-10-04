@@ -195,6 +195,14 @@ func (c Canary) GetDescription(check external.Check) string {
 	return check.GetEndpoint()
 }
 
+func (c *Canary) SetRunnerName(name string) {
+	c.Status.runnerName = name
+}
+
+func (c *Canary) GetRunnerName() string {
+	return c.Status.runnerName
+}
+
 type CanaryStatusCondition string
 
 var (
@@ -223,6 +231,8 @@ type CanaryStatus struct {
 	Uptime1H string `json:"uptime1h,omitempty"`
 	// Average latency to complete all checks
 	Latency1H string `json:"latency1h,omitempty"`
+	// used for keeping history of the checks
+	runnerName string `json:"-"`
 }
 
 type CheckStatus struct {
@@ -283,6 +293,11 @@ func (c Canary) GetAllLabels(extra map[string]string) map[string]string {
 
 func (c Canary) ID() string {
 	return fmt.Sprintf("%s/%s", c.Namespace, c.Name)
+}
+
+// Specify the canary location, <runner>/<namespace>/<name>
+func (c Canary) GetLocation() string {
+	return fmt.Sprintf("%s/%s/%s", c.GetRunnerName(), c.Namespace, c.Name)
 }
 
 // +kubebuilder:object:root=true
