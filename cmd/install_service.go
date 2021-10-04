@@ -38,28 +38,29 @@ func (p *program) Stop(s service.Service) error {
 func installService(cmd *cobra.Command, args []string) {
 	path, err := os.Executable()
 	if err != nil {
-		serviceLogger.Error(err)
+		serviceLogger.Error(err) // nolint: errcheck
+		return
 	}
 	path = filepath.Join(filepath.Dir(path), configFile)
 	prg := &program{}
 	ServiceConfig.Arguments = []string{"serve", "--configfile", path}
 	s, err := service.New(prg, ServiceConfig)
 	if err != nil {
-		serviceLogger.Error(err)
+		serviceLogger.Error(err) // nolint: errcheck
 		return
 	}
 	serviceLogger, err = s.Logger(nil)
 	if err != nil {
-		serviceLogger.Error(err)
+		serviceLogger.Error(err) // nolint: errcheck
 		return
 	}
 	err = s.Install()
 	if err != nil {
-		serviceLogger.Warning(err)
+		serviceLogger.Warning(err) // nolint: errcheck
 		return
 	}
 
-	serviceLogger.Info("Service Installed Successfully.")
+	serviceLogger.Info("Service Installed Successfully.") // nolint: errcheck
 }
 
 func init() {

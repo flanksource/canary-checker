@@ -36,7 +36,6 @@ var Serve = &cobra.Command{
 }
 
 func serverRun(cmd *cobra.Command, args []string) {
-
 	configs, err := pkg.ParseConfig(configFile)
 	if err != nil {
 		logger.Fatalf("could not parse %s: %v", configFile, err)
@@ -66,6 +65,7 @@ func serverRun(cmd *cobra.Command, args []string) {
 						}
 						cache.AddCheck(canary, result)
 						metrics.Record(canary, result)
+						push.Queue(pkg.FromV1(canary, result.Check, pkg.FromResult(*result)))
 					}
 				}()
 			})

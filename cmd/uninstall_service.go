@@ -15,19 +15,19 @@ func uninstallService(cmd *cobra.Command, args []string) {
 	prg := &program{}
 	s, err := service.New(prg, ServiceConfig)
 	if err != nil {
-		serviceLogger.Error(err)
+		serviceLogger.Error(err) // nolint: errcheck
 		return
 	}
 	serviceLogger, err = s.Logger(nil)
 	if err != nil {
-		serviceLogger.Error(err)
+		serviceLogger.Error(err) // nolint: errcheck
 		return
 	}
 	err = s.Uninstall()
 	if err != nil {
-		serviceLogger.Warning(err)
+		serviceLogger.Warning(err) // nolint: errcheck
 		return
 	}
 
-	serviceLogger.Info("Service Uninstalled Successfully.")
+	serviceLogger.Info("Service Uninstalled Successfully.") // nolint: errcheck
 }
