@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/flanksource/canary-checker/pkg/cache"
+	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/kardianos/service"
 	"github.com/spf13/cobra"
 )
@@ -41,9 +44,9 @@ func installService(cmd *cobra.Command, args []string) {
 		serviceLogger.Error(err) // nolint: errcheck
 		return
 	}
-	path = filepath.Join(filepath.Dir(path), configFile)
+	configFile = filepath.Join(filepath.Dir(path), configFile)
 	prg := &program{}
-	ServiceConfig.Arguments = []string{"serve", "--configfile", path}
+	ServiceConfig.Arguments = getArguments()
 	s, err := service.New(prg, ServiceConfig)
 	if err != nil {
 		serviceLogger.Error(err) // nolint: errcheck
@@ -63,6 +66,48 @@ func installService(cmd *cobra.Command, args []string) {
 	serviceLogger.Info("Service Installed Successfully.") // nolint: errcheck
 }
 
+func getArguments() []string {
+	arguments := []string{"serve", "--configfile"}
+	if configFile != "" {
+		arguments = append(arguments, configFile)
+	} else {
+		arguments = append(arguments, "canary-checker.yaml")
+	}
+	if httpPort != 0 {
+		arguments = append(arguments, "--httpPort", fmt.Sprint(httpPort))
+	}
+	if metricsPort != 0 {
+		arguments = append(arguments, "--metricsPort", fmt.Sprint(metricsPort))
+	}
+	if !logFail {
+		arguments = append(arguments, "--logFail=false")
+	}
+	if logPass {
+		arguments = append(arguments, "--logPass")
+	}
+	if namespace != "" {
+		arguments = append(arguments, "--namespace", namespace)
+	}
+	if includeCheck != "" {
+		arguments = append(arguments, "--include-check", includeCheck)
+	}
+	if cache.Size != 0 {
+		arguments = append(arguments, "--maxStatusCheckCount", fmt.Sprint(cache.Size))
+	}
+	if len(pushServers) > 0 {
+		servers := ""
+		for _, server := range pushServers {
+			servers += server + ","
+		}
+		arguments = append(arguments, "--push-servers", servers)
+	}
+	if runner.RunnerName != "" {
+		arguments = append(arguments, "--name", runner.RunnerName)
+	}
+	return arguments
+}
+
 func init() {
-	InstallService.Flags().StringVarP(&configFile, "config", "c", "canary-checker.yaml", "Path to the config file")
+	InstallService.Flags().StringVarP(&configFile, "configfile", "c", "canary-checker.yaml", "Path to the config file")
+	CommonFlags(InstallService.Flags())
 }
