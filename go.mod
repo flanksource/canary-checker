@@ -24,9 +24,8 @@ require (
 	github.com/denisenkom/go-mssqldb v0.9.0
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
-	github.com/dustin/go-humanize v1.0.0
 	github.com/eko/gocache v1.2.0
-	github.com/flanksource/commons v1.5.9
+	github.com/flanksource/commons v1.5.10
 	github.com/flanksource/kommons v0.25.0
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/go-logr/logr v0.3.0
@@ -70,7 +69,6 @@ require (
 	k8s.io/api v0.20.4
 	k8s.io/apimachinery v0.20.4
 	k8s.io/client-go v11.0.0+incompatible
-	maze.io/x/duration v0.0.0-20160924141736-faac084b6075
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/controller-runtime v0.8.3
 	sigs.k8s.io/yaml v1.2.0

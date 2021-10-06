@@ -9,7 +9,7 @@ import (
 
 	"github.com/c2h5oh/datasize"
 	"github.com/flanksource/kommons"
-	"maze.io/x/duration"
+	"github.com/flanksource/commons/duration"
 )
 
 type Duration string
