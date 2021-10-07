@@ -20,17 +20,17 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	queryParams := req.URL.Query()
-	timeString := queryParams.Get("time")
+	timeString := queryParams.Get("since")
 	if timeString == "" {
-		logger.Errorf("time is a required parameter")
-		fmt.Fprintf(w, "time is a required parameter")
+		logger.Errorf("since is a required parameter")
+		fmt.Fprintf(w, "since is a required parameter")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	timeDuration, err := time.ParseDuration(timeString)
 	if err != nil {
-		logger.Errorf("time value not a valid duration")
-		fmt.Fprintf(w, "time value not a valid duration")
+		logger.Errorf("since value not a valid duration")
+		fmt.Fprintf(w, "since value not a valid duration")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
