@@ -292,11 +292,6 @@ func (c Canary) GetAllLabels(extra map[string]string) map[string]string {
 }
 
 func (c Canary) ID() string {
-	return fmt.Sprintf("%s/%s", c.Namespace, c.Name)
-}
-
-// Specify the canary location, <runner>/<namespace>/<name>
-func (c Canary) GetLocation() string {
 	return fmt.Sprintf("%s/%s/%s", c.GetRunnerName(), c.Namespace, c.Name)
 }
 

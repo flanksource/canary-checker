@@ -28,7 +28,7 @@ func CanaryHandler(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	check := cache.Cache.GetCheckFromLocation(fmt.Sprintf("%s/%s/%s", runner, namespace, name))
+	check := cache.Cache.GetCheckFromID(fmt.Sprintf("%s/%s/%s", runner, namespace, name))
 	if check == nil {
 		logger.Errorf("check not found")
 		fmt.Fprintf(w, "check not found")

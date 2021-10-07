@@ -26,6 +26,12 @@ func CheckHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	check := cache.Cache.GetCheckFromKey(key)
+	if check.Key == "" {
+		logger.Errorf("no check found for key %v", key)
+		fmt.Fprintf(w, "no check found for key %v", key)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 	jsonData, err := json.Marshal(check)
 	if err != nil {
 		logger.Errorf("Failed to marshal data: %v", err)

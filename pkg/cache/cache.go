@@ -114,9 +114,9 @@ func (c *cache) GetCheckFromKey(checkkey string) pkg.Check {
 	return c.Checks[checkkey]
 }
 
-func (c *cache) GetCheckFromLocation(location string) *pkg.Check {
+func (c *cache) GetCheckFromID(id string) *pkg.Check {
 	for _, check := range c.Checks {
-		if check.Location == location {
+		if check.ID == id {
 			return &check
 		}
 	}

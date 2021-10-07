@@ -94,8 +94,8 @@ type Check struct {
 	DisplayType  string            `json:"displayType"`
 	RunnerName   string            `json:"runnerName"`
 	// Specify the canary location, <runner>/<namespace>/<name>
-	Location string     `json:"location"`
-	Canary   *v1.Canary `json:"-"`
+	ID     string     `json:"location"`
+	Canary *v1.Canary `json:"-"`
 }
 
 func FromResult(result CheckResult) CheckStatus {
@@ -126,12 +126,12 @@ func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Che
 		Endpoint:    check.GetEndpoint(),
 		Icon:        check.GetIcon(),
 		RunnerName:  canary.GetRunnerName(),
-		Location:    canary.GetLocation(),
+		ID:          canary.ID(),
 		Statuses:    statuses,
 	}
 }
 
-func (c Check) ID() string {
+func (c Check) GetID() string {
 	return c.Key + c.Endpoint + c.Description
 }
 
