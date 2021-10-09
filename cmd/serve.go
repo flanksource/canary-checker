@@ -46,8 +46,12 @@ var Serve = &cobra.Command{
 		cron.Start()
 
 		for _, canary := range configs {
-			if canary.Spec.Interval == 0 && canary.Spec.Schedule == "" {
-				canary.Spec.Schedule = schedule
+			if schedule == "" {
+				if canary.Spec.Schedule != "" {
+					schedule = canary.Spec.Schedule
+				} else if canary.Spec.Interval > 0 {
+					schedule = fmt.Sprintf("@every %ds", canary.Spec.Interval)
+				}
 			}
 
 			for _, _c := range checks.All {
@@ -55,8 +59,6 @@ var Serve = &cobra.Command{
 				if !checks.Checks(canary.Spec.GetAllChecks()).Includes(c) {
 					continue
 				}
-				schedule := canary.Spec.Schedule
-
 				cron.AddFunc(schedule, func() { // nolint: errcheck
 					go func() {
 						for _, result := range checks.RunChecks(context.New(kommonsClient, canary)) {
@@ -129,7 +131,6 @@ func simpleCors(f nethttp.HandlerFunc, allowedOrigin string) nethttp.HandlerFunc
 
 func init() {
 	ServerFlags(Serve.Flags())
-	Serve.Flags().StringP("configfile", "c", "", "Specify configfile")
-	Serve.MarkFlagRequired("configfile") // nolint: errcheck
-	Serve.Flags().StringP("schedule", "s", "", "schedule to run checks on. Supports all cron expression and golang duration support in format: '@every duration'")
+	Serve.Flags().StringVarP(&configFile, "configfile", "c", "", "Specify configfile")
+	Serve.Flags().StringVarP(&schedule, "schedule", "s", "", "schedule to run checks on. Supports all cron expression and golang duration support in format: '@every duration'")
 }

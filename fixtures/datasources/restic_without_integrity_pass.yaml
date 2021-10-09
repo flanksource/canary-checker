@@ -4,12 +4,12 @@ metadata:
   name: restic-pass-withoutinegrity
 spec:
   interval: 30
-restic:
-  - repository: s3:http://minio.minio:9000/restic-canary-checker
-    password:
-      value: S0m3p@sswd
-    maxAge: 1h
-    accessKey:
-      value: minio
-    secretKey:
-      value: minio123
+  restic:
+    - repository: s3:http://minio.minio:9000/restic-canary-checker
+      password:
+        value: S0m3p@sswd
+      maxAge: 1h
+      accessKey:
+        value: minio
+      secretKey:
+        value: minio123
