@@ -395,6 +395,8 @@ github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5Kwzbycv
 github.com/fatih/color v1.9.0 h1:8xPHl4/q1VyqGIPif1F+1V3Y3lSmrq01EabUW3CoW5s=
 github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=
 github.com/fatih/structs v1.1.0/go.mod h1:9NiDSp5zOcgEDl+j00MP/WkGVPOlPRLejGD8Ga6PJ7M=
+github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25 h1:PJ53zmJF1NVP8T//btondJbbLL+cXGsIlJuJiHCC0bI=
+github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25/go.mod h1:2cPofGTy3+NA5KvDoroEFyf8e/QPI+lRz/ncY0f3l9M=
 github.com/flanksource/commons v1.5.6/go.mod h1:boFAup9GmLcnz0fWQnPV5WVFcHYA7U0aWEA14ww/T/4=
 github.com/flanksource/commons v1.5.10 h1:fuz4mMdUUxZCZ8vaKtcWnONhpD+bzN5YCItM6Kr6Bhw=
 github.com/flanksource/commons v1.5.10/go.mod h1:od97zf237RGVkzyiKt+njiQ+Bgrp8XJ8IwqsNsmcXyM=

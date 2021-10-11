@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
+	changes "github.com/flanksource/changehub/api/v1"
 	"github.com/flanksource/commons/logger"
 )
 
@@ -36,9 +36,37 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 	}
 	startTime := time.Now().UTC()
 
-	changeResults := map[string][]pkg.CheckStatus{}
-	for checkName, check := range cache.Cache.Checks {
+	results := []changes.Changes{}
+
+	for _, check := range cache.Cache.Checks {
 		i := 0
+		scope := []changes.Scope{
+			{
+				Type:       "Namespace",
+				Identifier: changes.Identifier{Name: check.GetNamespace()},
+			},
+			{
+				Type:       "Name",
+				Identifier: changes.Identifier{Name: check.GetName()},
+			},
+		}
+		for key, value := range check.Labels {
+			scope = append(scope, changes.Scope{
+				Type:       "Label",
+				Identifier: changes.Identifier{
+					Id: key,
+					Name: value,
+				},
+			})
+		}
+		changeResult := changes.Changes{
+			FirstTimestamp: time.Time{},
+			LastTimestamp:  time.Time{},
+			Count:          0,
+			Scope:          scope,
+			Affects:        nil,
+			Changes:        []changes.Change{},
+		} 
 		var prevStatus bool
 		for {
 			if i >= len(check.Statuses) {
@@ -58,18 +86,37 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 				prevStatus = check.Statuses[i].Status
 			} else {
 				if check.Statuses[i].Status != prevStatus {
-					if changeResults[checkName] == nil {
-						changeResults[checkName] = []pkg.CheckStatus{check.Statuses[i-1]}
-					} else {
-						changeResults[checkName] = append(changeResults[checkName], check.Statuses[i])
+					category := "Succeeded"
+					if !check.Statuses[i].Status {
+						category = "Failed"
 					}
+					changeDetail := changes.Change{
+						Type:        "Canary",
+						Category:    category,
+						Description: check.Description,
+						Icon:        "",
+						Data:        check.Statuses[i].Message,
+						Identifier: changes.Identifier{
+							Id: check.Key,
+						},
+					}
+					if changeResult.Count == 0 {
+						changeResult.LastTimestamp = checkTime
+					}
+					changeResult.FirstTimestamp = checkTime
+					changeResult.Count++
+					changeResult.Changes = append(changeResult.Changes, changeDetail)
 				}
+			
 				prevStatus = check.Statuses[i].Status
 			}
 			i++
 		}
+		if changeResult.Count >0 {
+			results = append(results, changeResult)
+		}
 	}
-	jsonData, err := json.Marshal(changeResults)
+	jsonData, err := json.Marshal(results)
 	if err != nil {
 		logger.Errorf("Failed to marshal data: %v", err)
 		fmt.Fprintf(w, "{\"error\": \"internal\"}")
