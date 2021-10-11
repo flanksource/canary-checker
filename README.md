@@ -49,7 +49,6 @@
   - [Display Types](#display-types)
     - [displayTemplate](#displaytemplate-6)
   - [Guide for Developers](#guide-for-developers)
-  - [Windows Service](#windows-service)
 <!--te-->
 
 ## Introduction
@@ -823,15 +822,3 @@ Checks that currently have support for `displayTemplate` are:
 ### Guide for Developers
 
 This guide provides a step-by-step process for creating your local setup with the canary-checker: [dev Guide](docs/dev-guide.md).
-
-### Windows Service
-
-Canary Checker can be installed as a service in Windows environment using the `install-service.ps1` which is available at the root of the repo.
-The script accepts the following parameters to define the service.
-
-- configfile: Path to the config file with canaries. Defaults to "$pwd\canary-checker.yaml"
-- httpPort: port to start the server on.
-- metricsPort: port to expose the metrics on
-- name: name of the server
-- uninstall: A switch flag. Used to uninstall the service. For example: `.\install-service.ps1 -uninstall`
-- pushServers: A comma separated list of servers to push the check data
