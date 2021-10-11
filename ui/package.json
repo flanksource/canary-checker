@@ -4,7 +4,7 @@
   "dependencies": {
     "@babel/plugin-syntax-jsx": "^7.14.5",
     "@craco/craco": "^6.2.0",
-    "@flanksource/flanksource-ui": "^1.0.8",
+    "@flanksource/flanksource-ui": "^1.0.10",
     "@headlessui/react": "^1.4.0",
     "@heroicons/react": "^1.0.3",
     "@tailwindcss/forms": "^0.3.3",
