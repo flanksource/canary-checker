@@ -150,7 +150,7 @@ func (c Check) GetName() string {
 	return parts[1]
 }
 
-type Checks []Check
+type Checks []*Check
 
 func (c Checks) Len() int {
 	return len(c)

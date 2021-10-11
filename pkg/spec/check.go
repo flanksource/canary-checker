@@ -26,7 +26,7 @@ func CheckHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	check := cache.Cache.GetCheckFromKey(key)
-	if check.Key == "" {
+	if check == nil {
 		logger.Errorf("no check found for key %v", key)
 		fmt.Fprintf(w, "no check found for key %v", key)
 		w.WriteHeader(http.StatusNotFound)
