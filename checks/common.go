@@ -21,6 +21,12 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
+type Filesystem interface {
+	Close()
+	ReadDir(name string) ([]os.FileInfo, error)
+	Stat(name string) (os.FileInfo, error)
+}
+
 func GetConnection(ctx *context.Context, conn *v1.Connection, namespace string) (string, error) {
 	// TODO: this function should not be necessary, each check should be templated out individual
 	// however, the walk method only support high level values, not values from siblings.
