@@ -67,6 +67,7 @@ var Serve = &cobra.Command{
 							}
 							cache.AddCheck(canary, result)
 							metrics.Record(canary, result)
+							push.Queue(pkg.FromV1(canary, result.Check, pkg.FromResult(*result)))
 						}
 					}()
 				})
