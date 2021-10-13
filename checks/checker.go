@@ -46,6 +46,7 @@ var All = []Checker{
 	&GitHubChecker{},
 	&KubernetesChecker{},
 	&FolderChecker{},
+	&ExecChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),

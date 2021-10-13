@@ -1,0 +1,11 @@
+kind: Canary
+metadata:
+  name: exec-pass
+spec:
+  interval: 30
+  exec:
+   - description: "exec dummy check"
+     script: |
+       echo "hi there"
+     test:
+       template: '{{ if (.results | strings.Contains "hello") }}true{{ else }}false {{end}}'

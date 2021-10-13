@@ -30,20 +30,26 @@
   - [Namespace - Create a new kubernetes namespace and pod](#namespace---create-a-new-kubernetes-namespace-and-pod)
   - [Pod - Create a new pod and verify reachability](#pod---create-a-new-pod-and-verify-reachability)
   - [Postgres - Query a Postgresql DB using SQL](#postgres---query-a-postgresql-db-using-sql)
-  - [Folder Check](#folder-check)
     - [displayTemplate](#displaytemplate-1)
   - [Mssql - Query a Mssql DB using SQL](#mssql---query-a-mssql-db-using-sql)
     - [displayTemplate](#displaytemplate-2)
   - [Redis - Execute ping against redis instance](#redis---execute-ping-against-redis-instance)
   - [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
+  - [Folder Check](#folder-check)
+    - [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
+    - [GCS Bucket -  Query the contents of an GCS bucket for freshness](#gcs-bucket----query-the-contents-of-an-gcs-bucket-for-freshness)
+    - [Smb - Verify Folder Freshness](#smb---verify-folder-freshness)
+      - [server](#server)
   - [Restic - Query the contents of a Restic repository for backup freshness and integrity](#restic---query-the-contents-of-a-restic-repository-for-backup-freshness-and-integrity)
   - [Jmeter - Run the supplied JMX test plan against the specified host](#jmeter---run-the-supplied-jmx-test-plan-against-the-specified-host)
   - [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
+  - [Exec - Execute commands or script on the host](#exec---execute-commands-or-script-on-the-host)
   - [TCP](#tcp)
   - [Junit](#junit)
+    - [displayTemplate](#displaytemplate-3)
     - [displayTemplate](#displaytemplate-4)
   - [Display Types](#display-types)
-    - [displayTemplate](#displaytemplate-6)
+    - [displayTemplate](#displaytemplate-5)
   - [Guide for Developers](#guide-for-developers)
 <!--te-->
 
@@ -760,6 +766,17 @@ jmeter:
 | description |  | string | Yes |
 | endpoint | HTTP endpoint to crawl | string | Yes |
 | maxSSLExpiry | maximum number of days until the SSL Certificate expires. | int | Yes |
+
+
+### Exec - Execute commands or script on the host
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| script | Inline commands or Absolute path to the script that needs to be executed | Yes |
+| description | description for the check | string | No |
+| display | format on how the result is going to be displayed on the console | Template | No |
+| test | test against which result needs to be verified | Template | No |
 
 ### TCP
 
