@@ -52,9 +52,9 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 		}
 		for key, value := range check.Labels {
 			scope = append(scope, changes.Scope{
-				Type:       "Label",
+				Type: "Label",
 				Identifier: changes.Identifier{
-					Id: key,
+					Id:   key,
 					Name: value,
 				},
 			})
@@ -66,7 +66,7 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 			Scope:          scope,
 			Affects:        nil,
 			Changes:        []changes.Change{},
-		} 
+		}
 		var prevStatus bool
 		for {
 			if i >= len(check.Statuses) {
@@ -107,12 +107,12 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 					changeResult.Count++
 					changeResult.Changes = append(changeResult.Changes, changeDetail)
 				}
-			
+
 				prevStatus = check.Statuses[i].Status
 			}
 			i++
 		}
-		if changeResult.Count >0 {
+		if changeResult.Count > 0 {
 			results = append(results, changeResult)
 		}
 	}
