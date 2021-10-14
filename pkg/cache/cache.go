@@ -13,7 +13,7 @@ import (
 var Size = 5
 
 type cache struct {
-	Checks       map[string]pkg.Check
+	Checks       map[string]*pkg.Check
 	CheckConfigs map[string]external.Check
 	mtx          sync.Mutex
 	// the string is checkKey
@@ -21,7 +21,7 @@ type cache struct {
 }
 
 var Cache = &cache{
-	Checks:       make(map[string]pkg.Check),
+	Checks:       make(map[string]*pkg.Check),
 	CheckConfigs: make(map[string]external.Check),
 }
 
@@ -59,13 +59,14 @@ func (c *cache) RemoveCheckByKey(key string) {
 	delete(c.Checks, key)
 }
 
-func (c *cache) InitCheck(checks v1.Canary) {
+func (c *cache) InitCheck(canary v1.Canary) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 	// initialize all checks so that they appear on the dashboard as pending
-	for _, check := range checks.Spec.GetAllChecks() {
-		key := checks.GetKey(check)
-		c.Checks[key] = pkg.FromV1(checks, check)
+	for _, check := range canary.Spec.GetAllChecks() {
+		key := canary.GetKey(check)
+		pkgCheck := pkg.FromV1(canary, check)
+		c.Checks[key] = &pkgCheck
 		c.CheckConfigs[key] = check
 	}
 }
@@ -77,7 +78,6 @@ func (c *cache) AddCheck(checks v1.Canary, result *pkg.CheckResult) *pkg.Check {
 	}
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
-
 	return c.Add(pkg.FromV1(checks, result.Check, pkg.FromResult(*result)))
 }
 
@@ -89,8 +89,8 @@ func (c *cache) Add(check pkg.Check) *pkg.Check {
 			check.Statuses = check.Statuses[:Size]
 		}
 	}
-	c.Checks[check.Key] = check
-	return &lastCheck
+	c.Checks[check.Key] = &check
+	return lastCheck
 }
 
 func (c *cache) GetChecks(duration string) pkg.Checks {
@@ -109,6 +109,19 @@ func (c *cache) GetChecks(duration string) pkg.Checks {
 		result = append(result, check)
 	}
 	return result
+}
+
+func (c *cache) GetCheckFromKey(checkkey string) *pkg.Check {
+	return c.Checks[checkkey]
+}
+
+func (c *cache) GetCheckFromID(id string) *pkg.Check {
+	for _, check := range c.Checks {
+		if check.ID == id {
+			return check
+		}
+	}
+	return nil
 }
 
 // GetDetails returns the details for a given check

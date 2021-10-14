@@ -92,7 +92,10 @@ type Check struct {
 	Severity     string            `json:"severity"`
 	Icon         string            `json:"icon"`
 	DisplayType  string            `json:"displayType"`
-	CheckCanary  *v1.Canary        `json:"-"`
+	RunnerName   string            `json:"runnerName"`
+	// Specify the canary location, <runner>/<namespace>/<name>
+	ID     string     `json:"location"`
+	Canary *v1.Canary `json:"-"`
 }
 
 func FromResult(result CheckResult) CheckStatus {
@@ -106,27 +109,29 @@ func FromResult(result CheckResult) CheckStatus {
 		Detail:   result.Detail,
 	}
 }
-func FromV1(check v1.Canary, ext external.Check, statuses ...CheckStatus) Check {
+func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Check {
 	return Check{
-		Key:         check.GetKey(ext),
-		Name:        check.ID(),
-		Namespace:   check.Namespace,
-		Labels:      labels.FilterLabels(check.GetAllLabels(nil)),
-		CanaryName:  check.Name,
-		Interval:    check.Spec.Interval,
-		Schedule:    check.Spec.Schedule,
-		Owner:       check.Spec.Owner,
-		Severity:    check.Spec.Severity,
-		CheckCanary: &check,
-		Type:        ext.GetType(),
-		Description: ext.GetDescription(),
-		Endpoint:    ext.GetEndpoint(),
-		Icon:        ext.GetIcon(),
+		Key:         canary.GetKey(check),
+		Name:        canary.Name,
+		Namespace:   canary.Namespace,
+		Labels:      labels.FilterLabels(canary.GetAllLabels(nil)),
+		CanaryName:  canary.Name,
+		Interval:    canary.Spec.Interval,
+		Schedule:    canary.Spec.Schedule,
+		Owner:       canary.Spec.Owner,
+		Severity:    canary.Spec.Severity,
+		Canary:      &canary,
+		Type:        check.GetType(),
+		Description: check.GetDescription(),
+		Endpoint:    check.GetEndpoint(),
+		Icon:        check.GetIcon(),
+		RunnerName:  canary.GetRunnerName(),
+		ID:          canary.ID(),
 		Statuses:    statuses,
 	}
 }
 
-func (c Check) ID() string {
+func (c Check) GetID() string {
 	return c.Key + c.Endpoint + c.Description
 }
 
@@ -145,7 +150,7 @@ func (c Check) GetName() string {
 	return parts[1]
 }
 
-type Checks []Check
+type Checks []*Check
 
 func (c Checks) Len() int {
 	return len(c)

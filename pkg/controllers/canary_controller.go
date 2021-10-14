@@ -59,6 +59,7 @@ type CanaryReconciler struct {
 	Scheme     *runtime.Scheme
 	Events     record.EventRecorder
 	Cron       *cron.Cron
+	RunnerName string
 	Done       chan *pkg.CheckResult
 }
 
@@ -85,6 +86,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 
 	canary := &v1.Canary{}
 	err := r.Get(ctx, req.NamespacedName, canary)
+	canary.SetRunnerName(r.RunnerName)
 	var update bool
 	if canary.Status.ChecksStatus != nil {
 		specKeys := getAllCheckKeys(canary)
@@ -145,7 +147,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 
 	if canary.Spec.Interval > 0 || canary.Spec.Schedule != "" {
-		job := CanaryJob{Client: *r, Check: *canary, Logger: logger, Context: context.New(r.Kommons, *canary)}
+		job := CanaryJob{Client: *r, Canary: *canary, Logger: logger, Context: context.New(r.Kommons, *canary)}
 		if !run {
 			// check each job on startup
 			go job.Run()
@@ -189,13 +191,7 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName, results []*pkg.CheckResult) {
-	canary := v1.Canary{}
-	if err := r.Get(ctx, key, &canary); err != nil {
-		r.Log.Error(err, "unable to find canary", "key", key)
-		return
-	}
-
+func (r *CanaryReconciler) Report(ctx *context.Context, canary v1.Canary, results []*pkg.CheckResult) {
 	canary.Status.LastCheck = &metav1.Time{Time: time.Now()}
 	transitioned := false
 	var messages, errors []string
@@ -238,7 +234,6 @@ func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName
 		}
 		checkStatus[checkKey].Message = &result.Message
 		checkStatus[checkKey].ErrorMessage = &result.Error
-
 		push.Queue(pkg.FromV1(canary, result.Check, pkg.FromResult(*result)))
 	}
 
@@ -295,20 +290,20 @@ func (r *CanaryReconciler) includeNamespace(namespace string) bool {
 
 type CanaryJob struct {
 	Client  CanaryReconciler
-	Check   v1.Canary
+	Canary  v1.Canary
 	Context *context.Context
 	logr.Logger
 }
 
 func (c CanaryJob) GetNamespacedName() types.NamespacedName {
-	return types.NamespacedName{Name: c.Check.Name, Namespace: c.Check.Namespace}
+	return types.NamespacedName{Name: c.Canary.Name, Namespace: c.Canary.Namespace}
 }
 
 func (c CanaryJob) Run() {
 	c.V(2).Info("Starting")
 	results := checks.RunChecks(c.Context)
 
-	c.Client.Report(c.Context, c.GetNamespacedName(), results)
+	c.Client.Report(c.Context, c.Canary, results)
 
 	c.V(3).Info("Ending")
 }

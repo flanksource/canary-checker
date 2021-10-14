@@ -8,6 +8,7 @@ import (
 
 	"github.com/flanksource/canary-checker/pkg/details"
 	"github.com/flanksource/canary-checker/pkg/runner"
+	"github.com/flanksource/canary-checker/pkg/spec"
 
 	"github.com/flanksource/canary-checker/pkg/push"
 
@@ -53,7 +54,7 @@ var Serve = &cobra.Command{
 					schedule = fmt.Sprintf("@every %ds", canary.Spec.Interval)
 				}
 			}
-
+			canary.SetRunnerName(runner.RunnerName)
 			for _, _c := range checks.All {
 				c := _c
 				if !checks.Checks(canary.Spec.GetAllChecks()).Includes(c) {
@@ -105,6 +106,8 @@ func serve() {
 	nethttp.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler, allowedCors))
 	nethttp.HandleFunc("/api/push", simpleCors(push.Handler, allowedCors))
 	nethttp.HandleFunc("/api/details", simpleCors(details.Handler, allowedCors))
+	nethttp.HandleFunc("/api/spec", simpleCors(spec.CheckHandler, allowedCors))
+	nethttp.HandleFunc("/api/spec/canary", simpleCors(spec.CanaryHandler, allowedCors))
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
 	logger.Infof("Starting health dashboard at http://%s", addr)
 	logger.Infof("Metrics can be accessed at http://%s/metrics", addr)
