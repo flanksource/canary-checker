@@ -25,6 +25,7 @@ require (
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/eko/gocache v1.2.0
+	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
 	github.com/flanksource/commons v1.5.10
 	github.com/flanksource/kommons v0.25.0
 	github.com/go-ldap/ldap/v3 v3.1.7

@@ -6,6 +6,8 @@ import (
 	nethttp "net/http"
 	_ "net/http/pprof" // required by serve
 
+	"github.com/flanksource/canary-checker/pkg/changes"
+
 	"github.com/flanksource/canary-checker/pkg/details"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/spec"
@@ -108,6 +110,7 @@ func serve() {
 	nethttp.HandleFunc("/api/details", simpleCors(details.Handler, allowedCors))
 	nethttp.HandleFunc("/api/spec", simpleCors(spec.CheckHandler, allowedCors))
 	nethttp.HandleFunc("/api/spec/canary", simpleCors(spec.CanaryHandler, allowedCors))
+	nethttp.HandleFunc("/api/changes", simpleCors(changes.Handler, allowedCors))
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
 	logger.Infof("Starting health dashboard at http://%s", addr)
 	logger.Infof("Metrics can be accessed at http://%s/metrics", addr)
