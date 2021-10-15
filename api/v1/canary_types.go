@@ -42,8 +42,6 @@ type CanarySpec struct {
 	ContainerdPull []ContainerdPullCheck `yaml:"containerd,omitempty" json:"containerd,omitempty"`
 	ContainerdPush []ContainerdPushCheck `yaml:"containerdPush,omitempty" json:"containerdPush,omitempty"`
 	S3             []S3Check             `yaml:"s3,omitempty" json:"s3,omitempty"`
-	S3Bucket       []S3BucketCheck       `yaml:"s3Bucket,omitempty" json:"s3Bucket,omitempty"`
-	GCSBucket      []GCSBucketCheck      `yaml:"gcsBucket,omitempty" json:"gcsBucket,omitempty"`
 	TCP            []TCPCheck            `yaml:"tcp,omitempty" json:"tcp,omitempty"`
 	Pod            []PodCheck            `yaml:"pod,omitempty" json:"pod,omitempty"`
 	LDAP           []LDAPCheck           `yaml:"ldap,omitempty" json:"ldap,omitempty"`
@@ -53,7 +51,6 @@ type CanarySpec struct {
 	Restic         []ResticCheck         `yaml:"restic,omitempty" json:"restic,omitempty"`
 	Jmeter         []JmeterCheck         `yaml:"jmeter,omitempty" json:"jmeter,omitempty"`
 	Junit          []JunitCheck          `yaml:"junit,omitempty" json:"junit,omitempty"`
-	Smb            []SmbCheck            `yaml:"smb,omitempty" json:"smb,omitempty"`
 	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Redis          []RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
@@ -97,9 +94,6 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	for _, check := range spec.S3 {
 		checks = append(checks, check)
 	}
-	for _, check := range spec.S3Bucket {
-		checks = append(checks, check)
-	}
 	for _, check := range spec.TCP {
 		checks = append(checks, check)
 	}
@@ -136,9 +130,6 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	for _, check := range spec.Junit {
 		checks = append(checks, check)
 	}
-	for _, check := range spec.Smb {
-		checks = append(checks, check)
-	}
 	for _, check := range spec.EC2 {
 		checks = append(checks, check)
 	}
@@ -146,9 +137,6 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.MongoDB {
-		checks = append(checks, check)
-	}
-	for _, check := range spec.GCSBucket {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.CloudWatch {

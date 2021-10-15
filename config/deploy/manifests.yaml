@@ -132,6 +132,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      objectPath:
+                        description: glob path to restrict matches to a subset
+                        type: string
                       region:
                         type: string
                       secretKey:
@@ -178,6 +181,9 @@ spec:
                           template:
                             type: string
                         type: object
+                      usePathStyle:
+                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                        type: boolean
                     required:
                       - accessKey
                       - region
@@ -571,6 +577,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      objectPath:
+                        description: glob path to restrict matches to a subset
+                        type: string
                       region:
                         type: string
                       secretKey:
@@ -612,6 +621,9 @@ spec:
                         type: boolean
                       timeOut:
                         type: integer
+                      usePathStyle:
+                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                        type: boolean
                       userData:
                         type: string
                       waitTime:
@@ -675,6 +687,90 @@ spec:
                 folder:
                   items:
                     properties:
+                      awsConnection:
+                        properties:
+                          accessKey:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          endpoint:
+                            type: string
+                          objectPath:
+                            description: glob path to restrict matches to a subset
+                            type: string
+                          region:
+                            type: string
+                          secretKey:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          skipTLSVerify:
+                            description: Skip TLS verify when connecting to aws
+                            type: boolean
+                          usePathStyle:
+                            description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                            type: boolean
+                        required:
+                          - accessKey
+                          - region
+                          - secretKey
+                        type: object
                       description:
                         description: Description for the check
                         type: string
@@ -698,6 +794,43 @@ spec:
                           minSize:
                             type: string
                           regex:
+                            type: string
+                        type: object
+                      gcpConnection:
+                        properties:
+                          credentials:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          endpoint:
                             type: string
                         type: object
                       icon:
@@ -725,8 +858,98 @@ spec:
                         description: Name of the check
                         type: string
                       path:
-                        description: Absolute Path to the folder to be checked
+                        description: Path can be the s3 or gcs bucket, or reference to local folder for s3 the prefix need to be s3://<bucket-name> for gCloud, gcs://<bucket-name>
                         type: string
+                      smbConnection:
+                        properties:
+                          auth:
+                            properties:
+                              password:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              username:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                            required:
+                              - password
+                              - username
+                            type: object
+                          domain:
+                            description: Domain...
+                            type: string
+                          port:
+                            description: Port on which smb server is running. Defaults to 445
+                            type: integer
+                          searchPath:
+                            description: SearchPath sub-path inside the mount location
+                            type: string
+                          sharename:
+                            description: Sharename to mount from the samba server
+                            type: string
+                          workstation:
+                            description: Workstation...
+                            type: string
+                        required:
+                          - auth
+                        type: object
                       test:
                         properties:
                           expr:
@@ -738,107 +961,6 @@ spec:
                         type: object
                     required:
                       - path
-                    type: object
-                  type: array
-                gcsBucket:
-                  items:
-                    properties:
-                      bucket:
-                        type: string
-                      credentials:
-                        properties:
-                          name:
-                            type: string
-                          value:
-                            type: string
-                          valueFrom:
-                            properties:
-                              configMapKeyRef:
-                                properties:
-                                  key:
-                                    type: string
-                                  name:
-                                    type: string
-                                  optional:
-                                    type: boolean
-                                required:
-                                  - key
-                                type: object
-                              secretKeyRef:
-                                properties:
-                                  key:
-                                    type: string
-                                  name:
-                                    type: string
-                                  optional:
-                                    type: boolean
-                                required:
-                                  - key
-                                type: object
-                            type: object
-                        type: object
-                      description:
-                        description: Description for the check
-                        type: string
-                      display:
-                        properties:
-                          expr:
-                            type: string
-                          jsonPath:
-                            type: string
-                          template:
-                            type: string
-                        type: object
-                      endpoint:
-                        type: string
-                      filter:
-                        properties:
-                          maxAge:
-                            type: string
-                          maxSize:
-                            type: string
-                          minAge:
-                            type: string
-                          minSize:
-                            type: string
-                          regex:
-                            type: string
-                        type: object
-                      icon:
-                        description: Icon for overwriting default icon on the dashboard
-                        type: string
-                      maxAge:
-                        description: MaxAge the latest object should be younger than defined age
-                        type: string
-                      maxCount:
-                        description: MinCount the minimum number of files inside the searchPath
-                        type: integer
-                      maxSize:
-                        description: MaxSize of the files inside the searchPath
-                        type: string
-                      minAge:
-                        description: MinAge the latest object should be older than defined age
-                        type: string
-                      minCount:
-                        description: MinCount the minimum number of files inside the searchPath
-                        type: integer
-                      minSize:
-                        description: MinSize of the files inside the searchPath
-                        type: string
-                      name:
-                        description: Name of the check
-                        type: string
-                      test:
-                        properties:
-                          expr:
-                            type: string
-                          jsonPath:
-                            type: string
-                          template:
-                            type: string
-                        type: object
-                    required:
-                      - bucket
                     type: object
                   type: array
                 github:
@@ -5936,312 +6058,11 @@ spec:
                         type: boolean
                     type: object
                   type: array
-                s3Bucket:
-                  items:
-                    properties:
-                      accessKey:
-                        properties:
-                          name:
-                            type: string
-                          value:
-                            type: string
-                          valueFrom:
-                            properties:
-                              configMapKeyRef:
-                                properties:
-                                  key:
-                                    type: string
-                                  name:
-                                    type: string
-                                  optional:
-                                    type: boolean
-                                required:
-                                  - key
-                                type: object
-                              secretKeyRef:
-                                properties:
-                                  key:
-                                    type: string
-                                  name:
-                                    type: string
-                                  optional:
-                                    type: boolean
-                                required:
-                                  - key
-                                type: object
-                            type: object
-                        type: object
-                      bucket:
-                        type: string
-                      description:
-                        description: Description for the check
-                        type: string
-                      display:
-                        properties:
-                          expr:
-                            type: string
-                          jsonPath:
-                            type: string
-                          template:
-                            type: string
-                        type: object
-                      endpoint:
-                        type: string
-                      filter:
-                        properties:
-                          maxAge:
-                            type: string
-                          maxSize:
-                            type: string
-                          minAge:
-                            type: string
-                          minSize:
-                            type: string
-                          regex:
-                            type: string
-                        type: object
-                      icon:
-                        description: Icon for overwriting default icon on the dashboard
-                        type: string
-                      maxAge:
-                        description: MaxAge the latest object should be younger than defined age
-                        type: string
-                      maxCount:
-                        description: MinCount the minimum number of files inside the searchPath
-                        type: integer
-                      maxSize:
-                        description: MaxSize of the files inside the searchPath
-                        type: string
-                      minAge:
-                        description: MinAge the latest object should be older than defined age
-                        type: string
-                      minCount:
-                        description: MinCount the minimum number of files inside the searchPath
-                        type: integer
-                      minSize:
-                        description: MinSize of the files inside the searchPath
-                        type: string
-                      name:
-                        description: Name of the check
-                        type: string
-                      objectPath:
-                        description: glob path to restrict matches to a subset
-                        type: string
-                      region:
-                        type: string
-                      secretKey:
-                        properties:
-                          name:
-                            type: string
-                          value:
-                            type: string
-                          valueFrom:
-                            properties:
-                              configMapKeyRef:
-                                properties:
-                                  key:
-                                    type: string
-                                  name:
-                                    type: string
-                                  optional:
-                                    type: boolean
-                                required:
-                                  - key
-                                type: object
-                              secretKeyRef:
-                                properties:
-                                  key:
-                                    type: string
-                                  name:
-                                    type: string
-                                  optional:
-                                    type: boolean
-                                required:
-                                  - key
-                                type: object
-                            type: object
-                        type: object
-                      skipTLSVerify:
-                        description: Skip TLS verify when connecting to aws
-                        type: boolean
-                      test:
-                        properties:
-                          expr:
-                            type: string
-                          jsonPath:
-                            type: string
-                          template:
-                            type: string
-                        type: object
-                      usePathStyle:
-                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
-                        type: boolean
-                    required:
-                      - accessKey
-                      - bucket
-                      - region
-                      - secretKey
-                    type: object
-                  type: array
                 schedule:
                   description: 'Schedule to run checks on. Supports all cron expression, example: ''30 3-6,20-23 * * *''. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron  Also supports golang duration, can be set as ''@every 1m30s'' which runs the check every 1 minute and 30 seconds.'
                   type: string
                 severity:
                   type: string
-                smb:
-                  items:
-                    properties:
-                      auth:
-                        properties:
-                          password:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                      optional:
-                                        type: boolean
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                      optional:
-                                        type: boolean
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          username:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                      optional:
-                                        type: boolean
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                      optional:
-                                        type: boolean
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                        required:
-                          - password
-                          - username
-                        type: object
-                      description:
-                        description: Description for the check
-                        type: string
-                      display:
-                        properties:
-                          expr:
-                            type: string
-                          jsonPath:
-                            type: string
-                          template:
-                            type: string
-                        type: object
-                      domain:
-                        description: Domain...
-                        type: string
-                      filter:
-                        properties:
-                          maxAge:
-                            type: string
-                          maxSize:
-                            type: string
-                          minAge:
-                            type: string
-                          minSize:
-                            type: string
-                          regex:
-                            type: string
-                        type: object
-                      icon:
-                        description: Icon for overwriting default icon on the dashboard
-                        type: string
-                      maxAge:
-                        description: MaxAge the latest object should be younger than defined age
-                        type: string
-                      maxCount:
-                        description: MinCount the minimum number of files inside the searchPath
-                        type: integer
-                      maxSize:
-                        description: MaxSize of the files inside the searchPath
-                        type: string
-                      minAge:
-                        description: MinAge the latest object should be older than defined age
-                        type: string
-                      minCount:
-                        description: MinCount the minimum number of files inside the searchPath
-                        type: integer
-                      minSize:
-                        description: MinSize of the files inside the searchPath
-                        type: string
-                      name:
-                        description: Name of the check
-                        type: string
-                      port:
-                        description: Port on which smb server is running. Defaults to 445
-                        type: integer
-                      searchPath:
-                        description: SearchPath sub-path inside the mount location
-                        type: string
-                      server:
-                        description: Server location of smb server. Can be `hostname/ip` or in `\\server\e$\a\b\c` syntax Where server is the `hostname` `e$`` is the sharename and `a/b/c` is the searchPath location
-                        type: string
-                      sharename:
-                        description: Sharename to mount from the samba server
-                        type: string
-                      test:
-                        properties:
-                          expr:
-                            type: string
-                          jsonPath:
-                            type: string
-                          template:
-                            type: string
-                        type: object
-                      workstation:
-                        description: Workstation...
-                        type: string
-                    required:
-                      - auth
-                      - server
-                    type: object
-                  type: array
                 tcp:
                   items:
                     properties:

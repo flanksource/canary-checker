@@ -179,7 +179,6 @@ type Config struct {
 	DockerPull     []v1.DockerPullCheck     `yaml:"docker,omitempty" json:"docker,omitempty"`
 	DockerPush     []v1.DockerPushCheck     `yaml:"dockerPush,omitempty" json:"dockerPush,omitempty"`
 	S3             []v1.S3Check             `yaml:"s3,omitempty" json:"s3,omitempty"`
-	S3Bucket       []v1.S3BucketCheck       `yaml:"s3Bucket,omitempty" json:"s3Bucket,omitempty"`
 	TCP            []v1.TCPCheck            `yaml:"tcp,omitempty" json:"tcp,omitempty"`
 	Pod            []v1.PodCheck            `yaml:"pod,omitempty" json:"pod,omitempty"`
 	LDAP           []v1.LDAPCheck           `yaml:"ldap,omitempty" json:"ldap,omitempty"`
