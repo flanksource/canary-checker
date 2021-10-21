@@ -400,8 +400,8 @@ github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25/go.mod h
 github.com/flanksource/commons v1.5.6/go.mod h1:boFAup9GmLcnz0fWQnPV5WVFcHYA7U0aWEA14ww/T/4=
 github.com/flanksource/commons v1.5.10 h1:fuz4mMdUUxZCZ8vaKtcWnONhpD+bzN5YCItM6Kr6Bhw=
 github.com/flanksource/commons v1.5.10/go.mod h1:od97zf237RGVkzyiKt+njiQ+Bgrp8XJ8IwqsNsmcXyM=
-github.com/flanksource/kommons v0.25.0 h1:zUHE8a97kJwy9xNIbSTHEPrUFfzbwVuTHu5HK/ggj4k=
-github.com/flanksource/kommons v0.25.0/go.mod h1:Id4QLKaHWf0VKHdwWIhALP98lhcEl0+rzGNPmfFTfVs=
+github.com/flanksource/kommons v0.26.0 h1:T0JCThce36Mo6k3FeTl4h3xERsQoRr0hlaqVsHFv+wQ=
+github.com/flanksource/kommons v0.26.0/go.mod h1:Id4QLKaHWf0VKHdwWIhALP98lhcEl0+rzGNPmfFTfVs=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/fortytw2/leaktest v1.2.0/go.mod h1:jDsjWgpAGjm2CA7WthBh/CdZYEPF31XHquHwclZch5g=
 github.com/fortytw2/leaktest v1.3.0 h1:u8491cBMTQ8ft8aeV+adlcytMZylmA5nnwwkRZjI8vw=
@@ -946,7 +946,6 @@ github.com/nats-io/nats.go v1.9.1/go.mod h1:ZjDU1L/7fJ09jvUSRVBR2e7+RnLiiIQyqyzE
 github.com/nats-io/nkeys v0.1.0/go.mod h1:xpnFELMwJABBLVhffcfd1MZx6VsNRFpEugbxziKVo7w=
 github.com/nats-io/nkeys v0.1.3/go.mod h1:xpnFELMwJABBLVhffcfd1MZx6VsNRFpEugbxziKVo7w=
 github.com/nats-io/nuid v1.0.1/go.mod h1:19wcPz3Ph3q0Jbyiqsd0kePYG7A95tJPxeL+1OSON2c=
-github.com/ncw/swift v1.0.47 h1:4DQRPj35Y41WogBxyhOXlrI37nzGlyEcsforeudyYPQ=
 github.com/ncw/swift v1.0.47/go.mod h1:23YIA4yWVnGwv2dQlN4bB7egfYX6YLn0Yo/S6zZO/ZM=
 github.com/nxadm/tail v1.4.4 h1:DQuhQpB1tVlglWS2hLQ5OV6B5r8aGxSrPc5Qo6uTN78=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=

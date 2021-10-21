@@ -27,7 +27,8 @@ require (
 	github.com/eko/gocache v1.2.0
 	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
 	github.com/flanksource/commons v1.5.10
-	github.com/flanksource/kommons v0.25.0
+	github.com/flanksource/kommons v0.26.0
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/go-logr/logr v0.3.0
 	github.com/go-logr/zapr v0.2.0
