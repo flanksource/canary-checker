@@ -228,16 +228,11 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 		return strings.TrimSpace(buf.String()), nil
 	}
 	if template.Expression != "" {
-		ctx.Environment["sprintf"] = fmt.Sprintf
-		ctx.Environment["sprint"] = fmt.Sprint
-		for name, funcMap := range text.GetTemplateFuncs() {
-			ctx.Environment[name] = funcMap
-		}
-		program, err := expr.Compile(template.Expression, expr.Env(ctx.Environment))
+		program, err := expr.Compile(template.Expression, text.MakeExpressionOptions(ctx.Environment)...)
 		if err != nil {
 			return "", err
 		}
-		output, err := expr.Run(program, ctx.Environment)
+		output, err := expr.Run(program, text.MakeExpressionEnvs(ctx.Environment))
 		if err != nil {
 			return "", err
 		}
