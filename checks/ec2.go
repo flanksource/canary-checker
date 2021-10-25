@@ -15,8 +15,6 @@ import (
 	"github.com/flanksource/commons/timer"
 	"github.com/hairyhenderson/gomplate/v3/base64"
 	"github.com/prometheus/client_golang/prometheus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -354,31 +352,10 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	prometheusStartupTime.WithLabelValues(check.Region).Set(launchTime.Seconds() * 1000)
 	time.Sleep(time.Duration(check.WaitTime) * time.Second)
 
-	var innerCanaries []v1.Canary
-
 	innerFail := false
-	var innerMessage []string
-
-	for _, canary := range check.CanaryRef {
-		innerCanary := v1.Canary{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "Canary",
-				APIVersion: "canaries.flanksource.com/v1",
-			},
-		}
-		err = kommonsClient.Get(namespace, canary.Name, &innerCanary)
-		logger.Infof("Accessing Canary %v/%v", namespace, canary.Name)
-		if err != nil {
-			innerFail = true
-			innerMessage = append(innerMessage, fmt.Sprintf("Could not retrieve canary ref %v in %v: %v", canary.Name, namespace, err))
-			break
-		}
-		if innerCanary.Name == "" {
-			innerFail = true
-			innerMessage = append(innerMessage, fmt.Sprintf("Could not retrieve canary ref %v in %v", canary.Name, namespace))
-			break
-		}
-		innerCanaries = append(innerCanaries, innerCanary)
+	innerCanaries, innerMessage, err := ctx.GetInnerCanaries(namespace, check.CanaryRef)
+	if err != nil {
+		innerFail = true
 	}
 
 	ec2Vars := map[string]interface{}{
