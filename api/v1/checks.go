@@ -899,7 +899,6 @@ type Folder struct {
 Exec Check executes a command or scrtipt file on the target host.
 On Linux/MacOS uses bash and on Windows uses powershell.
 [include:minimal/exec_pass.yaml]
-[include:minimal/exec_fail.yaml]
 */
 type Exec struct {
 	ExecCheck `yaml:",inline" json:",inline"`

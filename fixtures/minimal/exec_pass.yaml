@@ -9,4 +9,4 @@ spec:
      script: |
        echo "hello"
      test:
-       template: '{{ if (.results | strings.Contains "hello") }}true{{ else }}false {{end}}'
+       expr: 'results == "hello"'

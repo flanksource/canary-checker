@@ -1,18 +1,17 @@
 package checks
 
 import (
+	"bytes"
+	"fmt"
 	osExec "os/exec"
 	"runtime"
+	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 )
-
-func init() {
-	//register metrics here
-}
 
 type ExecChecker struct {
 }
@@ -47,21 +46,27 @@ func execPowershell(check v1.ExecCheck, ctx *context.Context) *pkg.CheckResult {
 	}
 	args := []string{*check.Script}
 	cmd := osExec.Command(ps, args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return result.Failf("error executing the command: %v", err)
-	}
-	result.AddDetails(string(output))
-	return result
+	return runCmd(cmd, result)
 }
 
 func execBash(check v1.ExecCheck, ctx *context.Context) *pkg.CheckResult {
 	result := pkg.Success(check, ctx.Canary)
 	cmd := osExec.Command("bash", "-c", *check.Script)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
+	return runCmd(cmd, result)
+}
+
+func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) *pkg.CheckResult {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
 		return result.Failf("error executing the command: %v", err)
 	}
-	result.AddDetails(string(output))
+	if stderr.String() != "" {
+		return result.Failf("error executing the command, expecting stdErr to be 0 but got: %v", stderr.String())
+	}
+	fmt.Println(stdout.String())
+	result.AddDetails(strings.TrimSpace(stdout.String()))
 	return result
 }

@@ -6,6 +6,6 @@ spec:
   exec:
    - description: "exec dummy check"
      script: |
-       echo "hi there"
+       eche "hi there"
      test:
-       template: '{{ if (.results | strings.Contains "hello") }}true{{ else }}false {{end}}'
+       expr: 'results == "hi there"'
