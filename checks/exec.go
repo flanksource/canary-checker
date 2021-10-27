@@ -2,10 +2,8 @@ package checks
 
 import (
 	"bytes"
-	"fmt"
 	osExec "os/exec"
 	"runtime"
-	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -14,6 +12,12 @@ import (
 )
 
 type ExecChecker struct {
+}
+
+type ExecDetails struct {
+	Stdout   string `json:"stdout"`
+	Stderr   string `json:"stderr"`
+	ExitCode int    `json:"exitCode"`
 }
 
 func (c *ExecChecker) Type() string {
@@ -66,7 +70,10 @@ func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) *pkg.CheckResult {
 	if stderr.String() != "" {
 		return result.Failf("error executing the command, expecting stdErr to be 0 but got: %v", stderr.String())
 	}
-	fmt.Println(stdout.String())
-	result.AddDetails(strings.TrimSpace(stdout.String()))
+	result.AddDetails(ExecDetails{
+		Stdout:   stdout.String(),
+		Stderr:   stderr.String(),
+		ExitCode: cmd.ProcessState.ExitCode(),
+	})
 	return result
 }
