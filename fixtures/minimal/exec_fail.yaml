@@ -1,3 +1,4 @@
+apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: exec-pass
@@ -7,5 +8,3 @@ spec:
    - description: "exec dummy check"
      script: |
        eche "hi there"
-     test:
-       expr: 'results == "hi there"'

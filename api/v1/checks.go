@@ -674,6 +674,13 @@ func (c ExecCheck) GetEndpoint() string {
 	return *c.Script
 }
 
+func (c ExecCheck) GetTestFunction() Template {
+	if c.Test.Expression == "" {
+		c.Test.Expression = "results.ExitCode == 0"
+	}
+	return c.Test
+}
+
 /*
 [include:minimal/http_pass.yaml]
 */

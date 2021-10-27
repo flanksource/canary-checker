@@ -4,6 +4,7 @@ import (
 	"bytes"
 	osExec "os/exec"
 	"runtime"
+	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -64,15 +65,10 @@ func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) *pkg.CheckResult {
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil {
-		return result.Failf("error executing the command: %v", err)
-	}
-	if stderr.String() != "" {
-		return result.Failf("error executing the command, expecting stdErr to be 0 but got: %v", stderr.String())
-	}
+	_ = cmd.Run()
 	result.AddDetails(ExecDetails{
-		Stdout:   stdout.String(),
-		Stderr:   stderr.String(),
+		Stdout:   strings.TrimSpace(stdout.String()),
+		Stderr:   strings.TrimSpace(stderr.String()),
 		ExitCode: cmd.ProcessState.ExitCode(),
 	})
 	return result

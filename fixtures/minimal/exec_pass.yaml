@@ -9,4 +9,4 @@ spec:
      script: |
        echo "hello"
      test:
-       expr: 'results == "hello"'
+       expr: 'results.Stdout == "hello"'
