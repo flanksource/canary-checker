@@ -32,6 +32,12 @@ const (
 	postgresDriver = "postgres"
 )
 
+type ResultMode string
+
+const (
+	JunitResultMode = "junit"
+)
+
 // CanarySpec defines the desired state of Canary
 type CanarySpec struct {
 	Env            map[string]VarSource  `yaml:"env,omitempty" json:"env,omitempty"`
@@ -65,10 +71,11 @@ type CanarySpec struct {
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
 	// Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
 	//  Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.
-	Schedule string `yaml:"schedule,omitempty" json:"schedule,omitempty"`
-	Icon     string `yaml:"icon,omitempty" json:"icon,omitempty"`
-	Severity string `yaml:"severity,omitempty" json:"severity,omitempty"`
-	Owner    string `yaml:"owner,omitempty" json:"owner,omitempty"`
+	Schedule   string     `yaml:"schedule,omitempty" json:"schedule,omitempty"`
+	Icon       string     `yaml:"icon,omitempty" json:"icon,omitempty"`
+	Severity   string     `yaml:"severity,omitempty" json:"severity,omitempty"`
+	Owner      string     `yaml:"owner,omitempty" json:"owner,omitempty"`
+	ResultMode ResultMode `yaml:"resultMode,omitempty" json:"resultMode,omitempty"`
 }
 
 func (spec CanarySpec) GetAllChecks() []external.Check {

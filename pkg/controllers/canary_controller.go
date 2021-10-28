@@ -91,7 +91,8 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	if canary.Status.ChecksStatus != nil {
 		specKeys := getAllCheckKeys(canary)
 		for statusKey := range canary.Status.ChecksStatus {
-			if !contains(specKeys, statusKey) {
+			// TODO: figure out how the ResutMode generated check would be handled
+			if !contains(specKeys, statusKey) && canary.Spec.ResultMode == "" {
 				logger.Info("removing stale check", "key", statusKey)
 				cache.RemoveCheckByKey(statusKey)
 				metrics.RemoveCheckByKey(statusKey)
@@ -137,7 +138,10 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 
 	observed.Store(req.NamespacedName, true)
-	cache.Cache.InitCheck(*canary)
+	// since we are combining the checks and we don't want individual checks to be displayed on the UI.
+	if canary.Spec.ResultMode == "" {
+		cache.Cache.InitCheck(*canary)
+	}
 	for _, entry := range r.Cron.Entries() {
 		if entry.Job.(CanaryJob).GetNamespacedName() == req.NamespacedName {
 			logger.V(2).Info("unscheduled", "id", entry.ID)

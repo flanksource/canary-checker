@@ -46,7 +46,6 @@ var Serve = &cobra.Command{
 			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
 		}
 		cron := cron.New()
-		cron.Start()
 
 		for _, canary := range configs {
 			if schedule == "" {
@@ -75,6 +74,7 @@ var Serve = &cobra.Command{
 				})
 			}
 		}
+		cron.Start()
 		serve()
 	},
 }

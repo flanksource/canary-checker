@@ -14,6 +14,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/text"
 	"github.com/flanksource/kommons"
@@ -239,4 +240,31 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 		return fmt.Sprint(output), nil
 	}
 	return "", nil
+}
+
+func GetJunitReportFromResults(results []*pkg.CheckResult) JunitTestSuites {
+	var testSuites JunitTestSuites
+	for _, result := range results {
+		var suite JunitTestSuite
+		suite.Name = result.Check.GetDescription()
+		suite.Tests = make([]JunitTest, 1)
+		testSuites.Duration += float64(result.Duration) / 1000
+		suite.Duration = float64(result.Duration) / 1000
+		suite.Tests[0].Duration = float64(result.Duration) / 1000
+		suite.Duration = float64(result.Duration) / 1000
+		suite.Tests[0].Classname = result.Check.GetType()
+		suite.Tests[0].Message = result.Message
+		if result.Pass {
+			suite.Passed = 1
+			suite.Tests[0].Status = "passed"
+			testSuites.Passed++
+		} else {
+			suite.Failed = 1
+			testSuites.Failed++
+			suite.Tests[0].Status = "failed"
+			suite.Tests[0].Error = fmt.Errorf(result.Error)
+		}
+		testSuites.Suites = append(testSuites.Suites, suite)
+	}
+	return testSuites
 }

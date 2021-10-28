@@ -71,6 +71,11 @@ func (suites JunitTestSuites) GetMessages() string {
 	return message
 }
 
+// func (suites JunitTestSuites) GetDisplayMessage() string {
+// 	var message string
+// 	message = message + "\n" + suites.Totals.String()
+// }
+
 type JunitTestSuites struct {
 	Suites []JunitTestSuite `json:"suites,omitempty"`
 	Totals `json:",inline"`
