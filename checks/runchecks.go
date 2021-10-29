@@ -64,21 +64,21 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 	if ctx.Canary.Spec.ResultMode != "" {
 		switch ctx.Canary.Spec.ResultMode {
 		case v1.JunitResultMode:
-			suites := GetJunitReportFromResults(results)
+			suite := GetJunitReportFromResults(ctx.Canary.GetName(), results)
 			var status = true
-			if suites.Totals.Failed > 0 {
+			if suite.Failed > 0 {
 				status = false
 			}
 			return []*pkg.CheckResult{
 				{
 					Pass:   status,
 					Canary: ctx.Canary,
-					Detail: suites,
+					Detail: suite,
 					Check: v1.JunitCheck{
 						TestResults: "combined",
 						Description: v1.Description{Description: "Result Mode: JUnit Report"},
 					},
-					Message: suites.String(),
+					Message: suite.String(),
 					Start:   time.Now(),
 				},
 			}

@@ -242,29 +242,27 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 	return "", nil
 }
 
-func GetJunitReportFromResults(results []*pkg.CheckResult) JunitTestSuites {
-	var testSuites JunitTestSuites
-	for _, result := range results {
-		var suite JunitTestSuite
-		suite.Name = result.Check.GetDescription()
-		suite.Tests = make([]JunitTest, 1)
-		testSuites.Duration += float64(result.Duration) / 1000
-		suite.Duration = float64(result.Duration) / 1000
-		suite.Tests[0].Duration = float64(result.Duration) / 1000
-		suite.Duration = float64(result.Duration) / 1000
-		suite.Tests[0].Classname = result.Check.GetType()
-		suite.Tests[0].Message = result.Message
-		if result.Pass {
-			suite.Passed = 1
-			suite.Tests[0].Status = "passed"
-			testSuites.Passed++
-		} else {
-			suite.Failed = 1
-			testSuites.Failed++
-			suite.Tests[0].Status = "failed"
-			suite.Tests[0].Error = fmt.Errorf(result.Error)
-		}
-		testSuites.Suites = append(testSuites.Suites, suite)
+func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) JunitTestSuite {
+	var testSuite = JunitTestSuite{
+		Name: canaryName,
 	}
-	return testSuites
+	for _, result := range results {
+		var test JunitTest
+		test.Classname = result.Check.GetType()
+		test.Name = result.Check.GetDescription()
+		test.Message = result.Message
+		test.Duration = float64(result.Duration) / 1000
+		testSuite.Duration += float64(result.Duration) / 1000
+		if result.Pass {
+			testSuite.Passed++
+			test.Status = "passed"
+		} else {
+			testSuite.Failed++
+			test.Status = "failed"
+			test.Error = fmt.Errorf(result.Error)
+		}
+		testSuite.Duration += float64(result.Duration) / 1000
+		testSuite.Tests = append(testSuite.Tests, test)
+	}
+	return testSuite
 }
