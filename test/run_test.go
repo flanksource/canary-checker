@@ -60,7 +60,7 @@ func TestRunChecks(t *testing.T) {
 
 func runFixture(t *testing.T, name string) {
 	t.Run(name, func(t *testing.T) {
-		canaries, err := pkg.ParseConfig(fmt.Sprintf("../%s/%s", testFolder, name))
+		canaries, err := pkg.ParseConfig(fmt.Sprintf("../%s/%s", testFolder, name), "")
 		if err != nil {
 			t.Error(err)
 			return
