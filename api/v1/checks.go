@@ -658,6 +658,29 @@ func (c FolderCheck) GetEndpoint() string {
 	return c.Path
 }
 
+type ExecCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	// Script can be a inline script or a path to a script that needs to be executed
+	// On windows executed via powershell and in darwin and linux executed using bash
+	Script *string `yaml:"script" json:"script"`
+}
+
+func (c ExecCheck) GetType() string {
+	return "exec"
+}
+
+func (c ExecCheck) GetEndpoint() string {
+	return *c.Script
+}
+
+func (c ExecCheck) GetTestFunction() Template {
+	if c.Test.Expression == "" {
+		c.Test.Expression = "results.ExitCode == 0"
+	}
+	return c.Test
+}
+
 /*
 [include:minimal/http_pass.yaml]
 */
@@ -880,6 +903,15 @@ type Folder struct {
 }
 
 /*
+Exec Check executes a command or scrtipt file on the target host.
+On Linux/MacOS uses bash and on Windows uses powershell.
+[include:minimal/exec_pass.yaml]
+*/
+type Exec struct {
+	ExecCheck `yaml:",inline" json:",inline"`
+}
+
+/*
 [include:aws/ec2_pass.yaml]
 */
 type EC2 struct {
@@ -932,4 +964,5 @@ var AllChecks = []external.Check{
 	GitHubCheck{},
 	Kubernetes{},
 	FolderCheck{},
+	ExecCheck{},
 }
