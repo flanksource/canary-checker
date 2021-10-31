@@ -6019,6 +6019,8 @@ spec:
                       - repository
                     type: object
                   type: array
+                resultMode:
+                  type: string
                 s3:
                   items:
                     properties:

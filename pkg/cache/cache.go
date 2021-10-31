@@ -97,7 +97,6 @@ func (c *cache) GetChecks(duration string) pkg.Checks {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 	result := pkg.Checks{}
-
 	for _, check := range c.Checks {
 		uptime, latency := metrics.GetMetrics(check.Key)
 		check.Uptime = uptime

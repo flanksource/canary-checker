@@ -14,6 +14,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/text"
 	"github.com/flanksource/kommons"
@@ -239,4 +240,29 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 		return fmt.Sprint(output), nil
 	}
 	return "", nil
+}
+
+func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) JunitTestSuite {
+	var testSuite = JunitTestSuite{
+		Name: canaryName,
+	}
+	for _, result := range results {
+		var test JunitTest
+		test.Classname = result.Check.GetType()
+		test.Name = result.Check.GetDescription()
+		test.Message = result.Message
+		test.Duration = float64(result.Duration) / 1000
+		testSuite.Duration += float64(result.Duration) / 1000
+		if result.Pass {
+			testSuite.Passed++
+			test.Status = "passed"
+		} else {
+			testSuite.Failed++
+			test.Status = "failed"
+			test.Error = fmt.Errorf(result.Error)
+		}
+		testSuite.Duration += float64(result.Duration) / 1000
+		testSuite.Tests = append(testSuite.Tests, test)
+	}
+	return testSuite
 }
