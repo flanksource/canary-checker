@@ -15,6 +15,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/push"
 
 	"github.com/flanksource/canary-checker/api/context"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/api"
@@ -33,13 +34,17 @@ import (
 var schedule, configFile string
 
 var Serve = &cobra.Command{
-	Use:   "serve",
+	Use:   "serve config.yaml",
 	Short: "Start a server to execute checks ",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		configs, err := pkg.ParseConfig(configFile)
-		if err != nil {
-			logger.Fatalf("could not parse %s: %v", configFile, err)
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, configFiles []string) {
+		var canaries []v1.Canary
+		for _, configfile := range configFiles {
+			configs, err := pkg.ParseConfig(configfile, dataFile)
+			if err != nil {
+				logger.Fatalf("could not parse %s: %v", configfile, err)
+			}
+			canaries = append(canaries, configs...)
 		}
 		kommonsClient, err := pkg.NewKommonsClient()
 		if err != nil {
@@ -47,7 +52,7 @@ var Serve = &cobra.Command{
 		}
 		cron := cron.New()
 
-		for _, canary := range configs {
+		for _, canary := range canaries {
 			if schedule == "" {
 				if canary.Spec.Schedule != "" {
 					schedule = canary.Spec.Schedule
@@ -102,7 +107,7 @@ func serve() {
 
 	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheusURL)
 
-	nethttp.Handle("/", nethttp.FileServer(staticRoot))
+	nethttp.HandleFunc("/", stripQuery(nethttp.FileServer(staticRoot).ServeHTTP))
 	nethttp.HandleFunc("/api", simpleCors(api.Handler, allowedCors))
 	nethttp.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))
 	nethttp.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler, allowedCors))
@@ -117,6 +122,14 @@ func serve() {
 
 	if err := nethttp.ListenAndServe(addr, nil); err != nil {
 		logger.Fatalf("failed to start server: %v", err)
+	}
+}
+
+// stripQuery removes query parameters for static sites
+func stripQuery(f nethttp.HandlerFunc) nethttp.HandlerFunc {
+	return func(w nethttp.ResponseWriter, r *nethttp.Request) {
+		r.URL.RawQuery = ""
+		f(w, r)
 	}
 }
 

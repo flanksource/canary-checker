@@ -20,7 +20,7 @@ import (
 	"github.com/flanksource/commons/logger"
 )
 
-var outputFile string
+var outputFile, dataFile string
 var junit, csv bool
 
 var Run = &cobra.Command{
@@ -42,7 +42,7 @@ var Run = &cobra.Command{
 
 		for _, configfile := range configFiles {
 			logger.Infof("Checking %s", configfile)
-			configs, err := pkg.ParseConfig(configfile)
+			configs, err := pkg.ParseConfig(configfile, dataFile)
 			if err != nil {
 				logger.Errorf("Could not parse %s: %v", configfile, err)
 				continue
@@ -108,6 +108,7 @@ var Run = &cobra.Command{
 
 func init() {
 	Run.Flags().StringVarP(&namespace, "namespace", "n", "", "Namespace to run canary checks in")
+	Run.Flags().StringVarP(&dataFile, "data", "d", "", "Template out each spec using the JSON or YAML data in this file")
 	Run.Flags().StringVarP(&outputFile, "output-file", "o", "", "file to output the results in")
 	Run.Flags().BoolVarP(&junit, "junit", "j", false, "output results in junit format")
 	Run.Flags().BoolVar(&csv, "csv", false, "output results in csv format")
