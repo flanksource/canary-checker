@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"os"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -15,8 +15,8 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-var PostgresUsername, PostgresPassword, PostgresHost, PostgresDatabase string
-var PostgresPort int
+var PostgresConnectionString string
+var PostgresCacheTimeout int
 
 type postgresCache struct {
 	Conn *pgxpool.Pool
@@ -26,31 +26,38 @@ var PostgresCache = &postgresCache{
 	Conn: nil,
 }
 
-func InitPostgres(username, password, database, host string, port int) (*pgxpool.Pool, error) {
-	connString := fmt.Sprintf("postgres://%v:%v@%v:%d/%v", username, password, host, port, database)
+func InitPostgres(connectionString string) (*pgxpool.Pool, error) {
+	var connString string
+	// Check if the connectionString Param contains a reference to env
+	val := os.Getenv(connectionString)
+	if val == "" {
+		connString = connectionString
+	} else {
+		connString = val
+	}
 	conn, err := pgxpool.Connect(context.Background(), connString)
 	if err != nil {
 		return nil, err
 	}
 	_, err = conn.Exec(context.TODO(), `CREATE TABLE IF NOT EXISTS checks(
+		canary json,
+		canary_name TEXT,
+		check_type TEXT NOT NULL,
+		description TEXT,
+		display_type TEXT,
+		endpoint TEXT,
+		icon TEXT,
+		id TEXT NOT NULL,
+		interval int,
 		key TEXT NOT NULL,
-		checktype TEXT NOT NULL,
+		labels json,
 		name TEXT NOT NULL,
 		namespace TEXT NOT NULL,
-		labels json,
-		runnerLabels json,
-		canaryName TEXT,
-		description TEXT,
-		endpoint TEXT,
-		Interval int,
-		schedule TEXT,
 		owner TEXT,
+		runner_labels json,
+		runner_name TEXT,
+		schedule TEXT,
 		severity TEXT,
-		icon TEXT,
-		displayType TEXT,
-		runnerName TEXT,
-		id TEXT NOT NULL,
-		canary json,
 		updated_at TIMESTAMP NOT NULL,
 		PRIMARY KEY (key)
 	)`)
@@ -59,26 +66,26 @@ func InitPostgres(username, password, database, host string, port int) (*pgxpool
 	}
 
 	_, err = conn.Exec(context.TODO(), `CREATE TABLE IF NOT EXISTS check_statuses(
-		Status boolean,
-		Invalid boolean,
-		Time TIMESTAMP,
+		check_key TEXT NOT NULL,
+		details json,
 		duration INT,
-		message TEXT,
-		Error Text,
-		Details json,
-		CheckKey TEXT NOT NULL,
+		error Text,
 		inserted_at TIMESTAMP NOT NULL,
-		PRIMARY KEY (time, CheckKey)
+		invalid boolean,
+		message TEXT,
+		status boolean,
+		time TIMESTAMP,
+		PRIMARY KEY (time, check_key)
 	)`)
 	if err != nil {
 		return nil, err
 	}
 	cron := cron.New()
 	cron.AddFunc("@every 1d", func() { // nolint: errcheck
-		if _, err := conn.Exec(context.TODO(), "DELETE FROM checks WHERE updated_at < NOW() - INTERVAL '28 days';"); err != nil {
+		if _, err := conn.Exec(context.TODO(), "DELETE FROM checks WHERE updated_at < NOW() - INTERVAL '1 day' * $1;", PostgresCacheTimeout); err != nil {
 			logger.Errorf("error deleting old entried from check")
 		}
-		if _, err := conn.Exec(context.TODO(), "DELETE FROM check_statuses WHERE inserted_at < NOW() - INTERVAL '28 days';"); err != nil {
+		if _, err := conn.Exec(context.TODO(), "DELETE FROM check_statuses WHERE inserted_at < NOW() - INTERVAL '1 day' * $1;", PostgresCacheTimeout); err != nil {
 			logger.Errorf("error deleting old entried from check")
 		}
 	})
@@ -120,45 +127,45 @@ func (c *postgresCache) InsertCheck(check pkg.Check) {
 		logger.Errorf("error marshalling canary: %v", err)
 	}
 	_, err = c.Conn.Exec(context.TODO(), `INSERT INTO checks(
+		canary,
+		canary_name,
+		check_type,
+		description,
+		display_type,
+		endpoint,
+		icon,
+		id,
+		interval,
 		key,
-		checktype,
+		labels,
 		name,
 		namespace,
-		labels,
-		runnerLabels,
-		canaryName,
-		description,
-		endpoint,
-		Interval,
-		schedule,
 		owner,
+		runner_labels,
+		runner_name,
+		schedule,
 		severity,
-		icon,
-		displayType,
-		runnerName,
-		id,
-		canary,
 		updated_at
 		)
 		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,NOW())`,
-		check.Key,
+		string(jsonCanary),
+		check.CanaryName,
 		check.Type,
+		check.Description,
+		check.DisplayType,
+		check.Endpoint,
+		check.Icon,
+		check.ID,
+		check.Interval,
+		check.Key,
+		string(jsonLabels),
 		check.Name,
 		check.Namespace,
-		string(jsonLabels),
-		string(jsonRunnerLabels),
-		check.CanaryName,
-		check.Description,
-		check.Endpoint,
-		check.Interval,
-		check.Schedule,
 		check.Owner,
-		check.Severity,
-		check.Icon,
-		check.DisplayType,
+		string(jsonRunnerLabels),
 		check.RunnerName,
-		check.ID,
-		string(jsonCanary),
+		check.Schedule,
+		check.Severity,
 	)
 	if err != nil {
 		logger.Errorf("error adding check to postgres: %v", err)
@@ -178,26 +185,26 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 		logger.Errorf("error marshalling details: %v", err)
 	}
 	_, err = c.Conn.Exec(context.TODO(), `INSERT INTO check_statuses(
-		Status,
-		Invalid,
-		Time,
+		check_key,
+		details,
 		duration,
+		error,
+		inserted_at,
+		invalid,
 		message,
-		Error,
-		CheckKey,
-		Details,
-		inserted_at
+		status,
+		time
 		)
-		VALUES($1,$2,$3,$4,$5,$6,$7,$8, NOW())
+		VALUES($1,$2,$3,$4,NOW(),$5,$6,$7,$8)
 		`,
-		status.Status,
-		status.Invalid,
-		status.Time,
-		status.Duration,
-		status.Message,
-		status.Error,
 		check.Key,
 		string(jsonDetails),
+		status.Duration,
+		status.Error,
+		status.Invalid,
+		status.Message,
+		status.Status,
+		status.Time,
 	)
 	if err != nil {
 		logger.Errorf("error adding check status to postgres: %v", err)
@@ -224,26 +231,26 @@ func (c *postgresCache) GetChecks() pkg.Checks {
 
 func (c *postgresCache) GetCheckFromKey(key string) *pkg.Check {
 	row := c.Conn.QueryRow(context.TODO(), "SELECT * FROM checks WHERE key=$1", key)
-	var checkType, name, namespace, canaryName, description, endpoint, schedule, owner, severity, icon, displayType, runnerName, id string
+	var checkType, name, namespace, canaryName, description, endpoint, schedule, severity, owner, icon, displayType, runnerName, id string
 	var canary *v1.Canary
 	var labels, runnerLabels map[string]string
 	var checkUpdatedAt time.Time
 	var interval int
-	if err := row.Scan(&key, &checkType, &name, &namespace, &labels, &runnerLabels, &canaryName, &description, &endpoint, &interval, &schedule, &owner, &severity, &icon, &displayType, &runnerName, &id, &canary, &checkUpdatedAt); err != nil {
+	if err := row.Scan(&canary, &canaryName, &checkType, &description, &displayType, &endpoint, &icon, &id, &interval, &key, &labels, &name, &namespace, &owner, &runnerLabels, &runnerName, &schedule, &severity, &checkUpdatedAt); err != nil {
 		logger.Errorf("error scanning check row: %v", err)
 		return nil
 	}
 	var passed, failed int
 	var latencyR1H pgtype.Float4
-	passRow := c.Conn.QueryRow(context.TODO(), `SELECT COUNT(1) as passed from check_statuses where status=true and checkkey=$1 and (inserted_at > NOW() - Interval '1 hour')`, key)
+	passRow := c.Conn.QueryRow(context.TODO(), `SELECT COUNT(1) as passed from check_statuses where status=true and check_key=$1 and (inserted_at > NOW() - Interval '1 hour')`, key)
 	if err := passRow.Scan(&passed); err != nil {
 		logger.Errorf("error scanning check status row for pass statuses: %v", err)
 	}
-	failRow := c.Conn.QueryRow(context.TODO(), `SELECT COUNT(1) as passed from check_statuses where status!=true and checkkey=$1 and (inserted_at > NOW() - Interval '1 hour')`, key)
+	failRow := c.Conn.QueryRow(context.TODO(), `SELECT COUNT(1) as passed from check_statuses where status!=true and check_key=$1 and (inserted_at > NOW() - Interval '1 hour')`, key)
 	if err := failRow.Scan(&failed); err != nil {
 		logger.Errorf("error scanning check status row for fail statuses: %v", err)
 	}
-	latencyRow := c.Conn.QueryRow(context.TODO(), `SELECT percentile_disc(0.99) within group (order by check_statuses.duration) from check_statuses where checkkey=$1 and (inserted_at > NOW() - Interval '1 hour')`, key)
+	latencyRow := c.Conn.QueryRow(context.TODO(), `SELECT percentile_disc(0.99) within group (order by check_statuses.duration) from check_statuses where check_key=$1 and (inserted_at > NOW() - Interval '1 hour')`, key)
 	if err := latencyRow.Scan(&latencyR1H); err != nil {
 		logger.Errorf("error scanning check status row for latency: %v", err)
 	}
@@ -289,21 +296,21 @@ func (c *postgresCache) RemoveCheckByKey(key string) {
 	if _, err := c.Conn.Exec(context.TODO(), `DELETE FROM checks WHERE key=$1`, key); err != nil {
 		logger.Errorf("error deleting check from postgres: %v", err)
 	}
-	if _, err := c.Conn.Exec(context.TODO(), `DELETE FROM check_statuses WHERE checkKey=$1`, key); err != nil {
+	if _, err := c.Conn.Exec(context.TODO(), `DELETE FROM check_statuses WHERE check_key=$1`, key); err != nil {
 		logger.Errorf("error deleting check_statuses from postgres: %v", err)
 	}
 }
 
 func (c *postgresCache) ListCheckStatus(checkKey string, count int64, duration *time.Duration) []pkg.CheckStatus {
 	if duration != nil {
-		statusRows, err := c.Conn.Query(context.TODO(), `SELECT * FROM check_statuses WHERE checkKey=$1 and (inserted_at > NOW() - Interval '1 SECOND' * $2) ORDER BY inserted_at DESC LIMIT $3`, checkKey, duration.Seconds(), count)
+		statusRows, err := c.Conn.Query(context.TODO(), `SELECT * FROM check_statuses WHERE check_key=$1 and (inserted_at > NOW() - Interval '1 SECOND' * $2) ORDER BY inserted_at DESC LIMIT $3`, checkKey, duration.Seconds(), count)
 		if err != nil {
 			logger.Errorf("error querying check_statuses: %v", err)
 			return nil
 		}
 		return scanStatusRows(statusRows)
 	}
-	statusRows, err := c.Conn.Query(context.TODO(), `SELECT * FROM check_statuses WHERE checkKey=$1 ORDER BY inserted_at DESC LIMIT $2`, checkKey, count)
+	statusRows, err := c.Conn.Query(context.TODO(), `SELECT * FROM check_statuses WHERE check_key=$1 ORDER BY inserted_at DESC LIMIT $2`, checkKey, count)
 	if err != nil {
 		logger.Errorf("error querying check_statuses: %v", err)
 		return nil
@@ -318,8 +325,8 @@ func scanStatusRows(statusRows pgx.Rows) []pkg.CheckStatus {
 		var message, error, checkKey string
 		var duration int
 		var details interface{}
-		var statusTime, statusUpdatedAt time.Time
-		if err := statusRows.Scan(&status, &invalid, &statusTime, &duration, &message, &error, &details, &checkKey, &statusUpdatedAt); err != nil {
+		var statusTime, statusInsertedAt time.Time
+		if err := statusRows.Scan(&checkKey, &details, &duration, &error, &statusInsertedAt, &invalid, &message, &status, &statusTime); err != nil {
 			logger.Errorf("error scanning check status row: %v", err)
 			continue
 		}
@@ -338,7 +345,7 @@ func scanStatusRows(statusRows pgx.Rows) []pkg.CheckStatus {
 
 func (c *postgresCache) GetDetails(checkkey string, time string) interface{} {
 	var details interface{}
-	row := c.Conn.QueryRow(context.TODO(), `SELECT details from check_statuses where checkkey=$1 and time=$2`, checkkey, time)
+	row := c.Conn.QueryRow(context.TODO(), `SELECT details from check_statuses where check_key=$1 and time=$2`, checkkey, time)
 	if err := row.Scan(&details); err != nil {
 		logger.Errorf("error fetching details from check_statuses: %v", err)
 	}
