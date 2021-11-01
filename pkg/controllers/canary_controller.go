@@ -94,7 +94,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 			// TODO: figure out how the ResutMode generated check would be handled
 			if !contains(specKeys, statusKey) && canary.Spec.ResultMode == "" {
 				logger.Info("removing stale check", "key", statusKey)
-				cache.RemoveCheckByKey(statusKey)
+				cache.CacheChain.RemoveCheckByKey(statusKey)
 				metrics.RemoveCheckByKey(statusKey)
 				update = true
 			}
@@ -102,7 +102,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 	if !canary.DeletionTimestamp.IsZero() {
 		logger.Info("removing", "check", canary.Name)
-		cache.RemoveCheck(*canary)
+		cache.CacheChain.RemoveChecks(*canary)
 		metrics.RemoveCheck(*canary)
 		controllerutil.RemoveFinalizer(canary, FinalizerName)
 		if err := r.Update(ctx, canary); err != nil {
@@ -140,8 +140,9 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	observed.Store(req.NamespacedName, true)
 	// since we are combining the checks and we don't want individual checks to be displayed on the UI.
 	if canary.Spec.ResultMode == "" {
-		cache.Cache.InitCheck(*canary)
+		cache.InMemoryCache.InitCheck(*canary)
 	}
+	// TODO shouldn't be deleting entries every time, only add once and remove and add new one if interval or schedule is changed.
 	for _, entry := range r.Cron.Entries() {
 		if entry.Job.(CanaryJob).GetNamespacedName() == req.NamespacedName {
 			logger.V(2).Info("unscheduled", "id", entry.ID)
@@ -200,7 +201,6 @@ func (r *CanaryReconciler) Report(ctx *context.Context, canary v1.Canary, result
 	transitioned := false
 	var messages, errors []string
 	var checkStatus = make(map[string]*v1.CheckStatus)
-
 	var duration int64
 	var pass = true
 	var passed int
@@ -209,14 +209,14 @@ func (r *CanaryReconciler) Report(ctx *context.Context, canary v1.Canary, result
 			r.Log.Info(result.String())
 		}
 		duration += result.Duration
-		lastResult := cache.AddCheck(canary, result)
+		cache.CacheChain.Add(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
 		uptime, latency := metrics.Record(canary, result)
 		checkKey := canary.GetKey(result.Check)
 		checkStatus[checkKey] = &v1.CheckStatus{}
 		checkStatus[checkKey].Uptime1H = uptime.String()
 		checkStatus[checkKey].Latency1H = latency.String()
-
-		if lastResult != nil && len(lastResult.Statuses) > 0 && (lastResult.Statuses[0].Status != result.Pass) {
+		lastStatus := cache.InMemoryCache.ListCheckStatus(checkKey, 1, nil)
+		if len(lastStatus) > 0 && (lastStatus[0].Status != result.Pass) {
 			transitioned = true
 		}
 		if !result.Pass {
@@ -238,7 +238,7 @@ func (r *CanaryReconciler) Report(ctx *context.Context, canary v1.Canary, result
 		}
 		checkStatus[checkKey].Message = &result.Message
 		checkStatus[checkKey].ErrorMessage = &result.Error
-		push.Queue(pkg.FromV1(canary, result.Check, pkg.FromResult(*result)))
+		push.Queue(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
 	}
 
 	uptime, latency := metrics.Record(canary, &pkg.CheckResult{
@@ -306,7 +306,6 @@ func (c CanaryJob) GetNamespacedName() types.NamespacedName {
 func (c CanaryJob) Run() {
 	c.V(2).Info("Starting")
 	results := checks.RunChecks(c.Context)
-
 	c.Client.Report(c.Context, c.Canary, results)
 
 	c.V(3).Info("Ending")

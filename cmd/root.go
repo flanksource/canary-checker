@@ -36,6 +36,11 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringSliceVar(&pullServers, "pull-servers", []string{}, "push check results to multiple canary servers")
 	flags.StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 	flags.StringVar(&prometheusURL, "prometheus", "", "URL of the prometheus server that is scraping this instance")
+	flags.StringVar(&cache.PostgresHost, "postgres-host", "", "Address for the postgres database")
+	flags.StringVar(&cache.PostgresUsername, "postgres-user", "", "Username for the postgres database")
+	flags.StringVar(&cache.PostgresPassword, "postgres-passwd", "", "Password for the postgres database")
+	flags.StringVar(&cache.PostgresDatabase, "postgres-db", "", "Database for the postgres database")
+	flags.IntVar(&cache.PostgresPort, "postgres-port", 5432, "Port for the postgres database")
 }
 
 func init() {

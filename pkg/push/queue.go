@@ -19,9 +19,18 @@ func AddServers(servers []string) {
 	}
 }
 
-func Queue(check pkg.Check) {
+type QueueData struct {
+	Check  pkg.Check       `json:",inline"`
+	Status pkg.CheckStatus `json:",inline"`
+}
+
+func Queue(check pkg.Check, status pkg.CheckStatus) {
+	data := QueueData{
+		Check:  check,
+		Status: status,
+	}
 	for _, queue := range Queues {
-		queue.PushBack(check)
+		queue.PushBack(data)
 	}
 }
 
@@ -38,16 +47,16 @@ func consumeQueue(server string, queue *goqueue.Queue) {
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
-		check := element.(pkg.Check)
-		jsonData, err := json.Marshal(check)
+		data := element.(QueueData)
+		jsonData, err := json.Marshal(data)
 		if err != nil {
 			logger.Errorf("error unmarshalling request body: %v", err)
-			return
+			continue
 		}
 		err = PostDataToServer(strings.TrimSpace(server), bytes.NewBuffer(jsonData))
 		if err != nil {
 			logger.Errorf("error sending data to server %v body: %v", server, err)
-			return
+			continue
 		}
 	}
 }

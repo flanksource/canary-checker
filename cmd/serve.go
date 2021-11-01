@@ -72,8 +72,9 @@ var Serve = &cobra.Command{
 							if logPass && result.Pass || logFail && !result.Pass {
 								logger.Infof(result.String())
 							}
-							cache.AddCheck(canary, result)
+							cache.CacheChain.Add(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
 							metrics.Record(canary, result)
+							push.Queue(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
 						}
 					}()
 				})
@@ -101,7 +102,20 @@ func serve() {
 	}
 
 	nethttp.Handle("/metrics", promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{}))
-
+	if cache.PostgresHost != "" {
+		conn, err := cache.InitPostgres(cache.PostgresUsername, cache.PostgresPassword, cache.PostgresDatabase, cache.PostgresHost, cache.PostgresPort)
+		if err != nil {
+			logger.Debugf("error connecting with postgres. Only using in-memory cache: %v", err)
+		}
+		if conn != nil {
+			// needs to be implemented
+			cache.PostgresCache.Conn = conn
+			cache.CacheChain.Chain = append(cache.CacheChain.Chain, cache.PostgresCache)
+			for _, check := range cache.PostgresCache.GetChecks() {
+				cache.InMemoryCache.Checks[check.Key] = check
+			}
+		}
+	}
 	push.AddServers(pushServers)
 	go push.Start()
 

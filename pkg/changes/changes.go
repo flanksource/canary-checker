@@ -38,7 +38,7 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 
 	results := []changes.Changes{}
 
-	for _, check := range cache.Cache.Checks {
+	for _, check := range cache.InMemoryCache.Checks {
 		i := 0
 		scope := []changes.Scope{
 			{

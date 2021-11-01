@@ -25,7 +25,8 @@ func CheckHandler(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	check := cache.Cache.GetCheckFromKey(key)
+	// TODO: have it return pkg.Check
+	check := cache.InMemoryCache.GetCheckFromKey(key)
 	if check == nil {
 		logger.Errorf("no check found for key %v", key)
 		fmt.Fprintf(w, "no check found for key %v", key)
