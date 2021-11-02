@@ -17,7 +17,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.8.1
-	github.com/aws/smithy-go v1.8.0 // indirect
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
 	github.com/chartmuseum/helm-push v0.8.1
 	github.com/containerd/cgroups v0.0.0-20200824123100-0b889c03f102 // indirect
@@ -39,7 +38,7 @@ require (
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/henvic/httpretty v0.0.6
 	github.com/hirochachacha/go-smb2 v1.0.10
-	github.com/jackc/pgtype v1.8.1 // indirect
+	github.com/jackc/pgtype v1.8.1
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
