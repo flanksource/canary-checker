@@ -34,11 +34,9 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	startTime := time.Now().UTC()
-
 	results := []changes.Changes{}
 
-	for _, check := range cache.InMemoryCache.Checks {
+	for _, check := range cache.QueryChecks(cache.CacheChain, int64(cache.Size), &timeDuration, "") {
 		i := 0
 		scope := []changes.Scope{
 			{
@@ -78,9 +76,6 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 				fmt.Fprintf(w, "error parsing check records")
 				w.WriteHeader(http.StatusInternalServerError)
 				return
-			}
-			if checkTime.Add(timeDuration).Before(startTime) {
-				break
 			}
 			if i == 0 {
 				prevStatus = check.Statuses[i].Status
