@@ -1,0 +1,3 @@
+resources:
+  - git_check_pass.yaml
+  - git_test_expression_pass.yaml
