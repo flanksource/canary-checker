@@ -19,8 +19,18 @@ func Contextualise(check external.Check, ctx *context.Context) (external.Check, 
 	if err != nil {
 		return check, err
 	}
-	// Implement defaults by marshalling ctx.Canaries.Defaults and unmarshalling into defaults before templated values
-	yaml.Unmarshal(checkText, &updated)
+	defaultText, err := yaml.Marshal(ctx.Canary.Spec.Defaults)
+	if err != nil {
+		return check, err
+	}
+	err = yaml.Unmarshal(defaultText, &updated)
+	if err != nil {
+		return check, err
+	}
+	err = yaml.Unmarshal(checkText, &updated)
+	if err != nil {
+		return check, err
+	}
 	client, err := ctx.Kommons.GetClientset()
 	if err != nil {
 		return check, err
