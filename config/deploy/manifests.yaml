@@ -64,6 +64,128 @@ spec:
             spec:
               description: CanarySpec defines the desired state of Canary
               properties:
+                awsConfig:
+                  items:
+                    properties:
+                      aggregatorName:
+                        type: string
+                      awsConnection:
+                        properties:
+                          accessKey:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          endpoint:
+                            type: string
+                          objectPath:
+                            description: glob path to restrict matches to a subset
+                            type: string
+                          region:
+                            type: string
+                          secretKey:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          skipTLSVerify:
+                            description: Skip TLS verify when connecting to aws
+                            type: boolean
+                          usePathStyle:
+                            description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                            type: boolean
+                        required:
+                          - accessKey
+                          - region
+                          - secretKey
+                        type: object
+                      description:
+                        description: Description for the check
+                        type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      name:
+                        description: Name of the check
+                        type: string
+                      query:
+                        type: string
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                    required:
+                      - query
+                    type: object
+                  type: array
                 cloudwatch:
                   items:
                     properties:

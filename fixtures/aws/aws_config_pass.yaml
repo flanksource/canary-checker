@@ -1,0 +1,29 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: awsconfig-pass
+spec:
+  interval: 30
+  awsConfig:
+    - query: |
+        SELECT
+        configuration.complianceType,
+        COUNT(*)
+        WHERE
+        resourceType = 'AWS::Config::ResourceCompliance'
+        GROUP BY
+        configuration.complianceType
+      awsConnection:
+        accessKeyID:
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_ACCESS_KEY_ID
+        secretKey:
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_SECRET_ACCESS_KEY
+        region: af-south-1
+      display:
+        template: "{{ .results }}"
