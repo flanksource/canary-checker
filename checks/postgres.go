@@ -31,5 +31,9 @@ func (c *PostgresChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *PostgresChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	return CheckSQL(ctx, extConfig.(v1.PostgresCheck).SQLCheck)
+	updated, err := Contextualise(extConfig, ctx)
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	return CheckSQL(ctx, updated.(v1.PostgresCheck).SQLCheck)
 }

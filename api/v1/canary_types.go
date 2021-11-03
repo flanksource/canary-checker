@@ -66,6 +66,7 @@ type CanarySpec struct {
 	CloudWatch     []CloudWatchCheck     `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
 	GitHub         []GitHubCheck         `yaml:"github,omitempty" json:"github,omitempty"`
 	Kubernetes     []KubernetesCheck     `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
+	KubernetesCreator     []KubernetesCreatorCheck     `yaml:"kubernetesCreator,omitempty" json:"kubernetes,omitempty"`
 	Folder         []FolderCheck         `yaml:"folder,omitempty" json:"folder,omitempty"`
 	Exec           []ExecCheck           `yaml:"exec,omitempty" json:"exec,omitempty"`
 	// interval (in seconds) to run checks on Deprecated in favor of Schedule
@@ -154,6 +155,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Kubernetes {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.KubernetesCreator {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Folder {

@@ -310,7 +310,11 @@ func (cfg *AWS) Describe(instanceID string, timeout time.Duration) (internalIP s
 }
 
 func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.EC2Check)
+	updated, err := Contextualise(extConfig, ctx)
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.EC2Check)
 	prometheusCount.WithLabelValues(check.Region).Inc()
 	namespace := ctx.Canary.Namespace
 

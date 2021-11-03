@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -593,6 +594,24 @@ type ResourceSelector struct {
 	Name          string `yaml:"name,omitempty" json:"name,omitempty"`
 	LabelSelector string `json:"labelSelector,omitempty" yaml:"labelSelector,omitempty"`
 	FieldSelector string `json:"fieldSelector,omitempty" yaml:"fieldSelector,omitempty"`
+}
+
+type KubernetesCreatorCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	ResourceSpec []unstructured.Unstructured  `yaml:"resourceSpec,omitempty" json:"resourceSpec,omitempty"`
+	CanaryRef    []v1.LocalObjectReference `yaml:"canaryRef,omitempty" json:"canaryRef,omitempty"`
+}
+
+func (c KubernetesCreatorCheck) GetEndpoint() string {
+	if len(c.ResourceSpec) > 0 {
+		return fmt.Sprintf("%v/%v", c.ResourceSpec[0].GetKind(), c.ResourceSpec[0].GetName())
+	}
+	return ""
+}
+
+func (c KubernetesCreatorCheck) GetType() string {
+	return "KubernetesCreator"
 }
 
 type KubernetesCheck struct {

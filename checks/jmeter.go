@@ -37,7 +37,11 @@ func (c *JmeterChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 
 func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
-	jmeterCheck := extConfig.(v1.JmeterCheck)
+	updated, err := Contextualise(extConfig, ctx)
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	jmeterCheck := updated.(v1.JmeterCheck)
 	namespace := ctx.Canary.Namespace
 	_, value, err := ctx.Kommons.GetEnvValue(jmeterCheck.Jmx, namespace)
 	if err != nil {

@@ -31,7 +31,11 @@ func (c *CloudWatchChecker) Type() string {
 }
 
 func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.CloudWatchCheck)
+	updated, err := Contextualise(extConfig, ctx)
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.CloudWatchCheck)
 	result := pkg.Success(check, ctx.Canary)
 	cfg, err := awsUtil.NewSession(ctx, check.AWSConnection)
 	if err != nil {

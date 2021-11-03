@@ -80,7 +80,11 @@ func (c *FolderChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.FolderCheck)
+	updated, err := Contextualise(extConfig, ctx)
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.FolderCheck)
 	path := strings.ToLower(check.Path)
 	switch {
 	case strings.HasPrefix(path, "s3://"):

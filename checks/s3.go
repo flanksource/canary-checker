@@ -62,7 +62,11 @@ func (c *S3Checker) Type() string {
 }
 
 func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.S3Check)
+	updated, err := Contextualise(extConfig, ctx)
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.S3Check)
 	bucket := check.Bucket
 
 	cfg := aws.NewConfig().

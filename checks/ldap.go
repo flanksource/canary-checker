@@ -32,7 +32,11 @@ func (c *LdapChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 // CheckConfig : Check every ldap entry for lookup and auth
 // Returns check result and metrics
 func (c *LdapChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.LDAPCheck)
+	updated, err := Contextualise(extConfig, ctx)
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.LDAPCheck)
 	ld, err := ldap.DialURL(check.Host, ldap.DialWithTLSConfig(&tls.Config{
 		InsecureSkipVerify: check.SkipTLSVerify,
 	}))

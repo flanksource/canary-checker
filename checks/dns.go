@@ -41,7 +41,11 @@ var resolvers = map[string]func(ctx context.Context, r *net.Resolver, check v1.D
 }
 
 func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.DNSCheck)
+	updated, err := Contextualise(extConfig, ctx)
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.DNSCheck)
 	result := pkg.Success(check, ctx.Canary)
 
 	timeout := check.Timeout

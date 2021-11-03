@@ -44,7 +44,11 @@ func (c *ContainerdPullChecker) Type() string {
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
 func (c *ContainerdPullChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.ContainerdPullCheck)
+	updated, err := Contextualise(extConfig, ctx)
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.ContainerdPullCheck)
 	start := time.Now()
 
 	containerdClient, err := containerd.New(containerdSocket)

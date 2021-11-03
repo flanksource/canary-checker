@@ -35,7 +35,11 @@ func (c *GitHubChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.GitHubCheck)
+	updated, err := Contextualise(extConfig, ctx)
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.GitHubCheck)
 	checkResult := pkg.Success(check, ctx.Canary)
 	_, githubToken, err := ctx.Kommons.GetEnvValue(*check.GithubToken, ctx.Canary.GetNamespace())
 	if err != nil {
