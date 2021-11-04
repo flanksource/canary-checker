@@ -56,7 +56,7 @@ func (c *KubernetesCreatorChecker) Run(ctx *context.Context) []*pkg.CheckResult 
 // CheckConfig : Check every ldap entry for lookup and auth
 // Returns check result and metrics
 func (c *KubernetesCreatorChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := Contextualise(extConfig, ctx)
+	updated, err := ctx.Contextualise(extConfig)
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

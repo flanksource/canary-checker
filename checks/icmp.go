@@ -49,7 +49,7 @@ func (c *IcmpChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
 func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := Contextualise(extConfig, ctx)
+	updated, err := ctx.Contextualise(extConfig)
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

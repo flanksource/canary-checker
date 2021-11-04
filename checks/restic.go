@@ -42,7 +42,7 @@ func (c *ResticChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 
 func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
-	updated, err := Contextualise(extConfig, ctx)
+	updated, err := ctx.Contextualise(extConfig)
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

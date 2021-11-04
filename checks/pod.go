@@ -140,7 +140,7 @@ func diff(times map[v1.PodConditionType]metav1.Time, c1 v1.PodConditionType, c2 
 }
 
 func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := Contextualise(extConfig, ctx)
+	updated, err := ctx.Contextualise(extConfig)
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

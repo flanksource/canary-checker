@@ -4,7 +4,11 @@ import (
 	gocontext "context"
 	"errors"
 	"fmt"
+	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/kommons/ktemplate"
+	"gopkg.in/flanksource/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"reflect"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -96,4 +100,40 @@ func (ctx *Context) GetCanaries(namespace string, canaryRef []k8sv1.LocalObjectR
 		return innerCanaries, innerMessage, errors.New("error retrieving chained canaries")
 	}
 	return innerCanaries, innerMessage, nil
+}
+
+// Contexualize merges metadata from environment/defaulting/chained checks into check structure
+
+func (ctx *Context) Contextualise(check external.Check) (external.Check, error) {
+	updated := reflect.Zero(reflect.TypeOf(check)).Elem().Interface()
+
+	checkText, err := yaml.Marshal(check)
+	if err != nil {
+		return check, err
+	}
+	defaultText, err := yaml.Marshal(ctx.Canary.Spec.Defaults)
+	if err != nil {
+		return check, err
+	}
+	err = yaml.Unmarshal(defaultText, &updated)
+	if err != nil {
+		return check, err
+	}
+	err = yaml.Unmarshal(checkText, &updated)
+	if err != nil {
+		return check, err
+	}
+	client, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return check, err
+	}
+	templater := ktemplate.StructTemplater{
+		Values: ctx.Environment,
+		Clientset: client,
+	}
+	err = templater.Walk(&updated)
+	if err != nil {
+		return check, nil
+	}
+	return updated.(external.Check), nil
 }

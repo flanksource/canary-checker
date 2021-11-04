@@ -28,7 +28,7 @@ func (c *PrometheusChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := Contextualise(extConfig, ctx)
+	updated, err := ctx.Contextualise(extConfig)
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

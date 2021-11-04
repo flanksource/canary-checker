@@ -32,7 +32,7 @@ func (t *TCPChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 
 // Check performs a single tcp check, returning a checkResult
 func (t *TCPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := Contextualise(extConfig, ctx)
+	updated, err := ctx.Contextualise(extConfig)
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

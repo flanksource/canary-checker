@@ -310,7 +310,7 @@ func (cfg *AWS) Describe(instanceID string, timeout time.Duration) (internalIP s
 }
 
 func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := Contextualise(extConfig, ctx)
+	updated, err := ctx.Contextualise(extConfig)
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

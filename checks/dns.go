@@ -41,7 +41,7 @@ var resolvers = map[string]func(ctx context.Context, r *net.Resolver, check v1.D
 }
 
 func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := Contextualise(extConfig, ctx)
+	updated, err := ctx.Contextualise(extConfig)
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}
