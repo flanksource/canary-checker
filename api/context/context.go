@@ -65,7 +65,7 @@ func (ctx *Context) New(environment map[string]interface{}) *Context {
 		Logger:      ctx.Logger,
 	}
 }
-func (ctx *Context) GetInnerCanaries(namespace string, canaryRef []k8sv1.LocalObjectReference) ([]v1.Canary, []string, error) {
+func (ctx *Context) GetCanaries(namespace string, canaryRef []k8sv1.LocalObjectReference) ([]v1.Canary, []string, error) {
 	var innerCanaries []v1.Canary
 
 	innerFail := false

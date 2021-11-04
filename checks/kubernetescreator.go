@@ -85,7 +85,7 @@ func (c *KubernetesCreatorChecker) Check(ctx *context.Context, extConfig externa
 		"resources": templateInfo,
 	}
 	innerFail := false
-	innerCanaries, innerMessage, err := ctx.GetInnerCanaries(namespace, check.CanaryRef)
+	innerCanaries, innerMessage, err := ctx.GetCanaries(namespace, check.CanaryRef)
 	if err != nil {
 		innerFail = true
 	}

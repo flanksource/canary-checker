@@ -357,7 +357,7 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	time.Sleep(time.Duration(check.WaitTime) * time.Second)
 
 	innerFail := false
-	innerCanaries, innerMessage, err := ctx.GetInnerCanaries(namespace, check.CanaryRef)
+	innerCanaries, innerMessage, err := ctx.GetCanaries(namespace, check.CanaryRef)
 	if err != nil {
 		innerFail = true
 	}
