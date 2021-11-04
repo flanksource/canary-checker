@@ -50,10 +50,10 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	if modelValue != nil {
 		for i, value := range modelValue.(model.Vector) {
 			val := make(map[string]interface{})
-			val["value"] = value.Value
+			val["value"] = float64(value.Value)
 			if i == 0 {
 				data["firstResult"] = val
-				data["value"] = value.Value
+				data["value"] = float64(value.Value)
 			}
 			for k, v := range value.Metric {
 				val[string(k)] = v
