@@ -107,7 +107,7 @@ func (ctx *Context) GetCanaries(namespace string, canaryRef []k8sv1.LocalObjectR
 // Contexualize merges metadata from environment/defaulting/chained checks into check structure
 
 func (ctx *Context) Contextualise(check external.Check) (external.Check, error) {
-	updated := reflect.Zero(reflect.TypeOf(check)).Elem().Interface()
+	updated := reflect.Zero(reflect.TypeOf(&check)).Interface()
 
 	checkText, err := yaml.Marshal(check)
 	if err != nil {

@@ -298,6 +298,10 @@ spec:
                       - image
                     type: object
                   type: array
+                defaults:
+                  additionalProperties:
+                    type: Any
+                  type: object
                 dns:
                   items:
                     properties:
@@ -5260,6 +5264,51 @@ spec:
                         type: object
                     required:
                       - kind
+                    type: object
+                  type: array
+                kubernetesCreator:
+                  items:
+                    properties:
+                      canaryRef:
+                        items:
+                          description: LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.
+                          properties:
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                          type: object
+                        type: array
+                      description:
+                        description: Description for the check
+                        type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      name:
+                        description: Name of the check
+                        type: string
+                      resourceSpec:
+                        items:
+                          type: object
+                        type: array
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                     type: object
                   type: array
                 ldap:
