@@ -4,12 +4,13 @@ import (
 	gocontext "context"
 	"errors"
 	"fmt"
+	"reflect"
+	"time"
+
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/kommons/ktemplate"
 	"gopkg.in/flanksource/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reflect"
-	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/logger"
@@ -17,6 +18,7 @@ import (
 	k8sv1 "k8s.io/api/core/v1"
 )
 
+// +k8s:deepcopy-gen=false
 type Context struct {
 	gocontext.Context
 	Kommons     *kommons.Client
@@ -128,8 +130,14 @@ func (ctx *Context) Contextualise(check external.Check) (external.Check, error) 
 		return check, err
 	}
 	templater := ktemplate.StructTemplater{
-		Values: ctx.Environment,
+		Values:    ctx.Environment,
 		Clientset: client,
+		// Don't template connection strings at this point
+		// connection templating may be dependent on further lookup actions that may only be possible after this round of templating
+		// See checks/common/GetConnection
+		IgnoreFields: map[string]string{
+			"connection": "string",
+		},
 	}
 	err = templater.Walk(&updated)
 	if err != nil {
