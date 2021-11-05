@@ -2,8 +2,9 @@ package v1
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"strings"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/kommons"
@@ -597,10 +598,10 @@ type ResourceSelector struct {
 }
 
 type KubernetesCreatorCheck struct {
-	Description `yaml:",inline" json:",inline"`
-	Templatable `yaml:",inline" json:",inline"`
-	ResourceSpec []unstructured.Unstructured  `yaml:"resourceSpec,omitempty" json:"resourceSpec,omitempty"`
-	CanaryRef    []v1.LocalObjectReference `yaml:"canaryRef,omitempty" json:"canaryRef,omitempty"`
+	Description  `yaml:",inline" json:",inline"`
+	Templatable  `yaml:",inline" json:",inline"`
+	ResourceSpec []unstructured.Unstructured `yaml:"resourceSpec,omitempty" json:"resourceSpec,omitempty"`
+	CanaryRef    []v1.LocalObjectReference   `yaml:"canaryRef,omitempty" json:"canaryRef,omitempty"`
 }
 
 func (c KubernetesCreatorCheck) GetEndpoint() string {

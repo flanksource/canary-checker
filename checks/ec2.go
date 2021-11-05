@@ -9,13 +9,14 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 
+	"net/http"
+
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/timer"
 	"github.com/hairyhenderson/gomplate/v3/base64"
 	"github.com/prometheus/client_golang/prometheus"
-	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
