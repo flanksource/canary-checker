@@ -2,10 +2,12 @@ package checks
 
 import (
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
 	"strings"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	goctx "context"
+
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -19,6 +21,7 @@ type KubernetesCreatorChecker struct{}
 func (c *KubernetesCreatorChecker) Type() string {
 	return "kubernetescreator"
 }
+
 var (
 	k8sCreatePrometheusCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -61,7 +64,7 @@ func (c *KubernetesCreatorChecker) Check(ctx *context.Context, extConfig externa
 		return pkg.Fail(extConfig, ctx.Canary)
 	}
 	check := updated.(v1.KubernetesCreatorCheck)
-	prometheusCount.WithLabelValues(check.GetEndpoint()).Inc()
+	k8sCreatePrometheusCount.WithLabelValues(check.GetEndpoint()).Inc()
 	result := pkg.Success(check, ctx.Canary)
 	namespace := ctx.Canary.Namespace
 	var created []*unstructured.Unstructured
@@ -107,11 +110,12 @@ func (c *KubernetesCreatorChecker) Check(ctx *context.Context, extConfig externa
 		return c.HandleFail(check, fmt.Sprintf("referenced canaries failed: %v", strings.Join(innerMessage, ", ")))
 	}
 
+	k8sCreatePrometheusPassCount.WithLabelValues(check.GetEndpoint()).Inc()
 	return result
 }
 
 func (c KubernetesCreatorChecker) HandleFail(check v1.KubernetesCreatorCheck, message string) *pkg.CheckResult {
-	prometheusFailCount.WithLabelValues(check.GetEndpoint()).Inc()
+	k8sCreatePrometheusFailCount.WithLabelValues(check.GetEndpoint()).Inc()
 	return &pkg.CheckResult{ // nolint: staticcheck
 		Check:       check,
 		Pass:        false,
