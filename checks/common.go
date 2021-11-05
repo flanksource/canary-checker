@@ -47,7 +47,7 @@ func GetConnection(ctx *context.Context, conn *v1.Connection, namespace string) 
 
 	clone := conn.DeepCopy()
 
-	data := map[string]string{
+	data := map[string]interface{}{
 		"name":      ctx.Canary.Name,
 		"namespace": namespace,
 		"username":  auth.GetUsername(),
