@@ -701,6 +701,22 @@ func (c ExecCheck) GetTestFunction() Template {
 	return c.Test
 }
 
+type AwsConfigCheck struct {
+	Description    `yaml:",inline" json:",inline"`
+	Templatable    `yaml:",inline" json:",inline"`
+	Query          string `yaml:"query" json:"query"`
+	*AWSConnection `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
+	AggregatorName *string `yaml:"aggregatorName,omitempty" json:"aggregatorName,omitempty"`
+}
+
+func (c AwsConfigCheck) GetType() string {
+	return "awsconfig"
+}
+
+func (c AwsConfigCheck) GetEndpoint() string {
+	return c.Query
+}
+
 /*
 [include:minimal/http_pass.yaml]
 */
@@ -932,7 +948,15 @@ type Exec struct {
 }
 
 /*
+AwsConfig check runs the given query against the AWS resources.
 [include:aws/ec2_pass.yaml]
+*/
+type AwsConfig struct {
+	AwsConfigCheck `yaml:",inline" json:",inline"`
+}
+
+/*
+[include:aws/aws_config_pass.yaml]
 */
 type EC2 struct {
 	EC2Check `yaml:",inline" json:",inline"`
@@ -985,4 +1009,5 @@ var AllChecks = []external.Check{
 	Kubernetes{},
 	FolderCheck{},
 	ExecCheck{},
+	AwsConfigCheck{},
 }

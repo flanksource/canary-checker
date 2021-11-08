@@ -47,6 +47,7 @@ var All = []Checker{
 	&KubernetesChecker{},
 	&FolderChecker{},
 	&ExecChecker{},
+	&AwsConfigChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),

@@ -69,6 +69,7 @@ type CanarySpec struct {
 	KubernetesCreator []KubernetesCreatorCheck   `yaml:"kubernetesCreator,omitempty" json:"kubernetesCreator,omitempty"`
 	Folder            []FolderCheck              `yaml:"folder,omitempty" json:"folder,omitempty"`
 	Exec              []ExecCheck                `yaml:"exec,omitempty" json:"exec,omitempty"`
+	AwsConfig         []AwsConfigCheck           `yaml:"awsConfig,omitempty" json:"awsConfig,omitempty"`
 	Defaults          map[string]json.RawMessage `yaml:"defaults,omitempty" json:"defaults,omitempty"`
 	// interval (in seconds) to run checks on Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
@@ -165,6 +166,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Exec {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.AwsConfig {
 		checks = append(checks, check)
 	}
 	return checks
