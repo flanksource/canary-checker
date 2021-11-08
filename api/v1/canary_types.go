@@ -68,6 +68,7 @@ type CanarySpec struct {
 	Kubernetes     []KubernetesCheck     `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
 	Folder         []FolderCheck         `yaml:"folder,omitempty" json:"folder,omitempty"`
 	Exec           []ExecCheck           `yaml:"exec,omitempty" json:"exec,omitempty"`
+	AwsConfig      []AwsConfigCheck      `yaml:"awsConfig,omitempty" json:"awsConfig,omitempty"`
 	// interval (in seconds) to run checks on Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
 	// Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
@@ -160,6 +161,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Exec {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.AwsConfig {
 		checks = append(checks, check)
 	}
 	return checks
