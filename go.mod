@@ -28,7 +28,6 @@ require (
 	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
 	github.com/flanksource/commons v1.5.10
 	github.com/flanksource/kommons v0.26.0
-	github.com/ghodss/yaml v1.0.0
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/go-logr/logr v0.3.0
 	github.com/go-logr/zapr v0.2.0
@@ -43,6 +42,7 @@ require (
 	github.com/jszwec/csvutil v1.5.0
 	github.com/lib/pq v1.9.0
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
+	github.com/ncw/swift v1.0.47
 	github.com/onsi/ginkgo v1.15.0
 	github.com/onsi/gomega v1.10.5
 	github.com/opencontainers/selinux v1.6.0 // indirect
