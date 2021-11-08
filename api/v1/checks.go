@@ -684,7 +684,7 @@ func (c ExecCheck) GetTestFunction() Template {
 type AwsConfigCheck struct {
 	Description    `yaml:",inline" json:",inline"`
 	Templatable    `yaml:",inline" json:",inline"`
-	Query          string `yaml:"qeury" json:"query"`
+	Query          string `yaml:"query" json:"query"`
 	*AWSConnection `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
 	AggregatorName *string `yaml:"aggregatorName,omitempty" json:"aggregatorName,omitempty"`
 }
