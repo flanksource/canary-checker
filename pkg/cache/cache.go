@@ -7,7 +7,9 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 )
 
-var Size = 5
+var InMemoryCacheSize int
+
+const AllStatuses = -1
 
 type Cache interface {
 	Add(check pkg.Check, status pkg.CheckStatus)

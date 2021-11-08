@@ -303,6 +303,9 @@ func (c *postgresCache) RemoveCheckByKey(key string) {
 
 func (c *postgresCache) ListCheckStatus(checkKey string, count int64, duration *time.Duration) []pkg.CheckStatus {
 	if duration != nil {
+		if count == AllStatuses {
+			return c.ListAllCheckStatus(checkKey, duration)
+		}
 		statusRows, err := c.Conn.Query(context.TODO(), `SELECT * FROM check_statuses WHERE check_key=$1 and (inserted_at > NOW() - Interval '1 SECOND' * $2) ORDER BY inserted_at DESC LIMIT $3`, checkKey, duration.Seconds(), count)
 		if err != nil {
 			logger.Errorf("error querying check_statuses: %v", err)
@@ -311,6 +314,15 @@ func (c *postgresCache) ListCheckStatus(checkKey string, count int64, duration *
 		return scanStatusRows(statusRows)
 	}
 	statusRows, err := c.Conn.Query(context.TODO(), `SELECT * FROM check_statuses WHERE check_key=$1 ORDER BY inserted_at DESC LIMIT $2`, checkKey, count)
+	if err != nil {
+		logger.Errorf("error querying check_statuses: %v", err)
+		return nil
+	}
+	return scanStatusRows(statusRows)
+}
+
+func (c *postgresCache) ListAllCheckStatus(checkKey string, duration *time.Duration) []pkg.CheckStatus {
+	statusRows, err := c.Conn.Query(context.TODO(), `SELECT * FROM check_statuses WHERE check_key=$1 and (inserted_at > NOW() - Interval '1 SECOND' * $2) ORDER BY inserted_at DESC`, checkKey, duration.Seconds())
 	if err != nil {
 		logger.Errorf("error querying check_statuses: %v", err)
 		return nil

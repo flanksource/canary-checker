@@ -52,8 +52,8 @@ func (c *inMemoryCache) AddCheck(check pkg.Check) {
 
 func (c *inMemoryCache) AppendCheckStatus(checkKey string, checkStatus pkg.CheckStatus) error {
 	c.Statuses[checkKey] = append([]pkg.CheckStatus{checkStatus}, c.Statuses[checkKey]...)
-	if len(c.Statuses[checkKey]) > Size {
-		c.Statuses[checkKey] = c.Statuses[(checkKey)][:Size]
+	if len(c.Statuses[checkKey]) > InMemoryCacheSize {
+		c.Statuses[checkKey] = c.Statuses[(checkKey)][:InMemoryCacheSize]
 	}
 	return nil
 }
@@ -101,7 +101,7 @@ func (c *inMemoryCache) ListCheckStatus(checkKey string, count int64, duration *
 		startTime := time.Now().UTC()
 		var i int64 = 0
 		for _, status := range c.Statuses[checkKey] {
-			if i <= count {
+			if i <= count && count != AllStatuses {
 				break
 			}
 			checkTime, err := time.Parse(time.RFC3339, status.Time)
@@ -117,7 +117,7 @@ func (c *inMemoryCache) ListCheckStatus(checkKey string, count int64, duration *
 		}
 	}
 	statuses := c.Statuses[checkKey]
-	if len(statuses) < int(count) {
+	if len(statuses) < int(count) || count == AllStatuses {
 		return statuses
 	}
 	return statuses[0 : count-1]

@@ -33,7 +33,7 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	} else {
-		c = int64(cache.Size)
+		c = int64(cache.InMemoryCacheSize)
 	}
 	timeString := queryParams.Get("since")
 	var timeDuration *time.Duration
