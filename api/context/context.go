@@ -4,7 +4,6 @@ import (
 	gocontext "context"
 	"errors"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -107,7 +106,6 @@ func (ctx *Context) GetCanaries(namespace string, canaryRef []k8sv1.LocalObjectR
 // Contexualize merges metadata from environment/defaulting/chained checks into check structure
 
 func (ctx *Context) Contextualise(check external.Check) (external.Check, error) {
-	updated := reflect.Zero(reflect.TypeOf(&check)).Interface()
 
 	checkText, err := yaml.Marshal(check)
 	if err != nil {
@@ -117,11 +115,11 @@ func (ctx *Context) Contextualise(check external.Check) (external.Check, error) 
 	if err != nil {
 		return check, err
 	}
-	err = yaml.Unmarshal(defaultText, &updated)
+	err = yaml.Unmarshal(defaultText, &check)
 	if err != nil {
 		return check, err
 	}
-	err = yaml.Unmarshal(checkText, &updated)
+	err = yaml.Unmarshal(checkText, &check)
 	if err != nil {
 		return check, err
 	}
@@ -139,9 +137,9 @@ func (ctx *Context) Contextualise(check external.Check) (external.Check, error) 
 			"connection": "string",
 		},
 	}
-	err = templater.Walk(&updated)
+	err = templater.Walk(&check)
 	if err != nil {
 		return check, nil
 	}
-	return updated.(external.Check), nil
+	return check, nil
 }
