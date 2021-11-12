@@ -7,6 +7,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	awsUtil "github.com/flanksource/canary-checker/pkg/clients/aws"
+	"reflect"
 )
 
 type AwsConfigChecker struct {
@@ -31,7 +32,11 @@ func (c *AwsConfigChecker) Type() string {
 }
 
 func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.AwsConfigCheck)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.AwsConfigCheck{}))
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.AwsConfigCheck)
 	result := pkg.Success(check, ctx.Canary)
 	cfg, err := awsUtil.NewSession(ctx, *check.AWSConnection)
 	if err != nil {

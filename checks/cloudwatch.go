@@ -2,6 +2,7 @@ package checks
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
@@ -31,7 +32,7 @@ func (c *CloudWatchChecker) Type() string {
 }
 
 func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := ctx.Contextualise(extConfig)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.CloudWatchCheck{}))
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

@@ -3,6 +3,7 @@ package checks
 import (
 	"bytes"
 	osExec "os/exec"
+	"reflect"
 	"runtime"
 	"strings"
 
@@ -34,7 +35,11 @@ func (c *ExecChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.ExecCheck)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.ExecCheck{}))
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.ExecCheck)
 	switch runtime.GOOS {
 	case "windows":
 		return execPowershell(check, ctx)

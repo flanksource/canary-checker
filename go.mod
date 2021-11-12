@@ -39,6 +39,7 @@ require (
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/henvic/httpretty v0.0.6
 	github.com/hirochachacha/go-smb2 v1.0.10
+	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
 	github.com/lib/pq v1.9.0

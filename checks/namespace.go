@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 
 	gocontext "context"
 	"strings"
@@ -105,7 +106,7 @@ func (c *NamespaceChecker) getConditionTimes(ns *v1.Namespace, pod *v1.Pod) (tim
 }
 
 func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := ctx.Contextualise(extConfig)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(canaryv1.NamespaceCheck{}))
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

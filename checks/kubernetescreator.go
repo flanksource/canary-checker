@@ -2,6 +2,7 @@ package checks
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -59,7 +60,7 @@ func (c *KubernetesCreatorChecker) Run(ctx *context.Context) []*pkg.CheckResult 
 // CheckConfig : Check every ldap entry for lookup and auth
 // Returns check result and metrics
 func (c *KubernetesCreatorChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := ctx.Contextualise(extConfig)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.KubernetesCreatorCheck{}))
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

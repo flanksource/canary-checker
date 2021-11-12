@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math"
 	"net/http"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -140,7 +141,7 @@ func diff(times map[v1.PodConditionType]metav1.Time, c1 v1.PodConditionType, c2 
 }
 
 func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := ctx.Contextualise(extConfig)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(canaryv1.PodCheck{}))
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

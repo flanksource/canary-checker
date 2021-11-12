@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	osExec "os/exec"
+	"reflect"
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -35,7 +36,7 @@ func (c *GitHubChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := ctx.Contextualise(extConfig)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.GitHubCheck{}))
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

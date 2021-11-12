@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -37,7 +38,7 @@ func (c *JmeterChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 
 func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
-	updated, err := ctx.Contextualise(extConfig)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.JmeterCheck{}))
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

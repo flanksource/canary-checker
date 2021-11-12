@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"reflect"
 	"time"
 
 	pusher "github.com/chartmuseum/helm-push/pkg/chartmuseum"
@@ -42,7 +43,7 @@ func (c *HelmChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := ctx.Contextualise(extConfig)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.HelmCheck{}))
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

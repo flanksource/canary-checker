@@ -2,6 +2,7 @@ package checks
 
 import (
 	"bytes"
+	"reflect"
 
 	"github.com/flanksource/canary-checker/api/context"
 
@@ -83,7 +84,7 @@ func getDigestFromOutput(out io.ReadCloser) string {
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
 func (c *DockerPullChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := ctx.Contextualise(extConfig)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.DockerPullCheck{}))
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

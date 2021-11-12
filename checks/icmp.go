@@ -2,6 +2,7 @@ package checks
 
 import (
 	"net"
+	"reflect"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -49,7 +50,7 @@ func (c *IcmpChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
 func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := ctx.Contextualise(extConfig)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.ICMPCheck{}))
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -311,7 +312,7 @@ func (cfg *AWS) Describe(instanceID string, timeout time.Duration) (internalIP s
 }
 
 func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := ctx.Contextualise(extConfig)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.EC2Check{}))
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

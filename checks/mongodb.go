@@ -2,6 +2,7 @@ package checks
 
 import (
 	gocontext "context"
+	"reflect"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -33,7 +34,7 @@ func (c *MongoDBChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *MongoDBChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := ctx.Contextualise(extConfig)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.MongoDBCheck{}))
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"reflect"
 	"strings"
 
 	gcs "cloud.google.com/go/storage"
@@ -80,7 +81,7 @@ func (c *FolderChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	updated, err := ctx.Contextualise(extConfig)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.FolderCheck{}))
 	if err != nil {
 		return pkg.Fail(extConfig, ctx.Canary)
 	}

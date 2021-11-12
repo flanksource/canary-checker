@@ -4,6 +4,8 @@ import (
 	gocontext "context"
 	"errors"
 	"fmt"
+	"github.com/imdario/mergo"
+	"reflect"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -105,24 +107,21 @@ func (ctx *Context) GetCanaries(namespace string, canaryRef []k8sv1.LocalObjectR
 
 // Contexualize merges metadata from environment/defaulting/chained checks into check structure
 
-func (ctx *Context) Contextualise(check external.Check) (external.Check, error) {
+func (ctx *Context) Contextualise(check external.Check, checkType reflect.Type) (interface{}, error) {
+	updated := reflect.New(checkType).Interface()
 
-	checkText, err := yaml.Marshal(check)
-	if err != nil {
-		return check, err
-	}
 	defaultText, err := yaml.Marshal(ctx.Canary.Spec.Defaults)
 	if err != nil {
 		return check, err
 	}
-	err = yaml.Unmarshal(defaultText, &check)
+	err = yaml.Unmarshal(defaultText, &updated)
 	if err != nil {
 		return check, err
 	}
-	err = yaml.Unmarshal(checkText, &check)
-	if err != nil {
+	if err := mergo.Merge(updated, check); err != nil {
 		return check, err
 	}
+
 	client, err := ctx.Kommons.GetClientset()
 	if err != nil {
 		return check, err
@@ -141,5 +140,5 @@ func (ctx *Context) Contextualise(check external.Check) (external.Check, error) 
 	if err != nil {
 		return check, nil
 	}
-	return check, nil
+	return updated, nil
 }
