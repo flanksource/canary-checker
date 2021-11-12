@@ -2,14 +2,24 @@ package context
 
 import (
 	gocontext "context"
+	"errors"
 	"fmt"
+	"github.com/imdario/mergo"
+	"reflect"
 	"time"
+
+	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/kommons/ktemplate"
+	"gopkg.in/flanksource/yaml.v3"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
+	k8sv1 "k8s.io/api/core/v1"
 )
 
+// +k8s:deepcopy-gen=false
 type Context struct {
 	gocontext.Context
 	Kommons     *kommons.Client
@@ -61,4 +71,74 @@ func (ctx *Context) New(environment map[string]interface{}) *Context {
 		Environment: environment,
 		Logger:      ctx.Logger,
 	}
+}
+func (ctx *Context) GetCanaries(namespace string, canaryRef []k8sv1.LocalObjectReference) ([]v1.Canary, []string, error) {
+	var innerCanaries []v1.Canary
+
+	innerFail := false
+	var innerMessage []string
+
+	for _, canary := range canaryRef {
+		innerCanary := v1.Canary{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Canary",
+				APIVersion: "canaries.flanksource.com/v1",
+			},
+		}
+		err := ctx.Kommons.Get(namespace, canary.Name, &innerCanary)
+		logger.Infof("Accessing Canary %v/%v", namespace, canary.Name)
+		if err != nil {
+			innerFail = true
+			innerMessage = append(innerMessage, fmt.Sprintf("Could not retrieve canary ref %v in %v: %v", canary.Name, namespace, err))
+			break
+		}
+		if innerCanary.Name == "" {
+			innerFail = true
+			innerMessage = append(innerMessage, fmt.Sprintf("Could not retrieve canary ref %v in %v", canary.Name, namespace))
+			break
+		}
+		innerCanaries = append(innerCanaries, innerCanary)
+	}
+	if innerFail {
+		return innerCanaries, innerMessage, errors.New("error retrieving chained canaries")
+	}
+	return innerCanaries, innerMessage, nil
+}
+
+// Contexualize merges metadata from environment/defaulting/chained checks into check structure
+
+func (ctx *Context) Contextualise(check external.Check, checkType reflect.Type) (interface{}, error) {
+	updated := reflect.New(checkType).Interface()
+
+	defaultText, err := yaml.Marshal(ctx.Canary.Spec.Defaults)
+	if err != nil {
+		return check, err
+	}
+	err = yaml.Unmarshal(defaultText, &updated)
+	if err != nil {
+		return check, err
+	}
+	if err := mergo.Merge(updated, check); err != nil {
+		return check, err
+	}
+
+	client, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return check, err
+	}
+	templater := ktemplate.StructTemplater{
+		Values:    ctx.Environment,
+		Clientset: client,
+		// Don't template connection strings at this point
+		// connection templating may be dependent on further lookup actions that may only be possible after this round of templating
+		// See checks/common/GetConnection
+		IgnoreFields: map[string]string{
+			"connection": "string",
+		},
+	}
+	err = templater.Walk(&check)
+	if err != nil {
+		return check, nil
+	}
+	return updated, nil
 }

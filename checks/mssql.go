@@ -2,6 +2,7 @@ package checks
 
 import (
 	"github.com/flanksource/canary-checker/api/context"
+	"reflect"
 
 	_ "github.com/denisenkom/go-mssqldb" // required by mssql
 	"github.com/flanksource/canary-checker/api/external"
@@ -34,5 +35,9 @@ func (c *MssqlChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 //               driver and connection string
 // Returns check result and metrics
 func (c *MssqlChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	return CheckSQL(ctx, extConfig.(v1.MssqlCheck).SQLCheck)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.MssqlCheck{}))
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	return CheckSQL(ctx, updated.(v1.MssqlCheck).SQLCheck)
 }

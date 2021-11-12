@@ -2,6 +2,7 @@ package checks
 
 import (
 	"bytes"
+	"reflect"
 
 	"crypto/tls"
 	"io/ioutil"
@@ -62,7 +63,11 @@ func (c *S3Checker) Type() string {
 }
 
 func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.S3Check)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.S3Check{}))
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.S3Check)
 	bucket := check.Bucket
 
 	cfg := aws.NewConfig().

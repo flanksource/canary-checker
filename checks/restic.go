@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	osExec "os/exec"
+	"reflect"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -42,7 +43,11 @@ func (c *ResticChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 
 func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	start := time.Now()
-	resticCheck := extConfig.(v1.ResticCheck)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.ResticCheck{}))
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	resticCheck := updated.(v1.ResticCheck)
 	envVars, err := c.getEnvVars(resticCheck, ctx.Canary.Namespace, ctx.Kommons)
 	if err != nil {
 		return Failf(resticCheck, "error getting envVars %v", err)

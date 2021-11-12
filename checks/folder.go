@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"reflect"
 	"strings"
 
 	gcs "cloud.google.com/go/storage"
@@ -80,7 +81,11 @@ func (c *FolderChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.FolderCheck)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.FolderCheck{}))
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.FolderCheck)
 	path := strings.ToLower(check.Path)
 	switch {
 	case strings.HasPrefix(path, "s3://"):

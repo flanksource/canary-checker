@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"reflect"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -28,7 +29,11 @@ func (c *PrometheusChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.PrometheusCheck)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.PrometheusCheck{}))
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.PrometheusCheck)
 	result := pkg.Success(check, ctx.Canary)
 
 	promClient, err := prometheus.NewPrometheusAPI(check.Host)

@@ -2,6 +2,7 @@ package checks
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -31,7 +32,11 @@ func (c *KubernetesChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 // CheckConfig : Check every ldap entry for lookup and auth
 // Returns check result and metrics
 func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	check := extConfig.(v1.KubernetesCheck)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.KubernetesCheck{}))
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	check := updated.(v1.KubernetesCheck)
 	result := pkg.Success(check, ctx.Canary)
 	client, err := ctx.Kommons.GetClientByKind(check.Kind)
 	if err != nil {

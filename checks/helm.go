@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"reflect"
 	"time"
 
 	pusher "github.com/chartmuseum/helm-push/pkg/chartmuseum"
@@ -42,13 +43,16 @@ func (c *HelmChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	config := extConfig.(v1.HelmCheck)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.HelmCheck{}))
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	config := updated.(v1.HelmCheck)
 	start := time.Now()
 	result := pkg.Success(config, ctx.Canary)
 	var uploadOK, downloadOK = true, true
 	logger.Tracef("Uploading test chart")
 	namespace := ctx.Canary.Namespace
-	var err error
 	auth, err := GetAuthValues(config.Auth, ctx.Kommons, namespace)
 	if err != nil {
 		return Failf(config, "failed to fetch auth details: %v", err)

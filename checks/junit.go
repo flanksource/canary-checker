@@ -3,6 +3,7 @@ package checks
 import (
 	"fmt"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
@@ -174,7 +175,11 @@ func cleanupExistingPods(ctx *context.Context, k8s kubernetes.Interface, selecto
 }
 
 func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	junitCheck := extConfig.(v1.JunitCheck)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.JunitCheck{}))
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	junitCheck := updated.(v1.JunitCheck)
 
 	result := pkg.Success(junitCheck, ctx.Canary)
 	k8s, err := ctx.Kommons.GetClientset()

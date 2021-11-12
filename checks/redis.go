@@ -2,6 +2,7 @@ package checks
 
 import (
 	"github.com/flanksource/canary-checker/api/context"
+	"reflect"
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -32,10 +33,13 @@ func (c *RedisChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 }
 
 func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	redisCheck := extConfig.(v1.RedisCheck)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.RedisCheck{}))
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	redisCheck := updated.(v1.RedisCheck)
 	result := pkg.Success(redisCheck, ctx.Canary)
 	namespace := ctx.Canary.Namespace
-	var err error
 	auth, err := GetAuthValues(redisCheck.Auth, ctx.Kommons, namespace)
 	if err != nil {
 		return result.Failf("failed to fetch auth details: %v", err)

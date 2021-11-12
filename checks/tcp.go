@@ -3,6 +3,7 @@ package checks
 import (
 	"fmt"
 	"net"
+	"reflect"
 	"strings"
 	"time"
 
@@ -32,7 +33,11 @@ func (t *TCPChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 
 // Check performs a single tcp check, returning a checkResult
 func (t *TCPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	c := extConfig.(v1.TCPCheck)
+	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.TCPCheck{}))
+	if err != nil {
+		return pkg.Fail(extConfig, ctx.Canary)
+	}
+	c := updated.(v1.TCPCheck)
 	addr, port, err := extractAddrAndPort(c.Endpoint)
 	if err != nil {
 		return Failf(c, err.Error())
