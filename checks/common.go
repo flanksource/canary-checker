@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"strings"
 	"time"
@@ -212,7 +213,7 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 		tpl := gotemplate.New("")
 		tpl, err := tpl.Funcs(text.GetTemplateFuncs()).Parse(template.Template)
 		if err != nil {
-			return "", err
+			return "", errors.Wrap(err, "failed to get template function")
 		}
 
 		// marshal data from interface{} to map[string]interface{}
@@ -231,11 +232,11 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 	if template.Expression != "" {
 		program, err := expr.Compile(template.Expression, text.MakeExpressionOptions(ctx.Environment)...)
 		if err != nil {
-			return "", err
+			return "", errors.Wrap(err, "failed to compile test expression")
 		}
 		output, err := expr.Run(program, text.MakeExpressionEnvs(ctx.Environment))
 		if err != nil {
-			return "", err
+			return "", errors.Wrap(err, "failed to run test expression")
 		}
 		return fmt.Sprint(output), nil
 	}
