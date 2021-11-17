@@ -8,9 +8,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 
-	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
 )
 
@@ -27,19 +27,22 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer req.Body.Close()
-	check := &pkg.Check{}
+	data := QueueData{
+		Check:  pkg.Check{},
+		Status: pkg.CheckStatus{},
+	}
 	reqBody, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		logger.Errorf("error reading the request body: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if err := json.Unmarshal(reqBody, check); err != nil {
+	if err := json.Unmarshal(reqBody, &data); err != nil {
 		logger.Errorf("failed to unmarshal json body. Error: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	cache.Cache.Add(*check)
+	cache.CacheChain.Add(data.Check, data.Status)
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -53,6 +56,6 @@ func PostDataToServer(server string, body io.Reader) (err error) {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = resp.Body.Close() }()
+	defer func() { err = resp.Body.Close() }()
 	return err
 }

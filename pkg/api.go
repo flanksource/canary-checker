@@ -93,8 +93,8 @@ type Check struct {
 	Icon         string            `json:"icon"`
 	DisplayType  string            `json:"displayType"`
 	RunnerName   string            `json:"runnerName"`
-	// Specify the canary location, <runner>/<namespace>/<name>
-	ID     string     `json:"location"`
+	// Specify the canary id, <runner>/<namespace>/<name>
+	ID     string     `json:"id"`
 	Canary *v1.Canary `json:"-"`
 }
 

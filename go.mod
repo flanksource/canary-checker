@@ -25,26 +25,28 @@ require (
 	github.com/denisenkom/go-mssqldb v0.9.0
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
-	github.com/eko/gocache v1.2.0
+	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
 	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
 	github.com/flanksource/commons v1.5.10
-	github.com/flanksource/kommons v0.25.0
-	github.com/go-ldap/ldap/v3 v3.1.7
+	github.com/flanksource/kommons v0.25.2
+	github.com/go-ldap/ldap/v3 v3.4.1
 	github.com/go-logr/logr v0.3.0
 	github.com/go-logr/zapr v0.2.0
-	github.com/go-redis/redis/v8 v8.8.2
+	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/hairyhenderson/gomplate/v3 v3.6.0
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/henvic/httpretty v0.0.6
 	github.com/hirochachacha/go-smb2 v1.0.10
+	github.com/jackc/pgtype v1.8.1
+	github.com/jackc/pgx/v4 v4.13.0
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
-	github.com/lib/pq v1.9.0
+	github.com/lib/pq v1.10.2
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
-	github.com/onsi/ginkgo v1.15.0
-	github.com/onsi/gomega v1.10.5
+	github.com/onsi/ginkgo v1.16.4
+	github.com/onsi/gomega v1.16.0
 	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/phf/go-queue v0.0.0-20170504031614-9abe38d0371d
 	github.com/pkg/errors v0.9.1

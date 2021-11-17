@@ -31,11 +31,13 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.BoolVar(&logPass, "log-pass", false, "Log every passing check")
 	flags.StringVarP(&namespace, "namespace", "n", "", "Watch only specified namespaces, otherwise watch all")
 	flags.StringVar(&includeCheck, "include-check", "", "Run matching canaries - useful for debugging")
-	flags.IntVar(&cache.Size, "maxStatusCheckCount", 5, "Maximum number of past checks in the status page")
+	flags.IntVar(&cache.InMemoryCacheSize, "maxStatusCheckCount", 5, "Maximum number of past checks in the in memory cache")
 	flags.StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
 	flags.StringSliceVar(&pullServers, "pull-servers", []string{}, "push check results to multiple canary servers")
 	flags.StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 	flags.StringVar(&prometheusURL, "prometheus", "", "URL of the prometheus server that is scraping this instance")
+	flags.StringVar(&cache.PostgresConnectionString, "cache-connection-string", "CACHE_CONNECTION_STRING", "Connection string for the postgres database")
+	flags.IntVar(&cache.PostgresCacheTimeout, "cache-timeout", 90, "Cache timeout in days")
 }
 
 func init() {

@@ -26,7 +26,7 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	detail := cache.Cache.GetDetails(key, time)
+	detail := cache.CacheChain.GetDetails(key, time)
 	jsonData, err := json.Marshal(detail)
 	if err != nil {
 		logger.Errorf("Failed to marshal data: %v", err)
