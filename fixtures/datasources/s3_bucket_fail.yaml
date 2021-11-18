@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: s3-bucket-fail
   labels:
-    "Expected Fail": "true"
+    "Expected-Fail": "true"
 spec:
   interval: 30
   folder:
