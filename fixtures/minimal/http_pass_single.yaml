@@ -2,7 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: http-pass-single
-  namespace: default
 spec:
   interval: 10
   http:

@@ -12,7 +12,6 @@ spec:
         kind: Pod
         metadata:
           name: test-namespace
-          namespace: default
           labels:
             app: hello-world-golang
         spec:
