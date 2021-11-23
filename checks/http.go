@@ -103,7 +103,9 @@ func truncate(text string, max int) string {
 func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
 	updated, err := ctx.Contextualise(extConfig, reflect.TypeOf(v1.HTTPCheck{}))
 	if err != nil {
-		return pkg.Fail(extConfig, ctx.Canary)
+		f := pkg.Fail(extConfig, ctx.Canary)
+		f.Message = err.Error()
+		return f
 	}
 	check := updated.(v1.HTTPCheck)
 	result := pkg.Success(check, ctx.Canary)

@@ -384,18 +384,8 @@ func (in *CanarySpec) DeepCopyInto(out *CanarySpec) {
 	}
 	if in.Defaults != nil {
 		in, out := &in.Defaults, &out.Defaults
-		*out = make(map[string]json.RawMessage, len(*in))
-		for key, val := range *in {
-			var outVal []byte
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				in, out := &val, &outVal
-				*out = make(json.RawMessage, len(*in))
-				copy(*out, *in)
-			}
-			(*out)[key] = outVal
-		}
+		*out = make(json.RawMessage, len(*in))
+		copy(*out, *in)
 	}
 }
 

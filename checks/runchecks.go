@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -25,6 +26,8 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 			result := c.Run(ctx)
 			for _, r := range result {
 				if r != nil {
+					fmt.Println("result:")
+					fmt.Printf("%+v\n\n\n", r)
 					if r.Duration == 0 && r.GetDuration() > 0 {
 						r.Duration = r.GetDuration()
 					}

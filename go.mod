@@ -29,6 +29,7 @@ require (
 	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
 	github.com/flanksource/commons v1.5.10
 	github.com/flanksource/kommons v0.26.0
+	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-ldap/ldap/v3 v3.1.7
 	github.com/go-logr/logr v0.3.0
 	github.com/go-logr/zapr v0.2.0
@@ -43,6 +44,7 @@ require (
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
 	github.com/lib/pq v1.9.0
+	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/ncw/swift v1.0.47
 	github.com/onsi/ginkgo v1.15.0
@@ -69,6 +71,7 @@ require (
 	google.golang.org/api v0.54.0
 	google.golang.org/genproto v0.0.0-20210821163610-241b8fcbd6c8 // indirect
 	gopkg.in/flanksource/yaml.v3 v3.1.1
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 	helm.sh/helm/v3 v3.1.2
 	k8s.io/api v0.20.4
 	k8s.io/apimachinery v0.20.4

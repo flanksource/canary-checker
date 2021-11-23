@@ -21,7 +21,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/commons/logger"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,37 +39,37 @@ const (
 
 // CanarySpec defines the desired state of Canary
 type CanarySpec struct {
-	Env               map[string]VarSource       `yaml:"env,omitempty" json:"env,omitempty"`
-	HTTP              []HTTPCheck                `yaml:"http,omitempty" json:"http,omitempty"`
-	DNS               []DNSCheck                 `yaml:"dns,omitempty" json:"dns,omitempty"`
-	DockerPull        []DockerPullCheck          `yaml:"docker,omitempty" json:"docker,omitempty"`
-	DockerPush        []DockerPushCheck          `yaml:"dockerPush,omitempty" json:"dockerPush,omitempty"`
-	ContainerdPull    []ContainerdPullCheck      `yaml:"containerd,omitempty" json:"containerd,omitempty"`
-	ContainerdPush    []ContainerdPushCheck      `yaml:"containerdPush,omitempty" json:"containerdPush,omitempty"`
-	S3                []S3Check                  `yaml:"s3,omitempty" json:"s3,omitempty"`
-	TCP               []TCPCheck                 `yaml:"tcp,omitempty" json:"tcp,omitempty"`
-	Pod               []PodCheck                 `yaml:"pod,omitempty" json:"pod,omitempty"`
-	LDAP              []LDAPCheck                `yaml:"ldap,omitempty" json:"ldap,omitempty"`
-	ICMP              []ICMPCheck                `yaml:"icmp,omitempty" json:"icmp,omitempty"`
-	Postgres          []PostgresCheck            `yaml:"postgres,omitempty" json:"postgres,omitempty"`
-	Mssql             []MssqlCheck               `yaml:"mssql,omitempty" json:"mssql,omitempty"`
-	Restic            []ResticCheck              `yaml:"restic,omitempty" json:"restic,omitempty"`
-	Jmeter            []JmeterCheck              `yaml:"jmeter,omitempty" json:"jmeter,omitempty"`
-	Junit             []JunitCheck               `yaml:"junit,omitempty" json:"junit,omitempty"`
-	Helm              []HelmCheck                `yaml:"helm,omitempty" json:"helm,omitempty"`
-	Namespace         []NamespaceCheck           `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-	Redis             []RedisCheck               `yaml:"redis,omitempty" json:"redis,omitempty"`
-	EC2               []EC2Check                 `yaml:"ec2,omitempty" json:"ec2,omitempty"`
-	Prometheus        []PrometheusCheck          `yaml:"prometheus,omitempty" json:"prometheus,omitempty"`
-	MongoDB           []MongoDBCheck             `yaml:"mongodb,omitempty" json:"mongodb,omitempty"`
-	CloudWatch        []CloudWatchCheck          `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
-	GitHub            []GitHubCheck              `yaml:"github,omitempty" json:"github,omitempty"`
-	Kubernetes        []KubernetesCheck          `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
-	KubernetesCreator []KubernetesCreatorCheck   `yaml:"kubernetesCreator,omitempty" json:"kubernetesCreator,omitempty"`
-	Folder            []FolderCheck              `yaml:"folder,omitempty" json:"folder,omitempty"`
-	Exec              []ExecCheck                `yaml:"exec,omitempty" json:"exec,omitempty"`
-	AwsConfig         []AwsConfigCheck           `yaml:"awsConfig,omitempty" json:"awsConfig,omitempty"`
-	Defaults          map[string]json.RawMessage `yaml:"defaults,omitempty" json:"defaults,omitempty"`
+	Env               map[string]VarSource     `yaml:"env,omitempty" json:"env,omitempty"`
+	HTTP              []HTTPCheck              `yaml:"http,omitempty" json:"http,omitempty"`
+	DNS               []DNSCheck               `yaml:"dns,omitempty" json:"dns,omitempty"`
+	DockerPull        []DockerPullCheck        `yaml:"docker,omitempty" json:"docker,omitempty"`
+	DockerPush        []DockerPushCheck        `yaml:"dockerPush,omitempty" json:"dockerPush,omitempty"`
+	ContainerdPull    []ContainerdPullCheck    `yaml:"containerd,omitempty" json:"containerd,omitempty"`
+	ContainerdPush    []ContainerdPushCheck    `yaml:"containerdPush,omitempty" json:"containerdPush,omitempty"`
+	S3                []S3Check                `yaml:"s3,omitempty" json:"s3,omitempty"`
+	TCP               []TCPCheck               `yaml:"tcp,omitempty" json:"tcp,omitempty"`
+	Pod               []PodCheck               `yaml:"pod,omitempty" json:"pod,omitempty"`
+	LDAP              []LDAPCheck              `yaml:"ldap,omitempty" json:"ldap,omitempty"`
+	ICMP              []ICMPCheck              `yaml:"icmp,omitempty" json:"icmp,omitempty"`
+	Postgres          []PostgresCheck          `yaml:"postgres,omitempty" json:"postgres,omitempty"`
+	Mssql             []MssqlCheck             `yaml:"mssql,omitempty" json:"mssql,omitempty"`
+	Restic            []ResticCheck            `yaml:"restic,omitempty" json:"restic,omitempty"`
+	Jmeter            []JmeterCheck            `yaml:"jmeter,omitempty" json:"jmeter,omitempty"`
+	Junit             []JunitCheck             `yaml:"junit,omitempty" json:"junit,omitempty"`
+	Helm              []HelmCheck              `yaml:"helm,omitempty" json:"helm,omitempty"`
+	Namespace         []NamespaceCheck         `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Redis             []RedisCheck             `yaml:"redis,omitempty" json:"redis,omitempty"`
+	EC2               []EC2Check               `yaml:"ec2,omitempty" json:"ec2,omitempty"`
+	Prometheus        []PrometheusCheck        `yaml:"prometheus,omitempty" json:"prometheus,omitempty"`
+	MongoDB           []MongoDBCheck           `yaml:"mongodb,omitempty" json:"mongodb,omitempty"`
+	CloudWatch        []CloudWatchCheck        `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
+	GitHub            []GitHubCheck            `yaml:"github,omitempty" json:"github,omitempty"`
+	Kubernetes        []KubernetesCheck        `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
+	KubernetesCreator []KubernetesCreatorCheck `yaml:"kubernetesCreator,omitempty" json:"kubernetesCreator,omitempty"`
+	Folder            []FolderCheck            `yaml:"folder,omitempty" json:"folder,omitempty"`
+	Exec              []ExecCheck              `yaml:"exec,omitempty" json:"exec,omitempty"`
+	AwsConfig         []AwsConfigCheck         `yaml:"awsConfig,omitempty" json:"awsConfig,omitempty"`
+	Defaults          json.RawMessage          `yaml:"defaults,omitempty" json:"defaults,omitempty"`
 	// interval (in seconds) to run checks on Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
 	// Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron

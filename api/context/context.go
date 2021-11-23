@@ -2,15 +2,16 @@ package context
 
 import (
 	gocontext "context"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"github.com/imdario/mergo"
+	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 	"reflect"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/kommons/ktemplate"
-	"gopkg.in/flanksource/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -108,23 +109,28 @@ func (ctx *Context) GetCanaries(namespace string, canaryRef []k8sv1.LocalObjectR
 // Contexualize merges metadata from environment/defaulting/chained checks into check structure
 
 func (ctx *Context) Contextualise(check external.Check, checkType reflect.Type) (interface{}, error) {
-	updated := reflect.New(checkType).Interface()
+	updated := reflect.Zero(checkType).Interface()
 
-	defaultText, err := yaml.Marshal(ctx.Canary.Spec.Defaults)
-	if err != nil {
-		return check, err
+	fmt.Printf("update kind before: %s\n", reflect.TypeOf(updated).Kind())
+	fmt.Printf("update type before: %s\n", reflect.TypeOf(updated))
+	var defaults map[string]interface{}
+	if err := json.Unmarshal(ctx.Canary.Spec.Defaults, &defaults); err != nil {
+		return check, errors.Wrap(err, "failed to unmarshal defaults")
 	}
-	err = yaml.Unmarshal(defaultText, &updated)
-	if err != nil {
-		return check, err
+	fmt.Printf("defaults: %+v\n", defaults)
+	if err := mapstructure.Decode(defaults, &updated); err != nil {
+		return check, errors.Wrap(err, "failed to decode defaults")
 	}
-	if err := mergo.Merge(updated, check); err != nil {
-		return check, err
+	fmt.Printf("updated: %+v\n", updated)
+	fmt.Printf("check: %s\n", reflect.TypeOf(check).Kind())
+	fmt.Printf("update after: %s\n", reflect.TypeOf(updated).Kind())
+	if err := mergo.Merge(&updated, check); err != nil {
+		return check, errors.Wrap(err, "failed to merge defaults into check")
 	}
 
 	client, err := ctx.Kommons.GetClientset()
 	if err != nil {
-		return check, err
+		return check, errors.New("failed to get kubernetes client")
 	}
 	templater := ktemplate.StructTemplater{
 		Values:    ctx.Environment,
@@ -138,7 +144,7 @@ func (ctx *Context) Contextualise(check external.Check, checkType reflect.Type) 
 	}
 	err = templater.Walk(&check)
 	if err != nil {
-		return check, nil
+		return check, errors.Wrap(err, "failed to template check")
 	}
 	return updated, nil
 }
