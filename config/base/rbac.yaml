@@ -50,7 +50,7 @@ rules:
       - ""
     resources:
       - pods/exec
-      - pods/logs
+      - pods/log
     verbs:
       - "*"
   - apiGroups:
