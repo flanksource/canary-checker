@@ -14,12 +14,19 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/text"
 	"github.com/flanksource/kommons"
 	"github.com/flanksource/kommons/ktemplate"
 	"github.com/robfig/cron/v3"
 )
+
+type Filesystem interface {
+	Close()
+	ReadDir(name string) ([]os.FileInfo, error)
+	Stat(name string) (os.FileInfo, error)
+}
 
 func GetConnection(ctx *context.Context, conn *v1.Connection, namespace string) (string, error) {
 	// TODO: this function should not be necessary, each check should be templated out individual
@@ -222,20 +229,40 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 		return strings.TrimSpace(buf.String()), nil
 	}
 	if template.Expression != "" {
-		ctx.Environment["sprintf"] = fmt.Sprintf
-		ctx.Environment["sprint"] = fmt.Sprint
-		for name, funcMap := range text.GetTemplateFuncs() {
-			ctx.Environment[name] = funcMap
-		}
-		program, err := expr.Compile(template.Expression, expr.Env(ctx.Environment))
+		program, err := expr.Compile(template.Expression, text.MakeExpressionOptions(ctx.Environment)...)
 		if err != nil {
 			return "", err
 		}
-		output, err := expr.Run(program, ctx.Environment)
+		output, err := expr.Run(program, text.MakeExpressionEnvs(ctx.Environment))
 		if err != nil {
 			return "", err
 		}
 		return fmt.Sprint(output), nil
 	}
 	return "", nil
+}
+
+func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) JunitTestSuite {
+	var testSuite = JunitTestSuite{
+		Name: canaryName,
+	}
+	for _, result := range results {
+		var test JunitTest
+		test.Classname = result.Check.GetType()
+		test.Name = result.Check.GetDescription()
+		test.Message = result.Message
+		test.Duration = float64(result.Duration) / 1000
+		testSuite.Duration += float64(result.Duration) / 1000
+		if result.Pass {
+			testSuite.Passed++
+			test.Status = "passed"
+		} else {
+			testSuite.Failed++
+			test.Status = "failed"
+			test.Error = fmt.Errorf(result.Error)
+		}
+		testSuite.Duration += float64(result.Duration) / 1000
+		testSuite.Tests = append(testSuite.Tests, test)
+	}
+	return testSuite
 }

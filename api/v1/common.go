@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/c2h5oh/datasize"
+	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/kommons"
-	"maze.io/x/duration"
 )
 
 type Duration string

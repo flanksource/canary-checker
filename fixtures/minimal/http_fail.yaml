@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: http-fail
   labels:
-    "Expected Fail": "true"
+    "Expected-Fail": "true"
 spec:
   interval: 30
   http:

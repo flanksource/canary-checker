@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: mongo-fail
   labels:
-    "Expected Fail": "true"
+    "Expected-Fail": "true"
 spec:
   interval: 30
   mongodb:

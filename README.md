@@ -35,19 +35,21 @@
     - [displayTemplate](#displaytemplate-2)
   - [Redis - Execute ping against redis instance](#redis---execute-ping-against-redis-instance)
   - [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
-  - [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
-    - [displayTemplate](#displaytemplate-3)
+  - [Folder Check](#folder-check)
+    - [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
+    - [GCS Bucket -  Query the contents of an GCS bucket for freshness](#gcs-bucket----query-the-contents-of-an-gcs-bucket-for-freshness)
+    - [Smb - Verify Folder Freshness](#smb---verify-folder-freshness)
+      - [server](#server)
   - [Restic - Query the contents of a Restic repository for backup freshness and integrity](#restic---query-the-contents-of-a-restic-repository-for-backup-freshness-and-integrity)
   - [Jmeter - Run the supplied JMX test plan against the specified host](#jmeter---run-the-supplied-jmx-test-plan-against-the-specified-host)
   - [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
+  - [Exec - Execute commands or script on the host](#exec---execute-commands-or-script-on-the-host)
   - [TCP](#tcp)
   - [Junit](#junit)
+    - [displayTemplate](#displaytemplate-3)
     - [displayTemplate](#displaytemplate-4)
-  - [Smb - Verify Folder Freshness](#smb---verify-folder-freshness)
-    - [server](#server)
-    - [displayTemplate](#displaytemplate-5)
   - [Display Types](#display-types)
-    - [displayTemplate](#displaytemplate-6)
+    - [displayTemplate](#displaytemplate-5)
   - [Guide for Developers](#guide-for-developers)
 <!--te-->
 
@@ -561,7 +563,26 @@ s3:
 | skipTLSVerify | skip TLS verify when connecting to s3 | bool | Yes |
 
 
-### S3 Bucket - Query the contents of an S3 bucket for freshness
+### Folder Check
+
+Folder Check provides an abstraction over checker related to folder.
+Currently, used to perform the following checks:
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| description |  | string | No |
+| name | name for the check | string | No |
+| Icon | custom icon to display on the UI | string | No |
+| Test | Template to test the result against | Object | No |
+| Display | Template to display the result in  | Object | No |
+| Path | Path to the object, needs to be prefixed with the protocol. See example below | string | Yes |
+| SMBConnection | | Object | No |
+| AWSConnection | | Object | No |
+| GCPConnection | | Object | No |
+| Filter | Used to filter the objects | Object | No |
+| FolderTest | Parameters to test the folder against | Object | No |
+
+#### S3 Bucket - Query the contents of an S3 bucket for freshness
 
 This check will:
 
@@ -569,43 +590,108 @@ This check will:
 - check that latest object is no older than provided `maxAge` value in seconds
 - check that latest object size is not smaller than provided `minSize` value in bytes
 
+For working with folder check, the bucket name needs to be prefixed with `s3://`
 ```yaml
-s3Bucket:
-  - bucket: foo
-    accessKey: "<access-key>"
-    secretKey: "<secret-key>"
-    region: "us-east-2"
-    endpoint: "https://s3.us-east-2.amazonaws.com"
-    objectPath: "(.*)archive.zip$"
-    readWrite: true
-    maxAge: 5000000
-    minSize: 50000
+folder:
+    # Check for any backup not older than 7 days and min size 25 bytes
+    - path: s3://refactoringtest-tarun
+      awsConnection:
+        accessKey:
+          valueFrom:
+            secretKeyRef:
+              key: access-key
+              name: aws
+        secretKey:
+          valueFrom:
+            secretKeyRef:
+              key: secret-key
+              name: aws
+        region: "ap-south-1"
+      maxAge: 7d
+      maxSize: 25b
+```
+#### GCS Bucket -  Query the contents of an GCS bucket for freshness
+This check will:
+
+- search objects matching the provided object path pattern
+- check that latest object is no older than provided `maxAge` value in seconds
+- check that latest object size is not smaller than provided `minSize` value in bytes
+
+For working with folder check, the bucket name needs to be prefixed with `gcs://`
+```yaml
+folder:
+   - description: gcs auth test
+     path: gcs://somegcsbucket
+     gcpConnection:
+       credentials:
+        valueFrom:
+         configMapKeyRef:
+           key: canary-checker-df017acc453c.json
+           name: sa
+     minAge: 1m
+     maxAge: 5h
+     minSize: 2M
+     maxCount: 2
+     minCount: 5
 ```
 
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| bucket |  | string | Yes |
-| accessKey |  | string | Yes |
-| secretKey |  | string | Yes |
-| region |  | string | Yes |
-| endpoint |  | string | Yes |
-| objectPath | glob path to restrict matches to a subset | string | Yes |
-| readWrite |  | bool | Yes |
-| maxAge | maximum allowed age of matched objects in seconds | int64 | Yes |
-| minSize | min size of of most recent matched object in bytes | int64 | Yes |
-| usePathStyle | use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY | bool | Yes |
-| skipTLSVerify | skip TLS verify when connecting to s3 | bool | Yes |
-| displayTemplate | template to display testResults results in text (default: `Size: [[.size]]; Age: [[.maxAge]]; Count: [[.count]]; TotalSize: [[.totalSize]]`) | string | No |
+#### Smb - Verify Folder Freshness
 
-#### displayTemplate
+This check connects to a samba server to check folder freshness. This check will:
 
-The fields for `displayTemplate` (see [Display Types]((#display-types))) are:
+- verify most recently modified file fulfills the `minAge` and `maxAge` constraints (each an optional bound)
+- verify files present in the mount is more than `minCount`
 
-- `.size`: size of the latest object in mb
-- `.maxAge`: age of the latest object
-- `.count`: number of objects
-- `.totalSize`: total size of objects
+```yaml
+folder:
+  - server: smb://192.168.1.9
+    smbConnection:
+      auth:
+        username: 
+          value: samba
+        password:
+          valueFrom:
+            secretKeyRef:
+              key: smb-password
+              name: smb
+      sharename: "Some Public Folder"
+      searchPath: a/b/c
+    minAge: 10h
+    maxAge: 20h
+    description: "Success SMB server"
+```
+
+Or with `server` in path format:
+
+```yaml
+folder:
+   - server: '\\192.168.1.5\Some Public Folder\somedir'
+     smbConnection:
+       auth:
+         username: 
+          value: samba
+         password: 
+          value: password
+       sharename: "sharename" #will be overwritten by 'Some Public Folder'
+       searchPath: a/b/c #will be overwritten by 'somedir'
+     minAge: 10h
+     maxAge: 100h
+     description: "Success SMB server"
+```
+
+##### server
+
+The user can define server in two formats:
+
+- host: `192.168.1.9`, `www.server.com`
+- path: `\\www.server.com\e$\a\b\c`
+
+For path format:
+
+- `www.server.com` is the host
+- `e$` is the sharename (overrides `sharename` field)
+- `a/b/c` the sub-dir relative to mount representing the test root (overrides `searchPath` field)
+
 
 ### Restic - Query the contents of a Restic repository for backup freshness and integrity
 
@@ -681,6 +767,17 @@ jmeter:
 | endpoint | HTTP endpoint to crawl | string | Yes |
 | maxSSLExpiry | maximum number of days until the SSL Certificate expires. | int | Yes |
 
+
+### Exec - Execute commands or script on the host
+
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| script | Inline commands or Absolute path to the script that needs to be executed | Yes |
+| description | description for the check | string | No |
+| display | format on how the result is going to be displayed on the console | Template | No |
+| test | test against which result needs to be verified | Template | No |
+
 ### TCP
 
 | Field | Description | Scheme | Required |
@@ -723,77 +820,6 @@ The fields for `displayTemplate` (see [Display Types]((#display-types))) are:
 - `.skipped`: number of tests skipped
 - `.error`: number of tests errored
 
-### Smb - Verify Folder Freshness
-
-This check connects to a samba server to check folder freshness. This check will:
-
-- verify most recently modified file fulfills the `minAge` and `maxAge` constraints (each an optional bound)
-- verify files present in the mount is more than `minCount`
-  
-```yaml
-smb:
-  - server: 192.168.1.9
-    auth:
-      username: 
-        value: samba
-      password:
-        valueFrom:
-          secretKeyRef:
-            key: smb-password
-            name: smb
-    sharename: "Some Public Folder"
-    minAge: 10h
-    maxAge: 20h
-    searchPath: a/b/c
-    displayTemplate: 'Age: [[.age]]'
-    description: "Success SMB server"
-```
-
-Or with `server` in path format:
-
-```yaml
-smb:
-   - server: '\\192.168.1.5\Some Public Folder\somedir'
-     auth:
-       username: 
-        value: samba
-       password: 
-        value: password
-     sharename: "sharename" #will be overwritten by 'Some Public Folder'
-     searchPath: a/b/c #will be overwritten by 'somedir'
-     minAge: 10h
-     maxAge: 100h
-     displayTemplate: 'Age: [[.age]]'
-     description: "Success SMB server"
-```
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| server | path to the server (host and path format supported) | string | Yes |
-| port | port on which smb is running. Defaults to 443 | int | No |
-| auth | username and password value, configMapKeyRef or SecretKeyRef for smb | Object | Yes |
-| domain | domain for smb | string | No |
-| workstation | workstation for smb | string | No |
-| sharename | sharename for smb (overridden in `server` path format) | string | No |
-| searchPath | the sub-dir relative to mount representing the test root (overridden in `server` path format) | string | No |
-| minAge | minimum permissible file age | string | No |
-| maxAge | maximum permissible file age | string | No |
-| minCount | minimum number of files permissible | int | No |
-| description | description about the test | string | No |
-| displayTemplate | template to display check output in text (default `File Age: [[.age]]; File count: [[.count]]`). | string | No |
-
-#### server
-
-The user can define server in two formats:
-
-- host: `192.168.1.9`, `www.server.com`
-- path: `\\www.server.com\e$\a\b\c`
-
-For path format:
-
-- `www.server.com` is the host 
-- `e$` is the sharename (overrides `sharename` field)
-- `a/b/c` the sub-dir relative to mount representing the test root (overrides `searchPath` field)
 
 #### displayTemplate
 

@@ -1,0 +1,10 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: exec-pass
+spec:
+  interval: 30
+  exec:
+   - description: "exec dummy check"
+     script: |
+       eche "hi there"

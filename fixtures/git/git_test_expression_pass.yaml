@@ -1,0 +1,15 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: github-test-expression-pass
+spec:
+  interval: 30
+  github:
+    - query: "SELECT * FROM github_repo_checks('flanksource/template-operator') where branch='master'"
+      test:
+        expr: 'Age(results[0]["started_at"]) > Duration("10m")'
+      githubToken:
+        valueFrom:
+          secretKeyRef:
+            name: github-token
+            key: GITHUB_TOKEN

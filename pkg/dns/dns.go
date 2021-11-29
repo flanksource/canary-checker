@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/url"
@@ -35,7 +36,7 @@ func CacheLookup(recordType, hostname string) ([]net.IP, error) {
 	var ips IPs
 	key := fmt.Sprintf("%s:%s", recordType, hostname)
 
-	if _, err := cache.Get(key, &ips); err == nil {
+	if _, err := cache.Get(context.TODO(), key, &ips); err == nil {
 		return ips, nil
 	}
 
@@ -43,7 +44,7 @@ func CacheLookup(recordType, hostname string) ([]net.IP, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = cache.Set(key, ips, nil)
+	err = cache.Set(context.TODO(), key, ips, nil)
 	return ips, err
 }
 

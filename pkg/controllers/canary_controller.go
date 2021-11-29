@@ -59,6 +59,7 @@ type CanaryReconciler struct {
 	Scheme     *runtime.Scheme
 	Events     record.EventRecorder
 	Cron       *cron.Cron
+	RunnerName string
 	Done       chan *pkg.CheckResult
 }
 
@@ -85,13 +86,15 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 
 	canary := &v1.Canary{}
 	err := r.Get(ctx, req.NamespacedName, canary)
+	canary.SetRunnerName(r.RunnerName)
 	var update bool
 	if canary.Status.ChecksStatus != nil {
 		specKeys := getAllCheckKeys(canary)
 		for statusKey := range canary.Status.ChecksStatus {
-			if !contains(specKeys, statusKey) {
+			// TODO: figure out how the ResutMode generated check would be handled
+			if !contains(specKeys, statusKey) && canary.Spec.ResultMode == "" {
 				logger.Info("removing stale check", "key", statusKey)
-				cache.RemoveCheckByKey(statusKey)
+				cache.CacheChain.RemoveCheckByKey(statusKey)
 				metrics.RemoveCheckByKey(statusKey)
 				update = true
 			}
@@ -99,7 +102,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 	if !canary.DeletionTimestamp.IsZero() {
 		logger.Info("removing", "check", canary.Name)
-		cache.RemoveCheck(*canary)
+		cache.CacheChain.RemoveChecks(*canary)
 		metrics.RemoveCheck(*canary)
 		controllerutil.RemoveFinalizer(canary, FinalizerName)
 		if err := r.Update(ctx, canary); err != nil {
@@ -135,7 +138,11 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 
 	observed.Store(req.NamespacedName, true)
-	cache.Cache.InitCheck(*canary)
+	// since we are combining the checks and we don't want individual checks to be displayed on the UI.
+	if canary.Spec.ResultMode == "" {
+		cache.InMemoryCache.InitCheck(*canary)
+	}
+	// TODO shouldn't be deleting entries every time, only add once and remove and add new one if interval or schedule is changed.
 	for _, entry := range r.Cron.Entries() {
 		if entry.Job.(CanaryJob).GetNamespacedName() == req.NamespacedName {
 			logger.V(2).Info("unscheduled", "id", entry.ID)
@@ -145,7 +152,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 
 	if canary.Spec.Interval > 0 || canary.Spec.Schedule != "" {
-		job := CanaryJob{Client: *r, Check: *canary, Logger: logger, Context: context.New(r.Kommons, *canary)}
+		job := CanaryJob{Client: *r, Canary: *canary, Logger: logger, Context: context.New(r.Kommons, *canary)}
 		if !run {
 			// check each job on startup
 			go job.Run()
@@ -189,18 +196,11 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName, results []*pkg.CheckResult) {
-	canary := v1.Canary{}
-	if err := r.Get(ctx, key, &canary); err != nil {
-		r.Log.Error(err, "unable to find canary", "key", key)
-		return
-	}
-
+func (r *CanaryReconciler) Report(ctx *context.Context, canary v1.Canary, results []*pkg.CheckResult) {
 	canary.Status.LastCheck = &metav1.Time{Time: time.Now()}
 	transitioned := false
 	var messages, errors []string
 	var checkStatus = make(map[string]*v1.CheckStatus)
-
 	var duration int64
 	var pass = true
 	var passed int
@@ -209,14 +209,14 @@ func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName
 			r.Log.Info(result.String())
 		}
 		duration += result.Duration
-		lastResult := cache.AddCheck(canary, result)
+		cache.CacheChain.Add(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
 		uptime, latency := metrics.Record(canary, result)
 		checkKey := canary.GetKey(result.Check)
 		checkStatus[checkKey] = &v1.CheckStatus{}
 		checkStatus[checkKey].Uptime1H = uptime.String()
 		checkStatus[checkKey].Latency1H = latency.String()
-
-		if lastResult != nil && len(lastResult.Statuses) > 0 && (lastResult.Statuses[0].Status != result.Pass) {
+		lastStatus := cache.InMemoryCache.ListCheckStatus(checkKey, 1, nil)
+		if len(lastStatus) > 0 && (lastStatus[0].Status != result.Pass) {
 			transitioned = true
 		}
 		if !result.Pass {
@@ -238,8 +238,7 @@ func (r *CanaryReconciler) Report(ctx *context.Context, key types.NamespacedName
 		}
 		checkStatus[checkKey].Message = &result.Message
 		checkStatus[checkKey].ErrorMessage = &result.Error
-
-		push.Queue(pkg.FromV1(canary, result.Check, pkg.FromResult(*result)))
+		push.Queue(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
 	}
 
 	uptime, latency := metrics.Record(canary, &pkg.CheckResult{
@@ -295,20 +294,19 @@ func (r *CanaryReconciler) includeNamespace(namespace string) bool {
 
 type CanaryJob struct {
 	Client  CanaryReconciler
-	Check   v1.Canary
+	Canary  v1.Canary
 	Context *context.Context
 	logr.Logger
 }
 
 func (c CanaryJob) GetNamespacedName() types.NamespacedName {
-	return types.NamespacedName{Name: c.Check.Name, Namespace: c.Check.Namespace}
+	return types.NamespacedName{Name: c.Canary.Name, Namespace: c.Canary.Namespace}
 }
 
 func (c CanaryJob) Run() {
 	c.V(2).Info("Starting")
 	results := checks.RunChecks(c.Context)
-
-	c.Client.Report(c.Context, c.GetNamespacedName(), results)
+	c.Client.Report(c.Context, c.Canary, results)
 
 	c.V(3).Info("Ending")
 }

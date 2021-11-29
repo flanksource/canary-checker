@@ -6,13 +6,11 @@ spec:
   interval: 30
   pod:
     - name: golang
-      namespace: default
       spec: |
         apiVersion: v1
         kind: Pod
         metadata:
           name: hello-world-golang
-          namespace: default
           labels:
             app: hello-world-golang
         spec:
@@ -34,13 +32,11 @@ spec:
       expectedHttpStatuses: [200, 201, 202]
       priorityClass: canary-checker-priority
     - name: ruby
-      namespace: default
       spec: |
         apiVersion: v1
         kind: Pod
         metadata:
           name: hello-world-ruby
-          namespace: default
           labels:
             app: hello-world-ruby
         spec:

@@ -95,6 +95,7 @@ func run(cmd *cobra.Command, args []string) {
 		LogFail:           logFail,
 		Log:               ctrl.Log.WithName("controllers").WithName("canary"),
 		Scheme:            mgr.GetScheme(),
+		RunnerName:        runner.RunnerName,
 	}
 
 	if err = reconciler.SetupWithManager(mgr); err != nil {

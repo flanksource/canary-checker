@@ -133,40 +133,6 @@ func (c S3Check) GetType() string {
 	return "s3"
 }
 
-type AWSConnection struct {
-	AccessKey kommons.EnvVar `yaml:"accessKey" json:"accessKey"`
-	SecretKey kommons.EnvVar `yaml:"secretKey" json:"secretKey"`
-	Region    string         `yaml:"region,omitempty" json:"region"`
-	Endpoint  string         `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
-	// Skip TLS verify when connecting to aws
-	SkipTLSVerify bool `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
-}
-
-type S3BucketCheck struct {
-	Description   `yaml:",inline" json:",inline"`
-	Templatable   `yaml:",inline" json:",inline"`
-	AWSConnection `yaml:",inline" json:",inline"`
-	FolderTest    `yaml:",inline" json:",inline"`
-	Filter        FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
-	Bucket        string       `yaml:"bucket" json:"bucket"`
-	// glob path to restrict matches to a subset
-	ObjectPath string `yaml:"objectPath,omitempty" json:"objectPath,omitempty"`
-	// Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY
-	UsePathStyle bool `yaml:"usePathStyle,omitempty" json:"usePathStyle,omitempty"`
-}
-
-func (c S3BucketCheck) GetEndpoint() string {
-	if c.AWSConnection.Endpoint != "" {
-		return fmt.Sprintf("%s/%s", c.AWSConnection.Endpoint, c.Bucket)
-	} else {
-		return c.Bucket
-	}
-}
-
-func (c S3BucketCheck) GetType() string {
-	return "s3Bucket"
-}
-
 type CloudWatchCheck struct {
 	Description   `yaml:",inline" json:",inline"`
 	AWSConnection `yaml:",inline" json:",inline"`
@@ -194,28 +160,6 @@ func (c CloudWatchCheck) GetEndpoint() string {
 
 func (c CloudWatchCheck) GetType() string {
 	return "cloudwatch"
-}
-
-type GCPConnection struct {
-	Endpoint    string          `yaml:"endpoint" json:"endpoint,omitempty"`
-	Credentials *kommons.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
-}
-
-type GCSBucketCheck struct {
-	Description   `yaml:",inline" json:",inline"`
-	Templatable   `yaml:",inline" json:",inline"`
-	FolderTest    `yaml:",inline" json:",inline"`
-	GCPConnection `yaml:",inline" json:",inline"`
-	Filter        FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
-	Bucket        string       `yaml:"bucket" json:"bucket"`
-}
-
-func (c GCSBucketCheck) GetEndpoint() string {
-	return c.Bucket
-}
-
-func (c GCSBucketCheck) GetType() string {
-	return "gcsBucket"
 }
 
 type ResticCheck struct {
@@ -569,14 +513,7 @@ func (c JunitCheck) GetType() string {
 	return "junit"
 }
 
-type SmbCheck struct {
-	Description `yaml:",inline" json:",inline"`
-	Templatable `yaml:",inline" json:",inline"`
-	Filter      FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
-	FolderTest  `yaml:",inline" json:",inline"`
-	//Server location of smb server. Can be `hostname/ip` or in `\\server\e$\a\b\c` syntax
-	//Where server is the `hostname` `e$`` is the sharename and `a/b/c` is the searchPath location
-	Server string `yaml:"server" json:"server"`
+type SMBConnection struct {
 	//Port on which smb server is running. Defaults to 445
 	Port int             `yaml:"port,omitempty" json:"port,omitempty"`
 	Auth *Authentication `yaml:"auth" json:"auth"`
@@ -590,15 +527,7 @@ type SmbCheck struct {
 	SearchPath string `yaml:"searchPath,omitempty" json:"searchPath,omitempty" `
 }
 
-func (c SmbCheck) GetEndpoint() string {
-	return fmt.Sprintf("%s:%d/%s-%s", c.Server, c.GetPort(), c.Sharename, c.Description)
-}
-
-func (c SmbCheck) GetType() string {
-	return "smb"
-}
-
-func (c SmbCheck) GetPort() int {
+func (c SMBConnection) GetPort() int {
 	if c.Port != 0 {
 		return c.Port
 	}
@@ -690,13 +619,35 @@ func (c KubernetesCheck) CheckReady() bool {
 	return *c.Ready
 }
 
+type AWSConnection struct {
+	AccessKey kommons.EnvVar `yaml:"accessKey" json:"accessKey"`
+	SecretKey kommons.EnvVar `yaml:"secretKey" json:"secretKey"`
+	Region    string         `yaml:"region,omitempty" json:"region"`
+	Endpoint  string         `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
+	// Skip TLS verify when connecting to aws
+	SkipTLSVerify bool `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
+	// glob path to restrict matches to a subset
+	ObjectPath string `yaml:"objectPath,omitempty" json:"objectPath,omitempty"`
+	// Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY
+	UsePathStyle bool `yaml:"usePathStyle,omitempty" json:"usePathStyle,omitempty"`
+}
+
+type GCPConnection struct {
+	Endpoint    string          `yaml:"endpoint" json:"endpoint,omitempty"`
+	Credentials *kommons.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
+}
+
 type FolderCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
-	// Absolute Path to the folder to be checked
-	Path       string       `yaml:"path" json:"path"`
-	Filter     FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
-	FolderTest `yaml:",inline" json:",inline"`
+	// Path can be the s3 or gcs bucket, or reference to local folder
+	// for s3 the prefix need to be s3://<bucket-name> for gCloud, gcs://<bucket-name>
+	Path           string       `yaml:"path" json:"path"`
+	Filter         FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
+	FolderTest     `yaml:",inline" json:",inline"`
+	*AWSConnection `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
+	*GCPConnection `yaml:"gcpConnection,omitempty" json:"gcpConnection,omitempty"`
+	*SMBConnection `yaml:"smbConnection,omitempty" json:"smbConnection,omitempty"`
 }
 
 func (c FolderCheck) GetType() string {
@@ -705,6 +656,45 @@ func (c FolderCheck) GetType() string {
 
 func (c FolderCheck) GetEndpoint() string {
 	return c.Path
+}
+
+type ExecCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	// Script can be a inline script or a path to a script that needs to be executed
+	// On windows executed via powershell and in darwin and linux executed using bash
+	Script *string `yaml:"script" json:"script"`
+}
+
+func (c ExecCheck) GetType() string {
+	return "exec"
+}
+
+func (c ExecCheck) GetEndpoint() string {
+	return *c.Script
+}
+
+func (c ExecCheck) GetTestFunction() Template {
+	if c.Test.Expression == "" {
+		c.Test.Expression = "results.ExitCode == 0"
+	}
+	return c.Test
+}
+
+type AwsConfigCheck struct {
+	Description    `yaml:",inline" json:",inline"`
+	Templatable    `yaml:",inline" json:",inline"`
+	Query          string `yaml:"query" json:"query"`
+	*AWSConnection `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
+	AggregatorName *string `yaml:"aggregatorName,omitempty" json:"aggregatorName,omitempty"`
+}
+
+func (c AwsConfigCheck) GetType() string {
+	return "awsconfig"
+}
+
+func (c AwsConfigCheck) GetEndpoint() string {
+	return c.Query
 }
 
 /*
@@ -750,20 +740,6 @@ S3 check will:
 */
 type S3 struct {
 	S3Check `yaml:",inline" json:"inline"`
-}
-
-/*
-This check will
-
-- search objects matching the provided object path pattern
-- check that latest object is no older than provided MaxAge value in seconds
-- check that latest object size is not smaller than provided MinSize value in bytes.
-
-[include:datasources/s3_bucket_pass.yaml]
-
-*/
-type S3Bucket struct {
-	S3BucketCheck `yaml:",inline" json:"inline"`
 }
 
 type TCP struct {
@@ -890,18 +866,6 @@ type Junit struct {
 }
 
 /*
-Smb check will connect to the given samba server with given credentials
-find the age of the latest updated file and compare it with minAge
-count the number of file present and compare with minCount if defined
-
-[include:quarantine/smb_pass.yaml]
-
-*/
-type Smb struct {
-	SmbCheck `yaml:",inline" json:",inline"`
-}
-
-/*
 This checks the cloudwatch for all the Active alarm and response with the reason
 [include:aws/cloudwatch_pass.yaml]
 */
@@ -924,13 +888,6 @@ type ContainerdPush struct {
 }
 
 /*
-[include:gcs/bucket_pass.yaml]
-*/
-type GCSBucket struct {
-	GCSBucketCheck `yaml:",inline" json:",inline"`
-}
-
-/*
 [include:k8s/kuberenetes_pass.yaml]
 */
 type Kubernetes struct {
@@ -938,6 +895,23 @@ type Kubernetes struct {
 }
 
 /*
+Folder Check provides an abstraction over checker related to folder.
+Currently, used to perform the following checks:
+ - s3bucket check
+	- search objects matching the provided object path pattern
+	- check that latest object is no older than provided MaxAge value in seconds
+	- check that latest object size is not smaller than provided MinSize value in bytes.
+ - gcsBucket check
+    - search objects matching the provided object path pattern
+	- check that latest object is no older than provided MaxAge value in seconds
+	- check that latest object size is not smaller than provided MinSize value in bytes.
+ - Smb check: which connects to the given samba server with given credentials
+	find the age of the latest updated file and compare it with minAge
+	count the number of file present and compare with minCount if defined
+ - local Folder check
+
+[include:quarantine/smb_pass.yaml]
+[include:datasources/s3_bucket_pass.yaml]
 [include:datasource/folder_pass.yaml]
 */
 type Folder struct {
@@ -945,7 +919,24 @@ type Folder struct {
 }
 
 /*
+Exec Check executes a command or scrtipt file on the target host.
+On Linux/MacOS uses bash and on Windows uses powershell.
+[include:minimal/exec_pass.yaml]
+*/
+type Exec struct {
+	ExecCheck `yaml:",inline" json:",inline"`
+}
+
+/*
+AwsConfig check runs the given query against the AWS resources.
 [include:aws/ec2_pass.yaml]
+*/
+type AwsConfig struct {
+	AwsConfigCheck `yaml:",inline" json:",inline"`
+}
+
+/*
+[include:aws/aws_config_pass.yaml]
 */
 type EC2 struct {
 	EC2Check `yaml:",inline" json:",inline"`
@@ -975,7 +966,6 @@ var AllChecks = []external.Check{
 	TCPCheck{},
 	ICMPCheck{},
 	S3Check{},
-	S3BucketCheck{},
 	DockerPullCheck{},
 	DockerPushCheck{},
 	ContainerdPullCheck{},
@@ -991,13 +981,13 @@ var AllChecks = []external.Check{
 	HelmCheck{},
 	JmeterCheck{},
 	JunitCheck{},
-	SmbCheck{},
 	EC2Check{},
 	PrometheusCheck{},
-	GCSBucketCheck{},
 	MongoDBCheck{},
 	CloudWatchCheck{},
 	GitHubCheck{},
 	Kubernetes{},
 	FolderCheck{},
+	ExecCheck{},
+	AwsConfigCheck{},
 }

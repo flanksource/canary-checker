@@ -6,12 +6,16 @@ import (
 	nethttp "net/http"
 	_ "net/http/pprof" // required by serve
 
+	"github.com/flanksource/canary-checker/pkg/changes"
+
 	"github.com/flanksource/canary-checker/pkg/details"
 	"github.com/flanksource/canary-checker/pkg/runner"
+	"github.com/flanksource/canary-checker/pkg/spec"
 
 	"github.com/flanksource/canary-checker/pkg/push"
 
 	"github.com/flanksource/canary-checker/api/context"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/api"
@@ -30,22 +34,25 @@ import (
 var schedule, configFile string
 
 var Serve = &cobra.Command{
-	Use:   "serve",
+	Use:   "serve config.yaml",
 	Short: "Start a server to execute checks ",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		configs, err := pkg.ParseConfig(configFile)
-		if err != nil {
-			logger.Fatalf("could not parse %s: %v", configFile, err)
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, configFiles []string) {
+		var canaries []v1.Canary
+		for _, configfile := range configFiles {
+			configs, err := pkg.ParseConfig(configfile, dataFile)
+			if err != nil {
+				logger.Fatalf("could not parse %s: %v", configfile, err)
+			}
+			canaries = append(canaries, configs...)
 		}
 		kommonsClient, err := pkg.NewKommonsClient()
 		if err != nil {
 			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
 		}
 		cron := cron.New()
-		cron.Start()
 
-		for _, canary := range configs {
+		for _, canary := range canaries {
 			if schedule == "" {
 				if canary.Spec.Schedule != "" {
 					schedule = canary.Spec.Schedule
@@ -53,7 +60,7 @@ var Serve = &cobra.Command{
 					schedule = fmt.Sprintf("@every %ds", canary.Spec.Interval)
 				}
 			}
-
+			canary.SetRunnerName(runner.RunnerName)
 			for _, _c := range checks.All {
 				c := _c
 				if !checks.Checks(canary.Spec.GetAllChecks()).Includes(c) {
@@ -65,14 +72,15 @@ var Serve = &cobra.Command{
 							if logPass && result.Pass || logFail && !result.Pass {
 								logger.Infof(result.String())
 							}
-							cache.AddCheck(canary, result)
+							cache.CacheChain.Add(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
 							metrics.Record(canary, result)
-							push.Queue(pkg.FromV1(canary, result.Check, pkg.FromResult(*result)))
+							push.Queue(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
 						}
 					}()
 				})
 			}
 		}
+		cron.Start()
 		serve()
 	},
 }
@@ -94,24 +102,48 @@ func serve() {
 	}
 
 	nethttp.Handle("/metrics", promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{}))
-
+	if cache.PostgresConnectionString != "" {
+		conn, err := cache.InitPostgres(cache.PostgresConnectionString)
+		if err != nil {
+			logger.Debugf("error connecting with postgres. Only using in-memory cache: %v", err)
+		}
+		if conn != nil {
+			// needs to be implemented
+			cache.PostgresCache.Conn = conn
+			cache.CacheChain.Chain = append(cache.CacheChain.Chain, cache.PostgresCache)
+			for _, check := range cache.PostgresCache.GetChecks() {
+				cache.InMemoryCache.Checks[check.Key] = check
+			}
+		}
+	}
 	push.AddServers(pushServers)
 	go push.Start()
 
 	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheusURL)
 
-	nethttp.Handle("/", nethttp.FileServer(staticRoot))
+	nethttp.HandleFunc("/", stripQuery(nethttp.FileServer(staticRoot).ServeHTTP))
 	nethttp.HandleFunc("/api", simpleCors(api.Handler, allowedCors))
 	nethttp.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))
 	nethttp.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler, allowedCors))
 	nethttp.HandleFunc("/api/push", simpleCors(push.Handler, allowedCors))
 	nethttp.HandleFunc("/api/details", simpleCors(details.Handler, allowedCors))
+	nethttp.HandleFunc("/api/spec", simpleCors(spec.CheckHandler, allowedCors))
+	nethttp.HandleFunc("/api/spec/canary", simpleCors(spec.CanaryHandler, allowedCors))
+	nethttp.HandleFunc("/api/changes", simpleCors(changes.Handler, allowedCors))
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
 	logger.Infof("Starting health dashboard at http://%s", addr)
 	logger.Infof("Metrics can be accessed at http://%s/metrics", addr)
 
 	if err := nethttp.ListenAndServe(addr, nil); err != nil {
 		logger.Fatalf("failed to start server: %v", err)
+	}
+}
+
+// stripQuery removes query parameters for static sites
+func stripQuery(f nethttp.HandlerFunc) nethttp.HandlerFunc {
+	return func(w nethttp.ResponseWriter, r *nethttp.Request) {
+		r.URL.RawQuery = ""
+		f(w, r)
 	}
 }
 

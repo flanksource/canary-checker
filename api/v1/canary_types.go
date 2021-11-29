@@ -32,6 +32,12 @@ const (
 	postgresDriver = "postgres"
 )
 
+type ResultMode string
+
+const (
+	JunitResultMode = "junit"
+)
+
 // CanarySpec defines the desired state of Canary
 type CanarySpec struct {
 	Env            map[string]VarSource  `yaml:"env,omitempty" json:"env,omitempty"`
@@ -42,8 +48,6 @@ type CanarySpec struct {
 	ContainerdPull []ContainerdPullCheck `yaml:"containerd,omitempty" json:"containerd,omitempty"`
 	ContainerdPush []ContainerdPushCheck `yaml:"containerdPush,omitempty" json:"containerdPush,omitempty"`
 	S3             []S3Check             `yaml:"s3,omitempty" json:"s3,omitempty"`
-	S3Bucket       []S3BucketCheck       `yaml:"s3Bucket,omitempty" json:"s3Bucket,omitempty"`
-	GCSBucket      []GCSBucketCheck      `yaml:"gcsBucket,omitempty" json:"gcsBucket,omitempty"`
 	TCP            []TCPCheck            `yaml:"tcp,omitempty" json:"tcp,omitempty"`
 	Pod            []PodCheck            `yaml:"pod,omitempty" json:"pod,omitempty"`
 	LDAP           []LDAPCheck           `yaml:"ldap,omitempty" json:"ldap,omitempty"`
@@ -53,7 +57,6 @@ type CanarySpec struct {
 	Restic         []ResticCheck         `yaml:"restic,omitempty" json:"restic,omitempty"`
 	Jmeter         []JmeterCheck         `yaml:"jmeter,omitempty" json:"jmeter,omitempty"`
 	Junit          []JunitCheck          `yaml:"junit,omitempty" json:"junit,omitempty"`
-	Smb            []SmbCheck            `yaml:"smb,omitempty" json:"smb,omitempty"`
 	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Redis          []RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
@@ -64,14 +67,17 @@ type CanarySpec struct {
 	GitHub         []GitHubCheck         `yaml:"github,omitempty" json:"github,omitempty"`
 	Kubernetes     []KubernetesCheck     `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
 	Folder         []FolderCheck         `yaml:"folder,omitempty" json:"folder,omitempty"`
+	Exec           []ExecCheck           `yaml:"exec,omitempty" json:"exec,omitempty"`
+	AwsConfig      []AwsConfigCheck      `yaml:"awsConfig,omitempty" json:"awsConfig,omitempty"`
 	// interval (in seconds) to run checks on Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
 	// Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
 	//  Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.
-	Schedule string `yaml:"schedule,omitempty" json:"schedule,omitempty"`
-	Icon     string `yaml:"icon,omitempty" json:"icon,omitempty"`
-	Severity string `yaml:"severity,omitempty" json:"severity,omitempty"`
-	Owner    string `yaml:"owner,omitempty" json:"owner,omitempty"`
+	Schedule   string     `yaml:"schedule,omitempty" json:"schedule,omitempty"`
+	Icon       string     `yaml:"icon,omitempty" json:"icon,omitempty"`
+	Severity   string     `yaml:"severity,omitempty" json:"severity,omitempty"`
+	Owner      string     `yaml:"owner,omitempty" json:"owner,omitempty"`
+	ResultMode ResultMode `yaml:"resultMode,omitempty" json:"resultMode,omitempty"`
 }
 
 func (spec CanarySpec) GetAllChecks() []external.Check {
@@ -95,9 +101,6 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.S3 {
-		checks = append(checks, check)
-	}
-	for _, check := range spec.S3Bucket {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.TCP {
@@ -136,9 +139,6 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	for _, check := range spec.Junit {
 		checks = append(checks, check)
 	}
-	for _, check := range spec.Smb {
-		checks = append(checks, check)
-	}
 	for _, check := range spec.EC2 {
 		checks = append(checks, check)
 	}
@@ -146,9 +146,6 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.MongoDB {
-		checks = append(checks, check)
-	}
-	for _, check := range spec.GCSBucket {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.CloudWatch {
@@ -161,6 +158,12 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Folder {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.Exec {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.AwsConfig {
 		checks = append(checks, check)
 	}
 	return checks
@@ -195,6 +198,14 @@ func (c Canary) GetDescription(check external.Check) string {
 	return check.GetEndpoint()
 }
 
+func (c *Canary) SetRunnerName(name string) {
+	c.Status.runnerName = name
+}
+
+func (c *Canary) GetRunnerName() string {
+	return c.Status.runnerName
+}
+
 type CanaryStatusCondition string
 
 var (
@@ -223,6 +234,8 @@ type CanaryStatus struct {
 	Uptime1H string `json:"uptime1h,omitempty"`
 	// Average latency to complete all checks
 	Latency1H string `json:"latency1h,omitempty"`
+	// used for keeping history of the checks
+	runnerName string `json:"-"`
 }
 
 type CheckStatus struct {
@@ -282,7 +295,7 @@ func (c Canary) GetAllLabels(extra map[string]string) map[string]string {
 }
 
 func (c Canary) ID() string {
-	return fmt.Sprintf("%s/%s", c.Namespace, c.Name)
+	return fmt.Sprintf("%s/%s/%s", c.GetRunnerName(), c.Namespace, c.Name)
 }
 
 // +kubebuilder:object:root=true
