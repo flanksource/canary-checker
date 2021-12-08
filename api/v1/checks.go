@@ -339,6 +339,10 @@ type MssqlCheck struct {
 	SQLCheck `yaml:",inline" json:",inline"`
 }
 
+type MysqlCheck struct {
+	SQLCheck `yaml:",inline" json:",inline"`
+}
+
 /*
 [include:datasources/mongo_pass.yaml]
 */
@@ -348,6 +352,10 @@ type Mongo struct {
 
 func (m MssqlCheck) GetType() string {
 	return "mssql"
+}
+
+func (m MysqlCheck) GetType() string {
+	return "mysql"
 }
 
 type PodCheck struct {
@@ -972,6 +980,7 @@ var AllChecks = []external.Check{
 	ContainerdPushCheck{},
 	PostgresCheck{},
 	MssqlCheck{},
+	MysqlCheck{},
 	RedisCheck{},
 	PodCheck{},
 	LDAPCheck{},

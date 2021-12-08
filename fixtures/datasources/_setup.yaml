@@ -53,7 +53,37 @@ spec:
               value: postgresadmin
             - name: POSTGRES_PASSWORD
               value: admin123
-
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mysql
+  name: mysql
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_DATABASE
+              value: mysqldb
+            - name: MYSQL_USER
+              value: mysqladmin
+            - name: MYSQL_PASSWORD
+              value: admin123
 ---
 apiVersion: apps/v1
 kind: Deployment

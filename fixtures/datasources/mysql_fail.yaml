@@ -1,0 +1,16 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: mysql-fail
+spec:
+  interval: 30
+  mysql:
+    - connection: "Server=mysql.platformsystem;Port=3306;Uid=$(username);Password=$(password);Database=mysqldb"
+      auth:
+        username:
+          value: mysqladmin
+        password:
+          value: admin123
+      query: "SELECT 1"
+      results: 1
+
