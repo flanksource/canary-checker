@@ -36,11 +36,6 @@ sleep 10
 kubectl apply -f fixtures/minimal/http_pass_single.yaml
 echo "::endgroup::"
 
-_DOMAIN=$(kubectl get cm -n quack quack-config -o json | jq -r ".data.domain" || echo)
-if [[ "$_DOMAIN" != "" ]]; then
-  echo Using domain: "$_DOMAIN"
-  export DOMAIN=$_DOMAIN
-fi
 
 echo "::group::Operator"
 ## starting operator in background
@@ -60,12 +55,12 @@ if [ "${STATUS_COUNT_MEMORY}" -gt 1 ]; then
     exit 1
 fi
 
-if [ "${STATUS_COUNT_POSTGRES}" -ge 3 ]; then
+if [ "${STATUS_COUNT_POSTGRES}" -ge 2 ]; then
     sudo kill -9 $PROC_ID || :
     echo "::endgroup::"
     exit 0
 else
-    echo "expected statuses length to be greater than 2 but got ${STATUS_COUNT}"
+    echo "expected statuses length to be greater than 2 but got ${STATUS_COUNT_POSTGRES}"
     sudo kill -9 $PROC_ID || :
     echo "::endgroup::"    
     exit 1
