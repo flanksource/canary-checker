@@ -51,7 +51,7 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 		for _, resource := range resources {
 			ready, msg := ctx.Kommons.IsReady(&resource)
 			if ready != check.CheckReady() {
-				differentReadyStatus[fmt.Sprintf("The resource %v-%v-%v is expected Ready: %v but Ready is %v", resource.GetName(), resource.GetNamespace(), resource.GetKind(), ready, check.CheckReady())] = msg
+				differentReadyStatus[fmt.Sprintf("The resource %v-%v-%v is expected Ready: %v but Ready is %v", resource.GetName(), resource.GetNamespace(), resource.GetKind(), check.CheckReady(), ready)] = msg
 			}
 		}
 		allResources = append(allResources, resources...)
@@ -61,7 +61,7 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 	}
 	result.AddDetails(allResources)
 	if len(differentReadyStatus) > 0 {
-		message := "The following resources found with differednt ready status\n"
+		message := "The following resources found with different ready status\n"
 		for key, value := range differentReadyStatus {
 			message += fmt.Sprintf("%v: %v\n", key, value)
 		}
