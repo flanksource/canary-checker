@@ -29,6 +29,7 @@ import (
 
 const (
 	mssqlDriver    = "mssql"
+	mysqlDriver    = "mysql"
 	postgresDriver = "postgres"
 )
 
@@ -54,6 +55,7 @@ type CanarySpec struct {
 	ICMP           []ICMPCheck           `yaml:"icmp,omitempty" json:"icmp,omitempty"`
 	Postgres       []PostgresCheck       `yaml:"postgres,omitempty" json:"postgres,omitempty"`
 	Mssql          []MssqlCheck          `yaml:"mssql,omitempty" json:"mssql,omitempty"`
+	Mysql          []MysqlCheck          `yaml:"mysql,omitempty" json:"mysql,omitempty"`
 	Restic         []ResticCheck         `yaml:"restic,omitempty" json:"restic,omitempty"`
 	Jmeter         []JmeterCheck         `yaml:"jmeter,omitempty" json:"jmeter,omitempty"`
 	Junit          []JunitCheck          `yaml:"junit,omitempty" json:"junit,omitempty"`
@@ -115,6 +117,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	for _, check := range spec.Postgres {
 		checks = append(checks, check)
 	}
+	for _, check := range spec.Mysql {
+		checks = append(checks, check)
+	}
 	for _, check := range spec.Mssql {
 		checks = append(checks, check)
 	}
@@ -173,6 +178,11 @@ func (spec CanarySpec) SetSQLDrivers() {
 	for i := range spec.Mssql {
 		if spec.Mssql[i].driver == "" {
 			spec.Mssql[i].SetDriver(mssqlDriver)
+		}
+	}
+	for i := range spec.Mysql {
+		if spec.Mysql[i].driver == "" {
+			spec.Mysql[i].SetDriver(mysqlDriver)
 		}
 	}
 	for i := range spec.Postgres {

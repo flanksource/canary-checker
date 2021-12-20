@@ -43,11 +43,16 @@ go run main.go operator -vvv --cache-connection-string="postgres://postgres:myse
 PROC_ID=$!
 
 ## sleeping for a bit to let the operator start and statuses to be present
-sleep 40
+sleep 240
+
+curl http://0.0.0.0:8080/api
 
 STATUS_COUNT_POSTGRES=$(curl -s http://0.0.0.0:8080/api\?count\=4  | jq ."checks[0].checkStatuses | length")
 STATUS_COUNT_MEMORY=$(curl -s http://0.0.0.0:8080/api  | jq ."checks[0].checkStatuses | length")
 
+
+echo "Postgres count: ${STATUS_COUNT_POSTGRES}"
+echo "Memory count: ${STATUS_COUNT_MEMORY}"
 
 if [ "${STATUS_COUNT_MEMORY}" -gt 1 ]; then
     echo "Status in memory should not be greater than 1"

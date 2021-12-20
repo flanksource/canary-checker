@@ -7,6 +7,8 @@ resources:
   - mongo_pass.yaml
   - mssql_fail.yaml
   - mssql_pass.yaml
+  - mysql_fail.yaml
+  - mysql_pass.yaml
   - postgres_fail.yaml
   - postgres_pass.yaml
   - prometheus.yaml
