@@ -84,6 +84,22 @@ spec:
               value: mysqladmin
             - name: MYSQL_PASSWORD
               value: admin123
+            - name: MYSQL_ROOT_PASSWORD
+              value: "s3cur2root"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: default
+spec:
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: 3306
+      protocol: TCP
+  selector:
+    app: mysql
 ---
 apiVersion: apps/v1
 kind: Deployment

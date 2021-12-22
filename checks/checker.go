@@ -34,6 +34,7 @@ var All = []Checker{
 	&ContainerdPullChecker{},
 	&PostgresChecker{},
 	&MssqlChecker{},
+	&MysqlChecker{},
 	&LdapChecker{},
 	&JmeterChecker{},
 	&ResticChecker{},

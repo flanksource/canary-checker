@@ -5,12 +5,12 @@ metadata:
 spec:
   interval: 30
   mysql:
-    - connection: "Server=mysql.platformsystem;Port=3306;Uid=$(username);Password=$(password);Database=mysqldb"
+    - connection: "$(username):$(password)@tcp(mysql.default.svc:3306)/mysqldb"
       auth:
         username:
           value: mysqladmin
         password:
-          value: admin123
+          value: wrongpassword
       query: "SELECT 1"
       results: 1
 

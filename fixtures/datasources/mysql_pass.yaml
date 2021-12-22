@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 30
   mysql:
-    - connection: "Server=mysql.default.svc;Port=3306;Uid=$(username);Password=$(password);Database=mysqldb"
+    - connection: "$(username):$(password)@tcp(mysql.default.svc:3306)/mysqldb"
       auth:
         username:
           value: mysqladmin
