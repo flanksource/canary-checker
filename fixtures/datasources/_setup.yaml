@@ -84,6 +84,8 @@ spec:
               value: mysqladmin
             - name: MYSQL_PASSWORD
               value: admin123
+            - name: MYSQL_ROOT_PASSWORD
+              value: "s3cur2root"
 ---
 apiVersion: v1
 kind: Service
