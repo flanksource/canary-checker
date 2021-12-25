@@ -157,13 +157,16 @@ func cleanupExistingPods(ctx *context.Context, k8s kubernetes.Interface, selecto
 	ctx.Debugf("found %d pods for %s", len(existingPods.Items), selector)
 	skip := len(existingPods.Items) > 1 // allow up to 1 duplicate running container
 	for _, junitPod := range existingPods.Items {
-		nextRuntime, err := getNextRuntime(ctx.Canary, junitPod.CreationTimestamp.Time)
+
+		logger.Errorf("original=%s, local=%s", junitPod.CreationTimestamp, junitPod.CreationTimestamp.Local())
+		nextRuntime, err := getNextRuntime(ctx.Canary, junitPod.CreationTimestamp.Local())
 		if err != nil {
 			return false, err
 		}
-		if time.Now().After(*nextRuntime) {
+
+		if time.Now().After((*nextRuntime)) {
 			defer deletePod(ctx, &junitPod)
-			ctx.Warnf("stale pod found: %s, created=%s", junitPod.Name, time.Since(junitPod.GetCreationTimestamp().Time))
+			ctx.Warnf("stale pod found: %s, created=%s", junitPod.Name, time.Since(junitPod.GetCreationTimestamp().Local()))
 			skip = true
 		}
 	}
