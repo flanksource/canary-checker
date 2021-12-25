@@ -41,12 +41,12 @@ var Run = &cobra.Command{
 		queue := make(chan []*pkg.CheckResult, 1)
 
 		for _, configfile := range configFiles {
-			logger.Infof("Checking %s", configfile)
 			configs, err := pkg.ParseConfig(configfile, dataFile)
 			if err != nil {
 				logger.Errorf("Could not parse %s: %v", configfile, err)
 				continue
 			}
+			logger.Infof("Checking %s, %d checks found", configfile, len(configs))
 			for _, config := range configs {
 				if namespace != "" {
 					config.Namespace = namespace
