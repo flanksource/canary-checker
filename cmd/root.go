@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/commons/logger"
@@ -22,6 +24,12 @@ var pushServers, pullServers []string
 var exposeEnv bool
 var logPass, logFail bool
 
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&httpPort, "httpPort", 8080, "Port to expose a health dashboard ")
 	flags.IntVar(&devGuiPort, "devGuiPort", 3004, "Port used by a local npm server in development mode")
@@ -42,6 +50,19 @@ func ServerFlags(flags *pflag.FlagSet) {
 
 func init() {
 	logger.BindFlags(Root.PersistentFlags())
+
+	if len(commit) > 8 {
+		version = fmt.Sprintf("%v, commit %v, built at %v", version, commit[0:8], date)
+	}
+	Root.AddCommand(&cobra.Command{
+		Use:   "version",
+		Short: "Print the version of canary-checker",
+		Args:  cobra.MinimumNArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(version)
+		},
+	})
+	runner.Version = version
 
 	Root.PersistentFlags().BoolVar(&exposeEnv, "expose-env", false, "Expose environment variables for use in all templates. Note this has serious security implications with untrusted canaries")
 	Root.AddCommand(Docs)

@@ -11,12 +11,12 @@ import (
 )
 
 type inMemoryCache struct {
-	Checks map[string]*pkg.Check
+	Checks map[string]*pkg.Check `json:"checks"`
 	// Key is the "checkKey"-status
-	Statuses map[string][]pkg.CheckStatus
+	Statuses map[string][]pkg.CheckStatus `json:"status"`
 	mtx      sync.Mutex
 	// the string is checkKey
-	Details map[string][]interface{}
+	Details map[string][]interface{} `json:"details"`
 }
 
 var InMemoryCache = &inMemoryCache{
@@ -86,10 +86,14 @@ func (c *inMemoryCache) GetCheckFromID(id string) *pkg.Check {
 
 // GetDetails returns the details for a given check
 func (c *inMemoryCache) GetDetails(checkkey string, time string) interface{} {
-	statuses := c.Statuses[checkkey]
-	for _, status := range statuses {
-		if status.Time == time {
-			return status.Detail
+	if statuses, ok := c.Statuses[checkkey]; ok {
+		for _, status := range statuses {
+			if time == "*" || time == "last" {
+				return status.Detail
+			}
+			if status.Time == time {
+				return status.Detail
+			}
 		}
 	}
 	return nil

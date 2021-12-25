@@ -238,7 +238,10 @@ func (result CheckResult) String() string {
 	endpoint := ""
 	if result.Check != nil {
 		checkType = result.Check.GetType()
-		endpoint = result.Check.GetEndpoint()
+		endpoint = result.Check.GetDescription()
+		if endpoint == "" {
+			endpoint = result.Check.GetEndpoint()
+		}
 	}
 
 	if result.Pass {

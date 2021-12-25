@@ -19,6 +19,19 @@ type Response struct {
 	Checks     pkg.Checks `json:"checks"`
 }
 
+func About(w http.ResponseWriter, req *http.Request) {
+	data, _ := json.Marshal(map[string]interface{}{
+		"Timestamp": time.Now(),
+		"Version":   runner.Version,
+	})
+	fmt.Fprint(w, string(data))
+}
+
+func Dump(w http.ResponseWriter, req *http.Request) {
+	data, _ := json.Marshal(cache.InMemoryCache)
+	fmt.Fprint(w, string(data))
+}
+
 func Handler(w http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	count := queryParams.Get("count")
