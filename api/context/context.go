@@ -34,6 +34,9 @@ func (ctx *Context) WithDeadline(deadline time.Time) (*Context, gocontext.Cancel
 }
 
 func New(client *kommons.Client, canary v1.Canary) *Context {
+	if canary.Namespace == "" {
+		canary.Namespace = "default"
+	}
 	return &Context{
 		Context:     gocontext.Background(),
 		Kommons:     client,
