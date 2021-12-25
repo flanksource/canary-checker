@@ -16,6 +16,7 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 
 	// }
 	checks := ctx.Canary.Spec.GetAllChecks()
+	ctx.Debugf("[%s] checking %d checks", ctx.Canary.Name, len(checks))
 	for _, c := range All {
 		// FIXME: this doesn't work correct with DNS,
 		// t := GetDeadline(ctx.Canary)
@@ -52,8 +53,6 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 							} else {
 								r.Failf("")
 							}
-						} else {
-							ctx.Logger.Tracef("%s return %s", tpl, message)
 						}
 					}
 					results = append(results, r)

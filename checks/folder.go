@@ -84,16 +84,12 @@ func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) *p
 	path := strings.ToLower(check.Path)
 	switch {
 	case strings.HasPrefix(path, "s3://"):
-		logger.Debugf("running s3bucket check")
 		return CheckS3Bucket(ctx, check)
 	case strings.HasPrefix(path, "gcs://"):
-		logger.Debugf("running gcs bucket check")
 		return CheckGCSBucket(ctx, check)
 	case strings.HasPrefix(path, "smb://") || strings.HasPrefix(path, `\\`):
-		logger.Debugf("running smb check")
 		return CheckSmb(ctx, check)
 	default:
-		logger.Debugf("running local folder check")
 		return checkLocalFolder(ctx, check)
 	}
 }
