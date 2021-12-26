@@ -31,6 +31,9 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	check := extConfig.(v1.PrometheusCheck)
 	result := pkg.Success(check, ctx.Canary)
 
+	if check.Host == "" {
+		return result.Failf("Must specify a prometheus host")
+	}
 	promClient, err := prometheus.NewPrometheusAPI(check.Host)
 	if err != nil {
 		return result.ErrorMessage(err)
