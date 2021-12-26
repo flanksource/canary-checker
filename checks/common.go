@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/antonmedv/expr"
 	"github.com/pkg/errors"
 	"github.com/robertkrimen/otto"
+	_ "github.com/robertkrimen/otto/underscore"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -128,7 +128,64 @@ func getNextRuntime(canary v1.Canary, lastRuntime time.Time) (*time.Time, error)
 	return &t, nil
 }
 
+func def(a, b string) string {
+	if a != "" {
+		return a
+	}
+	return b
+}
+
+func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, error) {
+	var tpl v1.Template
+	switch v := in.Check.(type) {
+	case v1.Transformer:
+		tpl = v.GetTransformer()
+	}
+
+	if tpl.IsEmpty() {
+
+		return []*pkg.CheckResult{in}, nil
+	}
+
+	out, err := template(ctx.New(in.Data), tpl)
+	if err != nil {
+		return nil, err
+	}
+
+	var transformed []pkg.TransformedCheckResult
+
+	if err := json.Unmarshal([]byte(out), &transformed); err != nil {
+		return nil, err
+	}
+
+	var results []*pkg.CheckResult
+
+	for _, t := range transformed {
+		t.Icon = def(t.Icon, in.Check.GetIcon())
+		t.Description = def(t.Description, in.Check.GetDescription())
+		t.Name = def(t.Name, in.Check.GetName())
+		t.Type = def(t.Type, in.Check.GetType())
+		t.Endpoint = def(t.Endpoint, in.Check.GetEndpoint())
+		r := t.ToCheckResult()
+		r.Canary = in.Canary
+		r.Canary.Namespace = def(t.Namespace, r.Canary.Namespace)
+		for k, v := range t.Labels {
+			if r.Canary.Labels == nil {
+				r.Canary.Labels = make(map[string]string)
+			}
+			r.Canary.Labels[k] = v
+		}
+		results = append(results, &r)
+	}
+
+	ctx.Trace("transformed %s into %v", in, results)
+
+	return results, nil
+}
+
 func template(ctx *context.Context, template v1.Template) (string, error) {
+
+	// javascript
 	if template.Javascript != "" {
 		vm := otto.New()
 		for k, v := range ctx.Environment {
@@ -147,6 +204,8 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 			return s, nil
 		}
 	}
+
+	// gotemplate
 	if template.Template != "" {
 		tpl := gotemplate.New("")
 		tpl, err := tpl.Funcs(text.GetTemplateFuncs()).Parse(template.Template)
@@ -167,6 +226,8 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 		}
 		return strings.TrimSpace(buf.String()), nil
 	}
+
+	// exprv
 	if template.Expression != "" {
 		program, err := expr.Compile(template.Expression, text.MakeExpressionOptions(ctx.Environment)...)
 		if err != nil {
