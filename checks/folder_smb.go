@@ -100,7 +100,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) *pkg.CheckResult {
 		return result.ErrorMessage(err)
 	}
 
-	auth, err := GetAuthValues(check.Authentication, ctx.Kommons, namespace)
+	auth, err := GetAuthValues(check.SMBConnection.Auth, ctx.Kommons, namespace)
 	if err != nil {
 		return result.ErrorMessage(err)
 	}
