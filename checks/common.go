@@ -11,6 +11,8 @@ import (
 	gotemplate "text/template"
 
 	"github.com/antonmedv/expr"
+	"github.com/pkg/errors"
+	"github.com/robertkrimen/otto"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -208,6 +210,24 @@ func getNextRuntime(canary v1.Canary, lastRuntime time.Time) (*time.Time, error)
 }
 
 func template(ctx *context.Context, template v1.Template) (string, error) {
+	if template.Javascript != "" {
+		vm := otto.New()
+		for k, v := range ctx.Environment {
+			if err := vm.Set(k, v); err != nil {
+				return "", errors.Wrapf(err, "error setting %s", k)
+			}
+		}
+		out, err := vm.Run(template.Javascript)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to run javascript")
+		}
+
+		if s, err := out.ToString(); err != nil {
+			return "", errors.Wrapf(err, "failed to cast output to string")
+		} else {
+			return s, nil
+		}
+	}
 	if template.Template != "" {
 		tpl := gotemplate.New("")
 		tpl, err := tpl.Funcs(text.GetTemplateFuncs()).Parse(template.Template)

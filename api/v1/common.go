@@ -202,6 +202,7 @@ type Template struct {
 	Template   string `yaml:"template,omitempty" json:"template,omitempty"`
 	JSONPath   string `yaml:"jsonPath,omitempty" json:"jsonPath,omitempty"`
 	Expression string `yaml:"expr,omitempty" json:"expr,omitempty"`
+	Javascript string `yaml:"javascript,omitempty" json:"javascript,omitempty"`
 }
 
 func (t Template) IsEmpty() bool {
