@@ -1,38 +1,69 @@
 package cache
 
 import (
+	"fmt"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/pkg/errors"
 )
 
 var InMemoryCacheSize int
 
 const AllStatuses = -1
 
-type Cache interface {
-	Add(check pkg.Check, status pkg.CheckStatus)
-	GetChecks() pkg.Checks
-	GetCheckFromKey(key string) *pkg.Check
-	GetDetails(checkkey string, time string) interface{}
-	ListCheckStatus(checkKey string, count int64, duration *time.Duration) []pkg.CheckStatus
-	RemoveChecks(canary v1.Canary)
-	RemoveCheckByKey(key string)
+type QueryParams struct {
+	Check        string
+	Start, End   string
+	_start, _end *time.Time
+	StatusCount  int
+	Labels       map[string]string
+	Trace        bool
 }
 
-func QueryChecks(cache Cache, count int64, duration *time.Duration, checkKey string) pkg.Checks {
-	var checks pkg.Checks
-	if checkKey != "" {
-		checks = pkg.Checks{cache.GetCheckFromKey(checkKey)}
-	} else {
-		checks = cache.GetChecks()
+func (q QueryParams) Validate() error {
+	start, err := timeV(q.Start)
+	if err != nil {
+		return errors.Wrap(err, "start is invalid")
 	}
-	for _, check := range checks {
-		check.Statuses = cache.ListCheckStatus(check.Key, count, duration)
-		if len(check.Statuses) >= int(count) {
-			continue
+	end, err := timeV(q.End)
+	if err != nil {
+		return errors.Wrap(err, "end is invalid")
+	}
+	if start != nil && end != nil {
+		if end.Before(*start) {
+			return fmt.Errorf("end time must be after start time")
 		}
 	}
-	return checks
+	return nil
+}
+
+func (q QueryParams) GetStartTime() *time.Time {
+	if q._start != nil || q.Start == "" {
+		return q._start
+	}
+	q._start, _ = timeV(q.Start)
+	return q._start
+}
+
+func (q QueryParams) GetEndTime() *time.Time {
+	if q._end != nil || q.End == "" {
+		return q._start
+	}
+	q._start, _ = timeV(q.Start)
+	return q._start
+}
+
+func (q QueryParams) String() string {
+	return fmt.Sprintf("check:=%s, start=%s, end=%s, count=%d", q.Check, q.Start, q.End, q.StatusCount)
+}
+
+type Cache interface {
+	Add(check pkg.Check, status pkg.CheckStatus)
+	GetDetails(checkkey string, time string) interface{}
+	RemoveChecks(canary v1.Canary)
+	Query(q QueryParams) (pkg.Checks, error)
+	QueryStatus(q QueryParams) ([]pkg.Timeseries, error)
+	RemoveCheckByKey(key string)
 }

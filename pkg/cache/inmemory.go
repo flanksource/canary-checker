@@ -99,32 +99,49 @@ func (c *inMemoryCache) GetDetails(checkkey string, time string) interface{} {
 	return nil
 }
 
-func (c *inMemoryCache) ListCheckStatus(checkKey string, count int64, duration *time.Duration) []pkg.CheckStatus {
+func (c *inMemoryCache) QueryStatus(q QueryParams) ([]pkg.Timeseries, error) {
+	return nil, nil
+}
+
+func (c *inMemoryCache) Query(q QueryParams) (pkg.Checks, error) {
+	var checks pkg.Checks
+	if q.Check != "" {
+		checks = pkg.Checks{c.GetCheckFromKey(q.Check)}
+	} else {
+		checks = c.GetChecks()
+	}
+	for _, check := range checks {
+		check.Statuses = c.ListCheckStatus(check.Key, q)
+	}
+	return checks, nil
+}
+
+func (c *inMemoryCache) ListCheckStatus(checkKey string, q QueryParams) []pkg.CheckStatus {
 	var result []pkg.CheckStatus
-	if duration != nil {
-		startTime := time.Now().UTC()
-		var i int64 = 0
-		for _, status := range c.Statuses[checkKey] {
-			if i <= count && count != AllStatuses {
-				break
-			}
-			checkTime, err := time.Parse(time.RFC3339, status.Time)
-			if err != nil {
-				logger.Errorf("error parsing time: %v", err)
-				continue
-			}
-			if checkTime.Add(*duration).Before(startTime) {
-				return result
-			}
-			result = append(result, status)
-			i += 1
+	start := q.GetStartTime()
+	end := q.GetEndTime()
+
+	var i int64 = 0
+	for _, status := range c.Statuses[checkKey] {
+		if i <= int64(q.StatusCount) {
+			break
 		}
+		checkTime, err := time.Parse(time.RFC3339, status.Time)
+		if err != nil {
+			logger.Errorf("error parsing time: %v", err)
+			continue
+		}
+		if start != nil && checkTime.Before(*start) {
+			return result
+		}
+		if end != nil && checkTime.After(*end) {
+			return result
+		}
+		result = append(result, status)
+		i += 1
 	}
-	statuses := c.Statuses[checkKey]
-	if len(statuses) < int(count) || count == AllStatuses {
-		return statuses
-	}
-	return statuses[0 : count-1]
+
+	return result
 }
 
 func (c *inMemoryCache) RemoveChecks(canary v1.Canary) {

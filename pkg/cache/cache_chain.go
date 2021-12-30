@@ -2,7 +2,6 @@ package cache
 
 import (
 	"fmt"
-	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -24,32 +23,6 @@ func (c *cacheChain) Add(check pkg.Check, result pkg.CheckStatus) {
 	}
 }
 
-func (c *cacheChain) GetChecks() pkg.Checks {
-	var checksMap = make(map[string]bool)
-	var checks pkg.Checks
-	for _, cache := range c.Chain {
-		cacheChecks := cache.GetChecks()
-		for _, check := range cacheChecks {
-			if _, ok := checksMap[check.Key]; !ok {
-				checksMap[check.Key] = true
-				checks = append(checks, check)
-			}
-		}
-	}
-	return checks
-}
-
-func (c *cacheChain) GetCheckFromKey(key string) *pkg.Check {
-	var check *pkg.Check
-	for _, cache := range c.Chain {
-		check = cache.GetCheckFromKey(key)
-		if check != nil {
-			return check
-		}
-	}
-	return check
-}
-
 func (c *cacheChain) GetDetails(checkkey string, time string) interface{} {
 	for i, cache := range c.Chain {
 		details := cache.GetDetails(checkkey, time)
@@ -61,19 +34,20 @@ func (c *cacheChain) GetDetails(checkkey string, time string) interface{} {
 	return nil
 }
 
-func (c *cacheChain) ListCheckStatus(checkKey string, count int64, duration *time.Duration) []pkg.CheckStatus {
-	var statuses []pkg.CheckStatus
-	var statusMap = make(map[string]bool)
+func (c *cacheChain) QueryStatus(q QueryParams) ([]pkg.Timeseries, error) {
+	return nil, nil
+}
+
+func (c *cacheChain) Query(q QueryParams) (pkg.Checks, error) {
+	checks := pkg.Checks{}
 	for _, cache := range c.Chain {
-		checkStatuses := cache.ListCheckStatus(checkKey, count, duration)
-		for _, status := range checkStatuses {
-			if _, ok := statusMap[status.Time]; !ok {
-				statuses = append(statuses, status)
-				statusMap[status.Time] = true
-			}
+		results, err := cache.Query(q)
+		if err != nil {
+			return nil, err
 		}
+		checks = checks.Merge(results)
 	}
-	return statuses
+	return checks, nil
 }
 
 func (c *cacheChain) RemoveChecks(canary v1.Canary) {
