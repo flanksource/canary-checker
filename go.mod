@@ -47,10 +47,10 @@ require (
 	github.com/lib/pq v1.10.2
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/onsi/ginkgo v1.16.4
-	github.com/onsi/gomega v1.16.0
-	github.com/opencontainers/selinux v1.6.0 // indirect
+	github.com/onsi/gomega v1.17.0
 	github.com/phf/go-queue v0.0.0-20170504031614-9abe38d0371d
 	github.com/pkg/errors v0.9.1
+	github.com/pressly/goose/v3 v3.5.0 // indirect
 	github.com/prometheus/client_golang v1.10.0
 	github.com/prometheus/common v0.18.0
 	github.com/robertkrimen/otto v0.0.0-20211024170158-b87d35c0b86f
