@@ -48,6 +48,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.17.0
+	github.com/orcaman/concurrent-map v1.0.0 // indirect
 	github.com/phf/go-queue v0.0.0-20170504031614-9abe38d0371d
 	github.com/pkg/errors v0.9.1
 	github.com/pressly/goose/v3 v3.5.0 // indirect
