@@ -46,7 +46,7 @@ func Success(check external.Check, canary v1.Canary) *CheckResult {
 
 func (result *CheckResult) ErrorMessage(err error) *CheckResult {
 	if err == nil {
-		return result.Failf("")
+		return result
 	}
 	return result.Failf(err.Error())
 }
@@ -89,7 +89,7 @@ func (result *CheckResult) Failf(message string, args ...interface{}) *CheckResu
 		result.Error += ", "
 	}
 	result.Pass = false
-	result.Error = result.Error + fmt.Sprintf(message, args...)
+	result.Error += fmt.Sprintf(message, args...)
 	return result
 }
 

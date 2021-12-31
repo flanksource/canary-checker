@@ -43,7 +43,6 @@ func transformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.C
 			}
 		}
 	}
-
 	return out
 }
 

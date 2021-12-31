@@ -74,7 +74,9 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 	} else {
 		go func() {
 			pass, message, err := fn(ctx, &r, check)
-			result.ErrorMessage(err)
+			if err != nil {
+				result.ErrorMessage(err)
+			}
 			if !pass {
 				result.Failf(message)
 			}
