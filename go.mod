@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.5.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.3.1
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.8.0
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.10.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.8.1
@@ -22,8 +22,8 @@ require (
 	github.com/chartmuseum/helm-push v0.8.1
 	github.com/containerd/cgroups v0.0.0-20200824123100-0b889c03f102 // indirect
 	github.com/containerd/containerd v1.4.0
-	github.com/denisenkom/go-mssqldb v0.9.0
-	github.com/docker/docker v1.13.1
+	github.com/denisenkom/go-mssqldb v0.11.0
+	github.com/docker/docker v20.10.7+incompatible
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
 	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
@@ -33,7 +33,7 @@ require (
 	github.com/go-logr/logr v0.3.0
 	github.com/go-logr/zapr v0.2.0
 	github.com/go-redis/redis/v8 v8.11.4
-	github.com/go-sql-driver/mysql v1.5.0 // indirect
+	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/hairyhenderson/gomplate/v3 v3.6.0
@@ -44,19 +44,19 @@ require (
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
-	github.com/lib/pq v1.10.2
+	github.com/lib/pq v1.10.3
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.17.0
-	github.com/orcaman/concurrent-map v1.0.0 // indirect
+	github.com/orcaman/concurrent-map v1.0.0
 	github.com/phf/go-queue v0.0.0-20170504031614-9abe38d0371d
 	github.com/pkg/errors v0.9.1
-	github.com/pressly/goose/v3 v3.5.0 // indirect
+	github.com/pressly/goose/v3 v3.5.0
 	github.com/prometheus/client_golang v1.10.0
 	github.com/prometheus/common v0.18.0
 	github.com/robertkrimen/otto v0.0.0-20211024170158-b87d35c0b86f
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/sirupsen/logrus v1.7.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
@@ -64,10 +64,9 @@ require (
 	github.com/vadimi/go-http-ntlm/v2 v2.4.1
 	go.mongodb.org/mongo-driver v1.7.1
 	golang.org/x/mod v0.5.0 // indirect
-	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
+	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/api v0.54.0
 	google.golang.org/genproto v0.0.0-20210821163610-241b8fcbd6c8 // indirect
