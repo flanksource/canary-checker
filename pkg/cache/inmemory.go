@@ -106,14 +106,24 @@ func (c *inMemoryCache) QueryStatus(q QueryParams) ([]pkg.Timeseries, error) {
 func (c *inMemoryCache) Query(q QueryParams) (pkg.Checks, error) {
 	var checks pkg.Checks
 	if q.Check != "" {
-		checks = pkg.Checks{c.GetCheckFromKey(q.Check)}
+		check := c.GetCheckFromKey(q.Check)
+		if check == nil {
+			return nil, nil
+		}
+		checks = pkg.Checks{check}
 	} else {
 		checks = c.GetChecks()
 	}
+	var results pkg.Checks
 	for _, check := range checks {
+		if check == nil {
+		}
 		check.Statuses = c.ListCheckStatus(check.Key, q)
+		if len(check.Statuses) > 0 {
+			results = append(results, check)
+		}
 	}
-	return checks, nil
+	return results, nil
 }
 
 func (c *inMemoryCache) ListCheckStatus(checkKey string, q QueryParams) []pkg.CheckStatus {
