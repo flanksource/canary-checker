@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/runner"
@@ -40,47 +39,8 @@ func Dump(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprint(w, string(data))
 }
 
-func parseQuery(req *http.Request) (*cache.QueryParams, error) {
-	queryParams := req.URL.Query()
-	count := queryParams.Get("count")
-	var c int64
-	var err error
-	if count != "" {
-		c, err = strconv.ParseInt(count, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("count must be a number: %s", count)
-		}
-	} else {
-		c = int64(cache.InMemoryCacheSize)
-	}
-	since := queryParams.Get("since")
-	if since == "" {
-		since = queryParams.Get("start")
-	}
-	if since == "" {
-		since = DefaultWindow
-	}
-	until := queryParams.Get("until")
-	if until == "" {
-		until = queryParams.Get("end")
-	}
-	q := cache.QueryParams{
-		Start:       since,
-		End:         until,
-		Check:       queryParams.Get("key"),
-		StatusCount: int(c),
-		Trace:       queryParams.Get("trace") == "true",
-	}
-
-	if err := q.Validate(); err != nil {
-		return nil, err
-	}
-
-	return &q, nil
-}
-
 func CheckDetails(w http.ResponseWriter, req *http.Request) {
-	q, err := parseQuery(req)
+	q, err := cache.ParseQuery(req)
 	if err != nil {
 		errorResonse(w, err, http.StatusBadRequest)
 		return
@@ -108,7 +68,7 @@ func CheckDetails(w http.ResponseWriter, req *http.Request) {
 }
 
 func CheckSummary(w http.ResponseWriter, req *http.Request) {
-	q, err := parseQuery(req)
+	q, err := cache.ParseQuery(req)
 	if err != nil {
 		errorResonse(w, err, http.StatusBadRequest)
 		return
