@@ -9,6 +9,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/commons/logger"
+	cmap "github.com/orcaman/concurrent-map"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -84,9 +85,9 @@ var (
 	)
 )
 
-var failed = make(map[string]*rolling.TimePolicy)
-var passed = make(map[string]*rolling.TimePolicy)
-var latencies = make(map[string]*rolling.TimePolicy)
+var failed = cmap.New()
+var passed = cmap.New()
+var latencies = cmap.New()
 
 func init() {
 	prometheus.MustRegister(Gauge, OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency, GenericGauge, GenericCounter, GenericHistogram)
@@ -100,26 +101,27 @@ func RemoveCheck(checks v1.Canary) {
 }
 
 func RemoveCheckByKey(key string) {
-	delete(failed, key)
-	delete(passed, key)
-	delete(latencies, key)
+	failed.Remove(key)
+	passed.Remove(key)
+	latencies.Remove(key)
 }
 
 func GetMetrics(key string) (uptime pkg.Uptime, latency pkg.Latency) {
 	uptime = pkg.Uptime{}
-	fail := failed[key]
-	if fail != nil {
-		uptime.Failed = int(fail.Reduce(rolling.Sum))
+
+	fail, ok := failed.Get(key)
+	if ok {
+		uptime.Failed = int(fail.(*rolling.TimePolicy).Reduce(rolling.Sum))
 	}
-	pass := passed[key]
-	if pass != nil {
-		uptime.Passed = int(pass.Reduce(rolling.Sum))
+
+	pass, ok := passed.Get(key)
+	if ok {
+		uptime.Passed = int(pass.(*rolling.TimePolicy).Reduce(rolling.Sum))
 	}
-	_latency := latencies[key]
-	if _latency != nil {
-		latency = pkg.Latency{Rolling1H: _latency.Reduce(rolling.Percentile(95))}
-	} else {
-		latency = pkg.Latency{}
+
+	lat, ok := latencies.Get(key)
+	if ok {
+		latency = pkg.Latency{Rolling1H: lat.(*rolling.TimePolicy).Reduce(rolling.Percentile(95))}
 	}
 	return
 }
@@ -138,22 +140,30 @@ func Record(check v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _late
 	// We are recording aggreated metrics at the canary level, not the individual check level
 	key := check.GetKey(result.Check)
 
-	fail, ok := failed[key]
+	var fail, pass, latency *rolling.TimePolicy
+
+	_fail, ok := failed.Get(key)
 	if !ok {
 		fail = rolling.NewTimePolicy(rolling.NewWindow(3600), time.Second)
-		failed[key] = fail
+		failed.Set(key, fail)
+	} else {
+		fail = _fail.(*rolling.TimePolicy)
 	}
 
-	pass, ok := passed[key]
+	_pass, ok := passed.Get(key)
 	if !ok {
 		pass = rolling.NewTimePolicy(rolling.NewWindow(3600), time.Second)
-		passed[key] = pass
+		passed.Set(key, pass)
+	} else {
+		pass = _pass.(*rolling.TimePolicy)
 	}
 
-	latency, ok := latencies[key]
+	_latencyV, ok := latencies.Get(key)
 	if !ok {
 		latency = rolling.NewTimePolicy(rolling.NewWindow(3600), time.Second)
-		latencies[key] = latency
+		latencies.Set(key, latency)
+	} else {
+		latency = _latencyV.(*rolling.TimePolicy)
 	}
 
 	if logger.IsTraceEnabled() {
@@ -188,8 +198,8 @@ func Record(check v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _late
 	}
 
 	_uptime = pkg.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
-	if latencies[key] != nil {
-		_latency = pkg.Latency{Rolling1H: latencies[key].Reduce(rolling.Percentile(95))}
+	if latency != nil {
+		_latency = pkg.Latency{Rolling1H: latency.Reduce(rolling.Percentile(95))}
 	} else {
 		_latency = pkg.Latency{}
 	}

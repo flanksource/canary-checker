@@ -17,9 +17,9 @@ var CacheChain = &cacheChain{
 	},
 }
 
-func (c *cacheChain) Add(check pkg.Check, result pkg.CheckStatus) {
+func (c *cacheChain) Add(check pkg.Check, result ...pkg.CheckStatus) {
 	for _, cache := range c.Chain {
-		cache.Add(check, result)
+		cache.Add(check, result...)
 	}
 }
 
@@ -35,7 +35,15 @@ func (c *cacheChain) GetDetails(checkkey string, time string) interface{} {
 }
 
 func (c *cacheChain) QueryStatus(q QueryParams) ([]pkg.Timeseries, error) {
-	return nil, nil
+	series := []pkg.Timeseries{}
+	for _, cache := range c.Chain {
+		results, err := cache.QueryStatus(q)
+		if err != nil {
+			return nil, err
+		}
+		series = append(series, results...)
+	}
+	return series, nil
 }
 
 func (c *cacheChain) Query(q QueryParams) (pkg.Checks, error) {

@@ -23,12 +23,14 @@ func NewPostgresCache(pool *pgxpool.Pool) *postgresCache {
 	}
 }
 
-func (c *postgresCache) Add(check pkg.Check, status pkg.CheckStatus) {
-	c.AddCheck(check, status)
-	c.AddCheckStatus(check, status)
+func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) {
+	c.AddCheck(check)
+	for _, status := range statii {
+		c.AddCheckStatus(check, status)
+	}
 }
 
-func (c *postgresCache) AddCheck(check pkg.Check, status pkg.CheckStatus) {
+func (c *postgresCache) AddCheck(check pkg.Check) {
 	row := c.QueryRow(context.TODO(), "SELECT key from checks where key=$1", check.Key)
 	var key string
 	err := row.Scan(&key)
