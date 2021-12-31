@@ -6,7 +6,7 @@ import (
 	nethttp "net/http"
 	_ "net/http/pprof" // required by serve
 
-	"github.com/flanksource/canary-checker/pkg/changes"
+	"github.com/flanksource/canary-checker/pkg/db"
 
 	"github.com/flanksource/canary-checker/pkg/details"
 	"github.com/flanksource/canary-checker/pkg/runner"
@@ -53,6 +53,7 @@ var Serve = &cobra.Command{
 		cron := cron.New()
 
 		for _, canary := range canaries {
+			logger.Infof("Loading %s/%s", canary.Namespace, canary.Name)
 			if schedule == "" {
 				if canary.Spec.Schedule != "" {
 					schedule = canary.Spec.Schedule
@@ -60,21 +61,25 @@ var Serve = &cobra.Command{
 					schedule = fmt.Sprintf("@every %ds", canary.Spec.Interval)
 				}
 			}
+			if canary.Namespace == "" {
+				canary.Namespace = "default"
+			}
 			canary.SetRunnerName(runner.RunnerName)
 			for _, _c := range checks.All {
 				c := _c
 				if !checks.Checks(canary.Spec.GetAllChecks()).Includes(c) {
 					continue
 				}
+				var _canary = canary
 				cron.AddFunc(schedule, func() { // nolint: errcheck
 					go func() {
-						for _, result := range checks.RunChecks(context.New(kommonsClient, canary)) {
+						for _, result := range checks.RunChecks(context.New(kommonsClient, _canary)) {
 							if logPass && result.Pass || logFail && !result.Pass {
 								logger.Infof(result.String())
 							}
-							cache.CacheChain.Add(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
-							metrics.Record(canary, result)
-							push.Queue(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
+							cache.CacheChain.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
+							metrics.Record(result.Canary, result)
+							push.Queue(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
 						}
 					}()
 				})
@@ -102,17 +107,22 @@ func serve() {
 	}
 
 	nethttp.Handle("/metrics", promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{}))
-	if cache.PostgresConnectionString != "" {
-		conn, err := cache.InitPostgres(cache.PostgresConnectionString)
-		if err != nil {
+	if db.ConnectionString != "" {
+		if err := db.Init(db.ConnectionString); err != nil {
 			logger.Debugf("error connecting with postgres. Only using in-memory cache: %v", err)
-		}
-		if conn != nil {
-			// needs to be implemented
-			cache.PostgresCache.Conn = conn
-			cache.CacheChain.Chain = append(cache.CacheChain.Chain, cache.PostgresCache)
-			for _, check := range cache.PostgresCache.GetChecks() {
-				cache.InMemoryCache.Checks[check.Key] = check
+		} else {
+			postgresCache := cache.NewPostgresCache(db.Pool)
+			cache.CacheChain.Chain = append(cache.CacheChain.Chain, postgresCache)
+			existing, err := postgresCache.Query(cache.QueryParams{
+				Start:       "24h",
+				StatusCount: cache.InMemoryCacheSize,
+			})
+			if err != nil {
+				logger.Errorf("error querying postgres to fill in-memory cache: %v", err)
+			} else {
+				for _, check := range existing {
+					cache.InMemoryCache.Add(*check, check.Statuses...)
+				}
 			}
 		}
 	}
@@ -122,14 +132,17 @@ func serve() {
 	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheusURL)
 
 	nethttp.HandleFunc("/", stripQuery(nethttp.FileServer(staticRoot).ServeHTTP))
-	nethttp.HandleFunc("/api", simpleCors(api.Handler, allowedCors))
+	nethttp.HandleFunc("/about", simpleCors(api.About, allowedCors))
+	nethttp.HandleFunc("/dump", simpleCors(api.Dump, allowedCors))
+	nethttp.HandleFunc("/api", simpleCors(api.CheckSummary, allowedCors))
+	nethttp.HandleFunc("/api/graph", simpleCors(api.CheckDetails, allowedCors))
 	nethttp.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))
 	nethttp.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler, allowedCors))
 	nethttp.HandleFunc("/api/push", simpleCors(push.Handler, allowedCors))
 	nethttp.HandleFunc("/api/details", simpleCors(details.Handler, allowedCors))
 	nethttp.HandleFunc("/api/spec", simpleCors(spec.CheckHandler, allowedCors))
 	nethttp.HandleFunc("/api/spec/canary", simpleCors(spec.CanaryHandler, allowedCors))
-	nethttp.HandleFunc("/api/changes", simpleCors(changes.Handler, allowedCors))
+	nethttp.HandleFunc("/api/changes", simpleCors(api.Changes, allowedCors))
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
 	logger.Infof("Starting health dashboard at http://%s", addr)
 	logger.Infof("Metrics can be accessed at http://%s/metrics", addr)

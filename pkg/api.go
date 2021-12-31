@@ -95,7 +95,9 @@ type Timeseries struct {
 	Time     string `json:"time,omitempty"`
 	Status   bool   `json:"status,omitempty"`
 	Message  string `json:"message,omitempty"`
-	Duration int    `json:"duration,omitempty"`
+	Duration int    `json:"duration"`
+	// Count is the number of times the check has been run in the specified time window
+	Count int `json:"count,omitempty"`
 }
 
 type Check struct {
@@ -103,7 +105,7 @@ type Check struct {
 	Type         string            `json:"type"`
 	Name         string            `json:"name"`
 	Namespace    string            `json:"namespace,omitempty"`
-	Labels       map[string]string `json:"labels,omitempty"`
+	Labels       map[string]string `json:"labels"`
 	RunnerLabels map[string]string `json:"runnerLabels,omitempty"`
 	CanaryName   string            `json:"canaryName"`
 	Description  string            `json:"description,omitempty"`

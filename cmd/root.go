@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/flanksource/canary-checker/pkg/cache"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/commons/logger"
 	"github.com/spf13/cobra"
@@ -23,7 +24,6 @@ var namespace, includeCheck, prometheusURL string
 var pushServers, pullServers []string
 var exposeEnv bool
 var logPass, logFail bool
-
 var (
 	version = "dev"
 	commit  = "none"
@@ -44,8 +44,9 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringSliceVar(&pullServers, "pull-servers", []string{}, "push check results to multiple canary servers")
 	flags.StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 	flags.StringVar(&prometheusURL, "prometheus", "", "URL of the prometheus server that is scraping this instance")
-	flags.StringVar(&cache.PostgresConnectionString, "cache-connection-string", "CACHE_CONNECTION_STRING", "Connection string for the postgres database")
-	flags.IntVar(&cache.PostgresCacheTimeout, "cache-timeout", 90, "Cache timeout in days")
+	flags.StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database")
+	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
+	flags.StringVarP(&cache.DefaultWindow, "default-window", "", "1h", "Default search window")
 }
 
 func init() {

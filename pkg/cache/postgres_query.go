@@ -79,7 +79,54 @@ func (q QueryParams) GetWhereClause() (string, map[string]interface{}, error) {
 }
 
 func (q QueryParams) ExecuteDetails(db Querier) ([]pkg.Timeseries, error) {
-	return nil, nil
+	clause, namedArgs, err := q.GetWhereClause()
+	if err != nil {
+		return nil, err
+	}
+	namedArgs["limit"] = q.StatusCount
+	sql := "SELECT time,duration,status "
+	if q.Check == "" {
+		sql += ", check_key"
+	}
+	sql += fmt.Sprintf(`
+	FROM check_statuses
+	WHERE %s
+	LIMIT :limit
+`, clause)
+
+	rows, err := exec(db, q, sql, namedArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	var results []pkg.Timeseries
+	for rows.Next() {
+		vals, err := rows.Values()
+		if err != nil {
+			return nil, err
+		}
+		result := pkg.Timeseries{
+			Time:     vals[0].(time.Time).Format(time.RFC3339),
+			Duration: intV(vals[1]),
+			Status:   vals[2].(bool),
+		}
+		if q.Check == "" {
+			result.Key = vals[3].(string)
+		}
+		results = append(results, result)
+	}
+	return results, nil
+}
+
+func exec(db Querier, q QueryParams, sql string, namedArgs map[string]interface{}) (pgx.Rows, error) {
+	if q.Trace {
+		sqlDebug, _ := convertNamedParamsDebug(sql, namedArgs)
+		logger.Tracef(sqlDebug)
+	}
+
+	sql, args := convertNamedParams(sql, namedArgs)
+
+	return db.Query(context.Background(), sql, args...)
 }
 
 func (q QueryParams) ExecuteSummary(db Querier) (pkg.Checks, error) {
@@ -156,14 +203,7 @@ SELECT checks.key,
 	}
 	namedArgs["count"] = q.StatusCount
 
-	if q.Trace {
-		sqlDebug, _ := convertNamedParamsDebug(sql, namedArgs)
-		logger.Tracef(sqlDebug)
-	}
-
-	sql, args := convertNamedParams(sql, namedArgs)
-
-	rows, err := db.Query(context.Background(), sql, args...)
+	rows, err := exec(db, q, sql, namedArgs)
 	if err != nil {
 		return nil, err
 	}
