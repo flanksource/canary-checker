@@ -6,5 +6,5 @@ spec:
   interval: 30
   containerd:
     - image: public.ecr.aws/docker/library/busybox:1.33.1
-      expectedDigest: sha256:95cf004f559831017cdf4628aaf1bb30133677be8702a8c5f2994629f637a209
+      expectedDigest: sha256:f7ca5a32c10d51aeda3b4d01c61c6061f497893d7f6628b92f822f7117182a57
       expectedSize: 764556
