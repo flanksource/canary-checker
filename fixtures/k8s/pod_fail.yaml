@@ -29,6 +29,6 @@ spec:
       deleteTimeout: 12000
       ingressTimeout: 5000
       deadline: 100000
-      httpRetryInterval: 200
+      httpRetryInterval: 1500
       expectedContent: bar
       expectedHttpStatuses: [200, 201, 202]

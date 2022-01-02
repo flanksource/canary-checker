@@ -98,7 +98,6 @@ func (q QueryParams) ExecuteDetails(db Querier) ([]pkg.Timeseries, error) {
 			messageIndex -= 1
 			errorIndex -= 1
 		}
-
 	}
 	sql += fmt.Sprintf(`
 	FROM check_statuses
