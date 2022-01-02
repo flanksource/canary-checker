@@ -124,12 +124,12 @@ func exec(db Querier, q QueryParams, sql string, namedArgs map[string]interface{
 		logger.Tracef(sqlDebug)
 	}
 
-	positionalSql, args := convertNamedParams(sql, namedArgs)
+	positionalSQL, args := convertNamedParams(sql, namedArgs)
 
-	rows, err := db.Query(context.Background(), positionalSql, args...)
+	rows, err := db.Query(context.Background(), positionalSQL, args...)
 
 	if err != nil {
-		logger.Debugf("Error executing query: %v\n%s\n args=%v", err, positionalSql, args)
+		logger.Debugf("Error executing query: %v\n%s\n args=%v", err, positionalSQL, args)
 	}
 	return rows, err
 }
