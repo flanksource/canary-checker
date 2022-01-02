@@ -1,6 +1,6 @@
 module github.com/flanksource/canary-checker
 
-go 1.16
+go 1.17
 
 require (
 	cloud.google.com/go v0.93.3 // indirect
@@ -44,6 +44,7 @@ require (
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
+	github.com/kr/pretty v0.2.1 // indirect
 	github.com/lib/pq v1.10.3
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/onsi/ginkgo v1.16.4
