@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/runner"
@@ -14,49 +13,82 @@ import (
 	"github.com/flanksource/commons/logger"
 )
 
+var DefaultWindow = "1h"
+
 type Response struct {
+	Duration   int        `json:"duration,omitempty"`
 	RunnerName string     `json:"runnerName"`
 	Checks     pkg.Checks `json:"checks"`
 }
+type DetailResponse struct {
+	Duration   int              `json:"duration,omitempty"`
+	RunnerName string           `json:"runnerName"`
+	Status     []pkg.Timeseries `json:"status"`
+}
 
-func Handler(w http.ResponseWriter, req *http.Request) {
-	queryParams := req.URL.Query()
-	count := queryParams.Get("count")
-	var c int64
-	var err error
-	if count != "" {
-		c, err = strconv.ParseInt(count, 10, 64)
-		if err != nil {
-			logger.Errorf("error converting count to int: %v", err)
-			fmt.Fprintf(w, "error converting count to int")
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-	} else {
-		c = int64(cache.InMemoryCacheSize)
-	}
-	timeString := queryParams.Get("since")
-	var timeDuration *time.Duration
-	if timeString != "" {
-		duration, err := time.ParseDuration(timeString)
-		if err != nil {
-			logger.Errorf("since value not a valid duration")
-			fmt.Fprintf(w, "since value not a valid duration")
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		timeDuration = &duration
-	}
-	checkKey := queryParams.Get("key")
+func About(w http.ResponseWriter, req *http.Request) {
+	data, _ := json.Marshal(map[string]interface{}{
+		"Timestamp": time.Now(),
+		"Version":   runner.Version,
+	})
+	fmt.Fprint(w, string(data))
+}
 
-	apiResponse := &Response{
+func Dump(w http.ResponseWriter, req *http.Request) {
+	data, _ := json.Marshal(cache.InMemoryCache)
+	fmt.Fprint(w, string(data))
+}
+
+func CheckDetails(w http.ResponseWriter, req *http.Request) {
+	q, err := cache.ParseQuery(req)
+	if err != nil {
+		errorResonse(w, err, http.StatusBadRequest)
+		return
+	}
+
+	start := time.Now()
+	results, err := cache.CacheChain.QueryStatus(*q)
+	if err != nil {
+		errorResonse(w, err, http.StatusInternalServerError)
+		return
+	}
+	apiResponse := &DetailResponse{
 		RunnerName: runner.RunnerName,
-		Checks:     cache.QueryChecks(cache.CacheChain, c, timeDuration, checkKey),
+		Status:     results,
+		Duration:   int(time.Since(start).Milliseconds()),
 	}
 	jsonData, err := json.Marshal(apiResponse)
 	if err != nil {
-		logger.Errorf("Failed to marshal data: %v", err)
-		fmt.Fprintf(w, "{\"error\": \"internal\", \"checks\": []}")
+		errorResonse(w, err, http.StatusInternalServerError)
+		return
+	}
+	if _, err = w.Write(jsonData); err != nil {
+		logger.Errorf("failed to write data in response: %v", err)
+	}
+}
+
+func CheckSummary(w http.ResponseWriter, req *http.Request) {
+	q, err := cache.ParseQuery(req)
+	if err != nil {
+		errorResonse(w, err, http.StatusBadRequest)
+		return
+	}
+
+	start := time.Now()
+	results, err := cache.CacheChain.Query(*q)
+	if err != nil {
+		errorResonse(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	apiResponse := &Response{
+		RunnerName: runner.RunnerName,
+		Checks:     results,
+		Duration:   int(time.Since(start).Milliseconds()),
+	}
+	jsonData, err := json.Marshal(apiResponse)
+	if err != nil {
+		errorResonse(w, err, http.StatusInternalServerError)
 		return
 	}
 	if _, err = w.Write(jsonData); err != nil {

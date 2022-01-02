@@ -215,8 +215,14 @@ func (r *CanaryReconciler) Report(ctx *context.Context, canary v1.Canary, result
 		checkStatus[checkKey] = &v1.CheckStatus{}
 		checkStatus[checkKey].Uptime1H = uptime.String()
 		checkStatus[checkKey].Latency1H = latency.String()
-		lastStatus := cache.InMemoryCache.ListCheckStatus(checkKey, 1, nil)
-		if len(lastStatus) > 0 && (lastStatus[0].Status != result.Pass) {
+		q := cache.QueryParams{Check: checkKey, StatusCount: 1}
+		if canary.Status.LastTransitionedTime != nil {
+			q.Start = canary.Status.LastTransitionedTime.Format(time.RFC3339)
+		}
+		lastStatus, err := cache.InMemoryCache.Query(q)
+		if err != nil || len(lastStatus) == 0 || len(lastStatus[0].Statuses) == 0 {
+			transitioned = true
+		} else if len(lastStatus) > 0 && (lastStatus[0].Statuses[0].Status != result.Pass) {
 			transitioned = true
 		}
 		if !result.Pass {

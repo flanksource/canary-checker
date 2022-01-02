@@ -39,7 +39,7 @@ echo "::endgroup::"
 
 echo "::group::Operator"
 ## starting operator in background
-go run main.go operator -vvv --cache-connection-string="postgres://postgres:mysecretpassword@localhost:5432/postgres" --maxStatusCheckCount=1 &
+go run main.go operator -vvv --db="postgres://postgres:mysecretpassword@localhost:5432/postgres" --maxStatusCheckCount=1 &
 PROC_ID=$!
 
 ## sleeping for a bit to let the operator start and statuses to be present
@@ -67,6 +67,6 @@ if [ "${STATUS_COUNT_POSTGRES}" -ge 2 ]; then
 else
     echo "expected statuses length to be greater than 2 but got ${STATUS_COUNT_POSTGRES}"
     sudo kill -9 $PROC_ID || :
-    echo "::endgroup::"    
+    echo "::endgroup::"
     exit 1
 fi

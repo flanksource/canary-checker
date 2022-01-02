@@ -648,8 +648,7 @@ type GCPConnection struct {
 type FolderCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
-	// Path can be the s3 or gcs bucket, or reference to local folder
-	// for s3 the prefix need to be s3://<bucket-name> for gCloud, gcs://<bucket-name>
+	// Path  to folder or object storage, e.g. `s3://<bucket-name>`,  `gcs://<bucket-name>`, `/path/tp/folder`
 	Path           string       `yaml:"path" json:"path"`
 	Filter         FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
 	FolderTest     `yaml:",inline" json:",inline"`
@@ -896,31 +895,27 @@ type ContainerdPush struct {
 }
 
 /*
-[include:k8s/kuberenetes_pass.yaml]
+[include:k8s/kubernetes_pass.yaml]
 */
 type Kubernetes struct {
 	KubernetesCheck `yaml:",inline" json:",inline"`
 }
 
 /*
-Folder Check provides an abstraction over checker related to folder.
-Currently, used to perform the following checks:
- - s3bucket check
-	- search objects matching the provided object path pattern
-	- check that latest object is no older than provided MaxAge value in seconds
-	- check that latest object size is not smaller than provided MinSize value in bytes.
- - gcsBucket check
-    - search objects matching the provided object path pattern
-	- check that latest object is no older than provided MaxAge value in seconds
-	- check that latest object size is not smaller than provided MinSize value in bytes.
- - Smb check: which connects to the given samba server with given credentials
-	find the age of the latest updated file and compare it with minAge
-	count the number of file present and compare with minCount if defined
- - local Folder check
+
+The folder check lists files in a folder (local or SMB/CIFS) or object storage platform like S3 or GCS and provides a mechanism to test:
+
+* `minAge` - A file has been added within at least minAge e.g Has a backup been created in the last 24h
+* `maxAge` - A file has been added and not removed within maxAge e.g. Has a file been processed in less than 24h
+* `minSize` -
+* `maxSize` -
+* `minCount` -
+* `maxCount` -
+
 
 [include:quarantine/smb_pass.yaml]
 [include:datasources/s3_bucket_pass.yaml]
-[include:datasource/folder_pass.yaml]
+[include:datasources/folder_pass.yaml]
 */
 type Folder struct {
 	FolderCheck `yaml:",inline" json:",inline"`

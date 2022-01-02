@@ -6,7 +6,6 @@ import (
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/commons/logger"
 )
 
 func Fail(check external.Check, canary v1.Canary) *CheckResult {
@@ -35,17 +34,6 @@ func SetupError(canary v1.Canary, err error) []*CheckResult {
 }
 
 func Success(check external.Check, canary v1.Canary) *CheckResult {
-	switch v := check.(type) {
-	case external.Endpointer:
-		logger.Tracef("running %s", v.GetEndpoint())
-	case external.Describable:
-		logger.Tracef("running %s", v.GetDescription())
-	case fmt.Stringer:
-		logger.Tracef("running %s", v)
-	default:
-		logger.Tracef("running  %s", check)
-	}
-
 	return &CheckResult{
 		Start:  time.Now(),
 		Pass:   true,
@@ -59,9 +47,7 @@ func (result *CheckResult) ErrorMessage(err error) *CheckResult {
 	if err == nil {
 		return result
 	}
-	result.Error = err.Error()
-	result.Pass = false
-	return result
+	return result.Failf(err.Error())
 }
 
 func (result *CheckResult) ResultMessage(message string, args ...interface{}) *CheckResult {
@@ -102,7 +88,7 @@ func (result *CheckResult) Failf(message string, args ...interface{}) *CheckResu
 		result.Error += ", "
 	}
 	result.Pass = false
-	result.Error = result.Error + fmt.Sprintf(message, args...)
+	result.Error += fmt.Sprintf(message, args...)
 	return result
 }
 

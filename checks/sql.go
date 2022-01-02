@@ -62,6 +62,9 @@ func CheckSQL(ctx *context.Context, check v1.SQLCheck) *pkg.CheckResult { // nol
 	if err != nil {
 		return result.ErrorMessage(err)
 	}
+	if ctx.IsTrace() {
+		ctx.Tracef("connecting to %s", connection)
+	}
 
 	details, err := querySQL(check.GetDriver(), connection, check.GetQuery())
 	if err != nil {

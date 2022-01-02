@@ -1,7 +1,8 @@
-package changes
+package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -11,32 +12,28 @@ import (
 	"github.com/flanksource/commons/logger"
 )
 
-func Handler(w http.ResponseWriter, req *http.Request) {
+func Changes(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
-		logger.Errorf("%v method on /changes endpoint is not allowed", req.Method)
-		fmt.Fprintf(w, "%v method not allowed", req.Method)
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		errorResonse(w, fmt.Errorf("unsupported method %s", req.Method), http.StatusMethodNotAllowed)
 		return
 	}
-
-	queryParams := req.URL.Query()
-	timeString := queryParams.Get("since")
-	if timeString == "" {
-		logger.Errorf("since is a required parameter")
-		fmt.Fprintf(w, "since is a required parameter")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	timeDuration, err := time.ParseDuration(timeString)
+	q, err := cache.ParseQuery(req)
 	if err != nil {
-		logger.Errorf("since value not a valid duration")
-		fmt.Fprintf(w, "since value not a valid duration")
-		w.WriteHeader(http.StatusBadRequest)
+		errorResonse(w, err, http.StatusBadRequest)
 		return
 	}
-	results := []changes.Changes{}
+	if q.Start == "" {
+		q.Start = "1h"
+	}
 
-	for _, check := range cache.QueryChecks(cache.CacheChain, cache.AllStatuses, &timeDuration, "") {
+	results := []changes.Changes{}
+	checks, err := cache.CacheChain.Query(*q)
+	if err != nil {
+		errorResonse(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	for _, check := range checks {
 		i := 0
 		scope := []changes.Scope{
 			{
@@ -110,9 +107,7 @@ func Handler(w http.ResponseWriter, req *http.Request) {
 	}
 	jsonData, err := json.Marshal(results)
 	if err != nil {
-		logger.Errorf("Failed to marshal data: %v", err)
-		fmt.Fprintf(w, "{\"error\": \"internal\"}")
-		w.WriteHeader(http.StatusInternalServerError)
+		errorResonse(w, errors.New("error marshalling json"), http.StatusInternalServerError)
 		return
 	}
 	if _, err = w.Write(jsonData); err != nil {

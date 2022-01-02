@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
 	gotemplate "text/template"
 
 	"github.com/antonmedv/expr"
+	"github.com/pkg/errors"
+	"github.com/robertkrimen/otto"
+	_ "github.com/robertkrimen/otto/underscore"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -21,12 +23,6 @@ import (
 	"github.com/flanksource/kommons/ktemplate"
 	"github.com/robfig/cron/v3"
 )
-
-type Filesystem interface {
-	Close()
-	ReadDir(name string) ([]os.FileInfo, error)
-	Stat(name string) (os.FileInfo, error)
-}
 
 func GetConnection(ctx *context.Context, conn *v1.Connection, namespace string) (string, error) {
 	// TODO: this function should not be necessary, each check should be templated out individual
@@ -103,83 +99,8 @@ func GetAuthValues(auth *v1.Authentication, client *kommons.Client, namespace st
 	return authentication, err
 }
 
-type FolderCheck struct {
-	Oldest  os.FileInfo
-	Newest  os.FileInfo
-	MinSize os.FileInfo
-	MaxSize os.FileInfo
-	Files   []os.FileInfo
-}
-
-func (f *FolderCheck) Append(file os.FileInfo) {
-	if f.Oldest == nil || f.Oldest.ModTime().After(file.ModTime()) {
-		f.Oldest = file
-	}
-	if f.Newest == nil || f.Newest.ModTime().Before(file.ModTime()) {
-		f.Newest = file
-	}
-	if f.MinSize == nil || f.MinSize.Size() > file.Size() {
-		f.MinSize = file
-	}
-	if f.MaxSize == nil || f.MaxSize.Size() < file.Size() {
-		f.MaxSize = file
-	}
-	f.Files = append(f.Files, file)
-}
-
 func age(t time.Time) string {
 	return utils.Age(time.Since(t))
-}
-
-func (f FolderCheck) Test(test v1.FolderTest) string {
-	minAge, err := test.GetMinAge()
-	if err != nil {
-		return fmt.Sprintf("invalid duration %s: %v", test.MinAge, err)
-	}
-	maxAge, err := test.GetMaxAge()
-
-	if test.MinCount != nil && len(f.Files) < *test.MinCount {
-		return fmt.Sprintf("too few files %d < %d", len(f.Files), *test.MinCount)
-	}
-	if test.MaxCount != nil && len(f.Files) > *test.MaxCount {
-		return fmt.Sprintf("too many files %d > %d", len(f.Files), *test.MaxCount)
-	}
-
-	if len(f.Files) == 0 {
-		// nothing run age/size checks on
-		return ""
-	}
-
-	if err != nil {
-		return fmt.Sprintf("invalid duration %s: %v", test.MaxAge, err)
-	}
-	if minAge != nil && time.Since(f.Newest.ModTime()) < *minAge {
-		return fmt.Sprintf("%s is too new: %s < %s", f.Newest.Name(), age(f.Newest.ModTime()), test.MinAge)
-	}
-	if maxAge != nil && time.Since(f.Oldest.ModTime()) > *maxAge {
-		return fmt.Sprintf("%s is too old %s > %s", f.Oldest.Name(), age(f.Oldest.ModTime()), test.MaxAge)
-	}
-
-	if test.MinSize != "" {
-		size, err := test.MinSize.Value()
-		if err != nil {
-			return fmt.Sprintf("%s is an invalid size: %s", test.MinSize, err)
-		}
-		if f.MinSize.Size() < *size {
-			return fmt.Sprintf("%s is too small: %v < %v", f.MinSize.Name(), mb(f.MinSize.Size()), test.MinSize)
-		}
-	}
-
-	if test.MaxSize != "" {
-		size, err := test.MaxSize.Value()
-		if err != nil {
-			return fmt.Sprintf("%s is an invalid size: %s", test.MinSize, err)
-		}
-		if f.MaxSize.Size() < *size {
-			return fmt.Sprintf("%s is too large: %v > %v", f.MaxSize.Name(), mb(f.MaxSize.Size()), test.MaxSize)
-		}
-	}
-	return ""
 }
 
 func GetDeadline(canary v1.Canary) time.Time {
@@ -207,7 +128,84 @@ func getNextRuntime(canary v1.Canary, lastRuntime time.Time) (*time.Time, error)
 	return &t, nil
 }
 
+func def(a, b string) string {
+	if a != "" {
+		return a
+	}
+	return b
+}
+
+func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, error) {
+	var tpl v1.Template
+	switch v := in.Check.(type) {
+	case v1.Transformer:
+		tpl = v.GetTransformer()
+	}
+
+	if tpl.IsEmpty() {
+		return []*pkg.CheckResult{in}, nil
+	}
+
+	out, err := template(ctx.New(in.Data), tpl)
+	if err != nil {
+		return nil, err
+	}
+
+	var transformed []pkg.TransformedCheckResult
+
+	if err := json.Unmarshal([]byte(out), &transformed); err != nil {
+		return nil, err
+	}
+
+	var results []*pkg.CheckResult
+
+	for _, t := range transformed {
+		t.Icon = def(t.Icon, in.Check.GetIcon())
+		t.Description = def(t.Description, in.Check.GetDescription())
+		t.Name = def(t.Name, in.Check.GetName())
+		t.Type = def(t.Type, in.Check.GetType())
+		t.Endpoint = def(t.Endpoint, in.Check.GetEndpoint())
+		r := t.ToCheckResult()
+		r.Canary = in.Canary
+		r.Canary.Namespace = def(t.Namespace, r.Canary.Namespace)
+		for k, v := range t.Labels {
+			if r.Canary.Labels == nil {
+				r.Canary.Labels = make(map[string]string)
+			}
+			r.Canary.Labels[k] = v
+		}
+		results = append(results, &r)
+	}
+
+	if ctx.IsTrace() {
+		ctx.Tracef("transformed %s into %v", in, results)
+	}
+
+	return results, nil
+}
+
 func template(ctx *context.Context, template v1.Template) (string, error) {
+	// javascript
+	if template.Javascript != "" {
+		vm := otto.New()
+		for k, v := range ctx.Environment {
+			if err := vm.Set(k, v); err != nil {
+				return "", errors.Wrapf(err, "error setting %s", k)
+			}
+		}
+		out, err := vm.Run(template.Javascript)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to run javascript")
+		}
+
+		if s, err := out.ToString(); err != nil {
+			return "", errors.Wrapf(err, "failed to cast output to string")
+		} else {
+			return s, nil
+		}
+	}
+
+	// gotemplate
 	if template.Template != "" {
 		tpl := gotemplate.New("")
 		tpl, err := tpl.Funcs(text.GetTemplateFuncs()).Parse(template.Template)
@@ -228,6 +226,8 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 		}
 		return strings.TrimSpace(buf.String()), nil
 	}
+
+	// exprv
 	if template.Expression != "" {
 		program, err := expr.Compile(template.Expression, text.MakeExpressionOptions(ctx.Environment)...)
 		if err != nil {

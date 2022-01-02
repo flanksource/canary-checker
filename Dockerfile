@@ -6,7 +6,7 @@ RUN npm i
 ADD ui/ .
 RUN  ls && npm run build
 
-FROM golang:1.16 as builder
+FROM golang:1.17 as builder
 WORKDIR /app
 COPY ./ ./
 ARG NAME
@@ -17,7 +17,7 @@ RUN go mod download
 COPY --from=node /app/build /app/ui/build
 WORKDIR /app
 RUN go version
-RUN GOOS=linux GOARCH=amd64 go build -o canary-checker -ldflags "-X \"main.version=$VERSION\""  main.go
+RUN make build
 
 FROM ubuntu:bionic
 WORKDIR /app
@@ -50,5 +50,5 @@ RUN apt-get update && \
   rm -Rf /var/lib/apt/lists/*  && \
   rm -Rf /usr/share/doc && rm -Rf /usr/share/man  && \
   apt-get clean
-COPY --from=builder /app/canary-checker /app
+COPY --from=builder /app/.bin/canary-checker /app
 ENTRYPOINT ["/app/canary-checker"]

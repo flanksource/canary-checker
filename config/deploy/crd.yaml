@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.0
+    controller-gen.kubebuilder.io/version: v0.7.0
   creationTimestamp: null
   name: canaries.canaries.flanksource.com
 spec:
@@ -153,6 +153,8 @@ spec:
                         properties:
                           expr:
                             type: string
+                          javascript:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -169,6 +171,19 @@ spec:
                       test:
                         properties:
                           expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
                             type: string
                           jsonPath:
                             type: string
@@ -220,6 +235,8 @@ spec:
                       display:
                         properties:
                           expr:
+                            type: string
+                          javascript:
                             type: string
                           jsonPath:
                             type: string
@@ -290,6 +307,19 @@ spec:
                       test:
                         properties:
                           expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
                             type: string
                           jsonPath:
                             type: string
@@ -809,6 +839,8 @@ spec:
                         properties:
                           expr:
                             type: string
+                          javascript:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -826,6 +858,19 @@ spec:
                       test:
                         properties:
                           expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
                             type: string
                           jsonPath:
                             type: string
@@ -930,6 +975,8 @@ spec:
                         properties:
                           expr:
                             type: string
+                          javascript:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -1010,7 +1057,7 @@ spec:
                         description: Name of the check
                         type: string
                       path:
-                        description: Path can be the s3 or gcs bucket, or reference to local folder for s3 the prefix need to be s3://<bucket-name> for gCloud, gcs://<bucket-name>
+                        description: Path  to folder or object storage, e.g. `s3://<bucket-name>`,  `gcs://<bucket-name>`, `/path/tp/folder`
                         type: string
                       smbConnection:
                         properties:
@@ -1106,6 +1153,19 @@ spec:
                         properties:
                           expr:
                             type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -1124,6 +1184,8 @@ spec:
                       display:
                         properties:
                           expr:
+                            type: string
+                          javascript:
                             type: string
                           jsonPath:
                             type: string
@@ -1174,6 +1236,19 @@ spec:
                       test:
                         properties:
                           expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
                             type: string
                           jsonPath:
                             type: string
@@ -1358,6 +1433,8 @@ spec:
                         properties:
                           expr:
                             type: string
+                          javascript:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -1445,6 +1522,8 @@ spec:
                         properties:
                           expr:
                             type: string
+                          javascript:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -1453,6 +1532,17 @@ spec:
                       thresholdMillis:
                         description: Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.
                         type: integer
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                     type: object
                   type: array
                 icmp:
@@ -1563,6 +1653,8 @@ spec:
                       display:
                         properties:
                           expr:
+                            type: string
+                          javascript:
                             type: string
                           jsonPath:
                             type: string
@@ -2299,6 +2391,7 @@ spec:
                                         description: If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
                                         type: string
                                       protocol:
+                                        default: TCP
                                         description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
                                         type: string
                                     required:
@@ -3057,6 +3150,7 @@ spec:
                                         description: If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
                                         type: string
                                       protocol:
+                                        default: TCP
                                         description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
                                         type: string
                                     required:
@@ -3818,6 +3912,7 @@ spec:
                                         description: If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
                                         type: string
                                       protocol:
+                                        default: TCP
                                         description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
                                         type: string
                                     required:
@@ -5313,6 +5408,8 @@ spec:
                         properties:
                           expr:
                             type: string
+                          javascript:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -5323,6 +5420,17 @@ spec:
                       timeout:
                         description: Timeout in minutes to wait for specified container to finish its job. Defaults to 5 minutes
                         type: integer
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                     required:
                       - spec
                       - testResults
@@ -5337,6 +5445,8 @@ spec:
                       display:
                         properties:
                           expr:
+                            type: string
+                          javascript:
                             type: string
                           jsonPath:
                             type: string
@@ -5374,6 +5484,19 @@ spec:
                       test:
                         properties:
                           expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
                             type: string
                           jsonPath:
                             type: string
@@ -5650,6 +5773,8 @@ spec:
                         properties:
                           expr:
                             type: string
+                          javascript:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -5669,6 +5794,19 @@ spec:
                       test:
                         properties:
                           expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
                             type: string
                           jsonPath:
                             type: string
@@ -5761,6 +5899,8 @@ spec:
                         properties:
                           expr:
                             type: string
+                          javascript:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -5780,6 +5920,19 @@ spec:
                       test:
                         properties:
                           expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
                             type: string
                           jsonPath:
                             type: string
@@ -5999,6 +6152,8 @@ spec:
                         properties:
                           expr:
                             type: string
+                          javascript:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -6019,6 +6174,19 @@ spec:
                         properties:
                           expr:
                             type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
                           jsonPath:
                             type: string
                           template:
@@ -6037,6 +6205,8 @@ spec:
                       display:
                         properties:
                           expr:
+                            type: string
+                          javascript:
                             type: string
                           jsonPath:
                             type: string
@@ -6058,6 +6228,19 @@ spec:
                       test:
                         properties:
                           expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
                             type: string
                           jsonPath:
                             type: string

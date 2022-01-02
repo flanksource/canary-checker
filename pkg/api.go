@@ -37,23 +37,40 @@ func (t *JSONTime) UnmarshalJSON(b []byte) error {
 
 type CheckStatus struct {
 	Status   bool        `json:"status"`
-	Invalid  bool        `json:"invalid"`
+	Invalid  bool        `json:"invalid,omitempty"`
 	Time     string      `json:"time"`
 	Duration int         `json:"duration"`
-	Message  string      `json:"message"`
+	Message  string      `json:"message,omitempty"`
 	Error    string      `json:"error,omitempty"`
 	Detail   interface{} `json:"-"`
 }
 
+func (s CheckStatus) GetTime() (time.Time, error) {
+	return time.Parse("2006-01-02 15:04:05", s.Time)
+}
+
 type Latency struct {
-	Percentile99 float64 `json:"p99,omitempty"`
-	Percentile97 float64 `json:"p97,omitempty"`
-	Percentile95 float64 `json:"p95,omitempty"`
+	Percentile99 float64 `json:"p99,omitempty" db:"p99"`
+	Percentile97 float64 `json:"p97,omitempty" db:"p97"`
+	Percentile95 float64 `json:"p95,omitempty" db:"p95"`
 	Rolling1H    float64 `json:"rolling1h"`
 }
 
 func (l Latency) String() string {
-	return utils.Age(time.Duration(l.Rolling1H) * time.Millisecond)
+	s := ""
+	if l.Percentile99 != 0 {
+		s += fmt.Sprintf("p99=%s", utils.Age(time.Duration(l.Percentile99)*time.Millisecond))
+	}
+	if l.Percentile95 != 0 {
+		s += fmt.Sprintf("p95=%s", utils.Age(time.Duration(l.Percentile95)*time.Millisecond))
+	}
+	if l.Percentile97 != 0 {
+		s += fmt.Sprintf("p97=%s", utils.Age(time.Duration(l.Percentile97)*time.Millisecond))
+	}
+	if l.Rolling1H != 0 {
+		s += fmt.Sprintf("rolling1h=%s", utils.Age(time.Duration(l.Rolling1H)*time.Millisecond))
+	}
+	return s
 }
 
 type Uptime struct {
@@ -73,29 +90,97 @@ func (u Uptime) String() string {
 	return fmt.Sprintf("%d/%d (%0.1f%%)", u.Passed, u.Passed+u.Failed, percentage)
 }
 
+type Timeseries struct {
+	Key      string `json:"key,omitempty"`
+	Time     string `json:"time,omitempty"`
+	Status   bool   `json:"status,omitempty"`
+	Message  string `json:"message,omitempty"`
+	Duration int    `json:"duration"`
+	// Count is the number of times the check has been run in the specified time window
+	Count int `json:"count,omitempty"`
+}
+
 type Check struct {
 	Key          string            `json:"key"`
 	Type         string            `json:"type"`
 	Name         string            `json:"name"`
-	Namespace    string            `json:"namespace"`
+	Namespace    string            `json:"namespace,omitempty"`
 	Labels       map[string]string `json:"labels"`
-	RunnerLabels map[string]string `json:"runnerLabels"`
+	RunnerLabels map[string]string `json:"runnerLabels,omitempty"`
 	CanaryName   string            `json:"canaryName"`
-	Description  string            `json:"description"`
-	Endpoint     string            `json:"endpoint"`
-	Uptime       Uptime            `json:"uptime"`
-	Latency      Latency           `json:"latency"`
-	Statuses     []CheckStatus     `json:"checkStatuses" mapstructure:"-"`
-	Interval     uint64            `json:"interval"`
-	Schedule     string            `json:"schedule"`
-	Owner        string            `json:"owner"`
-	Severity     string            `json:"severity"`
-	Icon         string            `json:"icon"`
-	DisplayType  string            `json:"displayType"`
-	RunnerName   string            `json:"runnerName"`
+	Description  string            `json:"description,omitempty"`
+	Endpoint     string            `json:"endpoint,omitempty"`
+	Uptime       Uptime            `json:"uptime" db:""`
+	Latency      Latency           `json:"latency" db:""`
+	Statuses     []CheckStatus     `json:"checkStatuses"`
+	Interval     uint64            `json:"interval,omitempty"`
+	Schedule     string            `json:"schedule,omitempty"`
+	Owner        string            `json:"owner,omitempty"`
+	Severity     string            `json:"severity,omitempty"`
+	Icon         string            `json:"icon,omitempty"`
+	DisplayType  string            `json:"displayType,omitempty"`
+	RunnerName   string            `json:"runnerName,omitempty"`
 	// Specify the canary id, <runner>/<namespace>/<name>
 	ID     string     `json:"id"`
 	Canary *v1.Canary `json:"-"`
+}
+
+func (c Check) String() string {
+	s := ""
+
+	if c.Name != "" {
+		s += "name=" + c.Name + " "
+	}
+	if c.Key != "" {
+		s += "key=" + c.Key + " "
+	}
+	if c.Type != "" {
+		s += "type=" + c.Type + " "
+	}
+	if c.Namespace != "" {
+		s += "namespace=" + c.Namespace + " "
+	}
+	if c.CanaryName != "" {
+		s += "canary=" + c.CanaryName + " "
+	}
+	if c.Description != "" {
+		s += "description=" + c.Description + " "
+	}
+	if c.Endpoint != "" {
+		s += "endpoint=" + c.Endpoint + " "
+	}
+	if c.Uptime.String() != "" {
+		s += "uptime=" + c.Uptime.String() + " "
+	}
+	if c.Latency.String() != "" {
+		s += "latency=" + c.Latency.String() + " "
+	}
+	if c.Interval != 0 {
+		s += "interval=" + fmt.Sprintf("%d", c.Interval) + " "
+	}
+	if c.Schedule != "" {
+		s += "schedule=" + c.Schedule + " "
+	}
+	if c.Owner != "" {
+		s += "owner=" + c.Owner + " "
+	}
+	if c.Severity != "" {
+		s += "severity=" + c.Severity + " "
+	}
+	if c.Icon != "" {
+		s += "icon=" + c.Icon + " "
+	}
+	if c.DisplayType != "" {
+		s += "displayType=" + c.DisplayType + " "
+	}
+	if c.RunnerName != "" {
+		s += "runner=" + c.RunnerName + " "
+	}
+	if c.ID != "" {
+		s += "id=" + c.ID + " "
+	}
+	s += "statuses=" + fmt.Sprintf("%d", len(c.Statuses))
+	return s
 }
 
 func FromResult(result CheckResult) CheckStatus {
@@ -111,23 +196,23 @@ func FromResult(result CheckResult) CheckStatus {
 }
 func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Check {
 	return Check{
-		Key:         canary.GetKey(check),
-		Name:        canary.Name,
-		Namespace:   canary.Namespace,
-		Labels:      labels.FilterLabels(canary.GetAllLabels(nil)),
-		CanaryName:  canary.Name,
-		Interval:    canary.Spec.Interval,
-		Schedule:    canary.Spec.Schedule,
-		Owner:       canary.Spec.Owner,
-		Severity:    canary.Spec.Severity,
 		Canary:      &canary,
-		Type:        check.GetType(),
+		CanaryName:  canary.Name,
 		Description: check.GetDescription(),
 		Endpoint:    check.GetEndpoint(),
 		Icon:        check.GetIcon(),
-		RunnerName:  canary.GetRunnerName(),
 		ID:          canary.ID(),
+		Interval:    canary.Spec.Interval,
+		Key:         canary.GetKey(check),
+		Labels:      labels.FilterLabels(canary.GetAllLabels(nil)),
+		Name:        check.GetName(),
+		Namespace:   canary.Namespace,
+		Owner:       canary.Spec.Owner,
+		RunnerName:  canary.GetRunnerName(),
+		Schedule:    canary.Spec.Schedule,
+		Severity:    canary.Spec.Severity,
 		Statuses:    statuses,
+		Type:        check.GetType(),
 	}
 }
 
@@ -161,6 +246,35 @@ func (c Checks) Less(i, j int) bool {
 
 func (c Checks) Swap(i, j int) {
 	c[i], c[j] = c[j], c[i]
+}
+
+func (c Checks) String() string {
+	var s string
+	for _, check := range c {
+		s += check.String() + "\n"
+	}
+	return s
+}
+
+func (c Checks) Find(key string) *Check {
+	for _, check := range c {
+		if check.Key == key {
+			return check
+		}
+	}
+	return nil
+}
+
+func (c Checks) Merge(from Checks) Checks {
+	for _, check := range from {
+		match := c.Find(check.Key)
+		if match == nil {
+			c = append(c, check)
+		} else {
+			match.Statuses = append(match.Statuses, check.Statuses...)
+		}
+	}
+	return c
 }
 
 func (c Check) ToString() string {
@@ -238,13 +352,81 @@ func (result CheckResult) String() string {
 	endpoint := ""
 	if result.Check != nil {
 		checkType = result.Check.GetType()
-		endpoint = result.Check.GetEndpoint()
+		endpoint = result.Check.GetName()
+		if endpoint == "" {
+			endpoint = result.Check.GetDescription()
+		}
+		if endpoint == "" {
+			endpoint = result.Check.GetEndpoint()
+		}
+		endpoint = result.Canary.Namespace + "/" + result.Canary.Name + "/" + endpoint
 	}
 
 	if result.Pass {
 		return fmt.Sprintf("%s [%s] %s duration=%d %s", console.Greenf("PASS"), checkType, endpoint, result.Duration, result.Message)
 	}
 	return fmt.Sprintf("%s [%s] %s duration=%d %s %s", console.Redf("FAIL"), checkType, endpoint, result.Duration, result.Message, result.Error)
+}
+
+type GenericCheck struct {
+	v1.Description `yaml:",inline" json:",inline"`
+	Type           string
+	Endpoint       string
+}
+
+func (generic GenericCheck) GetType() string {
+	return generic.Type
+}
+
+func (generic GenericCheck) GetEndpoint() string {
+	return generic.Endpoint
+}
+
+type TransformedCheckResult struct {
+	Start       time.Time              `json:"start,omitempty"`
+	Pass        bool                   `json:"pass,omitempty"`
+	Invalid     bool                   `json:"invalid,omitempty"`
+	Detail      interface{}            `json:"detail,omitempty"`
+	Data        map[string]interface{} `json:"data,omitempty"`
+	Duration    int64                  `json:"duration,omitempty"`
+	Description string                 `json:"description,omitempty"`
+	DisplayType string                 `json:"displayType,omitempty"`
+	Message     string                 `json:"message,omitempty"`
+	Error       string                 `json:"error,omitempty"`
+	Name        string                 `json:"name,omitempty"`
+	Labels      map[string]string      `json:"labels,omitempty"`
+	Namespace   string                 `json:"namespace,omitempty"`
+	Icon        string                 `json:"icon,omitempty"`
+	Type        string                 `json:"type,omitempty"`
+	Endpoint    string                 `json:"endpoint,omitempty"`
+}
+
+func (t TransformedCheckResult) ToCheckResult() CheckResult {
+	return CheckResult{
+		Start:       t.Start,
+		Pass:        t.Pass,
+		Invalid:     t.Invalid,
+		Detail:      t.Detail,
+		Data:        t.Data,
+		Duration:    t.Duration,
+		Description: t.Description,
+		DisplayType: t.DisplayType,
+		Message:     t.Message,
+		Error:       t.Error,
+		Check: GenericCheck{
+			Description: v1.Description{
+				Description: t.Description,
+				Name:        t.Name,
+				Icon:        t.Icon,
+			},
+			Type:     t.Type,
+			Endpoint: t.Endpoint,
+		},
+	}
+}
+
+func (t TransformedCheckResult) GetDescription() string {
+	return t.Description
 }
 
 type MetricType string

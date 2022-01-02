@@ -202,10 +202,11 @@ type Template struct {
 	Template   string `yaml:"template,omitempty" json:"template,omitempty"`
 	JSONPath   string `yaml:"jsonPath,omitempty" json:"jsonPath,omitempty"`
 	Expression string `yaml:"expr,omitempty" json:"expr,omitempty"`
+	Javascript string `yaml:"javascript,omitempty" json:"javascript,omitempty"`
 }
 
 func (t Template) IsEmpty() bool {
-	return t.Template == "" && t.JSONPath == "" && t.Expression == ""
+	return t.Template == "" && t.JSONPath == "" && t.Expression == "" && t.Javascript == ""
 }
 
 // +k8s:deepcopy-gen=false
@@ -218,9 +219,15 @@ type TestFunction interface {
 	GetTestFunction() Template
 }
 
+// +k8s:deepcopy-gen=false
+type Transformer interface {
+	GetTransformer() Template
+}
+
 type Templatable struct {
-	Test    Template `yaml:"test,omitempty" json:"test,omitempty"`
-	Display Template `yaml:"display,omitempty" json:"display,omitempty"`
+	Test      Template `yaml:"test,omitempty" json:"test,omitempty"`
+	Display   Template `yaml:"display,omitempty" json:"display,omitempty"`
+	Transform Template `yaml:"transform,omitempty" json:"transform,omitempty"`
 }
 
 func (t Templatable) GetTestFunction() Template {
@@ -229,6 +236,10 @@ func (t Templatable) GetTestFunction() Template {
 
 func (t Templatable) GetDisplayTemplate() Template {
 	return t.Display
+}
+
+func (t Templatable) GetTransformer() Template {
+	return t.Transform
 }
 
 type Description struct {

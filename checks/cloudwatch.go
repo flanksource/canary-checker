@@ -1,7 +1,9 @@
+//go:build !fast
+
 package checks
 
 import (
-	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
@@ -50,19 +52,19 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 		return result.ErrorMessage(err)
 	}
 	result.AddDetails(alarms)
-	message := ""
+	firing := []string{}
 	for _, alarm := range alarms.MetricAlarms {
 		if alarm.StateValue == types.StateValueAlarm {
-			message += fmt.Sprintf("alarm '%s': is in %s state Reason: %s ReasonData: %s\n", *alarm.AlarmName, alarm.StateValue, *alarm.StateReason, *alarm.StateReasonData)
+			firing = append(firing, *alarm.AlarmName)
 		}
 	}
 	for _, alarm := range alarms.CompositeAlarms {
 		if alarm.StateValue == types.StateValueAlarm {
-			message += fmt.Sprintf("alarm '%s': is in %s state Reason: %s ReasonData: %s\n", *alarm.AlarmName, alarm.StateValue, *alarm.StateReason, *alarm.StateReasonData)
+			firing = append(firing, *alarm.AlarmName)
 		}
 	}
-	if message != "" {
-		return result.Failf(message)
+	if len(firing) > 0 {
+		return result.Failf(strings.Join(firing, ","))
 	}
 	return result
 }
