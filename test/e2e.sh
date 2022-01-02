@@ -85,7 +85,8 @@ if [ "$SKIP_SETUP" != "true" ]; then
   fi
 
   if [ -e $TEST_FOLDER/main.go ]; then
-    go run $TEST_FOLDER/main.go
+    cd $TEST_FOLDER
+    go run main.go
   fi
   echo "::endgroup::"
 fi
