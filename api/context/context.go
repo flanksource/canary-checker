@@ -55,20 +55,6 @@ func (ctx *Context) IsTrace() bool {
 	return ctx.Canary.Annotations != nil && ctx.Canary.Annotations["trace"] == "true"
 }
 
-func (ctx *Context) Debug(format string, args ...interface{}) {
-	if !ctx.IsDebug() && !ctx.IsTrace() {
-		return
-	}
-	ctx.Logger.Debugf(format, args...)
-}
-
-func (ctx *Context) Trace(format string, args ...interface{}) {
-	if !ctx.IsTrace() {
-		return
-	}
-	ctx.Logger.Tracef(format, args...)
-}
-
 func (ctx *Context) New(environment map[string]interface{}) *Context {
 	return &Context{
 		Context:     ctx.Context,

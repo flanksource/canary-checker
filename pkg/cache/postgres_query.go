@@ -120,7 +120,7 @@ func (q QueryParams) ExecuteDetails(db Querier) ([]pkg.Timeseries, error) {
 
 func exec(db Querier, q QueryParams, sql string, namedArgs map[string]interface{}) (pgx.Rows, error) {
 	if q.Trace {
-		sqlDebug, _ := convertNamedParamsDebug(sql, namedArgs)
+		sqlDebug := convertNamedParamsDebug(sql, namedArgs)
 		logger.Tracef(sqlDebug)
 	}
 

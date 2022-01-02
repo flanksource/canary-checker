@@ -3,7 +3,6 @@ package cache
 import (
 	"context"
 	"encoding/json"
-	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -167,31 +166,6 @@ func (c *postgresCache) Query(q QueryParams) (pkg.Checks, error) {
 
 func (c *postgresCache) QueryStatus(q QueryParams) ([]pkg.Timeseries, error) {
 	return q.ExecuteDetails(db.Pool)
-}
-
-func scanStatusRows(statusRows pgx.Rows) []pkg.CheckStatus {
-	var result []pkg.CheckStatus
-	for statusRows.Next() {
-		var status, invalid bool
-		var message, error, checkKey string
-		var duration int
-		var details interface{}
-		var statusTime, statusInsertedAt time.Time
-		if err := statusRows.Scan(&checkKey, &details, &duration, &error, &statusInsertedAt, &invalid, &message, &status, &statusTime); err != nil {
-			logger.Errorf("error scanning check status row: %v", err)
-			continue
-		}
-		result = append(result, pkg.CheckStatus{
-			Status:   status,
-			Invalid:  invalid,
-			Time:     statusTime.UTC().Format(time.RFC3339),
-			Duration: duration,
-			Message:  message,
-			Error:    error,
-			Detail:   details,
-		})
-	}
-	return result
 }
 
 func (c *postgresCache) GetDetails(checkkey string, time string) interface{} {

@@ -53,7 +53,7 @@ type Latency struct {
 	Percentile99 float64 `json:"p99,omitempty" db:"p99"`
 	Percentile97 float64 `json:"p97,omitempty" db:"p97"`
 	Percentile95 float64 `json:"p95,omitempty" db:"p95"`
-	Rolling1H    float64 `json:"rolling1h" db`
+	Rolling1H    float64 `json:"rolling1h"`
 }
 
 func (l Latency) String() string {
@@ -340,6 +340,34 @@ type CheckResult struct {
 	Canary v1.Canary
 }
 
+func (result CheckResult) GetDescription() string {
+	if result.Check.GetDescription() != "" {
+		return result.Check.GetDescription()
+	}
+	return result.Check.GetEndpoint()
+}
+
+func (result CheckResult) String() string {
+	checkType := ""
+	endpoint := ""
+	if result.Check != nil {
+		checkType = result.Check.GetType()
+		endpoint = result.Check.GetName()
+		if endpoint == "" {
+			endpoint = result.Check.GetDescription()
+		}
+		if endpoint == "" {
+			endpoint = result.Check.GetEndpoint()
+		}
+		endpoint = result.Canary.Namespace + "/" + result.Canary.Name + "/" + endpoint
+	}
+
+	if result.Pass {
+		return fmt.Sprintf("%s [%s] %s duration=%d %s", console.Greenf("PASS"), checkType, endpoint, result.Duration, result.Message)
+	}
+	return fmt.Sprintf("%s [%s] %s duration=%d %s %s", console.Redf("FAIL"), checkType, endpoint, result.Duration, result.Message, result.Error)
+}
+
 type GenericCheck struct {
 	v1.Description `yaml:",inline" json:",inline"`
 	Type           string
@@ -397,36 +425,8 @@ func (t TransformedCheckResult) ToCheckResult() CheckResult {
 	}
 }
 
-func (result TransformedCheckResult) GetDescription() string {
-	return result.Description
-}
-
-func (result CheckResult) GetDescription() string {
-	if result.Check.GetDescription() != "" {
-		return result.Check.GetDescription()
-	}
-	return result.Check.GetEndpoint()
-}
-
-func (result CheckResult) String() string {
-	checkType := ""
-	endpoint := ""
-	if result.Check != nil {
-		checkType = result.Check.GetType()
-		endpoint = result.Check.GetName()
-		if endpoint == "" {
-			endpoint = result.Check.GetDescription()
-		}
-		if endpoint == "" {
-			endpoint = result.Check.GetEndpoint()
-		}
-		endpoint = result.Canary.Namespace + "/" + result.Canary.Name + "/" + endpoint
-	}
-
-	if result.Pass {
-		return fmt.Sprintf("%s [%s] %s duration=%d %s", console.Greenf("PASS"), checkType, endpoint, result.Duration, result.Message)
-	}
-	return fmt.Sprintf("%s [%s] %s duration=%d %s %s", console.Redf("FAIL"), checkType, endpoint, result.Duration, result.Message, result.Error)
+func (t TransformedCheckResult) GetDescription() string {
+	return t.Description
 }
 
 type MetricType string
