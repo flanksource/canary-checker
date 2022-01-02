@@ -23,6 +23,7 @@ func convertNamedParams(sql string, namedArgs map[string]interface{}) (string, [
 	for pname, pval := range namedArgs {
 		sql = strings.ReplaceAll(sql, ":"+pname, fmt.Sprint(`$`, i))
 		args = append(args, pval)
+		i++
 	}
 	return sql, args
 }

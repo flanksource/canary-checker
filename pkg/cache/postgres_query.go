@@ -124,9 +124,14 @@ func exec(db Querier, q QueryParams, sql string, namedArgs map[string]interface{
 		logger.Tracef(sqlDebug)
 	}
 
-	sql, args := convertNamedParams(sql, namedArgs)
+	positionalSql, args := convertNamedParams(sql, namedArgs)
 
-	return db.Query(context.Background(), sql, args...)
+	rows, err := db.Query(context.Background(), positionalSql, args...)
+
+	if err != nil {
+		logger.Debugf("Error executing query: %v\n%s\n args=%v", err, positionalSql, args)
+	}
+	return rows, err
 }
 
 func (q QueryParams) ExecuteSummary(db Querier) (pkg.Checks, error) {
