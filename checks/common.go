@@ -143,7 +143,6 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 	}
 
 	if tpl.IsEmpty() {
-
 		return []*pkg.CheckResult{in}, nil
 	}
 
@@ -184,7 +183,6 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 }
 
 func template(ctx *context.Context, template v1.Template) (string, error) {
-
 	// javascript
 	if template.Javascript != "" {
 		vm := otto.New()

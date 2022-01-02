@@ -81,7 +81,6 @@ func TestQueries(t *testing.T) {
 						"RunnerName": Not(BeEmpty()),
 						"Statuses":   HaveLen(tc.fixture.StatusCount),
 					})))
-
 				})
 			}
 		})

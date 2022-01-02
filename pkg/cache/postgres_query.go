@@ -33,14 +33,14 @@ func parseDuration(d string, name string) (clause string, arg interface{}, err e
 func (q QueryParams) GetWhereClause() (string, map[string]interface{}, error) {
 	clause := ""
 	args := make(map[string]interface{})
-
+	and := " AND "
 	if q.Check != "" {
 		clause = "check_key = :check_key"
 		args["check_key"] = q.Check
 	}
 	if q.Start != "" && q.End == "" {
 		if clause != "" {
-			clause += " AND "
+			clause += and
 		}
 		start, arg, err := parseDuration(q.Start, "start")
 		if err != nil {
@@ -50,7 +50,7 @@ func (q QueryParams) GetWhereClause() (string, map[string]interface{}, error) {
 		clause += "time > " + start
 	} else if q.Start == "" && q.End != "" {
 		if clause != "" {
-			clause += " AND "
+			clause += and
 		}
 		end, arg, err := parseDuration(q.End, "end")
 		if err != nil {
@@ -61,7 +61,7 @@ func (q QueryParams) GetWhereClause() (string, map[string]interface{}, error) {
 	}
 	if q.Start != "" && q.End != "" {
 		if clause != "" {
-			clause += " AND "
+			clause += and
 		}
 		start, arg, err := parseDuration(q.Start, "start")
 		if err != nil {
@@ -73,7 +73,7 @@ func (q QueryParams) GetWhereClause() (string, map[string]interface{}, error) {
 			return "", nil, err
 		}
 		args["end"] = arg
-		clause += "time BETWEEN " + start + " AND " + end
+		clause += "time BETWEEN " + start + and + end
 	}
 	return strings.TrimSpace(clause), args, nil
 }

@@ -94,11 +94,11 @@ func ParseQuery(req *http.Request) (*QueryParams, error) {
 		Start:           since,
 		End:             until,
 		Window:          queryParams.Get("window"),
-		IncludeMessages: queryParams.Get("includeMessages") == "true",
-		IncludeDetails:  queryParams.Get("includeDetails") == "true",
+		IncludeMessages: isTrue(queryParams.Get("includeMessages")),
+		IncludeDetails:  isTrue(queryParams.Get("includeDetails")),
 		Check:           queryParams.Get("check"),
 		StatusCount:     int(c),
-		Trace:           queryParams.Get("trace") == "true",
+		Trace:           isTrue(queryParams.Get("trace")),
 	}
 
 	if err := q.Validate(); err != nil {
@@ -106,6 +106,10 @@ func ParseQuery(req *http.Request) (*QueryParams, error) {
 	}
 
 	return &q, nil
+}
+
+func isTrue(v string) bool {
+	return v == "true"
 }
 
 type Cache interface {

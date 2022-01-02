@@ -122,6 +122,7 @@ func (c *inMemoryCache) Query(q QueryParams) (pkg.Checks, error) {
 	var results pkg.Checks
 	for _, check := range checks {
 		if check == nil {
+			continue
 		}
 		check.Statuses = c.ListCheckStatus(check.Key, q)
 		if len(check.Statuses) > 0 {

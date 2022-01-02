@@ -6,26 +6,16 @@ import (
 	"time"
 
 	"github.com/flanksource/commons/duration"
-	"github.com/jackc/pgtype"
 )
-
-func convertDuration(d duration.Duration) pgtype.Interval {
-	return pgtype.Interval{
-		Microseconds: d.Nanoseconds() / 1000,
-		Status:       pgtype.Present,
-	}
-}
 
 func convertNamedParamsDebug(sql string, namedArgs map[string]interface{}) (string, []interface{}) {
 	var i int = 1
-	var args []interface{}
 	// Loop the named args and replace with placeholders
 	for pname, pval := range namedArgs {
 		sql = strings.ReplaceAll(sql, ":"+pname, fmt.Sprintf("%v", pval))
-		// args = append(args, pval)
 		i++
 	}
-	return sql, args
+	return sql, nil
 }
 
 func convertNamedParams(sql string, namedArgs map[string]interface{}) (string, []interface{}) {

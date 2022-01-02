@@ -34,7 +34,6 @@ func SetupError(canary v1.Canary, err error) []*CheckResult {
 }
 
 func Success(check external.Check, canary v1.Canary) *CheckResult {
-
 	return &CheckResult{
 		Start:  time.Now(),
 		Pass:   true,

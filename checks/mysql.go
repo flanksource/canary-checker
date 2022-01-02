@@ -9,13 +9,8 @@ import (
 	_ "github.com/go-sql-driver/mysql" // Necessary for mysql
 )
 
-func init() {
-	//register metrics here
-}
-
 type MysqlChecker struct{}
 
-// Type: returns checker type
 func (c *MysqlChecker) Type() string {
 	return "mysql"
 }
