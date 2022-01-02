@@ -237,12 +237,12 @@ func (c *NamespaceChecker) httpCheck(check canaryv1.NamespaceCheck, deadline tim
 
 	for {
 		url := fmt.Sprintf("http://%s%s", check.IngressHost, check.Path)
-		logger.Debugf("Checking url %s", url)
+		logger.Tracef("Checking url %s", url)
 		httpTimer := NewTimer()
 		response, responseCode, err := c.getHTTP(url, check.HTTPTimeout, hardDeadline)
 		if err != nil && perrors.Is(err, gocontext.DeadlineExceeded) {
 			if timer.Millis() > check.HTTPTimeout && time.Now().Before(hardDeadline) {
-				logger.Debugf("[%s] request completed in %s, above threshold of %d", check, httpTimer, check.HTTPTimeout)
+				logger.Tracef("[%s] request completed in %s, above threshold of %d", check, httpTimer, check.HTTPTimeout)
 				time.Sleep(retryInterval)
 				continue
 			} else if timer.Millis() > check.HTTPTimeout && time.Now().After(hardDeadline) {
@@ -254,7 +254,7 @@ func (c *NamespaceChecker) httpCheck(check canaryv1.NamespaceCheck, deadline tim
 				continue
 			}
 		} else if err != nil {
-			logger.Debugf("[%s] failed to get http URL %s: %v", check, url, err)
+			logger.Tracef("[%s] failed to get http URL %s: %v", check, url, err)
 			time.Sleep(retryInterval)
 			continue
 		}

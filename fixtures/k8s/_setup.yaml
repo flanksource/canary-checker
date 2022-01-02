@@ -16,9 +16,9 @@ metadata:
     app: k8s-ready
 spec:
   containers:
-  - name: hello
-    image: busybox
-    command: ['sh', '-c', 'echo "Hello, Kubernetes!" && sleep 3600']
+    - name: hello
+      image: public.ecr.aws/docker/library/busybox:1.35.0
+      command: ["sh", "-c", 'echo "Hello, Kubernetes!" && sleep 3600']
   restartPolicy: OnFailure
 ---
 apiVersion: v1
@@ -30,7 +30,7 @@ metadata:
     app: k8s-not-ready
 spec:
   containers:
-  - name: hello
-    image: busybox-random
-    command: ['sh', '-c', 'echo "Hello, Kubernetes!" && sleep 3600']
+    - name: hello
+      image: busybox-random
+      command: ["sh", "-c", 'echo "Hello, Kubernetes!" && sleep 3600']
   restartPolicy: OnFailure

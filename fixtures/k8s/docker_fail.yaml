@@ -7,12 +7,12 @@ metadata:
 spec:
   interval: 30
   docker:
-    - image: docker.io/busybox
+    - image: public.ecr.aws/docker/library/busybox:1.31.0
       expectedDigest: abcdef123
       expectedSize: 200
-    - image: docker.io/library/busybox:random
+    - image: public.ecr.aws/docker/library/busybox:1.31.0
       expectedDigest: abcdef123
       expectedSize: 200
-    - image: docker.io/library/busybox:1.31.1
+    - image: public.ecr.aws/docker/library/busybox:1.31.0
       expectedDigest: abcdef123
       expectedSize: 200

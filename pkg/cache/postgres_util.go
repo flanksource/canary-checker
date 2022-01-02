@@ -58,6 +58,13 @@ func intV(v interface{}) int {
 	return 0
 }
 
+func stringV(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	return v.(string)
+}
+
 func timeV(v interface{}) (*time.Time, error) {
 	if v == nil {
 		return nil, nil

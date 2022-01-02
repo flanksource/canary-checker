@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: pod-pass
 spec:
-  interval: 30
+  interval: 900
   pod:
     - name: golang
       spec: |
@@ -27,7 +27,7 @@ spec:
       deleteTimeout: 12000
       ingressTimeout: 10000
       deadline: 60000
-      httpRetryInterval: 200
+      httpRetryInterval: 1500
       expectedContent: bar
       expectedHttpStatuses: [200, 201, 202]
       priorityClass: canary-checker-priority

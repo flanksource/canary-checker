@@ -95,6 +95,7 @@ type Timeseries struct {
 	Time     string `json:"time,omitempty"`
 	Status   bool   `json:"status,omitempty"`
 	Message  string `json:"message,omitempty"`
+	Error    string `json:"error,omitempty"`
 	Duration int    `json:"duration"`
 	// Count is the number of times the check has been run in the specified time window
 	Count int `json:"count,omitempty"`

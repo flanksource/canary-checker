@@ -24,6 +24,7 @@ import (
 	gocontext "context"
 
 	"github.com/flanksource/canary-checker/pkg/push"
+	"github.com/flanksource/canary-checker/pkg/utils"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -254,7 +255,7 @@ func (r *CanaryReconciler) Report(ctx *context.Context, canary v1.Canary, result
 		Pass:     pass,
 		Duration: duration,
 	})
-	canary.Status.Latency1H = latency.String()
+	canary.Status.Latency1H = utils.Age(time.Duration(latency.Rolling1H) * time.Millisecond)
 	canary.Status.Uptime1H = uptime.String()
 
 	msg := ""

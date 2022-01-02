@@ -1,5 +1,5 @@
-docker pull docker.io/library/busybox:1.30
-docker tag docker.io/library/busybox:1.30 ttl.sh/flanksource-busybox:1.30
-docker tag docker.io/library/busybox:1.30 docker.io/flanksource/busybox:1.30
+docker pull public.ecr.aws/docker/library/busybox:1.33.1
+docker tag  public.ecr.aws/docker/library/busybox:1.33.1 ttl.sh/flanksource-busybox:1.33.1
+docker tag  public.ecr.aws/docker/library/busybox:1.33.1 docker.io/flanksource/busybox:1.33.1
 
 kubectl apply -k ../

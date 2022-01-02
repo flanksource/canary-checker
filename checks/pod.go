@@ -316,7 +316,7 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 		response, responseCode, err := c.getHTTP(url, podCheck.HTTPTimeout, deadline)
 		if err != nil && perrors.Is(err, gocontext.DeadlineExceeded) {
 			if timer.Millis() > podCheck.HTTPTimeout && time.Now().Before(deadline) {
-				logger.Debugf("[%s] request completed in %s, above threshold of %d", podCheck, httpTimer, httpTimeout)
+				logger.Tracef("[%s] request completed in %s, above threshold of %d", podCheck, httpTimer, httpTimeout)
 				time.Sleep(retry)
 				continue
 			} else if timer.Millis() > httpTimeout && time.Now().After(deadline) {
@@ -327,7 +327,7 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 				continue
 			}
 		} else if err != nil {
-			logger.Debugf("[%s] failed to get http URL %s: %v", podCheck, url, err)
+			logger.Tracef("[%s] failed to get http URL %s: %v", podCheck, url, err)
 			time.Sleep(retry)
 			continue
 		}
