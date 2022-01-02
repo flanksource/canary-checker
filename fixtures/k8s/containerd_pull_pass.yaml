@@ -5,6 +5,6 @@ metadata:
 spec:
   interval: 30
   containerd:
-    - image: public.ecr.aws/docker/library/busybox:1.31.0
+    - image: public.ecr.aws/docker/library/busybox:1.33.1
       expectedDigest: sha256:95cf004f559831017cdf4628aaf1bb30133677be8702a8c5f2994629f637a209
       expectedSize: 764556
