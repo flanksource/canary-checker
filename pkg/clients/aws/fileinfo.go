@@ -1,4 +1,4 @@
-// +build aws
+//go:build aws
 
 package aws
 
