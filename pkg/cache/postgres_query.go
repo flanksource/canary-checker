@@ -84,16 +84,27 @@ func (q QueryParams) ExecuteDetails(db Querier) ([]pkg.Timeseries, error) {
 		return nil, err
 	}
 	namedArgs["limit"] = q.StatusCount
+	keyIndex := 3
+	messageIndex := 4
+	errorIndex := 5
+
 	sql := "SELECT time,duration,status "
 	if q.Check == "" {
 		sql += ", check_key"
+	}
+	if q.IncludeMessages {
+		sql += ", message, error"
+		if q.Check != "" {
+			messageIndex -= 1
+			errorIndex -= 1
+		}
+
 	}
 	sql += fmt.Sprintf(`
 	FROM check_statuses
 	WHERE %s
 	LIMIT :limit
 `, clause)
-
 	rows, err := exec(db, q, sql, namedArgs)
 	if err != nil {
 		return nil, err
@@ -111,7 +122,11 @@ func (q QueryParams) ExecuteDetails(db Querier) ([]pkg.Timeseries, error) {
 			Status:   vals[2].(bool),
 		}
 		if q.Check == "" {
-			result.Key = vals[3].(string)
+			result.Key = vals[keyIndex].(string)
+		}
+		if q.IncludeMessages {
+			result.Message = vals[messageIndex].(string)
+			result.Error = vals[errorIndex].(string)
 		}
 		results = append(results, result)
 	}
@@ -138,6 +153,11 @@ func (q QueryParams) ExecuteSummary(db Querier) (pkg.Checks, error) {
 	clause, namedArgs, err := q.GetWhereClause()
 	if err != nil {
 		return nil, err
+	}
+
+	statusColumns := ""
+	if q.IncludeMessages {
+		statusColumns += ", 'message', message, 'error', error"
 	}
 	sql := fmt.Sprintf(`
 SELECT checks.key,
@@ -184,12 +204,14 @@ SELECT checks.key,
     GROUP BY check_key
   ) as passed ON passed.check_key = checks.key
 		FULL JOIN (
-			SELECT check_key, json_agg(json_build_object('status',status,'duration',duration, 'time',time)) as statii
+			SELECT check_key, json_agg(json_build_object('status',status,'duration',duration,'time',time %s)) as statii
 	FROM (
 			SELECT check_key,
 				status,
 				time,
 				duration,
+				message,
+				error,
 				rank() OVER (
 					PARTITION BY check_key
 					ORDER BY time DESC
@@ -201,7 +223,7 @@ SELECT checks.key,
 	GROUP by check_key
 		) as statuses ON statuses.check_key = checks.key
 		WHERE passed.passed > 0 OR failed.failed > 0
-	`, clause, clause, clause, clause)
+	`, clause, clause, clause, statusColumns, clause)
 
 	if q.StatusCount == 0 {
 		q.StatusCount = 5
@@ -250,6 +272,8 @@ SELECT checks.key,
 					Status:   s["status"].(bool),
 					Time:     s["time"].(string),
 					Duration: intV(s["duration"]),
+					Message:  stringV(s["message"]),
+					Error:    stringV(s["error"]),
 				})
 			}
 		}
