@@ -1,5 +1,4 @@
 //go:build aws
-// +build aws
 
 package checks
 

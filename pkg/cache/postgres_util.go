@@ -17,13 +17,12 @@ func convertNamedParamsDebug(sql string, namedArgs map[string]interface{}) strin
 }
 
 func convertNamedParams(sql string, namedArgs map[string]interface{}) (string, []interface{}) {
-	var i int = 1
+	i := 1
 	var args []interface{}
 	// Loop the named args and replace with placeholders
 	for pname, pval := range namedArgs {
 		sql = strings.ReplaceAll(sql, ":"+pname, fmt.Sprint(`$`, i))
 		args = append(args, pval)
-		i++
 	}
 	return sql, args
 }
