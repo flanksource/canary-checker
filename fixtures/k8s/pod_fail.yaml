@@ -5,7 +5,7 @@ metadata:
   labels:
     "Expected-Fail": "true"
 spec:
-  interval: 30
+  interval: 900
   pod:
     - name: fail
       spec: |
