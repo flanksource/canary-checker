@@ -19,13 +19,25 @@ jobs:
   binary:
     runs-on: ubuntu-latest
     needs: semantic-release
-    container:
-      image: flanksource/build-tools:v0.15.0
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
           node-version: "16"
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: v1.17.x
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            .bin
+          key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
+          restore-keys: |
+            cache-
+
       - run: make release
         env:
           VERSION: v${{ needs.semantic-release.outputs.release-version }}
@@ -66,9 +78,9 @@ jobs:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           MKDOCS_INSIDERS: ${{secrets.MKDOCS_INSIDERS}}
   trigger:
-     runs-on: ubuntu-latest
-     needs: docker
-     steps:
+    runs-on: ubuntu-latest
+    needs: docker
+    steps:
       - name: send dispatch
         uses: peter-evans/repository-dispatch@v1
         with:

@@ -1,12 +1,12 @@
 on:
   schedule:
-    - cron: '0 10 * * *'
+    - cron: "0 10 * * *"
 name: Cron Test
 jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.16.x]
+        go-version: [1.17.x]
         platform: [ubuntu-latest]
         k8s:
           - v1.18.6
