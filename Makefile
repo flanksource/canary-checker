@@ -58,7 +58,7 @@ static: .bin/kustomize manifests generate .bin/yq
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: .bin/controller-gen .bin/yq
-	.bin/controller-gen crd:trivialVersions=false paths="./..." output:stdout > config/deploy/crd.yaml
+	.bin/controller-gen crd paths="./..." output:stdout > config/deploy/crd.yaml
 	.bin/yq eval -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.junit.items.properties.spec.properties.containers.items.properties.ports.items.required=["containerPort", "protocol"]' config/deploy/crd.yaml
 	.bin/yq eval -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.junit.items.properties.spec.properties.initContainers.items.properties.ports.items.required=["containerPort", "protocol"]' config/deploy/crd.yaml
 
@@ -168,7 +168,7 @@ test-e2e: bin
 	./test/e2e.sh
 
 .bin/controller-gen:
-	GOBIN=$(PWD)/.bin go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.0
+	GOBIN=$(PWD)/.bin go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.7.0
 CONTROLLER_GEN=$(GOBIN)/controller-gen
 
 .bin/kustomize: .bin
