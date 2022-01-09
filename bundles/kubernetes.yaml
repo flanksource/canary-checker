@@ -1,0 +1,200 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: kubernetes-bundle
+spec:
+  interval: 60
+  kubernetes:
+    - kind: Node
+      ready: true
+      transform:
+        javascript: |+
+          function isReady(v) {
+            if (v.status == null) {
+              return false
+            }
+            status = v.status
+            if (status.conditions == null) {
+              return false
+            }
+            status.conditions.forEach(function (state) {
+              if (state.type != "Ready" && state.status == "True") {
+                return false
+              }
+            })
+            return true
+          }
+          function getMessage(v) {
+            message = ""
+            if (v.status == null) {
+              return "No status found"
+            }
+            status = v.status
+            if (status.conditions == null) {
+              return "no conditions found"
+            }
+            status.conditions.forEach(function (state) {
+              if (state.status == "True") {
+                message += state.type
+                message += " "
+              }
+            })
+            return message.trim()
+          }
+          function getError(v) {
+            active = []
+            if (v.status == null) {
+              return "No status found"
+            }
+            status = v.status
+            if (status.conditions == null) {
+              return "no conditions found"
+            }
+            status.conditions.forEach(function (state) {
+              if (state.status == "True") {
+                active.push(state)
+              }
+            })
+            active.sort(function (a, b) { a.lastTransitionTime > b.lastTransitionTime && 1 || -1 })
+            errorMessage = ""
+            active.forEach(function (state) {
+              if (errorMessage != "") {
+                errorMessage += ', '
+              }
+              errorMessage += state.lastTransitionTime + ': ' + state.type + ' is ' + state.reason
+              if (state.message != null) {
+                errorMessage += ' with ' + state.message
+              }
+            })
+            return errorMessage
+          }
+          function getLabels(v) {
+            if (v.metadata == null) {
+              return {}
+            }
+            metadata = v.metadata
+            if (metadata.labels == null) {
+              return {}
+            }
+            return metadata.labels
+          }
+          function getName(v) {
+            if (v.metadata == null) {
+              return ""
+            }
+            metadata = v.metadata
+            if (metadata.name == null) {
+              return ""
+            }
+            return metadata.name
+          }
+          var out = _.map(results, function (v) {
+            return {
+              pass: isReady(v.Object),
+              labels: getLabels(v.Object),
+              message: getMessage(v.Object),
+              error: getError(v.Object),
+              name: getName(v.Object),
+            }
+          })
+          JSON.stringify(out)
+
+
+
+
+    - kind: Pod
+      ready: true
+      transform:
+        javascript: |+
+          function isReady(v) {
+            if (v.status == null) {
+              return false
+            }
+            status = v.status
+            if (status.conditions == null) {
+              return false
+            }
+            ready = true
+            status.conditions.forEach(function (state){
+              if (state.type == "Ready") {
+                if (state.status != "True") {
+                  ready = false
+                }
+              }
+            })
+            return ready
+          }
+          function getMessage(v) {
+            message = ""
+            if (v.status == null) {
+              return "No status found"
+            }
+            status = v.status
+            if (status.conditions == null) {
+              return "no conditions found"
+            }
+            status.conditions.forEach(function (state) {
+              if (state.status != "True") {
+                message += state.type
+                message += " "
+              }
+            })
+            return message.trim()
+          }
+          function getError(v) {
+            active = []
+            if (v.status == null) {
+              return "No status found"
+            }
+            status = v.status
+            if (status.conditions == null) {
+              return "no conditions found"
+            }
+            status.conditions.forEach(function(state) {
+              if (state.status == "False") {
+                active.push(state)
+              }
+            })
+            active.sort(function(a,b){a.lastTransitionTime > b.lastTransitionTime && 1 || -1})
+            errorMessage = ""
+            active.forEach(function (state) {
+              if (errorMessage != "") {
+                errorMessage += ', '
+              }
+              errorMessage += state.lastTransitionTime + ': ' + state.type + ' is ' + state.reason
+              if (state.message != null) {
+                errorMessage += ' with ' + state.message
+              }
+            })
+            return errorMessage
+          }
+          function getLabels(v) {
+            if (v.metadata == null) {
+              return {}
+            }
+            metadata = v.metadata
+            if (metadata.labels == null) {
+              return {}
+            }
+            return metadata.labels
+          }
+          function getName(v) {
+            if (v.metadata == null) {
+              return ""
+            }
+            metadata = v.metadata
+            if (metadata.name == null) {
+              return ""
+            }
+            return metadata.name
+          }
+          var out = _.map(results, function( v) {
+              return {
+                pass:  isReady(v.Object),
+                labels: getLabels(v.Object)
+                message: getMessage(v.Object)
+                error: getError(v.Object)
+                name:  getName(v.Object)
+              }
+            })
+            JSON.stringify(out)
