@@ -99,6 +99,10 @@ func getNamespaces(ctx *context.Context, check v1.KubernetesCheck) ([]string, er
 	if err != nil {
 		return nil, err
 	}
+
+	if check.Namespace.FieldSelector == "" && check.Namespace.LabelSelector == "" {
+		return []string{""}, err
+	}
 	namespeceList, err := k8sClient.CoreV1().Namespaces().List(ctx, metav1.ListOptions{
 		LabelSelector: check.Namespace.LabelSelector,
 		FieldSelector: check.Namespace.FieldSelector,
