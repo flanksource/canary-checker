@@ -1,24 +1,17 @@
 package checks
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
-	gotemplate "text/template"
-
-	"github.com/antonmedv/expr"
-	"github.com/pkg/errors"
-	"github.com/robertkrimen/otto"
 	_ "github.com/robertkrimen/otto/underscore"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/flanksource/commons/text"
+	"github.com/flanksource/canary-checker/templating"
 	"github.com/flanksource/kommons"
 	"github.com/flanksource/kommons/ktemplate"
 	"github.com/robfig/cron/v3"
@@ -43,7 +36,7 @@ func GetConnection(ctx *context.Context, conn *v1.Connection, namespace string) 
 
 	clone := conn.DeepCopy()
 
-	data := map[string]string{
+	data := map[string]interface{}{
 		"name":      ctx.Canary.Name,
 		"namespace": namespace,
 		"username":  auth.GetUsername(),
@@ -135,6 +128,10 @@ func def(a, b string) string {
 	return b
 }
 
+func template(ctx *context.Context, template v1.Template) (string, error) {
+	return templating.Template(ctx, template)
+}
+
 func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, error) {
 	var tpl v1.Template
 	switch v := in.Check.(type) {
@@ -182,64 +179,6 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 	}
 
 	return results, nil
-}
-
-func template(ctx *context.Context, template v1.Template) (string, error) {
-	// javascript
-	if template.Javascript != "" {
-		vm := otto.New()
-		for k, v := range ctx.Environment {
-			if err := vm.Set(k, v); err != nil {
-				return "", errors.Wrapf(err, "error setting %s", k)
-			}
-		}
-		out, err := vm.Run(template.Javascript)
-		if err != nil {
-			return "", errors.Wrapf(err, "failed to run javascript")
-		}
-
-		if s, err := out.ToString(); err != nil {
-			return "", errors.Wrapf(err, "failed to cast output to string")
-		} else {
-			return s, nil
-		}
-	}
-
-	// gotemplate
-	if template.Template != "" {
-		tpl := gotemplate.New("")
-		tpl, err := tpl.Funcs(text.GetTemplateFuncs()).Parse(template.Template)
-		if err != nil {
-			return "", err
-		}
-
-		// marshal data from interface{} to map[string]interface{}
-		data, _ := json.Marshal(ctx.Environment)
-		unstructured := make(map[string]interface{})
-		if err := json.Unmarshal(data, &unstructured); err != nil {
-			return "", err
-		}
-
-		var buf bytes.Buffer
-		if err := tpl.Execute(&buf, unstructured); err != nil {
-			return "", fmt.Errorf("error executing template %s: %v", strings.Split(template.Template, "\n")[0], err)
-		}
-		return strings.TrimSpace(buf.String()), nil
-	}
-
-	// exprv
-	if template.Expression != "" {
-		program, err := expr.Compile(template.Expression, text.MakeExpressionOptions(ctx.Environment)...)
-		if err != nil {
-			return "", err
-		}
-		output, err := expr.Run(program, text.MakeExpressionEnvs(ctx.Environment))
-		if err != nil {
-			return "", err
-		}
-		return fmt.Sprint(output), nil
-	}
-	return "", nil
 }
 
 func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) JunitTestSuite {
