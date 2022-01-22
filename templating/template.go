@@ -13,7 +13,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/robertkrimen/otto"
 
-	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	_ "github.com/flanksource/canary-checker/templating/js"
 	"github.com/flanksource/commons/files"
@@ -33,12 +32,12 @@ func LoadSharedLibrary(source string) error {
 	return fmt.Errorf("shared library %s not found", source)
 }
 
-func Template(ctx *context.Context, template v1.Template) (string, error) {
+func Template(environment map[string]interface{}, template v1.Template) (string, error) {
 	// javascript
 	if template.Javascript != "" {
 		// FIXME: whitelist allowed files
 		vm := otto.New()
-		for k, v := range ctx.Environment {
+		for k, v := range environment {
 			if err := vm.Set(k, v); err != nil {
 				return "", errors.Wrapf(err, "error setting %s", k)
 			}
@@ -64,7 +63,7 @@ func Template(ctx *context.Context, template v1.Template) (string, error) {
 		}
 
 		// marshal data from interface{} to map[string]interface{}
-		data, _ := json.Marshal(ctx.Environment)
+		data, _ := json.Marshal(environment)
 		unstructured := make(map[string]interface{})
 		if err := json.Unmarshal(data, &unstructured); err != nil {
 			return "", err
@@ -79,11 +78,11 @@ func Template(ctx *context.Context, template v1.Template) (string, error) {
 
 	// exprv
 	if template.Expression != "" {
-		program, err := expr.Compile(template.Expression, text.MakeExpressionOptions(ctx.Environment)...)
+		program, err := expr.Compile(template.Expression, text.MakeExpressionOptions(environment)...)
 		if err != nil {
 			return "", err
 		}
-		output, err := expr.Run(program, text.MakeExpressionEnvs(ctx.Environment))
+		output, err := expr.Run(program, text.MakeExpressionEnvs(environment))
 		if err != nil {
 			return "", err
 		}
