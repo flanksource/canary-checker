@@ -328,6 +328,7 @@ type URL struct {
 	Body     string
 }
 
+type SystemResult struct{}
 type CheckResult struct {
 	Start       time.Time
 	Pass        bool
