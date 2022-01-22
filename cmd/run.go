@@ -107,9 +107,9 @@ var Run = &cobra.Command{
 }
 
 func init() {
-	Run.Flags().StringVarP(&namespace, "namespace", "n", "", "Namespace to run canary checks in")
-	Run.Flags().StringVarP(&dataFile, "data", "d", "", "Template out each spec using the JSON or YAML data in this file")
-	Run.Flags().StringVarP(&outputFile, "output-file", "o", "", "file to output the results in")
+	Run.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "Namespace to run canary checks in")
+	Run.PersistentFlags().StringVarP(&dataFile, "data", "d", "", "Template out each spec using the JSON or YAML data in this file")
+	Run.PersistentFlags().StringVarP(&outputFile, "output-file", "o", "", "file to output the results in")
 	Run.Flags().BoolVarP(&junit, "junit", "j", false, "output results in junit format")
 	Run.Flags().BoolVar(&csv, "csv", false, "output results in csv format")
 }

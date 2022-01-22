@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=generate-schemas/schemas/system.schema.json
+apiVersion: canaries.flanksource.com/v1
+kind: System
+metadata:
+  name: cluster
+spec:
+  type: KubernetesCluster
+  icon: kubernetes
+  id:
+    javascript: properties.id
+  components:
+    - name: nodes
+      icon: server
+      id:
+        javascript: properties.zone + "/" + self.name
+      type: KubernetesNode
+      lookup:
+        kubernetes:
+          - kind: Node
+            display:
+              javascript: JSON.stringify(k8s.getNodeTopology(results))
+      properties:
+        - name: metrics
+          lookup:
+            kubernetes:
+              - kind: NodeMetrics
+                ready: false
+                display:
+                  javascript: JSON.stringify(k8s.getNodeMetrics(results))
+
+  properties:
+    - name: name
+      lookup:
+        kubernetes:
+          - kind: ConfigMap
+            namespace:
+              name: quack
+            resource:
+              name: quack-config
+            display:
+              javascript: |+
+                parts =  results[0].Object.data.name.split(":")
+                props = [    {
+                  name: "dns",
+                  text:    results[0].Object.data.domain
+                },
+                {
+                  name: "id",
+                  text: results[0].Object.data.name,
+                  type: "hidden",
+                },
+                {
+                  name: "name",
+                  text:  parts[5].split("/")[1]
+                },
+                {
+                  name: "account",
+                  text: parts[4]
+                },
+                {
+                  name: "region",
+                  text: parts[3]
+                }
+                ]
+                JSON.stringify(props)
+
