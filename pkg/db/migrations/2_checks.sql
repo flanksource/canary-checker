@@ -11,11 +11,11 @@ CREATE TABLE IF NOT EXISTS checks(
 	id TEXT NOT NULL,
 	interval int,
 	key TEXT NOT NULL,
-	labels json,
+	labels jsonb,
 	name TEXT NOT NULL,
 	namespace TEXT NOT NULL,
 	owner TEXT,
-	runner_labels json,
+	runner_labels jsonb,
 	runner_name TEXT,
 	schedule TEXT,
 	severity TEXT,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS checks(
 ---
 CREATE TABLE IF NOT EXISTS check_statuses(
 	check_key TEXT NOT NULL,
-	details json,
+	details jsonb,
 	duration INT,
 	error Text,
 	inserted_at TIMESTAMP with time zone NOT NULL,

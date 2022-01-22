@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -21,6 +22,7 @@ var Root = &cobra.Command{
 				logger.Errorf("Failed to load shared library %s: %v", script, err)
 			}
 		}
+		db.ConnectionString = readFromEnv(db.ConnectionString)
 	},
 }
 
@@ -51,9 +53,16 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringSliceVar(&pullServers, "pull-servers", []string{}, "push check results to multiple canary servers")
 	flags.StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 	flags.StringVar(&prometheusURL, "prometheus", "", "URL of the prometheus server that is scraping this instance")
-	flags.StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database")
 	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
 	flags.StringVarP(&cache.DefaultWindow, "default-window", "", "1h", "Default search window")
+}
+
+func readFromEnv(v string) string {
+	val := os.Getenv(v)
+	if val != "" {
+		return val
+	}
+	return v
 }
 
 func init() {
@@ -71,6 +80,7 @@ func init() {
 		},
 	})
 	runner.Version = version
+	Root.PersistentFlags().StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database")
 	Root.PersistentFlags().StringArrayVar(&sharedLibrary, "shared-library", []string{}, "Add javascript files to be shared by all javascript templates")
 	Root.PersistentFlags().BoolVar(&exposeEnv, "expose-env", false, "Expose environment variables for use in all templates. Note this has serious security implications with untrusted canaries")
 	Root.AddCommand(Docs)

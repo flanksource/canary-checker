@@ -13,6 +13,7 @@ import (
 	"github.com/pressly/goose/v3"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 //go:embed migrations/*.sql
@@ -23,17 +24,12 @@ var ConnectionString string
 var DefaultExpiryDays int
 var pgxConnectionString string
 
-func Init(connection string) error {
-	var connString string
-	// Check if the connectionString Param contains a reference to env
-	val := os.Getenv(connection)
-	if val == "" {
-		connString = connection
-	} else {
-		connString = val
-	}
+func IsConfigured() bool {
+	return ConnectionString != "" && ConnectionString != "DB_URL"
+}
 
-	config, err := pgxpool.ParseConfig(connString)
+func Init(connection string) error {
+	config, err := pgxpool.ParseConfig(connection)
 	if err != nil {
 		return err
 	}
@@ -48,6 +44,7 @@ func Init(connection string) error {
 			ReportCaller: false,
 		}
 		config.ConnConfig.Logger = logrusadapter.NewLogger(logrusLogger)
+		boil.DebugMode = true
 	}
 	Pool, err = pgxpool.ConnectConfig(context.Background(), config)
 	if err != nil {
@@ -60,8 +57,13 @@ func Init(connection string) error {
 		return err
 	}
 	logger.Infof("Initialized DB: %s (%s)", config.ConnString(), size)
-
 	pgxConnectionString = stdlib.RegisterConnConfig(config.ConnConfig)
+
+	db, err := GetDB()
+	if err != nil {
+		return err
+	}
+	boil.SetDB(db)
 
 	return Migrate()
 }
