@@ -129,7 +129,7 @@ func def(a, b string) string {
 }
 
 func template(ctx *context.Context, template v1.Template) (string, error) {
-	return templating.Template(ctx, template)
+	return templating.Template(ctx.Environment, template)
 }
 
 func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, error) {
