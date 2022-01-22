@@ -10,6 +10,14 @@ import (
 	"github.com/flanksource/kommons"
 )
 
+type KubernetesContext struct {
+	gocontext.Context
+	Kommons     *kommons.Client
+	Namespace   string
+	Environment map[string]interface{}
+	logger.Logger
+}
+
 type Context struct {
 	gocontext.Context
 	Kommons     *kommons.Client
@@ -31,6 +39,29 @@ func (ctx *Context) WithDeadline(deadline time.Time) (*Context, gocontext.Cancel
 	_ctx, fn := gocontext.WithDeadline(ctx.Context, deadline)
 	ctx.Context = _ctx
 	return ctx, fn
+}
+
+func NewKubernetesContext(client *kommons.Client, namespace string) *KubernetesContext {
+	if namespace == "" {
+		namespace = "default"
+	}
+	return &KubernetesContext{
+		Context:     gocontext.Background(),
+		Kommons:     client,
+		Namespace:   namespace,
+		Environment: make(map[string]interface{}),
+		Logger:      logger.StandardLogger(),
+	}
+}
+
+func (ctx *KubernetesContext) Clone() *KubernetesContext {
+	return &KubernetesContext{
+		Context:     gocontext.Background(),
+		Kommons:     ctx.Kommons,
+		Namespace:   ctx.Namespace,
+		Environment: make(map[string]interface{}),
+		Logger:      logger.StandardLogger(),
+	}
 }
 
 func New(client *kommons.Client, canary v1.Canary) *Context {
