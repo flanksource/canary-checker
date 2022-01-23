@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"sync"
@@ -16,8 +17,33 @@ import (
 	"github.com/flanksource/commons/logger"
 )
 
+var Topology = &cobra.Command{
+	Use: "topology",
+}
+
+var QueryTopology = &cobra.Command{
+	Use:   "query",
+	Short: "Query the topology",
+	Run: func(cmd *cobra.Command, args []string) {
+		if !db.IsConfigured() {
+			logger.Fatalf("Must specify --db or DB_URL env")
+		}
+
+		if err := db.Init(db.ConnectionString); err != nil {
+			logger.Fatalf("error connecting with postgres %v", err)
+		}
+
+		results, err := topology.Query(topology.TopologyParams{})
+		if err != nil {
+			logger.Fatalf("Failed to query topology: %v", err)
+		}
+		data, _ := json.MarshalIndent(results, "", "  ")
+		fmt.Println(string(data))
+	},
+}
+
 var RunTopology = &cobra.Command{
-	Use:   "topology <system.yaml>",
+	Use:   "run <system.yaml>",
 	Short: "Execute checks and return",
 	Run: func(cmd *cobra.Command, configFiles []string) {
 		timer := timer.NewTimer()
@@ -83,5 +109,6 @@ var RunTopology = &cobra.Command{
 }
 
 func init() {
-	Run.AddCommand(RunTopology)
+	Topology.AddCommand(RunTopology, QueryTopology)
+	Root.AddCommand(Topology)
 }

@@ -35,10 +35,12 @@ var schedule, configFile string
 
 var Serve = &cobra.Command{
 	Use:   "serve config.yaml",
-	Short: "Start a server to execute checks ",
-	Args:  cobra.MinimumNArgs(1),
+	Short: "Start a server to execute checks",
 	Run: func(cmd *cobra.Command, configFiles []string) {
 		var canaries []v1.Canary
+		if len(configFiles) == 0 {
+			logger.Warnf("No config file specified, running in read-only mode")
+		}
 		for _, configfile := range configFiles {
 			configs, err := pkg.ParseConfig(configfile, dataFile)
 			if err != nil {
@@ -131,6 +133,8 @@ func serve() {
 	nethttp.HandleFunc("/api/spec", simpleCors(spec.CheckHandler, allowedCors))
 	nethttp.HandleFunc("/api/spec/canary", simpleCors(spec.CanaryHandler, allowedCors))
 	nethttp.HandleFunc("/api/changes", simpleCors(api.Changes, allowedCors))
+	nethttp.HandleFunc("/api/topology", simpleCors(api.Topology, allowedCors))
+
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
 	logger.Infof("Starting health dashboard at http://%s", addr)
 	logger.Infof("Metrics can be accessed at http://%s/metrics", addr)
