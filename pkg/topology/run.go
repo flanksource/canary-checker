@@ -167,7 +167,7 @@ func Run(client *kommons.Client, s v1.System) []*pkg.System {
 		for _, component := range components {
 			group.Components = append(group.Components, component)
 		}
-		group.Summary = count(group.Components)
+		group.Summary = group.Components.Summarize()
 		group.Status = group.Summary.GetStatus()
 		sys.Components = append(sys.Components, group)
 	}
@@ -182,7 +182,7 @@ func Run(client *kommons.Client, s v1.System) []*pkg.System {
 			sys.Properties = append(sys.Properties, props...)
 		}
 	}
-	sys.Summary = count(sys.Components)
+	sys.Summary = sys.Components.Summarize()
 	if sys.Id == "" && ctx.SystemAPI.Spec.Id != nil {
 		id, err := templating.Template(sys.GetAsEnvironment(), *ctx.SystemAPI.Spec.Id)
 		if err != nil {
