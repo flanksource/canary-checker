@@ -22,6 +22,9 @@ type System struct {
 	Summary    Summary    `json:"summary,omitempty"`
 	Status     string     `json:"status,omitempty"`
 	Type       string     `json:"type,omitempty"`
+	CreatedAt  string     `json:"created_at,omitempty"`
+	UpdatedAt  string     `json:"updated_at,omitempty"`
+	ExternalId string     `json:"external_id,omitempty"`
 }
 
 func (s System) GetAsEnvironment() map[string]interface{} {
@@ -35,6 +38,39 @@ type Object struct {
 	Name      string            `json:"name,omitempty"`
 	Namespace string            `json:"namespace,omitempty"`
 	Labels    map[string]string `json:"labels,omitempty"`
+}
+
+func (components *Components) UnmarshalJSON(b []byte) error {
+	var flat []Component
+	if err := json.Unmarshal(b, &flat); err != nil {
+		return err
+	}
+	for _, c := range flat {
+		if c.ParentId == "" {
+			// first add parents
+			parent := c
+			*components = append(*components, &parent)
+		}
+	}
+
+	for _, c := range flat {
+		if c.ParentId != "" {
+			parent := components.FindById(c.ParentId)
+			if parent == nil {
+				logger.Errorf("Invalid parent id %s for component %s in (%s)", c.ParentId, c.Id, strings.Join(components.GetIds(), ","))
+				*components = append(*components, &c)
+			} else {
+				c.ParentId = ""
+				parent.Components = append(parent.Components, &c)
+			}
+		}
+	}
+
+	for _, component := range *components {
+		component.Summary = component.Summarize()
+	}
+
+	return nil
 }
 
 type Component struct {
@@ -55,6 +91,10 @@ type Component struct {
 	Relationships []RelationshipSpec `json:"relationships,omitempty"`
 	Properties    Properties         `json:"properties,omitempty"`
 	Components    Components         `json:"components,omitempty"`
+	ParentId      string             `json:"parent_id,omitempty"`
+	CreatedAt     string             `json:"created_at,omitempty"`
+	UpdatedAt     string             `json:"updated_at,omitempty"`
+	ExternalId    string             `json:"external_id,omitempty"`
 }
 
 func (c Component) GetAsEnvironment() map[string]interface{} {
@@ -78,6 +118,23 @@ type Components []*Component
 func (c Components) Find(name string) *Component {
 	for _, component := range c {
 		if component.Name == name {
+			return component
+		}
+	}
+	return nil
+}
+
+func (c Components) GetIds() []string {
+	ids := []string{}
+	for _, component := range c {
+		ids = append(ids, component.Id)
+	}
+	return ids
+}
+
+func (c Components) FindById(id string) *Component {
+	for _, component := range c {
+		if component.Id == id {
 			return component
 		}
 	}
@@ -281,4 +338,31 @@ func NewProperty(property v1.Property) *Property {
 		Links:          property.Links,
 		Headline:       property.Headline,
 	}
+}
+
+func (component Component) Summarize() Summary {
+	s := Summary{}
+	if len(component.Components) == 0 {
+		switch component.Status {
+		case "healthy":
+			s.Healthy++
+		case "unhealthy":
+			s.Unhealthy++
+		case "warning":
+			s.Warning++
+		}
+		return s
+	}
+	for _, child := range component.Components {
+		s = s.Add(child.Summarize())
+	}
+	return s
+}
+
+func (components Components) Summarize() Summary {
+	s := Summary{}
+	for _, component := range components {
+		s = s.Add(component.Summarize())
+	}
+	return s
 }

@@ -2,8 +2,6 @@ package topology
 
 import (
 	"encoding/json"
-
-	"github.com/flanksource/canary-checker/pkg"
 )
 
 func isComponent(s map[string]interface{}) bool {
@@ -38,23 +36,4 @@ func isComponentList(data []byte) bool {
 		return false
 	}
 	return isComponent(s[0])
-}
-
-func count(components pkg.Components) pkg.Summary {
-	s := pkg.Summary{}
-	for _, component := range components {
-		switch component.Status {
-		case "healthy":
-			s.Healthy++
-		case "unhealthy":
-			s.Unhealthy++
-		case "warning":
-			s.Warning++
-		}
-		for _, child := range component.Components {
-			s = s.Add(count(pkg.Components{child}))
-		}
-	}
-
-	return s
 }
