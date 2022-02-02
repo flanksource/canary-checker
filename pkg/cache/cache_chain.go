@@ -53,7 +53,7 @@ func (c *cacheChain) Query(q QueryParams) (pkg.Checks, error) {
 		if err != nil {
 			return nil, err
 		}
-		checks = checks.Merge(results)
+		checks = checks.Merge(results, q.StatusCount)
 	}
 	return checks, nil
 }
