@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // Package v1 contains API Schema definitions for the canaries v1 API group
-// +kubebuilder:object:generate=true
+// +kubebuilder:object:generate:=true
 // +groupName=canaries.flanksource.com
 package v1
 
