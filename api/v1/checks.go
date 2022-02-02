@@ -951,12 +951,15 @@ type Exec struct {
 
 /*
 AwsConfig check runs the given query against the AWS resources.
-[include:aws/ec2_pass.yaml]
+[include:aws/aws_config_pass.yaml]
 */
 type AwsConfig struct {
 	AwsConfigCheck `yaml:",inline" json:",inline"`
 }
 
+/*
+[include:aws/aws_config_rule_pass.yaml]
+*/
 type AwsConfigRule struct {
 	AwsConfigRuleCheck `yaml:",inline" json:",inline"`
 }

@@ -1,0 +1,24 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: awsconfigrule-pass
+spec:
+  interval: 30
+  awsConfigRule:
+    - description: Fetch all non compliant config rules
+      display:
+        template: "{{ .results }}"
+      awsConnection:
+        accessKeyID:
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_ACCESS_KEY_ID
+        secretKey:
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_SECRET_ACCESS_KEY
+        region: af-south-1
+      complianceTypes:
+       - NON_COMPLIANT
