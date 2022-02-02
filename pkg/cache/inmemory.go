@@ -143,7 +143,7 @@ func (c *inMemoryCache) ListCheckStatus(checkKey string, q QueryParams) []pkg.Ch
 		return nil
 	}
 	for _, status := range checks.([]pkg.CheckStatus) {
-		if i <= int64(q.StatusCount) {
+		if i >= int64(q.StatusCount) {
 			break
 		}
 		checkTime, err := time.Parse(time.RFC3339, status.Time)
