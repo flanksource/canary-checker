@@ -274,7 +274,7 @@ spec:
                             type: boolean
                         type: object
                       complianceTypes:
-                        description: Filters the results by compliance. The allowed values are COMPLIANT and NON_COMPLIAN
+                        description: Filters the results by compliance. The allowed values are INSUFFICIENT_DATA, NON_COMPLIANT, NOT_APPLICABLE, COMPLIANT
                         items:
                           type: string
                         type: array

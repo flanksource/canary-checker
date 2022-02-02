@@ -280,8 +280,8 @@ spec:
                             description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                             type: boolean
                         type: object
-                      complianceType:
-                        description: Filters the results by compliance. The allowed values are COMPLIANT and NON_COMPLIAN
+                      complianceTypes:
+                        description: Filters the results by compliance. The allowed values are INSUFFICIENT_DATA, NON_COMPLIANT, NOT_APPLICABLE, COMPLIANT
                         items:
                           type: string
                         type: array
