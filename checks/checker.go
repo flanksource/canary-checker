@@ -49,6 +49,7 @@ var All = []Checker{
 	&FolderChecker{},
 	&ExecChecker{},
 	&AwsConfigChecker{},
+	&AwsConfigRuleChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),
