@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/flanksource/canary-checker/pkg/cache"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
 )
 
@@ -28,7 +28,9 @@ func CanaryHandler(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	check := cache.InMemoryCache.GetCheckFromID(fmt.Sprintf("%s/%s/%s", runner, namespace, name))
+	// check := cache.InMemoryCache.GetCheckFromID(fmt.Sprintf("%s/%s/%s", runner, namespace, name))
+	//FIXME
+	check := &pkg.Check{}
 	if check == nil {
 		logger.Errorf("check not found")
 		fmt.Fprintf(w, "check not found")

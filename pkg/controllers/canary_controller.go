@@ -89,21 +89,9 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	err := r.Get(ctx, req.NamespacedName, canary)
 	canary.SetRunnerName(r.RunnerName)
 	var update bool
-	if canary.Status.ChecksStatus != nil {
-		specKeys := getAllCheckKeys(canary)
-		for statusKey := range canary.Status.ChecksStatus {
-			// TODO: figure out how the ResutMode generated check would be handled
-			if !contains(specKeys, statusKey) && canary.Spec.ResultMode == "" {
-				logger.Info("removing stale check", "key", statusKey)
-				cache.CacheChain.RemoveCheckByKey(statusKey)
-				metrics.RemoveCheckByKey(statusKey)
-				update = true
-			}
-		}
-	}
 	if !canary.DeletionTimestamp.IsZero() {
 		logger.Info("removing", "check", canary.Name)
-		cache.CacheChain.RemoveChecks(*canary)
+		cache.PostgresCache.RemoveChecks(*canary)
 		metrics.RemoveCheck(*canary)
 		controllerutil.RemoveFinalizer(canary, FinalizerName)
 		if err := r.Update(ctx, canary); err != nil {
@@ -139,10 +127,6 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 
 	observed.Store(req.NamespacedName, true)
-	// since we are combining the checks and we don't want individual checks to be displayed on the UI.
-	if canary.Spec.ResultMode == "" {
-		cache.InMemoryCache.InitCheck(*canary)
-	}
 	// TODO shouldn't be deleting entries every time, only add once and remove and add new one if interval or schedule is changed.
 	for _, entry := range r.Cron.Entries() {
 		if entry.Job.(CanaryJob).GetNamespacedName() == req.NamespacedName {
@@ -210,7 +194,7 @@ func (r *CanaryReconciler) Report(ctx *context.Context, canary v1.Canary, result
 			r.Log.Info(result.String())
 		}
 		duration += result.Duration
-		cache.CacheChain.Add(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
+		cache.PostgresCache.Add(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
 		uptime, latency := metrics.Record(canary, result)
 		checkKey := canary.GetKey(result.Check)
 		checkStatus[checkKey] = &v1.CheckStatus{}
@@ -220,7 +204,7 @@ func (r *CanaryReconciler) Report(ctx *context.Context, canary v1.Canary, result
 		if canary.Status.LastTransitionedTime != nil {
 			q.Start = canary.Status.LastTransitionedTime.Format(time.RFC3339)
 		}
-		lastStatus, err := cache.InMemoryCache.Query(q)
+		lastStatus, err := cache.PostgresCache.Query(q)
 		if err != nil || len(lastStatus) == 0 || len(lastStatus[0].Statuses) == 0 {
 			transitioned = true
 		} else if len(lastStatus) > 0 && (lastStatus[0].Statuses[0].Status != result.Pass) {

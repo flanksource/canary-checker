@@ -27,7 +27,7 @@ func Changes(w http.ResponseWriter, req *http.Request) {
 	}
 
 	results := []changes.Changes{}
-	checks, err := cache.CacheChain.Query(*q)
+	checks, err := cache.PostgresCache.Query(*q)
 	if err != nil {
 		errorResonse(w, err, http.StatusInternalServerError)
 		return

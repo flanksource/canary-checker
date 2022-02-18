@@ -12,6 +12,8 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
+var PostgresCache = &postgresCache{}
+
 type postgresCache struct {
 	*pgxpool.Pool
 }
@@ -159,6 +161,11 @@ func (c *postgresCache) RemoveCheckByKey(key string) {
 		logger.Errorf("error deleting check_statuses from postgres: %v", err)
 	}
 }
+
+// func (c *postgresCache) GetCheckFromKey(key string) (pkg.Check, error) {
+// 	row := c.QueryRow(context.TODO(), `SELECT * from checks where check_key=$1`, key)
+
+// }
 
 func (c *postgresCache) Query(q QueryParams) (pkg.Checks, error) {
 	return q.ExecuteSummary(db.Pool)

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/flanksource/canary-checker/pkg/cache"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
 )
 
@@ -26,7 +26,8 @@ func CheckHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	// TODO: have it return pkg.Check
-	check := cache.InMemoryCache.GetCheckFromKey(key)
+	// check := cache.InMemoryCache.GetCheckFromKey(key)
+	check := &pkg.Check{}
 	if check == nil {
 		logger.Errorf("no check found for key %v", key)
 		fmt.Fprintf(w, "no check found for key %v", key)

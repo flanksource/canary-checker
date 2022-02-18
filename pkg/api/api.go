@@ -35,7 +35,7 @@ func About(w http.ResponseWriter, req *http.Request) {
 }
 
 func Dump(w http.ResponseWriter, req *http.Request) {
-	data, _ := json.Marshal(cache.InMemoryCache)
+	data, _ := json.Marshal(cache.PostgresCache)
 	fmt.Fprint(w, string(data))
 }
 
@@ -47,7 +47,7 @@ func CheckDetails(w http.ResponseWriter, req *http.Request) {
 	}
 
 	start := time.Now()
-	results, err := cache.CacheChain.QueryStatus(*q)
+	results, err := cache.PostgresCache.QueryStatus(*q)
 	if err != nil {
 		errorResonse(w, err, http.StatusInternalServerError)
 		return
@@ -75,7 +75,7 @@ func CheckSummary(w http.ResponseWriter, req *http.Request) {
 	}
 
 	start := time.Now()
-	results, err := cache.CacheChain.Query(*q)
+	results, err := cache.PostgresCache.Query(*q)
 	if err != nil {
 		errorResonse(w, err, http.StatusInternalServerError)
 		return
