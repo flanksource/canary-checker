@@ -5,20 +5,7 @@ metadata:
 spec:
   interval: 30
   awsConfigRule:
-    - description: Fetch all non compliant config rules
-      display:
-        template: "{{ .results }}"
-      awsConnection:
-        accessKeyID:
-          valueFrom:
-            secretKeyRef:
-              name: aws-credentials
-              key: AWS_ACCESS_KEY_ID
-        secretKey:
-          valueFrom:
-            secretKeyRef:
-              name: aws-credentials
-              key: AWS_SECRET_ACCESS_KEY
-        region: af-south-1
+    - description: Test config rules
+      name: non compliant rules
       complianceTypes:
-       - NON_COMPLIANT
+        - NON_COMPLIANT
