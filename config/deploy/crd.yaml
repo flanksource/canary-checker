@@ -187,6 +187,7 @@ spec:
                             type: string
                         type: object
                     required:
+                      - name
                       - query
                     type: object
                   type: array
@@ -295,6 +296,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      ignoreRules:
+                        description: List of rules which would be omitted from the fetch result
+                        items:
+                          type: string
+                        type: array
                       name:
                         description: Name of the check
                         type: string
@@ -325,6 +331,8 @@ spec:
                           template:
                             type: string
                         type: object
+                    required:
+                      - name
                     type: object
                   type: array
                 cloudwatch:
@@ -462,6 +470,8 @@ spec:
                       usePathStyle:
                         description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                         type: boolean
+                    required:
+                      - name
                     type: object
                   type: array
                 containerd:
@@ -555,6 +565,7 @@ spec:
                         type: string
                     required:
                       - image
+                      - name
                     type: object
                   type: array
                 containerdPush:
@@ -577,6 +588,7 @@ spec:
                         type: string
                     required:
                       - image
+                      - name
                     type: object
                   type: array
                 dns:
@@ -609,6 +621,8 @@ spec:
                         type: integer
                       timeout:
                         type: integer
+                    required:
+                      - name
                     type: object
                   type: array
                 docker:
@@ -702,6 +716,7 @@ spec:
                         type: string
                     required:
                       - image
+                      - name
                     type: object
                   type: array
                 dockerPush:
@@ -790,6 +805,7 @@ spec:
                         type: string
                     required:
                       - image
+                      - name
                     type: object
                   type: array
                 ec2:
@@ -902,6 +918,8 @@ spec:
                         type: string
                       waitTime:
                         type: integer
+                    required:
+                      - name
                     type: object
                   type: array
                 env:
@@ -1003,6 +1021,7 @@ spec:
                             type: string
                         type: object
                     required:
+                      - name
                       - script
                     type: object
                   type: array
@@ -1293,6 +1312,7 @@ spec:
                             type: string
                         type: object
                     required:
+                      - name
                       - path
                     type: object
                   type: array
@@ -1377,6 +1397,7 @@ spec:
                             type: string
                         type: object
                     required:
+                      - name
                       - query
                     type: object
                   type: array
@@ -1468,6 +1489,8 @@ spec:
                         type: string
                       project:
                         type: string
+                    required:
+                      - name
                     type: object
                   type: array
                 http:
@@ -1664,6 +1687,8 @@ spec:
                           template:
                             type: string
                         type: object
+                    required:
+                      - name
                     type: object
                   type: array
                 icmp:
@@ -1688,6 +1713,8 @@ spec:
                       thresholdMillis:
                         format: int64
                         type: integer
+                    required:
+                      - name
                     type: object
                   type: array
                 icon:
@@ -1763,6 +1790,7 @@ spec:
                         type: array
                     required:
                       - jmx
+                      - name
                     type: object
                   type: array
                 junit:
@@ -5553,6 +5581,7 @@ spec:
                             type: string
                         type: object
                     required:
+                      - name
                       - spec
                       - testResults
                     type: object
@@ -5626,6 +5655,7 @@ spec:
                         type: object
                     required:
                       - kind
+                      - name
                     type: object
                   type: array
                 ldap:
@@ -5722,6 +5752,7 @@ spec:
                       - auth
                       - bindDN
                       - host
+                      - name
                     type: object
                   type: array
                 mongodb:
@@ -5810,6 +5841,7 @@ spec:
                         type: string
                     required:
                       - connection
+                      - name
                     type: object
                   type: array
                 mssql:
@@ -5936,6 +5968,7 @@ spec:
                         type: object
                     required:
                       - connection
+                      - name
                     type: object
                   type: array
                 mysql:
@@ -6062,6 +6095,7 @@ spec:
                         type: object
                     required:
                       - connection
+                      - name
                     type: object
                   type: array
                 namespace:
@@ -6130,6 +6164,7 @@ spec:
                         format: int64
                         type: integer
                     required:
+                      - name
                       - podSpec
                     type: object
                   type: array
@@ -6189,6 +6224,8 @@ spec:
                         type: integer
                       spec:
                         type: string
+                    required:
+                      - name
                     type: object
                   type: array
                 postgres:
@@ -6315,6 +6352,7 @@ spec:
                         type: object
                     required:
                       - connection
+                      - name
                     type: object
                   type: array
                 prometheus:
@@ -6370,6 +6408,7 @@ spec:
                         type: object
                     required:
                       - host
+                      - name
                       - query
                     type: object
                   type: array
@@ -6462,6 +6501,7 @@ spec:
                     required:
                       - addr
                       - db
+                      - name
                     type: object
                   type: array
                 restic:
@@ -6589,6 +6629,7 @@ spec:
                         type: object
                     required:
                       - maxAge
+                      - name
                       - password
                       - repository
                     type: object
@@ -6625,6 +6666,8 @@ spec:
                       skipTLSVerify:
                         description: Skip TLS verify when connecting to s3
                         type: boolean
+                    required:
+                      - name
                     type: object
                   type: array
                 schedule:
@@ -6649,6 +6692,8 @@ spec:
                       thresholdMillis:
                         format: int64
                         type: integer
+                    required:
+                      - name
                     type: object
                   type: array
               type: object

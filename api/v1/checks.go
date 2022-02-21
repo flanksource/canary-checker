@@ -708,6 +708,8 @@ func (c AwsConfigCheck) GetEndpoint() string {
 type AwsConfigRuleCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	// List of rules which would be omitted from the fetch result
+	IgnoreRules []string `yaml:"ignoreRules,omitempty" json:"ignoreRules,omitempty"`
 	// Specify one or more Config rule names to filter the results by rule.
 	Rules []string `yaml:"rules,omitempty" json:"rules,omitempty"`
 	// Filters the results by compliance. The allowed values are INSUFFICIENT_DATA, NON_COMPLIANT, NOT_APPLICABLE, COMPLIANT

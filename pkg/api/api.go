@@ -34,11 +34,6 @@ func About(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprint(w, string(data))
 }
 
-func Dump(w http.ResponseWriter, req *http.Request) {
-	data, _ := json.Marshal(cache.PostgresCache)
-	fmt.Fprint(w, string(data))
-}
-
 func CheckDetails(w http.ResponseWriter, req *http.Request) {
 	q, err := cache.ParseQuery(req)
 	if err != nil {

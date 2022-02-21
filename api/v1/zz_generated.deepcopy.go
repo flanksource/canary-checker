@@ -126,6 +126,11 @@ func (in *AwsConfigRuleCheck) DeepCopyInto(out *AwsConfigRuleCheck) {
 	*out = *in
 	out.Description = in.Description
 	out.Templatable = in.Templatable
+	if in.IgnoreRules != nil {
+		in, out := &in.IgnoreRules, &out.IgnoreRules
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Rules != nil {
 		in, out := &in.Rules, &out.Rules
 		*out = make([]string, len(*in))

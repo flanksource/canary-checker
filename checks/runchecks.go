@@ -84,11 +84,13 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 
 	switch v := r.Check.(type) {
 	case v1.DisplayTemplate:
-		message, err := template(ctx.New(r.Data), v.GetDisplayTemplate())
-		if err != nil {
-			r.ErrorMessage(err)
-		} else {
-			r.ResultMessage(message)
+		if !v.GetDisplayTemplate().IsEmpty() {
+			message, err := template(ctx.New(r.Data), v.GetDisplayTemplate())
+			if err != nil {
+				r.ErrorMessage(err)
+			} else {
+				r.ResultMessage(message)
+			}
 		}
 	}
 

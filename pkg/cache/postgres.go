@@ -92,7 +92,7 @@ func (c *postgresCache) InsertCheck(check pkg.Check) {
 		check.Interval,
 		check.Key,
 		string(jsonLabels),
-		check.Name,
+		check.GetName(),
 		check.Namespace,
 		check.Owner,
 		string(jsonRunnerLabels),

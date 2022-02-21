@@ -122,7 +122,6 @@ func serve() {
 
 	nethttp.HandleFunc("/", stripQuery(nethttp.FileServer(staticRoot).ServeHTTP))
 	nethttp.HandleFunc("/about", simpleCors(api.About, allowedCors))
-	nethttp.HandleFunc("/dump", simpleCors(api.Dump, allowedCors))
 	nethttp.HandleFunc("/api", simpleCors(api.CheckSummary, allowedCors))
 	nethttp.HandleFunc("/api/graph", simpleCors(api.CheckDetails, allowedCors))
 	nethttp.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))
