@@ -38,34 +38,34 @@ func (c *IcmpChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *IcmpChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *IcmpChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.ICMP {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
 
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
-func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.ICMPCheck)
 	endpoint := check.Endpoint
-
+	var results pkg.Results
 	result := pkg.Success(check, ctx.Canary)
-
+	results = append(results, result)
 	ips, err := dns.Lookup("A", endpoint)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 
 	for _, urlObj := range ips {
 		pingerStats, err := c.checkICMP(urlObj, check.PacketCount)
 		if err != nil {
-			return result.ErrorMessage(err)
+			return results.ErrorMessage(err)
 		}
 		if pingerStats.PacketsSent == 0 {
-			return result.Failf("Failed to check icmp, no packets sent")
+			return results.Failf("Failed to check icmp, no packets sent")
 		}
 		latency := pingerStats.AvgRtt.Milliseconds()
 		if latency == 0 && pingerStats.AvgRtt.Microseconds() > 0 {
@@ -76,16 +76,16 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 		loss := pingerStats.PacketLoss
 
 		if check.ThresholdMillis < latency {
-			return result.Failf("timeout after %d ", latency)
+			return results.Failf("timeout after %d ", latency)
 		}
 		if check.PacketLossThreshold < int64(loss*100) {
-			return result.Failf("%s packet loss of %0.0f%% > than threshold of %d%%", urlObj.To4(), loss, check.PacketLossThreshold)
+			return results.Failf("%s packet loss of %0.0f%% > than threshold of %d%%", urlObj.To4(), loss, check.PacketLossThreshold)
 		}
 
 		packetLoss.WithLabelValues(endpoint, ips[0].String()).Set(loss)
-		return result //nolint
+		return results //nolint
 	}
-	return result.Failf("no IP found for %s", endpoint)
+	return results.Failf("no IP found for %s", endpoint)
 }
 
 func (c *IcmpChecker) checkICMP(ip net.IP, packetCount int) (*ping.Statistics, error) {

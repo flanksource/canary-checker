@@ -50,10 +50,10 @@ type S3Checker struct{}
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *S3Checker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *S3Checker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.S3 {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
@@ -63,10 +63,13 @@ func (c *S3Checker) Type() string {
 	return "s3"
 }
 
-func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.S3Check)
-	bucket := check.Bucket
+	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 
+	bucket := check.Bucket
 	cfg := aws.NewConfig().
 		WithRegion(bucket.Region).
 		WithEndpoint(bucket.Endpoint).
@@ -81,7 +84,7 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.C
 	}
 	ssn, err := session.NewSession(cfg)
 	if err != nil {
-		return Failf(check, "Failed to create S3 session for %s: %v", bucket.Name, err)
+		return results.Failf("Failed to create S3 session for %s: %v", bucket.Name, err)
 	}
 	client := s3.New(ssn)
 	yes := true
@@ -90,7 +93,7 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.C
 	listTimer := NewTimer()
 	_, err = client.ListObjects(&s3.ListObjectsInput{Bucket: &bucket.Name})
 	if err != nil {
-		return Failf(check, "Failed to list objects in bucket %s: %v", bucket.Name, err)
+		return results.Failf("Failed to list objects in bucket %s: %v", bucket.Name, err)
 	}
 	listHistogram.WithLabelValues(bucket.Endpoint, bucket.Name).Observe(listTimer.Elapsed())
 
@@ -102,28 +105,21 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.C
 		Body:   bytes.NewReader([]byte(data)),
 	})
 	if err != nil {
-		return Failf(check, "Failed to put object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err)
+		return results.Failf("Failed to put object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err)
 	}
 	updateHistogram.WithLabelValues(bucket.Endpoint, bucket.Name).Observe(updateTimer.Elapsed())
 
-	timer := NewTimer()
 	obj, err := client.GetObject(&s3.GetObjectInput{
 		Bucket: &bucket.Name,
 		Key:    &check.ObjectPath,
 	})
 
 	if err != nil {
-		return Failf(check, "Failed to get object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err)
+		return results.Failf("Failed to get object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err)
 	}
 	returnedData, _ := ioutil.ReadAll(obj.Body)
 	if string(returnedData) != data {
-		return Failf(check, "Get object doesn't match %s != %s", data, string(returnedData))
+		return results.Failf("Get object doesn't match %s != %s", data, string(returnedData))
 	}
-
-	return &pkg.CheckResult{
-		Check:    check,
-		Pass:     true,
-		Invalid:  false,
-		Duration: int64(timer.Elapsed()),
-	}
+	return results
 }

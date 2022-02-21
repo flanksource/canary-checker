@@ -22,31 +22,34 @@ func NewTCPChecker() *TCPChecker {
 }
 
 // Run executes tcp checks for the given config, returning results
-func (t *TCPChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (t *TCPChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, c := range ctx.Canary.Spec.TCP {
-		results = append(results, t.Check(ctx, c))
+		results = append(results, t.Check(ctx, c)...)
 	}
 	return results
 }
 
 // Check performs a single tcp check, returning a checkResult
-func (t *TCPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (t *TCPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	c := extConfig.(v1.TCPCheck)
+	result := pkg.Success(c, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	addr, port, err := extractAddrAndPort(c.Endpoint)
 	if err != nil {
-		return Failf(c, err.Error())
+		return results.ErrorMessage(err)
 	}
 
 	timeout := time.Millisecond * time.Duration(c.ThresholdMillis)
 	conn, err := net.DialTimeout("tcp", net.JoinHostPort(addr, port), timeout)
 	if err != nil {
-		return Failf(c, "Connection error: %s", err.Error())
+		return results.Failf("Connection error: %s", err)
 	}
 	if conn != nil {
 		defer conn.Close()
 	}
-	return Passf(c, "Successfully opened: %s", net.JoinHostPort(addr, port))
+	return results
 }
 
 func extractAddrAndPort(e string) (string, string, error) {

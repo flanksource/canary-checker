@@ -25,15 +25,15 @@ func (c *ExecChecker) Type() string {
 	return "exec"
 }
 
-func (c *ExecChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *ExecChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Exec {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
 
-func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.ExecCheck)
 	switch runtime.GOOS {
 	case "windows":
@@ -43,7 +43,7 @@ func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	}
 }
 
-func execPowershell(check v1.ExecCheck, ctx *context.Context) *pkg.CheckResult {
+func execPowershell(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	ps, err := osExec.LookPath("powershell.exe")
 	if err != nil {
@@ -54,13 +54,13 @@ func execPowershell(check v1.ExecCheck, ctx *context.Context) *pkg.CheckResult {
 	return runCmd(cmd, result)
 }
 
-func execBash(check v1.ExecCheck, ctx *context.Context) *pkg.CheckResult {
+func execBash(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	cmd := osExec.Command("bash", "-c", *check.Script)
 	return runCmd(cmd, result)
 }
 
-func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) *pkg.CheckResult {
+func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -71,5 +71,6 @@ func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) *pkg.CheckResult {
 		Stderr:   strings.TrimSpace(stderr.String()),
 		ExitCode: cmd.ProcessState.ExitCode(),
 	})
-	return result
+	results = append(results, result)
+	return results
 }

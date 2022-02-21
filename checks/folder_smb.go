@@ -91,23 +91,25 @@ func smbConnect(server string, share string, auth *v1.Authentication) (Filesyste
 	return smb, nil
 }
 
-func CheckSmb(ctx *context.Context, check v1.FolderCheck) *pkg.CheckResult {
+func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	namespace := ctx.Canary.Namespace
 	var server = strings.TrimPrefix(check.Path, "smb://")
 	server, sharename, path, err := getServerDetails(server)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 
 	auth, err := GetAuthValues(check.SMBConnection.Auth, ctx.Kommons, namespace)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 
 	session, err := smbConnect(server, sharename, auth)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 	if session != nil {
 		defer session.Close()
@@ -115,15 +117,15 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) *pkg.CheckResult {
 
 	folders, err := getSMBFolderCheck(session, path, check.Filter)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 
 	result.AddDetails(folders)
 
 	if test := folders.Test(check.FolderTest); test != "" {
-		return result.Failf(test)
+		return results.Failf(test)
 	}
-	return result
+	return results
 }
 
 func getServerDetails(serverPath string) (server, sharename, searchPath string, err error) {

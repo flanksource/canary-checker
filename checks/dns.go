@@ -22,10 +22,10 @@ func (c *DNSChecker) Type() string {
 	return "dns"
 }
 
-func (c *DNSChecker) Run(ctx *canaryContext.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *DNSChecker) Run(ctx *canaryContext.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.DNS {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
@@ -40,10 +40,11 @@ var resolvers = map[string]func(ctx context.Context, r *net.Resolver, check v1.D
 	"NS":    checkNS,
 }
 
-func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.DNSCheck)
 	result := pkg.Success(check, ctx.Canary)
-
+	var results pkg.Results
+	results = append(results, result)
 	timeout := check.Timeout
 	if timeout == 0 {
 		timeout = 10
@@ -53,7 +54,7 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 	if check.Server != "" {
 		dialer, err := getDialer(check, timeout)
 		if err != nil {
-			return Failf(check, "Failed to get dialer, %v", err)
+			return results.Failf("Failed to get dialer, %v", err)
 		}
 		r = net.Resolver{
 			PreferGo: true,
@@ -70,7 +71,7 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 		queryType = "A"
 	}
 	if fn, ok := resolvers[strings.ToUpper(queryType)]; !ok {
-		return result.Failf("unknown query type: %s", queryType)
+		return results.Failf("unknown query type: %s", queryType)
 	} else {
 		go func() {
 			pass, message, err := fn(ctx, &r, check)
@@ -92,16 +93,16 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 			res.Duration = 1
 		}
 		if check.ThresholdMillis > 0 && res.Duration > int64(check.ThresholdMillis) {
-			return result.Failf("%dms > %dms", res.Duration, check.ThresholdMillis)
+			return results.Failf("%dms > %dms", res.Duration, check.ThresholdMillis)
 		}
 		if res.Duration == 0 {
 			// round up submillisecond response times to 1ms
 			res.Duration = 1
 		}
-		return res
+		return results
 	case <-time.After(time.Second * time.Duration(timeout)):
 		result.Duration = result.GetDuration()
-		return result.Failf(fmt.Sprintf("timed out after %d seconds", timeout))
+		return results.Failf(fmt.Sprintf("timed out after %d seconds", timeout))
 	}
 }
 

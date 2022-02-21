@@ -52,10 +52,10 @@ func init() {
 type DockerPullChecker struct {
 }
 
-func (c *DockerPullChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *DockerPullChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.DockerPull {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
@@ -82,14 +82,16 @@ func getDigestFromOutput(out io.ReadCloser) string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *DockerPullChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *DockerPullChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.DockerPullCheck)
 	namespace := ctx.Canary.Namespace
-	var result = pkg.Success(check, ctx.Canary)
+	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	var authStr string
 	auth, err := GetAuthValues(check.Auth, ctx.Kommons, namespace)
 	if err != nil {
-		return Failf(check, "failed to fetch auth details: %v", err)
+		return results.Failf("failed to fetch auth details: %v", err)
 	}
 	if auth != nil {
 		authConfig := types.AuthConfig{
@@ -101,17 +103,17 @@ func (c *DockerPullChecker) Check(ctx *context.Context, extConfig external.Check
 	}
 	out, err := dockerClient.ImagePull(ctx, check.Image, types.ImagePullOptions{RegistryAuth: authStr})
 	if err != nil {
-		return result.Failf("Failed to pull image: %s", err)
+		return results.Failf("Failed to pull image: %s", err)
 	}
 	digest := getDigestFromOutput(out)
 	if digest != check.ExpectedDigest {
-		return result.Failf("digests do not match %s != %s", digest, check.ExpectedDigest)
+		return results.Failf("digests do not match %s != %s", digest, check.ExpectedDigest)
 	}
 
 	inspect, _, _ := dockerClient.ImageInspectWithRaw(ctx, check.Image)
 	if check.ExpectedSize > 0 && inspect.Size != check.ExpectedSize {
-		return result.Failf("size does not match: %d != %d", inspect.Size, check.ExpectedSize)
+		return results.Failf("size does not match: %d != %d", inspect.Size, check.ExpectedSize)
 	}
 
-	return result
+	return results
 }

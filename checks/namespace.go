@@ -47,9 +47,9 @@ func NewNamespaceChecker() *NamespaceChecker {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *NamespaceChecker) Run(ctx *context.Context) []*pkg.CheckResult {
+func (c *NamespaceChecker) Run(ctx *context.Context) pkg.Results {
 	var err error
-	var results []*pkg.CheckResult
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Namespace {
 		if c.k8s == nil {
 			c.k8s, err = ctx.Kommons.GetClientset()
@@ -58,7 +58,7 @@ func (c *NamespaceChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 				return []*pkg.CheckResult{pkg.Fail(conf, ctx.Canary).ErrorMessage(err)}
 			}
 		}
-		results = append(results, c.Check(c.ctx, conf))
+		results = append(results, c.Check(c.ctx, conf)...)
 	}
 	return results
 }
@@ -104,9 +104,11 @@ func (c *NamespaceChecker) getConditionTimes(ns *v1.Namespace, pod *v1.Pod) (tim
 	return times, nil
 }
 
-func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(canaryv1.NamespaceCheck)
-
+	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	if !c.lock.TryAcquire(1) {
 		logger.Tracef("Check already in progress, skipping")
 		return nil
@@ -117,7 +119,7 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 	logger.Debugf("Running namespace check %s", check.CheckName)
 	five := int64(5)
 	if _, err := c.k8s.CoreV1().Nodes().List(ctx, metav1.ListOptions{TimeoutSeconds: &five}); err != nil {
-		return unexpectedErrorf(check, err, "cannot connect to API server")
+		return results.Failf("cannot connect to API server: %v", err)
 	}
 
 	namespaceName := c.ng.NamespaceName(check.NamespaceNamePrefix)
@@ -131,7 +133,7 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 		},
 	}
 	if _, err := namespaces.Create(ctx, ns, metav1.CreateOptions{}); err != nil {
-		return unexpectedErrorf(check, err, "unable to create namespace")
+		return results.Failf("unable to create namespace: %v", err)
 	}
 	defer func() {
 		c.Cleanup(ns) // nolint: errcheck
@@ -139,20 +141,20 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 
 	pod, err := c.newPod(check, ns)
 	if err != nil {
-		return invalidErrorf(check, err, "invalid pod spec")
+		return results.Failf("invalid pod spec: %v", err)
 	}
 
 	pods := c.k8s.CoreV1().Pods(ns.Name)
 
 	if _, err := pods.Create(ctx, pod, metav1.CreateOptions{}); err != nil {
-		return unexpectedErrorf(check, err, "unable to create pod")
+		return results.Failf("unable to create pod: %v", err)
 	}
 	pod, _ = c.WaitForPod(ns.Name, pod.Name, time.Millisecond*time.Duration(check.ScheduleTimeout), v1.PodRunning)
 	created := pod.GetCreationTimestamp()
 
 	conditions, err := c.getConditionTimes(ns, pod)
 	if err != nil {
-		return unexpectedErrorf(check, err, "could not list conditions")
+		return results.Failf("could not list conditions: %v", err)
 	}
 
 	scheduled := diff(conditions, v1.PodInitialized, v1.PodScheduled)
@@ -163,7 +165,7 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 	logger.Tracef("%v", conditions)
 
 	if err := c.createServiceAndIngress(check, ns, pod); err != nil {
-		return unexpectedErrorf(check, err, "failed to create ingress")
+		return results.Failf("failed to create ingress and service: %v", err)
 	}
 
 	deadline := time.Now().Add(time.Duration(check.Deadline) * time.Millisecond)
@@ -173,47 +175,43 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 	deleteOk := true
 	deletion := NewTimer()
 	if err := pods.Delete(c.ctx, pod.Name, metav1.DeleteOptions{}); err != nil {
-		return unexpectedErrorf(check, err, "failed to delete pod")
+		return results.Failf("failed to delete pod: %v", err)
 	}
-
-	return &pkg.CheckResult{
-		Check:    check,
-		Pass:     ingressResult.Pass && deleteOk,
-		Duration: int64(startTimer.Elapsed()),
-		Message:  ingressResult.Message,
-		Metrics: []pkg.Metric{
-			{
-				Name:   "schedule_time",
-				Type:   metrics.HistogramType,
-				Labels: map[string]string{"namespaceCheck": check.CheckName},
-				Value:  float64(scheduled),
-			},
-			{
-				Name:   "creation_time",
-				Type:   metrics.HistogramType,
-				Labels: map[string]string{"namespaceCheck": check.CheckName},
-				Value:  float64(started),
-			},
-			{
-				Name:   "delete_time",
-				Type:   metrics.HistogramType,
-				Labels: map[string]string{"namespaceCheck": check.CheckName},
-				Value:  deletion.Elapsed(),
-			},
-			{
-				Name:   "ingress_time",
-				Type:   metrics.HistogramType,
-				Labels: map[string]string{"namespaceCheck": check.CheckName},
-				Value:  ingressTime,
-			},
-			{
-				Name:   "request_time",
-				Type:   metrics.HistogramType,
-				Labels: map[string]string{"namespaceCheck": check.CheckName},
-				Value:  requestTime,
-			},
+	result.Pass = ingressResult.Pass && deleteOk
+	result.Message = ingressResult.Message
+	result.Metrics = []pkg.Metric{
+		{
+			Name:   "schedule_time",
+			Type:   metrics.HistogramType,
+			Labels: map[string]string{"namespaceCheck": check.CheckName},
+			Value:  float64(scheduled),
+		},
+		{
+			Name:   "creation_time",
+			Type:   metrics.HistogramType,
+			Labels: map[string]string{"namespaceCheck": check.CheckName},
+			Value:  float64(started),
+		},
+		{
+			Name:   "delete_time",
+			Type:   metrics.HistogramType,
+			Labels: map[string]string{"namespaceCheck": check.CheckName},
+			Value:  deletion.Elapsed(),
+		},
+		{
+			Name:   "ingress_time",
+			Type:   metrics.HistogramType,
+			Labels: map[string]string{"namespaceCheck": check.CheckName},
+			Value:  ingressTime,
+		},
+		{
+			Name:   "request_time",
+			Type:   metrics.HistogramType,
+			Labels: map[string]string{"namespaceCheck": check.CheckName},
+			Value:  requestTime,
 		},
 	}
+	return results
 }
 
 func (c *NamespaceChecker) Cleanup(ns *v1.Namespace) error {

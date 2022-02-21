@@ -32,30 +32,32 @@ func (c *ResticChecker) Type() string {
 	return "restic"
 }
 
-func (c *ResticChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *ResticChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Restic {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
 
-func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	start := time.Now()
-	resticCheck := extConfig.(v1.ResticCheck)
-	envVars, err := c.getEnvVars(resticCheck, ctx.Canary.Namespace, ctx.Kommons)
+func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
+	check := extConfig.(v1.ResticCheck)
+	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
+	envVars, err := c.getEnvVars(check, ctx.Canary.Namespace, ctx.Kommons)
 	if err != nil {
-		return Failf(resticCheck, "error getting envVars %v", err)
+		return results.Failf("error getting envVars %v", err)
 	}
-	if resticCheck.CheckIntegrity {
-		if err := checkIntegrity(resticCheck.Repository, resticCheck.CaCert, envVars); err != nil {
-			return Failf(resticCheck, "integrity check failed %v", err)
+	if check.CheckIntegrity {
+		if err := checkIntegrity(check.Repository, check.CaCert, envVars); err != nil {
+			return results.Failf("integrity check failed %v", err)
 		}
 	}
-	if err := checkBackupFreshness(resticCheck.Repository, resticCheck.MaxAge, resticCheck.CaCert, envVars); err != nil {
-		return Failf(resticCheck, "backup freshness check failed: %v", err)
+	if err := checkBackupFreshness(check.Repository, check.MaxAge, check.CaCert, envVars); err != nil {
+		return results.Failf("backup freshness check failed: %v", err)
 	}
-	return Success(resticCheck, start)
+	return results
 }
 
 func checkIntegrity(repository, caCert string, envVars map[string]string) error {

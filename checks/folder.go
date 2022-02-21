@@ -48,18 +48,15 @@ func (c *FolderChecker) Type() string {
 	return "folder"
 }
 
-func (c *FolderChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *FolderChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Folder {
-		result := c.Check(ctx, conf)
-		if result != nil {
-			results = append(results, result)
-		}
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
 
-func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.FolderCheck)
 	path := strings.ToLower(check.Path)
 	switch {
@@ -74,18 +71,20 @@ func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) *p
 	}
 }
 
-func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) *pkg.CheckResult {
+func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	folders, err := getLocalFolderCheck(check.Path, check.Filter)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 	result.AddDetails(folders)
 
 	if test := folders.Test(check.FolderTest); test != "" {
-		return result.Failf(test)
+		return results.Failf(test)
 	}
-	return result
+	return results
 }
 
 func getLocalFolderCheck(path string, filter v1.FolderFilter) (*FolderCheck, error) {

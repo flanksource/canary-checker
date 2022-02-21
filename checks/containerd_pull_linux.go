@@ -8,7 +8,6 @@ import (
 
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/containerd/containerd"
 	"github.com/containerd/containerd/namespaces"
@@ -31,10 +30,10 @@ func init() {
 
 type ContainerdPullChecker struct{}
 
-func (c *ContainerdPullChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *ContainerdPullChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.ContainerdPull {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
@@ -46,39 +45,35 @@ func (c *ContainerdPullChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *ContainerdPullChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *ContainerdPullChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.ContainerdPullCheck)
-	start := time.Now()
-
+	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	containerdClient, err := containerd.New(containerdSocket)
 	if err != nil {
-		return Failf(check, err.Error())
+		return results.ErrorMessage(err)
 	}
 
 	containerdCtx := namespaces.WithNamespace(ctx, "default")
 
 	image, err := containerdClient.Pull(containerdCtx, check.Image, containerd.WithPullUnpack)
-	elapsed := time.Since(start)
 	if err != nil {
-		return Failf(check, "Failed to pull image: %s", err)
+		return results.Failf("Failed to pull image: %s", err)
 	}
 
 	digest := fmt.Sprintf("sha256:%s", image.Target().Digest.Hex())
 	if digest != check.ExpectedDigest {
-		return Failf(check, "digests do not match %s != %s", digest, check.ExpectedDigest)
+		return results.Failf("digests do not match %s != %s", digest, check.ExpectedDigest)
 	}
 
 	size, err := image.Size(containerdCtx)
 	if err != nil {
-		return Failf(check, "Failed to get image size: %s", err)
+		return results.Failf("Failed to get image size: %s", err)
 	}
 	if check.ExpectedSize > 0 && size != check.ExpectedSize {
-		return Failf(check, "size does not match: %d != %d", size, check.ExpectedSize)
+		return results.Failf("size does not match: %d != %d", size, check.ExpectedSize)
 	}
 
-	return &pkg.CheckResult{
-		Check:    check,
-		Pass:     true,
-		Duration: elapsed.Milliseconds(),
-	}
+	return results
 }
