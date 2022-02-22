@@ -16,13 +16,10 @@ type AwsConfigChecker struct {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *AwsConfigChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *AwsConfigChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.AwsConfig {
-		result := c.Check(ctx, conf)
-		if result != nil {
-			results = append(results, result)
-		}
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
@@ -32,12 +29,17 @@ func (c *AwsConfigChecker) Type() string {
 	return "awsconfig"
 }
 
-func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.AwsConfigCheck)
 	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
+	if check.AWSConnection == nil {
+		check.AWSConnection = &v1.AWSConnection{}
+	}
 	cfg, err := awsUtil.NewSession(ctx, *check.AWSConnection)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 	client := configservice.NewFromConfig(*cfg)
 	if check.AggregatorName != nil {
@@ -46,7 +48,7 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 			Expression:                  &check.Query,
 		})
 		if err != nil {
-			return result.ErrorMessage(err)
+			return results.ErrorMessage(err)
 		}
 		result.AddDetails(output.Results)
 	} else {
@@ -54,9 +56,9 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 			Expression: &check.Query,
 		})
 		if err != nil {
-			return result.ErrorMessage(err)
+			return results.ErrorMessage(err)
 		}
 		result.AddDetails(output.Results)
 	}
-	return result
+	return results
 }

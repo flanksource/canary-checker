@@ -42,13 +42,10 @@ func (c *JunitChecker) Type() string {
 	return "junit"
 }
 
-func (c *JunitChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *JunitChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Junit {
-		result := c.Check(ctx, conf)
-		if result != nil {
-			results = append(results, result)
-		}
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
@@ -131,18 +128,18 @@ func getLogs(ctx *context.Context, pod corev1.Pod) string {
 	return message
 }
 
-func podExecf(ctx *context.Context, pod corev1.Pod, result *pkg.CheckResult, cmd string, args ...interface{}) (string, bool) {
+func podExecf(ctx *context.Context, pod corev1.Pod, results pkg.Results, cmd string, args ...interface{}) (string, bool) {
 	_cmd := fmt.Sprintf(cmd, args...)
 	stdout, stderr, err := ctx.Kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", _cmd)
 	if stderr != "" || err != nil {
-		podFail(ctx, pod, result.Failf("error running %s: %v %v %v", _cmd, stdout, stderr, err))
+		podFail(ctx, pod, results.Failf("error running %s: %v %v %v", _cmd, stdout, stderr, err))
 		return "", false
 	}
 	return strings.TrimSpace(stdout), true
 }
 
-func podFail(ctx *context.Context, pod corev1.Pod, result *pkg.CheckResult) *pkg.CheckResult {
-	return result.ErrorMessage(fmt.Errorf("%s is %s\n %v", pod.Name, pod.Status.Phase, getLogs(ctx, pod)))
+func podFail(ctx *context.Context, pod corev1.Pod, results pkg.Results) pkg.Results {
+	return results.ErrorMessage(fmt.Errorf("%s is %s\n %v", pod.Name, pod.Status.Phase, getLogs(ctx, pod)))
 }
 
 func cleanupExistingPods(ctx *context.Context, k8s kubernetes.Interface, selector string) (bool, error) {
@@ -174,27 +171,28 @@ func cleanupExistingPods(ctx *context.Context, k8s kubernetes.Interface, selecto
 	return skip, err
 }
 
-func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	junitCheck := extConfig.(v1.JunitCheck)
-
-	result := pkg.Success(junitCheck, ctx.Canary)
+func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
+	check := extConfig.(v1.JunitCheck)
+	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	k8s, err := ctx.Kommons.GetClientset()
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 
-	timeout := time.Duration(junitCheck.GetTimeout()) * time.Minute
-	pod := newPod(ctx, junitCheck)
+	timeout := time.Duration(check.GetTimeout()) * time.Minute
+	pod := newPod(ctx, check)
 	pods := k8s.CoreV1().Pods(ctx.Namespace)
 
 	if skip, err := cleanupExistingPods(ctx, k8s, fmt.Sprintf("%s=%s", junitCheckSelector, pod.Labels[junitCheckSelector])); err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	} else if skip {
 		return nil
 	}
 
 	if err := ctx.Kommons.Apply(ctx.Namespace, pod); err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 
 	defer deletePod(ctx, pod)
@@ -214,49 +212,49 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) *pk
 
 	podObj, err := pods.Get(ctx, pod.Name, metav1.GetOptions{})
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 
 	if !kommons.IsPodHealthy(*podObj) {
-		return podFail(ctx, *pod, result)
+		return podFail(ctx, *pod, results)
 	}
 
 	var suites JunitTestSuites
-	exitCode, _ := podExecf(ctx, *pod, result, "cat %v/exit-code", mountPath)
+	exitCode, _ := podExecf(ctx, *pod, results, "cat %v/exit-code", mountPath)
 
 	if exitCode != "" && exitCode != "0" {
 		// we don't exit early as junit files may have been generated in addition to a failing exit code
 		result.Failf("process exited with: %s:\n%s", exitCode, getLogs(ctx, *pod))
 	}
-	files, ok := podExecf(ctx, *pod, result, fmt.Sprintf("find %v -name \\*.xml -type f", mountPath))
+	files, ok := podExecf(ctx, *pod, results, fmt.Sprintf("find %v -name \\*.xml -type f", mountPath))
 	if !ok {
-		return result
+		return results
 	}
 	files = strings.TrimSpace(files)
 	if files == "" && exitCode != "" && exitCode != "0" {
-		return result.Failf("No junit files found")
+		return results.Failf("No junit files found")
 	}
 	for _, file := range strings.Split(files, "\n") {
-		output, ok := podExecf(ctx, *pod, result, "cat %v", file)
+		output, ok := podExecf(ctx, *pod, results, "cat %v", file)
 		if !ok {
-			return result
+			return results
 		}
 		if suites, err = suites.Ingest(output); err != nil {
-			return result.ErrorMessage(err)
+			return results.ErrorMessage(err)
 		}
 	}
 
 	// signal container to exit
-	_, _ = podExecf(ctx, *pod, result, "touch %s/done", mountPath)
+	_, _ = podExecf(ctx, *pod, results, "touch %s/done", mountPath)
 	result.AddDetails(suites)
 	result.Duration = int64(suites.Duration * 1000)
-	if junitCheck.Test.IsEmpty() && suites.Failed > 0 {
-		if junitCheck.Display.IsEmpty() {
-			return result.Failf(suites.Totals.String())
+	if check.Test.IsEmpty() && suites.Failed > 0 {
+		if check.Display.IsEmpty() {
+			return results.Failf(suites.Totals.String())
 		}
-		return result.Failf("")
+		return results.Failf("")
 	}
-	return result
+	return results
 }
 
 func getJunitCheckLabel(label, name, namespace string) string {

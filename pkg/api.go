@@ -266,13 +266,17 @@ func (c Checks) Find(key string) *Check {
 	return nil
 }
 
-func (c Checks) Merge(from Checks) Checks {
+func (c Checks) Merge(from Checks, statusCount int) Checks {
 	for _, check := range from {
 		match := c.Find(check.Key)
 		if match == nil {
 			c = append(c, check)
 		} else {
 			match.Statuses = append(match.Statuses, check.Statuses...)
+			if len(match.Statuses) > statusCount {
+				match.Statuses = match.Statuses[0:statusCount]
+				continue
+			}
 		}
 	}
 	return c

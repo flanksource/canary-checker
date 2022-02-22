@@ -65,8 +65,8 @@ func NewPodChecker() *PodChecker {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *PodChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *PodChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	if len(ctx.Canary.Spec.Pod) > 0 {
 		if c.k8s == nil {
 			k8sClient, err := pkg.NewK8sClient()
@@ -77,10 +77,7 @@ func (c *PodChecker) Run(ctx *context.Context) []*pkg.CheckResult {
 			c.k8s = k8sClient
 		}
 		for _, conf := range ctx.Canary.Spec.Pod {
-			result := c.Check(ctx, conf)
-			if result != nil {
-				results = append(results, result)
-			}
+			results = append(results, c.Check(ctx, conf)...)
 		}
 	}
 	return results
@@ -139,8 +136,9 @@ func diff(times map[v1.PodConditionType]metav1.Time, c1 v1.PodConditionType, c2 
 	return -1
 }
 
-func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	podCheck := extConfig.(canaryv1.PodCheck)
+
 	if !c.lock.TryAcquire(1) {
 		logger.Tracef("Check already in progress, skipping")
 		return nil
@@ -152,11 +150,13 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	}
 
 	result := pkg.Success(podCheck, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	startTimer := NewTimer()
 	pods := c.k8s.CoreV1().Pods(podCheck.Namespace)
 
 	if skip, err := cleanupExistingPods(ctx, c.k8s, c.podCheckSelector(podCheck)); err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	} else if skip {
 		return nil
 	}
@@ -167,29 +167,29 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	five := int64(5)
 	nodes, err := c.k8s.CoreV1().Nodes().List(ctx, metav1.ListOptions{TimeoutSeconds: &five})
 	if err != nil {
-		return unexpectedErrorf(podCheck, err, "cannot connect to API server")
+		return results.Failf("cannot connect to API server: %v", err)
 	}
 	nextNode, newIndex := c.nextNode(nodes, c.latestNodeIndex)
 	c.latestNodeIndex = newIndex
 
 	pod, err := c.newPod(podCheck, nextNode)
 	if err != nil {
-		return invalidErrorf(podCheck, err, "invalid pod spec")
+		return results.Failf("invalid pod spec: %v", err)
 	}
 
 	if err := ctx.Kommons.Apply(podCheck.Namespace, pod); err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 
 	pod, err = c.WaitForPod(podCheck.Namespace, pod.Name, time.Millisecond*time.Duration(podCheck.ScheduleTimeout), v1.PodRunning)
 	if err != nil {
-		return unexpectedErrorf(podCheck, err, "unable to fetch pod details")
+		return results.Failf("unable to fetch pod details: %v", err)
 	}
 	created := pod.GetCreationTimestamp()
 
 	conditions, err := c.getConditionTimes(podCheck, pod)
 	if err != nil {
-		return unexpectedErrorf(podCheck, err, "could not list conditions")
+		return results.Failf("could not list conditions: %v", err)
 	}
 
 	scheduled := diff(conditions, v1.PodInitialized, v1.PodScheduled)
@@ -199,7 +199,7 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	logger.Debugf("%s created=%s, scheduled=%d, started=%d, running=%d wall=%s nodeName=%s", pod.Name, created, scheduled, started, running, startTimer, nextNode)
 
 	if err := c.createServiceAndIngress(podCheck, pod); err != nil {
-		return unexpectedErrorf(podCheck, err, "failed to create ingress")
+		return results.Failf("failed to create ingress: %v", err)
 	}
 
 	deadline := time.Now().Add(time.Duration(podCheck.Deadline) * time.Millisecond)
@@ -219,47 +219,43 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 
 	deletion := NewTimer()
 	if err := pods.Delete(ctx, pod.Name, metav1.DeleteOptions{}); err != nil {
-		return unexpectedErrorf(podCheck, err, "failed to delete pod")
+		return results.Failf("failed to delete pod: %v", err)
 	}
+	result.ResultMessage(message)
 
-	return &pkg.CheckResult{
-		Check:    podCheck,
-		Pass:     ingressResult.Pass,
-		Duration: int64(startTimer.Elapsed()),
-		Message:  message,
-		Metrics: []pkg.Metric{
-			{
-				Name:   "schedule_time",
-				Type:   metrics.HistogramType,
-				Labels: map[string]string{"podCheck": podCheck.Name},
-				Value:  float64(scheduled),
-			},
-			{
-				Name:   "creation_time",
-				Type:   metrics.HistogramType,
-				Labels: map[string]string{"podCheck": podCheck.Name},
-				Value:  float64(started),
-			},
-			{
-				Name:   "delete_time",
-				Type:   metrics.HistogramType,
-				Labels: map[string]string{"podCheck": podCheck.Name},
-				Value:  deletion.Elapsed(),
-			},
-			{
-				Name:   "ingress_time",
-				Type:   metrics.HistogramType,
-				Labels: map[string]string{"podCheck": podCheck.Name},
-				Value:  ingressTime,
-			},
-			{
-				Name:   "request_time",
-				Type:   metrics.HistogramType,
-				Labels: map[string]string{"podCheck": podCheck.Name},
-				Value:  requestTime,
-			},
+	result.Metrics = []pkg.Metric{
+		{
+			Name:   "schedule_time",
+			Type:   metrics.HistogramType,
+			Labels: map[string]string{"podCheck": podCheck.Name},
+			Value:  float64(scheduled),
+		},
+		{
+			Name:   "creation_time",
+			Type:   metrics.HistogramType,
+			Labels: map[string]string{"podCheck": podCheck.Name},
+			Value:  float64(started),
+		},
+		{
+			Name:   "delete_time",
+			Type:   metrics.HistogramType,
+			Labels: map[string]string{"podCheck": podCheck.Name},
+			Value:  deletion.Elapsed(),
+		},
+		{
+			Name:   "ingress_time",
+			Type:   metrics.HistogramType,
+			Labels: map[string]string{"podCheck": podCheck.Name},
+			Value:  ingressTime,
+		},
+		{
+			Name:   "request_time",
+			Type:   metrics.HistogramType,
+			Labels: map[string]string{"podCheck": podCheck.Name},
+			Value:  requestTime,
 		},
 	}
+	return results
 }
 
 func (c *PodChecker) Cleanup(ctx *context.Context, podCheck canaryv1.PodCheck) {

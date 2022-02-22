@@ -19,10 +19,10 @@ type CloudWatchChecker struct {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *CloudWatchChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *CloudWatchChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.CloudWatch {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
@@ -32,12 +32,14 @@ func (c *CloudWatchChecker) Type() string {
 	return "cloudwatch"
 }
 
-func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.CloudWatchCheck)
 	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	cfg, err := awsUtil.NewSession(ctx, check.AWSConnection)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 	client := cloudwatch.NewFromConfig(*cfg)
 	maxRecords := int32(100)
@@ -49,7 +51,7 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 		MaxRecords:      &maxRecords,
 	})
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 	result.AddDetails(alarms)
 	firing := []string{}
@@ -64,7 +66,7 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 		}
 	}
 	if len(firing) > 0 {
-		return result.Failf(strings.Join(firing, ","))
+		return results.Failf(strings.Join(firing, ","))
 	}
-	return result
+	return results
 }

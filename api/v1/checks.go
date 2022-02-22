@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	awsconfigruletypes "github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/kommons"
 	v1 "k8s.io/api/core/v1"
@@ -628,9 +629,9 @@ func (c KubernetesCheck) CheckReady() bool {
 }
 
 type AWSConnection struct {
-	AccessKey kommons.EnvVar `yaml:"accessKey" json:"accessKey"`
-	SecretKey kommons.EnvVar `yaml:"secretKey" json:"secretKey"`
-	Region    string         `yaml:"region,omitempty" json:"region"`
+	AccessKey kommons.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
+	SecretKey kommons.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
+	Region    string         `yaml:"region,omitempty" json:"region,omitempty"`
 	Endpoint  string         `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
 	// Skip TLS verify when connecting to aws
 	SkipTLSVerify bool `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
@@ -702,6 +703,26 @@ func (c AwsConfigCheck) GetType() string {
 
 func (c AwsConfigCheck) GetEndpoint() string {
 	return c.Query
+}
+
+type AwsConfigRuleCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	// List of rules which would be omitted from the fetch result
+	IgnoreRules []string `yaml:"ignoreRules,omitempty" json:"ignoreRules,omitempty"`
+	// Specify one or more Config rule names to filter the results by rule.
+	Rules []string `yaml:"rules,omitempty" json:"rules,omitempty"`
+	// Filters the results by compliance. The allowed values are INSUFFICIENT_DATA, NON_COMPLIANT, NOT_APPLICABLE, COMPLIANT
+	ComplianceTypes []awsconfigruletypes.ComplianceType `yaml:"complianceTypes,omitempty" json:"complianceTypes,omitempty"`
+	*AWSConnection  `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
+}
+
+func (c AwsConfigRuleCheck) GetType() string {
+	return "awsconfigrule"
+}
+
+func (c AwsConfigRuleCheck) GetEndpoint() string {
+	return c.Description.Description
 }
 
 /*
@@ -932,10 +953,17 @@ type Exec struct {
 
 /*
 AwsConfig check runs the given query against the AWS resources.
-[include:aws/ec2_pass.yaml]
+[include:aws/aws_config_pass.yaml]
 */
 type AwsConfig struct {
 	AwsConfigCheck `yaml:",inline" json:",inline"`
+}
+
+/*
+[include:aws/aws_config_rule_pass.yaml]
+*/
+type AwsConfigRule struct {
+	AwsConfigRuleCheck `yaml:",inline" json:",inline"`
 }
 
 /*
@@ -994,4 +1022,5 @@ var AllChecks = []external.Check{
 	FolderCheck{},
 	ExecCheck{},
 	AwsConfigCheck{},
+	AwsConfigRuleCheck{},
 }

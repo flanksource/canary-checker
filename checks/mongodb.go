@@ -21,25 +21,24 @@ func (c *MongoDBChecker) Type() string {
 	return "mongodb"
 }
 
-func (c *MongoDBChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *MongoDBChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.MongoDB {
-		result := c.Check(ctx, conf)
-		if result != nil {
-			results = append(results, result)
-		}
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
 
-func (c *MongoDBChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *MongoDBChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.MongoDBCheck)
 	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	var err error
 
 	connection, err := GetConnection(ctx, &check.Connection, ctx.Namespace)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 
 	opts := options.Client().
@@ -51,12 +50,12 @@ func (c *MongoDBChecker) Check(ctx *context.Context, extConfig external.Check) *
 	defer cancel()
 	client, err := mongo.Connect(_ctx, opts)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 	defer client.Disconnect(ctx) //nolint: errcheck
 	err = client.Ping(_ctx, readpref.Primary())
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
-	return result
+	return results
 }

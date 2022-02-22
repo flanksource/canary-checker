@@ -88,10 +88,10 @@ type EC2Checker struct {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *EC2Checker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *EC2Checker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, ec2 := range ctx.Canary.Spec.EC2 {
-		results = append(results, c.Check(ctx, ec2))
+		results = append(results, c.Check(ctx, ec2)...)
 	}
 
 	return results
@@ -313,45 +313,48 @@ func (cfg *AWS) Describe(instanceID string, timeout time.Duration) (internalIP s
 	return
 }
 
-func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.EC2Check)
+	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	prometheusCount.WithLabelValues(check.Region).Inc()
 	namespace := ctx.Canary.Namespace
 
 	kommonsClient := ctx.Kommons
 	if kommonsClient == nil {
-		return Error(check, fmt.Errorf("commons client not configured for ec2 checker"))
+		return results.Failf("commons client not configured for ec2 checker")
 	}
 
 	aws, err := NewAWS(ctx, check)
 	if err != nil {
-		return Error(check, err)
+		return results.ErrorMessage(err)
 	}
 
 	ami, err := aws.GetAMI(check)
 	if err != nil {
-		return Error(check, err)
+		return results.ErrorMessage(err)
 	}
 
 	idString := fmt.Sprintf("%v/%v/%v", ctx.Canary.ClusterName, namespace, ctx.Canary.Name)
 
 	ids, err := aws.GetExistingInstanceIds(idString)
 	if err != nil {
-		return Error(check, err)
+		return results.ErrorMessage(err)
 	}
 	logger.Infof("Found %v stale ec2 instances (%s) - terminating", len(ids), strings.Join(ids, ","))
 	if _, err := aws.TerminateInstances(ids, 5*time.Minute); err != nil {
-		return Error(check, err)
+		return results.ErrorMessage(err)
 	}
 
 	instanceID, launchTime, err := aws.Launch(check, idString, *ami)
 	if err != nil {
-		return Error(check, err)
+		return results.ErrorMessage(err)
 	}
 
 	ip, dns, err := aws.Describe(instanceID, 5*time.Minute)
 	if err != nil {
-		return Error(check, err)
+		return results.ErrorMessage(err)
 	}
 	prometheusStartupTime.WithLabelValues(check.Region).Set(launchTime.Seconds() * 1000)
 	time.Sleep(time.Duration(check.WaitTime) * time.Second)
@@ -391,7 +394,7 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 
 	for _, inner := range innerCanaries {
 		if len(inner.Spec.EC2) > 0 {
-			return Error(check, fmt.Errorf("EC2 checks may not be nested to avoid potential recursion.  Skipping inner EC2"))
+			return results.Failf("EC2 checks may not be nested to avoid potential recursion.  Skipping inner EC2")
 		}
 		innerResults := RunChecks(ctx.New(ec2Vars))
 		for _, result := range innerResults {
@@ -407,7 +410,7 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 		logger.Infof("Terminating instance id %s", instanceID)
 		stopTime, err := aws.TerminateInstances([]string{instanceID}, 60*time.Second)
 		if err != nil {
-			return Error(check, err)
+			return results.ErrorMessage(err)
 		}
 		prometheusTerminateTime.WithLabelValues(check.Region).Set(stopTime.Seconds() * 1000)
 	}
@@ -428,23 +431,21 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) *pkg.
 	if innerFail {
 		return HandleFail(check, fmt.Sprintf("referenced canaries failed: %v", strings.Join(innerMessage, ", ")))
 	}
+	result.Metrics = metricsList
 
-	return &pkg.CheckResult{
-		Check:   check,
-		Pass:    true,
-		Invalid: false,
-		Metrics: metricsList,
-	}
+	return results
 }
 
-func HandleFail(check v1.EC2Check, message string) *pkg.CheckResult {
+func HandleFail(check v1.EC2Check, message string) pkg.Results {
 	prometheusFailCount.WithLabelValues(check.Region).Inc()
-	return &pkg.CheckResult{ // nolint: staticcheck
-		Check:       check,
-		Pass:        false,
-		Duration:    0,
-		Invalid:     false,
-		DisplayType: "Text",
-		Message:     message,
+	return pkg.Results{ // nolint: staticcheck
+		{
+			Check:       check,
+			Pass:        false,
+			Duration:    0,
+			Invalid:     false,
+			DisplayType: "Text",
+			Message:     message,
+		},
 	}
 }

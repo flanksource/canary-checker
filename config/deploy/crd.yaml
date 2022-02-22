@@ -141,10 +141,6 @@ spec:
                           usePathStyle:
                             description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                             type: boolean
-                        required:
-                          - accessKey
-                          - region
-                          - secretKey
                         type: object
                       description:
                         description: Description for the check
@@ -191,7 +187,152 @@ spec:
                             type: string
                         type: object
                     required:
+                      - name
                       - query
+                    type: object
+                  type: array
+                awsConfigRule:
+                  items:
+                    properties:
+                      awsConnection:
+                        properties:
+                          accessKey:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          endpoint:
+                            type: string
+                          objectPath:
+                            description: glob path to restrict matches to a subset
+                            type: string
+                          region:
+                            type: string
+                          secretKey:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          skipTLSVerify:
+                            description: Skip TLS verify when connecting to aws
+                            type: boolean
+                          usePathStyle:
+                            description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                            type: boolean
+                        type: object
+                      complianceTypes:
+                        description: Filters the results by compliance. The allowed values are INSUFFICIENT_DATA, NON_COMPLIANT, NOT_APPLICABLE, COMPLIANT
+                        items:
+                          type: string
+                        type: array
+                      description:
+                        description: Description for the check
+                        type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      ignoreRules:
+                        description: List of rules which would be omitted from the fetch result
+                        items:
+                          type: string
+                        type: array
+                      name:
+                        description: Name of the check
+                        type: string
+                      rules:
+                        description: Specify one or more Config rule names to filter the results by rule.
+                        items:
+                          type: string
+                        type: array
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                    required:
+                      - name
                     type: object
                   type: array
                 cloudwatch:
@@ -330,9 +471,7 @@ spec:
                         description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                         type: boolean
                     required:
-                      - accessKey
-                      - region
-                      - secretKey
+                      - name
                     type: object
                   type: array
                 containerd:
@@ -426,6 +565,7 @@ spec:
                         type: string
                     required:
                       - image
+                      - name
                     type: object
                   type: array
                 containerdPush:
@@ -448,6 +588,7 @@ spec:
                         type: string
                     required:
                       - image
+                      - name
                     type: object
                   type: array
                 dns:
@@ -480,6 +621,8 @@ spec:
                         type: integer
                       timeout:
                         type: integer
+                    required:
+                      - name
                     type: object
                   type: array
                 docker:
@@ -573,6 +716,7 @@ spec:
                         type: string
                     required:
                       - image
+                      - name
                     type: object
                   type: array
                 dockerPush:
@@ -661,6 +805,7 @@ spec:
                         type: string
                     required:
                       - image
+                      - name
                     type: object
                   type: array
                 ec2:
@@ -774,9 +919,7 @@ spec:
                       waitTime:
                         type: integer
                     required:
-                      - accessKey
-                      - region
-                      - secretKey
+                      - name
                     type: object
                   type: array
                 env:
@@ -878,6 +1021,7 @@ spec:
                             type: string
                         type: object
                     required:
+                      - name
                       - script
                     type: object
                   type: array
@@ -963,10 +1107,6 @@ spec:
                           usePathStyle:
                             description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                             type: boolean
-                        required:
-                          - accessKey
-                          - region
-                          - secretKey
                         type: object
                       description:
                         description: Description for the check
@@ -1172,6 +1312,7 @@ spec:
                             type: string
                         type: object
                     required:
+                      - name
                       - path
                     type: object
                   type: array
@@ -1256,6 +1397,7 @@ spec:
                             type: string
                         type: object
                     required:
+                      - name
                       - query
                     type: object
                   type: array
@@ -1347,6 +1489,8 @@ spec:
                         type: string
                       project:
                         type: string
+                    required:
+                      - name
                     type: object
                   type: array
                 http:
@@ -1543,6 +1687,8 @@ spec:
                           template:
                             type: string
                         type: object
+                    required:
+                      - name
                     type: object
                   type: array
                 icmp:
@@ -1567,6 +1713,8 @@ spec:
                       thresholdMillis:
                         format: int64
                         type: integer
+                    required:
+                      - name
                     type: object
                   type: array
                 icon:
@@ -1642,6 +1790,7 @@ spec:
                         type: array
                     required:
                       - jmx
+                      - name
                     type: object
                   type: array
                 junit:
@@ -5432,6 +5581,7 @@ spec:
                             type: string
                         type: object
                     required:
+                      - name
                       - spec
                       - testResults
                     type: object
@@ -5505,6 +5655,7 @@ spec:
                         type: object
                     required:
                       - kind
+                      - name
                     type: object
                   type: array
                 ldap:
@@ -5601,6 +5752,7 @@ spec:
                       - auth
                       - bindDN
                       - host
+                      - name
                     type: object
                   type: array
                 mongodb:
@@ -5689,6 +5841,7 @@ spec:
                         type: string
                     required:
                       - connection
+                      - name
                     type: object
                   type: array
                 mssql:
@@ -5815,6 +5968,7 @@ spec:
                         type: object
                     required:
                       - connection
+                      - name
                     type: object
                   type: array
                 mysql:
@@ -5941,6 +6095,7 @@ spec:
                         type: object
                     required:
                       - connection
+                      - name
                     type: object
                   type: array
                 namespace:
@@ -6009,6 +6164,7 @@ spec:
                         format: int64
                         type: integer
                     required:
+                      - name
                       - podSpec
                     type: object
                   type: array
@@ -6068,6 +6224,8 @@ spec:
                         type: integer
                       spec:
                         type: string
+                    required:
+                      - name
                     type: object
                   type: array
                 postgres:
@@ -6194,6 +6352,7 @@ spec:
                         type: object
                     required:
                       - connection
+                      - name
                     type: object
                   type: array
                 prometheus:
@@ -6249,6 +6408,7 @@ spec:
                         type: object
                     required:
                       - host
+                      - name
                       - query
                     type: object
                   type: array
@@ -6341,6 +6501,7 @@ spec:
                     required:
                       - addr
                       - db
+                      - name
                     type: object
                   type: array
                 restic:
@@ -6468,6 +6629,7 @@ spec:
                         type: object
                     required:
                       - maxAge
+                      - name
                       - password
                       - repository
                     type: object
@@ -6504,6 +6666,8 @@ spec:
                       skipTLSVerify:
                         description: Skip TLS verify when connecting to s3
                         type: boolean
+                    required:
+                      - name
                     type: object
                   type: array
                 schedule:
@@ -6528,6 +6692,8 @@ spec:
                       thresholdMillis:
                         format: int64
                         type: integer
+                    required:
+                      - name
                     type: object
                   type: array
               type: object

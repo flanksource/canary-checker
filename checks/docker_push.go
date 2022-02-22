@@ -18,10 +18,10 @@ import (
 type DockerPushChecker struct {
 }
 
-func (c *DockerPushChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *DockerPushChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.DockerPush {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
@@ -33,13 +33,16 @@ func (c *DockerPushChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *DockerPushChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *DockerPushChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.DockerPushCheck)
+	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	namespace := ctx.Canary.Namespace
 	var err error
 	auth, err := GetAuthValues(check.Auth, ctx.Kommons, namespace)
 	if err != nil {
-		return Failf(check, "failed to fetch auth details: %v", err)
+		return results.Failf("failed to fetch auth details: %v", err)
 	}
 	authConfig := types.AuthConfig{
 		Username: auth.Username.Value,
@@ -49,7 +52,7 @@ func (c *DockerPushChecker) Check(ctx *context.Context, extConfig external.Check
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 	out, err := dockerClient.ImagePush(ctx, check.Image, types.ImagePushOptions{RegistryAuth: authStr})
 	if err != nil {
-		return Failf(check, "Failed to push image: %s", err)
+		return results.Failf("Failed to push image: %v", err)
 	}
 
 	buf := new(bytes.Buffer)
@@ -66,16 +69,12 @@ func (c *DockerPushChecker) Check(ctx *context.Context, extConfig external.Check
 		}{}
 		err = json.Unmarshal([]byte(line), &decodedResponse)
 		if err != nil {
-			return Failf(check, "Invalid response: %v: %s", err, line)
+			return results.Failf("Invalid response: %v: %s", err, line)
 		}
 		if decodedResponse.Error != "" {
-			return Failf(check, "Failed to push %v", decodedResponse.Error)
+			return results.Failf("Failed to push %v", decodedResponse.Error)
 		}
 	}
 
-	return &pkg.CheckResult{
-		Check:   check,
-		Pass:    true,
-		Metrics: []pkg.Metric{},
-	}
+	return results
 }

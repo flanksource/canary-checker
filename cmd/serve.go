@@ -77,7 +77,7 @@ var Serve = &cobra.Command{
 							if logPass && result.Pass || logFail && !result.Pass {
 								logger.Infof(result.String())
 							}
-							cache.CacheChain.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
+							cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
 							metrics.Record(result.Canary, result)
 							push.Queue(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
 						}
@@ -109,21 +109,10 @@ func serve() {
 	nethttp.Handle("/metrics", promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{}))
 	if db.ConnectionString != "" {
 		if err := db.Init(db.ConnectionString); err != nil {
-			logger.Debugf("error connecting with postgres. Only using in-memory cache: %v", err)
+			logger.Fatalf("error connecting with postgres. Only using in-memory cache: %v", err)
+			return
 		} else {
-			postgresCache := cache.NewPostgresCache(db.Pool)
-			cache.CacheChain.Chain = append(cache.CacheChain.Chain, postgresCache)
-			existing, err := postgresCache.Query(cache.QueryParams{
-				Start:       "24h",
-				StatusCount: cache.InMemoryCacheSize,
-			})
-			if err != nil {
-				logger.Errorf("error querying postgres to fill in-memory cache: %v", err)
-			} else {
-				for _, check := range existing {
-					cache.InMemoryCache.Add(*check, check.Statuses...)
-				}
-			}
+			cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 		}
 	}
 	push.AddServers(pushServers)
@@ -133,7 +122,6 @@ func serve() {
 
 	nethttp.HandleFunc("/", stripQuery(nethttp.FileServer(staticRoot).ServeHTTP))
 	nethttp.HandleFunc("/about", simpleCors(api.About, allowedCors))
-	nethttp.HandleFunc("/dump", simpleCors(api.Dump, allowedCors))
 	nethttp.HandleFunc("/api", simpleCors(api.CheckSummary, allowedCors))
 	nethttp.HandleFunc("/api/graph", simpleCors(api.CheckDetails, allowedCors))
 	nethttp.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))

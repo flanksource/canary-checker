@@ -20,12 +20,14 @@ type S3 struct {
 	Bucket string
 }
 
-func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) *pkg.CheckResult {
+func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 
 	cfg, err := awsUtil.NewSession(ctx, *check.AWSConnection)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 
 	client := &S3{
@@ -36,15 +38,15 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) *pkg.CheckResult 
 	}
 	folders, err := client.CheckFolder(ctx, check.Filter)
 	if err != nil {
-		return result.ErrorMessage(fmt.Errorf("failed to retrieve s3://%s: %v", getS3BucketName(check.Path), err))
+		return results.ErrorMessage(fmt.Errorf("failed to retrieve s3://%s: %v", getS3BucketName(check.Path), err))
 	}
 	result.AddDetails(folders)
 
 	if test := folders.Test(check.FolderTest); test != "" {
-		return result.Failf(test)
+		return results.Failf(test)
 	}
 
-	return result
+	return results
 }
 
 func (conn *S3) CheckFolder(ctx *context.Context, filter v1.FolderFilter) (*FolderCheck, error) {

@@ -53,10 +53,10 @@ func (c *HTTPChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *HTTPChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *HTTPChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.HTTP {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
@@ -99,11 +99,13 @@ func truncate(text string, max int) string {
 // CheckConfig : Check every record of DNS name against config information
 // Returns check result and metrics
 
-func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.HTTPCheck)
+	var results pkg.Results
 	result := pkg.Success(check, ctx.Canary)
+	results = append(results, result)
 	if _, err := url.Parse(check.Endpoint); err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 
 	endpoint := check.Endpoint
@@ -111,7 +113,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	req := http.NewRequest(check.Endpoint).Method(check.GetMethod())
 
 	if err := c.configure(req, ctx, check, ctx.Kommons); err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 
 	resp := req.Do(check.Body)
@@ -143,13 +145,13 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	if resp.IsJSON() {
 		json, err := resp.AsJSON()
 		if err != nil {
-			return result.ErrorMessage(err)
+			return results.ErrorMessage(err)
 		} else {
 			data["json"] = json.Value
 			if check.ResponseJSONContent.Path != "" {
 				err := resp.CheckJSONContent(json.Value, check.ResponseJSONContent)
 				if err != nil {
-					return result.ErrorMessage(err)
+					return results.ErrorMessage(err)
 				}
 			}
 		}
@@ -158,30 +160,30 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	result.AddData(data)
 
 	if status == -1 {
-		return result.Failf("%v", truncate(resp.Error.Error(), 500))
+		return results.Failf("%v", truncate(resp.Error.Error(), 500))
 	}
 
 	if ok := resp.IsOK(check.ResponseCodes...); !ok {
-		return result.Failf("response code invalid %d != %v", status, check.ResponseCodes)
+		return results.Failf("response code invalid %d != %v", status, check.ResponseCodes)
 	}
 
 	if check.ThresholdMillis > 0 && check.ThresholdMillis < int(resp.Elapsed.Milliseconds()) {
-		return result.Failf("threshold exceeded %s > %d", utils.Age(resp.Elapsed), check.ThresholdMillis)
+		return results.Failf("threshold exceeded %s > %d", utils.Age(resp.Elapsed), check.ThresholdMillis)
 	}
 
 	if check.ResponseContent != "" && !strings.Contains(body, check.ResponseContent) {
-		return result.Failf("expected %v, found %v", check.ResponseContent, truncate(body, 100))
+		return results.Failf("expected %v, found %v", check.ResponseContent, truncate(body, 100))
 	}
 
 	if req.URL.Scheme == "https" && check.MaxSSLExpiry > 0 {
 		if age == nil {
-			return result.Failf("No certificate found to check age")
+			return results.Failf("No certificate found to check age")
 		}
 		if *age < time.Duration(check.MaxSSLExpiry)*time.Hour*24 {
-			return result.Failf("SSL certificate expires soon %s > %d", utils.Age(*age), check.MaxSSLExpiry)
+			return results.Failf("SSL certificate expires soon %s > %d", utils.Age(*age), check.MaxSSLExpiry)
 		}
 	}
-	return result
+	return results
 }
 
 func statusCodeToClass(statusCode int) string {

@@ -23,26 +23,28 @@ func (c *RedisChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *RedisChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *RedisChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Redis {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
 
-func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	redisCheck := extConfig.(v1.RedisCheck)
-	result := pkg.Success(redisCheck, ctx.Canary)
+func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
+	check := extConfig.(v1.RedisCheck)
+	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	namespace := ctx.Canary.Namespace
 	var err error
-	auth, err := GetAuthValues(redisCheck.Auth, ctx.Kommons, namespace)
+	auth, err := GetAuthValues(check.Auth, ctx.Kommons, namespace)
 	if err != nil {
-		return result.Failf("failed to fetch auth details: %v", err)
+		return results.Failf("failed to fetch auth details: %v", err)
 	}
 	opts := &redis.Options{
-		Addr: redisCheck.Addr,
-		DB:   redisCheck.DB,
+		Addr: check.Addr,
+		DB:   check.DB,
 	}
 	if auth != nil {
 		opts.Username = auth.GetUsername()
@@ -50,13 +52,13 @@ func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) *pk
 	}
 
 	rdb := redis.NewClient(opts)
-	results, err := rdb.Ping(ctx).Result()
+	queryResult, err := rdb.Ping(ctx).Result()
 
 	if err != nil {
-		return result.Failf("failed to execute query %s", err)
+		return results.Failf("failed to execute query %s", err)
 	}
-	if results != "PONG" {
-		return result.Failf("expected PONG as result, got %s", result)
+	if queryResult != "PONG" {
+		return results.Failf("expected PONG as result, got %s", result)
 	}
-	return result
+	return results
 }

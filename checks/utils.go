@@ -18,15 +18,6 @@ func unexpectedErrorf(check external.Check, err error, msg string, args ...inter
 	}
 }
 
-func invalidErrorf(check external.Check, err error, msg string, args ...interface{}) *pkg.CheckResult { // nolint: unparam
-	return &pkg.CheckResult{
-		Check:   check,
-		Pass:    false,
-		Invalid: true,
-		Message: fmt.Sprintf("%s: %v", fmt.Sprintf(msg, args...), err),
-	}
-}
-
 func Error(check external.Check, err error) *pkg.CheckResult {
 	return &pkg.CheckResult{
 		Check:   check,

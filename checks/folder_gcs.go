@@ -15,11 +15,13 @@ type GCS struct {
 	*gcs.Client
 }
 
-func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) *pkg.CheckResult {
+func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	cfg, err := gcp.NewSession(ctx, *check.GCPConnection)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 	client := GCS{
 		BucketName: getGCSBucketName(check.Path),
@@ -27,13 +29,13 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) *pkg.CheckResult
 	}
 	folders, err := client.CheckFolder(ctx, check.Filter)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 	result.AddDetails(folders)
 	if test := folders.Test(check.FolderTest); test != "" {
-		result.Failf(test)
+		results.Failf(test)
 	}
-	return result
+	return results
 }
 
 func (conn *GCS) CheckFolder(ctx *context.Context, filter v1.FolderFilter) (*FolderCheck, error) {

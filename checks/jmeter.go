@@ -27,62 +27,64 @@ func (c *JmeterChecker) Type() string {
 	return "jmeter"
 }
 
-func (c *JmeterChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *JmeterChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Jmeter {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
 
-func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
-	start := time.Now()
-	jmeterCheck := extConfig.(v1.JmeterCheck)
+func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
+	check := extConfig.(v1.JmeterCheck)
+	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	namespace := ctx.Canary.Namespace
-	_, value, err := ctx.Kommons.GetEnvValue(jmeterCheck.Jmx, namespace)
+	_, value, err := ctx.Kommons.GetEnvValue(check.Jmx, namespace)
 	if err != nil {
-		return Failf(jmeterCheck, "Failed to parse the jmx plan: %v", err)
+		return results.Failf("Failed to parse the jmx plan: %v", err)
 	}
-	testPlanFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jmx", namespace, jmeterCheck.Jmx.Name, rand.Int())
-	logFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jtl", namespace, jmeterCheck.Jmx.Name, rand.Int())
+	testPlanFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jmx", namespace, check.Jmx.Name, rand.Int())
+	logFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jtl", namespace, check.Jmx.Name, rand.Int())
 	err = ioutil.WriteFile(testPlanFilename, []byte(value), 0755)
 	defer os.Remove(testPlanFilename) // nolint: errcheck
 	if err != nil {
-		return Failf(jmeterCheck, "unable to write test plan file")
+		return results.Failf("unable to write test plan file")
 	}
 	var host string
 	var port string
-	if jmeterCheck.Host != "" {
-		host = "-H " + jmeterCheck.Host
+	if check.Host != "" {
+		host = "-H " + check.Host
 	}
-	if jmeterCheck.Port != 0 {
-		port = "-P " + string(jmeterCheck.Port)
+	if check.Port != 0 {
+		port = "-P " + string(check.Port)
 	}
-	jmeterCmd := fmt.Sprintf("jmeter -n %s %s -t %s %s %s -l %s", getProperties(jmeterCheck.Properties), getSystemProperties(jmeterCheck.SystemProperties), testPlanFilename, host, port, logFilename)
+	jmeterCmd := fmt.Sprintf("jmeter -n %s %s -t %s %s %s -l %s", getProperties(check.Properties), getSystemProperties(check.SystemProperties), testPlanFilename, host, port, logFilename)
 	_, ok := exec.SafeExec(jmeterCmd)
 	defer os.Remove(logFilename) // nolint: errcheck
 	if !ok {
-		return Failf(jmeterCheck, "error running the jmeter command: %v", jmeterCmd)
+		return results.Failf("error running the jmeter command: %v", jmeterCmd)
 	}
 	raw, err := ioutil.ReadFile(logFilename)
 	if err != nil {
-		return Failf(jmeterCheck, "error opening the log file: %v", err)
+		return results.Failf("error opening the log file: %v", err)
 	}
 	elapsedTime, err := checkLogs(raw)
 	if err != nil {
-		return Failf(jmeterCheck, "check failed: %v", err)
+		return results.Failf("check failed: %v", err)
 	}
 	totalDuration := time.Duration(elapsedTime) * time.Millisecond
-	if jmeterCheck.ResponseDuration != "" {
-		resDuration, err := time.ParseDuration(jmeterCheck.ResponseDuration)
+	if check.ResponseDuration != "" {
+		resDuration, err := time.ParseDuration(check.ResponseDuration)
 		if err != nil {
-			return Failf(jmeterCheck, "error parsing response duration: %v", err)
+			return results.Failf("error parsing response duration: %v", err)
 		}
 		if totalDuration > resDuration {
-			return Failf(jmeterCheck, "the response took %v longer than specified", (totalDuration - resDuration).String())
+			return results.Failf("the response took %v longer than specified", (totalDuration - resDuration).String())
 		}
 	}
-	return Success(jmeterCheck, start)
+	return results
 }
 
 func getProperties(properties []string) string {

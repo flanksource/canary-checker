@@ -18,9 +18,9 @@ func (c Checks) Includes(checker Checker) bool {
 }
 
 type Checker interface {
-	Run(ctx *context.Context) []*pkg.CheckResult
+	Run(ctx *context.Context) pkg.Results
 	Type() string
-	Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult
+	Check(ctx *context.Context, extConfig external.Check) pkg.Results
 }
 
 var All = []Checker{
@@ -49,6 +49,7 @@ var All = []Checker{
 	&FolderChecker{},
 	&ExecChecker{},
 	&AwsConfigChecker{},
+	&AwsConfigRuleChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),

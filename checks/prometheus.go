@@ -19,33 +19,35 @@ func (c *PrometheusChecker) Type() string {
 	return "prometheus"
 }
 
-func (c *PrometheusChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *PrometheusChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Prometheus {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
 
-func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.PrometheusCheck)
 	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 
 	if check.Host == "" {
-		return result.Failf("Must specify a prometheus host")
+		return results.Failf("Must specify a prometheus host")
 	}
 	promClient, err := prometheus.NewPrometheusAPI(check.Host)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 	modelValue, warning, err := promClient.Query(ctx.Context, check.Query, time.Now())
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 	if warning != nil {
 		logger.Debugf("warnings when running the query: %v", warning)
 	}
-	var results = make([]map[string]interface{}, 0)
+	var prometheusResults = make([]map[string]interface{}, 0)
 	var data = map[string]interface{}{
 		"value":       0,
 		"firstResult": make(map[string]interface{}),
@@ -61,9 +63,10 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 			for k, v := range value.Metric {
 				val[string(k)] = v
 			}
-			results = append(results, val)
+			prometheusResults = append(prometheusResults, val)
 		}
 	}
-	data["results"] = results
-	return result.AddData(data)
+	data["results"] = prometheusResults
+	result.AddData(data)
+	return results
 }

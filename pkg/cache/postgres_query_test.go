@@ -56,35 +56,29 @@ func TestQueries(t *testing.T) {
 		t.Fatalf("Failed to init db: %v", err)
 	}
 	psql := NewPostgresCache(db.Pool)
-	for _, cache := range []Cache{psql, &cacheChain{
-		Chain: []Cache{
-			InMemoryCache,
-			psql,
-		}}} {
-		_cache := cache
-		t.Run(fmt.Sprintf("%T", cache), func(t *testing.T) {
-			for _, tc := range cases {
-				t.Run(tc.fixture.String(), func(t *testing.T) {
-					results, err := _cache.Query(tc.fixture)
-					if err != nil {
-						t.Errorf("Expected no error, got: %v", err)
-					}
-					g := NewWithT(t)
-					g.Expect(len(results)).To(BeNumerically(">", 1))
-					check := results[0]
-					t.Log(*check)
-					g.Expect(*check).To((MatchFields(IgnoreExtras, Fields{
-						"Name":       Not(BeEmpty()),
-						"Namespace":  Not(BeEmpty()),
-						"Type":       Not(BeEmpty()),
-						"Key":        Not(BeEmpty()),
-						"RunnerName": Not(BeEmpty()),
-						"Statuses":   HaveLen(tc.fixture.StatusCount),
-					})))
-				})
-			}
-		})
-	}
+	_cache := psql
+	t.Run(fmt.Sprintf("%T", psql), func(t *testing.T) {
+		for _, tc := range cases {
+			t.Run(tc.fixture.String(), func(t *testing.T) {
+				results, err := _cache.Query(tc.fixture)
+				if err != nil {
+					t.Errorf("Expected no error, got: %v", err)
+				}
+				g := NewWithT(t)
+				g.Expect(len(results)).To(BeNumerically(">", 1))
+				check := results[0]
+				t.Log(*check)
+				g.Expect(*check).To((MatchFields(IgnoreExtras, Fields{
+					"Name":       Not(BeEmpty()),
+					"Namespace":  Not(BeEmpty()),
+					"Type":       Not(BeEmpty()),
+					"Key":        Not(BeEmpty()),
+					"RunnerName": Not(BeEmpty()),
+					"Statuses":   HaveLen(tc.fixture.StatusCount),
+				})))
+			})
+		}
+	})
 }
 
 func TestDurations(t *testing.T) {

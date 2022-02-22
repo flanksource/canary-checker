@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var InMemoryCacheSize int
+var DefaultCacheCount int
 
 var DefaultWindow string
 
@@ -77,7 +77,7 @@ func ParseQuery(req *http.Request) (*QueryParams, error) {
 			return nil, fmt.Errorf("count must be a number: %s", count)
 		}
 	} else {
-		c = int64(InMemoryCacheSize)
+		c = int64(DefaultCacheCount)
 	}
 	since := queryParams.Get("since")
 	if since == "" {

@@ -20,33 +20,35 @@ func (c *KubernetesChecker) Type() string {
 
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
-func (c *KubernetesChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *KubernetesChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Kubernetes {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
 
 // CheckConfig : Check every ldap entry for lookup and auth
 // Returns check result and metrics
-func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.KubernetesCheck)
 	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	client, err := ctx.Kommons.GetClientByKind(check.Kind)
 	if err != nil {
-		return result.Failf("Failed to get client for kind %s: %v", check.Kind, err)
+		return results.Failf("Failed to get client for kind %s: %v", check.Kind, err)
 	}
 	namespaces, err := getNamespaces(ctx, check)
 	if err != nil {
-		return result.Failf("Failed to get namespaces: %v", err)
+		return results.Failf("Failed to get namespaces: %v", err)
 	}
 	var allResources []unstructured.Unstructured
 	differentReadyStatus := make(map[string]string)
 	for _, namespace := range namespaces {
 		resources, err := getResourcesFromNamespace(ctx, client, check, namespace)
 		if err != nil {
-			return result.Failf("failed to get resources: %v. namespace: %v", err, namespace)
+			return results.Failf("failed to get resources: %v. namespace: %v", err, namespace)
 		}
 		for _, resource := range resources {
 			ready, msg := ctx.Kommons.IsReady(&resource)
@@ -57,7 +59,7 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 		allResources = append(allResources, resources...)
 	}
 	if allResources == nil {
-		return result.Failf("no resources found")
+		return results.Failf("no resources found")
 	}
 	result.AddDetails(allResources)
 	if len(differentReadyStatus) > 0 {
@@ -65,9 +67,9 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 		for key, value := range differentReadyStatus {
 			message += fmt.Sprintf("%v: %v\n", key, value)
 		}
-		return result.Failf(message)
+		return results.Failf(message)
 	}
-	return result
+	return results
 }
 
 func getResourcesFromNamespace(ctx *context.Context, client dynamic.NamespaceableResourceInterface, check v1.KubernetesCheck, namespace string) ([]unstructured.Unstructured, error) {

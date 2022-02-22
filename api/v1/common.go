@@ -246,7 +246,7 @@ type Description struct {
 	// Description for the check
 	Description string `yaml:"description,omitempty" json:"description,omitempty" template:"true"`
 	// Name of the check
-	Name string `yaml:"name,omitempty" json:"name,omitempty" template:"true"`
+	Name string `yaml:"name" json:"name" template:"true"`
 	// Icon for overwriting default icon on the dashboard
 	Icon string `yaml:"icon,omitempty" json:"icon,omitempty" template:"true"`
 }

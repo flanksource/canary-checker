@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"time"
 
 	pusher "github.com/chartmuseum/helm-push/pkg/chartmuseum"
 	"github.com/flanksource/canary-checker/api/context"
@@ -33,25 +32,26 @@ func (c *HelmChecker) Type() string {
 	return "helm"
 }
 
-func (c *HelmChecker) Run(ctx *context.Context) []*pkg.CheckResult {
-	var results []*pkg.CheckResult
+func (c *HelmChecker) Run(ctx *context.Context) pkg.Results {
+	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Helm {
-		results = append(results, c.Check(ctx, conf))
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
 
-func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) *pkg.CheckResult {
+func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	config := extConfig.(v1.HelmCheck)
-	start := time.Now()
 	result := pkg.Success(config, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	var uploadOK, downloadOK = true, true
 	logger.Tracef("Uploading test chart")
 	namespace := ctx.Canary.Namespace
 	var err error
 	auth, err := GetAuthValues(config.Auth, ctx.Kommons, namespace)
 	if err != nil {
-		return Failf(config, "failed to fetch auth details: %v", err)
+		return results.Failf("failed to fetch auth details: %v", err)
 	}
 	client, _ := pusher.NewClient(
 		pusher.URL(config.Chartmuseum),
@@ -62,17 +62,17 @@ func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 		pusher.CAFile(config.CaFile))
 	chartPath, err := createTestChart()
 	if err != nil {
-		return result.ErrorMessage(err).StartTime(start)
+		return results.Failf(err.Error())
 	}
 	response, err := client.UploadChartPackage(*chartPath, false)
 	if err != nil {
-		return result.ErrorMessage(err).StartTime(start)
+		return results.Failf(err.Error())
 	}
 	defer func() {
 		response.Close = true
 	}()
 	if response.StatusCode != 201 {
-		return result.ErrorMessage(fmt.Errorf("failed to upload test chart. Error code: %d", response.StatusCode)).StartTime(start)
+		return results.Failf("failed to upload test chart. Error code: %d", response.StatusCode)
 	}
 
 	defer os.RemoveAll("./test-chart-0.1.0.tgz") // nolint: errcheck
@@ -88,23 +88,18 @@ func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) *pkg
 	logger.Tracef("Pulling test chart")
 	url, err := url.Parse(config.Chartmuseum)
 	if err != nil {
-		return result.ErrorMessage(err).StartTime(start)
+		return results.Failf(err.Error())
 	}
 	url.Path = path.Join(url.Path, "charts/test-chart-0.1.0.tgz")
 	_, err = iCli.Run(url.String())
 	if err != nil {
-		return result.ErrorMessage(err).StartTime(start)
+		return results.Failf(err.Error())
 	}
 
 	defer cleanUp("test-chart", config.Chartmuseum, config, auth.Username.Value, auth.Password.Value) // nolint: errcheck
 
-	elapsed := time.Since(start)
-	return &pkg.CheckResult{
-		Check:    config,
-		Pass:     uploadOK && downloadOK,
-		Invalid:  false,
-		Duration: elapsed.Milliseconds(),
-	}
+	result.Pass = uploadOK && downloadOK
+	return results
 }
 
 func cleanUp(chartname string, chartmuseum string, config v1.HelmCheck, username, password string) error {

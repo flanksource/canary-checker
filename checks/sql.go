@@ -56,11 +56,13 @@ func querySQL(driver string, connection string, query string) (*SQLDetails, erro
 // CheckSQL : Attempts to connect to a DB using the specified
 //               driver and connection string
 // Returns check result and metrics
-func CheckSQL(ctx *context.Context, check v1.SQLCheck) *pkg.CheckResult { // nolint: golint
+func CheckSQL(ctx *context.Context, check v1.SQLCheck) pkg.Results { // nolint: golint
 	result := pkg.Success(check, ctx.Canary)
+	var results pkg.Results
+	results = append(results, result)
 	connection, err := GetConnection(ctx, &check.Connection, ctx.Namespace)
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 	if ctx.IsTrace() {
 		ctx.Tracef("connecting to %s", connection)
@@ -68,11 +70,11 @@ func CheckSQL(ctx *context.Context, check v1.SQLCheck) *pkg.CheckResult { // nol
 
 	details, err := querySQL(check.GetDriver(), connection, check.GetQuery())
 	if err != nil {
-		return result.ErrorMessage(err)
+		return results.ErrorMessage(err)
 	}
 	result.AddDetails(details)
 	if details.Count < check.Result {
-		return result.Failf("Query return %d rows, expected %d", details.Count, check.Result)
+		return results.Failf("Query return %d rows, expected %d", details.Count, check.Result)
 	}
-	return result
+	return results
 }

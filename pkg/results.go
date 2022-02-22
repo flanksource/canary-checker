@@ -8,6 +8,8 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 )
 
+type Results []*CheckResult
+
 func Fail(check external.Check, canary v1.Canary) *CheckResult {
 	return &CheckResult{
 		Check:  check,
@@ -115,4 +117,14 @@ func (result *CheckResult) AddData(data map[string]interface{}) *CheckResult {
 		result.Data[k] = v
 	}
 	return result
+}
+
+func (r Results) Failf(msg string, args ...interface{}) Results {
+	r[0].Failf(msg, args...)
+	return r
+}
+
+func (r Results) ErrorMessage(err error) Results {
+	r[0].ErrorMessage(err)
+	return r
 }
