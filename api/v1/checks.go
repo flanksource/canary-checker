@@ -713,7 +713,7 @@ type AwsConfigRuleCheck struct {
 	// Specify one or more Config rule names to filter the results by rule.
 	Rules []string `yaml:"rules,omitempty" json:"rules,omitempty"`
 	// Filters the results by compliance. The allowed values are INSUFFICIENT_DATA, NON_COMPLIANT, NOT_APPLICABLE, COMPLIANT
-	ComplianceTypes []awsconfigruletypes.ComplianceType `yaml:"complianceTypes,omitempty" json:"complianceTypes,omitempty"`
+	ComplianceTypes []string `yaml:"complianceTypes,omitempty" json:"complianceTypes,omitempty"`
 	*AWSConnection  `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
 }
 

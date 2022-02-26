@@ -22,11 +22,7 @@ limitations under the License.
 package v1
 
 import (
-<<<<<<< HEAD
-	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
-=======
 	"encoding/json"
->>>>>>> 6488716 (feat: add topology model)
 	"github.com/flanksource/kommons"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -142,7 +138,7 @@ func (in *AwsConfigRuleCheck) DeepCopyInto(out *AwsConfigRuleCheck) {
 	}
 	if in.ComplianceTypes != nil {
 		in, out := &in.ComplianceTypes, &out.ComplianceTypes
-		*out = make([]types.ComplianceType, len(*in))
+		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
 	if in.AWSConnection != nil {
