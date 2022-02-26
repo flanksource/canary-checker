@@ -29,6 +29,7 @@ type HTTPRequest struct {
 	connectTo               string
 	Port                    int
 	URL                     *url.URL
+	timeout                 time.Duration
 	start                   time.Time
 	headers                 map[string]string
 	insecure                bool
@@ -47,6 +48,11 @@ func NewRequest(endpoint string) *HTTPRequest {
 		start:    time.Now(),
 		headers:  make(map[string]string),
 	}
+}
+
+func (h *HTTPRequest) Timeout(timeout time.Duration) *HTTPRequest {
+	h.timeout = timeout
+	return h
 }
 
 func (h *HTTPRequest) Method(method string) *HTTPRequest {
@@ -171,6 +177,7 @@ func (h *HTTPRequest) getHTTPClient() *http.Client {
 	}
 
 	return &http.Client{
+		Timeout:   h.timeout,
 		Transport: transport,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -254,7 +261,6 @@ func (h *HTTPRequest) Do(body string) *HTTPResponse {
 	if h.Username != "" && h.Password != "" {
 		req.SetBasicAuth(h.Username, h.Password)
 	}
-
 	resp, err := h.getHTTPClient().Do(req)
 	r := NewHTTPResponse(h, resp).SetError(err)
 
