@@ -7,6 +7,8 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/kommons"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
@@ -44,29 +46,33 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 		return results.Failf("Failed to get namespaces: %v", err)
 	}
 	var allResources []unstructured.Unstructured
-	differentReadyStatus := make(map[string]string)
+
+	message := ""
+
 	for _, namespace := range namespaces {
 		resources, err := getResourcesFromNamespace(ctx, client, check, namespace)
 		if err != nil {
 			return results.Failf("failed to get resources: %v. namespace: %v", err, namespace)
 		}
-		for _, resource := range resources {
-			ready, msg := ctx.Kommons.IsReady(&resource)
-			if ready != check.CheckReady() {
-				differentReadyStatus[fmt.Sprintf("The resource %v-%v-%v is expected Ready: %v but Ready is %v", resource.GetName(), resource.GetNamespace(), resource.GetKind(), check.CheckReady(), ready)] = msg
+		logger.Debugf("Found %d resources in namespace %s with label=%s field=%s", len(resources), namespace, check.Resource.LabelSelector, check.Resource.FieldSelector)
+		if check.CheckReady() {
+			for _, resource := range resources {
+				ready, msg := ctx.Kommons.IsReady(&resource)
+				if !ready {
+					if message != "" {
+						message += ", "
+					}
+					message += fmt.Sprintf("%s is not ready: %v", kommons.GetName(resource), msg)
+				}
 			}
 		}
 		allResources = append(allResources, resources...)
 	}
-	if allResources == nil {
+	if check.Test.IsEmpty() && len(allResources) == 0 {
 		return results.Failf("no resources found")
 	}
 	result.AddDetails(allResources)
-	if len(differentReadyStatus) > 0 {
-		message := "The following resources found with different ready status\n"
-		for key, value := range differentReadyStatus {
-			message += fmt.Sprintf("%v: %v\n", key, value)
-		}
+	if message != "" {
 		return results.Failf(message)
 	}
 	return results
