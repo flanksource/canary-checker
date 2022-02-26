@@ -66,7 +66,7 @@ func (c *HTTPChecker) configure(req *http.HTTPRequest, ctx *context.Context, che
 		if kommons == nil {
 			return fmt.Errorf("HTTP headers are not supported outside k8s")
 		}
-		key, value, err := kommons.GetEnvValue(header, ctx.Canary.GetNamespace())
+		key, value, err := kommons.GetEnvValueFromCache(header, ctx.Canary.GetNamespace(), 1*time.Minute)
 		if err != nil {
 			return errors.WithMessagef(err, "failed getting header: %v", header)
 		}
@@ -83,6 +83,10 @@ func (c *HTTPChecker) configure(req *http.HTTPRequest, ctx *context.Context, che
 
 	req.NTLM(check.NTLM)
 	req.NTLMv2(check.NTLMv2)
+
+	if check.ThresholdMillis > 0 {
+		req.Timeout(time.Duration(check.ThresholdMillis) * time.Millisecond)
+	}
 
 	req.Trace(ctx.IsTrace()).Debug(ctx.IsDebug())
 	return nil
@@ -109,15 +113,15 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	}
 
 	endpoint := check.Endpoint
-
 	req := http.NewRequest(check.Endpoint).Method(check.GetMethod())
 
 	if err := c.configure(req, ctx, check, ctx.Kommons); err != nil {
 		return results.ErrorMessage(err)
 	}
 
+	start := time.Now()
+
 	resp := req.Do(check.Body)
-	result.Duration = resp.Elapsed.Milliseconds()
 	status := resp.GetStatusCode()
 	result.AddMetric(pkg.Metric{
 		Name: "response_code",
@@ -138,7 +142,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	data := map[string]interface{}{
 		"code":    status,
 		"headers": resp.GetHeaders(),
-		"elapsed": resp.Elapsed,
+		"elapsed": time.Since(start),
 		"sslAge":  age,
 		"content": body,
 	}
