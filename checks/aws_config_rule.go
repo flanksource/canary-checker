@@ -1,3 +1,5 @@
+//go:build !fast
+
 package checks
 
 import (
@@ -46,12 +48,15 @@ func (c *AwsConfigRuleChecker) Check(ctx *context.Context, extConfig external.Ch
 	client := configservice.NewFromConfig(*cfg)
 
 	if err != nil {
-		fmt.Println(err)
 		return results.Failf("failed to describe compliance rules: %v", err)
 	}
 
+	var complianceTypes = []types.ComplianceType{}
+	for _, i := range check.ComplianceTypes {
+		complianceTypes = append(complianceTypes, types.ComplianceType(i))
+	}
 	output, err := client.DescribeComplianceByConfigRule(ctx, &configservice.DescribeComplianceByConfigRuleInput{
-		ComplianceTypes: check.ComplianceTypes,
+		ComplianceTypes: complianceTypes,
 		ConfigRuleNames: check.Rules,
 	})
 	if err != nil {
@@ -78,14 +83,14 @@ func (c *AwsConfigRuleChecker) Check(ctx *context.Context, extConfig external.Ch
 					complianceResult.Failf("failed to get compliance details: %v", err)
 					continue
 				}
-				var resources resources
+				var resources []string
 				for _, result := range complianceDetailsOutput.EvaluationResults {
 					if result.EvaluationResultIdentifier.EvaluationResultQualifier.ResourceId != nil {
 						resources = append(resources, *result.EvaluationResultIdentifier.EvaluationResultQualifier.ResourceId)
 					}
 				}
 				complianceResult.AddDetails(resources)
-				complianceResult.ResultMessage(fmt.Sprintf("The following resources are not compliant: \n%v", resources.String()))
+				complianceResult.ResultMessage(strings.Join(resources, ","))
 			} else {
 				complianceResult = pkg.Success(complianceCheck, ctx.Canary)
 				complianceResult.AddDetails(complianceRule)
@@ -104,15 +109,4 @@ func configRuleInRules(rules []string, ruleName string) bool {
 		}
 	}
 	return false
-}
-
-type resources []string
-
-func (r resources) String() string {
-	s := ""
-	for i := range r {
-		s += r[i] + ","
-	}
-	s = strings.TrimRight(s, ",")
-	return s
 }
