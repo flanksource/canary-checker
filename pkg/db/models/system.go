@@ -26,13 +26,18 @@ type System struct {
 	ID         string      `boil:"id" json:"id" toml:"id" yaml:"id"`
 	ExternalID string      `boil:"external_id" json:"external_id" toml:"external_id" yaml:"external_id"`
 	Name       string      `boil:"name" json:"name" toml:"name" yaml:"name"`
+	Text       null.String `boil:"text" json:"text,omitempty" toml:"text" yaml:"text,omitempty"`
 	Status     string      `boil:"status" json:"status" toml:"status" yaml:"status"`
+	Hidden     bool        `boil:"hidden" json:"hidden" toml:"hidden" yaml:"hidden"`
+	Silenced   bool        `boil:"silenced" json:"silenced" toml:"silenced" yaml:"silenced"`
+	Labels     null.JSON   `boil:"labels" json:"labels,omitempty" toml:"labels" yaml:"labels,omitempty"`
 	Tooltip    null.String `boil:"tooltip" json:"tooltip,omitempty" toml:"tooltip" yaml:"tooltip,omitempty"`
 	Lifecycle  null.String `boil:"lifecycle" json:"lifecycle,omitempty" toml:"lifecycle" yaml:"lifecycle,omitempty"`
 	Icon       null.String `boil:"icon" json:"icon,omitempty" toml:"icon" yaml:"icon,omitempty"`
 	Owner      null.String `boil:"owner" json:"owner,omitempty" toml:"owner" yaml:"owner,omitempty"`
 	Type       null.String `boil:"type" json:"type,omitempty" toml:"type" yaml:"type,omitempty"`
 	Properties null.JSON   `boil:"properties" json:"properties,omitempty" toml:"properties" yaml:"properties,omitempty"`
+	Spec       null.JSON   `boil:"spec" json:"spec,omitempty" toml:"spec" yaml:"spec,omitempty"`
 	CreatedAt  time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt  time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
@@ -44,26 +49,36 @@ var SystemColumns = struct {
 	ID         string
 	ExternalID string
 	Name       string
+	Text       string
 	Status     string
+	Hidden     string
+	Silenced   string
+	Labels     string
 	Tooltip    string
 	Lifecycle  string
 	Icon       string
 	Owner      string
 	Type       string
 	Properties string
+	Spec       string
 	CreatedAt  string
 	UpdatedAt  string
 }{
 	ID:         "id",
 	ExternalID: "external_id",
 	Name:       "name",
+	Text:       "text",
 	Status:     "status",
+	Hidden:     "hidden",
+	Silenced:   "silenced",
+	Labels:     "labels",
 	Tooltip:    "tooltip",
 	Lifecycle:  "lifecycle",
 	Icon:       "icon",
 	Owner:      "owner",
 	Type:       "type",
 	Properties: "properties",
+	Spec:       "spec",
 	CreatedAt:  "created_at",
 	UpdatedAt:  "updated_at",
 }
@@ -72,26 +87,36 @@ var SystemTableColumns = struct {
 	ID         string
 	ExternalID string
 	Name       string
+	Text       string
 	Status     string
+	Hidden     string
+	Silenced   string
+	Labels     string
 	Tooltip    string
 	Lifecycle  string
 	Icon       string
 	Owner      string
 	Type       string
 	Properties string
+	Spec       string
 	CreatedAt  string
 	UpdatedAt  string
 }{
 	ID:         "system.id",
 	ExternalID: "system.external_id",
 	Name:       "system.name",
+	Text:       "system.text",
 	Status:     "system.status",
+	Hidden:     "system.hidden",
+	Silenced:   "system.silenced",
+	Labels:     "system.labels",
 	Tooltip:    "system.tooltip",
 	Lifecycle:  "system.lifecycle",
 	Icon:       "system.icon",
 	Owner:      "system.owner",
 	Type:       "system.type",
 	Properties: "system.properties",
+	Spec:       "system.spec",
 	CreatedAt:  "system.created_at",
 	UpdatedAt:  "system.updated_at",
 }
@@ -102,26 +127,36 @@ var SystemWhere = struct {
 	ID         whereHelperstring
 	ExternalID whereHelperstring
 	Name       whereHelperstring
+	Text       whereHelpernull_String
 	Status     whereHelperstring
+	Hidden     whereHelperbool
+	Silenced   whereHelperbool
+	Labels     whereHelpernull_JSON
 	Tooltip    whereHelpernull_String
 	Lifecycle  whereHelpernull_String
 	Icon       whereHelpernull_String
 	Owner      whereHelpernull_String
 	Type       whereHelpernull_String
 	Properties whereHelpernull_JSON
+	Spec       whereHelpernull_JSON
 	CreatedAt  whereHelpertime_Time
 	UpdatedAt  whereHelpertime_Time
 }{
 	ID:         whereHelperstring{field: "\"system\".\"id\""},
 	ExternalID: whereHelperstring{field: "\"system\".\"external_id\""},
 	Name:       whereHelperstring{field: "\"system\".\"name\""},
+	Text:       whereHelpernull_String{field: "\"system\".\"text\""},
 	Status:     whereHelperstring{field: "\"system\".\"status\""},
+	Hidden:     whereHelperbool{field: "\"system\".\"hidden\""},
+	Silenced:   whereHelperbool{field: "\"system\".\"silenced\""},
+	Labels:     whereHelpernull_JSON{field: "\"system\".\"labels\""},
 	Tooltip:    whereHelpernull_String{field: "\"system\".\"tooltip\""},
 	Lifecycle:  whereHelpernull_String{field: "\"system\".\"lifecycle\""},
 	Icon:       whereHelpernull_String{field: "\"system\".\"icon\""},
 	Owner:      whereHelpernull_String{field: "\"system\".\"owner\""},
 	Type:       whereHelpernull_String{field: "\"system\".\"type\""},
 	Properties: whereHelpernull_JSON{field: "\"system\".\"properties\""},
+	Spec:       whereHelpernull_JSON{field: "\"system\".\"spec\""},
 	CreatedAt:  whereHelpertime_Time{field: "\"system\".\"created_at\""},
 	UpdatedAt:  whereHelpertime_Time{field: "\"system\".\"updated_at\""},
 }
@@ -147,9 +182,9 @@ func (*systemR) NewStruct() *systemR {
 type systemL struct{}
 
 var (
-	systemAllColumns            = []string{"id", "external_id", "name", "status", "tooltip", "lifecycle", "icon", "owner", "type", "properties", "created_at", "updated_at"}
-	systemColumnsWithoutDefault = []string{"external_id", "name", "status", "tooltip", "lifecycle", "icon", "owner", "type", "properties"}
-	systemColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
+	systemAllColumns            = []string{"id", "external_id", "name", "text", "status", "hidden", "silenced", "labels", "tooltip", "lifecycle", "icon", "owner", "type", "properties", "spec", "created_at", "updated_at"}
+	systemColumnsWithoutDefault = []string{"external_id", "name", "text", "status", "labels", "tooltip", "lifecycle", "icon", "owner", "type", "properties", "spec"}
+	systemColumnsWithDefault    = []string{"id", "hidden", "silenced", "created_at", "updated_at"}
 	systemPrimaryKeyColumns     = []string{"id"}
 )
 

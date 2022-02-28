@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	gotemplate "text/template"
@@ -95,6 +96,9 @@ func ParseSystems(configFile, datafile string) ([]v1.System, error) {
 			}
 			config.Spec = spec
 		}
+		if config.Name == "" {
+			config.Name = CleanupFilename(configFile)
+		}
 		systems = append(systems, config)
 	}
 
@@ -145,4 +149,9 @@ func ParseConfig(configfile string, datafile string) ([]v1.Canary, error) {
 	}
 
 	return canaries, nil
+}
+
+func CleanupFilename(fileName string) string {
+	removeSuffix := fileName[:len(fileName)-len(filepath.Ext(fileName))]
+	return strings.Replace(removeSuffix, "_", "", -1)
 }

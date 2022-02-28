@@ -2,6 +2,8 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -29,6 +31,48 @@ type ComponentSpec struct {
 	Properties    []*Property        `json:"properties,omitempty"`
 	Lookup        *CanarySpec        `json:"lookup,omitempty"`
 	Components    []json.RawMessage  `json:"components,omitempty"`
+	Pods          map[string]string  `json:"pods,omitempty"`
+	Summary       *Summary           `json:"summary,omitempty"`
+}
+type Summary struct {
+	Healthy   int `json:"healthy,omitempty"`
+	Unhealthy int `json:"unhealthy,omitempty"`
+	Warning   int `json:"warning,omitempty"`
+	Info      int `json:"info,omitempty"`
+}
+
+func (s Summary) String() string {
+	str := ""
+	if s.Unhealthy > 0 {
+		str += fmt.Sprintf("unhealthy=%d ", s.Unhealthy)
+	}
+	if s.Warning > 0 {
+		str += fmt.Sprintf("warning=%d ", s.Warning)
+	}
+	if s.Healthy > 0 {
+		str += fmt.Sprintf("healthy=%d ", s.Healthy)
+	}
+	return strings.TrimSpace(str)
+}
+
+func (s Summary) GetStatus() string {
+	if s.Unhealthy > 0 {
+		return "unhealthy"
+	} else if s.Warning > 0 {
+		return "warning"
+	} else if s.Healthy > 0 {
+		return "healthy"
+	}
+	return "unknown"
+}
+
+func (s Summary) Add(b Summary) Summary {
+	return Summary{
+		Healthy:   s.Healthy + b.Healthy,
+		Unhealthy: s.Unhealthy + b.Unhealthy,
+		Warning:   s.Warning + b.Warning,
+		Info:      s.Info + b.Info,
+	}
 }
 
 type ComponentStatus struct {
@@ -76,6 +120,8 @@ type Property struct {
 	Icon     string `json:"icon,omitempty"`
 	Text     string `json:"text,omitempty"`
 	Headline bool   `json:"headline,omitempty"`
+	Type     string `json:"type,omitempty"`
+	Color    string `json:"color,omitempty"`
 	// e.g. milliseconds, bytes, millicores, epoch etc.
 	Unit           string      `json:"unit,omitempty"`
 	Value          int64       `json:"value,omitempty"`

@@ -6,25 +6,28 @@ import (
 	"strings"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
 )
 
 type System struct {
-	Object     `yaml:",inline"`
-	Id         string     `json:"id"`
-	Tooltip    string     `json:"tooltip,omitempty"`
-	Icon       string     `json:"icon,omitempty"`
-	Text       string     `json:"text,omitempty"`
-	Label      string     `json:"label,omitempty"`
-	Owner      string     `json:"owner,omitempty"`
-	Components Components `json:"components,omitempty"`
-	Properties Properties `json:"properties,omitempty"`
-	Summary    Summary    `json:"summary,omitempty"`
-	Status     string     `json:"status,omitempty"`
-	Type       string     `json:"type,omitempty"`
-	CreatedAt  string     `json:"created_at,omitempty"`
-	UpdatedAt  string     `json:"updated_at,omitempty"`
-	ExternalId string     `json:"external_id,omitempty"`
+	Object       `yaml:",inline"`
+	Id           string            `json:"id"`
+	Tooltip      string            `json:"tooltip,omitempty"`
+	Icon         string            `json:"icon,omitempty"`
+	Text         string            `json:"text,omitempty"`
+	Label        string            `json:"label,omitempty"`
+	Labels       map[string]string `json:"labels,omitempty"`
+	Owner        string            `json:"owner,omitempty"`
+	Components   Components        `json:"components,omitempty"`
+	Properties   Properties        `json:"properties,omitempty"`
+	Summary      v1.Summary        `json:"summary,omitempty"`
+	Status       string            `json:"status,omitempty"`
+	Type         string            `json:"type,omitempty"`
+	CreatedAt    string            `json:"created_at,omitempty"`
+	UpdatedAt    string            `json:"updated_at,omitempty"`
+	ExternalId   string            `json:"external_id,omitempty"`
+	TopologyType string            `json:"topologyType,omitempty"`
 }
 
 func (s System) GetAsEnvironment() map[string]interface{} {
@@ -40,12 +43,24 @@ type Object struct {
 	Labels    map[string]string `json:"labels,omitempty"`
 }
 
+func (component *Component) UnmarshalJSON(b []byte) error {
+	type UpstreamUnmarshal Component
+	var c UpstreamUnmarshal
+	if err := json.Unmarshal(b, &c); err != nil {
+		return err
+	}
+	c.TopologyType = "component"
+	*component = Component(c)
+	return nil
+}
+
 func (components *Components) UnmarshalJSON(b []byte) error {
 	var flat []Component
 	if err := json.Unmarshal(b, &flat); err != nil {
 		return err
 	}
 	for _, c := range flat {
+		c.TopologyType = "component"
 		if c.ParentId == "" {
 			// first add parents
 			parent := c
@@ -53,14 +68,14 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 		}
 	}
 
-	for _, c := range flat {
+	for _, _c := range flat {
+		c := _c
+		c.TopologyType = "component"
 		if c.ParentId != "" {
 			parent := components.FindById(c.ParentId)
 			if parent == nil {
-				logger.Errorf("Invalid parent id %s for component %s in (%s)", c.ParentId, c.Id, strings.Join(components.GetIds(), ","))
 				*components = append(*components, &c)
 			} else {
-				c.ParentId = ""
 				parent.Components = append(parent.Components, &c)
 			}
 		}
@@ -76,6 +91,8 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 type Component struct {
 	Name         string            `json:"name,omitempty"`
 	Id           string            `json:"id,omitempty"`
+	Text         string            `json:"text,omitempty"`
+	TopologyType string            `json:"topologyType,omitempty"`
 	Namespace    string            `json:"namespace,omitempty"`
 	Labels       map[string]string `json:"labels,omitempty"`
 	Tooltip      string            `json:"tooltip,omitempty"`
@@ -84,8 +101,8 @@ type Component struct {
 	Status       string            `json:"status,omitempty"`
 	StatusReason string            `json:"statusReason,omitempty"`
 	// The type of component, e.g. service, API, website, library, database, etc.
-	Type    string  `json:"type,omitempty"`
-	Summary Summary `json:"summary,omitempty"`
+	Type    string     `json:"type,omitempty"`
+	Summary v1.Summary `json:"summary,omitempty"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
 	Lifecycle     string             `json:"lifecycle,omitempty"`
 	Relationships []RelationshipSpec `json:"relationships,omitempty"`
@@ -95,6 +112,44 @@ type Component struct {
 	CreatedAt     string             `json:"created_at,omitempty"`
 	UpdatedAt     string             `json:"updated_at,omitempty"`
 	ExternalId    string             `json:"external_id,omitempty"`
+}
+
+func (c Component) Clone() Component {
+	return Component{
+		Name:         c.Name,
+		TopologyType: c.TopologyType,
+		Id:           c.Id,
+		Text:         c.Text,
+		Namespace:    c.Namespace,
+		Labels:       c.Labels,
+		Tooltip:      c.Tooltip,
+		Icon:         c.Icon,
+		Owner:        c.Owner,
+		Status:       c.Status,
+		StatusReason: c.StatusReason,
+		Type:         c.Type,
+		Lifecycle:    c.Lifecycle,
+		Properties:   c.Properties,
+		ExternalId:   c.ExternalId,
+	}
+}
+
+func (c Component) String() string {
+	s := ""
+	if c.Type != "" {
+		s += c.Type + "/"
+	}
+	if c.Namespace != "" {
+		s += c.Namespace + "/"
+	}
+	if c.Text != "" {
+		s += c.Text
+	} else if c.Name != "" {
+		s += c.Name
+	} else {
+		s += c.Id
+	}
+	return s
 }
 
 func (c Component) GetAsEnvironment() map[string]interface{} {
@@ -110,7 +165,37 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Owner:     c.Owner,
 		Type:      c.Type,
 		Lifecycle: c.Lifecycle,
+		Tooltip:   c.Tooltip,
+		Icon:      c.Icon,
 	}
+}
+
+func (c Component) GetID() string {
+	if c.Id != "" {
+		return c.Id
+	}
+	if c.Text != "" {
+		return c.Text
+	}
+	return c.Name
+}
+
+func (c Components) Debug(prefix string) string {
+	s := ""
+	for _, component := range c {
+		status := component.Status
+
+		if component.IsHealthy() {
+			status = console.Greenf(status)
+		} else {
+			status = console.Redf(status)
+
+		}
+
+		s += fmt.Sprintf("%s%s (%s) => %s\n", prefix, component, component.GetID(), status)
+		s += component.Components.Debug(prefix + "\t")
+	}
+	return s
 }
 
 type Components []*Component
@@ -143,33 +228,6 @@ func (c Components) FindById(id string) *Component {
 
 type ComponentStatus struct {
 	Status ComponentPropertyStatus `json:"status,omitempty"`
-}
-
-type Summary struct {
-	Healthy   int `json:"healthy,omitempty"`
-	Unhealthy int `json:"unhealthy,omitempty"`
-	Warning   int `json:"warning,omitempty"`
-	Info      int `json:"info,omitempty"`
-}
-
-func (s Summary) GetStatus() string {
-	if s.Unhealthy > 0 {
-		return "unhealthy"
-	} else if s.Warning > 0 {
-		return "warning"
-	} else if s.Healthy > 0 {
-		return "healthy"
-	}
-	return "unknown"
-}
-
-func (s Summary) Add(b Summary) Summary {
-	return Summary{
-		Healthy:   s.Healthy + b.Healthy,
-		Unhealthy: s.Unhealthy + b.Unhealthy,
-		Warning:   s.Warning + b.Warning,
-		Info:      s.Info + b.Info,
-	}
 }
 
 type RelationshipSpec struct {
@@ -211,6 +269,7 @@ type Property struct {
 	Tooltip string `json:"tooltip,omitempty"`
 	Icon    string `json:"icon,omitempty"`
 	Type    string `json:"type,omitempty"`
+	Color   string `json:"color,omitempty"`
 
 	Headline bool `json:"headline,omitempty"`
 
@@ -320,6 +379,12 @@ func (p *Property) Merge(other *Property) {
 	if other.Links != nil {
 		p.Links = other.Links
 	}
+	if other.Type != "" {
+		p.Type = other.Type
+	}
+	if other.Color != "" {
+		p.Color = other.Color
+	}
 }
 
 func NewProperty(property v1.Property) *Property {
@@ -337,11 +402,18 @@ func NewProperty(property v1.Property) *Property {
 		LastTransition: property.LastTransition,
 		Links:          property.Links,
 		Headline:       property.Headline,
+		Type:           property.Type,
+		Color:          property.Color,
 	}
 }
 
-func (component Component) Summarize() Summary {
-	s := Summary{}
+func (component Component) IsHealthy() bool {
+	s := component.Summarize()
+	return s.Healthy > 0 && s.Unhealthy == 0 && s.Warning == 0
+}
+
+func (component Component) Summarize() v1.Summary {
+	s := v1.Summary{}
 	if len(component.Components) == 0 {
 		switch component.Status {
 		case "healthy":
@@ -359,8 +431,8 @@ func (component Component) Summarize() Summary {
 	return s
 }
 
-func (components Components) Summarize() Summary {
-	s := Summary{}
+func (components Components) Summarize() v1.Summary {
+	s := v1.Summary{}
 	for _, component := range components {
 		s = s.Add(component.Summarize())
 	}
