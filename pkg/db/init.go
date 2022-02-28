@@ -4,9 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"embed"
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/flanksource/commons/logger"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/jackc/pgx/v4/stdlib"
@@ -14,18 +17,26 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	glogger "gorm.io/gorm/logger"
 )
 
 //go:embed migrations/*.sql
 var embedMigrations embed.FS
 
 var Pool *pgxpool.Pool
+var Gorm *gorm.DB
 var ConnectionString string
 var DefaultExpiryDays int
 var pgxConnectionString string
+var Trace bool
 
 func IsConfigured() bool {
 	return ConnectionString != "" && ConnectionString != "DB_URL"
+}
+func IsConnected() bool {
+	return Pool != nil
 }
 
 func Init(connection string) error {
@@ -34,7 +45,7 @@ func Init(connection string) error {
 		return err
 	}
 
-	if logger.IsTraceEnabled() {
+	if Trace {
 		logrusLogger := &logrus.Logger{
 			Out:          os.Stderr,
 			Formatter:    new(logrus.TextFormatter),
@@ -54,6 +65,7 @@ func Init(connection string) error {
 	row := Pool.QueryRow(context.TODO(), "SELECT pg_size_pretty(pg_database_size($1));", config.ConnConfig.Database)
 	var size string
 	if err := row.Scan(&size); err != nil {
+		Pool = nil
 		return err
 	}
 	logger.Infof("Initialized DB: %s (%s)", config.ConnString(), size)
@@ -64,6 +76,19 @@ func Init(connection string) error {
 		return err
 	}
 	boil.SetDB(db)
+
+	Gorm, err = gorm.Open(postgres.New(postgres.Config{
+		Conn: db,
+	}), &gorm.Config{
+		FullSaveAssociations: true,
+	})
+
+	if logger.IsTraceEnabled() {
+		Gorm.Logger.LogMode(glogger.Info)
+	}
+	if err != nil {
+		return err
+	}
 
 	return Migrate()
 }
@@ -97,4 +122,21 @@ func Cleanup() {
 
 func GetDB() (*sql.DB, error) {
 	return sql.Open("pgx", pgxConnectionString)
+}
+
+func ConvertNamedParams(sql string, namedArgs map[string]interface{}) (string, []interface{}) {
+	i := 1
+	var args []interface{}
+	// Loop the named args and replace with placeholders
+	for pname, pval := range namedArgs {
+		sql = strings.ReplaceAll(sql, ":"+pname, fmt.Sprint(`$`, i))
+		args = append(args, pval)
+		i++
+	}
+	return sql, args
+}
+
+func QueryNamed(ctx context.Context, sql string, args map[string]interface{}) (pgx.Rows, error) {
+	sql, namedArgs := ConvertNamedParams(sql, args)
+	return Pool.Query(ctx, sql, namedArgs...)
 }

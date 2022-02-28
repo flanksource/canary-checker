@@ -81,6 +81,7 @@ func init() {
 	})
 	runner.Version = version
 	Root.PersistentFlags().StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database")
+	Root.PersistentFlags().BoolVar(&db.Trace, "db-trace", false, "Trace database queries")
 	Root.PersistentFlags().StringArrayVar(&sharedLibrary, "shared-library", []string{}, "Add javascript files to be shared by all javascript templates")
 	Root.PersistentFlags().BoolVar(&exposeEnv, "expose-env", false, "Expose environment variables for use in all templates. Note this has serious security implications with untrusted canaries")
 	Root.AddCommand(Docs)
