@@ -35,28 +35,12 @@ func (c *ExecChecker) Run(ctx *context.Context) pkg.Results {
 
 func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.ExecCheck)
-	result := pkg.Success(check, ctx.Canary)
-	_runtime := ""
-
-	var details ExecDetails
-	if _runtime == "" {
-		switch runtime.GOOS {
-		case "windows":
-			_runtime = "powershell.exe"
-		default:
-			_runtime = "bash"
-		}
+	switch runtime.GOOS {
+	case "windows":
+		return execPowershell(check, ctx)
+	default:
+		return execBash(check, ctx)
 	}
-
-	// details = execBash(check, ctx)
-
-	if ctx.IsTrace() {
-		ctx.Tracef("[%s] => %d\n%s\n%s", check.GetDescription(), details.ExitCode, details.Stdout, details.Stderr)
-	}
-	if details.ExitCode != 0 {
-		return result.Failf("non-zero exit-code: %d: %s %s", details.ExitCode, details.Stdout, details.Stderr).ToSlice()
-	}
-	return result.AddDetails(details).ToSlice()
 }
 
 func execPowershell(check v1.ExecCheck, ctx *context.Context) pkg.Results {
@@ -82,11 +66,15 @@ func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	_ = cmd.Run()
-	result.AddDetails(ExecDetails{
+	details := ExecDetails{
 		Stdout:   strings.TrimSpace(stdout.String()),
 		Stderr:   strings.TrimSpace(stderr.String()),
 		ExitCode: cmd.ProcessState.ExitCode(),
-	})
+	}
+	result.AddDetails(details)
+	if details.ExitCode != 0 {
+		return result.Failf("non-zero exit-code: %d: %s %s", details.ExitCode, details.Stdout, details.Stderr).ToSlice()
+	}
 	results = append(results, result)
 	return results
 }
