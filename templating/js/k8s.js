@@ -158,7 +158,7 @@ k8s = {
     for (i in results) {
       node = results[i].Object
       components.push({
-        name: node.metadata.name,
+        name: k8s.getNodeName(node.metadata.name),
         properties: [
           {
             name: "cpu",
@@ -173,23 +173,116 @@ k8s = {
     }
     return components
   },
+
+  getPodMetrics: function (results) {
+    components = []
+    for (i in results) {
+      node = results[i].Object
+      cpu = 0
+      mem = 0
+      for (j in node.containers) {
+        cpu += fromMillicores(node.containers[j].usage.cpu)
+        mem += fromSI(node.containers[j].usage.memory)
+      }
+      components.push({
+        name: node.metadata.name,
+        properties: [
+          {
+            name: "cpu",
+            value: cpu
+          },
+          {
+            name: "memory",
+            value: mem
+          }
+        ]
+      })
+    }
+    return components
+  },
+
+  filterLabels: function (labels) {
+    var filtered = {}
+    for (label in labels) {
+      if (endsWith(label, "-hash")) {
+        continue
+      }
+      filtered[label] = labels[label]
+    }
+    return filtered
+  },
+  getNodeName: function (name) {
+    return name.replace(".compute.internal", "")
+  },
+  getPodTopology: function (results) {
+    var pods = []
+    for (i in results) {
+      pod = results[i].Object
+      labels = k8s.filterLabels(pod.metadata.labels)
+      labels.namespace = pod.metadata.namespace
+      _pod = {
+        name: pod.metadata.name,
+        id: pod.metadata.namespace + "/" + pod.metadata.name,
+        type: "KubernetesPod",
+        labels: labels,
+        properties: [
+          {
+            name: "cpu",
+            headline: true,
+            unit: "millicores"
+          }, {
+            name: "memory",
+            headline: true,
+            unit: "bytes"
+          },
+
+          {
+            name: "node",
+            text: pod.spec.nodeName
+          },
+          {
+            name: "created",
+            text: pod.metadata.creationTimestamp,
+          },
+          {
+            name: "ip",
+            text: pod.status.IPs != null && pod.status.IPs.length > 0 ? pod.status.IPs[0].ip : ""
+          }
+        ]
+      }
+
+      if (k8s.conditions.isReady(pod)) {
+        _pod.status = "healthy"
+      } else {
+        _pod.status = "unhealthy"
+        _pod.statusReason = k8s.conditions.getMessage(pod)
+      }
+
+      pods.push(_pod)
+    }
+    return pods
+  },
+
+
   getNodeTopology: function (results) {
     var nodes = []
     for (i in results) {
       node = results[i].Object
       _node = {
-        name: node.metadata.name,
+        name: k8s.getNodeName(node.metadata.name),
+        type: "KubernetesNode",
         properties: [
           {
             name: "cpu",
             min: 0,
             unit: "millicores",
-
+            headline: true,
             max: fromMillicores(node.status.allocatable.cpu)
           },
           {
             name: "memory",
             unit: "bytes",
+            headline: true,
             max: fromSI(node.status.allocatable.memory)
           },
           {
@@ -226,13 +319,17 @@ k8s = {
           text: externalIP.address
         })
       }
+      _node.properties.push({
+        name: "os",
+        text: node.status.nodeInfo.osImage + "(" + node.status.nodeInfo.architecture + ")"
+      })
       for (k in node.status.nodeInfo) {
-        if (k == "bootID" || k == "machineID" || k == "systemUUID") {
+        if (k == "bootID" || k == "machineID" || k == "systemUUID" || k == "architecture" || k == "operatingSystem" || k == "osImage") {
           continue
         }
         v = node.status.nodeInfo[k]
         _node.properties.push({
-          name: k,
+          name: k.replace("Version", ""),
           text: v
         })
       }
