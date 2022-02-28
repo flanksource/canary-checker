@@ -35,7 +35,7 @@ func (q QueryParams) GetWhereClause() (string, map[string]interface{}, error) {
 	args := make(map[string]interface{})
 	and := " AND "
 	if q.Check != "" {
-		clause = "check_key = :check_key"
+		clause = "id = :check_key"
 		args["check_key"] = q.Check
 	}
 	if q.Start != "" && q.End == "" {
@@ -134,11 +134,11 @@ func (q QueryParams) ExecuteDetails(db Querier) ([]pkg.Timeseries, error) {
 
 func exec(db Querier, q QueryParams, sql string, namedArgs map[string]interface{}) (pgx.Rows, error) {
 	if q.Trace {
-		sqlDebug := convertNamedParamsDebug(sql, namedArgs)
+		sqlDebug := ConvertNamedParamsDebug(sql, namedArgs)
 		logger.Tracef(sqlDebug)
 	}
 
-	positionalSQL, args := convertNamedParams(sql, namedArgs)
+	positionalSQL, args := ConvertNamedParams(sql, namedArgs)
 
 	rows, err := db.Query(context.Background(), positionalSQL, args...)
 
@@ -159,68 +159,65 @@ func (q QueryParams) ExecuteSummary(db Querier) (pkg.Checks, error) {
 		statusColumns += ", 'message', message, 'error', error"
 	}
 	sql := fmt.Sprintf(`
-SELECT checks.key,
-  passed.passed,
-  failed.failed,
-  stats.p99, stats.p97, stats.p95,
-	statii,
-	canary_name as canaryName,
-	check_type as type,
-	description,
-	display_type as displayType,
-	endpoint,
-	icon,
-	id,
-	interval,
-	labels,
-	name,
-	namespace,
-	owner,
-	runner_labels as runnerLabels,
-	runner_name as runnerName,
-	schedule,
-	severity
+SELECT
+checks.id::text,
+canary_id::text,
+passed.passed,
+failed.failed,
+stats.p99, stats.p97, stats.p95,
+statii,
+type,
+checks.icon,
+checks.name,
+checks.description,
+canaries.namespace,
+canaries.name as canaryName,
+canaries.labels,
+severity,
+owner,
+last_runtime
 	FROM checks checks
   FULL JOIN (
-  	SELECT check_key,
+  	SELECT check_id,
 			percentile_disc(0.99) within group (order by check_statuses.duration) as p99,
 			percentile_disc(0.97) within group (order by check_statuses.duration) as p97,
 			percentile_disc(0.05) within group (order by check_statuses.duration) as p95
-			FROM check_statuses WHERE %s  GROUP BY check_key
-  ) as stats ON stats.check_key = checks.key
+			FROM check_statuses WHERE %s  GROUP BY check_id
+  ) as stats ON stats.check_id = checks.id
+	FULL JOIN canaries on checks.canary_id = canaries.id
   FULL JOIN (
-    SELECT check_key,
+    SELECT check_id,
       count(*) as failed
 		FROM check_statuses
     WHERE status = false  AND %s
-    GROUP BY check_key
-  ) as failed ON failed.check_key = checks.key
+    GROUP BY check_id
+  ) as failed ON failed.check_id = checks.id
   FULL JOIN (
-    SELECT check_key,
+    SELECT check_id,
       count(*) as passed
 		FROM check_statuses
     WHERE  status = true AND %s
-    GROUP BY check_key
-  ) as passed ON passed.check_key = checks.key
+    GROUP BY check_id
+  ) as passed ON passed.check_id = checks.id
 		FULL JOIN (
-			SELECT check_key, json_agg(json_build_object('status',status,'duration',duration,'time',time %s)) as statii
+			SELECT check_id, json_agg(json_build_object('status',status,'duration',duration,'time',time %s)) as statii
 	FROM (
-			SELECT check_key,
+			SELECT check_id,
 				status,
 				time,
 				duration,
 				message,
 				error,
 				rank() OVER (
-					PARTITION BY check_key
+					PARTITION BY check_id
 					ORDER BY time DESC
 				)
 			FROM check_statuses
 			WHERE  %s
 		) check_statuses
 	WHERE rank <= :count
-	GROUP by check_key
-		) as statuses ON statuses.check_key = checks.key
+	GROUP by check_id
+		) as statuses ON statuses.check_id = checks.id
 		WHERE passed.passed > 0 OR failed.failed > 0
 	`, clause, clause, clause, statusColumns, clause)
 
@@ -241,31 +238,25 @@ SELECT checks.key,
 		if err != nil {
 			return nil, err
 		}
-		check.Key = vals[0].(string)
-		check.Uptime.Passed = intV(vals[1])
-		check.Uptime.Failed = intV(vals[2])
-		check.Latency.Percentile99 = float64V(vals[3])
-		check.Latency.Percentile97 = float64V(vals[4])
-		check.Latency.Percentile95 = float64V(vals[5])
-		check.CanaryName = vals[7].(string)
+		check.ID = vals[0].(string)
+		check.CanaryID = vals[1].(string)
+		check.Uptime.Passed = intV(vals[2])
+		check.Uptime.Failed = intV(vals[3])
+		check.Latency.Percentile99 = float64V(vals[4])
+		check.Latency.Percentile97 = float64V(vals[6])
+		check.Latency.Percentile95 = float64V(vals[6])
 		check.Type = vals[8].(string)
-		check.Description = vals[9].(string)
-		check.DisplayType = vals[10].(string)
-		check.Endpoint = vals[11].(string)
-		check.Icon = vals[12].(string)
-		check.ID = vals[13].(string)
-		check.Interval = uint64(intV(vals[14]))
-		check.Labels = mapStringString(vals[15])
-		check.Name = vals[16].(string)
-		check.Namespace = vals[17].(string)
-		check.Owner = vals[18].(string)
-		check.RunnerLabels = mapStringString(vals[19])
-		check.RunnerName = vals[20].(string)
-		check.Schedule = vals[21].(string)
-		check.Severity = vals[22].(string)
-
-		if vals[6] != nil {
-			for _, status := range vals[6].([]interface{}) {
+		check.Icon = vals[9].(string)
+		check.Name = vals[10].(string)
+		check.Description = vals[11].(string)
+		check.Namespace = vals[12].(string)
+		check.CanaryName = vals[13].(string)
+		check.Labels = mapStringString(vals[14])
+		check.Severity = vals[15].(string)
+		check.Owner = vals[16].(string)
+		check.LastRuntime, _ = timeV(vals[17])
+		if vals[7] != nil {
+			for _, status := range vals[7].([]interface{}) {
 				s := status.(map[string]interface{})
 				check.Statuses = append(check.Statuses, pkg.CheckStatus{
 					Status:   s["status"].(bool),
@@ -277,7 +268,7 @@ SELECT checks.key,
 			}
 		}
 		if q.Trace {
-			logger.Infof("%s", check.String())
+			logger.Infof("%+v", check)
 		}
 		checks = append(checks, &check)
 	}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	awsconfigruletypes "github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/kommons"
 	v1 "k8s.io/api/core/v1"

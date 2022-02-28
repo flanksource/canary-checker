@@ -1,16 +1,18 @@
 package pkg
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/console"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/google/uuid"
 )
 
 type Endpoint struct {
@@ -101,87 +103,52 @@ type Timeseries struct {
 	Count int `json:"count,omitempty"`
 }
 
-type Check struct {
-	Key          string            `json:"key"`
-	Type         string            `json:"type"`
-	Name         string            `json:"name"`
-	Namespace    string            `json:"namespace,omitempty"`
-	Labels       map[string]string `json:"labels"`
-	RunnerLabels map[string]string `json:"runnerLabels,omitempty"`
-	CanaryName   string            `json:"canaryName"`
-	Description  string            `json:"description,omitempty"`
-	Endpoint     string            `json:"endpoint,omitempty"`
-	Uptime       Uptime            `json:"uptime" db:""`
-	Latency      Latency           `json:"latency" db:""`
-	Statuses     []CheckStatus     `json:"checkStatuses"`
-	Interval     uint64            `json:"interval,omitempty"`
-	Schedule     string            `json:"schedule,omitempty"`
-	Owner        string            `json:"owner,omitempty"`
-	Severity     string            `json:"severity,omitempty"`
-	Icon         string            `json:"icon,omitempty"`
-	DisplayType  string            `json:"displayType,omitempty"`
-	RunnerName   string            `json:"runnerName,omitempty"`
-	// Specify the canary id, <runner>/<namespace>/<name>
-	ID     string     `json:"id"`
-	Canary *v1.Canary `json:"-"`
+type Canary struct {
+	ID        uuid.UUID `gorm:"default:generate_ulid()"`
+	Spec      types.JSON
+	Labels    types.JSONStringMap
+	Source    string
+	Name      string
+	Namespace string
+	Schedule  string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
 }
 
-func (c Check) String() string {
-	s := ""
+func CanaryFromV1(canary v1.Canary) Canary {
+	spec, _ := json.Marshal(canary.Spec)
+	return Canary{
+		Spec:      spec,
+		Labels:    types.JSONStringMap(canary.Labels),
+		Name:      canary.Name,
+		Namespace: canary.Namespace,
+		Schedule:  canary.Spec.GetSchedule(),
+	}
+}
 
-	if c.Name != "" {
-		s += "name=" + c.Name + " "
-	}
-	if c.Key != "" {
-		s += "key=" + c.Key + " "
-	}
-	if c.Type != "" {
-		s += "type=" + c.Type + " "
-	}
-	if c.Namespace != "" {
-		s += "namespace=" + c.Namespace + " "
-	}
-	if c.CanaryName != "" {
-		s += "canary=" + c.CanaryName + " "
-	}
-	if c.Description != "" {
-		s += "description=" + c.Description + " "
-	}
-	if c.Endpoint != "" {
-		s += "endpoint=" + c.Endpoint + " "
-	}
-	if c.Uptime.String() != "" {
-		s += "uptime=" + c.Uptime.String() + " "
-	}
-	if c.Latency.String() != "" {
-		s += "latency=" + c.Latency.String() + " "
-	}
-	if c.Interval != 0 {
-		s += "interval=" + fmt.Sprintf("%d", c.Interval) + " "
-	}
-	if c.Schedule != "" {
-		s += "schedule=" + c.Schedule + " "
-	}
-	if c.Owner != "" {
-		s += "owner=" + c.Owner + " "
-	}
-	if c.Severity != "" {
-		s += "severity=" + c.Severity + " "
-	}
-	if c.Icon != "" {
-		s += "icon=" + c.Icon + " "
-	}
-	if c.DisplayType != "" {
-		s += "displayType=" + c.DisplayType + " "
-	}
-	if c.RunnerName != "" {
-		s += "runner=" + c.RunnerName + " "
-	}
-	if c.ID != "" {
-		s += "id=" + c.ID + " "
-	}
-	s += "statuses=" + fmt.Sprintf("%d", len(c.Statuses))
-	return s
+type Check struct {
+	ID          string              `gorm:"default:generate_ulid()"`
+	CanaryID    string              `json:"canary_id"`
+	Spec        types.JSON          `json:"-"`
+	Type        string              `json:"type"`
+	Name        string              `json:"name"`
+	CanaryName  string              `json:"canary_name" gorm:"-"`
+	Namespace   string              `json:"namespace"  gorm:"-"`
+	Labels      types.JSONStringMap `json:"labels" gorm:"type:jsonstringmap;<-:false"`
+	Description string              `json:"description,omitempty"`
+	Uptime      Uptime              `json:"uptime"  gorm:"-"`
+	Latency     Latency             `json:"latency"  gorm:"-"`
+	Statuses    []CheckStatus       `json:"checkStatuses"  gorm:"-"`
+	Owner       string              `json:"owner,omitempty"`
+	Severity    string              `json:"severity,omitempty"`
+	Icon        string              `json:"icon,omitempty"`
+	DisplayType string              `json:"displayType,omitempty"  gorm:"-"`
+	LastRuntime *time.Time          `json:"lastRuntime,omitempty"`
+	NextRuntime *time.Time          `json:"nextRuntime,omitempty"`
+	UpdatedAt   time.Time           `json:"updatedAt,omitempty"`
+	CreatedAt   time.Time           `json:"createdAt,omitempty"`
+	Canary      *v1.Canary          `json:"-" gorm:"-"`
 }
 
 func FromResult(result CheckResult) CheckStatus {
@@ -196,44 +163,35 @@ func FromResult(result CheckResult) CheckStatus {
 	}
 }
 func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Check {
-	return Check{
-		Canary:      &canary,
-		CanaryName:  canary.Name,
-		Description: check.GetDescription(),
-		Endpoint:    check.GetEndpoint(),
-		Icon:        check.GetIcon(),
-		ID:          canary.ID(),
-		Interval:    canary.Spec.Interval,
-		Key:         canary.GetKey(check),
-		Labels:      labels.FilterLabels(canary.GetAllLabels(nil)),
+	c := Check{
+		Owner:    canary.Spec.Owner,
+		Severity: canary.Spec.Severity,
+		// DisplayType: check.DisplayType,
 		Name:        check.GetName(),
+		Description: check.GetDescription(),
+		Icon:        check.GetIcon(),
 		Namespace:   canary.Namespace,
-		Owner:       canary.Spec.Owner,
-		RunnerName:  canary.GetRunnerName(),
-		Schedule:    canary.Spec.Schedule,
-		Severity:    canary.Spec.Severity,
+		CanaryName:  canary.Name,
+		Labels:      labels.FilterLabels(canary.GetAllLabels(nil)),
 		Statuses:    statuses,
 		Type:        check.GetType(),
 	}
+	if canary.Status.PersistedID != nil {
+		c.CanaryID = *canary.Status.PersistedID
+	}
+
+	return c
 }
 
 func (c Check) GetID() string {
-	return c.Key + c.Endpoint + c.Description
-}
-
-func (c Check) GetNamespace() string {
-	if c.Namespace != "" {
-		return c.Namespace
-	}
-	return strings.Split(c.Name, "/")[0]
+	return c.ID
 }
 
 func (c Check) GetName() string {
-	parts := strings.Split(c.Name, "/")
-	if len(parts) == 1 {
-		return parts[0]
+	if c.Name != "" {
+		return c.Name
 	}
-	return parts[1]
+	return c.Description
 }
 
 type Checks []*Check
@@ -249,37 +207,13 @@ func (c Checks) Swap(i, j int) {
 	c[i], c[j] = c[j], c[i]
 }
 
-func (c Checks) String() string {
-	var s string
-	for _, check := range c {
-		s += check.String() + "\n"
-	}
-	return s
-}
-
 func (c Checks) Find(key string) *Check {
 	for _, check := range c {
-		if check.Key == key {
+		if check.Name == key {
 			return check
 		}
 	}
 	return nil
-}
-
-func (c Checks) Merge(from Checks, statusCount int) Checks {
-	for _, check := range from {
-		match := c.Find(check.Key)
-		if match == nil {
-			c = append(c, check)
-		} else {
-			match.Statuses = append(match.Statuses, check.Statuses...)
-			if len(match.Statuses) > statusCount {
-				match.Statuses = match.Statuses[0:statusCount]
-				continue
-			}
-		}
-	}
-	return c
 }
 
 func (c Check) ToString() string {
@@ -288,26 +222,6 @@ func (c Check) ToString() string {
 
 func (c Check) GetDescription() string {
 	return c.Description
-}
-
-type Config struct {
-	HTTP           []v1.HTTPCheck           `yaml:"http,omitempty" json:"http,omitempty"`
-	DNS            []v1.DNSCheck            `yaml:"dns,omitempty" json:"dns,omitempty"`
-	ContainerdPull []v1.ContainerdPullCheck `yaml:"containerdPull,omitempty" json:"containerdPull,omitempty"`
-	ContainerdPush []v1.ContainerdPushCheck `yaml:"containerdPush,omitempty" json:"containerdPush,omitempty"`
-	DockerPull     []v1.DockerPullCheck     `yaml:"docker,omitempty" json:"docker,omitempty"`
-	DockerPush     []v1.DockerPushCheck     `yaml:"dockerPush,omitempty" json:"dockerPush,omitempty"`
-	S3             []v1.S3Check             `yaml:"s3,omitempty" json:"s3,omitempty"`
-	TCP            []v1.TCPCheck            `yaml:"tcp,omitempty" json:"tcp,omitempty"`
-	Pod            []v1.PodCheck            `yaml:"pod,omitempty" json:"pod,omitempty"`
-	LDAP           []v1.LDAPCheck           `yaml:"ldap,omitempty" json:"ldap,omitempty"`
-	ICMP           []v1.ICMPCheck           `yaml:"icmp,omitempty" json:"icmp,omitempty"`
-	Postgres       []v1.PostgresCheck       `yaml:"postgres,omitempty" json:"postgres,omitempty"`
-	Mssql          []v1.MssqlCheck          `yaml:"mssql,omitempty" json:"mssql,omitempty"`
-	Redis          []v1.RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
-	Helm           []v1.HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
-	Namespace      []v1.NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-	Interval       metav1.Duration          `yaml:"-" json:"interval,omitempty"`
 }
 
 type Checker interface {
