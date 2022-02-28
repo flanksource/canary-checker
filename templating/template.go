@@ -15,21 +15,21 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	_ "github.com/flanksource/canary-checker/templating/js"
-	"github.com/flanksource/commons/files"
+	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/text"
 	"github.com/robertkrimen/otto/registry"
 	_ "github.com/robertkrimen/otto/underscore"
 )
 
 func LoadSharedLibrary(source string) error {
-	if files.Exists(source) {
-		data, err := ioutil.ReadFile(source)
-		if err != nil {
-			return fmt.Errorf("failed to read shared library %s: %s", source, err)
-		}
-		registry.Register(func() string { return string(data) })
+	source = strings.TrimSpace(source)
+	data, err := ioutil.ReadFile(source)
+	if err != nil {
+		return fmt.Errorf("failed to read shared library %s: %s", source, err)
 	}
-	return fmt.Errorf("shared library %s not found", source)
+	logger.Tracef("Loaded %s: \n%s", source, string(data))
+	registry.Register(func() string { return string(data) })
+	return nil
 }
 
 func Template(environment map[string]interface{}, template v1.Template) (string, error) {
