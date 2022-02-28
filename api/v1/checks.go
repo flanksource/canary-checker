@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -491,22 +492,22 @@ type JunitCheck struct {
 	TestResults string `yaml:"testResults" json:"testResults"`
 	Templatable `yaml:",inline" json:",inline"`
 	// Timeout in minutes to wait for specified container to finish its job. Defaults to 5 minutes
-	Timeout int        `yaml:"timeout,omitempty" json:"timeout,omitempty"`
-	Spec    v1.PodSpec `yaml:"spec" json:"spec"`
+	Timeout int             `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+	Spec    json.RawMessage `yaml:"spec" json:"spec"`
 }
 
 func (c JunitCheck) GetEndpoint() string {
 	if c.Description.String() != "" {
 		return c.Description.String()
 	}
-	if len(c.Spec.Containers) > 0 {
-		if c.Spec.Containers[0].Name != "" {
-			return c.Spec.Containers[0].Name
-		}
-		if c.Spec.Containers[0].Image != "" {
-			return c.Spec.Containers[0].Image
-		}
-	}
+	// if len(c.Spec.Containers) > 0 {
+	// 	if c.Spec.Containers[0].Name != "" {
+	// 		return c.Spec.Containers[0].Name
+	// 	}
+	// 	if c.Spec.Containers[0].Image != "" {
+	// 		return c.Spec.Containers[0].Image
+	// 	}
+	// }
 	return c.TestResults
 }
 
