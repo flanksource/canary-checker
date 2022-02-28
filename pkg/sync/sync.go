@@ -10,7 +10,6 @@ import (
 )
 
 func SyncCanary(dataFile string, configFiles ...string) error {
-
 	if len(configFiles) == 0 {
 		return errors.New("No config file specified, running in read-only mode")
 	}
@@ -26,7 +25,6 @@ func SyncCanary(dataFile string, configFiles ...string) error {
 				return err
 			}
 		}
-
 	}
 	return nil
 }
