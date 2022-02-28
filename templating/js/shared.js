@@ -23,3 +23,10 @@ function startsWith(s, search, rawPos) {
   var pos = rawPos > 0 ? rawPos | 0 : 0;
   return s.substring(pos, pos + search.length) === search;
 }
+
+function endsWith(s, search) {
+  if (s == null) {
+    return false;
+  }
+  return s.indexOf(search) === s.length - search.length;
+}
