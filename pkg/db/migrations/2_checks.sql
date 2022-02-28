@@ -1,40 +1,52 @@
 -- +goose Up
 -- +goose StatementBegin
+
+CREATE TABLE IF NOT EXISTS canaries (
+	id UUID DEFAULT generate_ulid() PRIMARY KEY,
+	name text NOT NULL,
+	namespace text NOT NULL,
+	labels jsonb NULL,
+	spec jsonb NOT NULL,
+	schedule text,
+	source text,
+	created_at TIMESTAMP,
+	updated_at TIMESTAMP,
+	deleted_at TIMESTAMP,
+	UNIQUE (name, namespace)
+);
+
 CREATE TABLE IF NOT EXISTS checks(
-	canary json,
-	canary_name TEXT,
-	check_type TEXT NOT NULL,
+	id UUID DEFAULT generate_ulid() PRIMARY KEY,
+	canary_id UUID NOT NULL,
+	type TEXT NOT NULL,
+	name text NOT NULL,
 	description TEXT,
-	display_type TEXT,
-	endpoint TEXT,
 	icon TEXT,
-	id TEXT NOT NULL,
-	interval int,
-	key TEXT NOT NULL,
-	labels jsonb,
-	name TEXT NOT NULL,
-	namespace TEXT NOT NULL,
-	owner TEXT,
-	runner_labels jsonb,
-	runner_name TEXT,
-	schedule TEXT,
+	spec jsonb  NULL,
+	owner text,
 	severity TEXT,
-	updated_at TIMESTAMP with time zone NOT NULL,
-	PRIMARY KEY (key)
+	last_runtime TIMESTAMP,
+	next_runtime TIMESTAMP,
+	created_at TIMESTAMP,
+	updated_at TIMESTAMP NULL,
+	FOREIGN KEY (canary_id) REFERENCES canaries(id),
+	UNIQUE (canary_id, type, name)
 );
 ---
 CREATE TABLE IF NOT EXISTS check_statuses(
-	check_key TEXT NOT NULL,
+	check_id UUID NOT NULL,
 	details jsonb,
 	duration INT,
 	error Text,
-	inserted_at TIMESTAMP with time zone NOT NULL,
+	-- The time the check as run, can be earlier than created_at
+	time TIMESTAMP,
+	-- The time in which the check was added to the database
+	created_at TIMESTAMP with time zone NOT NULL,
 	invalid boolean,
 	message TEXT,
 	status boolean,
-	time TIMESTAMP with time zone,
-	PRIMARY KEY (time, check_key)
+	FOREIGN KEY (check_id) REFERENCES checks(id),
+	 UNIQUE (check_id, time)
+
 );
-CREATE INDEX if NOT EXISTS idx_check_statuses_time on check_statuses (time);
-CREATE INDEX IF NOT EXISTS idx_check_statuses_key on check_statuses(check_key);
 -- +goose StatementEnd

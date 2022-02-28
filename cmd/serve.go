@@ -6,28 +6,22 @@ import (
 	nethttp "net/http"
 	_ "net/http/pprof" // required by serve
 
+	"github.com/flanksource/canary-checker/pkg/controllers"
 	"github.com/flanksource/canary-checker/pkg/db"
 
 	"github.com/flanksource/canary-checker/pkg/details"
 	"github.com/flanksource/canary-checker/pkg/runner"
-	"github.com/flanksource/canary-checker/pkg/spec"
 
 	"github.com/flanksource/canary-checker/pkg/push"
 
-	"github.com/flanksource/canary-checker/api/context"
-	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/checks"
-	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
-	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/flanksource/canary-checker/ui"
 	"github.com/flanksource/commons/logger"
-	"github.com/robfig/cron/v3"
 	"github.com/spf13/cobra"
 )
 
@@ -37,59 +31,23 @@ var Serve = &cobra.Command{
 	Use:   "serve config.yaml",
 	Short: "Start a server to execute checks",
 	Run: func(cmd *cobra.Command, configFiles []string) {
-		var canaries []v1.Canary
-		if len(configFiles) == 0 {
-			logger.Warnf("No config file specified, running in read-only mode")
-		}
-		for _, configfile := range configFiles {
-			configs, err := pkg.ParseConfig(configfile, dataFile)
-			if err != nil {
-				logger.Fatalf("could not parse %s: %v", configfile, err)
-			}
-			canaries = append(canaries, configs...)
-		}
-		kommonsClient, err := pkg.NewKommonsClient()
-		if err != nil {
-			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
-		}
-		cron := cron.New()
 
-		for _, canary := range canaries {
-			logger.Infof("Loading %s/%s", canary.Namespace, canary.Name)
-			if schedule == "" {
-				if canary.Spec.Schedule != "" {
-					schedule = canary.Spec.Schedule
-				} else if canary.Spec.Interval > 0 {
-					schedule = fmt.Sprintf("@every %ds", canary.Spec.Interval)
-				}
-			}
-			if canary.Namespace == "" {
-				canary.Namespace = "default"
-			}
-			canary.SetRunnerName(runner.RunnerName)
-			for _, _c := range checks.All {
-				c := _c
-				if !checks.Checks(canary.Spec.GetAllChecks()).Includes(c) {
-					continue
-				}
-				var _canary = canary
-				cron.AddFunc(schedule, func() { // nolint: errcheck
-					go func() {
-						for _, result := range checks.RunChecks(context.New(kommonsClient, _canary)) {
-							if logPass && result.Pass || logFail && !result.Pass {
-								logger.Infof(result.String())
-							}
-							cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
-							metrics.Record(result.Canary, result)
-							push.Queue(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
-						}
-					}()
-				})
-			}
-		}
-		cron.Start()
+		setup()
+		controllers.StartScanCanaryConfigs(dataFile, configFiles)
+		controllers.Start()
 		serve()
 	},
+}
+
+func setup() {
+	if err := db.Init(db.ConnectionString); err != nil {
+		logger.Fatalf("error connecting to db %v", err)
+	}
+	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
+	controllers.Start()
+	push.AddServers(pushServers)
+	go push.Start()
+
 }
 
 func serve() {
@@ -108,6 +66,7 @@ func serve() {
 		allowedCors = ""
 	}
 
+<<<<<<< HEAD
 	nethttp.Handle("/metrics", promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{}))
 	if db.ConnectionString != "" {
 		if err := db.Init(db.ConnectionString); err != nil {
@@ -120,6 +79,8 @@ func serve() {
 	push.AddServers(pushServers)
 	go push.Start()
 
+=======
+>>>>>>> f0fbe02 (feat: switch to uuid based canary id + sql as source of truth)
 	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheusURL)
 
 	nethttp.HandleFunc("/", stripQuery(nethttp.FileServer(staticRoot).ServeHTTP))
@@ -130,10 +91,9 @@ func serve() {
 	nethttp.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler, allowedCors))
 	nethttp.HandleFunc("/api/push", simpleCors(push.Handler, allowedCors))
 	nethttp.HandleFunc("/api/details", simpleCors(details.Handler, allowedCors))
-	nethttp.HandleFunc("/api/spec", simpleCors(spec.CheckHandler, allowedCors))
-	nethttp.HandleFunc("/api/spec/canary", simpleCors(spec.CanaryHandler, allowedCors))
 	nethttp.HandleFunc("/api/changes", simpleCors(api.Changes, allowedCors))
 	nethttp.HandleFunc("/api/topology", simpleCors(api.Topology, allowedCors))
+	nethttp.Handle("/metrics", promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{}))
 
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
 	logger.Infof("Starting health dashboard at http://%s", addr)
