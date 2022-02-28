@@ -80,7 +80,7 @@ func lookupComponents(ctx *SystemContext, component v1.ComponentSpec) ([]*pkg.Co
 		for _, property := range component.Properties {
 			props, err := lookupProperty(ctx.WithComponents(&components, comp), property)
 			if err != nil {
-				return nil, errors.Wrapf(err, "property lookup failed: %s", property)
+				return nil, errors.Wrapf(err, "property lookup failed: %s", property.Name)
 			}
 			comp.Properties = append(comp.Properties, props...)
 		}
@@ -143,7 +143,6 @@ func getPodLookup(namespace string, labels ...map[string]string) v1.ComponentSpe
 			},
 		},
 	}
-
 }
 
 func template(ctx *SystemContext, tpl v1.Template) (string, error) {
@@ -165,9 +164,9 @@ func lookup(client *kommons.Client, name string, spec v1.CanarySpec) ([]interfac
 			case []interface{}:
 				results = append(results, result.Detail.([]interface{})...)
 			case interface{}:
-				results = append(results, result.Detail.(interface{}))
+				results = append(results, result.Detail)
 			default:
-				return nil, fmt.Errorf("Unknown type %T", result.Detail)
+				return nil, fmt.Errorf("unknown type %T", result.Detail)
 			}
 		}
 	}
@@ -193,15 +192,18 @@ func lookupProperty(ctx *SystemContext, property *v1.Property) (pkg.Properties, 
 		if isComponentList(data) {
 			components := pkg.Components{}
 			err = json.Unmarshal([]byte(results[0].(string)), &components)
+			if err != nil {
+				return nil, err
+			}
 			for _, component := range components {
 				found := ctx.Components.Find(component.Name)
 				if found == nil {
-					return nil, fmt.Errorf("Component %s not found", component.Name)
+					return nil, fmt.Errorf("component %s not found", component.Name)
 				}
 				for _, property := range component.Properties {
 					foundProperty := found.Properties.Find(property.Name)
 					if foundProperty == nil {
-						return nil, fmt.Errorf("Property %s not found", property.Name)
+						return nil, fmt.Errorf("property %s not found", property.Name)
 					}
 					foundProperty.Merge(property)
 				}
@@ -212,11 +214,11 @@ func lookupProperty(ctx *SystemContext, property *v1.Property) (pkg.Properties, 
 			err = json.Unmarshal([]byte(results[0].(string)), &properties)
 			return properties, err
 		} else {
-			logger.Errorf("Unknown type %T: %v", data, string(data))
+			logger.Errorf("unknown type %T: %v", data, string(data))
 			return nil, nil
 		}
 	}
-	logger.Errorf("Unknown type %T", results)
+	logger.Errorf("unknown type %T", results)
 
 	return nil, nil
 }

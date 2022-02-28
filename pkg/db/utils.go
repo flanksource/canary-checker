@@ -7,7 +7,7 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
-func mapToJson(m map[string]string) null.JSON {
+func mapToJSON(m map[string]string) null.JSON {
 	b, err := json.Marshal(m)
 	if err != nil {
 		return null.JSON{}

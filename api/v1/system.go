@@ -13,7 +13,7 @@ type System struct {
 }
 type SystemSpec struct {
 	Type    string            `json:"type,omitempty"`
-	Id      *Template         `json:"id,omitempty"`
+	Id      *Template         `json:"id,omitempty"` //nolint
 	Tooltip string            `json:"tooltip,omitempty"`
 	Icon    string            `json:"icon,omitempty"`
 	Text    string            `json:"text,omitempty"`

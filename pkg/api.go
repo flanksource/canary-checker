@@ -128,7 +128,7 @@ func CanaryFromV1(canary v1.Canary) Canary {
 }
 
 type Check struct {
-	ID          string              `gorm:"default:generate_ulid()"`
+	ID          string              `json:"id" gorm:"default:generate_ulid()"`
 	CanaryID    string              `json:"canary_id"`
 	Spec        types.JSON          `json:"-"`
 	Type        string              `json:"type"`
