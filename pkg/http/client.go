@@ -45,7 +45,6 @@ func NewRequest(endpoint string) *HTTPRequest {
 	return &HTTPRequest{
 		URL:      url,
 		dnsCache: true,
-		start:    time.Now(),
 		headers:  make(map[string]string),
 	}
 }
@@ -261,8 +260,10 @@ func (h *HTTPRequest) Do(body string) *HTTPResponse {
 	if h.Username != "" && h.Password != "" {
 		req.SetBasicAuth(h.Username, h.Password)
 	}
-	resp, err := h.getHTTPClient().Do(req)
-	r := NewHTTPResponse(h, resp).SetError(err)
+	client := h.getHTTPClient()
+	start := time.Now()
+	resp, err := client.Do(req)
+	r := NewHTTPResponse(h, resp, start).SetError(err)
 
 	if logger.IsTraceEnabled() {
 		logger.Tracef(r.String())
@@ -270,7 +271,7 @@ func (h *HTTPRequest) Do(body string) *HTTPResponse {
 	return r
 }
 
-func NewHTTPResponse(req *HTTPRequest, resp *http.Response) *HTTPResponse {
+func NewHTTPResponse(req *HTTPRequest, resp *http.Response, start time.Time) *HTTPResponse {
 	headers := make(map[string]string)
 	if resp != nil {
 		for header, values := range resp.Header {
@@ -281,7 +282,7 @@ func NewHTTPResponse(req *HTTPRequest, resp *http.Response) *HTTPResponse {
 		Request:  req,
 		Headers:  headers,
 		Response: resp,
-		Elapsed:  time.Since(req.start),
+		Elapsed:  time.Since(start),
 	}
 }
 
