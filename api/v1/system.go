@@ -12,13 +12,15 @@ type System struct {
 	Status            SystemStatus `json:"status,omitempty"`
 }
 type SystemSpec struct {
-	Type       string           `json:"type,omitempty"`
-	Id         *Template        `json:"id,omitempty"`
-	Tooltip    string           `json:"tooltip,omitempty"`
-	Icon       string           `json:"icon,omitempty"`
-	Text       string           `json:"text,omitempty"`
-	Label      string           `json:"label,omitempty"`
-	Owner      Owner            `json:"owner,omitempty"`
+	Type    string            `json:"type,omitempty"`
+	Id      *Template         `json:"id,omitempty"`
+	Tooltip string            `json:"tooltip,omitempty"`
+	Icon    string            `json:"icon,omitempty"`
+	Text    string            `json:"text,omitempty"`
+	Label   string            `json:"label,omitempty"`
+	Owner   Owner             `json:"owner,omitempty"`
+	Pods    map[string]string `json:"pods,omitempty"`
+	// ComponentSelector []ComponentSelector `json:"componentSelector,omitempty"`
 	Components []ComponentSpec  `json:"components,omitempty"`
 	Canaries   []CanarySelector `json:"canaries,omitempty"`
 	Properties Properties       `json:"properties,omitempty"`
@@ -28,8 +30,13 @@ func (system System) IsEmpty() bool {
 	return len(system.Spec.Properties) == 0 && len(system.Spec.Canaries) == 0 && len(system.Spec.Components) == 0 && system.Name == ""
 }
 
+type ComponentSelector struct {
+	Selector   `json:",inline"`
+	Properties map[string]string `json:"properties,omitempty"`
+}
+
 type SystemStatus struct {
-	Status ComponentPropertyStatus `json:"status,omitempty"`
+	Status string `json:"status,omitempty"`
 }
 
 type Selector struct {
@@ -38,11 +45,6 @@ type Selector struct {
 }
 type NamespaceSelector struct {
 	Selector `json:",inline"`
-}
-
-type ComponentSelector struct {
-	Namespace Selector `json:"namespace,omitempty"`
-	Selector  `json:",inline"`
 }
 
 type CanarySelector string

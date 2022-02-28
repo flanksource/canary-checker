@@ -16,9 +16,10 @@ func Topology(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	results, err := topology.Query(topology.TopologyParams{})
+	results, err := topology.Query(topology.NewTopologyParams(req.URL.Query()))
 	if err != nil {
 		errorResonse(w, err, http.StatusInternalServerError)
+		return
 	}
 
 	jsonData, err := json.Marshal(results)

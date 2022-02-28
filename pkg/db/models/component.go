@@ -28,6 +28,10 @@ type Component struct {
 	ParentID    null.String `boil:"parent_id" json:"parent_id,omitempty" toml:"parent_id" yaml:"parent_id,omitempty"`
 	SystemID    null.String `boil:"system_id" json:"system_id,omitempty" toml:"system_id" yaml:"system_id,omitempty"`
 	Name        string      `boil:"name" json:"name" toml:"name" yaml:"name"`
+	Text        null.String `boil:"text" json:"text,omitempty" toml:"text" yaml:"text,omitempty"`
+	Labels      null.JSON   `boil:"labels" json:"labels,omitempty" toml:"labels" yaml:"labels,omitempty"`
+	Hidden      bool        `boil:"hidden" json:"hidden" toml:"hidden" yaml:"hidden"`
+	Silenced    bool        `boil:"silenced" json:"silenced" toml:"silenced" yaml:"silenced"`
 	Status      string      `boil:"status" json:"status" toml:"status" yaml:"status"`
 	Description null.String `boil:"description" json:"description,omitempty" toml:"description" yaml:"description,omitempty"`
 	Lifecycle   null.String `boil:"lifecycle" json:"lifecycle,omitempty" toml:"lifecycle" yaml:"lifecycle,omitempty"`
@@ -35,6 +39,7 @@ type Component struct {
 	Icon        null.String `boil:"icon" json:"icon,omitempty" toml:"icon" yaml:"icon,omitempty"`
 	Type        null.String `boil:"type" json:"type,omitempty" toml:"type" yaml:"type,omitempty"`
 	Owner       null.String `boil:"owner" json:"owner,omitempty" toml:"owner" yaml:"owner,omitempty"`
+	Spec        null.JSON   `boil:"spec" json:"spec,omitempty" toml:"spec" yaml:"spec,omitempty"`
 	Properties  null.JSON   `boil:"properties" json:"properties,omitempty" toml:"properties" yaml:"properties,omitempty"`
 	CreatedAt   time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt   time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
@@ -49,6 +54,10 @@ var ComponentColumns = struct {
 	ParentID    string
 	SystemID    string
 	Name        string
+	Text        string
+	Labels      string
+	Hidden      string
+	Silenced    string
 	Status      string
 	Description string
 	Lifecycle   string
@@ -56,6 +65,7 @@ var ComponentColumns = struct {
 	Icon        string
 	Type        string
 	Owner       string
+	Spec        string
 	Properties  string
 	CreatedAt   string
 	UpdatedAt   string
@@ -65,6 +75,10 @@ var ComponentColumns = struct {
 	ParentID:    "parent_id",
 	SystemID:    "system_id",
 	Name:        "name",
+	Text:        "text",
+	Labels:      "labels",
+	Hidden:      "hidden",
+	Silenced:    "silenced",
 	Status:      "status",
 	Description: "description",
 	Lifecycle:   "lifecycle",
@@ -72,6 +86,7 @@ var ComponentColumns = struct {
 	Icon:        "icon",
 	Type:        "type",
 	Owner:       "owner",
+	Spec:        "spec",
 	Properties:  "properties",
 	CreatedAt:   "created_at",
 	UpdatedAt:   "updated_at",
@@ -83,6 +98,10 @@ var ComponentTableColumns = struct {
 	ParentID    string
 	SystemID    string
 	Name        string
+	Text        string
+	Labels      string
+	Hidden      string
+	Silenced    string
 	Status      string
 	Description string
 	Lifecycle   string
@@ -90,6 +109,7 @@ var ComponentTableColumns = struct {
 	Icon        string
 	Type        string
 	Owner       string
+	Spec        string
 	Properties  string
 	CreatedAt   string
 	UpdatedAt   string
@@ -99,6 +119,10 @@ var ComponentTableColumns = struct {
 	ParentID:    "component.parent_id",
 	SystemID:    "component.system_id",
 	Name:        "component.name",
+	Text:        "component.text",
+	Labels:      "component.labels",
+	Hidden:      "component.hidden",
+	Silenced:    "component.silenced",
 	Status:      "component.status",
 	Description: "component.description",
 	Lifecycle:   "component.lifecycle",
@@ -106,6 +130,7 @@ var ComponentTableColumns = struct {
 	Icon:        "component.icon",
 	Type:        "component.type",
 	Owner:       "component.owner",
+	Spec:        "component.spec",
 	Properties:  "component.properties",
 	CreatedAt:   "component.created_at",
 	UpdatedAt:   "component.updated_at",
@@ -113,12 +138,25 @@ var ComponentTableColumns = struct {
 
 // Generated where
 
+type whereHelperbool struct{ field string }
+
+func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+
 var ComponentWhere = struct {
 	ID          whereHelperstring
 	ExternalID  whereHelperstring
 	ParentID    whereHelpernull_String
 	SystemID    whereHelpernull_String
 	Name        whereHelperstring
+	Text        whereHelpernull_String
+	Labels      whereHelpernull_JSON
+	Hidden      whereHelperbool
+	Silenced    whereHelperbool
 	Status      whereHelperstring
 	Description whereHelpernull_String
 	Lifecycle   whereHelpernull_String
@@ -126,6 +164,7 @@ var ComponentWhere = struct {
 	Icon        whereHelpernull_String
 	Type        whereHelpernull_String
 	Owner       whereHelpernull_String
+	Spec        whereHelpernull_JSON
 	Properties  whereHelpernull_JSON
 	CreatedAt   whereHelpertime_Time
 	UpdatedAt   whereHelpertime_Time
@@ -135,6 +174,10 @@ var ComponentWhere = struct {
 	ParentID:    whereHelpernull_String{field: "\"component\".\"parent_id\""},
 	SystemID:    whereHelpernull_String{field: "\"component\".\"system_id\""},
 	Name:        whereHelperstring{field: "\"component\".\"name\""},
+	Text:        whereHelpernull_String{field: "\"component\".\"text\""},
+	Labels:      whereHelpernull_JSON{field: "\"component\".\"labels\""},
+	Hidden:      whereHelperbool{field: "\"component\".\"hidden\""},
+	Silenced:    whereHelperbool{field: "\"component\".\"silenced\""},
 	Status:      whereHelperstring{field: "\"component\".\"status\""},
 	Description: whereHelpernull_String{field: "\"component\".\"description\""},
 	Lifecycle:   whereHelpernull_String{field: "\"component\".\"lifecycle\""},
@@ -142,6 +185,7 @@ var ComponentWhere = struct {
 	Icon:        whereHelpernull_String{field: "\"component\".\"icon\""},
 	Type:        whereHelpernull_String{field: "\"component\".\"type\""},
 	Owner:       whereHelpernull_String{field: "\"component\".\"owner\""},
+	Spec:        whereHelpernull_JSON{field: "\"component\".\"spec\""},
 	Properties:  whereHelpernull_JSON{field: "\"component\".\"properties\""},
 	CreatedAt:   whereHelpertime_Time{field: "\"component\".\"created_at\""},
 	UpdatedAt:   whereHelpertime_Time{field: "\"component\".\"updated_at\""},
@@ -174,9 +218,9 @@ func (*componentR) NewStruct() *componentR {
 type componentL struct{}
 
 var (
-	componentAllColumns            = []string{"id", "external_id", "parent_id", "system_id", "name", "status", "description", "lifecycle", "tooltip", "icon", "type", "owner", "properties", "created_at", "updated_at"}
-	componentColumnsWithoutDefault = []string{"external_id", "parent_id", "system_id", "name", "status", "description", "lifecycle", "tooltip", "icon", "type", "owner", "properties"}
-	componentColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
+	componentAllColumns            = []string{"id", "external_id", "parent_id", "system_id", "name", "text", "labels", "hidden", "silenced", "status", "description", "lifecycle", "tooltip", "icon", "type", "owner", "spec", "properties", "created_at", "updated_at"}
+	componentColumnsWithoutDefault = []string{"external_id", "parent_id", "system_id", "name", "text", "labels", "status", "description", "lifecycle", "tooltip", "icon", "type", "owner", "spec", "properties"}
+	componentColumnsWithDefault    = []string{"id", "hidden", "silenced", "created_at", "updated_at"}
 	componentPrimaryKeyColumns     = []string{"id"}
 )
 

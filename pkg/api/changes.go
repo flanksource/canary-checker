@@ -38,11 +38,11 @@ func Changes(w http.ResponseWriter, req *http.Request) {
 		scope := []changes.Scope{
 			{
 				Type:       "Namespace",
-				Identifier: changes.Identifier{Name: check.GetNamespace()},
+				Identifier: changes.Identifier{Name: check.Namespace},
 			},
 			{
 				Type:       "Name",
-				Identifier: changes.Identifier{Name: check.GetName()},
+				Identifier: changes.Identifier{Name: check.Name},
 			},
 		}
 		for key, value := range check.Labels {
@@ -86,7 +86,7 @@ func Changes(w http.ResponseWriter, req *http.Request) {
 						Icon:        "",
 						Data:        check.Statuses[i].Message,
 						Identifier: changes.Identifier{
-							Id: check.Key,
+							Id: check.ID,
 						},
 					}
 					if changeResult.Count == 0 {
