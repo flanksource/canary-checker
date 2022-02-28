@@ -75,14 +75,14 @@ func GetAuthValues(auth *v1.Authentication, client *kommons.Client, namespace st
 	if auth == nil {
 		return authentication, nil
 	}
-	_, username, err := client.GetEnvValue(auth.Username, namespace)
+	_, username, err := client.GetEnvValueFromCache(auth.Username, namespace, 5*time.Minute)
 	if err != nil {
 		return nil, err
 	}
 	authentication.Username = kommons.EnvVar{
 		Value: username,
 	}
-	_, password, err := client.GetEnvValue(auth.Password, namespace)
+	_, password, err := client.GetEnvValueFromCache(auth.Password, namespace, 120*time.Second)
 	if err != nil {
 		return nil, err
 	}
