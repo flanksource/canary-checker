@@ -66,7 +66,7 @@ func (c *HTTPChecker) configure(req *http.HTTPRequest, ctx *context.Context, che
 		if kommons == nil {
 			return fmt.Errorf("HTTP headers are not supported outside k8s")
 		}
-		key, value, err := kommons.GetEnvValueFromCache(header, ctx.Canary.GetNamespace(), 1*time.Minute)
+		key, value, err := kommons.GetEnvValueFromCache(header, ctx.Canary.GetNamespace(), 5*time.Minute)
 		if err != nil {
 			return errors.WithMessagef(err, "failed getting header: %v", header)
 		}
@@ -122,6 +122,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	start := time.Now()
 
 	resp := req.Do(check.Body)
+	elapsed := time.Since(start)
 	status := resp.GetStatusCode()
 	result.AddMetric(pkg.Metric{
 		Name: "response_code",
@@ -131,6 +132,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 			"endpoint": endpoint,
 		},
 	})
+	result.Duration = elapsed.Milliseconds()
 	responseStatus.WithLabelValues(strconv.Itoa(status), statusCodeToClass(status), endpoint).Inc()
 	age := resp.GetSSLAge()
 	if age != nil {
@@ -171,8 +173,8 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		return results.Failf("response code invalid %d != %v", status, check.ResponseCodes)
 	}
 
-	if check.ThresholdMillis > 0 && check.ThresholdMillis < int(resp.Elapsed.Milliseconds()) {
-		return results.Failf("threshold exceeded %s > %d", utils.Age(resp.Elapsed), check.ThresholdMillis)
+	if check.ThresholdMillis > 0 && check.ThresholdMillis < int(elapsed.Milliseconds()) {
+		return results.Failf("threshold exceeded %s > %d", utils.Age(elapsed), check.ThresholdMillis)
 	}
 
 	if check.ResponseContent != "" && !strings.Contains(body, check.ResponseContent) {
