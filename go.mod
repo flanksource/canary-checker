@@ -321,6 +321,7 @@ require (
 )
 
 replace (
+	github.com/containerd/containerd => github.com/containerd/containerd v1.4.0
 	github.com/docker/docker => github.com/moby/moby v17.12.0-ce-rc1.0.20210128214336-420b1d36250f+incompatible
 	google.golang.org/grpc => google.golang.org/grpc v1.29.1
 	helm.sh/helm/v3 => helm.sh/helm/v3 v3.5.1
