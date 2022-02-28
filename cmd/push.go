@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -51,9 +50,7 @@ var Push = &cobra.Command{
 			check := pkg.Check{
 				Name:        name,
 				Type:        checkType,
-				Key:         fmt.Sprintf("%s/%s/%s", checkType, name, description),
 				Description: description,
-				ID:          fmt.Sprintf("%s/%s/%s", checkType, name, description),
 			}
 			data := push.QueueData{
 				Check:  check,
