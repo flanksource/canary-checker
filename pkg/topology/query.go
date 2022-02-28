@@ -27,15 +27,15 @@ func NewTopologyParams(values url.Values) TopologyParams {
 	} else if params.Id != "" {
 		params.TopologyId = params.Id
 	}
-	if strings.HasPrefix(params.ComponentId, "c-") {
-		params.ComponentId = params.ComponentId[2:]
-	}
+	params.ComponentId = strings.TrimPrefix(params.ComponentId, "c-")
+
 	if depth := values.Get("depth"); depth != "" {
 		params.Depth, _ = strconv.Atoi(depth)
 	}
 	return params
 }
 
+//nolint
 type TopologyParams struct {
 	Id          string
 	TopologyId  string
@@ -63,7 +63,7 @@ func (p TopologyParams) String() string {
 
 func (p TopologyParams) GetSystemWhereClause() string {
 	s := ""
-	if p.GetId() != "" {
+	if p.getID() != "" {
 		s = "WHERE system.id = :id"
 	}
 
@@ -78,7 +78,7 @@ func (p TopologyParams) GetSystemWhereClause() string {
 	return s
 }
 
-func (p TopologyParams) GetId() string {
+func (p TopologyParams) getID() string {
 	if p.Id != "" {
 		return p.Id
 	}
@@ -92,8 +92,7 @@ func (p TopologyParams) GetId() string {
 }
 
 func (p TopologyParams) GetComponentWhereClause() string {
-
-	if p.GetId() == "" {
+	if p.getID() == "" {
 		return ""
 	}
 	s := `

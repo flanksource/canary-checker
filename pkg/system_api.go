@@ -12,7 +12,7 @@ import (
 
 type System struct {
 	Object       `yaml:",inline"`
-	Id           string            `json:"id"`
+	Id           string            `json:"id"` //nolint
 	Tooltip      string            `json:"tooltip,omitempty"`
 	Icon         string            `json:"icon,omitempty"`
 	Text         string            `json:"text,omitempty"`
@@ -26,7 +26,7 @@ type System struct {
 	Type         string            `json:"type,omitempty"`
 	CreatedAt    string            `json:"created_at,omitempty"`
 	UpdatedAt    string            `json:"updated_at,omitempty"`
-	ExternalId   string            `json:"external_id,omitempty"`
+	ExternalId   string            `json:"external_id,omitempty"` //nolint
 	TopologyType string            `json:"topologyType,omitempty"`
 }
 
@@ -72,7 +72,7 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 		c := _c
 		c.TopologyType = "component"
 		if c.ParentId != "" {
-			parent := components.FindById(c.ParentId)
+			parent := components.FindByID(c.ParentId)
 			if parent == nil {
 				*components = append(*components, &c)
 			} else {
@@ -90,7 +90,7 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 
 type Component struct {
 	Name         string            `json:"name,omitempty"`
-	Id           string            `json:"id,omitempty"`
+	Id           string            `json:"id,omitempty"` //nolint
 	Text         string            `json:"text,omitempty"`
 	TopologyType string            `json:"topologyType,omitempty"`
 	Namespace    string            `json:"namespace,omitempty"`
@@ -108,10 +108,10 @@ type Component struct {
 	Relationships []RelationshipSpec `json:"relationships,omitempty"`
 	Properties    Properties         `json:"properties,omitempty"`
 	Components    Components         `json:"components,omitempty"`
-	ParentId      string             `json:"parent_id,omitempty"`
+	ParentId      string             `json:"parent_id,omitempty"` //nolint
 	CreatedAt     string             `json:"created_at,omitempty"`
 	UpdatedAt     string             `json:"updated_at,omitempty"`
-	ExternalId    string             `json:"external_id,omitempty"`
+	ExternalId    string             `json:"external_id,omitempty"` //nolint
 }
 
 func (c Component) Clone() Component {
@@ -217,7 +217,7 @@ func (c Components) GetIds() []string {
 	return ids
 }
 
-func (c Components) FindById(id string) *Component {
+func (c Components) FindByID(id string) *Component {
 	for _, component := range c {
 		if component.Id == id {
 			return component

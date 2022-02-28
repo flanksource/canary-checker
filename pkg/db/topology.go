@@ -10,7 +10,7 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-	. "github.com/volatiletech/sqlboiler/v4/queries/qm"
+	. "github.com/volatiletech/sqlboiler/v4/queries/qm" //nolint
 )
 
 func NewSystemModel(system *pkg.System) models.System {
@@ -19,7 +19,7 @@ func NewSystemModel(system *pkg.System) models.System {
 		ExternalID: system.Id,
 		Text:       null.StringFrom(system.Text),
 		Icon:       null.StringFrom(system.Icon),
-		Labels:     mapToJson(system.Labels),
+		Labels:     mapToJSON(system.Labels),
 		Owner:      null.StringFrom(system.Owner),
 		Tooltip:    null.StringFrom(system.Tooltip),
 		Status:     system.Status,
@@ -33,7 +33,7 @@ func NewComponentModel(component *pkg.Component) models.Component {
 		ExternalID: component.GetID(),
 		Name:       component.Name,
 		Status:     component.Status,
-		Labels:     mapToJson(component.Labels),
+		Labels:     mapToJSON(component.Labels),
 		Text:       null.StringFrom(component.Text),
 		Icon:       null.StringFrom(component.Icon),
 		Owner:      null.StringFrom(component.Owner),
@@ -43,8 +43,8 @@ func NewComponentModel(component *pkg.Component) models.Component {
 	}
 }
 
-func FindSystem(systemId, systemType string) (*models.System, error) {
-	if sys, err := models.Systems(Where("external_id = ? AND type = ?", systemId, systemType)).OneG(); err == nil {
+func FindSystem(systemID, systemType string) (*models.System, error) {
+	if sys, err := models.Systems(Where("external_id = ? AND type = ?", systemID, systemType)).OneG(); err == nil {
 		return sys, nil
 	} else if err == sql.ErrNoRows {
 		return nil, nil
@@ -104,15 +104,15 @@ func AddSystem(system *pkg.System, cols ...string) (string, error) {
 
 var componentUpdate = []string{"name", "status", "description", "labels", "text", "icon", "owner", "tooltip", "properties", "type"}
 
-func PersistComponent(systemId string, component *pkg.Component, parent *models.Component) error {
+func PersistComponent(systemID string, component *pkg.Component, parent *models.Component) error {
 	_component := NewComponentModel(component)
-	_component.SystemID = null.StringFrom(systemId)
+	_component.SystemID = null.StringFrom(systemID)
 	if parent != nil {
 		_component.ParentID = null.StringFrom(parent.ID)
 	}
 
-	existing, err := models.Components(Where("system_id = ? AND external_id = ? AND type = ?", systemId, _component.ExternalID, component.Type)).OneG()
-	logger.Debugf("Inserting %s id=%s type=%s external_id=%s) ", component, systemId, component.Type, _component.ExternalID)
+	existing, err := models.Components(Where("system_id = ? AND external_id = ? AND type = ?", systemID, _component.ExternalID, component.Type)).OneG()
+	logger.Debugf("Inserting %s id=%s type=%s external_id=%s) ", component, systemID, component.Type, _component.ExternalID)
 
 	if err == sql.ErrNoRows {
 		if err := _component.InsertG(boil.Infer()); err != nil {
@@ -128,7 +128,7 @@ func PersistComponent(systemId string, component *pkg.Component, parent *models.
 		}
 	}
 	for _, child := range component.Components {
-		if err := PersistComponent(systemId, child, &_component); err != nil {
+		if err := PersistComponent(systemID, child, &_component); err != nil {
 			return err
 		}
 	}
