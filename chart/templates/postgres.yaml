@@ -1,0 +1,77 @@
+{{- if eq .Values.db.enabled true }}
+
+---
+# PostgreSQL StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgresql
+spec:
+  serviceName: postgresql
+  selector:
+    matchLabels:
+      app: postgresql
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      containers:
+      - name: postgresql
+        image: postgres:14
+        volumeMounts:
+          - name: postgresql
+            mountPath: /data
+        envFrom:
+          - secretRef:
+              name: {{ .Values.db.secretKeyRef.name }}
+    volumeClaimTemplates:
+    - metadata:
+        name: postgresql
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.db.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.db.storage }}
+
+---
+
+# PostgreSQL StatefulSet Service
+apiVersion: v1
+kind: Service
+  metadata:
+    name: postgres
+spec:
+  selector:
+    app: postgresql
+  ports:
+  - port: 5432
+    targetPort: 5432
+
+---
+
+{{- if empty .Values.db.secretKeyRef.name }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-connection
+  annotations:
+    "helm.sh/resource-policy": "keep"
+type: Opaque
+data:
+  {{- $secretObj := (lookup "v1" "Secret" .Release.Namespace "postgres-connection") | default dict }}
+  {{ $releaseNamespace := .Release.Namespace }}
+  {{- $secretData := (get $secretObj "data") | default dict }}
+  {{- $user := (get $secretData "POSTGRES_USER") | default ("postgres" | b64enc) }}
+  POSTGRES_USER: {{ $user | quote }}
+  {{- $password := (get $secretData "POSTGRES_PASSWORD") | default (randAlphaNum 32 | b64enc) }}
+  POSTGRES_PASSWORD: {{ $password | quote }}
+  {{- $canaryCheckerUrl := (get $secretData "DB_URL") | default ( ( print "postgresql://" $user ":" $password "@postgres." $releaseNamespace ".svc.cluster.local:5432/canary_checker" ) | b64enc ) }}
+  {{ .Values.db.secretKeyRef.key }}: {{ $canaryCheckerUrl | quote }}
+{{- end }}
+
+---
+
+{{- end }}
