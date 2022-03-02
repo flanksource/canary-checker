@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "canary-checker.name" . }}
+  labels:
+    {{- include "canary-checker.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      {{- include "canary-checker.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "canary-checker.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "canary-checker.name" . }}-sa
+      volumes:
+        - name: dockersock
+          hostPath:
+            path: /var/run/docker.sock
+        - name: podinfo
+          downwardAPI:
+            items:
+              - path: "labels"
+                fieldRef:
+                  fieldPath: metadata.labels
+      containers:
+        - name: {{ include "canary-checker.name" . }}
+          securityContext:
+            privileged: true
+            allowPrivilegeEscalation: true
+            runAsUser: 0
+            capabilities:
+              add:
+                - CAP_NET_RAW
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          env:
+            - name: DOCKER_API_VERSION
+              value: "1.39"
+          volumeMounts:
+            - name: dockersock
+              mountPath: "/var/run/docker.sock"
+            - mountPath: /etc/podinfo
+              name: podinfo
+          command:
+            - /app/canary-checker
+          args:
+            - operator
+            - -v
+            - --httpPort
+            - "8080"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /index.html
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /index.html
+              port: 8080
+      {{- with .Values.extra }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: {{ include "canary-checker.name" . }}-priority
+value: -1
+globalDefault: false
+description: "This priority class should be used for canary pods only."
