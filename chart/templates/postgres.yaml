@@ -68,7 +68,7 @@ data:
   POSTGRES_USER: {{ $user | quote }}
   {{- $password := (get $secretData "POSTGRES_PASSWORD") | default (randAlphaNum 32 | b64enc) }}
   POSTGRES_PASSWORD: {{ $password | quote }}
-  {{- $canaryCheckerUrl := (get $secretData "DB_URL") | default ( ( print "postgresql://" $user ":" $password "@postgres." $releaseNamespace ".svc.cluster.local:5432/canary_checker" ) | b64enc ) }}
+  {{- $canaryCheckerUrl := ( get $secretData .Values.db.secretKeyRef.key ) | default ( ( print "postgresql://" $user ":" $password "@postgres." $releaseNamespace ".svc.cluster.local:5432/canary_checker" ) | b64enc ) }}
   {{ .Values.db.secretKeyRef.key }}: {{ $canaryCheckerUrl | quote }}
 {{- end }}
 
