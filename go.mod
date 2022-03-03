@@ -19,7 +19,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.8.1
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
 	github.com/chartmuseum/helm-push v0.8.1
-	github.com/containerd/containerd v1.4.0
+	github.com/containerd/containerd v1.4.13
 	github.com/denisenkom/go-mssqldb v0.11.0
 	github.com/docker/docker v20.10.7+incompatible
 	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
