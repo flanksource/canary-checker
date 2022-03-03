@@ -81,7 +81,7 @@ func PersistCanary(canary v1.Canary, source string) (string, error) {
 	model := pkg.CanaryFromV1(canary)
 	model.Source = source
 	tx := Gorm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "name"}, clause.Column{Name: "namespace"}},
+		Columns:   []clause.Column{{Name: "name"}, {Name: "namespace"}},
 		UpdateAll: true,
 	}).Create(&model)
 

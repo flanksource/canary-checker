@@ -55,6 +55,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	_ = clientgoscheme.AddToScheme(scheme)
 	_ = canaryv1.AddToScheme(scheme)
+	go setup()
 	go serve()
 
 	ctrl.SetLogger(zapr.NewLogger(loggr))
