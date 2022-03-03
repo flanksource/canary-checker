@@ -16,9 +16,11 @@ spec:
     spec:
       serviceAccountName: {{ include "canary-checker.name" . }}-sa
       volumes:
+        {{- if eq .Values.dockerSocket "true" }}
         - name: dockersock
           hostPath:
             path: /var/run/docker.sock
+        {{- end }}
         - name: podinfo
           downwardAPI:
             items:
@@ -39,8 +41,10 @@ spec:
             - name: DOCKER_API_VERSION
               value: "1.39"
           volumeMounts:
+            {{- if eq .Values.dockerSocket "true" }}
             - name: dockersock
               mountPath: "/var/run/docker.sock"
+            {{- end }}
             - mountPath: /etc/podinfo
               name: podinfo
           command:
