@@ -241,3 +241,9 @@ bin: .bin .bin/wait4x .bin/yq .bin/karina .bin/go-junit-report .bin/restic .bin/
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources
 resources: fmt static manifests
+
+.PHONY: chart
+chart: 
+	cp ./config/deploy/crd.yaml ./chart/templates
+	helm package ./chart
+	
