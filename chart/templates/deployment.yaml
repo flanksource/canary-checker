@@ -40,6 +40,11 @@ spec:
           env:
             - name: DOCKER_API_VERSION
               value: "1.39"
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.secretKeyRef.name }}
+                  key: {{ .Values.db.secretKeyRef.key }}
           volumeMounts:
             {{- if eq .Values.dockerSocket "true" }}
             - name: dockersock
