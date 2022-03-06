@@ -87,3 +87,42 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: flanksource/aws-sandbox
           event-type: canary-checker-release
+  helm:
+    runs-on: ubuntu-latest
+    needs: semantic-release
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download yq
+        run: |
+          wget -nv -nc -O yq https://github.com/mikefarah/yq/releases/download/v4.20.2/yq_linux_amd64
+          chmod +x yq
+      - name: Update chart version
+        run: ./yq -i e '.version = "${{ needs.semantic-release.outputs.release-version }}"' chart/Chart.yaml
+      - name: Update app version
+        run: ./yq -i e '.appVersion = "${{ needs.semantic-release.outputs.release-version }}"' chart/Chart.yaml
+      - name: Update image tags
+        run: ./yq -i e '.image.tag = "${{ needs.semantic-release.outputs.release-version }}"' chart/values.yaml
+      - name: Set up Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.8.0
+      - name: Package Helm chart
+        run: |
+          make chart
+      - name: Clone charts repo
+        uses: actions/checkout@v3
+        with:
+          repository: "${{ github.repository_owner }}/charts"
+          path: charts
+          token: "${{ secrets.FLANKBOT }}"
+      - name: Update chart repo
+        run: |
+          cd charts
+          cp ../canary-checker-*.tgz ./
+          helm repo index --merge index.yaml .
+      - name: Push changes to chart repo
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Release ${{ needs.semantic-release.outputs.release-version }} of ${{ github.repository }}"
+          branch: gh-pages
+          repository: ./charts
