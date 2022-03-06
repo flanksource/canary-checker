@@ -244,6 +244,7 @@ resources: fmt static manifests
 
 .PHONY: chart
 chart: 
-	cp ./config/deploy/crd.yaml ./chart/templates
+	mkdir -p chart/crds        
+	cp ./config/deploy/crd.yaml ./chart/crds
 	helm package ./chart
 	
