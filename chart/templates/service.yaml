@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "canary-checker.name" . }}
+  labels:
+    {{- include "canary-checker.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    {{- include "canary-checker.selectorLabels" . | nindent 4 }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "canary-checker.name" . }}-monitor
+  labels:
+    {{- include "canary-checker.labels" . | nindent 4 }}
+spec:
+  jobLabel: {{ include "canary-checker.name" . }}
+  endpoints:
+    - port: metrics
+      interval: 30s
+  selector:
+    matchLabels:
+      {{- include "canary-checker.selectorLabels" . | nindent 6 }}

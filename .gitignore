@@ -12,3 +12,4 @@ test.test
 *.log
 wait4x
 .vscode/
+chart/templates/crd.yaml

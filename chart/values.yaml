@@ -1,0 +1,66 @@
+# Default values for canary-checker.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicas: 1
+
+image:
+  repository: docker.io/flanksource/canary-checker
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+dockerSocket: "true"
+
+db:
+  # Setting this to true will create a postgres stateful set for canary-checker to connect to.
+  enabled: false
+  storegaClass: 
+  storage: 
+  secretKeyRef:
+    # Setting the name of the secret will disable secret creation in this chart and look for an existing secret (whose name is specified in this field) to mount.
+    # When setting this up in a fresh environment as a standalone app, it's best to leave the value empty.
+    name:
+    # This is the key that either the secret will create(if secretRefKey is empty) or this is the key it'll look for in the secret(if secretRefKey is mentioned).
+    # The name of the key is mandatory to set.
+    key: DB_URL
+
+nameOverride: ""
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: 
+    kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  host: canary-checker
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: 
+  requests:
+    cpu: 200m
+    memory: 200Mi
+  limits:
+    memory: 512Mi
+
+extra:
+  # nodeSelector:
+  #   key: value
+  # tolerations:
+  #   - key: "key1"
+  #     operator: "Equal"
+  #     value: "value1"
+  #     effect: "NoSchedule"
+  # affinity: 
+  #   nodeAffinity:
+  #       requiredDuringSchedulingIgnoredDuringExecution:
+  #         nodeSelectorTerms:
+  #         - matchExpressions:
+  #           - key: kubernetes.io/e2e-az-name
+  #             operator: In
+  #             values:
+  #             - e2e-az1
+  #             - e2e-az2
