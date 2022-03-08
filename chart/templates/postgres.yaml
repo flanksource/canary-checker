@@ -41,8 +41,8 @@ spec:
 # PostgreSQL StatefulSet Service
 apiVersion: v1
 kind: Service
-  metadata:
-    name: postgres
+metadata:
+  name: postgres
 spec:
   selector:
     app: postgresql
@@ -61,7 +61,6 @@ metadata:
     "helm.sh/resource-policy": "keep"
 type: Opaque
 stringData:
-  {{ $releaseNamespace :=  }}
   {{- $secretObj := ( lookup "v1" "Secret" .Release.Namespace "postgres-connection" ) }}
   {{- $secretData := ( get $secretObj "data" ) }}
   {{- $user := (( get $secretData "POSTGRES_USER" ) | b64dec ) | default "postgres" }}
