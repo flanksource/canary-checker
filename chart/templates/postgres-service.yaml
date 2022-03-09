@@ -1,13 +1,15 @@
+{{- if eq .Values.db.enabled true }}
 apiVersion: v1
 kind: Service
-metadata:
-  name: {{ include "canary-checker.name" . }}
+  metadata:
+    name: postgres
   labels:
     {{- include "canary-checker.labels" . | nindent 4 }}
 spec:
-  ports:
-    - port: 8080
-      targetPort: 8080
-      protocol: TCP
   selector:
+    app: postgresql
     {{- include "canary-checker.selectorLabels" . | nindent 4 }}
+  ports:
+  - port: 5432
+    targetPort: 5432
+{{- end }}
