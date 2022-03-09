@@ -1,9 +1,6 @@
 apiVersion: v2
 name: canary-checker
-description: A Helm chart for canary-checker
-
+description: a Kubernetes native, multi-tenant synthetic monitoring system
 type: application
-
-version: 0.1.0
-
-appVersion: "0.38.75"
+version: 0.0.0
+appVersion: "master"
