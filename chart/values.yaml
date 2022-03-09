@@ -14,7 +14,7 @@ dockerSocket: "true"
 
 db:
   # Setting this to true will create a postgres stateful set for canary-checker to connect to.
-  enabled: true
+  enabled: false
   secretKeyRef:
     create: true
     # Setting the name of the secret will disable secret creation in this chart and look for an existing secret (whose name is specified in this field) to mount.
@@ -23,7 +23,7 @@ db:
     # This is the key that either the secret will create(if secretRefKey is empty) or this is the key it'll look for in the secret(if secretRefKey is mentioned).
     # The name of the key is mandatory to set.
     key: DB_URL
-  storegaClass:
+  storageClass:
   storage:
 
 nameOverride: ""
