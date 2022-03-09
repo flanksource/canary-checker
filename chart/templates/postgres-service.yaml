@@ -1,8 +1,8 @@
 {{- if eq .Values.db.enabled true }}
 apiVersion: v1
 kind: Service
-  metadata:
-    name: postgres
+metadata:
+  name: postgres
   labels:
     {{- include "canary-checker.labels" . | nindent 4 }}
 spec:

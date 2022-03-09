@@ -27,7 +27,7 @@ spec:
         envFrom:
           - secretRef:
               name: {{ .Values.db.secretKeyRef.name }}
-    volumeClaimTemplates:
+  volumeClaimTemplates:
     - metadata:
         name: postgresql
       spec:
