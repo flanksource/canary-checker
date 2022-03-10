@@ -1,0 +1,39 @@
+{{- if eq .Values.db.enabled true }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgresql
+  labels:
+    {{- include "canary-checker.labels" . | nindent 4 }}
+spec:
+  serviceName: postgresql
+  selector:
+    matchLabels:
+      app: postgresql
+      {{- include "canary-checker.selectorLabels" . | nindent 6 }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgresql
+        {{- include "canary-checker.labels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: postgresql
+        image: postgres:14
+        volumeMounts:
+          - name: postgresql
+            mountPath: /data
+        envFrom:
+          - secretRef:
+              name: {{ .Values.db.secretKeyRef.name }}
+  volumeClaimTemplates:
+    - metadata:
+        name: postgresql
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.db.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.db.storage }}
+{{- end }}

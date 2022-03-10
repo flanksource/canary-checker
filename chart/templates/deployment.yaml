@@ -43,7 +43,7 @@ spec:
             - name: DB_URL
               valueFrom:
                 secretKeyRef:
-                  name: {{ if .Values.db.secretKeyRef.name }} {{ .Values.db.secretKeyRef.name }} {{ else }} postgres-connection {{ end }}
+                  name: {{ .Values.db.secretKeyRef.name }}
                   key: {{ .Values.db.secretKeyRef.key }}
           volumeMounts:
             {{- if eq .Values.dockerSocket "true" }}
@@ -72,11 +72,3 @@ spec:
       {{- with .Values.extra }}
       {{- toYaml . | nindent 6 }}
       {{- end }}
----
-apiVersion: scheduling.k8s.io/v1
-kind: PriorityClass
-metadata:
-  name: {{ include "canary-checker.name" . }}-priority
-value: -1
-globalDefault: false
-description: "This priority class should be used for canary pods only."

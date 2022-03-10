@@ -15,22 +15,23 @@ dockerSocket: "true"
 db:
   # Setting this to true will create a postgres stateful set for canary-checker to connect to.
   enabled: false
-  storegaClass: 
-  storage: 
   secretKeyRef:
-    # Setting the name of the secret will disable secret creation in this chart and look for an existing secret (whose name is specified in this field) to mount.
-    # When setting this up in a fresh environment as a standalone app, it's best to leave the value empty.
-    name:
-    # This is the key that either the secret will create(if secretRefKey is empty) or this is the key it'll look for in the secret(if secretRefKey is mentioned).
-    # The name of the key is mandatory to set.
+    # Setting this to true will create the secret automatically.
+    create: true
+    name: postgres-connection
+    # This is the key that either the secret will create(if create is true) or this is the key
+    # it will look for in the secret(if secretRefKey is mentioned). The name of the key is
+    # mandatory to set.
     key: DB_URL
+  storageClass:
+  storage:
 
 nameOverride: ""
 
 ingress:
   enabled: false
   className: ""
-  annotations: 
+  annotations:
     kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   host: canary-checker
@@ -39,7 +40,7 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-resources: 
+resources:
   requests:
     cpu: 200m
     memory: 200Mi
@@ -54,7 +55,7 @@ extra:
   #     operator: "Equal"
   #     value: "value1"
   #     effect: "NoSchedule"
-  # affinity: 
+  # affinity:
   #   nodeAffinity:
   #       requiredDuringSchedulingIgnoredDuringExecution:
   #         nodeSelectorTerms:
