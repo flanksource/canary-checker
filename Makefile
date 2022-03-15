@@ -243,8 +243,5 @@ bin: .bin .bin/wait4x .bin/yq .bin/karina .bin/go-junit-report .bin/restic .bin/
 resources: fmt static manifests
 
 .PHONY: chart
-chart: 
-	mkdir -p chart/crds        
-	cp ./config/deploy/crd.yaml ./chart/crds
+chart:
 	helm package ./chart
-	
