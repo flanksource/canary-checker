@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/flanksource/canary-checker/pkg/cache"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/runner"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
@@ -50,6 +52,15 @@ func run(cmd *cobra.Command, args []string) {
 		ctrlzap.StacktraceLevel(zapLogger.StackTraceLevel),
 		ctrlzap.Encoder(zapLogger.GetEncoder()),
 	)
+
+	if db.ConnectionString != "" {
+		if err := db.Init(db.ConnectionString); err != nil {
+			logger.Fatalf("error connecting with postgres. Only using in-memory cache: %v", err)
+			return
+		} else {
+			cache.PostgresCache = cache.NewPostgresCache(db.Pool)
+		}
+	}
 
 	scheme := runtime.NewScheme()
 
