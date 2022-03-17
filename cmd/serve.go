@@ -109,7 +109,7 @@ func serve() {
 	nethttp.Handle("/metrics", promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{}))
 	if db.ConnectionString != "" {
 		if err := db.Init(db.ConnectionString); err != nil {
-			logger.Fatalf("error connecting with postgres. Only using in-memory cache: %v", err)
+			logger.Fatalf("error connecting with postgres: %v", err)
 			return
 		} else {
 			cache.PostgresCache = cache.NewPostgresCache(db.Pool)

@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"embed"
 	"os"
+	"strings"
 
+	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/flanksource/commons/logger"
 	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -22,6 +24,19 @@ var Pool *pgxpool.Pool
 var ConnectionString string
 var DefaultExpiryDays int
 var pgxConnectionString string
+var PostgresServer *embeddedpostgres.EmbeddedPostgres
+
+func StopServer() error {
+	if PostgresServer != nil {
+		logger.Infof("Stopping database server")
+		err := PostgresServer.Stop()
+		if err != nil {
+			return err
+		}
+		PostgresServer = nil
+	}
+	return nil
+}
 
 func Init(connection string) error {
 	var connString string
@@ -33,9 +48,23 @@ func Init(connection string) error {
 		connString = val
 	}
 
+	if strings.HasPrefix(connString, "embedded://") {
+		runtimePath := strings.ReplaceAll(connString, "embedded://", "")
+		PostgresServer = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().
+			RuntimePath(runtimePath).
+			Database("canarychecker"))
+		connString = "postgres://postgres:postgres@localhost/canarychecker"
+		err := PostgresServer.Start()
+		if err != nil {
+			return err
+		}
+	}
+
 	config, err := pgxpool.ParseConfig(connString)
 	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	if logger.IsTraceEnabled() {
