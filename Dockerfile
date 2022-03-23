@@ -31,9 +31,9 @@ RUN apt-get update && \
   rm -rf /app/restic.bz2
 
 #Install jmeter
-RUN curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmeter-5.4.1.tgz -o apache-jmeter-5.4.1.tgz && \
-  tar xf apache-jmeter-5.4.1.tgz -C / && \
-  rm /app/apache-jmeter-5.4.1.tgz && \
+RUN curl -L https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.4.3.tgz -o apache-jmeter-5.4.3.tgz && \
+  tar xf apache-jmeter-5.4.3.tgz -C / && \
+  rm /app/apache-jmeter-5.4.3.tgz && \
   apt-get install -y openjdk-11-jre-headless
 
 ENV PATH /apache-jmeter-5.4.1/bin/:$PATH
