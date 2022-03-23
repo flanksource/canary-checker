@@ -101,7 +101,7 @@ jobs:
       - name: Update app version
         run: ./yq -i e '.appVersion = "${{ needs.semantic-release.outputs.release-version }}"' chart/Chart.yaml
       - name: Update image tags
-        run: ./yq -i e '.image.tag = "${{ needs.semantic-release.outputs.release-version }}"' chart/values.yaml
+        run: ./yq -i e '.image.tag = "v${{ needs.semantic-release.outputs.release-version }}"' chart/values.yaml
       - name: Set up Helm
         uses: azure/setup-helm@v1
         with:
