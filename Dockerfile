@@ -31,7 +31,7 @@ RUN apt-get update && \
   rm -rf /app/restic.bz2
 
 #Install jmeter
-RUN curl -L https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.4.3.tgz -o apache-jmeter-5.4.3.tgz && \
+RUN curl -L https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.4.3.zip -o apache-jmeter-5.4.1.tgz && \
   tar xf apache-jmeter-5.4.3.tgz -C / && \
   rm /app/apache-jmeter-5.4.3.tgz && \
   apt-get install -y openjdk-11-jre-headless
