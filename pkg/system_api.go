@@ -10,6 +10,8 @@ import (
 	"github.com/flanksource/commons/logger"
 )
 
+const ComponentType = "component"
+
 type System struct {
 	Object       `yaml:",inline"`
 	Id           string            `json:"id"` //nolint
@@ -49,7 +51,7 @@ func (component *Component) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &c); err != nil {
 		return err
 	}
-	c.TopologyType = "component"
+	c.TopologyType = ComponentType
 	*component = Component(c)
 	return nil
 }
@@ -60,7 +62,7 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	for _, c := range flat {
-		c.TopologyType = "component"
+		c.TopologyType = ComponentType
 		if c.ParentId == "" {
 			// first add parents
 			parent := c
@@ -70,7 +72,7 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 
 	for _, _c := range flat {
 		c := _c
-		c.TopologyType = "component"
+		c.TopologyType = ComponentType
 		if c.ParentId != "" {
 			parent := components.FindByID(c.ParentId)
 			if parent == nil {
@@ -114,48 +116,48 @@ type Component struct {
 	ExternalId    string             `json:"external_id,omitempty"` //nolint
 }
 
-func (c Component) Clone() Component {
+func (component Component) Clone() Component {
 	return Component{
-		Name:         c.Name,
-		TopologyType: c.TopologyType,
-		Id:           c.Id,
-		Text:         c.Text,
-		Namespace:    c.Namespace,
-		Labels:       c.Labels,
-		Tooltip:      c.Tooltip,
-		Icon:         c.Icon,
-		Owner:        c.Owner,
-		Status:       c.Status,
-		StatusReason: c.StatusReason,
-		Type:         c.Type,
-		Lifecycle:    c.Lifecycle,
-		Properties:   c.Properties,
-		ExternalId:   c.ExternalId,
+		Name:         component.Name,
+		TopologyType: component.TopologyType,
+		Id:           component.Id,
+		Text:         component.Text,
+		Namespace:    component.Namespace,
+		Labels:       component.Labels,
+		Tooltip:      component.Tooltip,
+		Icon:         component.Icon,
+		Owner:        component.Owner,
+		Status:       component.Status,
+		StatusReason: component.StatusReason,
+		Type:         component.Type,
+		Lifecycle:    component.Lifecycle,
+		Properties:   component.Properties,
+		ExternalId:   component.ExternalId,
 	}
 }
 
-func (c Component) String() string {
+func (component Component) String() string {
 	s := ""
-	if c.Type != "" {
-		s += c.Type + "/"
+	if component.Type != "" {
+		s += component.Type + "/"
 	}
-	if c.Namespace != "" {
-		s += c.Namespace + "/"
+	if component.Namespace != "" {
+		s += component.Namespace + "/"
 	}
-	if c.Text != "" {
-		s += c.Text
-	} else if c.Name != "" {
-		s += c.Name
+	if component.Text != "" {
+		s += component.Text
+	} else if component.Name != "" {
+		s += component.Name
 	} else {
-		s += c.Id
+		s += component.Id
 	}
 	return s
 }
 
-func (c Component) GetAsEnvironment() map[string]interface{} {
+func (component Component) GetAsEnvironment() map[string]interface{} {
 	return map[string]interface{}{
-		"self":       c,
-		"properties": c.Properties.AsMap(),
+		"self":       component,
+		"properties": component.Properties.AsMap(),
 	}
 }
 
@@ -170,26 +172,25 @@ func NewComponent(c v1.ComponentSpec) *Component {
 	}
 }
 
-func (c Component) GetID() string {
-	if c.Id != "" {
-		return c.Id
+func (component Component) GetID() string {
+	if component.Id != "" {
+		return component.Id
 	}
-	if c.Text != "" {
-		return c.Text
+	if component.Text != "" {
+		return component.Text
 	}
-	return c.Name
+	return component.Name
 }
 
-func (c Components) Debug(prefix string) string {
+func (components Components) Debug(prefix string) string {
 	s := ""
-	for _, component := range c {
+	for _, component := range components {
 		status := component.Status
 
 		if component.IsHealthy() {
 			status = console.Greenf(status)
 		} else {
 			status = console.Redf(status)
-
 		}
 
 		s += fmt.Sprintf("%s%s (%s) => %s\n", prefix, component, component.GetID(), status)
@@ -200,8 +201,8 @@ func (c Components) Debug(prefix string) string {
 
 type Components []*Component
 
-func (c Components) Find(name string) *Component {
-	for _, component := range c {
+func (components Components) Find(name string) *Component {
+	for _, component := range components {
 		if component.Name == name {
 			return component
 		}
@@ -209,16 +210,16 @@ func (c Components) Find(name string) *Component {
 	return nil
 }
 
-func (c Components) GetIds() []string {
+func (components Components) GetIds() []string {
 	ids := []string{}
-	for _, component := range c {
+	for _, component := range components {
 		ids = append(ids, component.Id)
 	}
 	return ids
 }
 
-func (c Components) FindByID(id string) *Component {
-	for _, component := range c {
+func (components Components) FindByID(id string) *Component {
+	for _, component := range components {
 		if component.Id == id {
 			return component
 		}

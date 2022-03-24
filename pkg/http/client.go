@@ -30,7 +30,6 @@ type HTTPRequest struct {
 	Port                    int
 	URL                     *url.URL
 	timeout                 time.Duration
-	start                   time.Time
 	headers                 map[string]string
 	insecure                bool
 	ntlm                    bool
