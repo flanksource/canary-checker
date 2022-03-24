@@ -31,12 +31,12 @@ RUN apt-get update && \
   rm -rf /app/restic.bz2
 
 #Install jmeter
-RUN curl -L https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.4.3.zip -o apache-jmeter-5.4.3.tgz && \
-  tar xf apache-jmeter-5.4.3.tgz -C / && \
-  rm /app/apache-jmeter-5.4.3.tgz && \
+RUN curl -L https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.4.3.zip -o apache-jmeter-5.4.3.zip && \
+  unzip apache-jmeter-5.4.3.zip -d /opt && \
+  rm apache-jmeter-5.4.3.zip && \
   apt-get install -y openjdk-11-jre-headless
 
-ENV PATH /apache-jmeter-5.4.1/bin/:$PATH
+ENV PATH /opt/apache-jmeter-5.4.3/bin/:$PATH
 
 # Install askgit binaries
 RUN curl -L https://github.com/flanksource/askgit/releases/download/v0.4.8-flanksource/askgit-linux-amd64.tar.gz -o askgit.tar.gz && \
