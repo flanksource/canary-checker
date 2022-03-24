@@ -1,4 +1,5 @@
 .bin/
+bin/
 .idea/
 .env
 .certs
