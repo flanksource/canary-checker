@@ -1,10 +1,15 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
+	"log"
+	"net/http"
 	nethttp "net/http"
 	_ "net/http/pprof" // required by serve
+	"os"
+	"os/signal"
 
 	"github.com/flanksource/canary-checker/pkg/controllers"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -31,7 +36,6 @@ var Serve = &cobra.Command{
 	Use:   "serve config.yaml",
 	Short: "Start a server to execute checks",
 	Run: func(cmd *cobra.Command, configFiles []string) {
-
 		setup()
 		controllers.StartScanCanaryConfigs(dataFile, configFiles)
 		controllers.Start()
@@ -40,7 +44,7 @@ var Serve = &cobra.Command{
 }
 
 func setup() {
-	if err := db.Init(db.ConnectionString); err != nil {
+	if err := db.Init(); err != nil {
 		logger.Fatalf("error connecting to db %v", err)
 	}
 	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
@@ -66,41 +70,60 @@ func serve() {
 		allowedCors = ""
 	}
 
-<<<<<<< HEAD
-	nethttp.Handle("/metrics", promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{}))
 	if db.ConnectionString != "" {
-		if err := db.Init(db.ConnectionString); err != nil {
-			logger.Fatalf("error connecting with postgres: %v", err)
-			return
-		} else {
-			cache.PostgresCache = cache.NewPostgresCache(db.Pool)
-		}
+		cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 	}
+
 	push.AddServers(pushServers)
 	go push.Start()
 
-=======
->>>>>>> f0fbe02 (feat: switch to uuid based canary id + sql as source of truth)
 	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheusURL)
 
-	nethttp.HandleFunc("/", stripQuery(nethttp.FileServer(staticRoot).ServeHTTP))
-	nethttp.HandleFunc("/about", simpleCors(api.About, allowedCors))
-	nethttp.HandleFunc("/api", simpleCors(api.CheckSummary, allowedCors))
-	nethttp.HandleFunc("/api/graph", simpleCors(api.CheckDetails, allowedCors))
-	nethttp.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))
-	nethttp.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler, allowedCors))
-	nethttp.HandleFunc("/api/push", simpleCors(push.Handler, allowedCors))
-	nethttp.HandleFunc("/api/details", simpleCors(details.Handler, allowedCors))
-	nethttp.HandleFunc("/api/changes", simpleCors(api.Changes, allowedCors))
-	nethttp.HandleFunc("/api/topology", simpleCors(api.Topology, allowedCors))
-	nethttp.Handle("/metrics", promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{}))
-
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", stripQuery(nethttp.FileServer(staticRoot).ServeHTTP))
+	mux.HandleFunc("/about", simpleCors(api.About, allowedCors))
+	mux.HandleFunc("/api", simpleCors(api.CheckSummary, allowedCors))
+	mux.HandleFunc("/api/graph", simpleCors(api.CheckDetails, allowedCors))
+	mux.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))
+	mux.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler, allowedCors))
+	mux.HandleFunc("/api/push", simpleCors(push.Handler, allowedCors))
+	mux.HandleFunc("/api/details", simpleCors(details.Handler, allowedCors))
+	mux.HandleFunc("/api/changes", simpleCors(api.Changes, allowedCors))
+	mux.HandleFunc("/api/topology", simpleCors(api.Topology, allowedCors))
+	mux.Handle("/metrics", promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{}))
 	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
+
+	var srv = nethttp.Server{
+		Addr:    addr,
+		Handler: mux,
+	}
+
 	logger.Infof("Starting health dashboard at http://%s", addr)
 	logger.Infof("Metrics can be accessed at http://%s/metrics", addr)
 
-	if err := nethttp.ListenAndServe(addr, nil); err != nil {
-		logger.Fatalf("failed to start server: %v", err)
+	idleConnsClosed := make(chan struct{})
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt)
+		<-sigint
+
+		// We received an interrupt signal, shut down.
+		if err := srv.Shutdown(context.Background()); err != nil {
+			// Error from closing listeners, or context timeout:
+			logger.Infof("HTTP server Shutdown: %v", err)
+		}
+		close(idleConnsClosed)
+	}()
+
+	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		// Error starting or closing listener:
+		log.Fatalf("HTTP server ListenAndServe: %v", err)
+	}
+
+	<-idleConnsClosed
+
+	if err := db.StopServer(); err != nil {
+		logger.Errorf("Error stopping embedded postgres: %v", err)
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/runner"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
@@ -18,6 +19,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 var webhookPort int
@@ -55,6 +57,11 @@ func run(cmd *cobra.Command, args []string) {
 
 	_ = clientgoscheme.AddToScheme(scheme)
 	_ = canaryv1.AddToScheme(scheme)
+
+	if err := db.Init(); err != nil {
+		logger.Fatalf("error connecting with postgres: %v", err)
+	}
+
 	go serve()
 
 	ctrl.SetLogger(zapr.NewLogger(loggr))
@@ -98,6 +105,7 @@ func run(cmd *cobra.Command, args []string) {
 		RunnerName:        runner.RunnerName,
 	}
 
+	mgr.Add(manager.RunnableFunc(db.Start))
 	if err = reconciler.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Canary")
 		os.Exit(1)
@@ -111,6 +119,5 @@ func run(cmd *cobra.Command, args []string) {
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
-		os.Exit(1)
 	}
 }

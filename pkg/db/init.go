@@ -34,6 +34,14 @@ var pgxConnectionString string
 var PostgresServer *embeddedpostgres.EmbeddedPostgres
 var Trace bool
 
+func Start(ctx context.Context) error {
+	if err := Init(); err != nil {
+		return err
+	}
+	<-ctx.Done()
+	return StopServer()
+}
+
 func StopServer() error {
 	if PostgresServer != nil {
 		logger.Infof("Stopping database server")
@@ -42,6 +50,8 @@ func StopServer() error {
 			return err
 		}
 		PostgresServer = nil
+		logger.Infof("Stoped database server")
+
 	}
 	return nil
 }
@@ -49,24 +59,37 @@ func StopServer() error {
 func IsConfigured() bool {
 	return ConnectionString != "" && ConnectionString != "DB_URL"
 }
+
 func IsConnected() bool {
 	return Pool != nil
 }
 
-func Init(connection string) error {
-	if strings.HasPrefix(connString, "embedded://") {
-		runtimePath := strings.ReplaceAll(connString, "embedded://", "")
+func Init() error {
+	if ConnectionString == "" {
+		logger.Warnf("No db connection string specified")
+		return nil
+	}
+	if Pool != nil {
+		return nil
+	}
+	if strings.HasPrefix(ConnectionString, "embedded://") {
+		runtimePath := strings.ReplaceAll(ConnectionString, "embedded://", "")
+		logger.Infof("Starting embedded postgres server at %s", runtimePath)
 		PostgresServer = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().
-			RuntimePath(runtimePath).
-			Database("canarychecker"))
-		connString = "postgres://postgres:postgres@localhost/canarychecker"
+			Port(6432).
+			DataPath(runtimePath).
+			BinariesPath(".bin/postgres").
+			Version(embeddedpostgres.V14).
+			Username("postgres").Password("postgres").
+			Database("canary"))
+		ConnectionString = "postgres://postgres:postgres@localhost:6432/canary"
 		err := PostgresServer.Start()
 		if err != nil {
 			return err
 		}
 	}
 
-	config, err := pgxpool.ParseConfig(connection)
+	config, err := pgxpool.ParseConfig(ConnectionString)
 	if err != nil {
 		if err != nil {
 			return err

@@ -11,7 +11,7 @@ import (
 var Sync = &cobra.Command{
 	Use: "sync",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := db.Init(db.ConnectionString); err != nil {
+		if err := db.Init(); err != nil {
 			logger.Fatalf("error connecting with postgres %v", err)
 		}
 	},

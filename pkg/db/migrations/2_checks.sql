@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS check_statuses(
 	message TEXT,
 	status boolean,
 	FOREIGN KEY (check_id) REFERENCES checks(id),
-	 UNIQUE (check_id, time)
+	PRIMARY KEY (check_id, time)
 
 );
 -- +goose StatementEnd

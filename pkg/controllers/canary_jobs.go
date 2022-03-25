@@ -143,16 +143,20 @@ func SyncCanaryJobs() {
 			LogPass: true,
 			LogFail: true,
 		}
+		if canary.Spec.GetSchedule() == "@never" {
+			continue
+		}
 		entryId, err := Scheduler.AddJob(canary.Spec.GetSchedule(), job)
 		if err != nil {
 			logger.Errorf("Failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
+			continue
 		} else {
 			logger.Infof("Scheduling %s to %s", canary, canary.Spec.GetSchedule())
 			seenEntryIds[entryId] = true
 		}
 
 		entry = findCronEntry(canary)
-		if time.Until(entry.Next) < 1*time.Hour {
+		if entry != nil && time.Until(entry.Next) < 1*time.Hour {
 			// run all regular canaries on startup
 			go job.Run()
 		}

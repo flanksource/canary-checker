@@ -22,7 +22,7 @@ var Topology = &cobra.Command{
 	Use: "topology",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if db.IsConfigured() {
-			if err := db.Init(db.ConnectionString); err != nil {
+			if err := db.Init(); err != nil {
 				logger.Debugf("error connecting with postgres %v", err)
 			}
 		}
@@ -39,7 +39,7 @@ var QueryTopology = &cobra.Command{
 			logger.Fatalf("Must specify --db or DB_URL env")
 		}
 
-		if err := db.Init(db.ConnectionString); err != nil {
+		if err := db.Init(); err != nil {
 			logger.Fatalf("error connecting with postgres %v", err)
 		}
 
