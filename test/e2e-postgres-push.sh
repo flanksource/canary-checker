@@ -52,7 +52,7 @@ curl http://0.0.0.0:8080/api
 i=0
 while [ $i -lt 5 ]
 do
-    go run main.go push http://0.0.0.0:8080 --name abc --description a --type junit --status passed --duration 10ms --message "10 of 10 passed"
+    go run main.go push http://0.0.0.0:8080 --name abc --description a --type junit  --duration 10 --message "10 of 10 passed"
     i=$((i+1))
 done
 
@@ -69,7 +69,7 @@ echo "Postgres count: ${STATUS_COUNT_POSTGRES}"
 echo "Memory count: ${STATUS_COUNT_MEMORY}"
 
 
-if [ "${CANARY_COUNT}" -gt 0 ]; then 
+if [ "${CANARY_COUNT}" -gt 0 ]; then
     echo "Number of canaries is greater than 0: ${CANARY_COUNT}"
     exit 1
 fi
