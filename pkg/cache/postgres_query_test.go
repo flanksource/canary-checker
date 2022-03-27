@@ -52,7 +52,7 @@ var cases = []struct {
 }
 
 func TestQueries(t *testing.T) {
-	if err := db.Init("postgres://root@localhost:5432/canary_checker?sslmode=disable"); err != nil {
+	if err := db.Init(); err != nil {
 		t.Fatalf("Failed to init db: %v", err)
 	}
 	psql := NewPostgresCache(db.Pool)
