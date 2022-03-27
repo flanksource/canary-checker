@@ -88,7 +88,7 @@ func serve() {
 	mux.HandleFunc("/api/graph", simpleCors(api.CheckDetails, allowedCors))
 	mux.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))
 	mux.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler, allowedCors))
-	mux.HandleFunc("/api/push", simpleCors(push.Handler, allowedCors))
+	mux.HandleFunc("/api/push", simpleCors(api.PushHandler, allowedCors))
 	mux.HandleFunc("/api/details", simpleCors(details.Handler, allowedCors))
 	mux.HandleFunc("/api/changes", simpleCors(api.Changes, allowedCors))
 	mux.HandleFunc("/api/topology", simpleCors(api.Topology, allowedCors))

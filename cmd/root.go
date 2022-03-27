@@ -86,5 +86,5 @@ func init() {
 	Root.PersistentFlags().StringArrayVar(&sharedLibrary, "shared-library", []string{}, "Add javascript files to be shared by all javascript templates")
 	Root.PersistentFlags().BoolVar(&exposeEnv, "expose-env", false, "Expose environment variables for use in all templates. Note this has serious security implications with untrusted canaries")
 	Root.AddCommand(Docs)
-	Root.AddCommand(Run, Serve, Operator, Push)
+	Root.AddCommand(Run, Serve, Operator)
 }

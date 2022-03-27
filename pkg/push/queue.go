@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/api"
+
 	"github.com/flanksource/commons/logger"
 	goqueue "github.com/phf/go-queue/queue"
 )
@@ -19,13 +21,8 @@ func AddServers(servers []string) {
 	}
 }
 
-type QueueData struct {
-	Check  pkg.Check       `json:",inline"`
-	Status pkg.CheckStatus `json:",inline"`
-}
-
 func Queue(check pkg.Check, status pkg.CheckStatus) {
-	data := QueueData{
+	data := api.QueueData{
 		Check:  check,
 		Status: status,
 	}
@@ -47,13 +44,13 @@ func consumeQueue(server string, queue *goqueue.Queue) {
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
-		data := element.(QueueData)
+		data := element.(api.QueueData)
 		jsonData, err := json.Marshal(data)
 		if err != nil {
 			logger.Errorf("error unmarshalling request body: %v", err)
 			continue
 		}
-		err = PostDataToServer(strings.TrimSpace(server), bytes.NewBuffer(jsonData))
+		err = api.PostDataToServer(strings.TrimSpace(server), bytes.NewBuffer(jsonData))
 		if err != nil {
 			logger.Errorf("error sending data to server %v body: %v", server, err)
 			continue
