@@ -31,6 +31,7 @@ import (
 )
 
 var schedule, configFile string
+var executor bool
 
 var Serve = &cobra.Command{
 	Use:   "serve config.yaml",
@@ -38,7 +39,9 @@ var Serve = &cobra.Command{
 	Run: func(cmd *cobra.Command, configFiles []string) {
 		setup()
 		controllers.StartScanCanaryConfigs(dataFile, configFiles)
-		controllers.Start()
+		if executor {
+			controllers.Start()
+		}
 		serve()
 	},
 }
@@ -48,7 +51,6 @@ func setup() {
 		logger.Fatalf("error connecting to db %v", err)
 	}
 	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
-	controllers.Start()
 	push.AddServers(pushServers)
 	go push.Start()
 
@@ -152,6 +154,7 @@ func simpleCors(f nethttp.HandlerFunc, allowedOrigin string) nethttp.HandlerFunc
 
 func init() {
 	ServerFlags(Serve.Flags())
+	Serve.Flags().BoolVar(&executor, "executor", true, "If false, only serve the UI and sync the configs")
 	Serve.Flags().StringVarP(&configFile, "configfile", "c", "", "Specify configfile")
 	Serve.Flags().StringVarP(&schedule, "schedule", "s", "", "schedule to run checks on. Supports all cron expression and golang duration support in format: '@every duration'")
 }
