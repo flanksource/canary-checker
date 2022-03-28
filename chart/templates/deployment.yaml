@@ -22,10 +22,15 @@ spec:
     spec:
       serviceAccountName: {{ include "canary-checker.fullname" . }}-sa
       volumes:
-        {{- if eq .Values.dockerSocket "true" }}
+        {{- if eq .Values.dockerSocket true }}
         - name: dockersock
           hostPath:
             path: /var/run/docker.sock
+        {{- end }}
+        {{- if eq .Values.containerdSocket true }}
+        - name: containerdsock
+          hostPath:
+            path: /run/containerd/containerd.sock
         {{- end }}
         - name: podinfo
           downwardAPI:
@@ -71,9 +76,13 @@ spec:
               value: "embedded:///opt/database/"
               {{- end }}
           volumeMounts:
-            {{- if eq .Values.dockerSocket "true" }}
+            {{- if eq .Values.dockerSocket true }}
             - name: dockersock
               mountPath: "/var/run/docker.sock"
+            {{- end }}
+            {{- if eq .Values.containerdSocket true }}
+            - name: containerdsock
+              mountPath: "/run/containerd/containerd.sock"
             {{- end }}
             {{- if eq .Values.db.external.enabled false }}
             {{- if eq .Values.db.embedded.persist true }}
