@@ -1,4 +1,4 @@
-{{- if eq .Values.db.enabled true }}
+{{- if eq .Values.db.external.enabled true }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -26,14 +26,14 @@ spec:
             mountPath: /data
         envFrom:
           - secretRef:
-              name: {{ .Values.db.secretKeyRef.name }}
+              name: {{ .Values.db.external.secretKeyRef.name }}
   volumeClaimTemplates:
     - metadata:
         name: postgresql
       spec:
         accessModes: ["ReadWriteOnce"]
-        storageClassName: {{ .Values.db.storageClass }}
+        storageClassName: {{ .Values.db.external.storageClass }}
         resources:
           requests:
-            storage: {{ .Values.db.storage }}
+            storage: {{ .Values.db.external.storage }}
 {{- end }}

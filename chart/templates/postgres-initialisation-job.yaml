@@ -1,3 +1,4 @@
+{{- if eq .Values.db.external.enabled true }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -24,10 +25,11 @@ spec:
           args: ["psql", "-U", "$(POSTGRES_USER)", "-h", "$(POSTGRES_HOST)", "-d", "postgres", "-c", "CREATE DATABASE canarychecker"]
           envFrom:
             - secretRef:
-                name: {{ .Values.db.secretKeyRef.name }}
+                name: {{ .Values.db.external.secretKeyRef.name }}
           env:
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.db.secretKeyRef.name }}
+                  name: {{ .Values.db.external.secretKeyRef.name }}
                   key: POSTGRES_PASSWORD
+{{- end }}
