@@ -1,5 +1,11 @@
 apiVersion: apps/v1
+{{- if eq .Values.db.external.enabled false }}
+{{- if eq .Values.db.embedded.persist true }}
+kind: StatefulSet
+{{- else }}
 kind: Deployment
+{{- end }}
+{{- end }}
 metadata:
   name: {{ include "canary-checker.name" . }}
   labels:
@@ -16,10 +22,15 @@ spec:
     spec:
       serviceAccountName: {{ include "canary-checker.fullname" . }}-sa
       volumes:
-        {{- if eq .Values.dockerSocket "true" }}
+        {{- if eq .Values.dockerSocket true }}
         - name: dockersock
           hostPath:
             path: /var/run/docker.sock
+        {{- end }}
+        {{- if eq .Values.containerdSocket true }}
+        - name: containerdsock
+          hostPath:
+            path: /run/containerd/containerd.sock
         {{- end }}
         - name: podinfo
           downwardAPI:
@@ -27,6 +38,21 @@ spec:
               - path: "labels"
                 fieldRef:
                   fieldPath: metadata.labels
+      {{- if eq .Values.db.external.enabled false }}
+      {{- if eq .Values.db.embedded.persist true }}
+      volumeClaimTemplates:
+        - metadata:
+            name: canarychecker-database
+            labels:
+              {{- include "canary-checker.labels" . | nindent 16 }}
+          spec:
+            storageClassName: {{ .Values.db.embedded.storageClass }}
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: {{ .Values.db.embedded.storage }}
+      {{- end }}
+      {{- end }}
       containers:
         - name: {{ include "canary-checker.name" . }}
           securityContext:
@@ -41,14 +67,28 @@ spec:
             - name: DOCKER_API_VERSION
               value: "1.39"
             - name: DB_URL
+              {{- if eq .Values.db.external.enabled true }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.db.secretKeyRef.name }}
-                  key: {{ .Values.db.secretKeyRef.key }}
+                  name: {{ .Values.db.external.secretKeyRef.name }}
+                  key: {{ .Values.db.external.secretKeyRef.key }}
+              {{- else }}
+              value: "embedded:///opt/database/"
+              {{- end }}
           volumeMounts:
-            {{- if eq .Values.dockerSocket "true" }}
+            {{- if eq .Values.dockerSocket true }}
             - name: dockersock
               mountPath: "/var/run/docker.sock"
+            {{- end }}
+            {{- if eq .Values.containerdSocket true }}
+            - name: containerdsock
+              mountPath: "/run/containerd/containerd.sock"
+            {{- end }}
+            {{- if eq .Values.db.external.enabled false }}
+            {{- if eq .Values.db.embedded.persist true }}
+            - name: canarychecker-database
+              mountPath: "/opt/database"
+            {{- end }}
             {{- end }}
             - mountPath: /etc/podinfo
               name: podinfo

@@ -10,21 +10,29 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
-dockerSocket: "true"
+dockerSocket: true
+containerdSocket: false
 
 db:
-  # Setting this to true will create a postgres stateful set for canary-checker to connect to.
-  enabled: false
-  secretKeyRef:
-    # Setting this to true will create the secret automatically.
-    create: true
-    name: postgres-connection
-    # This is the key that either the secret will create(if create is true) or this is the key
-    # it will look for in the secret(if secretRefKey is mentioned). The name of the key is
-    # mandatory to set.
-    key: DB_URL
-  storageClass:
-  storage:
+  embedded:
+    # If the database is embedded, setting this to true will persist the contents of the database
+    # through a persistent volume
+    persist: true
+    storageClass:
+    storage:
+  external:
+    # Setting this to true will create a postgres stateful set for canary-checker to connect to.
+    enabled: false
+    secretKeyRef:
+      # Setting this to true will create the secret automatically.
+      create: true
+      name: postgres-connection
+      # This is the key that either the secret will create(if create is true) or this is the key
+      # it will look for in the secret(if secretRefKey is mentioned). The name of the key is
+      # mandatory to set.
+      key: DB_URL
+    storageClass:
+    storage:
 
 nameOverride: ""
 
