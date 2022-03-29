@@ -598,6 +598,105 @@ spec:
                       - name
                     type: object
                   type: array
+                databaseBackup:
+                  items:
+                    properties:
+                      description:
+                        description: Description for the check
+                        type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      gcp:
+                        properties:
+                          gcpConnection:
+                            properties:
+                              credentials:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              endpoint:
+                                type: string
+                            type: object
+                          instance:
+                            type: string
+                          project:
+                            type: string
+                        required:
+                          - instance
+                          - project
+                        type: object
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      maxAge:
+                        format: int32
+                        type: integer
+                      name:
+                        description: Name of the check
+                        type: string
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                    required:
+                      - name
+                    type: object
+                  type: array
                 dns:
                   items:
                     properties:
@@ -3620,6 +3719,105 @@ spec:
                           - name
                         type: object
                       type: array
+                    databaseBackup:
+                      items:
+                        properties:
+                          description:
+                            description: Description for the check
+                            type: string
+                          display:
+                            properties:
+                              expr:
+                                type: string
+                              javascript:
+                                type: string
+                              jsonPath:
+                                type: string
+                              template:
+                                type: string
+                            type: object
+                          gcp:
+                            properties:
+                              gcpConnection:
+                                properties:
+                                  credentials:
+                                    properties:
+                                      name:
+                                        type: string
+                                      value:
+                                        type: string
+                                      valueFrom:
+                                        properties:
+                                          configMapKeyRef:
+                                            properties:
+                                              key:
+                                                type: string
+                                              name:
+                                                type: string
+                                              optional:
+                                                type: boolean
+                                            required:
+                                              - key
+                                            type: object
+                                          secretKeyRef:
+                                            properties:
+                                              key:
+                                                type: string
+                                              name:
+                                                type: string
+                                              optional:
+                                                type: boolean
+                                            required:
+                                              - key
+                                            type: object
+                                        type: object
+                                    type: object
+                                  endpoint:
+                                    type: string
+                                type: object
+                              instance:
+                                type: string
+                              project:
+                                type: string
+                            required:
+                              - instance
+                              - project
+                            type: object
+                          icon:
+                            description: Icon for overwriting default icon on the dashboard
+                            type: string
+                          maxAge:
+                            format: int32
+                            type: integer
+                          name:
+                            description: Name of the check
+                            type: string
+                          test:
+                            properties:
+                              expr:
+                                type: string
+                              javascript:
+                                type: string
+                              jsonPath:
+                                type: string
+                              template:
+                                type: string
+                            type: object
+                          transform:
+                            properties:
+                              expr:
+                                type: string
+                              javascript:
+                                type: string
+                              jsonPath:
+                                type: string
+                              template:
+                                type: string
+                            type: object
+                        required:
+                          - name
+                        type: object
+                      type: array
                     dns:
                       items:
                         properties:
@@ -6566,6 +6764,105 @@ spec:
                                   type: string
                               required:
                                 - image
+                                - name
+                              type: object
+                            type: array
+                          databaseBackup:
+                            items:
+                              properties:
+                                description:
+                                  description: Description for the check
+                                  type: string
+                                display:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                gcp:
+                                  properties:
+                                    gcpConnection:
+                                      properties:
+                                        credentials:
+                                          properties:
+                                            name:
+                                              type: string
+                                            value:
+                                              type: string
+                                            valueFrom:
+                                              properties:
+                                                configMapKeyRef:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                    - key
+                                                  type: object
+                                                secretKeyRef:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                    - key
+                                                  type: object
+                                              type: object
+                                          type: object
+                                        endpoint:
+                                          type: string
+                                      type: object
+                                    instance:
+                                      type: string
+                                    project:
+                                      type: string
+                                  required:
+                                    - instance
+                                    - project
+                                  type: object
+                                icon:
+                                  description: Icon for overwriting default icon on the dashboard
+                                  type: string
+                                maxAge:
+                                  format: int32
+                                  type: integer
+                                name:
+                                  description: Name of the check
+                                  type: string
+                                test:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                transform:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                              required:
                                 - name
                               type: object
                             type: array
@@ -9616,6 +9913,105 @@ spec:
                                 - name
                               type: object
                             type: array
+                          databaseBackup:
+                            items:
+                              properties:
+                                description:
+                                  description: Description for the check
+                                  type: string
+                                display:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                gcp:
+                                  properties:
+                                    gcpConnection:
+                                      properties:
+                                        credentials:
+                                          properties:
+                                            name:
+                                              type: string
+                                            value:
+                                              type: string
+                                            valueFrom:
+                                              properties:
+                                                configMapKeyRef:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                    - key
+                                                  type: object
+                                                secretKeyRef:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                    - key
+                                                  type: object
+                                              type: object
+                                          type: object
+                                        endpoint:
+                                          type: string
+                                      type: object
+                                    instance:
+                                      type: string
+                                    project:
+                                      type: string
+                                  required:
+                                    - instance
+                                    - project
+                                  type: object
+                                icon:
+                                  description: Icon for overwriting default icon on the dashboard
+                                  type: string
+                                maxAge:
+                                  format: int32
+                                  type: integer
+                                name:
+                                  description: Name of the check
+                                  type: string
+                                test:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                transform:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                              required:
+                                - name
+                              type: object
+                            type: array
                           dns:
                             items:
                               properties:
@@ -12562,6 +12958,105 @@ spec:
                                         type: string
                                     required:
                                       - image
+                                      - name
+                                    type: object
+                                  type: array
+                                databaseBackup:
+                                  items:
+                                    properties:
+                                      description:
+                                        description: Description for the check
+                                        type: string
+                                      display:
+                                        properties:
+                                          expr:
+                                            type: string
+                                          javascript:
+                                            type: string
+                                          jsonPath:
+                                            type: string
+                                          template:
+                                            type: string
+                                        type: object
+                                      gcp:
+                                        properties:
+                                          gcpConnection:
+                                            properties:
+                                              credentials:
+                                                properties:
+                                                  name:
+                                                    type: string
+                                                  value:
+                                                    type: string
+                                                  valueFrom:
+                                                    properties:
+                                                      configMapKeyRef:
+                                                        properties:
+                                                          key:
+                                                            type: string
+                                                          name:
+                                                            type: string
+                                                          optional:
+                                                            type: boolean
+                                                        required:
+                                                          - key
+                                                        type: object
+                                                      secretKeyRef:
+                                                        properties:
+                                                          key:
+                                                            type: string
+                                                          name:
+                                                            type: string
+                                                          optional:
+                                                            type: boolean
+                                                        required:
+                                                          - key
+                                                        type: object
+                                                    type: object
+                                                type: object
+                                              endpoint:
+                                                type: string
+                                            type: object
+                                          instance:
+                                            type: string
+                                          project:
+                                            type: string
+                                        required:
+                                          - instance
+                                          - project
+                                        type: object
+                                      icon:
+                                        description: Icon for overwriting default icon on the dashboard
+                                        type: string
+                                      maxAge:
+                                        format: int32
+                                        type: integer
+                                      name:
+                                        description: Name of the check
+                                        type: string
+                                      test:
+                                        properties:
+                                          expr:
+                                            type: string
+                                          javascript:
+                                            type: string
+                                          jsonPath:
+                                            type: string
+                                          template:
+                                            type: string
+                                        type: object
+                                      transform:
+                                        properties:
+                                          expr:
+                                            type: string
+                                          javascript:
+                                            type: string
+                                          jsonPath:
+                                            type: string
+                                          template:
+                                            type: string
+                                        type: object
+                                    required:
                                       - name
                                     type: object
                                   type: array
@@ -15587,6 +16082,105 @@ spec:
                                   type: string
                               required:
                                 - image
+                                - name
+                              type: object
+                            type: array
+                          databaseBackup:
+                            items:
+                              properties:
+                                description:
+                                  description: Description for the check
+                                  type: string
+                                display:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                gcp:
+                                  properties:
+                                    gcpConnection:
+                                      properties:
+                                        credentials:
+                                          properties:
+                                            name:
+                                              type: string
+                                            value:
+                                              type: string
+                                            valueFrom:
+                                              properties:
+                                                configMapKeyRef:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                    - key
+                                                  type: object
+                                                secretKeyRef:
+                                                  properties:
+                                                    key:
+                                                      type: string
+                                                    name:
+                                                      type: string
+                                                    optional:
+                                                      type: boolean
+                                                  required:
+                                                    - key
+                                                  type: object
+                                              type: object
+                                          type: object
+                                        endpoint:
+                                          type: string
+                                      type: object
+                                    instance:
+                                      type: string
+                                    project:
+                                      type: string
+                                  required:
+                                    - instance
+                                    - project
+                                  type: object
+                                icon:
+                                  description: Icon for overwriting default icon on the dashboard
+                                  type: string
+                                maxAge:
+                                  format: int32
+                                  type: integer
+                                name:
+                                  description: Name of the check
+                                  type: string
+                                test:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                transform:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                              required:
                                 - name
                               type: object
                             type: array
