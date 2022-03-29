@@ -1826,23 +1826,6 @@ spec:
                       spec:
                         description: RawMessage is a raw encoded JSON value. It implements Marshaler and Unmarshaler and can be used to delay JSON decoding or precompute a JSON encoding.
                         format: byte
-                        properties:
-                          containers:
-                            items:
-                              properties:
-                                ports:
-                                  items:
-                                    required:
-                                      - containerPort
-                                      - protocol
-                          initContainers:
-                            items:
-                              properties:
-                                ports:
-                                  items:
-                                    required:
-                                      - containerPort
-                                      - protocol
                         type: string
                       test:
                         properties:
@@ -3097,27 +3080,6 @@ spec:
                     template:
                       type: string
                   type: object
-                junit:
-                  items:
-                    properties:
-                      spec:
-                        properties:
-                          containers:
-                            items:
-                              properties:
-                                ports:
-                                  items:
-                                    required:
-                                      - containerPort
-                                      - protocol
-                          initContainers:
-                            items:
-                              properties:
-                                ports:
-                                  items:
-                                    required:
-                                      - containerPort
-                                      - protocol
                 lifecycle:
                   description: The lifecycle state of the component e.g. production, staging, dev, etc.
                   type: string
@@ -15052,27 +15014,6 @@ spec:
                     template:
                       type: string
                   type: object
-                junit:
-                  items:
-                    properties:
-                      spec:
-                        properties:
-                          containers:
-                            items:
-                              properties:
-                                ports:
-                                  items:
-                                    required:
-                                      - containerPort
-                                      - protocol
-                          initContainers:
-                            items:
-                              properties:
-                                ports:
-                                  items:
-                                    required:
-                                      - containerPort
-                                      - protocol
                 label:
                   type: string
                 owner:
