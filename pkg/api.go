@@ -104,7 +104,7 @@ type Timeseries struct {
 }
 
 type Canary struct {
-	ID        uuid.UUID `gorm:"default:generate_ulid()"`
+	ID        uuid.UUID `gorm:"default:uuid_generate_v4()"`
 	Spec      types.JSON
 	Labels    types.JSONStringMap
 	Source    string
@@ -128,7 +128,7 @@ func CanaryFromV1(canary v1.Canary) Canary {
 }
 
 type Check struct {
-	ID          string              `json:"id" gorm:"default:generate_ulid()"`
+	ID          string              `json:"id" gorm:"default:uuid_generate_v4()"`
 	CanaryID    string              `json:"canary_id"`
 	Spec        types.JSON          `json:"-"`
 	Type        string              `json:"type"`

@@ -62,8 +62,8 @@ func PushHandler(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			errorResonse(w, fmt.Errorf("failed to lookup canary: %s ", err), http.StatusInternalServerError)
 			return
-
-		} else if canary == nil && err == nil {
+		}
+		if canary == nil {
 			canary = &pkg.Canary{
 				Name:      data.Check.Name,
 				Namespace: data.Check.Namespace,
@@ -72,15 +72,14 @@ func PushHandler(w http.ResponseWriter, req *http.Request) {
 				errorResonse(w, fmt.Errorf("failed to create canary: %s ", err), http.StatusInternalServerError)
 				return
 			}
-
-			if err != db.CreateCheck(*canary, &data.Check) {
+			data.Check.CanaryID = canary.ID.String()
+			if err := db.CreateCheck(*canary, &data.Check); err != nil {
 				errorResonse(w, fmt.Errorf("failed to create canary: %s ", err), http.StatusInternalServerError)
 				return
 			}
 		}
 		data.Check.CanaryID = canary.ID.String()
 	}
-
 	cache.PostgresCache.Add(data.Check, data.Status)
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fmt.Sprintf("pushed to %s", data.Check.ID)))
