@@ -49,7 +49,7 @@ func (c *DatabaseBackupChecker) Run(ctx *context.Context) pkg.Results {
 func (c *DatabaseBackupChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.DatabaseBackupCheck)
 	switch {
-	case check.GCP.Instance != "" && check.GCP.Project != "":
+	case check.GCP != nil:
 		return GCPDatabaseBackupCheck(ctx, check)
 	default:
 		return FailDatabaseBackupParse(ctx, check)
@@ -61,5 +61,4 @@ func FailDatabaseBackupParse(ctx *context.Context, check v1.DatabaseBackupCheck)
 	var results pkg.Results
 	results = append(results, result)
 	return results.ErrorMessage(errors.New("Could not parse databaseBackup input"))
-
 }

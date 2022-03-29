@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	sql "google.golang.org/genproto/googleapis/cloud/sql/v1beta4"
+
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -32,18 +34,42 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 	}
 	var errorMessages []string
 	for _, backup := range backupList.Items {
-		if backup.Status != "SUCCESSFUL" {
-			errorMessages = append(errorMessages, backup.Error.Message)
+		if !(backup.Status == sql.SqlBackupRunStatus_SUCCESSFUL.String() || backup.Status == sql.SqlBackupRunStatus_RUNNING.String() || backup.Status == sql.SqlBackupRunStatus_ENQUEUED.String()) {
+			errorMessages = append(errorMessages, fmt.Sprintf("Backup %d has status %s with error %s", backup.Id, backup.Status, backup.Error.Message))
 		}
 	}
 	if check.MaxAge > 0 {
 		for _, backup := range backupList.Items {
-			endTime, err := time.Parse(time.RFC3339, backup.EndTime)
-			if err != nil {
-				errorMessages = append(errorMessages, "Could not parse backup end time")
+			var checkTime time.Time
+			var checkString string
+			parseFail := false
+			// Ideally running for too long and being enqueued for too long would have stricter age restrictions, but that might make the checks too complicated
+			// This handles the most recent valid timestamp that each state would present
+			if backup.Status == sql.SqlBackupRunStatus_RUNNING.String() {
+				checkTime, err = time.Parse(time.RFC3339, backup.StartTime)
+				if err != nil {
+					errorMessages = append(errorMessages, "Could not parse backup start time")
+					parseFail = true
+				}
+				checkString = "started"
+			} else if backup.Status == sql.SqlBackupRunStatus_ENQUEUED.String() {
+				checkTime, err = time.Parse(time.RFC3339, backup.EnqueuedTime)
+				if err != nil {
+					errorMessages = append(errorMessages, "Could not parse backup enqueued time")
+					parseFail = true
+				}
+				checkString = "enqueued"
 			} else {
-				if endTime.Add(time.Duration(check.MaxAge) * time.Minute).After(time.Now()) {
-					errorMessages = append(errorMessages, fmt.Sprintf("Most recent backup run too old - ended at %s", backup.EndTime))
+				checkTime, err = time.Parse(time.RFC3339, backup.EndTime)
+				if err != nil {
+					errorMessages = append(errorMessages, "Could not parse backup end time")
+					parseFail = true
+				}
+				checkString = "ended"
+			}
+			if !parseFail {
+				if checkTime.Add(time.Duration(check.MaxAge) * time.Minute).After(time.Now()) {
+					errorMessages = append(errorMessages, fmt.Sprintf("Most recent backup run too old - %s at %s", checkString, checkTime.String()))
 				}
 			}
 		}

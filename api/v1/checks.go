@@ -728,13 +728,13 @@ func (c AwsConfigRuleCheck) GetEndpoint() string {
 type DatabaseBackupCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
-	GCP         GCPDatabase `yaml:"gcp,omitempty" json:"gcp,omitempty"`
-	MaxAge      int32       `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
+	GCP         *GCPDatabase `yaml:"gcp,omitempty" json:"gcp,omitempty"`
+	MaxAge      int32        `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
 }
 
 type GCPDatabase struct {
-	Project        string `yaml:"project,omitempty" json:"project,omitempty"`
-	Instance       string `yaml:"instance,omitempty" json:"instance,omitempty"`
+	Project        string `yaml:"project" json:"project"`
+	Instance       string `yaml:"instance" json:"instance"`
 	*GCPConnection `yaml:"gcpConnection,omitempty" json:"gcpConnection,omitempty"`
 }
 

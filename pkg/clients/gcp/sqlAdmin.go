@@ -4,7 +4,7 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"google.golang.org/api/option"
-	"google.golang.org/api/sqladmin/v1beta4"
+	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 )
 
 func NewSQLAdmin(ctx *context.Context, conn v1.GCPConnection) (*sqladmin.Service, error) {
