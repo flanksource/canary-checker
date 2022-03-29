@@ -178,6 +178,16 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	return checks
 }
 
+func (spec CanarySpec) GetSchedule() string {
+	if spec.Schedule != "" {
+		return spec.Schedule
+	}
+	if spec.Interval > 0 {
+		return fmt.Sprintf("@every %ds", spec.Interval)
+	}
+	return "@never"
+}
+
 func (spec CanarySpec) SetSQLDrivers() {
 	for i := range spec.Mssql {
 		if spec.Mssql[i].driver == "" {
@@ -230,6 +240,7 @@ var (
 
 // CanaryStatus defines the observed state of Canary
 type CanaryStatus struct {
+	PersistedID *string `json:"persistedID,omitempty"`
 	// +optional
 	LastTransitionedTime *metav1.Time `json:"lastTransitionedTime,omitempty"`
 	// +optional
@@ -285,6 +296,15 @@ type Canary struct {
 
 	Spec   CanarySpec   `json:"spec,omitempty"`
 	Status CanaryStatus `json:"status,omitempty"`
+}
+
+func NewCanaryFromSpec(name string, spec CanarySpec) Canary {
+	return Canary{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: spec,
+	}
 }
 
 func (c Canary) String() string {

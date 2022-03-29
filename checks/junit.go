@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -50,7 +51,7 @@ func (c *JunitChecker) Run(ctx *context.Context) pkg.Results {
 	return results
 }
 
-func newPod(ctx *context.Context, check v1.JunitCheck) *corev1.Pod {
+func newPod(ctx *context.Context, check v1.JunitCheck) (*corev1.Pod, error) {
 	pod := &corev1.Pod{}
 	pod.APIVersion = corev1.SchemeGroupVersion.Version
 	pod.Kind = podKind
@@ -59,7 +60,10 @@ func newPod(ctx *context.Context, check v1.JunitCheck) *corev1.Pod {
 	}
 	pod.Namespace = ctx.Namespace
 	pod.Name = ctx.Canary.Name + "-" + strings.ToLower(rand.String(5))
-	pod.Spec = check.Spec
+	if err := json.Unmarshal(check.Spec, &pod.Spec); err != nil {
+		return nil, err
+	}
+	// pod.Spec = check.Spec
 	for _, container := range pod.Spec.Containers {
 		if len(container.Command) > 0 {
 			// attempt to wrap the command so that it always completes, allowing for access to junit results
@@ -108,7 +112,7 @@ func newPod(ctx *context.Context, check v1.JunitCheck) *corev1.Pod {
 	pod.Spec.RestartPolicy = corev1.RestartPolicyNever
 	pod.Spec.InitContainers[0].VolumeMounts = []corev1.VolumeMount{{Name: volumeName, MountPath: filepath.Dir(check.TestResults)}}
 	pod.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{{Name: volumeName, MountPath: mountPath}}
-	return pod
+	return pod, nil
 }
 
 func deletePod(ctx *context.Context, pod *corev1.Pod) {
@@ -182,7 +186,10 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	}
 
 	timeout := time.Duration(check.GetTimeout()) * time.Minute
-	pod := newPod(ctx, check)
+	pod, err := newPod(ctx, check)
+	if err != nil {
+		return results.ErrorMessage(err)
+	}
 	pods := k8s.CoreV1().Pods(ctx.Namespace)
 
 	if skip, err := cleanupExistingPods(ctx, k8s, fmt.Sprintf("%s=%s", junitCheckSelector, pod.Labels[junitCheckSelector])); err != nil {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	gotemplate "text/template"
@@ -56,6 +57,54 @@ func template(content string, data interface{}) (string, error) {
 	return strings.TrimSpace(buf.String()), nil
 }
 
+func ParseSystems(configFile, datafile string) ([]v1.System, error) {
+	configs, err := readFile(configFile)
+	if err != nil {
+		return nil, err
+	}
+
+	if datafile != "" {
+		data, err := parseDataFile(datafile)
+		if err != nil {
+			return nil, err
+		}
+		configs, err = template(configs, data)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var systems []v1.System
+	re := regexp.MustCompile(`(?m)^---\n`)
+	for _, chunk := range re.Split(configs, -1) {
+		if strings.TrimSpace(chunk) == "" {
+			continue
+		}
+		config := v1.System{}
+		decoder := yamlutil.NewYAMLOrJSONDecoder(strings.NewReader(chunk), 1024)
+
+		if err := decoder.Decode(&config); err != nil {
+			return nil, err
+		}
+
+		if config.IsEmpty() {
+			// try just the specs:
+			spec := v1.SystemSpec{}
+
+			if yamlerr := yaml.Unmarshal([]byte(chunk), &spec); yamlerr != nil {
+				return nil, yamlerr
+			}
+			config.Spec = spec
+		}
+		if config.Name == "" {
+			config.Name = CleanupFilename(configFile)
+		}
+		systems = append(systems, config)
+	}
+
+	return systems, nil
+}
+
 // ParseConfig : Read config file
 func ParseConfig(configfile string, datafile string) ([]v1.Canary, error) {
 	configs, err := readFile(configfile)
@@ -100,4 +149,9 @@ func ParseConfig(configfile string, datafile string) ([]v1.Canary, error) {
 	}
 
 	return canaries, nil
+}
+
+func CleanupFilename(fileName string) string {
+	removeSuffix := fileName[:len(fileName)-len(filepath.Ext(fileName))]
+	return strings.Replace(removeSuffix, "_", "", -1)
 }

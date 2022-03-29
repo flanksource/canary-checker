@@ -59,8 +59,7 @@ static: .bin/kustomize manifests generate .bin/yq
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: .bin/controller-gen .bin/yq
 	.bin/controller-gen crd paths="./..." output:stdout > config/deploy/crd.yaml
-	.bin/yq eval -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.junit.items.properties.spec.properties.containers.items.properties.ports.items.required=["containerPort", "protocol"]' config/deploy/crd.yaml
-	.bin/yq eval -i '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.junit.items.properties.spec.properties.initContainers.items.properties.ports.items.required=["containerPort", "protocol"]' config/deploy/crd.yaml
+	cd hack/generate-schemas && go run ./main.go
 
 # Run go fmt against code
 fmt:

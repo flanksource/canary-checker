@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/runner"
+	"github.com/flanksource/canary-checker/templating"
 	"github.com/flanksource/commons/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -15,6 +17,12 @@ var Root = &cobra.Command{
 	Use: "canary-checker",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		logger.UseZap(cmd.Flags())
+		for _, script := range sharedLibrary {
+			if err := templating.LoadSharedLibrary(script); err != nil {
+				logger.Errorf("Failed to load shared library %s: %v", script, err)
+			}
+		}
+		db.ConnectionString = readFromEnv(db.ConnectionString)
 	},
 }
 
@@ -22,6 +30,7 @@ var dev bool
 var httpPort, metricsPort, devGuiPort int
 var namespace, includeCheck, prometheusURL string
 var pushServers, pullServers []string
+var sharedLibrary []string
 var exposeEnv bool
 var logPass, logFail bool
 var (
@@ -49,6 +58,14 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringVarP(&cache.DefaultWindow, "default-window", "", "1h", "Default search window")
 }
 
+func readFromEnv(v string) string {
+	val := os.Getenv(v)
+	if val != "" {
+		return val
+	}
+	return v
+}
+
 func init() {
 	logger.BindFlags(Root.PersistentFlags())
 
@@ -64,8 +81,10 @@ func init() {
 		},
 	})
 	runner.Version = version
-
+	Root.PersistentFlags().StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database")
+	Root.PersistentFlags().BoolVar(&db.Trace, "db-trace", false, "Trace database queries")
+	Root.PersistentFlags().StringArrayVar(&sharedLibrary, "shared-library", []string{}, "Add javascript files to be shared by all javascript templates")
 	Root.PersistentFlags().BoolVar(&exposeEnv, "expose-env", false, "Expose environment variables for use in all templates. Note this has serious security implications with untrusted canaries")
 	Root.AddCommand(Docs)
-	Root.AddCommand(Run, Serve, Operator, Push)
+	Root.AddCommand(Run, Serve, Operator)
 }

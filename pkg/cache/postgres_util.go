@@ -8,7 +8,7 @@ import (
 	"github.com/flanksource/commons/duration"
 )
 
-func convertNamedParamsDebug(sql string, namedArgs map[string]interface{}) string {
+func ConvertNamedParamsDebug(sql string, namedArgs map[string]interface{}) string {
 	// Loop the named args and replace with placeholders
 	for pname, pval := range namedArgs {
 		sql = strings.ReplaceAll(sql, ":"+pname, fmt.Sprintf("%v", pval))
@@ -16,7 +16,7 @@ func convertNamedParamsDebug(sql string, namedArgs map[string]interface{}) strin
 	return sql
 }
 
-func convertNamedParams(sql string, namedArgs map[string]interface{}) (string, []interface{}) {
+func ConvertNamedParams(sql string, namedArgs map[string]interface{}) (string, []interface{}) {
 	i := 1
 	var args []interface{}
 	// Loop the named args and replace with placeholders

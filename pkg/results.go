@@ -20,8 +20,8 @@ func Fail(check external.Check, canary v1.Canary) *CheckResult {
 	}
 }
 
-func SetupError(canary v1.Canary, err error) []*CheckResult {
-	var results []*CheckResult
+func SetupError(canary v1.Canary, err error) Results {
+	var results Results
 	for _, check := range canary.Spec.GetAllChecks() {
 		results = append(results, &CheckResult{
 			Start:   time.Now(),
@@ -101,6 +101,10 @@ func (result *CheckResult) AddDetails(detail interface{}) *CheckResult {
 	}
 	result.Data["results"] = detail
 	return result
+}
+
+func (result *CheckResult) ToSlice() Results {
+	return Results{result}
 }
 
 func (result *CheckResult) AddMetric(metric Metric) *CheckResult {

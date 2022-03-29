@@ -1,10 +1,10 @@
 package v1
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
-	awsconfigruletypes "github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/kommons"
 	v1 "k8s.io/api/core/v1"
@@ -492,22 +492,22 @@ type JunitCheck struct {
 	TestResults string `yaml:"testResults" json:"testResults"`
 	Templatable `yaml:",inline" json:",inline"`
 	// Timeout in minutes to wait for specified container to finish its job. Defaults to 5 minutes
-	Timeout int        `yaml:"timeout,omitempty" json:"timeout,omitempty"`
-	Spec    v1.PodSpec `yaml:"spec" json:"spec"`
+	Timeout int             `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+	Spec    json.RawMessage `yaml:"spec" json:"spec"`
 }
 
 func (c JunitCheck) GetEndpoint() string {
 	if c.Description.String() != "" {
 		return c.Description.String()
 	}
-	if len(c.Spec.Containers) > 0 {
-		if c.Spec.Containers[0].Name != "" {
-			return c.Spec.Containers[0].Name
-		}
-		if c.Spec.Containers[0].Image != "" {
-			return c.Spec.Containers[0].Image
-		}
-	}
+	// if len(c.Spec.Containers) > 0 {
+	// 	if c.Spec.Containers[0].Name != "" {
+	// 		return c.Spec.Containers[0].Name
+	// 	}
+	// 	if c.Spec.Containers[0].Image != "" {
+	// 		return c.Spec.Containers[0].Image
+	// 	}
+	// }
 	return c.TestResults
 }
 
@@ -713,7 +713,7 @@ type AwsConfigRuleCheck struct {
 	// Specify one or more Config rule names to filter the results by rule.
 	Rules []string `yaml:"rules,omitempty" json:"rules,omitempty"`
 	// Filters the results by compliance. The allowed values are INSUFFICIENT_DATA, NON_COMPLIANT, NOT_APPLICABLE, COMPLIANT
-	ComplianceTypes []awsconfigruletypes.ComplianceType `yaml:"complianceTypes,omitempty" json:"complianceTypes,omitempty"`
+	ComplianceTypes []string `yaml:"complianceTypes,omitempty" json:"complianceTypes,omitempty"`
 	*AWSConnection  `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
 }
 
