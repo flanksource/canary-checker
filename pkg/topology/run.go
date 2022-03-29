@@ -145,10 +145,6 @@ func getPodLookup(namespace string, labels ...map[string]string) v1.ComponentSpe
 	}
 }
 
-func template(ctx *SystemContext, tpl v1.Template) (string, error) {
-	return templating.Template(ctx.Environment, tpl)
-}
-
 func lookup(client *kommons.Client, name string, spec v1.CanarySpec) ([]interface{}, error) {
 	results := []interface{}{}
 	for _, result := range checks.RunChecks(context.New(client, v1.NewCanaryFromSpec(name, spec))) {

@@ -49,7 +49,7 @@ func ScheduleSystemFunc(schedule string, fn func()) (interface{}, error) {
 type CanaryJob struct {
 	*kommons.Client
 	v1.Canary
-	model   pkg.Canary
+	// model   pkg.Canary
 	LogPass bool
 	LogFail bool
 }
@@ -73,7 +73,6 @@ func (job CanaryJob) Run() {
 
 func (job *CanaryJob) NewContext() *context.Context {
 	return context.New(job.Client, job.Canary)
-
 }
 
 func findCronEntry(canary v1.Canary) *cron.Entry {
@@ -146,13 +145,13 @@ func SyncCanaryJobs() {
 		if canary.Spec.GetSchedule() == "@never" {
 			continue
 		}
-		entryId, err := Scheduler.AddJob(canary.Spec.GetSchedule(), job)
+		entryID, err := Scheduler.AddJob(canary.Spec.GetSchedule(), job)
 		if err != nil {
 			logger.Errorf("Failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
 			continue
 		} else {
 			logger.Infof("Scheduling %s to %s", canary, canary.Spec.GetSchedule())
-			seenEntryIds[entryId] = true
+			seenEntryIds[entryID] = true
 		}
 
 		entry = findCronEntry(canary)
@@ -160,7 +159,6 @@ func SyncCanaryJobs() {
 			// run all regular canaries on startup
 			go job.Run()
 		}
-
 	}
 
 	for _, entry := range Scheduler.Entries() {
@@ -169,5 +167,4 @@ func SyncCanaryJobs() {
 			Scheduler.Remove(entry.ID)
 		}
 	}
-
 }

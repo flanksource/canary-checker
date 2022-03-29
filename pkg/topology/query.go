@@ -108,36 +108,6 @@ WHERE component.id = :id OR component.parent_id = :id`
 	return s
 }
 
-func queryComponent(params TopologyParams) ([]pkg.System, error) {
-
-	sql := `select json_agg(to_json(component))::jsonb as component FROM component WHERE component.id = :component_id OR component.parent_id = :component_id`
-
-	args := map[string]interface{}{
-		"component_id": params.ComponentId,
-	}
-
-	logger.Infof("Querying components => %s", sql)
-	var results []pkg.System
-	rows, err := db.QueryNamed(context.Background(), sql, args)
-	if err != nil {
-		return nil, errors.Wrapf(err, "db query failed")
-	}
-	for rows.Next() {
-		components := &pkg.Components{}
-		if len(rows.RawValues()[0]) == 0 {
-			continue
-		}
-		if err := json.Unmarshal(rows.RawValues()[0], components); err != nil {
-			return nil, errors.Wrapf(err, "failed to unmarshal: %s", rows.RawValues()[0])
-		}
-		results = append(results, pkg.System{
-			Components: *components,
-		})
-	}
-
-	return results, nil
-}
-
 func Query(params TopologyParams) ([]pkg.System, error) {
 	sql := fmt.Sprintf(`
 SELECT

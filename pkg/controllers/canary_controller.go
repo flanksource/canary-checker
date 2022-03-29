@@ -17,8 +17,6 @@ limitations under the License.
 package controllers
 
 import (
-	"sync"
-
 	gocontext "context"
 
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -53,9 +51,6 @@ type CanaryReconciler struct {
 	RunnerName string
 	Done       chan *pkg.CheckResult
 }
-
-// track the canaries that have already been scheduled
-var observed = sync.Map{}
 
 const FinalizerName = "canary.canaries.flanksource.com"
 

@@ -51,7 +51,6 @@ func StopServer() error {
 		}
 		PostgresServer = nil
 		logger.Infof("Stoped database server")
-
 	}
 	return nil
 }

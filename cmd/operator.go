@@ -105,7 +105,10 @@ func run(cmd *cobra.Command, args []string) {
 		RunnerName:        runner.RunnerName,
 	}
 
-	mgr.Add(manager.RunnableFunc(db.Start))
+	if err = mgr.Add(manager.RunnableFunc(db.Start)); err != nil {
+		setupLog.Error(err, "unable to Add manager")
+		os.Exit(1)
+	}
 	if err = reconciler.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Canary")
 		os.Exit(1)

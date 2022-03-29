@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
-	"net/http"
 	nethttp "net/http"
 	_ "net/http/pprof" // required by serve
 	"os"
@@ -53,7 +52,6 @@ func setup() {
 	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 	push.AddServers(pushServers)
 	go push.Start()
-
 }
 
 func serve() {
@@ -81,7 +79,7 @@ func serve() {
 
 	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheusURL)
 
-	mux := http.NewServeMux()
+	mux := nethttp.NewServeMux()
 	mux.HandleFunc("/", stripQuery(nethttp.FileServer(staticRoot).ServeHTTP))
 	mux.HandleFunc("/about", simpleCors(api.About, allowedCors))
 	mux.HandleFunc("/api", simpleCors(api.CheckSummary, allowedCors))
@@ -117,7 +115,7 @@ func serve() {
 		close(idleConnsClosed)
 	}()
 
-	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+	if err := srv.ListenAndServe(); err != nethttp.ErrServerClosed {
 		// Error starting or closing listener:
 		log.Fatalf("HTTP server ListenAndServe: %v", err)
 	}

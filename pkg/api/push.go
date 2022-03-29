@@ -63,7 +63,9 @@ func PushHandler(w http.ResponseWriter, req *http.Request) {
 			errorResonse(w, fmt.Errorf("failed to lookup canary: %s ", err), http.StatusInternalServerError)
 			return
 		}
-		if canary == nil {
+		if canary != nil {
+			data.Check.CanaryID = canary.ID.String()
+		} else {
 			canary = &pkg.Canary{
 				Name:      data.Check.Name,
 				Namespace: data.Check.Namespace,
@@ -78,11 +80,12 @@ func PushHandler(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 		}
-		data.Check.CanaryID = canary.ID.String()
 	}
 	cache.PostgresCache.Add(data.Check, data.Status)
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(fmt.Sprintf("pushed to %s", data.Check.ID)))
+	if _, err := w.Write([]byte(fmt.Sprintf("pushed to %s", data.Check.ID))); err != nil {
+		logger.Errorf("failed to write response: %s", err)
+	}
 }
 
 func PostDataToServer(server string, body io.Reader) (err error) {
