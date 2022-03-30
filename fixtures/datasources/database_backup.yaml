@@ -1,0 +1,11 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: database-backup-example
+spec:
+  interval: 60
+  databaseBackup:
+    - maxAge: 3600
+      GCP:
+        project: google-project-name
+        instance: cloudsql-instance-name
