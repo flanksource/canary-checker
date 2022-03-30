@@ -15,6 +15,21 @@ spec:
   selector:
     matchLabels:
       {{- include "canary-checker.selectorLabels" . | nindent 6 }}
+  {{- if eq .Values.db.external.enabled false }}
+  {{- if eq .Values.db.embedded.persist true }}
+  volumeClaimTemplates:
+    - metadata:
+        name: canarychecker-database
+        labels:
+          {{- include "canary-checker.labels" . | nindent 16 }}
+      spec:
+        storageClassName: {{ .Values.db.embedded.storageClass }}
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.db.embedded.storage }}
+  {{- end }}
+  {{- end }}
   template:
     metadata:
       labels:
@@ -38,21 +53,6 @@ spec:
               - path: "labels"
                 fieldRef:
                   fieldPath: metadata.labels
-      {{- if eq .Values.db.external.enabled false }}
-      {{- if eq .Values.db.embedded.persist true }}
-      volumeClaimTemplates:
-        - metadata:
-            name: canarychecker-database
-            labels:
-              {{- include "canary-checker.labels" . | nindent 16 }}
-          spec:
-            storageClassName: {{ .Values.db.embedded.storageClass }}
-            accessModes: ["ReadWriteOnce"]
-            resources:
-              requests:
-                storage: {{ .Values.db.embedded.storage }}
-      {{- end }}
-      {{- end }}
       containers:
         - name: {{ include "canary-checker.name" . }}
           securityContext:
