@@ -666,8 +666,7 @@ spec:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
                       maxAge:
-                        format: int32
-                        type: integer
+                        type: string
                       name:
                         description: Name of the check
                         type: string
@@ -3787,8 +3786,7 @@ spec:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
                           maxAge:
-                            format: int32
-                            type: integer
+                            type: string
                           name:
                             description: Name of the check
                             type: string
@@ -6835,8 +6833,7 @@ spec:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
                                 maxAge:
-                                  format: int32
-                                  type: integer
+                                  type: string
                                 name:
                                   description: Name of the check
                                   type: string
@@ -9981,8 +9978,7 @@ spec:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
                                 maxAge:
-                                  format: int32
-                                  type: integer
+                                  type: string
                                 name:
                                   description: Name of the check
                                   type: string
@@ -13029,8 +13025,7 @@ spec:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
                                       maxAge:
-                                        format: int32
-                                        type: integer
+                                        type: string
                                       name:
                                         description: Name of the check
                                         type: string
@@ -16153,8 +16148,7 @@ spec:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
                                 maxAge:
-                                  format: int32
-                                  type: integer
+                                  type: string
                                 name:
                                   description: Name of the check
                                   type: string

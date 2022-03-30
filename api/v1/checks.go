@@ -729,7 +729,7 @@ type DatabaseBackupCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 	GCP         *GCPDatabase `yaml:"gcp,omitempty" json:"gcp,omitempty"`
-	MaxAge      int32        `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
+	MaxAge      string       `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
 }
 
 type GCPDatabase struct {

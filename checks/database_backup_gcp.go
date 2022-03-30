@@ -52,7 +52,7 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 			errorMessages = append(errorMessages, fmt.Sprintf("Backup %d has status %s with error %s", backup.Id, backup.Status, backup.Error.Message))
 		}
 	}
-	if check.MaxAge > 0 {
+	if check.MaxAge != "" {
 		backup := backupList.Items[0]
 		var checkTime time.Time
 		var checkString string
@@ -81,12 +81,17 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 			}
 			checkString = "enqueued"
 		} else {
-			errorMessages = append(errorMessages, fmt.Sprintf("BackupRun %s did not contain a time to validate", backup.Id))
+			errorMessages = append(errorMessages, fmt.Sprintf("BackupRun %d did not contain a time to validate", backup.Id))
 			parseFail = true
 		}
 		if !parseFail {
-			if checkTime.Add(time.Duration(check.MaxAge) * time.Minute).After(time.Now()) {
-				errorMessages = append(errorMessages, fmt.Sprintf("BackupRun %s too old - %s at %s", backup.Id, checkString, checkTime.String()))
+			maxTime, err := time.ParseDuration(check.MaxAge)
+			if err != nil {
+				errorMessages = append(errorMessages, fmt.Sprintf("Could not parse age string: %s", err))
+			} else {
+				if checkTime.Add(maxTime).Before(time.Now()) {
+					errorMessages = append(errorMessages, fmt.Sprintf("BackupRun %d too old - %s at %s", backup.Id, checkString, checkTime.String()))
+				}
 			}
 		}
 	}

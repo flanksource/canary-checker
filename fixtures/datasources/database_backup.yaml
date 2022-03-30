@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 60
   databaseBackup:
-    - maxAge: 3600
+    - maxAge: 6h
       GCP:
         project: google-project-name
         instance: cloudsql-instance-name
