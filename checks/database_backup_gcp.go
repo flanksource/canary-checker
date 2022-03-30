@@ -14,6 +14,14 @@ import (
 	"github.com/flanksource/canary-checker/pkg/clients/gcp"
 )
 
+var (
+	allowedStatus = []string{
+		sql.SqlBackupRunStatus_SUCCESSFUL.String(),
+		sql.SqlBackupRunStatus_RUNNING.String(),
+		sql.SqlBackupRunStatus_ENQUEUED.String(),
+	}
+)
+
 func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) pkg.Results {
 	databaseScanObjectCount.WithLabelValues(check.GCP.Project, check.GCP.Instance).Inc()
 	result := pkg.Success(check, ctx.Canary)
@@ -34,43 +42,51 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 	}
 	var errorMessages []string
 	for _, backup := range backupList.Items {
-		if !(backup.Status == sql.SqlBackupRunStatus_SUCCESSFUL.String() || backup.Status == sql.SqlBackupRunStatus_RUNNING.String() || backup.Status == sql.SqlBackupRunStatus_ENQUEUED.String()) {
+		statusPass := false
+		for _, status := range allowedStatus {
+			if backup.Status == status {
+				statusPass = true
+			}
+		}
+		if !statusPass {
 			errorMessages = append(errorMessages, fmt.Sprintf("Backup %d has status %s with error %s", backup.Id, backup.Status, backup.Error.Message))
 		}
 	}
 	if check.MaxAge > 0 {
-		for _, backup := range backupList.Items {
-			var checkTime time.Time
-			var checkString string
-			parseFail := false
-			// Ideally running for too long and being enqueued for too long would have stricter age restrictions, but that might make the checks too complicated
-			// This handles the most recent valid timestamp that each state would present
-			if backup.Status == sql.SqlBackupRunStatus_RUNNING.String() {
-				checkTime, err = time.Parse(time.RFC3339, backup.StartTime)
-				if err != nil {
-					errorMessages = append(errorMessages, "Could not parse backup start time")
-					parseFail = true
-				}
-				checkString = "started"
-			} else if backup.Status == sql.SqlBackupRunStatus_ENQUEUED.String() {
-				checkTime, err = time.Parse(time.RFC3339, backup.EnqueuedTime)
-				if err != nil {
-					errorMessages = append(errorMessages, "Could not parse backup enqueued time")
-					parseFail = true
-				}
-				checkString = "enqueued"
-			} else {
-				checkTime, err = time.Parse(time.RFC3339, backup.EndTime)
-				if err != nil {
-					errorMessages = append(errorMessages, "Could not parse backup end time")
-					parseFail = true
-				}
-				checkString = "ended"
+		backup := backupList.Items[0]
+		var checkTime time.Time
+		var checkString string
+		parseFail := false
+		// Ideally running for too long and being enqueued for too long would have stricter age restrictions, but that might make the checks too complicated
+		// This handles the most recent valid timestamp that each state would present
+		if backup.EndTime != "" {
+			checkTime, err = time.Parse(time.RFC3339, backup.EndTime)
+			if err != nil {
+				errorMessages = append(errorMessages, "Could not parse backup end time")
+				parseFail = true
 			}
-			if !parseFail {
-				if checkTime.Add(time.Duration(check.MaxAge) * time.Minute).After(time.Now()) {
-					errorMessages = append(errorMessages, fmt.Sprintf("Most recent backup run too old - %s at %s", checkString, checkTime.String()))
-				}
+			checkString = "ended"
+		} else if backup.StartTime != "" {
+			checkTime, err = time.Parse(time.RFC3339, backup.StartTime)
+			if err != nil {
+				errorMessages = append(errorMessages, "Could not parse backup start time")
+				parseFail = true
+			}
+			checkString = "started"
+		} else if backup.EnqueuedTime != "" {
+			checkTime, err = time.Parse(time.RFC3339, backup.EnqueuedTime)
+			if err != nil {
+				errorMessages = append(errorMessages, "Could not parse backup enqueued time")
+				parseFail = true
+			}
+			checkString = "enqueued"
+		} else {
+			errorMessages = append(errorMessages, fmt.Sprintf("BackupRun %s did not contain a time to validate", backup.Id))
+			parseFail = true
+		}
+		if !parseFail {
+			if checkTime.Add(time.Duration(check.MaxAge) * time.Minute).After(time.Now()) {
+				errorMessages = append(errorMessages, fmt.Sprintf("BackupRun %s too old - %s at %s", backup.Id, checkString, checkTime.String()))
 			}
 		}
 	}
