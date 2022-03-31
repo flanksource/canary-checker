@@ -23,6 +23,11 @@ func (d Duration) GetHours() (*time.Duration, error) {
 	return &_d, nil
 }
 
+func (d Duration) GetDuration() (*time.Duration, error) {
+	_d, err := time.ParseDuration(string(d))
+	return &_d, err
+}
+
 type Size string
 
 func (s Size) String() string {

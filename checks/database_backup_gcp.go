@@ -85,11 +85,11 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 			parseFail = true
 		}
 		if !parseFail {
-			maxTime, err := time.ParseDuration(check.MaxAge)
-			if err != nil {
+			maxTime, err := check.MaxAge.GetDuration()
+			if err != nil || maxTime == nil {
 				errorMessages = append(errorMessages, fmt.Sprintf("Could not parse age string: %s", err))
 			} else {
-				if checkTime.Add(maxTime).Before(time.Now()) {
+				if checkTime.Add(*maxTime).Before(time.Now()) {
 					errorMessages = append(errorMessages, fmt.Sprintf("BackupRun %d too old - %s at %s", backup.Id, checkString, checkTime.String()))
 				}
 			}
