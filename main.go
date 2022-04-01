@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"os"
+
+	"github.com/flanksource/canary-checker/pkg/db"
 
 	"github.com/flanksource/canary-checker/cmd"
 )
