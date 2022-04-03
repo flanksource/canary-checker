@@ -21,7 +21,7 @@ spec:
     - metadata:
         name: canarychecker-database
         labels:
-          {{- include "canary-checker.labels" . | nindent 16 }}
+          {{- include "canary-checker.labels" . | nindent 10 }}
       spec:
         storageClassName: {{ .Values.db.embedded.storageClass }}
         accessModes: ["ReadWriteOnce"]
