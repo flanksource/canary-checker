@@ -53,12 +53,12 @@ deploy: .bin/kustomize manifests
 	kubectl $(KUSTOMIZE) config | kubectl apply -f -
 
 static: .bin/kustomize manifests generate .bin/yq
-	.bin/kustomize build ./config | $(YQ) eval -P '' - > config/deploy/manifests.yaml
-	.bin/kustomize build ./config/base | $(YQ) eval -P '' - > config/deploy/base.yaml
+	.bin/kustomize build ./config | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/manifests.yaml
+	.bin/kustomize build ./config/base | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/base.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: .bin/controller-gen .bin/yq
-	.bin/controller-gen crd paths="./..." output:stdout > config/deploy/crd.yaml
+	.bin/controller-gen crd paths="./..." output:stdout | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/crd.yaml
 	cd hack/generate-schemas && go run ./main.go
 
 # Run go fmt against code
@@ -212,7 +212,7 @@ CONTROLLER_GEN=$(GOBIN)/controller-gen
 	chmod +x .bin/karina
 
 .bin/yq: .bin
-	curl -sSLo .bin/yq https://github.com/mikefarah/yq/releases/download/v4.9.6/yq_$(OS)_$(ARCH) && chmod +x .bin/yq
+	curl -sSLo .bin/yq https://github.com/mikefarah/yq/releases/download/v4.16.1/yq_$(OS)_$(ARCH) && chmod +x .bin/yq
 YQ = $(realpath ./.bin/yq)
 
 .PHONY: telepresence

@@ -1,10 +1,138 @@
 apiVersion: v1
-kind: ServiceAccount
+kind: Service
 metadata:
   labels:
     control-plane: canary-checker
-  name: canary-checker-sa
+  name: canary-checker
   namespace: canary-checker
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    control-plane: canary-checker
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: canary-checker
+  name: canary-checker
+  namespace: canary-checker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: canary-checker
+  template:
+    metadata:
+      labels:
+        control-plane: canary-checker
+    spec:
+      containers:
+        - args:
+            - operator
+            - -v
+            - --httpPort
+            - "8080"
+          command:
+            - /app/canary-checker
+          env:
+            - name: DOCKER_API_VERSION
+              value: "1.39"
+          image: docker.io/flanksource/canary-checker:latest
+          livenessProbe:
+            httpGet:
+              path: /index.html
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          name: canary-checker
+          readinessProbe:
+            httpGet:
+              path: /index.html
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 200m
+              memory: 200Mi
+          securityContext:
+            allowPrivilegeEscalation: true
+            capabilities:
+              add:
+                - CAP_NET_RAW
+            privileged: true
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /var/run/docker.sock
+              name: dockersock
+            - mountPath: /etc/podinfo
+              name: podinfo
+      serviceAccountName: canary-checker-sa
+      terminationGracePeriodSeconds: 10
+      volumes:
+        - hostPath:
+            path: /var/run/docker.sock
+          name: dockersock
+        - downwardAPI:
+            items:
+              - fieldRef:
+                  fieldPath: metadata.labels
+                path: labels
+          name: podinfo
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/tls-acme: "true"
+  name: canary-checker
+  namespace: canary-checker
+spec:
+  rules:
+    - host: canary-checker
+      http:
+        paths:
+          - backend:
+              service:
+                name: canary-checker
+                port:
+                  number: 8080
+            path: /
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - canary-checker
+      secretName: canary-tls
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    control-plane: canary-checker
+  name: canary-checker-monitor
+  namespace: canary-checker
+spec:
+  endpoints:
+    - interval: 30s
+      port: metrics
+  jobLabel: canary-checker
+  selector:
+    matchLabels:
+      control-plane: canary-checker
+---
+apiVersion: scheduling.k8s.io/v1
+description: This priority class should be used for canary pods only.
+globalDefault: false
+kind: PriorityClass
+metadata:
+  name: canary-checker-priority
+value: -1
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -110,137 +238,9 @@ subjects:
     namespace: canary-checker
 ---
 apiVersion: v1
-kind: Service
+kind: ServiceAccount
 metadata:
   labels:
     control-plane: canary-checker
-  name: canary-checker
+  name: canary-checker-sa
   namespace: canary-checker
-spec:
-  ports:
-    - port: 8080
-      protocol: TCP
-      targetPort: 8080
-  selector:
-    control-plane: canary-checker
----
-apiVersion: scheduling.k8s.io/v1
-description: This priority class should be used for canary pods only.
-globalDefault: false
-kind: PriorityClass
-metadata:
-  name: canary-checker-priority
-value: -1
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    control-plane: canary-checker
-  name: canary-checker
-  namespace: canary-checker
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      control-plane: canary-checker
-  template:
-    metadata:
-      labels:
-        control-plane: canary-checker
-    spec:
-      containers:
-        - args:
-            - operator
-            - -v
-            - --httpPort
-            - "8080"
-          command:
-            - /app/canary-checker
-          env:
-            - name: DOCKER_API_VERSION
-              value: "1.39"
-          image: docker.io/flanksource/canary-checker:latest
-          livenessProbe:
-            httpGet:
-              path: /index.html
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 5
-          name: canary-checker
-          readinessProbe:
-            httpGet:
-              path: /index.html
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 5
-          resources:
-            limits:
-              memory: 512Mi
-            requests:
-              cpu: 200m
-              memory: 200Mi
-          securityContext:
-            allowPrivilegeEscalation: true
-            capabilities:
-              add:
-                - CAP_NET_RAW
-            privileged: true
-            runAsUser: 0
-          volumeMounts:
-            - mountPath: /var/run/docker.sock
-              name: dockersock
-            - mountPath: /etc/podinfo
-              name: podinfo
-      serviceAccountName: canary-checker-sa
-      terminationGracePeriodSeconds: 10
-      volumes:
-        - hostPath:
-            path: /var/run/docker.sock
-          name: dockersock
-        - downwardAPI:
-            items:
-              - fieldRef:
-                  fieldPath: metadata.labels
-                path: labels
-          name: podinfo
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  labels:
-    control-plane: canary-checker
-  name: canary-checker-monitor
-  namespace: canary-checker
-spec:
-  endpoints:
-    - interval: 30s
-      port: metrics
-  jobLabel: canary-checker
-  selector:
-    matchLabels:
-      control-plane: canary-checker
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    kubernetes.io/tls-acme: "true"
-  name: canary-checker
-  namespace: canary-checker
-spec:
-  rules:
-    - host: canary-checker
-      http:
-        paths:
-          - backend:
-              service:
-                name: canary-checker
-                port:
-                  number: 8080
-            path: /
-            pathType: ImplementationSpecific
-  tls:
-    - hosts:
-        - canary-checker
-      secretName: canary-tls
