@@ -725,6 +725,27 @@ func (c AwsConfigRuleCheck) GetEndpoint() string {
 	return c.Description.Description
 }
 
+type DatabaseBackupCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	GCP         *GCPDatabase `yaml:"gcp,omitempty" json:"gcp,omitempty"`
+	MaxAge      Duration     `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
+}
+
+type GCPDatabase struct {
+	Project        string `yaml:"project" json:"project"`
+	Instance       string `yaml:"instance" json:"instance"`
+	*GCPConnection `yaml:"gcpConnection,omitempty" json:"gcpConnection,omitempty"`
+}
+
+func (c DatabaseBackupCheck) GetType() string {
+	return "databasebackupcheck"
+}
+
+func (c DatabaseBackupCheck) GetEndpoint() string {
+	return c.Description.Description
+}
+
 /*
 [include:minimal/http_pass.yaml]
 */
@@ -967,6 +988,13 @@ type AwsConfigRule struct {
 }
 
 /*
+[include:datasources/database_backup.yaml]
+*/
+type DatabaseBackup struct {
+	DatabaseBackupCheck `yaml:",inline" json:",inline"`
+}
+
+/*
 [include:aws/aws_config_pass.yaml]
 */
 type EC2 struct {
@@ -1023,4 +1051,5 @@ var AllChecks = []external.Check{
 	ExecCheck{},
 	AwsConfigCheck{},
 	AwsConfigRuleCheck{},
+	DatabaseBackupCheck{},
 }
