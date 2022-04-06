@@ -33,7 +33,7 @@ func (c *ConfigdbChecker) Check(ctx *canaryContext.Context, extConfig external.C
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	logger.Infof("Sending GET request to: %v with query param: %v", check.Host, check.Query)
+	logger.Tracef("[%v] query: %v", check.Host, check.Query)
 	var endpoint string
 	var query = url.QueryEscape(check.Query)
 	if strings.HasSuffix(check.Host, "/") {
