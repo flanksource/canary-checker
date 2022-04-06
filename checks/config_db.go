@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -53,7 +54,21 @@ func (c *ConfigdbChecker) Check(ctx *canaryContext.Context, extConfig external.C
 	if err != nil {
 		return results.Failf("Failed to read the response body: %v", err)
 	}
-
-	result.AddDetails(body)
+	queryResult := ConfigDBQueryResult{}
+	if err := json.Unmarshal(body, &queryResult); err != nil {
+		results.Failf("failed to unmarshal the response body into QueryResult: %v", err)
+	}
+	result.AddDetails(queryResult)
 	return results
+}
+
+type ConfigDBQueryResult struct {
+	Count   int                      `json:"count"`
+	Columns []ConfigDBQueryColumn    `json:"columns"`
+	Results []map[string]interface{} `json:"results"`
+}
+
+type ConfigDBQueryColumn struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
 }
