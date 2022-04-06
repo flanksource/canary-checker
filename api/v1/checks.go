@@ -598,6 +598,22 @@ func (c GitHubCheck) GetEndpoint() string {
 	return strings.ReplaceAll(c.Query, " ", "-")
 }
 
+type ConfigDBCheck struct {
+	Templatable    `yaml:",inline" json:",inline"`
+	Description    `yaml:",inline" json:",inline"`
+	Authentication Authentication `yaml:"authentication,omitempty" json:"authentication,omitempty"`
+	Host           string         `yaml:"host" json:"host"`
+	Query          string         `yaml:"query" json:"query"`
+}
+
+func (c ConfigDBCheck) GetType() string {
+	return "configdb"
+}
+
+func (c ConfigDBCheck) GetEndpoint() string {
+	return fmt.Sprintf("%v/%v", c.Host, c.Query)
+}
+
 type ResourceSelector struct {
 	Name          string `yaml:"name,omitempty" json:"name,omitempty"`
 	LabelSelector string `json:"labelSelector,omitempty" yaml:"labelSelector,omitempty"`
@@ -906,6 +922,13 @@ type Jmeter struct {
 }
 
 /*
+ConfigDB check will connect to the specified host; run the specified query and return the result
+*/
+type ConfigDB struct {
+	ConfigDBCheck `yaml:",inline" json:",inline"`
+}
+
+/*
 Junit check will wait for the given pod to be completed than parses all the xml files present in the defined testResults directory
 
 [include:k8s/junit_pass.yaml]
@@ -1052,4 +1075,5 @@ var AllChecks = []external.Check{
 	AwsConfigCheck{},
 	AwsConfigRuleCheck{},
 	DatabaseBackupCheck{},
+	ConfigDBCheck{},
 }

@@ -50,6 +50,8 @@ var All = []Checker{
 	&ExecChecker{},
 	&AwsConfigChecker{},
 	&AwsConfigRuleChecker{},
+	&DatabaseBackupChecker{},
+	&ConfigdbChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),
