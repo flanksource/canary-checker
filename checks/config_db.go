@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 
 	canaryContext "github.com/flanksource/canary-checker/api/context"
@@ -33,13 +34,14 @@ func (c *ConfigdbChecker) Check(ctx *canaryContext.Context, extConfig external.C
 	var results pkg.Results
 	results = append(results, result)
 	logger.Infof("Sending GET request to: %v with query param: %v", check.Host, check.Query)
-	var url string
+	var endpoint string
+	var query = url.QueryEscape(check.Query)
 	if strings.HasSuffix(check.Host, "/") {
-		url = fmt.Sprintf("%v?query=%v", check.Host, check.Query)
+		endpoint = fmt.Sprintf("%v?query=%v", check.Host, query)
 	} else {
-		url = fmt.Sprintf("%v/?query=%v", check.Host, check.Query)
+		endpoint = fmt.Sprintf("%v/?query=%v", check.Host, query)
 	}
-	resp, err := http.Get(url)
+	resp, err := http.Get(endpoint)
 	if err != nil {
 		return results.Failf("Failed to send GET request, %v", err)
 	}
