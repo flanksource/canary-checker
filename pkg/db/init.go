@@ -77,7 +77,8 @@ func Init() error {
 		PostgresServer = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().
 			Port(6432).
 			DataPath(runtimePath).
-			BinariesPath(".bin/postgres").
+			RuntimePath("/var/lib/canary/run").
+			BinariesPath("/var/lib/canary/bin").
 			Version(embeddedpostgres.V14).
 			Username("postgres").Password("postgres").
 			Database("canary"))
