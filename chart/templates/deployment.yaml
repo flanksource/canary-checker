@@ -1,10 +1,8 @@
 apiVersion: apps/v1
-{{- if eq .Values.db.external.enabled false }}
-{{- if eq .Values.db.embedded.persist true }}
+{{- if and (eq .Values.db.external.enabled false) ( eq .Values.db.embedded.persist true) }}
 kind: StatefulSet
 {{- else }}
 kind: Deployment
-{{- end }}
 {{- end }}
 metadata:
   name: {{ include "canary-checker.name" . }}
