@@ -4,7 +4,7 @@ import "./index.css";
 function App() {
   return (
     <div className="max-w-screen-xl mx-auto flex justify-center">
-      <Canary url="/api" />
+      <Canary url="/canary/api" />
     </div>
   );
 }
