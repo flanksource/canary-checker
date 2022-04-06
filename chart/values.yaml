@@ -21,11 +21,13 @@ db:
     storageClass:
     storage:
   external:
-    # Setting this to true will create a postgres stateful set for canary-checker to connect to.
+    # Setting this to true will use a external postgres DB
     enabled: false
+    # Setting this to true will provision a new postgress DB for you
+    create: false
     secretKeyRef:
       # Setting this to true will create the secret automatically.
-      create: true
+      create: false
       name: postgres-connection
       # This is the key that either the secret will create(if create is true) or this is the key
       # it will look for in the secret(if secretRefKey is mentioned). The name of the key is
