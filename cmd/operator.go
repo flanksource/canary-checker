@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/runner"
 
@@ -61,7 +62,8 @@ func run(cmd *cobra.Command, args []string) {
 	if err := db.Init(); err != nil {
 		logger.Fatalf("error connecting with postgres: %v", err)
 	}
-
+	controllers.Start()
+	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 	go serve()
 
 	ctrl.SetLogger(zapr.NewLogger(loggr))
