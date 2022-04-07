@@ -28,7 +28,7 @@ var Root = &cobra.Command{
 
 var dev bool
 var httpPort, metricsPort, devGuiPort int
-var namespace, includeCheck, prometheusURL string
+var namespace, includeCheck, prometheusURL, operatorNamespace string
 var pushServers, pullServers []string
 var sharedLibrary []string
 var exposeEnv bool
@@ -46,7 +46,7 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.BoolVar(&dev, "dev", false, "Run in development mode")
 	flags.BoolVar(&logFail, "log-fail", true, "Log every failing check")
 	flags.BoolVar(&logPass, "log-pass", false, "Log every passing check")
-	flags.StringVarP(&namespace, "namespace", "n", "", "Watch only specified namespaces, otherwise watch all")
+	flags.StringVarP(&operatorNamespace, "namespace", "n", "", "Watch only specified namespaces, otherwise watch all")
 	flags.StringVar(&includeCheck, "include-check", "", "Run matching canaries - useful for debugging")
 	flags.IntVar(&cache.DefaultCacheCount, "maxStatusCheckCount", 5, "Maximum number of past checks in the in memory cache")
 	flags.StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
