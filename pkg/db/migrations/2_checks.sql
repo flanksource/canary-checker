@@ -1,5 +1,4 @@
 -- +goose Up
--- +goose StatementBegin
 
 CREATE TABLE IF NOT EXISTS canaries (
 	id UUID DEFAULT generate_ulid() PRIMARY KEY,
@@ -27,9 +26,10 @@ CREATE TABLE IF NOT EXISTS checks(
 	severity TEXT,
 	last_runtime TIMESTAMP,
 	next_runtime TIMESTAMP,
+	silenced_at TIMESTAMP NULL,
 	created_at TIMESTAMP,
 	updated_at TIMESTAMP NULL,
-	FOREIGN KEY (canary_id) REFERENCES canaries(id),
+	FOREIGN KEY (canary_id) REFERENCES canaries(id) ON DELETE CASCADE,
 	UNIQUE (canary_id, type, name)
 );
 ---
@@ -45,8 +45,7 @@ CREATE TABLE IF NOT EXISTS check_statuses(
 	invalid boolean,
 	message TEXT,
 	status boolean,
-	FOREIGN KEY (check_id) REFERENCES checks(id),
+	FOREIGN KEY (check_id) REFERENCES checks(id) ON DELETE CASCADE,
 	PRIMARY KEY (check_id, time)
 
 );
--- +goose StatementEnd
