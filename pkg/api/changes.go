@@ -1,26 +1,18 @@
 package api
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/cache"
 	changes "github.com/flanksource/changehub/api/v1"
-	"github.com/flanksource/commons/logger"
+	"github.com/labstack/echo/v4"
 )
 
-func Changes(w http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodGet {
-		errorResonse(w, fmt.Errorf("unsupported method %s", req.Method), http.StatusMethodNotAllowed)
-		return
-	}
-	q, err := cache.ParseQuery(req)
+func Changes(c echo.Context) error {
+	q, err := cache.ParseQuery(c)
 	if err != nil {
-		errorResonse(w, err, http.StatusBadRequest)
-		return
+		return errorResonse(c, err, http.StatusBadRequest)
 	}
 	if q.Start == "" {
 		q.Start = "1h"
@@ -29,8 +21,7 @@ func Changes(w http.ResponseWriter, req *http.Request) {
 	results := []changes.Changes{}
 	checks, err := cache.PostgresCache.Query(*q)
 	if err != nil {
-		errorResonse(w, err, http.StatusInternalServerError)
-		return
+		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 
 	for _, check := range checks {
@@ -66,10 +57,7 @@ func Changes(w http.ResponseWriter, req *http.Request) {
 		for i < len(check.Statuses) {
 			checkTime, err := time.Parse(time.RFC3339, check.Statuses[i].Time)
 			if err != nil {
-				logger.Errorf("error parsing check records")
-				fmt.Fprintf(w, "error parsing check records")
-				w.WriteHeader(http.StatusInternalServerError)
-				return
+				return errorResonse(c, err, http.StatusInternalServerError)
 			}
 			if i == 0 {
 				prevStatus = check.Statuses[i].Status
@@ -105,12 +93,5 @@ func Changes(w http.ResponseWriter, req *http.Request) {
 			results = append(results, changeResult)
 		}
 	}
-	jsonData, err := json.Marshal(results)
-	if err != nil {
-		errorResonse(w, errors.New("error marshalling json"), http.StatusInternalServerError)
-		return
-	}
-	if _, err = w.Write(jsonData); err != nil {
-		logger.Errorf("failed to write data in response: %v", err)
-	}
+	return c.JSON(http.StatusOK, results)
 }

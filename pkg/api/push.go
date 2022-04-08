@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/labstack/echo/v4"
 
 	"github.com/flanksource/commons/logger"
 )
@@ -21,47 +22,35 @@ type QueueData struct {
 	Status pkg.CheckStatus `json:",inline"`
 }
 
-func PushHandler(w http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodPost {
-		logger.Errorf("%v method on /api/push endpoint is not allowed", req.Method)
-		fmt.Fprintf(w, "%v method not allowed", req.Method)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	if req.Body == nil {
+func PushHandler(c echo.Context) error {
+	if c.Request().Body == nil {
 		logger.Debugf("missing request body")
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		return errorResonse(c, errors.New("missing request body"), http.StatusBadRequest)
 	}
-	defer req.Body.Close()
+	defer c.Request().Body.Close()
 	data := QueueData{
 		Check:  pkg.Check{},
 		Status: pkg.CheckStatus{},
 	}
-	reqBody, err := ioutil.ReadAll(req.Body)
+	reqBody, err := ioutil.ReadAll(c.Request().Body)
 	if err != nil {
-		errorResonse(w, err, http.StatusInternalServerError)
-		return
+		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 	if err := json.Unmarshal(reqBody, &data); err != nil {
-		errorResonse(w, err, http.StatusBadRequest)
-		return
+		return errorResonse(c, err, http.StatusBadRequest)
 	}
 	if data.Check.ID != "" && data.Check.CanaryID == "" {
 		check, err := db.GetCheck(data.Check.ID)
 		if check == nil && err == nil {
-			errorResonse(w, fmt.Errorf("check not found: %s ", data.Check.ID), http.StatusNotFound)
-			return
+			return errorResonse(c, errors.New("check not found"), http.StatusNotFound)
 		} else if err != nil {
-			errorResonse(w, fmt.Errorf("failed to lookup check: %s ", err), http.StatusInternalServerError)
-			return
+			return errorResonse(c, err, http.StatusInternalServerError)
 		}
 		data.Check.CanaryID = check.CanaryID
 	} else if data.Check.ID == "" {
 		canary, err := db.FindCanary(data.Check.Namespace, data.Check.Name)
 		if err != nil {
-			errorResonse(w, fmt.Errorf("failed to lookup canary: %s ", err), http.StatusInternalServerError)
-			return
+			return errorResonse(c, err, http.StatusInternalServerError)
 		}
 		if canary != nil {
 			data.Check.CanaryID = canary.ID.String()
@@ -71,21 +60,17 @@ func PushHandler(w http.ResponseWriter, req *http.Request) {
 				Namespace: data.Check.Namespace,
 			}
 			if err := db.CreateCanary(canary); err != nil {
-				errorResonse(w, fmt.Errorf("failed to create canary: %s ", err), http.StatusInternalServerError)
-				return
+				return errorResonse(c, err, http.StatusInternalServerError)
 			}
 			data.Check.CanaryID = canary.ID.String()
 			if err := db.CreateCheck(*canary, &data.Check); err != nil {
-				errorResonse(w, fmt.Errorf("failed to create canary: %s ", err), http.StatusInternalServerError)
-				return
+				return errorResonse(c, err, http.StatusInternalServerError)
 			}
 		}
 	}
 	cache.PostgresCache.Add(data.Check, data.Status)
-	w.WriteHeader(http.StatusCreated)
-	if _, err := w.Write([]byte(fmt.Sprintf("pushed to %s", data.Check.ID))); err != nil {
-		logger.Errorf("failed to write response: %s", err)
-	}
+	c.Response().WriteHeader(http.StatusCreated)
+	return nil
 }
 
 func PostDataToServer(server string, body io.Reader) (err error) {

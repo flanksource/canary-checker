@@ -2,12 +2,12 @@ package cache
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 )
 
@@ -66,18 +66,18 @@ func (q QueryParams) String() string {
 	return fmt.Sprintf("check:=%s, start=%s, end=%s, count=%d", q.Check, q.Start, q.End, q.StatusCount)
 }
 
-func ParseQuery(req *http.Request) (*QueryParams, error) {
-	queryParams := req.URL.Query()
+func ParseQuery(c echo.Context) (*QueryParams, error) {
+	queryParams := c.Request().URL.Query()
 	count := queryParams.Get("count")
-	var c int64
+	var cacheCount int64
 	var err error
 	if count != "" {
-		c, err = strconv.ParseInt(count, 10, 64)
+		cacheCount, err = strconv.ParseInt(count, 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("count must be a number: %s", count)
 		}
 	} else {
-		c = int64(DefaultCacheCount)
+		cacheCount = int64(DefaultCacheCount)
 	}
 	since := queryParams.Get("since")
 	if since == "" {
@@ -97,7 +97,7 @@ func ParseQuery(req *http.Request) (*QueryParams, error) {
 		IncludeMessages: isTrue(queryParams.Get("includeMessages")),
 		IncludeDetails:  isTrue(queryParams.Get("includeDetails")),
 		Check:           queryParams.Get("check"),
-		StatusCount:     int(c),
+		StatusCount:     int(cacheCount),
 		Trace:           isTrue(queryParams.Get("trace")),
 	}
 
