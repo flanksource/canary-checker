@@ -35,7 +35,7 @@ func (q QueryParams) GetWhereClause() (string, map[string]interface{}, error) {
 	args := make(map[string]interface{})
 	and := " AND "
 	if q.Check != "" {
-		clause = "id = :check_key"
+		clause = "check_id = :check_key"
 		args["check_key"] = q.Check
 	}
 	if q.Start != "" && q.End == "" {
