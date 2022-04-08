@@ -492,8 +492,11 @@ type JunitCheck struct {
 	TestResults string `yaml:"testResults" json:"testResults"`
 	Templatable `yaml:",inline" json:",inline"`
 	// Timeout in minutes to wait for specified container to finish its job. Defaults to 5 minutes
-	Timeout int             `yaml:"timeout,omitempty" json:"timeout,omitempty"`
-	Spec    json.RawMessage `yaml:"spec" json:"spec"`
+	Timeout int `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Type=object
+	Spec json.RawMessage `yaml:"spec" json:"spec"`
 }
 
 func (c JunitCheck) GetEndpoint() string {
