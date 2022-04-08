@@ -2040,9 +2040,8 @@ spec:
                         description: Name of the check
                         type: string
                       spec:
-                        description: RawMessage is a raw encoded JSON value. It implements Marshaler and Unmarshaler and can be used to delay JSON decoding or precompute a JSON encoding.
-                        format: byte
-                        type: string
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
                       test:
                         properties:
                           expr:
@@ -5539,9 +5538,8 @@ spec:
                             description: Name of the check
                             type: string
                           spec:
-                            description: RawMessage is a raw encoded JSON value. It implements Marshaler and Unmarshaler and can be used to delay JSON decoding or precompute a JSON encoding.
-                            format: byte
-                            type: string
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
                           test:
                             properties:
                               expr:
@@ -8711,9 +8709,8 @@ spec:
                                   description: Name of the check
                                   type: string
                                 spec:
-                                  description: RawMessage is a raw encoded JSON value. It implements Marshaler and Unmarshaler and can be used to delay JSON decoding or precompute a JSON encoding.
-                                  format: byte
-                                  type: string
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
                                 test:
                                   properties:
                                     expr:
@@ -11981,9 +11978,8 @@ spec:
                                   description: Name of the check
                                   type: string
                                 spec:
-                                  description: RawMessage is a raw encoded JSON value. It implements Marshaler and Unmarshaler and can be used to delay JSON decoding or precompute a JSON encoding.
-                                  format: byte
-                                  type: string
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
                                 test:
                                   properties:
                                     expr:
@@ -15153,9 +15149,8 @@ spec:
                                         description: Name of the check
                                         type: string
                                       spec:
-                                        description: RawMessage is a raw encoded JSON value. It implements Marshaler and Unmarshaler and can be used to delay JSON decoding or precompute a JSON encoding.
-                                        format: byte
-                                        type: string
+                                        type: object
+                                        x-kubernetes-preserve-unknown-fields: true
                                       test:
                                         properties:
                                           expr:
@@ -18401,9 +18396,8 @@ spec:
                                   description: Name of the check
                                   type: string
                                 spec:
-                                  description: RawMessage is a raw encoded JSON value. It implements Marshaler and Unmarshaler and can be used to delay JSON decoding or precompute a JSON encoding.
-                                  format: byte
-                                  type: string
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
                                 test:
                                   properties:
                                     expr:
