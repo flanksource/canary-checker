@@ -63,7 +63,7 @@ func serve() {
 	} else {
 		contentHandler := echo.WrapHandler(http.FileServer(http.FS(ui.StaticContent)))
 		var contentRewrite = middleware.Rewrite(map[string]string{"/*": "/build/$1"})
-		e.GET("/*", contentHandler, contentRewrite)
+		e.GET("/*", contentHandler, contentRewrite, stripQuery)
 		allowedCors = ""
 	}
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
