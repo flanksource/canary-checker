@@ -58,12 +58,12 @@ func serve() {
 	var allowedCors string
 	e := echo.New()
 	if dev {
-		e.Static("/*", "./ui/build")
+		e.Static("/", "./ui/build")
 		allowedCors = fmt.Sprintf("http://localhost:%d", devGuiPort)
 	} else {
 		contentHandler := echo.WrapHandler(http.FileServer(http.FS(ui.StaticContent)))
 		var contentRewrite = middleware.Rewrite(map[string]string{"/*": "/build/$1"})
-		e.GET("/", contentHandler, contentRewrite, stripQuery)
+		e.GET("/*", contentHandler, contentRewrite)
 		allowedCors = ""
 	}
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{

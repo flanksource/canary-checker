@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"path"
 	"time"
 
@@ -61,17 +60,11 @@ func (job CanaryJob) GetNamespacedName() types.NamespacedName {
 
 func (job CanaryJob) Run() {
 	results := checks.RunChecks(job.NewContext())
-	if results == nil {
-		fmt.Println("results is nil")
-	}
-	fmt.Println("coming in here")
 	for _, result := range results {
 		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
 			logger.Infof(result.String())
 		}
-		fmt.Println("adding in postgres")
 		cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
-		fmt.Println("adding in metrics")
 		metrics.Record(result.Canary, result)
 		push.Queue(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
 	}
@@ -84,8 +77,6 @@ func (job *CanaryJob) NewContext() *context.Context {
 func findCronEntry(canary v1.Canary) *cron.Entry {
 	for _, entry := range Scheduler.Entries() {
 		if entry.Job.(CanaryJob).Status.PersistedID == canary.Status.PersistedID {
-			fmt.Println("sending the persistedID from here")
-			fmt.Println(canary.Status.PersistedID)
 			return &entry
 		}
 	}
