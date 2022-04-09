@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	nethttp "net/http"
 	_ "net/http/pprof" // required by serve
 	"os"
 	"os/signal"
@@ -109,21 +108,6 @@ func stripQuery(f echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		c.Request().URL.RawQuery = ""
 		return f(c)
-	}
-}
-
-// simpleCors is minimal middleware for injecting an Access-Control-Allow-Origin header value.
-// If an empty allowedOrigin is specified, then no header is added.
-func simpleCors(f nethttp.HandlerFunc, allowedOrigin string) nethttp.HandlerFunc {
-	// if not set return a no-op middleware
-	if allowedOrigin == "" {
-		return func(w nethttp.ResponseWriter, r *nethttp.Request) {
-			f(w, r)
-		}
-	}
-	return func(w nethttp.ResponseWriter, r *nethttp.Request) {
-		(w).Header().Set("Access-Control-Allow-Origin", allowedOrigin)
-		f(w, r)
 	}
 }
 

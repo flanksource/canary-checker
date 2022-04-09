@@ -24,6 +24,7 @@ require (
 	github.com/docker/docker v20.10.7+incompatible
 	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
 	github.com/fergusstrange/embedded-postgres v1.15.0
+	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
 	github.com/flanksource/commons v1.5.13
 	github.com/flanksource/kommons v0.29.0
 	github.com/friendsofgo/errors v0.9.2
@@ -34,7 +35,6 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/hairyhenderson/gomplate/v3 v3.6.0
-	github.com/hashicorp/vault/api v1.0.4
 	github.com/henvic/httpretty v0.0.6
 	github.com/hirochachacha/go-smb2 v1.0.10
 	github.com/jackc/pgx/v4 v4.14.1
@@ -146,7 +146,6 @@ require (
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
 	github.com/fatih/color v1.9.0 // indirect
-	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/geoffgarside/ber v1.1.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
@@ -193,6 +192,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/serf v0.9.5 // indirect
+	github.com/hashicorp/vault/api v1.0.4 // indirect
 	github.com/hashicorp/vault/sdk v0.1.13 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
