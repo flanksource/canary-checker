@@ -99,6 +99,8 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 	canary.Status.PersistedID = &id
 	canary.Status.ObservedGeneration = canary.Generation
+	// only run it once when persisting the canary for the first time
+	// SyncCanaryJobs()
 	return ctrl.Result{}, nil
 }
 

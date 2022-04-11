@@ -1,16 +1,14 @@
 package api
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/runner"
+	"github.com/labstack/echo/v4"
 
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/cache"
-	"github.com/flanksource/commons/logger"
 )
 
 var DefaultWindow = "1h"
@@ -26,54 +24,43 @@ type DetailResponse struct {
 	Status     []pkg.Timeseries `json:"status"`
 }
 
-func About(w http.ResponseWriter, req *http.Request) {
-	data, _ := json.Marshal(map[string]interface{}{
+func About(c echo.Context) error {
+	data := map[string]interface{}{
 		"Timestamp": time.Now(),
 		"Version":   runner.Version,
-	})
-	fmt.Fprint(w, string(data))
+	}
+	return c.JSON(http.StatusOK, data)
 }
 
-func CheckDetails(w http.ResponseWriter, req *http.Request) {
-	q, err := cache.ParseQuery(req)
+func CheckDetails(c echo.Context) error {
+	q, err := cache.ParseQuery(c)
 	if err != nil {
-		errorResonse(w, err, http.StatusBadRequest)
-		return
+		return errorResonse(c, err, http.StatusBadRequest)
 	}
 
 	start := time.Now()
 	results, err := cache.PostgresCache.QueryStatus(*q)
 	if err != nil {
-		errorResonse(w, err, http.StatusInternalServerError)
-		return
+		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 	apiResponse := &DetailResponse{
 		RunnerName: runner.RunnerName,
 		Status:     results,
 		Duration:   int(time.Since(start).Milliseconds()),
 	}
-	jsonData, err := json.Marshal(apiResponse)
-	if err != nil {
-		errorResonse(w, err, http.StatusInternalServerError)
-		return
-	}
-	if _, err = w.Write(jsonData); err != nil {
-		logger.Errorf("failed to write data in response: %v", err)
-	}
+	return c.JSON(http.StatusOK, apiResponse)
 }
 
-func CheckSummary(w http.ResponseWriter, req *http.Request) {
-	q, err := cache.ParseQuery(req)
+func CheckSummary(c echo.Context) error {
+	q, err := cache.ParseQuery(c)
 	if err != nil {
-		errorResonse(w, err, http.StatusBadRequest)
-		return
+		return errorResonse(c, err, http.StatusBadRequest)
 	}
 
 	start := time.Now()
 	results, err := cache.PostgresCache.Query(*q)
 	if err != nil {
-		errorResonse(w, err, http.StatusInternalServerError)
-		return
+		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 
 	apiResponse := &Response{
@@ -81,12 +68,5 @@ func CheckSummary(w http.ResponseWriter, req *http.Request) {
 		Checks:     results,
 		Duration:   int(time.Since(start).Milliseconds()),
 	}
-	jsonData, err := json.Marshal(apiResponse)
-	if err != nil {
-		errorResonse(w, err, http.StatusInternalServerError)
-		return
-	}
-	if _, err = w.Write(jsonData); err != nil {
-		logger.Errorf("failed to write data in response: %v", err)
-	}
+	return c.JSON(http.StatusOK, apiResponse)
 }

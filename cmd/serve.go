@@ -3,17 +3,18 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io/fs"
-	"log"
-	nethttp "net/http"
+	"net/http"
 	_ "net/http/pprof" // required by serve
 	"os"
 	"os/signal"
+	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/flanksource/canary-checker/pkg/controllers"
 	"github.com/flanksource/canary-checker/pkg/db"
 
-	"github.com/flanksource/canary-checker/pkg/details"
 	"github.com/flanksource/canary-checker/pkg/runner"
 
 	"github.com/flanksource/canary-checker/pkg/push"
@@ -21,11 +22,10 @@ import (
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
-	prom "github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-
 	"github.com/flanksource/canary-checker/ui"
 	"github.com/flanksource/commons/logger"
+	prom "github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 )
 
@@ -55,21 +55,20 @@ func setup() {
 }
 
 func serve() {
-	var staticRoot nethttp.FileSystem
 	var allowedCors string
-
+	e := echo.New()
 	if dev {
-		staticRoot = nethttp.Dir("./ui/build")
+		e.Static("/", "./ui/build")
 		allowedCors = fmt.Sprintf("http://localhost:%d", devGuiPort)
 	} else {
-		fs, err := fs.Sub(ui.StaticContent, "build")
-		if err != nil {
-			logger.Errorf("Error: %v", err)
-		}
-		staticRoot = nethttp.FS(fs)
+		contentHandler := echo.WrapHandler(http.FileServer(http.FS(ui.StaticContent)))
+		var contentRewrite = middleware.Rewrite(map[string]string{"/*": "/build/$1"})
+		e.GET("/*", contentHandler, contentRewrite, stripQuery)
 		allowedCors = ""
 	}
-
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{allowedCors},
+	}))
 	if db.ConnectionString != "" {
 		cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 	}
@@ -79,74 +78,36 @@ func serve() {
 
 	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheusURL)
 
-	mux := nethttp.NewServeMux()
-	mux.HandleFunc("/", stripQuery(nethttp.FileServer(staticRoot).ServeHTTP))
-	mux.HandleFunc("/about", simpleCors(api.About, allowedCors))
-	mux.HandleFunc("/api", simpleCors(api.CheckSummary, allowedCors))
-	mux.HandleFunc("/api/graph", simpleCors(api.CheckDetails, allowedCors))
-	mux.HandleFunc("/api/triggerCheck", simpleCors(api.TriggerCheckHandler, allowedCors))
-	mux.HandleFunc("/api/prometheus/graph", simpleCors(api.PrometheusGraphHandler, allowedCors))
-	mux.HandleFunc("/api/push", simpleCors(api.PushHandler, allowedCors))
-	mux.HandleFunc("/api/details", simpleCors(details.Handler, allowedCors))
-	mux.HandleFunc("/api/changes", simpleCors(api.Changes, allowedCors))
-	mux.HandleFunc("/api/topology", simpleCors(api.Topology, allowedCors))
-	mux.Handle("/metrics", promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{}))
-	addr := fmt.Sprintf("0.0.0.0:%d", httpPort)
-
-	var srv = nethttp.Server{
-		Addr:    addr,
-		Handler: mux,
+	e.GET("/api", api.CheckSummary)
+	e.GET("/about", api.About)
+	e.GET("/api/graph", api.CheckDetails)
+	e.POST("/api/push", api.PushHandler)
+	e.GET("/api/details", api.DetailsHandler)
+	e.GET("/api/topology", api.Topology)
+	e.GET("/metrics", echo.WrapHandler(promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{})))
+	e.GET("/api/changes", api.Changes)
+	if err := e.Start(fmt.Sprintf(":%d", httpPort)); err != nil {
+		e.Logger.Fatal(err)
 	}
 
-	logger.Infof("Starting health dashboard at http://%s", addr)
-	logger.Infof("Metrics can be accessed at http://%s/metrics", addr)
-
-	idleConnsClosed := make(chan struct{})
-	go func() {
-		sigint := make(chan os.Signal, 1)
-		signal.Notify(sigint, os.Interrupt)
-		<-sigint
-
-		// We received an interrupt signal, shut down.
-		if err := srv.Shutdown(context.Background()); err != nil {
-			// Error from closing listeners, or context timeout:
-			logger.Infof("HTTP server Shutdown: %v", err)
-		}
-		close(idleConnsClosed)
-	}()
-
-	if err := srv.ListenAndServe(); err != nethttp.ErrServerClosed {
-		// Error starting or closing listener:
-		log.Fatalf("HTTP server ListenAndServe: %v", err)
-	}
-
-	<-idleConnsClosed
-
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
 	if err := db.StopServer(); err != nil {
-		logger.Errorf("Error stopping embedded postgres: %v", err)
+		e.Logger.Fatal("Error stopping embedded postgres: %v", err)
+	}
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
 	}
 }
 
 // stripQuery removes query parameters for static sites
-func stripQuery(f nethttp.HandlerFunc) nethttp.HandlerFunc {
-	return func(w nethttp.ResponseWriter, r *nethttp.Request) {
-		r.URL.RawQuery = ""
-		f(w, r)
-	}
-}
-
-// simpleCors is minimal middleware for injecting an Access-Control-Allow-Origin header value.
-// If an empty allowedOrigin is specified, then no header is added.
-func simpleCors(f nethttp.HandlerFunc, allowedOrigin string) nethttp.HandlerFunc {
-	// if not set return a no-op middleware
-	if allowedOrigin == "" {
-		return func(w nethttp.ResponseWriter, r *nethttp.Request) {
-			f(w, r)
-		}
-	}
-	return func(w nethttp.ResponseWriter, r *nethttp.Request) {
-		(w).Header().Set("Access-Control-Allow-Origin", allowedOrigin)
-		f(w, r)
+func stripQuery(f echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Request().URL.RawQuery = ""
+		return f(c)
 	}
 }
 

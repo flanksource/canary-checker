@@ -60,7 +60,6 @@ func (job CanaryJob) GetNamespacedName() types.NamespacedName {
 
 func (job CanaryJob) Run() {
 	results := checks.RunChecks(job.NewContext())
-
 	for _, result := range results {
 		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
 			logger.Infof(result.String())
@@ -157,6 +156,7 @@ func SyncCanaryJobs() {
 		entry = findCronEntry(canary)
 		if entry != nil && time.Until(entry.Next) < 1*time.Hour {
 			// run all regular canaries on startup
+			job = entry.Job.(CanaryJob)
 			go job.Run()
 		}
 	}
