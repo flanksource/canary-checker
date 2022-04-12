@@ -15,6 +15,7 @@ spec:
       {{- include "canary-checker.selectorLabels" . | nindent 6 }}
   {{- if eq .Values.db.external.enabled false }}
   {{- if eq .Values.db.embedded.persist true }}
+  serviceName: {{- include "canary-checker.fullname" . }}
   volumeClaimTemplates:
     - metadata:
         name: canarychecker-database
@@ -51,16 +52,17 @@ spec:
               - path: "labels"
                 fieldRef:
                   fieldPath: metadata.labels
+      securityContext:
+        fsGroup: 1000
       containers:
         - name: {{ include "canary-checker.name" . }}
           securityContext:
-            privileged: true
             allowPrivilegeEscalation: true
-            runAsUser: 0
             capabilities:
               add:
                 - CAP_NET_RAW
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           env:
             - name: DOCKER_API_VERSION
               value: "1.39"
@@ -71,7 +73,7 @@ spec:
                   name: {{ .Values.db.external.secretKeyRef.name }}
                   key: {{ .Values.db.external.secretKeyRef.key }}
               {{- else }}
-              value: "embedded:///opt/database/"
+              value: "embedded:///opt/database/data/"
               {{- end }}
           volumeMounts:
             {{- if eq .Values.dockerSocket true }}
