@@ -13,6 +13,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/console"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type Endpoint struct {
@@ -113,7 +114,7 @@ type Canary struct {
 	Schedule  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt time.Time
+	DeletedAt gorm.DeletedAt
 }
 
 func CanaryFromV1(canary v1.Canary) Canary {
@@ -148,6 +149,7 @@ type Check struct {
 	NextRuntime *time.Time          `json:"nextRuntime,omitempty"`
 	UpdatedAt   time.Time           `json:"updatedAt,omitempty"`
 	CreatedAt   time.Time           `json:"createdAt,omitempty"`
+	DeletedAt   gorm.DeletedAt      `json:"deletedAt,omitempty"`
 	Canary      *v1.Canary          `json:"-" gorm:"-"`
 }
 

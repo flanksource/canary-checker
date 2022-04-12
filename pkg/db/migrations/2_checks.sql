@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS canaries (
 	source text,
 	created_at TIMESTAMP,
 	updated_at TIMESTAMP,
-	deleted_at TIMESTAMP,
+	deleted_at TIMESTAMP DEFAULT NULL,
 	UNIQUE (name, namespace)
 );
 
@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS checks(
 	silenced_at TIMESTAMP NULL,
 	created_at TIMESTAMP,
 	updated_at TIMESTAMP NULL,
+	deleted_at TIMESTAMP DEFAULT NULL,
 	FOREIGN KEY (canary_id) REFERENCES canaries(id) ON DELETE CASCADE,
 	UNIQUE (canary_id, type, name)
 );

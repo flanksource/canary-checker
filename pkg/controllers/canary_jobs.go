@@ -76,7 +76,7 @@ func (job *CanaryJob) NewContext() *context.Context {
 
 func findCronEntry(canary v1.Canary) *cron.Entry {
 	for _, entry := range Scheduler.Entries() {
-		if entry.Job.(CanaryJob).Status.PersistedID == canary.Status.PersistedID {
+		if *entry.Job.(CanaryJob).Status.PersistedID == *canary.Status.PersistedID {
 			return &entry
 		}
 	}
@@ -92,7 +92,7 @@ func ScanCanaryConfigs() {
 		}
 
 		for _, canary := range configs {
-			_, err := db.PersistCanary(canary, path.Base(configfile))
+			_, _, err := db.PersistCanary(canary, path.Base(configfile))
 			if err != nil {
 				logger.Errorf("could not persist %s: %v", canary.Name, err)
 			} else {

@@ -107,7 +107,7 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 			if message != "false" {
 				r.Failf("expecting either 'true' or 'false' but got '%v'", message)
 			} else {
-				r.Failf("")
+				r.Failf("Test expression failed. Expecting true from: %v", tpl.Expression)
 			}
 		}
 	}

@@ -8,15 +8,17 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db/types"
+	"github.com/flanksource/commons/logger"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"helm.sh/helm/v3/pkg/time"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func GetAllCanaries() ([]v1.Canary, error) {
 	var canaries []v1.Canary
 	var _canaries []pkg.Canary
-	if err := Gorm.Find(&_canaries).Error; err != nil {
+	if err := Gorm.Find(&_canaries).Where("deleted_at = NULL").Error; err != nil {
 		return nil, err
 	}
 	for _, _canary := range _canaries {
@@ -77,7 +79,16 @@ func PersistCheck(canary pkg.Canary, check external.Check) (string, error) {
 }
 
 func DeleteCanary(canary v1.Canary) error {
-	return nil
+	logger.Infof("deleting canary %s/%s", canary.Namespace, canary.Name)
+	model := pkg.CanaryFromV1(canary)
+	deleteTime := time.Now().Time
+	tx := Gorm.Find(&model).Where("id = ?", *canary.Status.PersistedID).UpdateColumn("deleted_at", deleteTime)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	var checkmodel = &pkg.Check{}
+	tx = Gorm.Find(&checkmodel).Where("canary_id = ?", model.ID.String()).UpdateColumn("deleted_at", deleteTime)
+	return tx.Error
 }
 
 func GetCanary(id string) (*pkg.Canary, error) {
@@ -138,23 +149,26 @@ func CreateCheck(canary pkg.Canary, check *pkg.Check) error {
 	return Gorm.Create(&check).Error
 }
 
-func PersistCanary(canary v1.Canary, source string) (string, error) {
+func PersistCanary(canary v1.Canary, source string) (string, bool, error) {
+	changed := false
 	model := pkg.CanaryFromV1(canary)
 	model.Source = source
 	tx := Gorm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "name"}, clause.Column{Name: "namespace"}},
 		UpdateAll: true,
 	}).Create(&model)
-
+	if tx.RowsAffected > 0 {
+		changed = true
+	}
 	if tx.Error != nil {
-		return "", tx.Error
+		return "", changed, tx.Error
 	}
 
 	for _, config := range canary.Spec.GetAllChecks() {
 		if _, err := PersistCheck(model, config); err != nil {
-			return "", err
+			return "", changed, err
 		}
 	}
 
-	return model.ID.String(), nil
+	return model.ID.String(), changed, nil
 }
