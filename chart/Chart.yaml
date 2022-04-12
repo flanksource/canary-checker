@@ -4,3 +4,7 @@ description: a Kubernetes native, multi-tenant synthetic monitoring system
 type: application
 version: 0.0.0
 appVersion: "master"
+maintainers:
+  - name: Flanksource
+    url: https://www.flanksource.com
+icon: https://avatars.githubusercontent.com/u/58787470
