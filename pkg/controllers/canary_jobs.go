@@ -15,6 +15,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/push"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
+	"github.com/google/go-cmp/cmp"
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -121,12 +122,11 @@ func SyncCanaryJobs() {
 		return
 	}
 	for _, canary := range canaries {
-		schedule := canary.Spec.GetSchedule()
 		entry := findCronEntry(canary)
 		if entry != nil {
 			job := entry.Job.(CanaryJob)
-			if schedule != job.Canary.Spec.GetSchedule() {
-				logger.Infof("Rescheduling %s from %s to %s", canary, job.Canary.Spec.GetSchedule(), canary.Spec.GetSchedule())
+			if !cmp.Equal(job.Canary.Spec, canary.Spec) {
+				logger.Infof("Rescheduling %s with updated specs", canary)
 				Scheduler.Remove(entry.ID)
 			} else {
 				seenEntryIds[entry.ID] = true
