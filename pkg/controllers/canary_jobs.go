@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"path"
 	"time"
 
@@ -167,4 +168,14 @@ func SyncCanaryJobs() {
 			Scheduler.Remove(entry.ID)
 		}
 	}
+}
+
+func DeleteCanaryJob(canary v1.Canary) error {
+	entry := findCronEntry(canary)
+	if entry == nil {
+		return fmt.Errorf("cron entry not found for canary %s/%s", canary.Namespace, canary.Name)
+	}
+	logger.Infof("deleting cron entry for canary %s/%s with entry ID: %v", canary.Name, canary.Namespace, entry.ID)
+	Scheduler.Remove(entry.ID)
+	return nil
 }

@@ -18,8 +18,6 @@ package controllers
 
 import (
 	gocontext "context"
-	"fmt"
-	"time"
 
 	"github.com/flanksource/canary-checker/pkg/db"
 
@@ -88,15 +86,10 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		if err := db.DeleteCanary(*canary); err != nil {
 			logger.Error(err, "failed to delete canary")
 		}
-		entry := findCronEntry(*canary)
-		if entry == nil {
-			logger.Error(fmt.Errorf("cron entry not found for canary %s/%s", canary.Namespace, canary.Name), "failed to delete cron entry")
-			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+		if err := DeleteCanaryJob(*canary); err != nil {
+			logger.Error(err, "failed to delete canary job")
 		}
-		logger.Info("deleting cron entry for canary", "name", canary.Name, "namespace", canary.Namespace, "entry", entry.ID)
-		Scheduler.Remove(entry.ID)
 		controllerutil.RemoveFinalizer(canary, FinalizerName)
-		logger.Info("removed finalizer")
 		return ctrl.Result{}, r.Update(ctx, canary)
 	}
 
