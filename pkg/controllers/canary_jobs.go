@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"path"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/push"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
+	"github.com/google/go-cmp/cmp"
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -76,7 +78,7 @@ func (job *CanaryJob) NewContext() *context.Context {
 
 func findCronEntry(canary v1.Canary) *cron.Entry {
 	for _, entry := range Scheduler.Entries() {
-		if entry.Job.(CanaryJob).Status.PersistedID == canary.Status.PersistedID {
+		if *entry.Job.(CanaryJob).Status.PersistedID == *canary.Status.PersistedID {
 			return &entry
 		}
 	}
@@ -92,7 +94,7 @@ func ScanCanaryConfigs() {
 		}
 
 		for _, canary := range configs {
-			_, err := db.PersistCanary(canary, path.Base(configfile))
+			_, _, err := db.PersistCanary(canary, path.Base(configfile))
 			if err != nil {
 				logger.Errorf("could not persist %s: %v", canary.Name, err)
 			} else {
@@ -120,12 +122,11 @@ func SyncCanaryJobs() {
 		return
 	}
 	for _, canary := range canaries {
-		schedule := canary.Spec.GetSchedule()
 		entry := findCronEntry(canary)
 		if entry != nil {
 			job := entry.Job.(CanaryJob)
-			if schedule != job.Canary.Spec.GetSchedule() {
-				logger.Infof("Rescheduling %s from %s to %s", canary, job.Canary.Spec.GetSchedule(), canary.Spec.GetSchedule())
+			if !cmp.Equal(job.Canary.Spec, canary.Spec) {
+				logger.Infof("Rescheduling %s with updated specs", canary)
 				Scheduler.Remove(entry.ID)
 			} else {
 				seenEntryIds[entry.ID] = true
@@ -167,4 +168,14 @@ func SyncCanaryJobs() {
 			Scheduler.Remove(entry.ID)
 		}
 	}
+}
+
+func DeleteCanaryJob(canary v1.Canary) error {
+	entry := findCronEntry(canary)
+	if entry == nil {
+		return fmt.Errorf("cron entry not found for canary %s/%s", canary.Namespace, canary.Name)
+	}
+	logger.Infof("deleting cron entry for canary %s/%s with entry ID: %v", canary.Name, canary.Namespace, entry.ID)
+	Scheduler.Remove(entry.ID)
+	return nil
 }

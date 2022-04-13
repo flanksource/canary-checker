@@ -76,31 +76,36 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 	canary.SetRunnerName(r.RunnerName)
-
-	if !canary.DeletionTimestamp.IsZero() {
-		if err := db.DeleteCanary(*canary); err == nil {
-			controllerutil.RemoveFinalizer(canary, FinalizerName)
-		} else {
-			return ctrl.Result{Requeue: true}, err
-		}
-	}
-	defer r.Patch(canary)
 	// Add finalizer first if not exist to avoid the race condition between init and delete
 	if !controllerutil.ContainsFinalizer(canary, FinalizerName) {
 		logger.Info("adding finalizer", "finalizers", canary.GetFinalizers())
 		controllerutil.AddFinalizer(canary, FinalizerName)
 	}
 
-	id, err := db.PersistCanary(*canary, "kubernetes/"+string(canary.ObjectMeta.UID))
+	if !canary.DeletionTimestamp.IsZero() {
+		if err := db.DeleteCanary(*canary); err != nil {
+			logger.Error(err, "failed to delete canary")
+		}
+		if err := DeleteCanaryJob(*canary); err != nil {
+			logger.Error(err, "failed to delete canary job")
+		}
+		controllerutil.RemoveFinalizer(canary, FinalizerName)
+		return ctrl.Result{}, r.Update(ctx, canary)
+	}
+
+	id, changed, err := db.PersistCanary(*canary, "kubernetes/"+string(canary.ObjectMeta.UID))
 	if err != nil {
 		return ctrl.Result{
 			Requeue: true,
 		}, err
 	}
+	// Sync jobs if canary is created or updated
+	if canary.Generation == 1 || changed {
+		SyncCanaryJobs()
+	}
 	canary.Status.PersistedID = &id
 	canary.Status.ObservedGeneration = canary.Generation
-	// only run it once when persisting the canary for the first time
-	// SyncCanaryJobs()
+	r.Patch(canary)
 	return ctrl.Result{}, nil
 }
 
@@ -200,8 +205,11 @@ func (r *CanaryReconciler) Report(ctx *context.Context, canary v1.Canary, result
 
 func (r *CanaryReconciler) Patch(canary *v1.Canary) {
 	r.Log.V(3).Info("patching", "canary", canary.Name, "namespace", canary.Namespace, "status", canary.Status.Status)
-	if err := r.Status().Update(gocontext.Background(), canary, &client.UpdateOptions{}); err != nil {
+	if err := r.Update(gocontext.Background(), canary, &client.UpdateOptions{}); err != nil {
 		r.Log.Error(err, "failed to patch", "canary", canary.Name)
+	}
+	if err := r.Status().Update(gocontext.Background(), canary); err != nil {
+		r.Log.Error(err, "failed to update status", "canary", canary.Name)
 	}
 }
 
