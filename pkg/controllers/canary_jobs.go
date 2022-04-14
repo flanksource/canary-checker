@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"path"
+	"reflect"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -15,7 +16,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/push"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
-	"github.com/google/go-cmp/cmp"
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -125,7 +125,8 @@ func SyncCanaryJobs() {
 		entry := findCronEntry(canary)
 		if entry != nil {
 			job := entry.Job.(CanaryJob)
-			if !cmp.Equal(job.Canary.Spec, canary.Spec) {
+
+			if !reflect.DeepEqual(job.Canary.Spec, canary.Spec) {
 				logger.Infof("Rescheduling %s with updated specs", canary)
 				Scheduler.Remove(entry.ID)
 			} else {
