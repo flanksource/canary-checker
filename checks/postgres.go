@@ -31,5 +31,5 @@ func (c *PostgresChecker) Run(ctx *context.Context) pkg.Results {
 }
 
 func (c *PostgresChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
-	return CheckSQL(ctx, extConfig.(v1.PostgresCheck).SQLCheck)
+	return CheckSQL(ctx, extConfig.(v1.PostgresCheck))
 }

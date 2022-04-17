@@ -11,10 +11,6 @@ import (
 
 func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
-	ctx.Canary.Spec.SetSQLDrivers()
-	// for _, check := range ctx.Canary.Spec.GetAllChecks() {
-
-	// }
 	checks := ctx.Canary.Spec.GetAllChecks()
 	ctx.Debugf("[%s] checking %d checks", ctx.Canary.Name, len(checks))
 	for _, c := range All {

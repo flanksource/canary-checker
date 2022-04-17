@@ -26,5 +26,5 @@ func (c *MysqlChecker) Run(ctx *context.Context) pkg.Results {
 }
 
 func (c *MysqlChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
-	return CheckSQL(ctx, extConfig.(v1.MysqlCheck).SQLCheck)
+	return CheckSQL(ctx, extConfig.(v1.MysqlCheck))
 }

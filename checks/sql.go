@@ -5,9 +5,17 @@ import (
 	"fmt"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 )
+
+type SQLChecker interface {
+	GetCheck() external.Check
+	GetDriver() string
+	GetSQLCheck() v1.SQLCheck
+	GetType() string
+}
 
 type SQLDetails struct {
 	Rows  []map[string]interface{} `json:"rows,omitempty"`
@@ -56,8 +64,9 @@ func querySQL(driver string, connection string, query string) (*SQLDetails, erro
 // CheckSQL : Attempts to connect to a DB using the specified
 //               driver and connection string
 // Returns check result and metrics
-func CheckSQL(ctx *context.Context, check v1.SQLCheck) pkg.Results { // nolint: golint
-	result := pkg.Success(check, ctx.Canary)
+func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint: golint
+	check := checker.GetSQLCheck()
+	result := pkg.Success(checker.GetCheck(), ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
 	connection, err := GetConnection(ctx, &check.Connection, ctx.Namespace)
@@ -68,7 +77,7 @@ func CheckSQL(ctx *context.Context, check v1.SQLCheck) pkg.Results { // nolint: 
 		ctx.Tracef("connecting to %s", connection)
 	}
 
-	details, err := querySQL(check.GetDriver(), connection, check.GetQuery())
+	details, err := querySQL(checker.GetDriver(), connection, check.GetQuery())
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
