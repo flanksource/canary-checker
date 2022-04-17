@@ -25,12 +25,13 @@ var SystemScheduler = cron.New()
 var Kommons *kommons.Client
 var CanaryConfigFiles []string
 var DataFile string
+var Executor bool
 var LogPass, LogFail bool
 
 func Start() {
 	SystemScheduler.Start()
 	Scheduler.Start()
-	if _, err := ScheduleSystemFunc("@every 5m", SyncCanaryJobs); err != nil {
+	if _, err := ScheduleSystemFunc("@every 120s", SyncCanaryJobs); err != nil {
 		logger.Errorf("Failed to schedule sync jobs: %v", err)
 	}
 	SyncCanaryJobs()
@@ -79,7 +80,7 @@ func (job *CanaryJob) NewContext() *context.Context {
 
 func findCronEntry(canary v1.Canary) *cron.Entry {
 	for _, entry := range Scheduler.Entries() {
-		if *entry.Job.(CanaryJob).Status.PersistedID == *canary.Status.PersistedID {
+		if entry.Job.(CanaryJob).GetPersistedID() == canary.GetPersistedID() {
 			return &entry
 		}
 	}
@@ -105,9 +106,11 @@ func ScanCanaryConfigs() {
 	}
 }
 
-func SyncCanaryJobs() {
-	logger.Infof("Syncing canary jobs")
-	seenEntryIds := map[cron.EntryID]bool{}
+func SyncCanaryJob(canary v1.Canary) error {
+	if !canary.DeletionTimestamp.IsZero() || canary.Spec.GetSchedule() == "@never" {
+		DeleteCanaryJob(canary)
+		return nil
+	}
 
 	if Kommons == nil {
 		var err error
@@ -117,67 +120,63 @@ func SyncCanaryJobs() {
 		}
 	}
 
+	entry := findCronEntry(canary)
+	if entry != nil {
+		job := entry.Job.(CanaryJob)
+		if !reflect.DeepEqual(job.Canary.Spec, canary.Spec) {
+			logger.Infof("Rescheduling %s with updated specs", canary)
+			Scheduler.Remove(entry.ID)
+		} else {
+			return nil
+		}
+	}
+
+	job := CanaryJob{
+		Client:  Kommons,
+		Canary:  canary,
+		LogPass: canary.IsTrace() || canary.IsDebug() || LogPass,
+		LogFail: canary.IsTrace() || canary.IsDebug() || LogFail,
+	}
+
+	_, err := Scheduler.AddJob(canary.Spec.GetSchedule(), job)
+	if err != nil {
+		return fmt.Errorf("Failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
+	} else {
+		logger.Infof("Scheduled %s: %s", canary, canary.Spec.GetSchedule())
+	}
+
+	entry = findCronEntry(canary)
+	if entry != nil && time.Until(entry.Next) < 1*time.Hour {
+		// run all regular canaries on startup
+		job = entry.Job.(CanaryJob)
+		go job.Run()
+	}
+
+	return nil
+
+}
+func SyncCanaryJobs() {
+	logger.Debugf("Syncing canary jobs")
+
 	canaries, err := db.GetAllCanaries()
 	if err != nil {
 		logger.Errorf("Failed to get canaries: %v", err)
 		return
 	}
+
 	for _, canary := range canaries {
-		entry := findCronEntry(canary)
-		if entry != nil {
-			job := entry.Job.(CanaryJob)
-
-			if !reflect.DeepEqual(job.Canary.Spec, canary.Spec) {
-				logger.Infof("Rescheduling %s with updated specs", canary)
-				Scheduler.Remove(entry.ID)
-			} else {
-				seenEntryIds[entry.ID] = true
-				job.Canary = canary
-				(*entry).Job = job
-				continue
-			}
-		}
-
-		job := CanaryJob{
-			Client:  Kommons,
-			Canary:  canary,
-		LogPass: canary.IsTrace() || canary.IsDebug() || LogPass,
-		LogFail: canary.IsTrace() || canary.IsDebug() || LogFail,
-		}
-		if canary.Spec.GetSchedule() == "@never" {
-			continue
-		}
-		entryID, err := Scheduler.AddJob(canary.Spec.GetSchedule(), job)
-		if err != nil {
-			logger.Errorf("Failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
-			continue
-		} else {
-			logger.Infof("Scheduling %s to %s", canary, canary.Spec.GetSchedule())
-			seenEntryIds[entryID] = true
-		}
-
-		entry = findCronEntry(canary)
-		if entry != nil && time.Until(entry.Next) < 1*time.Hour {
-			// run all regular canaries on startup
-			job = entry.Job.(CanaryJob)
-			go job.Run()
+		if err := SyncCanaryJob(canary); err != nil {
+			logger.Errorf(err.Error())
 		}
 	}
-
-	for _, entry := range Scheduler.Entries() {
-		if !seenEntryIds[entry.ID] {
-			logger.Infof("Removing  %s", entry.Job.(CanaryJob).Canary)
-			Scheduler.Remove(entry.ID)
-		}
-	}
+	logger.Infof("Synced canary jobs %d", len(Scheduler.Entries()))
 }
 
-func DeleteCanaryJob(canary v1.Canary) error {
+func DeleteCanaryJob(canary v1.Canary) {
 	entry := findCronEntry(canary)
 	if entry == nil {
-		return fmt.Errorf("cron entry not found for canary %s/%s", canary.Namespace, canary.Name)
+		return
 	}
-	logger.Infof("deleting cron entry for canary %s/%s with entry ID: %v", canary.Name, canary.Namespace, entry.ID)
+	logger.Tracef("deleting cron entry for canary %s/%s with entry ID: %v", canary.Name, canary.Namespace, entry.ID)
 	Scheduler.Remove(entry.ID)
-	return nil
 }

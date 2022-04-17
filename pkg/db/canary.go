@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db/types"
@@ -29,6 +28,11 @@ func GetAllCanaries() ([]v1.Canary, error) {
 				Labels:    _canary.Labels,
 			},
 		}
+		var deletionTimestamp metav1.Time
+		if _canary.DeletedAt.Valid {
+			deletionTimestamp = metav1.NewTime(_canary.DeletedAt.Time)
+			canary.ObjectMeta.DeletionTimestamp = &deletionTimestamp
+		}
 		if err := json.Unmarshal(_canary.Spec, &canary.Spec); err != nil {
 			return nil, err
 		}
@@ -47,35 +51,28 @@ func GetAllChecks() ([]pkg.Check, error) {
 	return checks, nil
 }
 
-func PersistCheck(canary pkg.Canary, check external.Check) (string, error) {
-	spec, _ := json.Marshal(check)
+func PersistCheck(check pkg.Check) (string, error) {
+	if check.Spec == nil {
+		spec, _ := json.Marshal(check)
+		check.Spec = spec
+	}
 	name := check.GetName()
 	description := check.GetDescription()
 	if name == "" {
 		name = description
 		description = ""
 	}
-
-	model := pkg.Check{
-		CanaryID:    canary.ID.String(),
-		Spec:        spec,
-		Type:        check.GetType(),
-		Icon:        check.GetIcon(),
-		Name:        name,
-		Namespace:   canary.Namespace,
-		CanaryName:  canary.Name,
-		Labels:      canary.Labels,
-		Description: description,
-	}
+	check.Name = name
+	check.Description = description
 	tx := Gorm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}},
 		UpdateAll: true,
-	}).Create(&model)
+	}).Create(&check)
 	if tx.Error != nil {
 		return "", tx.Error
 	}
 
-	return model.ID, nil
+	return check.ID, nil
 }
 
 func DeleteCanary(canary v1.Canary) error {
@@ -165,7 +162,7 @@ func PersistCanary(canary v1.Canary, source string) (string, bool, error) {
 	}
 
 	for _, config := range canary.Spec.GetAllChecks() {
-		if _, err := PersistCheck(model, config); err != nil {
+		if _, err := PersistCheck(pkg.FromExternalCheck(model, config)); err != nil {
 			return "", changed, err
 		}
 	}

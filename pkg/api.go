@@ -153,6 +153,19 @@ type Check struct {
 	Canary      *v1.Canary          `json:"-" gorm:"-"`
 }
 
+func FromExternalCheck(canary Canary, check external.Check) Check {
+	return Check{
+		CanaryID:    canary.ID.String(),
+		Type:        check.GetType(),
+		Icon:        check.GetIcon(),
+		Description: check.GetDescription(),
+		Name:        check.GetName(),
+		Namespace:   canary.Namespace,
+		CanaryName:  canary.Name,
+		Labels:      labels.FilterLabels(canary.Labels),
+	}
+}
+
 func FromResult(result CheckResult) CheckStatus {
 	return CheckStatus{
 		Status:   result.Pass,
