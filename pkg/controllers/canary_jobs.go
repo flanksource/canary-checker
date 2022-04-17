@@ -25,6 +25,7 @@ var SystemScheduler = cron.New()
 var Kommons *kommons.Client
 var CanaryConfigFiles []string
 var DataFile string
+var LogPass, LogFail bool
 
 func Start() {
 	SystemScheduler.Start()
@@ -140,8 +141,8 @@ func SyncCanaryJobs() {
 		job := CanaryJob{
 			Client:  Kommons,
 			Canary:  canary,
-			LogPass: true,
-			LogFail: true,
+		LogPass: canary.IsTrace() || canary.IsDebug() || LogPass,
+		LogFail: canary.IsTrace() || canary.IsDebug() || LogFail,
 		}
 		if canary.Spec.GetSchedule() == "@never" {
 			continue

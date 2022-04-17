@@ -44,8 +44,6 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&devGuiPort, "devGuiPort", 3004, "Port used by a local npm server in development mode")
 	flags.IntVar(&metricsPort, "metricsPort", 8081, "Port to expose a health dashboard ")
 	flags.BoolVar(&dev, "dev", false, "Run in development mode")
-	flags.BoolVar(&logFail, "log-fail", true, "Log every failing check")
-	flags.BoolVar(&logPass, "log-pass", false, "Log every passing check")
 	flags.StringVarP(&operatorNamespace, "namespace", "n", "", "Watch only specified namespaces, otherwise watch all")
 	flags.StringVar(&includeCheck, "include-check", "", "Run matching canaries - useful for debugging")
 	flags.IntVar(&cache.DefaultCacheCount, "maxStatusCheckCount", 5, "Maximum number of past checks in the in memory cache")
@@ -83,6 +81,8 @@ func init() {
 	runner.Version = version
 	Root.PersistentFlags().StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database")
 	Root.PersistentFlags().BoolVar(&db.Trace, "db-trace", false, "Trace database queries")
+	Root.PersistentFlags().BoolVar(&logFail, "log-fail", true, "Log every failing check")
+	Root.PersistentFlags().BoolVar(&logPass, "log-pass", false, "Log every passing check")
 	Root.PersistentFlags().StringArrayVar(&sharedLibrary, "shared-library", []string{}, "Add javascript files to be shared by all javascript templates")
 	Root.PersistentFlags().BoolVar(&exposeEnv, "expose-env", false, "Expose environment variables for use in all templates. Note this has serious security implications with untrusted canaries")
 	Root.AddCommand(Docs)

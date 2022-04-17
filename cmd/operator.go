@@ -25,7 +25,7 @@ import (
 
 var webhookPort int
 var enableLeaderElection bool
-
+var operatorExecutor bool
 var Operator = &cobra.Command{
 	Use:   "operator",
 	Short: "Start the kubernetes operator",
@@ -34,6 +34,7 @@ var Operator = &cobra.Command{
 
 func init() {
 	ServerFlags(Operator.Flags())
+	Operator.Flags().BoolVar(&operatorExecutor, "executor", true, "If false, only serve the UI and sync the configs")
 	Operator.Flags().IntVar(&webhookPort, "webhookPort", 8082, "Port for webhooks ")
 	Operator.Flags().BoolVar(&enableLeaderElection, "enable-leader-election", false, "Enabling this will ensure there is only one active controller manager")
 	// +kubebuilder:scaffold:scheme
@@ -45,6 +46,8 @@ func run(cmd *cobra.Command, args []string) {
 		logger.Fatalf("failed to get zap logger")
 		return
 	}
+	controllers.LogFail = logFail
+	controllers.LogPass = logPass
 
 	loggr := ctrlzap.NewRaw(
 		ctrlzap.UseDevMode(true),
@@ -63,7 +66,10 @@ func run(cmd *cobra.Command, args []string) {
 		logger.Fatalf("error connecting with postgres: %v", err)
 	}
 	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
-	controllers.Start()
+	if operatorExecutor {
+		logger.Infof("Starting executors")
+		controllers.Start()
+	}
 	go serve()
 
 	ctrl.SetLogger(zapr.NewLogger(loggr))
