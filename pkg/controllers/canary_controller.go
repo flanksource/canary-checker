@@ -86,9 +86,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		if err := db.DeleteCanary(*canary); err != nil {
 			logger.Error(err, "failed to delete canary")
 		}
-		if err := DeleteCanaryJob(*canary); err != nil {
-			logger.Error(err, "failed to delete canary job")
-		}
+		DeleteCanaryJob(*canary)
 		controllerutil.RemoveFinalizer(canary, FinalizerName)
 		return ctrl.Result{}, r.Update(ctx, canary)
 	}
@@ -99,11 +97,11 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 			Requeue: true,
 		}, err
 	}
+	canary.Status.PersistedID = &id
 	// Sync jobs if canary is created or updated
 	if canary.Generation == 1 || changed {
-		SyncCanaryJobs()
+		SyncCanaryJob(*canary)
 	}
-	canary.Status.PersistedID = &id
 	canary.Status.ObservedGeneration = canary.Generation
 	r.Patch(canary)
 	return ctrl.Result{}, nil

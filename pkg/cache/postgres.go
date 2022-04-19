@@ -3,10 +3,12 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -36,9 +38,15 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 
 	row := c.QueryRow(context.TODO(), "UPDATE checks SET last_runtime = NOW() WHERE canary_id = $1 AND type = $2 AND name = $3 RETURNING id", check.CanaryID, check.Type, check.GetName())
 	var id string
+
 	if err := row.Scan(&id); err != nil {
-		if err != nil {
-			logger.Errorf("error updating last_runtime: %v", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			if id, err = db.PersistCheck(check); err != nil {
+				logger.Errorf("error inserting check: %v", err)
+				return
+			}
+		} else {
+			logger.Errorf("error fetching check id: %v", err)
 			return
 		}
 	}

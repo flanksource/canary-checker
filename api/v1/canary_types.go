@@ -27,12 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	mssqlDriver    = "mssql"
-	mysqlDriver    = "mysql"
-	postgresDriver = "postgres"
-)
-
 type ResultMode string
 
 const (
@@ -196,22 +190,12 @@ func (spec CanarySpec) GetSchedule() string {
 	return "@never"
 }
 
-func (spec CanarySpec) SetSQLDrivers() {
-	for i := range spec.Mssql {
-		if spec.Mssql[i].driver == "" {
-			spec.Mssql[i].SetDriver(mssqlDriver)
-		}
-	}
-	for i := range spec.Mysql {
-		if spec.Mysql[i].driver == "" {
-			spec.Mysql[i].SetDriver(mysqlDriver)
-		}
-	}
-	for i := range spec.Postgres {
-		if spec.Postgres[i].driver == "" {
-			spec.Postgres[i].SetDriver(postgresDriver)
-		}
-	}
+func (c Canary) IsTrace() bool {
+	return c.Annotations != nil && c.Annotations["debug"] == "true"
+}
+
+func (c Canary) IsDebug() bool {
+	return c.Annotations != nil && c.Annotations["debug"] == "true"
 }
 
 func (c Canary) GetKey(check external.Check) string {
@@ -338,6 +322,13 @@ func (c Canary) GetAllLabels(extra map[string]string) map[string]string {
 
 func (c Canary) ID() string {
 	return fmt.Sprintf("%s/%s/%s", c.GetRunnerName(), c.Namespace, c.Name)
+}
+
+func (c Canary) GetPersistedID() string {
+	if c.Status.PersistedID != nil {
+		return *c.Status.PersistedID
+	}
+	return ""
 }
 
 // +kubebuilder:object:root=true

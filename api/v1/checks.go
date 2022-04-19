@@ -293,7 +293,6 @@ type SQLCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 	Connection  `yaml:",inline" json:",inline"`
-	driver      string `yaml:"-" json:"-"`
 	Query       string `yaml:"query" json:"query,omitempty" template:"true"`
 	// Number rows to check for
 	Result int `yaml:"results" json:"results,omitempty"`
@@ -304,18 +303,6 @@ func (c *SQLCheck) GetQuery() string {
 		return "SELECT 1"
 	}
 	return c.Query
-}
-
-func (c SQLCheck) GetDriver() string {
-	return c.driver
-}
-
-func (c *SQLCheck) SetDriver(driver string) {
-	c.driver = driver
-}
-
-func (c SQLCheck) GetType() string {
-	return c.GetDriver()
 }
 
 func (c SQLCheck) GetEndpoint() string {
@@ -332,7 +319,15 @@ type PostgresCheck struct {
 	SQLCheck `yaml:",inline" json:",inline"`
 }
 
+func (p PostgresCheck) GetCheck() external.Check {
+	return p
+}
+
 func (p PostgresCheck) GetType() string {
+	return "postgres"
+}
+
+func (p PostgresCheck) GetDriver() string {
 	return "postgres"
 }
 
@@ -340,8 +335,44 @@ type MssqlCheck struct {
 	SQLCheck `yaml:",inline" json:",inline"`
 }
 
+func (m MssqlCheck) GetCheck() external.Check {
+	return m
+}
+
+func (m MssqlCheck) GetSQLCheck() SQLCheck {
+	return m.SQLCheck
+}
+
+func (m MysqlCheck) GetSQLCheck() SQLCheck {
+	return m.SQLCheck
+}
+
+func (p PostgresCheck) GetSQLCheck() SQLCheck {
+	return p.SQLCheck
+}
+
+func (m MssqlCheck) GetDriver() string {
+	return "mssql"
+}
+
+func (m MssqlCheck) GetType() string {
+	return "mssql"
+}
+
 type MysqlCheck struct {
 	SQLCheck `yaml:",inline" json:",inline"`
+}
+
+func (m MysqlCheck) GetCheck() external.Check {
+	return m
+}
+
+func (m MysqlCheck) GetDriver() string {
+	return "mysql"
+}
+
+func (m MysqlCheck) GetType() string {
+	return "mysql"
 }
 
 /*
@@ -349,14 +380,6 @@ type MysqlCheck struct {
 */
 type Mongo struct {
 	MongoDBCheck `yaml:",inline" json:",inline"`
-}
-
-func (m MssqlCheck) GetType() string {
-	return "mssql"
-}
-
-func (m MysqlCheck) GetType() string {
-	return "mysql"
 }
 
 type PodCheck struct {

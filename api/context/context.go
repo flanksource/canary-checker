@@ -79,11 +79,11 @@ func New(client *kommons.Client, canary v1.Canary) *Context {
 }
 
 func (ctx *Context) IsDebug() bool {
-	return ctx.Canary.Annotations != nil && ctx.Canary.Annotations["debug"] == "true"
+	return ctx.Canary.IsDebug()
 }
 
 func (ctx *Context) IsTrace() bool {
-	return ctx.Canary.Annotations != nil && ctx.Canary.Annotations["trace"] == "true"
+	return ctx.Canary.IsTrace()
 }
 
 func (ctx *Context) New(environment map[string]interface{}) *Context {
