@@ -57,7 +57,7 @@ func template(content string, data interface{}) (string, error) {
 	return strings.TrimSpace(buf.String()), nil
 }
 
-func ParseSystems(configFile, datafile string) ([]v1.System, error) {
+func ParseSystems(configFile, datafile string) ([]v1.SystemTemplate, error) {
 	configs, err := readFile(configFile)
 	if err != nil {
 		return nil, err
@@ -74,13 +74,13 @@ func ParseSystems(configFile, datafile string) ([]v1.System, error) {
 		}
 	}
 
-	var systems []v1.System
+	var systems []v1.SystemTemplate
 	re := regexp.MustCompile(`(?m)^---\n`)
 	for _, chunk := range re.Split(configs, -1) {
 		if strings.TrimSpace(chunk) == "" {
 			continue
 		}
-		config := v1.System{}
+		config := v1.SystemTemplate{}
 		decoder := yamlutil.NewYAMLOrJSONDecoder(strings.NewReader(chunk), 1024)
 
 		if err := decoder.Decode(&config); err != nil {
@@ -89,7 +89,7 @@ func ParseSystems(configFile, datafile string) ([]v1.System, error) {
 
 		if config.IsEmpty() {
 			// try just the specs:
-			spec := v1.SystemSpec{}
+			spec := v1.SystemTemplateSpec{}
 
 			if yamlerr := yaml.Unmarshal([]byte(chunk), &spec); yamlerr != nil {
 				return nil, yamlerr

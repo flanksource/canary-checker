@@ -100,7 +100,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 	runner.RunnerLabels = labels.LoadFromFile("/etc/podinfo/labels")
 
-	reconciler := &controllers.CanaryReconciler{
+	canaryReconciler := &controllers.CanaryReconciler{
 		IncludeCheck:      includeCheck,
 		IncludeNamespaces: includeNamespaces,
 		Client:            mgr.GetClient(),
@@ -111,20 +111,23 @@ func run(cmd *cobra.Command, args []string) {
 		RunnerName:        runner.RunnerName,
 	}
 
+	systemReconciler := &controllers.SystemReconciler{
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("system"),
+		Scheme: mgr.GetScheme(),
+	}
 	if err = mgr.Add(manager.RunnableFunc(db.Start)); err != nil {
 		setupLog.Error(err, "unable to Add manager")
 		os.Exit(1)
 	}
-	if err = reconciler.SetupWithManager(mgr); err != nil {
+	if err = canaryReconciler.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Canary")
 		os.Exit(1)
 	}
-
-	if err != nil {
-		logger.Debugf("error getting prometheus client")
-		return
+	if err = systemReconciler.SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "System")
+		os.Exit(1)
 	}
-
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")

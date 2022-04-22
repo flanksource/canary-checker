@@ -1,6 +1,6 @@
-# yaml-language-server: $schema=generate-schemas/schemas/system.schema.json
+#yaml-language-server: $schema=../../generate-schemas/schemas/system.schema.json
 apiVersion: canaries.flanksource.com/v1
-kind: System
+kind: SystemTemplate
 metadata:
   name: cluster
 spec:
@@ -17,50 +17,53 @@ spec:
       lookup:
         kubernetes:
           - kind: Node
+            name: k8s
             display:
               javascript: JSON.stringify(k8s.getNodeTopology(results))
-      properties:
-        - name: metrics
-          lookup:
-            kubernetes:
-              - kind: NodeMetrics
-                ready: false
-                display:
-                  javascript: JSON.stringify(k8s.getNodeMetrics(results))
+      # properties:
+      #   - name: metrics
+      #     lookup:
+      #       kubernetes:
+      #         - kind: NodeMetrics
+      #           ready: false
+      #           name: test
+      #           display:
+      #             javascript: JSON.stringify(k8s.getNodeMetrics(results))
 
-  properties:
-    - name: name
-      lookup:
-        kubernetes:
-          - kind: ConfigMap
-            namespace:
-              name: quack
-            resource:
-              name: quack-config
-            display:
-              javascript: |+
-                parts =  results[0].Object.data.name.split(":")
-                props = [    {
-                  name: "dns",
-                  text:    results[0].Object.data.domain
-                },
-                {
-                  name: "id",
-                  text: results[0].Object.data.name,
-                  type: "hidden",
-                },
-                {
-                  name: "name",
-                  text:  parts[5].split("/")[1]
-                },
-                {
-                  name: "account",
-                  text: parts[4]
-                },
-                {
-                  name: "region",
-                  text: parts[3]
-                }
-                ]
-                JSON.stringify(props)
+  # properties:
+  #   - name: name
+  #     lookup:
+  #       kubernetes:
+  #         - kind: ConfigMap
+  #           name: test
+  #           namespace:
+  #             name: quack
+  #           resource:
+  #             name: quack-config
+  #           display:
+  #             javascript: |+
+  #               parts =  results[0].Object.data.name.split(":")
+  #               props = [    {
+  #                 name: "dns",
+  #                 text:    results[0].Object.data.domain
+  #               },
+  #               {
+  #                 name: "id",
+  #                 text: results[0].Object.data.name,
+  #                 type: "hidden",
+  #               },
+  #               {
+  #                 name: "name",
+  #                 text:  parts[5].split("/")[1]
+  #               },
+  #               {
+  #                 name: "account",
+  #                 text: parts[4]
+  #               },
+  #               {
+  #                 name: "region",
+  #                 text: parts[3]
+  #               }
+  #               ]
+  #               JSON.stringify(props)
 

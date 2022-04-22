@@ -225,7 +225,7 @@ type TopologyRunOptions struct {
 	Namespace string
 }
 
-func Run(opts TopologyRunOptions, s v1.System) []*pkg.System {
+func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.System {
 	logger.Debugf("Running topology %s depth=%d", s.Name, opts.Depth)
 	if s.Namespace == "" {
 		s.Namespace = opts.Namespace
@@ -276,23 +276,23 @@ func Run(opts TopologyRunOptions, s v1.System) []*pkg.System {
 		}
 	}
 	sys.Summary = sys.Components.Summarize()
-	if sys.Id == "" && ctx.SystemAPI.Spec.Id != nil {
+	if sys.ID == "" && ctx.SystemAPI.Spec.Id != nil {
 		id, err := templating.Template(sys.GetAsEnvironment(), *ctx.SystemAPI.Spec.Id)
 		if err != nil {
 			logger.Errorf("Failed to lookup id: %v", err)
 		} else {
-			sys.Id = id
+			sys.ID = id
 		}
 	}
 
-	if sys.Id == "" {
-		sys.Id = sys.Name
+	if sys.ID == "" {
+		sys.ID = sys.Name
 	}
 	sys.Status = sys.Summary.GetStatus()
 	// if logger.IsTraceEnabled() {
 	logger.Debugf(sys.Components.Debug(""))
 	// }
 	results = append(results, sys)
-	logger.Infof("%s id=%s status=%s", sys.Name, sys.Id, sys.Status)
+	logger.Infof("%s id=%s status=%s", sys.Name, sys.ID, sys.Status)
 	return results
 }

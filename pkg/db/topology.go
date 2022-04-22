@@ -11,12 +11,13 @@ import (
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	. "github.com/volatiletech/sqlboiler/v4/queries/qm" //nolint
+	"gorm.io/gorm/clause"
 )
 
 func NewSystemModel(system *pkg.System) models.System {
 	return models.System{
 		Name:       system.Name,
-		ExternalID: system.Id,
+		ExternalID: system.ID,
 		Text:       null.StringFrom(system.Text),
 		Icon:       null.StringFrom(system.Icon),
 		Labels:     mapToJSON(system.Labels),
@@ -53,7 +54,7 @@ func FindSystem(systemID, systemType string) (*models.System, error) {
 	}
 }
 
-func AddSystemSpec(id string, system v1.System) (string, error) {
+func AddSystemSpec(id string, system v1.SystemTemplate) (string, error) {
 	spec, err := json.Marshal(system)
 	if err != nil {
 		return "", err
@@ -86,7 +87,7 @@ func AddSystemSpec(id string, system v1.System) (string, error) {
 
 func AddSystem(system *pkg.System, cols ...string) (string, error) {
 	_system := NewSystemModel(system)
-	existing, err := models.Systems(Where("external_id = ? AND type = ?", system.Id, system.Type)).OneG()
+	existing, err := models.Systems(Where("external_id = ? AND type = ?", system.ID, system.Type)).OneG()
 	if err == sql.ErrNoRows {
 		if err := _system.InsertG(boil.Infer()); err != nil {
 			return "", err
@@ -135,6 +136,18 @@ func PersistComponent(systemID string, component *pkg.Component, parent *models.
 	return nil
 }
 
+func AddSystemTemplate(system *v1.SystemTemplate) (string, error) {
+	model := pkg.SystemTemplateFromV1(system)
+	tx := Gorm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "name"}, {Name: "namespace"}},
+		UpdateAll: true,
+	}).Create(model)
+	if tx.Error != nil {
+		return "", tx.Error
+	}
+	return model.ID.String(), nil
+}
+
 func Persist(results []*pkg.System) error {
 	for _, system := range results {
 		id, err := AddSystem(system)
@@ -148,4 +161,25 @@ func Persist(results []*pkg.System) error {
 		}
 	}
 	return nil
+}
+
+func GetAllSystemTemplates() ([]v1.SystemTemplate, error) {
+	var systemTemplates []v1.SystemTemplate
+	var _systemTemplates []pkg.SystemTemplate
+	if err := Gorm.Find(&_systemTemplates).Where("deleted_at = NULL").Error; err != nil {
+		return nil, err
+	}
+	for _, systemTemplate := range _systemTemplates {
+		systemTemplates = append(systemTemplates, systemTemplate.ToV1())
+	}
+	return systemTemplates, nil
+}
+
+func PersistSystem(parentID string, system *pkg.System) error {
+
+	tx := Gorm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "name"}, {Name: "namespace"}},
+		UpdateAll: true,
+	}).Create(system)
+	return tx.Error
 }

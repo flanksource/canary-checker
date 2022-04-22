@@ -4,32 +4,81 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const ComponentType = "component"
 
 type System struct {
-	Object       `yaml:",inline"`
-	Id           string            `json:"id"` //nolint
-	Tooltip      string            `json:"tooltip,omitempty"`
-	Icon         string            `json:"icon,omitempty"`
-	Text         string            `json:"text,omitempty"`
-	Label        string            `json:"label,omitempty"`
-	Labels       map[string]string `json:"labels,omitempty"`
-	Owner        string            `json:"owner,omitempty"`
-	Components   Components        `json:"components,omitempty"`
-	Properties   Properties        `json:"properties,omitempty"`
-	Summary      v1.Summary        `json:"summary,omitempty"`
-	Status       string            `json:"status,omitempty"`
-	Type         string            `json:"type,omitempty"`
-	CreatedAt    string            `json:"created_at,omitempty"`
-	UpdatedAt    string            `json:"updated_at,omitempty"`
-	ExternalId   string            `json:"external_id,omitempty"` //nolint
-	TopologyType string            `json:"topologyType,omitempty"`
+	Object           `yaml:",inline"`
+	SystemTemplateID string
+	ID               string            `json:"id"` //nolint
+	Tooltip          string            `json:"tooltip,omitempty"`
+	Icon             string            `json:"icon,omitempty"`
+	Text             string            `json:"text,omitempty"`
+	Label            string            `json:"label,omitempty"`
+	Labels           map[string]string `json:"labels,omitempty"`
+	Owner            string            `json:"owner,omitempty"`
+	Components       Components        `json:"components,omitempty"` //ignor  this
+	Properties       Properties        `json:"properties,omitempty"`
+	Summary          v1.Summary        `json:"summary,omitempty"` // ignor ethis
+	Status           string            `json:"status,omitempty"`
+	Type             string            `json:"type,omitempty"`
+	CreatedAt        string            `json:"created_at,omitempty"`
+	UpdatedAt        string            `json:"updated_at,omitempty"`
+	ExternalId       string            `json:"external_id,omitempty"` //nolint
+	TopologyType     string            `json:"topologyType,omitempty"`
+}
+
+type SystemTemplate struct {
+	ID        uuid.UUID `gorm:"default:generate_ulid()"`
+	Name      string
+	Namespace string
+	Labels    types.JSONStringMap
+	Spec      types.JSON
+	Schedule  string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt
+}
+
+func SystemTemplateFromV1(systemTemplate *v1.SystemTemplate) *SystemTemplate {
+	spec, _ := json.Marshal(systemTemplate.Spec)
+	return &SystemTemplate{
+		Name:      systemTemplate.GetName(),
+		Namespace: systemTemplate.GetNamespace(),
+		Labels:    types.JSONStringMap(systemTemplate.GetLabels()),
+		Spec:      spec,
+	}
+}
+
+func (s SystemTemplate) ToV1() v1.SystemTemplate {
+	var systemTemplateSpec v1.SystemTemplateSpec
+	id := s.ID.String()
+	_ = json.Unmarshal(s.Spec, &systemTemplateSpec)
+	return v1.SystemTemplate{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "SystemTemplate",
+			APIVersion: "canaries.flanksource.com/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      s.Name,
+			Namespace: s.Namespace,
+			Labels:    s.Labels,
+		},
+		Spec: systemTemplateSpec,
+		Status: v1.SystemTemplateStatus{
+			PersistentID: &id,
+		},
+	}
 }
 
 func (s System) GetAsEnvironment() map[string]interface{} {

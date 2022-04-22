@@ -5,13 +5,13 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 // +kubebuilder:object:root=true
 
 // +kubebuilder:subresource:status
-type System struct {
+type SystemTemplate struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              SystemSpec   `json:"spec,omitempty"`
-	Status            SystemStatus `json:"status,omitempty"`
+	Spec              SystemTemplateSpec   `json:"spec,omitempty"`
+	Status            SystemTemplateStatus `json:"status,omitempty"`
 }
-type SystemSpec struct {
+type SystemTemplateSpec struct {
 	Type    string            `json:"type,omitempty"`
 	Id      *Template         `json:"id,omitempty"` //nolint
 	Tooltip string            `json:"tooltip,omitempty"`
@@ -26,7 +26,7 @@ type SystemSpec struct {
 	Properties Properties       `json:"properties,omitempty"`
 }
 
-func (system System) IsEmpty() bool {
+func (system SystemTemplate) IsEmpty() bool {
 	return len(system.Spec.Properties) == 0 && len(system.Spec.Canaries) == 0 && len(system.Spec.Components) == 0 && system.Name == ""
 }
 
@@ -35,8 +35,11 @@ type ComponentSelector struct {
 	Properties map[string]string `json:"properties,omitempty"`
 }
 
-type SystemStatus struct {
-	Status string `json:"status,omitempty"`
+type SystemTemplateStatus struct {
+	PersistentID *string `json:"persistentID,omitempty"`
+	// +optional
+	ObservedGeneration int64  `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`
+	Status             string `json:"status,omitempty"`
 }
 
 type Selector struct {
@@ -48,3 +51,16 @@ type NamespaceSelector struct {
 }
 
 type CanarySelector string
+
+// +kubebuilder:object:root=true
+
+// SystemTemplateList contains a list of Canary
+type SystemTemplateList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []SystemTemplate `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&SystemTemplate{}, &SystemTemplateList{})
+}

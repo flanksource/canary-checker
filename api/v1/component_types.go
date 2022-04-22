@@ -133,3 +133,16 @@ type Property struct {
 	Lookup         *CanarySpec `json:"lookup,omitempty"`
 	Summary        *Template   `json:"summary,omitempty"`
 }
+
+// +kubebuilder:object:root=true
+
+// ComponentList contains a list of Canary
+type ComponentList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Component `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&Component{}, &ComponentList{})
+}

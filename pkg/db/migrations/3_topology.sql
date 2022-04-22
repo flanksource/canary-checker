@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 
 
-CREATE TABLE system (
+CREATE TABLE IF NOT EXISTS systems (
   id UUID DEFAULT generate_ulid() PRIMARY KEY,
   external_id text NOT NULL,
   name text NOT NULL, -- Corresponding to .metadata.name
@@ -24,7 +24,7 @@ CREATE TABLE system (
 );
 
 
-CREATE TABLE component (
+CREATE TABLE IF NOT EXISTS components (
   id UUID DEFAULT generate_ulid() PRIMARY KEY,
   external_id text NOT NULL,
   parent_id UUID NULL,
@@ -50,6 +50,19 @@ CREATE TABLE component (
   UNIQUE (system_id,type, external_id)
 );
 
+
+CREATE TABLE IF NOT EXISTS SYSTEM_TEMPLATES (
+  id UUID DEFAULT generate_ulid() PRIMARY KEY,
+  name text NOT NULL,
+  namespace text NOT NULL,
+  labels jsonb null,
+  spec jsonb,
+  created_at timestamp,
+  updated_at timestamp,
+  schedule text,
+  deleted_at TIMESTAMP NULL,
+  UNIQUE (name, namespace)
+);
 
 -- +goose StatementEnd
 
