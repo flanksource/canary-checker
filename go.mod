@@ -25,8 +25,8 @@ require (
 	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
 	github.com/fergusstrange/embedded-postgres v1.15.0
 	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
-	github.com/flanksource/commons v1.5.13
-	github.com/flanksource/kommons v0.29.0
+	github.com/flanksource/commons v1.5.14
+	github.com/flanksource/kommons v0.30.0
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ldap/ldap/v3 v3.4.1
 	github.com/go-logr/logr v0.3.0
