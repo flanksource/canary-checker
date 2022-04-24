@@ -12,5 +12,5 @@ spec:
       interval: 30s
   selector:
     matchLabels:
-      {{- include "canary-checker.selectorLabels" . | nindent 6 }}
+      {{- include "canary-checker.labels" . | nindent 6 }}
 {{- end }}
