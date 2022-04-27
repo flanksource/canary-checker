@@ -130,7 +130,7 @@ func SyncCanaryJob(canary v1.Canary) error {
 
 	_, err := CanaryScheduler.AddJob(canary.Spec.GetSchedule(), job)
 	if err != nil {
-		return fmt.Errorf("Failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
+		return fmt.Errorf("failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
 	} else {
 		logger.Infof("Scheduled %s: %s", canary, canary.Spec.GetSchedule())
 	}

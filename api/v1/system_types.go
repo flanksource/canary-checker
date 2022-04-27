@@ -29,8 +29,8 @@ type SystemTemplateSpec struct {
 	Properties Properties       `json:"properties,omitempty"`
 }
 
-func (system SystemTemplate) IsEmpty() bool {
-	return len(system.Spec.Properties) == 0 && len(system.Spec.Canaries) == 0 && len(system.Spec.Components) == 0 && system.Name == ""
+func (s SystemTemplate) IsEmpty() bool {
+	return len(s.Spec.Properties) == 0 && len(s.Spec.Canaries) == 0 && len(s.Spec.Components) == 0 && s.Name == ""
 }
 
 func (spec SystemTemplateSpec) GetSchedule() string {

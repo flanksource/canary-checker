@@ -324,7 +324,7 @@ func (p PostgresCheck) GetCheck() external.Check {
 }
 
 func (p PostgresCheck) GetType() string {
-	return "postgres"
+	return "postgres" //nolint
 }
 
 func (p PostgresCheck) GetDriver() string {

@@ -100,7 +100,9 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	canary.Status.PersistedID = &id
 	// Sync jobs if canary is created or updated
 	if canary.Generation == 1 || changed {
-		SyncCanaryJob(*canary)
+		if err := SyncCanaryJob(*canary); err != nil {
+			logger.Error(err, "failed to sync canary job")
+		}
 	}
 	canary.Status.ObservedGeneration = canary.Generation
 	r.Patch(canary)

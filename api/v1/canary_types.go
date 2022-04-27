@@ -191,7 +191,7 @@ func (spec CanarySpec) GetSchedule() string {
 }
 
 func (c Canary) IsTrace() bool {
-	return c.Annotations != nil && c.Annotations["debug"] == "true"
+	return c.Annotations != nil && c.Annotations["debug"] == "true" //nolint
 }
 
 func (c Canary) IsDebug() bool {
