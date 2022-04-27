@@ -83,7 +83,7 @@ func (s *SystemTemplate) ToV1() v1.SystemTemplate {
 		},
 		Spec: systemTemplateSpec,
 		Status: v1.SystemTemplateStatus{
-			PersistentID: &id,
+			PersistedID: &id,
 		},
 	}
 }

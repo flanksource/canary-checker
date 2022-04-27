@@ -48,14 +48,16 @@ func (r *SystemReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 	// db.AddSystem(system)
-	id, err := db.AddSystemTemplate(systemTemplate)
+	id, changed, err := db.AddSystemTemplate(systemTemplate)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	systemTemplate.Status.PersistentID = &id
+	if changed || systemTemplate.Status.ObservedGeneration == 1 {
+		SyncSystemsJobs()
+	}
+	systemTemplate.Status.PersistedID = &id
 	systemTemplate.Status.ObservedGeneration = systemTemplate.Generation
 	r.Patch(systemTemplate)
-	SyncSystemsJobs()
 	return ctrl.Result{}, nil
 }
 

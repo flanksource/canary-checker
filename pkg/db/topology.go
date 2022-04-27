@@ -9,16 +9,20 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func AddSystemTemplate(system *v1.SystemTemplate) (string, error) {
+func AddSystemTemplate(system *v1.SystemTemplate) (string, bool, error) {
 	model := pkg.SystemTemplateFromV1(system)
+	var changed bool
 	tx := Gorm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "name"}, {Name: "namespace"}},
 		UpdateAll: true,
 	}).Create(model)
 	if tx.Error != nil {
-		return "", tx.Error
+		return "", changed, tx.Error
 	}
-	return model.ID.String(), nil
+	if tx.RowsAffected > 0 {
+		changed = true
+	}
+	return model.ID.String(), changed, nil
 }
 
 func PersistSystems(results []*pkg.System) error {

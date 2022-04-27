@@ -20,34 +20,24 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var Scheduler = cron.New()
-var SystemScheduler = cron.New()
-var Kommons *kommons.Client
+var CanaryScheduler = cron.New()
+var CanaryFuncScheduler = cron.New()
 var CanaryConfigFiles []string
 var DataFile string
 var Executor bool
 var LogPass, LogFail bool
 
-func Start() {
-	SystemScheduler.Start()
-	Scheduler.Start()
-	if _, err := ScheduleSystemFunc("@every 120s", SyncCanaryJobs); err != nil {
-		logger.Errorf("Failed to schedule sync jobs: %v", err)
-	}
-	SyncCanaryJobs()
-}
-
 func StartScanCanaryConfigs(dataFile string, configFiles []string) {
 	DataFile = dataFile
 	CanaryConfigFiles = configFiles
-	if _, err := ScheduleSystemFunc("@every 5m", ScanCanaryConfigs); err != nil {
+	if _, err := ScheduleCanaryFunc("@every 5m", ScanCanaryConfigs); err != nil {
 		logger.Errorf("Failed to schedule scan jobs: %v", err)
 	}
 	ScanCanaryConfigs()
 }
 
-func ScheduleSystemFunc(schedule string, fn func()) (interface{}, error) {
-	return SystemScheduler.AddFunc(schedule, fn)
+func ScheduleCanaryFunc(schedule string, fn func()) (interface{}, error) {
+	return CanaryFuncScheduler.AddFunc(schedule, fn)
 }
 
 type CanaryJob struct {
@@ -79,7 +69,7 @@ func (job *CanaryJob) NewContext() *context.Context {
 }
 
 func findCronEntry(canary v1.Canary) *cron.Entry {
-	for _, entry := range Scheduler.Entries() {
+	for _, entry := range CanaryScheduler.Entries() {
 		if entry.Job.(CanaryJob).GetPersistedID() == canary.GetPersistedID() {
 			return &entry
 		}
@@ -124,8 +114,8 @@ func SyncCanaryJob(canary v1.Canary) error {
 	if entry != nil {
 		job := entry.Job.(CanaryJob)
 		if !reflect.DeepEqual(job.Canary.Spec, canary.Spec) {
-			logger.Infof("Rescheduling %s with updated specs", canary)
-			Scheduler.Remove(entry.ID)
+			logger.Infof("Rescheduling %s canary with updated specs", canary)
+			CanaryScheduler.Remove(entry.ID)
 		} else {
 			return nil
 		}
@@ -138,7 +128,7 @@ func SyncCanaryJob(canary v1.Canary) error {
 		LogFail: canary.IsTrace() || canary.IsDebug() || LogFail,
 	}
 
-	_, err := Scheduler.AddJob(canary.Spec.GetSchedule(), job)
+	_, err := CanaryScheduler.AddJob(canary.Spec.GetSchedule(), job)
 	if err != nil {
 		return fmt.Errorf("Failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
 	} else {
@@ -168,7 +158,7 @@ func SyncCanaryJobs() {
 			logger.Errorf(err.Error())
 		}
 	}
-	logger.Infof("Synced canary jobs %d", len(Scheduler.Entries()))
+	logger.Infof("Synced canary jobs %d", len(CanaryScheduler.Entries()))
 }
 
 func DeleteCanaryJob(canary v1.Canary) {
@@ -177,5 +167,5 @@ func DeleteCanaryJob(canary v1.Canary) {
 		return
 	}
 	logger.Tracef("deleting cron entry for canary %s/%s with entry ID: %v", canary.Name, canary.Namespace, entry.ID)
-	Scheduler.Remove(entry.ID)
+	CanaryScheduler.Remove(entry.ID)
 }

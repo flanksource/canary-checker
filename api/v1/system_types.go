@@ -33,16 +33,27 @@ func (system SystemTemplate) IsEmpty() bool {
 	return len(system.Spec.Properties) == 0 && len(system.Spec.Canaries) == 0 && len(system.Spec.Components) == 0 && system.Name == ""
 }
 
+func (spec SystemTemplateSpec) GetSchedule() string {
+	return spec.Schedule
+}
+
 type ComponentSelector struct {
 	Selector   `json:",inline"`
 	Properties map[string]string `json:"properties,omitempty"`
 }
 
 type SystemTemplateStatus struct {
-	PersistentID *string `json:"persistentID,omitempty"`
+	PersistedID *string `json:"persistentID,omitempty"`
 	// +optional
 	ObservedGeneration int64  `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`
 	Status             string `json:"status,omitempty"`
+}
+
+func (s SystemTemplate) GetPersistedID() string {
+	if s.Status.PersistedID != nil {
+		return *s.Status.PersistedID
+	}
+	return ""
 }
 
 type Selector struct {
