@@ -1,6 +1,8 @@
 package pkg
 
 import (
+	"context"
+	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -11,7 +13,10 @@ import (
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+	"gorm.io/gorm/schema"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -19,23 +24,23 @@ const ComponentType = "component"
 
 type System struct {
 	Object           `yaml:",inline"`
-	SystemTemplateID string
-	ID               string            `json:"id"` //nolint
-	Tooltip          string            `json:"tooltip,omitempty"`
-	Icon             string            `json:"icon,omitempty"`
-	Text             string            `json:"text,omitempty"`
-	Label            string            `json:"label,omitempty"`
-	Labels           map[string]string `json:"labels,omitempty"`
-	Owner            string            `json:"owner,omitempty"`
-	Components       Components        `json:"components,omitempty"` //ignor  this
-	Properties       Properties        `json:"properties,omitempty"`
-	Summary          v1.Summary        `json:"summary,omitempty"` // ignor ethis
-	Status           string            `json:"status,omitempty"`
-	Type             string            `json:"type,omitempty"`
-	CreatedAt        string            `json:"created_at,omitempty"`
-	UpdatedAt        string            `json:"updated_at,omitempty"`
-	ExternalId       string            `json:"external_id,omitempty"` //nolint
-	TopologyType     string            `json:"topologyType,omitempty"`
+	SystemTemplateID uuid.UUID           `json:"systemTemplateId,omitempty"`
+	ID               uuid.UUID           `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
+	Tooltip          string              `json:"tooltip,omitempty"`
+	Icon             string              `json:"icon,omitempty"`
+	Text             string              `json:"text,omitempty"`
+	Label            string              `json:"label,omitempty"`
+	Labels           types.JSONStringMap `json:"labels,omitempty"`
+	Owner            string              `json:"owner,omitempty"`
+	Components       Components          `json:"components,omitempty" gorm:"-"` //ignor  this
+	Properties       Properties          `json:"properties,omitempty" gorm:"type:properties"`
+	Summary          v1.Summary          `json:"summary,omitempty" gorm:"type:summary"` // ignor ethis
+	Status           string              `json:"status,omitempty"`
+	Type             string              `json:"type,omitempty"`
+	CreatedAt        time.Time           `json:"created_at,omitempty"`
+	UpdatedAt        time.Time           `json:"updated_at,omitempty"`
+	ExternalId       string              `json:"external_id,omitempty"` //nolint
+	TopologyType     string              `json:"topologyType,omitempty"`
 }
 
 type SystemTemplate struct {
@@ -60,10 +65,12 @@ func SystemTemplateFromV1(systemTemplate *v1.SystemTemplate) *SystemTemplate {
 	}
 }
 
-func (s SystemTemplate) ToV1() v1.SystemTemplate {
+func (s *SystemTemplate) ToV1() v1.SystemTemplate {
 	var systemTemplateSpec v1.SystemTemplateSpec
 	id := s.ID.String()
-	_ = json.Unmarshal(s.Spec, &systemTemplateSpec)
+	if err := json.Unmarshal(s.Spec, &systemTemplateSpec); err != nil {
+		logger.Errorf("error unmarshalling system template spec %s", err)
+	}
 	return v1.SystemTemplate{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "SystemTemplate",
@@ -89,9 +96,9 @@ func (s System) GetAsEnvironment() map[string]interface{} {
 }
 
 type Object struct {
-	Name      string            `json:"name,omitempty"`
-	Namespace string            `json:"namespace,omitempty"`
-	Labels    map[string]string `json:"labels,omitempty"`
+	Name      string              `json:"name,omitempty"`
+	Namespace string              `json:"namespace,omitempty"`
+	Labels    types.JSONStringMap `json:"labels,omitempty"`
 }
 
 func (component *Component) UnmarshalJSON(b []byte) error {
@@ -112,7 +119,7 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 	}
 	for _, c := range flat {
 		c.TopologyType = ComponentType
-		if c.ParentId == "" {
+		if c.ParentId == nil {
 			// first add parents
 			parent := c
 			*components = append(*components, &parent)
@@ -122,8 +129,8 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 	for _, _c := range flat {
 		c := _c
 		c.TopologyType = ComponentType
-		if c.ParentId != "" {
-			parent := components.FindByID(c.ParentId)
+		if c.ParentId != nil {
+			parent := components.FindByID(*c.ParentId)
 			if parent == nil {
 				*components = append(*components, &c)
 			} else {
@@ -140,36 +147,37 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 }
 
 type Component struct {
-	Name         string            `json:"name,omitempty"`
-	Id           string            `json:"id,omitempty"` //nolint
-	Text         string            `json:"text,omitempty"`
-	TopologyType string            `json:"topologyType,omitempty"`
-	Namespace    string            `json:"namespace,omitempty"`
-	Labels       map[string]string `json:"labels,omitempty"`
-	Tooltip      string            `json:"tooltip,omitempty"`
-	Icon         string            `json:"icon,omitempty"`
-	Owner        string            `json:"owner,omitempty"`
-	Status       string            `json:"status,omitempty"`
-	StatusReason string            `json:"statusReason,omitempty"`
+	Name         string              `json:"name,omitempty"`
+	ID           uuid.UUID           `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
+	Text         string              `json:"text,omitempty"`
+	TopologyType string              `json:"topologyType,omitempty"`
+	Namespace    string              `json:"namespace,omitempty"`
+	Labels       types.JSONStringMap `json:"labels,omitempty"`
+	Tooltip      string              `json:"tooltip,omitempty"`
+	Icon         string              `json:"icon,omitempty"`
+	Owner        string              `json:"owner,omitempty"`
+	Status       string              `json:"status,omitempty"`
+	StatusReason string              `json:"statusReason,omitempty"`
 	// The type of component, e.g. service, API, website, library, database, etc.
 	Type    string     `json:"type,omitempty"`
-	Summary v1.Summary `json:"summary,omitempty"`
+	Summary v1.Summary `json:"summary,omitempty" gorm:"type:summary"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
-	Lifecycle     string             `json:"lifecycle,omitempty"`
-	Relationships []RelationshipSpec `json:"relationships,omitempty"`
-	Properties    Properties         `json:"properties,omitempty"`
-	Components    Components         `json:"components,omitempty"`
-	ParentId      string             `json:"parent_id,omitempty"` //nolint
-	CreatedAt     string             `json:"created_at,omitempty"`
-	UpdatedAt     string             `json:"updated_at,omitempty"`
-	ExternalId    string             `json:"external_id,omitempty"` //nolint
+	Lifecycle     string        `json:"lifecycle,omitempty"`
+	Relationships Relationships `json:"relationships,omitempty" gorm:"type:relationships"`
+	Properties    Properties    `json:"properties,omitempty" gorm:"type:properties"`
+	Components    Components    `json:"components,omitempty" gorm:"-"`
+	ParentId      *uuid.UUID    `json:"parent_id,omitempty"` //nolint
+	SystemId      *uuid.UUID    `json:"system_id,omitempty"` //nolint
+	CreatedAt     time.Time     `json:"created_at,omitempty"`
+	UpdatedAt     time.Time     `json:"updated_at,omitempty"`
+	ExternalId    string        `json:"external_id,omitempty"` //nolint
 }
 
 func (component Component) Clone() Component {
 	return Component{
 		Name:         component.Name,
 		TopologyType: component.TopologyType,
-		Id:           component.Id,
+		ID:           component.ID,
 		Text:         component.Text,
 		Namespace:    component.Namespace,
 		Labels:       component.Labels,
@@ -198,7 +206,7 @@ func (component Component) String() string {
 	} else if component.Name != "" {
 		s += component.Name
 	} else {
-		s += component.Id
+		s += component.ExternalId
 	}
 	return s
 }
@@ -222,8 +230,8 @@ func NewComponent(c v1.ComponentSpec) *Component {
 }
 
 func (component Component) GetID() string {
-	if component.Id != "" {
-		return component.Id
+	if component.ID != uuid.Nil {
+		return component.ID.String()
 	}
 	if component.Text != "" {
 		return component.Text
@@ -262,14 +270,14 @@ func (components Components) Find(name string) *Component {
 func (components Components) GetIds() []string {
 	ids := []string{}
 	for _, component := range components {
-		ids = append(ids, component.Id)
+		ids = append(ids, component.ID.String())
 	}
 	return ids
 }
 
-func (components Components) FindByID(id string) *Component {
+func (components Components) FindByID(id uuid.UUID) *Component {
 	for _, component := range components {
-		if component.Id == id {
+		if component.ID == id {
 			return component
 		}
 	}
@@ -285,6 +293,8 @@ type RelationshipSpec struct {
 	Type string `json:"type,omitempty"`
 	Ref  string `json:"ref,omitempty"`
 }
+
+type Relationships []RelationshipSpec
 
 type ComponentPropertyStatus string
 
@@ -487,4 +497,98 @@ func (components Components) Summarize() v1.Summary {
 		s = s.Add(component.Summarize())
 	}
 	return s
+}
+
+// Scan scan value into Jsonb, implements sql.Scanner interface
+func (r Relationships) Value() (driver.Value, error) {
+	if len(r) == 0 {
+		return nil, nil
+	}
+	return json.Marshal(r)
+}
+
+// Scan scan value into Jsonb, implements sql.Scanner interface
+func (r *Relationships) Scan(val interface{}) error {
+	if val == nil {
+		*r = make(Relationships, 0)
+		return nil
+	}
+	var ba []byte
+	switch v := val.(type) {
+	case []byte:
+		ba = v
+	default:
+		return errors.New(fmt.Sprint("Failed to unmarshal relationships value:", val))
+	}
+	err := json.Unmarshal(ba, r)
+	return err
+}
+
+// GormDataType gorm common data type
+func (Relationships) GormDataType() string {
+	return "relationships"
+}
+
+func (Relationships) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	switch db.Dialector.Name() {
+	case "sqlite":
+		return "TEXT"
+	case "postgres":
+		return "JSONB"
+	case "sqlserver":
+		return "NVARCHAR(MAX)"
+	}
+	return ""
+}
+
+func (r Relationships) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
+	data, _ := json.Marshal(r)
+	return gorm.Expr("?", data)
+}
+
+// Scan scan value into Jsonb, implements sql.Scanner interface
+func (p Properties) Value() (driver.Value, error) {
+	if len(p) == 0 {
+		return nil, nil
+	}
+	return p.AsJSON(), nil
+}
+
+// Scan scan value into Jsonb, implements sql.Scanner interface
+func (p *Properties) Scan(val interface{}) error {
+	if val == nil {
+		*p = make(Properties, 0)
+		return nil
+	}
+	var ba []byte
+	switch v := val.(type) {
+	case []byte:
+		ba = v
+	default:
+		return errors.New(fmt.Sprint("Failed to unmarshal properties value:", val))
+	}
+	err := json.Unmarshal(ba, p)
+	return err
+}
+
+// GormDataType gorm common data type
+func (Properties) GormDataType() string {
+	return "properties"
+}
+
+func (Properties) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	switch db.Dialector.Name() {
+	case "sqlite":
+		return "TEXT"
+	case "postgres":
+		return "JSONB"
+	case "sqlserver":
+		return "NVARCHAR(MAX)"
+	}
+	return ""
+}
+
+func (p Properties) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
+	data, _ := json.Marshal(p)
+	return gorm.Expr("?", data)
 }

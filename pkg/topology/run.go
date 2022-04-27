@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/templating"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -91,16 +92,16 @@ func lookupComponents(ctx *SystemContext, component v1.ComponentSpec) ([]*pkg.Co
 		if comp.Lifecycle == "" && component.Lifecycle != "" {
 			comp.Lifecycle = component.Lifecycle
 		}
-		if comp.Id == "" && component.Id != nil {
+		if comp.ExternalId == "" && component.Id != nil {
 			id, err := templating.Template(comp.GetAsEnvironment(), *component.Id)
 			if err != nil {
 				logger.Errorf("Failed to lookup id: %v", err)
 			} else {
-				comp.Id = id
+				comp.ExternalId = id
 			}
 		}
-		if comp.Id == "" {
-			comp.Id = comp.Name
+		if comp.ExternalId == "" {
+			comp.ExternalId = comp.Name
 		}
 	}
 
@@ -276,17 +277,17 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.System {
 		}
 	}
 	sys.Summary = sys.Components.Summarize()
-	if sys.ID == "" && ctx.SystemAPI.Spec.Id != nil {
+	if sys.ID.String() == "" && ctx.SystemAPI.Spec.Id != nil {
 		id, err := templating.Template(sys.GetAsEnvironment(), *ctx.SystemAPI.Spec.Id)
 		if err != nil {
 			logger.Errorf("Failed to lookup id: %v", err)
 		} else {
-			sys.ID = id
+			sys.ID = uuid.MustParse(id)
 		}
 	}
 
-	if sys.ID == "" {
-		sys.ID = sys.Name
+	if sys.ID.String() == "" {
+		sys.ID = uuid.MustParse(sys.Name)
 	}
 	sys.Status = sys.Summary.GetStatus()
 	// if logger.IsTraceEnabled() {

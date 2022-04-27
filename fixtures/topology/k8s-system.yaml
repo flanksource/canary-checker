@@ -6,6 +6,7 @@ metadata:
 spec:
   type: KubernetesCluster
   icon: kubernetes
+  schedule: "@every 20m"
   id:
     javascript: properties.id
   components:
@@ -27,8 +28,8 @@ spec:
       #         - kind: NodeMetrics
       #           ready: false
       #           name: test
-      #           display:
-      #             javascript: JSON.stringify(k8s.getNodeMetrics(results))
+                # display:
+                #   javascript: JSON.stringify(k8s.getNodeMetrics(results))
 
   # properties:
   #   - name: name

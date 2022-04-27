@@ -1,6 +1,8 @@
 package v1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // +kubebuilder:object:root=true
 
@@ -12,14 +14,15 @@ type SystemTemplate struct {
 	Status            SystemTemplateStatus `json:"status,omitempty"`
 }
 type SystemTemplateSpec struct {
-	Type    string            `json:"type,omitempty"`
-	Id      *Template         `json:"id,omitempty"` //nolint
-	Tooltip string            `json:"tooltip,omitempty"`
-	Icon    string            `json:"icon,omitempty"`
-	Text    string            `json:"text,omitempty"`
-	Label   string            `json:"label,omitempty"`
-	Owner   Owner             `json:"owner,omitempty"`
-	Pods    map[string]string `json:"pods,omitempty"`
+	Type     string            `json:"type,omitempty"`
+	Id       *Template         `json:"id,omitempty"` //nolint
+	Schedule string            `json:"schedule,omitempty"`
+	Tooltip  string            `json:"tooltip,omitempty"`
+	Icon     string            `json:"icon,omitempty"`
+	Text     string            `json:"text,omitempty"`
+	Label    string            `json:"label,omitempty"`
+	Owner    Owner             `json:"owner,omitempty"`
+	Pods     map[string]string `json:"pods,omitempty"`
 	// ComponentSelector []ComponentSelector `json:"componentSelector,omitempty"`
 	Components []ComponentSpec  `json:"components,omitempty"`
 	Canaries   []CanarySelector `json:"canaries,omitempty"`

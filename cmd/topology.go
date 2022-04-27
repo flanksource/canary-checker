@@ -112,7 +112,7 @@ var RunTopology = &cobra.Command{
 		logger.Infof("Checked %d systems in %v", len(results), timer)
 
 		if db.IsConnected() {
-			if err := db.Persist(results); err != nil {
+			if err := db.PersistSystems(results); err != nil {
 				logger.Errorf("error persisting results: %v", err)
 			}
 			return
