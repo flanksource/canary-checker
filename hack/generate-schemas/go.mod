@@ -36,7 +36,7 @@ require (
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
 	github.com/fatih/color v1.9.0 // indirect
-	github.com/flanksource/kommons v0.30.0 // indirect
+	github.com/flanksource/kommons v0.30.2 // indirect
 	github.com/frankban/quicktest v1.11.3 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logr/logr v0.3.0 // indirect
