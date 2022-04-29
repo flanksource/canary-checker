@@ -83,6 +83,9 @@ func DeleteCanary(canary v1.Canary) error {
 	}
 	deleteTime := time.Now().Time
 	persistedID := canary.GetPersistedID()
+	if persistedID == "" {
+		return nil
+	}
 	tx := Gorm.Find(&model).Where("id = ?", persistedID).UpdateColumn("deleted_at", deleteTime)
 	if tx.Error != nil {
 		return tx.Error
