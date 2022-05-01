@@ -26,7 +26,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.15.0
 	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
 	github.com/flanksource/commons v1.5.14
-	github.com/flanksource/kommons v0.30.0
+	github.com/flanksource/kommons v0.30.2
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ldap/ldap/v3 v3.4.1
 	github.com/go-logr/logr v0.3.0
