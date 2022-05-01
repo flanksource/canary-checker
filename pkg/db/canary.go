@@ -77,9 +77,16 @@ func PersistCheck(check pkg.Check) (string, error) {
 
 func DeleteCanary(canary v1.Canary) error {
 	logger.Infof("deleting canary %s/%s", canary.Namespace, canary.Name)
-	model := pkg.CanaryFromV1(canary)
+	model, err := pkg.CanaryFromV1(canary)
+	if err != nil {
+		return err
+	}
 	deleteTime := time.Now().Time
-	tx := Gorm.Find(&model).Where("id = ?", *canary.Status.PersistedID).UpdateColumn("deleted_at", deleteTime)
+	persistedID := canary.GetPersistedID()
+	if persistedID == "" {
+		return nil
+	}
+	tx := Gorm.Find(&model).Where("id = ?", persistedID).UpdateColumn("deleted_at", deleteTime)
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -148,7 +155,10 @@ func CreateCheck(canary pkg.Canary, check *pkg.Check) error {
 
 func PersistCanary(canary v1.Canary, source string) (string, bool, error) {
 	changed := false
-	model := pkg.CanaryFromV1(canary)
+	model, err := pkg.CanaryFromV1(canary)
+	if err != nil {
+		return "", changed, err
+	}
 	model.Source = source
 	tx := Gorm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "name"}, clause.Column{Name: "namespace"}},

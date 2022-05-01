@@ -117,15 +117,18 @@ type Canary struct {
 	DeletedAt gorm.DeletedAt
 }
 
-func CanaryFromV1(canary v1.Canary) Canary {
-	spec, _ := json.Marshal(canary.Spec)
+func CanaryFromV1(canary v1.Canary) (Canary, error) {
+	spec, err := json.Marshal(canary.Spec)
+	if err != nil {
+		return Canary{}, err
+	}
 	return Canary{
 		Spec:      spec,
 		Labels:    types.JSONStringMap(canary.Labels),
 		Name:      canary.Name,
 		Namespace: canary.Namespace,
 		Schedule:  canary.Spec.GetSchedule(),
-	}
+	}, nil
 }
 
 type Check struct {

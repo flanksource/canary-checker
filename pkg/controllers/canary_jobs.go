@@ -153,7 +153,6 @@ func SyncCanaryJob(canary v1.Canary) error {
 	}
 
 	return nil
-
 }
 func SyncCanaryJobs() {
 	logger.Debugf("Syncing canary jobs")
