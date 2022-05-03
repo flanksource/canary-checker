@@ -13,7 +13,7 @@ import (
 func PersistSystemTemplate(system *v1.SystemTemplate) (string, bool, error) {
 	model := pkg.SystemTemplateFromV1(system)
 	var changed bool
-	tx := Gorm.Clauses(clause.OnConflict{
+	tx := Gorm.Table("templates").Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "name"}, {Name: "namespace"}},
 		UpdateAll: true,
 	}).Create(model)
@@ -39,7 +39,7 @@ func PersistSystems(results []*pkg.System) error {
 func GetAllSystemTemplates() ([]v1.SystemTemplate, error) {
 	var systemTemplates []v1.SystemTemplate
 	var _systemTemplates []pkg.SystemTemplate
-	if err := Gorm.Find(&_systemTemplates).Where("deleted_at = NULL").Error; err != nil {
+	if err := Gorm.Table("templates").Find(&_systemTemplates).Where("deleted_at = NULL").Error; err != nil {
 		return nil, err
 	}
 	for _, _systemTemplate := range _systemTemplates {
@@ -100,7 +100,7 @@ func DeleteSystemTemplate(systemTemplate *v1.SystemTemplate) error {
 		logger.Errorf("System template %s/%s has not been persisted", systemTemplate.Namespace, systemTemplate.Name)
 		return nil
 	}
-	tx := Gorm.Find(model, "id = ?", systemTemplate.GetPersistedID()).UpdateColumn("deleted_at", deleteTime.Time)
+	tx := Gorm.Table("templates").Find(model, "id = ?", systemTemplate.GetPersistedID()).UpdateColumn("deleted_at", deleteTime.Time)
 	if tx.Error != nil {
 		return tx.Error
 	}

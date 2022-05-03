@@ -3,7 +3,7 @@
 
 
 
-CREATE TABLE system_templates (
+CREATE TABLE templates (
   id UUID DEFAULT generate_ulid() PRIMARY KEY,
   name text NOT NULL,
   namespace text NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE systems (
   created_at timestamp NOT NULL DEFAULT now(),
   updated_at timestamp NOT NULL DEFAULT now(),
   deleted_at TIMESTAMP DEFAULT NULL,
-  FOREIGN KEY (system_template_id) REFERENCES system_templates(id),
+  FOREIGN KEY (system_template_id) REFERENCES templates(id),
   unique (type, external_id)
 );
 
@@ -82,4 +82,4 @@ CREATE TABLE components (
 -- +goose Down
 DROP TABLE components;
 DROP TABLE systems;
-DROP TABLE system_templates;
+DROP TABLE templates;
