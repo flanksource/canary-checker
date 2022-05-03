@@ -163,16 +163,15 @@ type Component struct {
 	Type    string     `json:"type,omitempty"`
 	Summary v1.Summary `json:"summary,omitempty" gorm:"type:summary"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
-	Lifecycle     string         `json:"lifecycle,omitempty"`
-	Relationships Relationships  `json:"relationships,omitempty" gorm:"type:relationships"`
-	Properties    Properties     `json:"properties,omitempty" gorm:"type:properties"`
-	Components    Components     `json:"components,omitempty" gorm:"-"`
-	ParentId      *uuid.UUID     `json:"parent_id,omitempty"` //nolint
-	SystemId      *uuid.UUID     `json:"system_id,omitempty"` //nolint
-	CreatedAt     time.Time      `json:"created_at,omitempty"`
-	UpdatedAt     time.Time      `json:"updated_at,omitempty"`
-	DeletedAt     gorm.DeletedAt `json:"deleted_at,omitempty"`
-	ExternalId    string         `json:"external_id,omitempty"` //nolint
+	Lifecycle  string         `json:"lifecycle,omitempty"`
+	Properties Properties     `json:"properties,omitempty" gorm:"type:properties"`
+	Components Components     `json:"components,omitempty" gorm:"-"`
+	ParentId   *uuid.UUID     `json:"parent_id,omitempty"` //nolint
+	SystemId   *uuid.UUID     `json:"system_id,omitempty"` //nolint
+	CreatedAt  time.Time      `json:"created_at,omitempty"`
+	UpdatedAt  time.Time      `json:"updated_at,omitempty"`
+	DeletedAt  gorm.DeletedAt `json:"deleted_at,omitempty"`
+	ExternalId string         `json:"external_id,omitempty"` //nolint
 }
 
 func (component Component) Clone() Component {
@@ -289,14 +288,6 @@ func (components Components) FindByID(id uuid.UUID) *Component {
 type ComponentStatus struct {
 	Status ComponentPropertyStatus `json:"status,omitempty"`
 }
-
-type RelationshipSpec struct {
-	// The type of relationship, e.g. dependsOn, subcomponentOf, providesApis, consumesApis
-	Type string `json:"type,omitempty"`
-	Ref  string `json:"ref,omitempty"`
-}
-
-type Relationships []RelationshipSpec
 
 type ComponentPropertyStatus string
 
@@ -499,53 +490,6 @@ func (components Components) Summarize() v1.Summary {
 		s = s.Add(component.Summarize())
 	}
 	return s
-}
-
-// Scan scan value into Jsonb, implements sql.Scanner interface
-func (r Relationships) Value() (driver.Value, error) {
-	if len(r) == 0 {
-		return nil, nil
-	}
-	return json.Marshal(r)
-}
-
-// Scan scan value into Jsonb, implements sql.Scanner interface
-func (r *Relationships) Scan(val interface{}) error {
-	if val == nil {
-		*r = make(Relationships, 0)
-		return nil
-	}
-	var ba []byte
-	switch v := val.(type) {
-	case []byte:
-		ba = v
-	default:
-		return errors.New(fmt.Sprint("Failed to unmarshal relationships value:", val))
-	}
-	err := json.Unmarshal(ba, r)
-	return err
-}
-
-// GormDataType gorm common data type
-func (Relationships) GormDataType() string {
-	return "relationships"
-}
-
-func (Relationships) GormDBDataType(db *gorm.DB, field *schema.Field) string {
-	switch db.Dialector.Name() {
-	case "sqlite":
-		return "TEXT"
-	case "postgres":
-		return "JSONB"
-	case "sqlserver":
-		return "NVARCHAR(MAX)"
-	}
-	return ""
-}
-
-func (r Relationships) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
-	data, _ := json.Marshal(r)
-	return gorm.Expr("?", data)
 }
 
 // Scan scan value into Jsonb, implements sql.Scanner interface

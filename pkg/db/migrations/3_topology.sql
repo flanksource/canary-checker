@@ -65,7 +65,6 @@ CREATE TABLE components (
   type text NULL,
   owner text,
   properties jsonb,
-  relationships jsonb,
   summary  jsonb,
   created_at timestamp NOT NULL DEFAULT now(),
   updated_at timestamp NOT NULL DEFAULT now(),
