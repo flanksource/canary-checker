@@ -131,8 +131,8 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		logger.Warnf("%s/%s returned a nil result", canary.Namespace, canary.Name)
 		return
 	}
-	canary_namespace := canary.Namespace
-	canary_name := canary.Name
+	canaryNamespace := canary.Namespace
+	canaryName := canary.Name
 	name := result.Check.GetName()
 	checkType := result.Check.GetType()
 	endpoint := canary.GetDescription(result.Check)
@@ -170,32 +170,32 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 	if logger.IsTraceEnabled() {
 		logger.Tracef(result.String())
 	}
-	OpsCount.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Inc()
+	OpsCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 	if result.Duration > 0 {
-		RequestLatency.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Observe(float64(result.Duration))
+		RequestLatency.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Observe(float64(result.Duration))
 		latency.Append(float64(result.Duration))
 	}
 	if result.Pass {
 		pass.Append(1)
-		Gauge.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Set(0)
-		OpsSuccessCount.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Inc()
+		Gauge.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Set(0)
+		OpsSuccessCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 		// always add a failed count to ensure the metric is present in prometheus
 		// for an uptime calculation
-		OpsFailedCount.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Add(0)
+		OpsFailedCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Add(0)
 		for _, m := range result.Metrics {
 			switch m.Type {
 			case CounterType:
-				GenericCounter.WithLabelValues(checkType, endpoint, m.Name, strconv.Itoa(int(m.Value)), canary_namespace, owner, severity, key, name).Inc()
+				GenericCounter.WithLabelValues(checkType, endpoint, m.Name, strconv.Itoa(int(m.Value)), canaryNamespace, owner, severity, key, name).Inc()
 			case GaugeType:
-				GenericGauge.WithLabelValues(checkType, endpoint, m.Name, canary_namespace, owner, severity, key, name).Set(m.Value)
+				GenericGauge.WithLabelValues(checkType, endpoint, m.Name, canaryNamespace, owner, severity, key, name).Set(m.Value)
 			case HistogramType:
-				GenericHistogram.WithLabelValues(checkType, endpoint, m.Name, canary_namespace, owner, severity, key, name).Observe(m.Value)
+				GenericHistogram.WithLabelValues(checkType, endpoint, m.Name, canaryNamespace, owner, severity, key, name).Observe(m.Value)
 			}
 		}
 	} else {
 		fail.Append(1)
-		Gauge.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Set(1)
-		OpsFailedCount.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Inc()
+		Gauge.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Set(1)
+		OpsFailedCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 	}
 
 	_uptime = pkg.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
