@@ -32,13 +32,14 @@ type System struct {
 	Label            string              `json:"label,omitempty"`
 	Labels           types.JSONStringMap `json:"labels,omitempty"`
 	Owner            string              `json:"owner,omitempty"`
-	Components       Components          `json:"components,omitempty" gorm:"-"` //ignor  this
+	Components       Components          `json:"components,omitempty" gorm:"-"`
 	Properties       Properties          `json:"properties,omitempty" gorm:"type:properties"`
-	Summary          v1.Summary          `json:"summary,omitempty" gorm:"type:summary"` // ignor ethis
+	Summary          v1.Summary          `json:"summary,omitempty" gorm:"type:summary"`
 	Status           string              `json:"status,omitempty"`
 	Type             string              `json:"type,omitempty"`
 	CreatedAt        time.Time           `json:"created_at,omitempty"`
 	UpdatedAt        time.Time           `json:"updated_at,omitempty"`
+	DeletedAt        gorm.DeletedAt      `json:"deleted_at,omitempty"`
 	ExternalId       string              `json:"external_id,omitempty"` //nolint
 	TopologyType     string              `json:"topologyType,omitempty"`
 }
@@ -162,15 +163,16 @@ type Component struct {
 	Type    string     `json:"type,omitempty"`
 	Summary v1.Summary `json:"summary,omitempty" gorm:"type:summary"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
-	Lifecycle     string        `json:"lifecycle,omitempty"`
-	Relationships Relationships `json:"relationships,omitempty" gorm:"type:relationships"`
-	Properties    Properties    `json:"properties,omitempty" gorm:"type:properties"`
-	Components    Components    `json:"components,omitempty" gorm:"-"`
-	ParentId      *uuid.UUID    `json:"parent_id,omitempty"` //nolint
-	SystemId      *uuid.UUID    `json:"system_id,omitempty"` //nolint
-	CreatedAt     time.Time     `json:"created_at,omitempty"`
-	UpdatedAt     time.Time     `json:"updated_at,omitempty"`
-	ExternalId    string        `json:"external_id,omitempty"` //nolint
+	Lifecycle     string         `json:"lifecycle,omitempty"`
+	Relationships Relationships  `json:"relationships,omitempty" gorm:"type:relationships"`
+	Properties    Properties     `json:"properties,omitempty" gorm:"type:properties"`
+	Components    Components     `json:"components,omitempty" gorm:"-"`
+	ParentId      *uuid.UUID     `json:"parent_id,omitempty"` //nolint
+	SystemId      *uuid.UUID     `json:"system_id,omitempty"` //nolint
+	CreatedAt     time.Time      `json:"created_at,omitempty"`
+	UpdatedAt     time.Time      `json:"updated_at,omitempty"`
+	DeletedAt     gorm.DeletedAt `json:"deleted_at,omitempty"`
+	ExternalId    string         `json:"external_id,omitempty"` //nolint
 }
 
 func (component Component) Clone() Component {

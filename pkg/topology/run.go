@@ -282,12 +282,12 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.System {
 		if err != nil {
 			logger.Errorf("Failed to lookup id: %v", err)
 		} else {
-			sys.ID = uuid.MustParse(id)
+			sys.ID, _ = uuid.Parse(id)
 		}
 	}
 
 	if sys.ID.String() == "" {
-		sys.ID = uuid.MustParse(sys.Name)
+		sys.ID, _ = uuid.Parse(sys.Name)
 	}
 	sys.Status = sys.Summary.GetStatus()
 	// if logger.IsTraceEnabled() {

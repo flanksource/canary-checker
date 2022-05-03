@@ -17,6 +17,7 @@ package controllers
 
 import (
 	gocontext "context"
+	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -26,6 +27,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // SystemReconciler reconciles a Canary object
@@ -37,6 +39,8 @@ type SystemReconciler struct {
 	RunnerName string
 }
 
+const SystemTemplateFinalizerName = "systemTemplate.canaries.flanksource.com"
+
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=systemtemplates,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=systemtemplates/status,verbs=get;update;patch
 func (r *SystemReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -47,15 +51,32 @@ func (r *SystemReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		logger.V(1).Info("System not found")
 		return ctrl.Result{}, nil
 	}
-	// db.AddSystem(system)
-	id, changed, err := db.AddSystemTemplate(systemTemplate)
+	if !controllerutil.ContainsFinalizer(systemTemplate, SystemTemplateFinalizerName) {
+		logger.Info("adding finalizer", "finalizers", systemTemplate.GetFinalizers())
+		controllerutil.AddFinalizer(systemTemplate, SystemTemplateFinalizerName)
+	}
+
+	if !systemTemplate.DeletionTimestamp.IsZero() {
+		if err := db.DeleteSystemTemplate(systemTemplate); err != nil {
+			logger.Error(err, "failed to delete system template")
+		}
+		DeleteSystemJob(*systemTemplate)
+		controllerutil.RemoveFinalizer(systemTemplate, SystemTemplateFinalizerName)
+		return ctrl.Result{}, r.Update(ctx, systemTemplate)
+	}
+
+	id, changed, err := db.PersistSystemTemplate(systemTemplate)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	if changed || systemTemplate.Status.ObservedGeneration == 1 {
-		SyncSystemsJobs()
-	}
 	systemTemplate.Status.PersistedID = &id
+	// Sync jobs if system template is created or updated
+	if changed || systemTemplate.Status.ObservedGeneration == 1 {
+		if err := SyncSystemJob(*systemTemplate); err != nil {
+			logger.Error(err, "failed to sync system template job")
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+		}
+	}
 	systemTemplate.Status.ObservedGeneration = systemTemplate.Generation
 	r.Patch(systemTemplate)
 	return ctrl.Result{}, nil

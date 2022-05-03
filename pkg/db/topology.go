@@ -7,9 +7,10 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"helm.sh/helm/v3/pkg/time"
 )
 
-func AddSystemTemplate(system *v1.SystemTemplate) (string, bool, error) {
+func PersistSystemTemplate(system *v1.SystemTemplate) (string, bool, error) {
 	model := pkg.SystemTemplateFromV1(system)
 	var changed bool
 	tx := Gorm.Clauses(clause.OnConflict{
@@ -38,7 +39,7 @@ func PersistSystems(results []*pkg.System) error {
 func GetAllSystemTemplates() ([]v1.SystemTemplate, error) {
 	var systemTemplates []v1.SystemTemplate
 	var _systemTemplates []pkg.SystemTemplate
-	if err := Gorm.Find(&_systemTemplates).Error; err != nil {
+	if err := Gorm.Find(&_systemTemplates).Where("deleted_at = NULL").Error; err != nil {
 		return nil, err
 	}
 	for _, _systemTemplate := range _systemTemplates {
@@ -89,4 +90,43 @@ func PersistComponent(component *pkg.Component) (string, error) {
 		tx = Gorm.Create(component)
 	}
 	return component.ID.String(), tx.Error
+}
+
+func DeleteSystemTemplate(systemTemplate *v1.SystemTemplate) error {
+	logger.Infof("Deleting system template %s/%s", systemTemplate.Namespace, systemTemplate.Name)
+	model := pkg.SystemTemplateFromV1(systemTemplate)
+	deleteTime := time.Now()
+	if systemTemplate.GetPersistedID() == "" {
+		logger.Errorf("System template %s/%s has not been persisted", systemTemplate.Namespace, systemTemplate.Name)
+		return nil
+	}
+	tx := Gorm.Find(model, "id = ?", systemTemplate.GetPersistedID()).UpdateColumn("deleted_at", deleteTime.Time)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	systemID, err := DeleteSystem(systemTemplate.GetPersistedID(), deleteTime)
+	if err != nil {
+		return err
+	}
+	return DeleteComponnent(systemID, deleteTime)
+}
+
+func DeleteSystem(systemTemplateID string, deleteTime time.Time) (string, error) {
+	logger.Infof("Deleting system associated with template: %s", systemTemplateID)
+	systemModel := &pkg.System{}
+	tx := Gorm.Find(systemModel).Where("system_template_id = ?", systemTemplateID).UpdateColumn("deleted_at", deleteTime.Time)
+	if tx.Error != nil {
+		return "", tx.Error
+	}
+	return systemModel.ID.String(), nil
+}
+
+func DeleteComponnent(systemID string, deleteTime time.Time) error {
+	logger.Infof("Deleting components associated with system: %s", systemID)
+	componentModel := &[]pkg.Component{}
+	tx := Gorm.Find(componentModel).Where("system_id = ?", systemID).UpdateColumn("deleted_at", deleteTime.Time)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
 }

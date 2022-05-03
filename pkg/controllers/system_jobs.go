@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"reflect"
 	"time"
 
@@ -38,7 +39,7 @@ func (job SystemJob) Run() {
 		system.Name = job.SystemTemplate.Name
 		system.Namespace = job.SystemTemplate.Namespace
 		system.Labels = job.SystemTemplate.Labels
-		system.SystemTemplateID = uuid.MustParse(*job.SystemTemplate.Status.PersistedID)
+		system.SystemTemplateID, _ = uuid.Parse(job.SystemTemplate.GetPersistedID())
 		err := db.PersistSystem(system)
 		if err != nil {
 			logger.Errorf("error persisting the system: %v", err)
@@ -112,6 +113,49 @@ func SyncSystemsJobs() {
 	}
 }
 
+func SyncSystemJob(systemTemplate v1.SystemTemplate) error {
+	if !systemTemplate.DeletionTimestamp.IsZero() || systemTemplate.Spec.GetSchedule() == "@never" {
+		DeleteSystemJob(systemTemplate)
+		return nil
+	}
+	if Kommons == nil {
+		var err error
+		Kommons, err = pkg.NewKommonsClient()
+		if err != nil {
+			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
+		}
+	}
+	entry := findSystemTemplateCronEntry(systemTemplate)
+	if entry != nil {
+		job := entry.Job.(SystemJob)
+		if !reflect.DeepEqual(job.SystemTemplate.Spec, systemTemplate.Spec) {
+			logger.Infof("Rescheduling %s system template with updated specs", systemTemplate)
+			SystemScheduler.Remove(entry.ID)
+		} else {
+			return nil
+		}
+	}
+	job := SystemJob{
+		Client:         Kommons,
+		SystemTemplate: systemTemplate,
+	}
+
+	_, err := SystemScheduler.AddJob(systemTemplate.Spec.GetSchedule(), job)
+	if err != nil {
+		return fmt.Errorf("failed to schedule system template %s/%s: %v", systemTemplate.Namespace, systemTemplate.Name, err)
+	} else {
+		logger.Infof("Scheduled %s/%s: %s", systemTemplate.Namespace, systemTemplate.Name, systemTemplate.Spec.GetSchedule())
+	}
+
+	entry = findSystemTemplateCronEntry(systemTemplate)
+	if entry != nil && time.Until(entry.Next) < 1*time.Hour {
+		// run all regular systemTemplate on startup
+		job = entry.Job.(SystemJob)
+		go job.Run()
+	}
+	return nil
+}
+
 func findSystemTemplateCronEntry(systemTemplate v1.SystemTemplate) *cron.Entry {
 	for _, entry := range SystemScheduler.Entries() {
 		if entry.Job.(SystemJob).GetPersistedID() == systemTemplate.GetPersistedID() {
@@ -119,4 +163,13 @@ func findSystemTemplateCronEntry(systemTemplate v1.SystemTemplate) *cron.Entry {
 		}
 	}
 	return nil
+}
+
+func DeleteSystemJob(systemTemplate v1.SystemTemplate) {
+	entry := findSystemTemplateCronEntry(systemTemplate)
+	if entry == nil {
+		return
+	}
+	logger.Tracef("deleting cron entry for system template %s/%s with entry ID: %v", systemTemplate.Name, systemTemplate.Namespace, entry.ID)
+	SystemScheduler.Remove(entry.ID)
 }

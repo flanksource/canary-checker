@@ -3,7 +3,7 @@
 
 
 
-CREATE TABLE IF NOT EXISTS SYSTEM_TEMPLATES (
+CREATE TABLE system_templates (
   id UUID DEFAULT generate_ulid() PRIMARY KEY,
   name text NOT NULL,
   namespace text NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS SYSTEM_TEMPLATES (
   UNIQUE (name, namespace)
 );
 
-CREATE TABLE IF NOT EXISTS systems (
+CREATE TABLE systems (
   id UUID DEFAULT generate_ulid() PRIMARY KEY,
   system_template_id UUID,
   external_id text NULL,
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS systems (
 );
 
 
-CREATE TABLE IF NOT EXISTS components (
+CREATE TABLE components (
   id UUID DEFAULT generate_ulid() PRIMARY KEY,
   external_id text NOT NULL,
   parent_id UUID DEFAULT NULL,
@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS components (
   summary  jsonb,
   created_at timestamp NOT NULL DEFAULT now(),
   updated_at timestamp NOT NULL DEFAULT now(),
+  deleted_at TIMESTAMP DEFAULT NULL,
   FOREIGN KEY (parent_id) REFERENCES components(id),
   FOREIGN KEY (system_id) REFERENCES systems(id),
   UNIQUE (system_id, type, name, parent_id)
@@ -76,3 +77,9 @@ CREATE TABLE IF NOT EXISTS components (
 -- +goose StatementEnd
 
 
+
+-- For local developemnent; one can run: `goose -dir ./pkg/db/migrations  postgres "postgres://tarun@localhost:5432/canary?sslmode=disable" down-to 0` to remove all the migr
+-- +goose Down
+DROP TABLE components;
+DROP TABLE systems;
+DROP TABLE system_templates;
