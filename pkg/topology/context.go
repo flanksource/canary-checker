@@ -9,7 +9,7 @@ import (
 
 type SystemContext struct {
 	*context.KubernetesContext
-	SystemAPI    v1.System
+	SystemAPI    v1.SystemTemplate
 	ComponentAPI v1.Component
 	System       *pkg.System
 	// Components keep track of the components that properties can apply to,
@@ -36,7 +36,7 @@ func (c *SystemContext) WithComponents(components *pkg.Components, current *pkg.
 	return cloned
 }
 
-func NewSystemContext(client *kommons.Client, system v1.System) *SystemContext {
+func NewSystemContext(client *kommons.Client, system v1.SystemTemplate) *SystemContext {
 	return &SystemContext{
 		KubernetesContext: context.NewKubernetesContext(client, system.Namespace),
 		SystemAPI:         system,

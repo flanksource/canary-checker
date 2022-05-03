@@ -9684,14 +9684,14 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.7.0
   creationTimestamp: null
-  name: systems.canaries.flanksource.com
+  name: systemtemplates.canaries.flanksource.com
 spec:
   group: canaries.flanksource.com
   names:
-    kind: System
-    listKind: SystemList
-    plural: systems
-    singular: system
+    kind: SystemTemplate
+    listKind: SystemTemplateList
+    plural: systemtemplates
+    singular: systemtemplate
   scope: Namespaced
   versions:
     - name: v1
@@ -19323,6 +19323,8 @@ spec:
                         type: integer
                     type: object
                   type: array
+                schedule:
+                  type: string
                 text:
                   type: string
                 tooltip:
@@ -19332,6 +19334,11 @@ spec:
               type: object
             status:
               properties:
+                observedGeneration:
+                  format: int64
+                  type: integer
+                persistentID:
+                  type: string
                 status:
                   type: string
               type: object

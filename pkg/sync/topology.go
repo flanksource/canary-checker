@@ -23,10 +23,10 @@ func SyncTopology(opts topology.TopologyRunOptions, dataFile string, configFiles
 		for _, config := range configs {
 			systems := topology.Run(opts, config)
 			for _, system := range systems {
-				if id, err := db.AddSystemSpec(system.Id, config); err != nil {
-					return errors.Wrapf(err, "could not add %s", configfile)
+				if err := db.PersistSystem(system); err != nil {
+					return errors.Wrapf(err, "could not persist %s", configfile)
 				} else {
-					logger.Infof("Added %s: %s", configfile, id)
+					logger.Infof("Persisted %s", configfile)
 				}
 			}
 		}

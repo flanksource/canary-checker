@@ -155,9 +155,9 @@ FROM   system
 			}
 			system.Components = components
 			for i := range system.Components {
-				if system.Components[i].ParentId == "" {
-					if system.Id != "" {
-						system.Components[i].ParentId = system.Id
+				if system.Components[i].ParentId.String() == "" {
+					if system.ID.String() != "" {
+						system.Components[i].ParentId = &system.ID
 					}
 				}
 			}

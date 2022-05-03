@@ -1,6 +1,6 @@
 -- +goose Up
 
-CREATE TABLE IF NOT EXISTS canaries (
+CREATE TABLE canaries (
 	id UUID DEFAULT generate_ulid() PRIMARY KEY,
 	name text NOT NULL,
 	namespace text NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS canaries (
 	UNIQUE (name, namespace)
 );
 
-CREATE TABLE IF NOT EXISTS checks(
+CREATE TABLE checks(
 	id UUID DEFAULT generate_ulid() PRIMARY KEY,
 	canary_id UUID NOT NULL,
 	type TEXT NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS checks(
 	UNIQUE (canary_id, type, name)
 );
 ---
-CREATE TABLE IF NOT EXISTS check_statuses(
+CREATE TABLE check_statuses(
 	check_id UUID NOT NULL,
 	details jsonb,
 	duration INT,
@@ -50,3 +50,7 @@ CREATE TABLE IF NOT EXISTS check_statuses(
 	PRIMARY KEY (check_id, time)
 
 );
+-- +goose Down
+DROP TABLE check_statuses;
+DROP TABLE checks;
+DROP TABLE canaries;

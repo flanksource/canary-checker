@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/alecthomas/jsonschema v0.0.0-20211228220459-151e3c21f49d
 	github.com/flanksource/canary-checker v1.0.0
-	github.com/flanksource/commons v1.5.13
+	github.com/flanksource/commons v1.5.14
 	github.com/spf13/cobra v1.2.1
 )
 
@@ -36,7 +36,7 @@ require (
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
 	github.com/fatih/color v1.9.0 // indirect
-	github.com/flanksource/kommons v0.29.0 // indirect
+	github.com/flanksource/kommons v0.30.2 // indirect
 	github.com/frankban/quicktest v1.11.3 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logr/logr v0.3.0 // indirect
@@ -80,6 +80,8 @@ require (
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.4 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/joho/godotenv v1.3.0 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
@@ -137,6 +139,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gorm.io/gorm v1.23.1 // indirect
 	gotest.tools/v3 v3.0.3 // indirect
 	k8s.io/api v0.20.6 // indirect
 	k8s.io/apiextensions-apiserver v0.20.4 // indirect

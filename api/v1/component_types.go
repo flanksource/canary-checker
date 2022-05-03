@@ -1,10 +1,16 @@
 package v1
 
 import (
+	"context"
+	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+	"gorm.io/gorm/schema"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -75,6 +81,50 @@ func (s Summary) Add(b Summary) Summary {
 	}
 }
 
+// Scan scan value into Jsonb, implements sql.Scanner interface
+func (s Summary) Value() (driver.Value, error) {
+	return json.Marshal(s)
+}
+
+// Scan scan value into Jsonb, implements sql.Scanner interface
+func (s *Summary) Scan(val interface{}) error {
+	if val == nil {
+		*s = Summary{}
+		return nil
+	}
+	var ba []byte
+	switch v := val.(type) {
+	case []byte:
+		ba = v
+	default:
+		return errors.New(fmt.Sprint("Failed to unmarshal properties value:", val))
+	}
+	err := json.Unmarshal(ba, s)
+	return err
+}
+
+// GormDataType gorm common data type
+func (Summary) GormDataType() string {
+	return "summary"
+}
+
+func (Summary) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	switch db.Dialector.Name() {
+	case "sqlite":
+		return "TEXT"
+	case "postgres":
+		return "JSONB"
+	case "sqlserver":
+		return "NVARCHAR(MAX)"
+	}
+	return ""
+}
+
+func (s Summary) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
+	data, _ := json.Marshal(s)
+	return gorm.Expr("?", data)
+}
+
 type ComponentStatus struct {
 	Status ComponentPropertyStatus `json:"status,omitempty"`
 }
@@ -132,4 +182,17 @@ type Property struct {
 	Links          []Link      `json:"links,omitempty"`
 	Lookup         *CanarySpec `json:"lookup,omitempty"`
 	Summary        *Template   `json:"summary,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// ComponentList contains a list of Canary
+type ComponentList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Component `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&Component{}, &ComponentList{})
 }
