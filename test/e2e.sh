@@ -84,6 +84,10 @@ if [ "$SKIP_SETUP" != "true" ]; then
     $KARINA apply $(pwd)/$TEST_FOLDER/../_setup.yaml -v
   fi
 
+  if [ -e $TEST_FOLDER/_post_setup.sh ]; then
+    sh $TEST_FOLDER/_post_setup.sh || echo Post setup failed, attempting tests anyway
+  fi
+
   if [ -e $TEST_FOLDER/main.go ]; then
     cd $TEST_FOLDER
     go run main.go

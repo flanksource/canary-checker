@@ -33,6 +33,7 @@
     - [displayTemplate](#displaytemplate-1)
   - [Mssql - Query a Mssql DB using SQL](#mssql---query-a-mssql-db-using-sql)
     - [displayTemplate](#displaytemplate-2)
+  - [Elasticsearch - Query an Elasticsearch DB](#elasticsearch---query-an-elasticsearch-db)
   - [Redis - Execute ping against redis instance](#redis---execute-ping-against-redis-instance)
   - [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
   - [Folder Check](#folder-check)
@@ -531,6 +532,35 @@ redis:
 | db | database to be selected after connecting to the server. | int | Yes |
 | description | description for canary | string | No |
 | auth | username and password value, configMapKeyRef or SecretKeyRef for redis server | Object | No |
+
+### Elasticsearch - Query an Elasticsearch DB
+
+This check will try to connect to a specified Elasticsearch database, run a query against it and verify the results.
+
+```yaml
+elasticsearch:
+  - url: http://elasticsearch-host.example.com:9200
+    description: elasticsearch checker
+    index: index_name
+    query: |
+      {
+        "query": {
+          "term": {
+            "system.role": "api"
+          }
+        }
+      }
+    results: 3
+```
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| url | host:port address. | string | Yes |
+| description | description for the test | string | No |
+| index | index against which query should be ran | string | Yes |
+| query | query that needs to be executed on the server  | string | Yes |
+| results | number of expected hits | int | Yes |
+| auth | username and password value, configMapKeyRef or SecretKeyRef for elasticsearch server | Object | No |
 
 
 ### S3 - Verify reachability and correctness of an S3 compatible store

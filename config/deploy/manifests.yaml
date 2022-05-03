@@ -1145,6 +1145,133 @@ spec:
                       - name
                     type: object
                   type: array
+                elasticsearch:
+                  items:
+                    properties:
+                      auth:
+                        properties:
+                          password:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          username:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                        required:
+                          - password
+                          - username
+                        type: object
+                      description:
+                        description: Description for the check
+                        type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      index:
+                        type: string
+                      name:
+                        description: Name of the check
+                        type: string
+                      query:
+                        type: string
+                      results:
+                        type: integer
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      url:
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  type: array
                 env:
                   additionalProperties:
                     description: VarSource represents a source for a value
@@ -4655,6 +4782,133 @@ spec:
                           - name
                         type: object
                       type: array
+                    elasticsearch:
+                      items:
+                        properties:
+                          auth:
+                            properties:
+                              password:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              username:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                            required:
+                              - password
+                              - username
+                            type: object
+                          description:
+                            description: Description for the check
+                            type: string
+                          display:
+                            properties:
+                              expr:
+                                type: string
+                              javascript:
+                                type: string
+                              jsonPath:
+                                type: string
+                              template:
+                                type: string
+                            type: object
+                          icon:
+                            description: Icon for overwriting default icon on the dashboard
+                            type: string
+                          index:
+                            type: string
+                          name:
+                            description: Name of the check
+                            type: string
+                          query:
+                            type: string
+                          results:
+                            type: integer
+                          test:
+                            properties:
+                              expr:
+                                type: string
+                              javascript:
+                                type: string
+                              jsonPath:
+                                type: string
+                              template:
+                                type: string
+                            type: object
+                          transform:
+                            properties:
+                              expr:
+                                type: string
+                              javascript:
+                                type: string
+                              jsonPath:
+                                type: string
+                              template:
+                                type: string
+                            type: object
+                          url:
+                            type: string
+                        required:
+                          - name
+                        type: object
+                      type: array
                     env:
                       additionalProperties:
                         description: VarSource represents a source for a value
@@ -7821,6 +8075,133 @@ spec:
                                   type: string
                                 waitTime:
                                   type: integer
+                              required:
+                                - name
+                              type: object
+                            type: array
+                          elasticsearch:
+                            items:
+                              properties:
+                                auth:
+                                  properties:
+                                    password:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                    username:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                  required:
+                                    - password
+                                    - username
+                                  type: object
+                                description:
+                                  description: Description for the check
+                                  type: string
+                                display:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                icon:
+                                  description: Icon for overwriting default icon on the dashboard
+                                  type: string
+                                index:
+                                  type: string
+                                name:
+                                  description: Name of the check
+                                  type: string
+                                query:
+                                  type: string
+                                results:
+                                  type: integer
+                                test:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                transform:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                url:
+                                  type: string
                               required:
                                 - name
                               type: object
@@ -11107,6 +11488,133 @@ spec:
                                 - name
                               type: object
                             type: array
+                          elasticsearch:
+                            items:
+                              properties:
+                                auth:
+                                  properties:
+                                    password:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                    username:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                  required:
+                                    - password
+                                    - username
+                                  type: object
+                                description:
+                                  description: Description for the check
+                                  type: string
+                                display:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                icon:
+                                  description: Icon for overwriting default icon on the dashboard
+                                  type: string
+                                index:
+                                  type: string
+                                name:
+                                  description: Name of the check
+                                  type: string
+                                query:
+                                  type: string
+                                results:
+                                  type: integer
+                                test:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                transform:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                url:
+                                  type: string
+                              required:
+                                - name
+                              type: object
+                            type: array
                           env:
                             additionalProperties:
                               description: VarSource represents a source for a value
@@ -14273,6 +14781,133 @@ spec:
                                         type: string
                                       waitTime:
                                         type: integer
+                                    required:
+                                      - name
+                                    type: object
+                                  type: array
+                                elasticsearch:
+                                  items:
+                                    properties:
+                                      auth:
+                                        properties:
+                                          password:
+                                            properties:
+                                              name:
+                                                type: string
+                                              value:
+                                                type: string
+                                              valueFrom:
+                                                properties:
+                                                  configMapKeyRef:
+                                                    properties:
+                                                      key:
+                                                        type: string
+                                                      name:
+                                                        type: string
+                                                      optional:
+                                                        type: boolean
+                                                    required:
+                                                      - key
+                                                    type: object
+                                                  secretKeyRef:
+                                                    properties:
+                                                      key:
+                                                        type: string
+                                                      name:
+                                                        type: string
+                                                      optional:
+                                                        type: boolean
+                                                    required:
+                                                      - key
+                                                    type: object
+                                                type: object
+                                            type: object
+                                          username:
+                                            properties:
+                                              name:
+                                                type: string
+                                              value:
+                                                type: string
+                                              valueFrom:
+                                                properties:
+                                                  configMapKeyRef:
+                                                    properties:
+                                                      key:
+                                                        type: string
+                                                      name:
+                                                        type: string
+                                                      optional:
+                                                        type: boolean
+                                                    required:
+                                                      - key
+                                                    type: object
+                                                  secretKeyRef:
+                                                    properties:
+                                                      key:
+                                                        type: string
+                                                      name:
+                                                        type: string
+                                                      optional:
+                                                        type: boolean
+                                                    required:
+                                                      - key
+                                                    type: object
+                                                type: object
+                                            type: object
+                                        required:
+                                          - password
+                                          - username
+                                        type: object
+                                      description:
+                                        description: Description for the check
+                                        type: string
+                                      display:
+                                        properties:
+                                          expr:
+                                            type: string
+                                          javascript:
+                                            type: string
+                                          jsonPath:
+                                            type: string
+                                          template:
+                                            type: string
+                                        type: object
+                                      icon:
+                                        description: Icon for overwriting default icon on the dashboard
+                                        type: string
+                                      index:
+                                        type: string
+                                      name:
+                                        description: Name of the check
+                                        type: string
+                                      query:
+                                        type: string
+                                      results:
+                                        type: integer
+                                      test:
+                                        properties:
+                                          expr:
+                                            type: string
+                                          javascript:
+                                            type: string
+                                          jsonPath:
+                                            type: string
+                                          template:
+                                            type: string
+                                        type: object
+                                      transform:
+                                        properties:
+                                          expr:
+                                            type: string
+                                          javascript:
+                                            type: string
+                                          jsonPath:
+                                            type: string
+                                          template:
+                                            type: string
+                                        type: object
+                                      url:
+                                        type: string
                                     required:
                                       - name
                                     type: object
@@ -17530,6 +18165,133 @@ spec:
                                   type: string
                                 waitTime:
                                   type: integer
+                              required:
+                                - name
+                              type: object
+                            type: array
+                          elasticsearch:
+                            items:
+                              properties:
+                                auth:
+                                  properties:
+                                    password:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                    username:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                  required:
+                                    - password
+                                    - username
+                                  type: object
+                                description:
+                                  description: Description for the check
+                                  type: string
+                                display:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                icon:
+                                  description: Icon for overwriting default icon on the dashboard
+                                  type: string
+                                index:
+                                  type: string
+                                name:
+                                  description: Name of the check
+                                  type: string
+                                query:
+                                  type: string
+                                results:
+                                  type: integer
+                                test:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                transform:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                url:
+                                  type: string
                               required:
                                 - name
                               type: object
