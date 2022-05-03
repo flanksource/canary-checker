@@ -17,7 +17,7 @@ import (
 func GetAllCanaries() ([]v1.Canary, error) {
 	var canaries []v1.Canary
 	var _canaries []pkg.Canary
-	if err := Gorm.Find(&_canaries).Where("deleted_at = NULL").Error; err != nil {
+	if err := Gorm.Find(&_canaries).Where("deleted_at is NULL").Error; err != nil {
 		return nil, err
 	}
 	for _, _canary := range _canaries {

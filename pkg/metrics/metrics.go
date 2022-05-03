@@ -23,7 +23,7 @@ var (
 			Name: "canary_check_count",
 			Help: "The total number of checks",
 		},
-		[]string{"type", "endpoint", "name", "namespace", "owner", "severity", "key"},
+		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
 	)
 
 	OpsSuccessCount = prometheus.NewCounterVec(
@@ -31,7 +31,7 @@ var (
 			Name: "canary_check_success_count",
 			Help: "The total number of successful checks",
 		},
-		[]string{"type", "endpoint", "name", "namespace", "owner", "severity", "key"},
+		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
 	)
 
 	OpsFailedCount = prometheus.NewCounterVec(
@@ -39,7 +39,7 @@ var (
 			Name: "canary_check_failed_count",
 			Help: "The total number of failed checks",
 		},
-		[]string{"type", "endpoint", "name", "namespace", "owner", "severity", "key"},
+		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
 	)
 
 	RequestLatency = prometheus.NewHistogramVec(
@@ -48,7 +48,7 @@ var (
 			Help:    "A histogram of the response latency in milliseconds.",
 			Buckets: []float64{5, 10, 25, 50, 200, 500, 1000, 3000, 10000, 30000},
 		},
-		[]string{"type", "endpoint", "name", "namespace", "owner", "severity", "key"},
+		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
 	)
 
 	Gauge = prometheus.NewGaugeVec(
@@ -56,7 +56,7 @@ var (
 			Name: "canary_check",
 			Help: "A gauge representing the canaries success (0) or failure (1)",
 		},
-		[]string{"type", "endpoint", "name", "namespace", "owner", "severity", "key"},
+		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
 	)
 
 	GenericGauge = prometheus.NewGaugeVec(
@@ -64,7 +64,7 @@ var (
 			Name: "canary_check_gauge",
 			Help: "A gauge representing duration",
 		},
-		[]string{"type", "name", "metric", "namespace", "owner", "severity", "key"},
+		[]string{"type", "canary_name", "metric", "canary_namespace", "owner", "severity", "key", "name"},
 	)
 
 	GenericCounter = prometheus.NewCounterVec(
@@ -72,7 +72,7 @@ var (
 			Name: "canary_check_counter",
 			Help: "A gauge representing counters",
 		},
-		[]string{"type", "name", "metric", "value", "namespace", "owner", "severity", "key"},
+		[]string{"type", "canary_name", "metric", "value", "canary_namespace", "owner", "severity", "key", "name"},
 	)
 
 	GenericHistogram = prometheus.NewHistogramVec(
@@ -81,7 +81,7 @@ var (
 			Help:    "A histogram representing durations",
 			Buckets: []float64{5, 10, 25, 50, 200, 500, 1000, 2500, 5000, 10000, 20000},
 		},
-		[]string{"type", "name", "metric", "namespace", "owner", "severity", "key"},
+		[]string{"type", "canary_name", "metric", "canary_namespace", "owner", "severity", "key", "name"},
 	)
 )
 
@@ -126,19 +126,20 @@ func GetMetrics(key string) (uptime pkg.Uptime, latency pkg.Latency) {
 	return
 }
 
-func Record(check v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _latency pkg.Latency) {
+func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _latency pkg.Latency) {
 	if result == nil || result.Check == nil {
-		logger.Warnf("%s/%s returned a nil result", check.Namespace, check.Name)
+		logger.Warnf("%s/%s returned a nil result", canary.Namespace, canary.Name)
 		return
 	}
-	namespace := check.Namespace
-	name := check.Name
+	canary_namespace := canary.Namespace
+	canary_name := canary.Name
+	name := result.Check.GetName()
 	checkType := result.Check.GetType()
-	endpoint := check.GetDescription(result.Check)
-	owner := check.Spec.Owner
-	severity := check.Spec.Severity
+	endpoint := canary.GetDescription(result.Check)
+	owner := canary.Spec.Owner
+	severity := canary.Spec.Severity
 	// We are recording aggreated metrics at the canary level, not the individual check level
-	key := check.GetKey(result.Check)
+	key := canary.GetKey(result.Check)
 
 	var fail, pass, latency *rolling.TimePolicy
 
@@ -169,32 +170,32 @@ func Record(check v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _late
 	if logger.IsTraceEnabled() {
 		logger.Tracef(result.String())
 	}
-	OpsCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Inc()
+	OpsCount.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Inc()
 	if result.Duration > 0 {
-		RequestLatency.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Observe(float64(result.Duration))
+		RequestLatency.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Observe(float64(result.Duration))
 		latency.Append(float64(result.Duration))
 	}
 	if result.Pass {
 		pass.Append(1)
-		Gauge.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Set(0)
-		OpsSuccessCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Inc()
+		Gauge.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Set(0)
+		OpsSuccessCount.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Inc()
 		// always add a failed count to ensure the metric is present in prometheus
 		// for an uptime calculation
-		OpsFailedCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Add(0)
+		OpsFailedCount.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Add(0)
 		for _, m := range result.Metrics {
 			switch m.Type {
 			case CounterType:
-				GenericCounter.WithLabelValues(checkType, endpoint, m.Name, strconv.Itoa(int(m.Value)), namespace, owner, severity, key).Inc()
+				GenericCounter.WithLabelValues(checkType, endpoint, m.Name, strconv.Itoa(int(m.Value)), canary_namespace, owner, severity, key, name).Inc()
 			case GaugeType:
-				GenericGauge.WithLabelValues(checkType, endpoint, m.Name, namespace, owner, severity, key).Set(m.Value)
+				GenericGauge.WithLabelValues(checkType, endpoint, m.Name, canary_namespace, owner, severity, key, name).Set(m.Value)
 			case HistogramType:
-				GenericHistogram.WithLabelValues(checkType, endpoint, m.Name, namespace, owner, severity, key).Observe(m.Value)
+				GenericHistogram.WithLabelValues(checkType, endpoint, m.Name, canary_namespace, owner, severity, key, name).Observe(m.Value)
 			}
 		}
 	} else {
 		fail.Append(1)
-		Gauge.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Set(1)
-		OpsFailedCount.WithLabelValues(checkType, endpoint, name, namespace, owner, severity, key).Inc()
+		Gauge.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Set(1)
+		OpsFailedCount.WithLabelValues(checkType, endpoint, canary_name, canary_namespace, owner, severity, key, name).Inc()
 	}
 
 	_uptime = pkg.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
