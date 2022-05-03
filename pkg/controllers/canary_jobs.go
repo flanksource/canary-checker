@@ -97,7 +97,7 @@ func ScanCanaryConfigs() {
 }
 
 func SyncCanaryJob(canary v1.Canary) error {
-	if !canary.DeletionTimestamp.IsZero() || canary.Spec.GetSchedule() == "@never" {
+	if !canary.DeletionTimestamp.IsZero() || canary.Spec.GetSchedule() == "@never" { //nolint:goconst
 		DeleteCanaryJob(canary)
 		return nil
 	}
