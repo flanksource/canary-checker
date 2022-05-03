@@ -39,7 +39,7 @@ func PersistSystems(results []*pkg.System) error {
 func GetAllSystemTemplates() ([]v1.SystemTemplate, error) {
 	var systemTemplates []v1.SystemTemplate
 	var _systemTemplates []pkg.SystemTemplate
-	if err := Gorm.Table("templates").Find(&_systemTemplates).Where("deleted_at = NULL").Error; err != nil {
+	if err := Gorm.Table("templates").Find(&_systemTemplates).Where("deleted_at is NULL").Error; err != nil {
 		return nil, err
 	}
 	for _, _systemTemplate := range _systemTemplates {
