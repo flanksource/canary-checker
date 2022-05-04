@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/commons/logger"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"helm.sh/helm/v3/pkg/time"
@@ -159,6 +160,9 @@ func PersistCanary(canary v1.Canary, source string) (string, bool, error) {
 	model, err := pkg.CanaryFromV1(canary)
 	if err != nil {
 		return "", changed, err
+	}
+	if canary.GetPersistedID() != "" {
+		model.ID = uuid.MustParse(canary.GetPersistedID())
 	}
 	model.Source = source
 	tx := Gorm.Clauses(clause.OnConflict{
