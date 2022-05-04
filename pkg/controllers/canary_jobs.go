@@ -21,7 +21,6 @@ import (
 )
 
 var CanaryScheduler = cron.New()
-var CanaryFuncScheduler = cron.New()
 var CanaryConfigFiles []string
 var DataFile string
 var Executor bool
@@ -30,14 +29,10 @@ var LogPass, LogFail bool
 func StartScanCanaryConfigs(dataFile string, configFiles []string) {
 	DataFile = dataFile
 	CanaryConfigFiles = configFiles
-	if _, err := ScheduleCanaryFunc("@every 5m", ScanCanaryConfigs); err != nil {
+	if _, err := ScheduleFunc("@every 5m", ScanCanaryConfigs); err != nil {
 		logger.Errorf("Failed to schedule scan jobs: %v", err)
 	}
 	ScanCanaryConfigs()
-}
-
-func ScheduleCanaryFunc(schedule string, fn func()) (interface{}, error) {
-	return CanaryFuncScheduler.AddFunc(schedule, fn)
 }
 
 type CanaryJob struct {

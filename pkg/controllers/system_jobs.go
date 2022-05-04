@@ -17,7 +17,6 @@ import (
 )
 
 var SystemScheduler = cron.New()
-var SystemFuncSchedule = cron.New()
 
 type SystemJob struct {
 	*kommons.Client
@@ -45,10 +44,6 @@ func (job SystemJob) Run() {
 			logger.Errorf("error persisting the system: %v", err)
 		}
 	}
-}
-
-func ScheduleSystemFunc(schedule string, fn func()) (interface{}, error) {
-	return SystemFuncSchedule.AddFunc(schedule, fn)
 }
 
 func SyncSystemsJobs() {
