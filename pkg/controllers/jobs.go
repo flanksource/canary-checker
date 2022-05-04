@@ -16,6 +16,4 @@ func Start() {
 	if _, err := ScheduleCanaryFunc("@every 120s", SyncSystemsJobs); err != nil {
 		logger.Errorf("Failed to schedule sync jobs for systems: %v", err)
 	}
-	SyncCanaryJobs()
-	SyncSystemsJobs()
 }
