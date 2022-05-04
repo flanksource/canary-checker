@@ -24,7 +24,9 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-
+	if check.AWSConnection == nil {
+		check.AWSConnection = &v1.AWSConnection{}
+	}
 	cfg, err := awsUtil.NewSession(ctx, *check.AWSConnection)
 	if err != nil {
 		return results.ErrorMessage(err)
