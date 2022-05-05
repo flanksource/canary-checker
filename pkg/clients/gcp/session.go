@@ -7,7 +7,8 @@ import (
 	"google.golang.org/api/option"
 )
 
-func NewSession(ctx *context.Context, conn v1.GCPConnection) (*gcs.Client, error) {
+func NewSession(ctx *context.Context, conn *v1.GCPConnection) (*gcs.Client, error) {
+	conn = conn.Validate()
 	var client *gcs.Client
 	var err error
 	if conn.Credentials != nil {

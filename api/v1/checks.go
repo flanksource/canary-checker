@@ -688,6 +688,13 @@ type GCPConnection struct {
 	Credentials *kommons.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
 }
 
+func (g *GCPConnection) Validate() *GCPConnection {
+	if g == nil {
+		return &GCPConnection{}
+	}
+	return g
+}
+
 type FolderCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
