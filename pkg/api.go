@@ -150,9 +150,9 @@ type Check struct {
 	DisplayType string              `json:"displayType,omitempty"  gorm:"-"`
 	LastRuntime *time.Time          `json:"lastRuntime,omitempty"`
 	NextRuntime *time.Time          `json:"nextRuntime,omitempty"`
-	UpdatedAt   time.Time           `json:"updatedAt,omitempty"`
-	CreatedAt   time.Time           `json:"createdAt,omitempty"`
-	DeletedAt   gorm.DeletedAt      `json:"deletedAt,omitempty"`
+	UpdatedAt   *time.Time          `json:"updatedAt,omitempty"`
+	CreatedAt   *time.Time          `json:"createdAt,omitempty"`
+	DeletedAt   *gorm.DeletedAt     `json:"deletedAt,omitempty"`
 	Canary      *v1.Canary          `json:"-" gorm:"-"`
 }
 

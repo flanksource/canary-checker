@@ -10,6 +10,7 @@ import (
 	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/commons/logger"
 	"github.com/jackc/pgx/v4"
+	"gorm.io/gorm"
 )
 
 type Querier interface {
@@ -175,7 +176,10 @@ canaries.name as canaryName,
 canaries.labels,
 severity,
 owner,
-last_runtime
+last_runtime,
+checks.created_at,
+checks.updated_at,
+checks.deleted_at
 	FROM checks checks
   FULL JOIN (
   	SELECT check_id,
@@ -255,6 +259,11 @@ last_runtime
 		check.Severity = vals[15].(string)
 		check.Owner = vals[16].(string)
 		check.LastRuntime, _ = timeV(vals[17])
+		check.CreatedAt, _ = timeV(vals[18])
+		check.UpdatedAt, _ = timeV(vals[19])
+		if vals[20] != nil {
+			check.DeletedAt = &gorm.DeletedAt{Time: vals[20].(time.Time), Valid: true}
+		}
 		if vals[7] != nil {
 			for _, status := range vals[7].([]interface{}) {
 				s := status.(map[string]interface{})
