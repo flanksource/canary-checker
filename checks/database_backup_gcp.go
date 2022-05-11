@@ -25,10 +25,11 @@ var (
 func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) pkg.Results {
 	databaseScanObjectCount.WithLabelValues(check.GCP.Project, check.GCP.Instance).Inc()
 	result := pkg.Success(check, ctx.Canary)
+	result.Start = time.Now()
 	var results pkg.Results
 	results = append(results, result)
 
-	svc, err := gcp.NewSQLAdmin(ctx, *check.GCP.GCPConnection)
+	svc, err := gcp.NewSQLAdmin(ctx, check.GCP.GCPConnection)
 	if err != nil {
 		databaseScanFailCount.WithLabelValues(check.GCP.Project, check.GCP.Instance).Inc()
 		return results.ErrorMessage(err)
@@ -99,5 +100,11 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 		databaseScanFailCount.WithLabelValues(check.GCP.Project, check.GCP.Instance).Inc()
 		return results.ErrorMessage(errors.New(strings.Join(errorMessages, ", ")))
 	}
+
+	backupRaw, err := backupList.Items[0].MarshalJSON()
+	if err != nil {
+		result.ResultMessage("Could not output raw backup data")
+	}
+	result.ResultMessage(string(backupRaw))
 	return results
 }

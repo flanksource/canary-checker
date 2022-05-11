@@ -35,7 +35,7 @@ type DatabaseBackupChecker struct {
 }
 
 func (c *DatabaseBackupChecker) Type() string {
-	return "databasebackup"
+	return "databasebackupcheck"
 }
 
 func (c *DatabaseBackupChecker) Run(ctx *context.Context) pkg.Results {

@@ -7,7 +7,8 @@ import (
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 )
 
-func NewSQLAdmin(ctx *context.Context, conn v1.GCPConnection) (*sqladmin.Service, error) {
+func NewSQLAdmin(ctx *context.Context, conn *v1.GCPConnection) (*sqladmin.Service, error) {
+	conn = conn.Validate()
 	var err error
 	var client *sqladmin.Service
 	if conn.Credentials != nil {
