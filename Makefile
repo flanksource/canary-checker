@@ -193,10 +193,10 @@ CONTROLLER_GEN=$(GOBIN)/controller-gen
 	GOBIN=$(PWD)/.bin GOFLAGS="-mod=mod"  go install github.com/jstemmer/go-junit-report
 
 .bin/jmeter:
-	curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmeter-5.4.1.tgz -o apache-jmeter-5.4.1.tgz && \
-    tar xf apache-jmeter-5.4.1.tgz -C .bin/ && \
-    rm apache-jmeter-5.4.1.tgz && \
-		ln -s apache-jmeter-5.4.1/bin/jmeter .bin/jmeter
+	curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmeter-5.4.3.tgz -o apache-jmeter-5.4.3.tgz && \
+    tar xf apache-jmeter-5.4.3.tgz -C .bin/ && \
+    rm apache-jmeter-5.4.3.tgz && \
+		ln -s apache-jmeter-5.4.3/bin/jmeter .bin/jmeter
 
 .bin/restic:
 	wget -nv  https://github.com/restic/restic/releases/download/v0.12.1/restic_0.12.1_$(OS)_$(ARCH).bz2 -O .bin/restic.bz2 && \
