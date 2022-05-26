@@ -2,17 +2,20 @@ package topology
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
 
+	jsontime "github.com/liamylian/jsontime/v2/v2"
+	"github.com/pkg/errors"
+
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
-	"github.com/pkg/errors"
 )
+
+var json = jsontime.ConfigWithCustomTimeFormat
 
 func NewTopologyParams(values url.Values) TopologyParams {
 	params := TopologyParams{
@@ -64,7 +67,7 @@ func (p TopologyParams) String() string {
 func (p TopologyParams) GetSystemWhereClause() string {
 	s := ""
 	if p.getID() != "" {
-		s = "WHERE system.id = :id"
+		s = "WHERE systems.id = :id"
 	}
 
 	if p.Status != "" {
@@ -73,7 +76,7 @@ func (p TopologyParams) GetSystemWhereClause() string {
 		} else {
 			s += "WHERE "
 		}
-		s += "system.status = :status"
+		s += "systems.status = :status"
 	}
 	return s
 }
@@ -97,13 +100,13 @@ func (p TopologyParams) GetComponentWhereClause() string {
 	}
 	s := `
 UNION
-SELECT NULL :: jsonb                         AS system,
-	json_agg(To_json(component)) :: jsonb AS components
-FROM component
-WHERE component.id = :id OR component.parent_id = :id`
+SELECT NULL :: jsonb                         AS systems,
+	json_agg(To_json(components)) :: jsonb AS components
+FROM components
+WHERE components.id = :id OR components.parent_id = :id`
 
 	if p.Status != "" {
-		s += " AND component.status = :status"
+		s += " AND components.status = :status"
 	}
 	return s
 }
@@ -111,14 +114,14 @@ WHERE component.id = :id OR component.parent_id = :id`
 func Query(params TopologyParams) ([]pkg.System, error) {
 	sql := fmt.Sprintf(`
 SELECT
-	to_json(system) :: jsonb       AS system,
+	to_json(systems) :: jsonb       AS systems,
 	components.components :: jsonb AS components
-FROM   system
+FROM   systems
 	full join (SELECT system_id,
-										json_agg(To_json(component)) AS components
-						 FROM   component
+										json_agg(To_json(components)) AS components
+						 FROM   components
 						 GROUP  BY system_id) AS components
-	ON system.id = components.system_id
+	ON systems.id = components.system_id
 %s
 %s`, params.GetSystemWhereClause(), params.GetComponentWhereClause())
 
@@ -155,7 +158,7 @@ FROM   system
 			}
 			system.Components = components
 			for i := range system.Components {
-				if system.Components[i].ParentId.String() == "" {
+				if system.Components[i].ParentId == nil {
 					if system.ID.String() != "" {
 						system.Components[i].ParentId = &system.ID
 					}
