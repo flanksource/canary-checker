@@ -1,9 +1,5 @@
 package topology
 
-import (
-	"encoding/json"
-)
-
 func isComponent(s map[string]interface{}) bool {
 	_, name := s["name"]
 	_, properties := s["properties"]

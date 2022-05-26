@@ -3,7 +3,6 @@ package pkg
 import (
 	"context"
 	"database/sql/driver"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -13,12 +12,19 @@ import (
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
+	jsontime "github.com/liamylian/jsontime/v2/v2"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+var json = jsontime.ConfigWithCustomTimeFormat
+
+func init() {
+	jsontime.AddTimeFormatAlias("postgres_timestamp", "2006-01-02T15:04:05.999999999")
+}
 
 const ComponentType = "component"
 
@@ -37,9 +43,9 @@ type System struct {
 	Summary          v1.Summary          `json:"summary,omitempty" gorm:"type:summary"`
 	Status           string              `json:"status,omitempty"`
 	Type             string              `json:"type,omitempty"`
-	CreatedAt        time.Time           `json:"created_at,omitempty"`
-	UpdatedAt        time.Time           `json:"updated_at,omitempty"`
-	DeletedAt        gorm.DeletedAt      `json:"deleted_at,omitempty"`
+	CreatedAt        time.Time           `json:"created_at,omitempty" time_format:"postgres_timestamp"`
+	UpdatedAt        time.Time           `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt        gorm.DeletedAt      `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
 	ExternalId       string              `json:"external_id,omitempty"` //nolint
 	TopologyType     string              `json:"topologyType,omitempty"`
 }
@@ -169,9 +175,9 @@ type Component struct {
 	ParentId   *uuid.UUID           `json:"parent_id,omitempty"` //nolint
 	Selectors  v1.ResourceSelectors `json:"selector,omitempty" gorm:"resourceSelectors"`
 	SystemId   *uuid.UUID           `json:"system_id,omitempty"` //nolint
-	CreatedAt  time.Time            `json:"created_at,omitempty"`
-	UpdatedAt  time.Time            `json:"updated_at,omitempty"`
-	DeletedAt  gorm.DeletedAt       `json:"deleted_at,omitempty"`
+	CreatedAt  time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
+	UpdatedAt  time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt  gorm.DeletedAt       `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
 	ExternalId string               `json:"external_id,omitempty"` //nolint
 }
 

@@ -1,7 +1,6 @@
 package topology
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/flanksource/canary-checker/api/context"
