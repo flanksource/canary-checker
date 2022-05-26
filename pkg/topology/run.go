@@ -8,12 +8,12 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/templating"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func mergeComponentLookup(ctx *SystemContext, name string, spec *v1.CanarySpec) (pkg.Components, error) {
@@ -23,6 +23,7 @@ func mergeComponentLookup(ctx *SystemContext, name string, spec *v1.CanarySpec) 
 		return nil, errors.Wrapf(err, "component lookup failed: %s", name)
 	}
 	if len(results) == 1 {
+		fmt.Println(results[0])
 		if err := json.Unmarshal([]byte(results[0].(string)), &components); err != nil {
 			return nil, errors.Wrapf(err, "component lookup returned invalid json: %s", name)
 		}
@@ -55,15 +56,6 @@ func lookupComponents(ctx *SystemContext, component v1.ComponentSpec) ([]*pkg.Co
 			return nil, err
 		}
 		components = append(components, children...)
-	}
-
-	if len(component.Pods) > 0 {
-		lookup := getPodLookup(ctx.Namespace, ctx.SystemAPI.Spec.Pods, component.Pods)
-		if children, err := lookupComponents(ctx, lookup); err != nil {
-			return nil, err
-		} else {
-			components = append(components, children...)
-		}
 	}
 
 	if component.Lookup == nil {
@@ -104,53 +96,15 @@ func lookupComponents(ctx *SystemContext, component v1.ComponentSpec) ([]*pkg.Co
 			comp.ExternalId = comp.Name
 		}
 	}
-
 	return components, nil
-}
-
-func getPodLookup(namespace string, labels ...map[string]string) v1.ComponentSpec {
-	allLabels := map[string]string{}
-	for _, label := range labels {
-		for k, v := range label {
-			allLabels[k] = v
-		}
-	}
-
-	f := false
-
-	return v1.ComponentSpec{
-		Name: "pods",
-		Icon: "pod",
-		Type: "summary",
-		Lookup: &v1.CanarySpec{
-			Kubernetes: []v1.KubernetesCheck{
-				{
-					Kind:  "pod",
-					Ready: &f,
-					Namespace: v1.ResourceSelector{
-						Name: namespace,
-					},
-					Resource: v1.ResourceSelector{
-						LabelSelector: metav1.FormatLabelSelector(&metav1.LabelSelector{
-							MatchLabels: allLabels,
-						}),
-					},
-					Templatable: v1.Templatable{
-						Display: v1.Template{
-							Javascript: "JSON.stringify(k8s.getPodTopology(results))",
-						},
-					},
-				},
-			},
-		},
-	}
 }
 
 func lookup(client *kommons.Client, name string, spec v1.CanarySpec) ([]interface{}, error) {
 	results := []interface{}{}
 	for _, result := range checks.RunChecks(context.New(client, v1.NewCanaryFromSpec(name, spec))) {
 		if result.Error != "" {
-			return nil, fmt.Errorf("%s", result.Error)
+			logger.Errorf("error in running checks; check: %s wouldn't be persisted: %s", name, result.Error)
+			return nil, nil
 		}
 		if result.Message != "" {
 			results = append(results, result.Message)
@@ -238,6 +192,7 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.System {
 			Name:      ctx.SystemAPI.Name,
 			Namespace: ctx.SystemAPI.Namespace,
 		},
+		Labels:  ctx.SystemAPI.Labels,
 		Tooltip: ctx.SystemAPI.Spec.Tooltip,
 		Icon:    ctx.SystemAPI.Spec.Icon,
 		Text:    ctx.SystemAPI.Spec.Text,
@@ -247,15 +202,25 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.System {
 	if opts.Depth > 0 {
 		for _, comp := range ctx.SystemAPI.Spec.Components {
 			components, err := lookupComponents(ctx, comp)
-
+			// add systemTemplates lables to the components
+			for _, component := range components {
+				for key, value := range ctx.SystemAPI.Labels {
+					// don't overwrite the component labels
+					if _, isPresent := component.Labels[key]; !isPresent {
+						component.Labels[key] = value
+					}
+				}
+			}
 			if err != nil {
 				logger.Errorf("Error looking up component %s: %s", comp.Name, err)
 				continue
 			}
-			group := pkg.NewComponent(comp)
-			for _, component := range components {
-				group.Components = append(group.Components, component)
+			if comp.Lookup == nil {
+				sys.Components = append(sys.Components, components...)
+				continue
 			}
+			group := pkg.NewComponent(comp)
+			group.Components = append(group.Components, components...)
 			if comp.Summary == nil {
 				group.Summary = group.Components.Summarize()
 			} else {
@@ -296,4 +261,31 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.System {
 	results = append(results, sys)
 	logger.Infof("%s id=%s status=%s", sys.Name, sys.ID, sys.Status)
 	return results
+}
+
+// Fetches and updates the selected component for components
+func ComponentRun() {
+	logger.Debugf("Syncing Component Relationships")
+	components, err := db.GetAllComponentWithSelectors()
+	if err != nil {
+		logger.Errorf("error getting components: %v", err)
+		return
+	}
+	for _, component := range components {
+		comps, err := db.GetComponensWithSelectors(component.Selectors)
+		if err != nil {
+			logger.Errorf("error getting components with selectors: %s. err: %v", component.Selectors, err)
+			continue
+		}
+		relationships, err := db.GetComponentRelationships(component.ID, comps)
+		if err != nil {
+			logger.Errorf("error getting relationships: %v", err)
+			continue
+		}
+		err = db.PersisComponentRelationships(relationships)
+		if err != nil {
+			logger.Errorf("error persisting relationships: %v", err)
+			continue
+		}
+	}
 }

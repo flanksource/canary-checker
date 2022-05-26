@@ -44,11 +44,11 @@ func (job SystemJob) Run() {
 			logger.Errorf("error persisting the system: %v", err)
 		}
 	}
+	topology.ComponentRun()
 }
 
 func SyncSystemsJobs() {
 	logger.Infof("Syncing systemTemplate jobs")
-	seenEntryIds := map[cron.EntryID]bool{}
 	if Kommons == nil {
 		var err error
 		Kommons, err = pkg.NewKommonsClient()
@@ -64,48 +64,11 @@ func SyncSystemsJobs() {
 	}
 
 	for _, systemTemplate := range systemTemplates {
-		entry := findSystemTemplateCronEntry(systemTemplate)
-		if entry != nil {
-			job := entry.Job.(SystemJob)
-			if !reflect.DeepEqual(job.SystemTemplate.Spec, systemTemplate.Spec) {
-				logger.Infof("Rescheduling %s/%s systemTemplate with updated specs", systemTemplate.Namespace, systemTemplate.Name)
-				SystemScheduler.Remove(entry.ID)
-			} else {
-				seenEntryIds[entry.ID] = true
-				job.SystemTemplate = systemTemplate
-				(*entry).Job = job
-				continue
-			}
-		}
-		job := SystemJob{
-			Client:         Kommons,
-			SystemTemplate: systemTemplate,
-		}
-		if systemTemplate.Spec.GetSchedule() == "@never" {
-			continue
-		}
-		schedule := systemTemplate.Spec.GetSchedule()
-		entryID, err := SystemScheduler.AddJob(schedule, job)
-		if err != nil {
-			logger.Errorf("Failed to schedule systemTemplate %s/%s: %v", systemTemplate.Namespace, systemTemplate.Name, err)
-			continue
-		} else {
-			logger.Infof("Scheduling %s/%s to %s", systemTemplate.Namespace, systemTemplate.Name, systemTemplate.Spec.GetSchedule())
-			seenEntryIds[entryID] = true
-		}
-		entry = findSystemTemplateCronEntry(systemTemplate)
-		if entry != nil && time.Until(entry.Next) < 1*time.Hour {
-			// run all regular canaries on startup
-			job = entry.Job.(SystemJob)
-			go job.Run()
+		if err := SyncSystemJob(systemTemplate); err != nil {
+			logger.Errorf(err.Error())
 		}
 	}
-	for _, entry := range SystemScheduler.Entries() {
-		if !seenEntryIds[entry.ID] {
-			logger.Infof("Removing  %s", entry.Job.(SystemJob).SystemTemplate)
-			SystemScheduler.Remove(entry.ID)
-		}
-	}
+	logger.Infof("Synced system template jobs %d", len(SystemScheduler.Entries()))
 }
 
 func SyncSystemJob(systemTemplate v1.SystemTemplate) error {

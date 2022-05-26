@@ -222,7 +222,7 @@ k8s = {
       labels.namespace = pod.metadata.namespace
       _pod = {
         name: pod.metadata.name,
-        id: pod.metadata.namespace + "/" + pod.metadata.name,
+        namespace: pod.metadata.namespace,
         type: "KubernetesPod",
         labels: labels,
         properties: [
@@ -271,6 +271,12 @@ k8s = {
       _node = {
         name: k8s.getNodeName(node.metadata.name),
         type: "KubernetesNode",
+        labels: k8s.filterLabels(node.metadata.labels),
+        selector: [{
+          name: "",
+          labelSelector: "",
+          fieldSelector: "node="+node.metadata.name
+        }],
         properties: [
           {
             name: "cpu",

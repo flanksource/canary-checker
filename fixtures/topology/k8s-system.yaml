@@ -3,6 +3,8 @@ apiVersion: canaries.flanksource.com/v1
 kind: SystemTemplate
 metadata:
   name: cluster
+  labels:
+    canary: "kubernetes-cluster"
 spec:
   type: KubernetesCluster
   icon: kubernetes
@@ -20,7 +22,17 @@ spec:
           - kind: Node
             name: k8s
             display:
-              javascript: JSON.stringify(k8s.getNodeTopology(results))
+              javascript: JSON.stringify(k8s.getNodeTopology(results)) 
+    - name: pods
+      icon: pods
+      type: KubernetesPods
+      lookup:
+        kubernetes:
+          - kind: Pod
+            name: k8s-pods
+            ready: false
+            display:
+              javascript: JSON.stringify(k8s.getPodTopology(results)) 
       # properties:
       #   - name: metrics
       #     lookup:

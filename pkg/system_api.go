@@ -163,15 +163,25 @@ type Component struct {
 	Type    string     `json:"type,omitempty"`
 	Summary v1.Summary `json:"summary,omitempty" gorm:"type:summary"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
-	Lifecycle  string         `json:"lifecycle,omitempty"`
-	Properties Properties     `json:"properties,omitempty" gorm:"type:properties"`
-	Components Components     `json:"components,omitempty" gorm:"-"`
-	ParentId   *uuid.UUID     `json:"parent_id,omitempty"` //nolint
-	SystemId   *uuid.UUID     `json:"system_id,omitempty"` //nolint
-	CreatedAt  time.Time      `json:"created_at,omitempty"`
-	UpdatedAt  time.Time      `json:"updated_at,omitempty"`
-	DeletedAt  gorm.DeletedAt `json:"deleted_at,omitempty"`
-	ExternalId string         `json:"external_id,omitempty"` //nolint
+	Lifecycle  string               `json:"lifecycle,omitempty"`
+	Properties Properties           `json:"properties,omitempty" gorm:"type:properties"`
+	Components Components           `json:"components,omitempty" gorm:"-"`
+	ParentId   *uuid.UUID           `json:"parent_id,omitempty"` //nolint
+	Selectors  v1.ResourceSelectors `json:"selector,omitempty" gorm:"resourceSelectors"`
+	SystemId   *uuid.UUID           `json:"system_id,omitempty"` //nolint
+	CreatedAt  time.Time            `json:"created_at,omitempty"`
+	UpdatedAt  time.Time            `json:"updated_at,omitempty"`
+	DeletedAt  gorm.DeletedAt       `json:"deleted_at,omitempty"`
+	ExternalId string               `json:"external_id,omitempty"` //nolint
+}
+
+type ComponentRelationship struct {
+	ComponentID    uuid.UUID      `json:"component_id,omitempty"`
+	RelationshipID uuid.UUID      `json:"relationship_id,omitempty"`
+	SelectorID     string         `json:"selector_id,omitempty"`
+	CreatedAt      time.Time      `json:"created_at,omitempty"`
+	UpdatedAt      time.Time      `json:"updated_at,omitempty"`
+	DeletedAt      gorm.DeletedAt `json:"deleted_at,omitempty"`
 }
 
 func (component Component) Clone() Component {
@@ -227,6 +237,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Lifecycle: c.Lifecycle,
 		Tooltip:   c.Tooltip,
 		Icon:      c.Icon,
+		Selectors: c.Selectors,
 	}
 }
 

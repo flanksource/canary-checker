@@ -1,6 +1,10 @@
 package db
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"encoding/json"
+
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
@@ -12,6 +16,9 @@ import (
 
 func PersistSystemTemplate(system *v1.SystemTemplate) (string, bool, error) {
 	model := pkg.SystemTemplateFromV1(system)
+	if system.GetPersistedID() != "" {
+		model.ID = uuid.MustParse(system.GetPersistedID())
+	}
 	var changed bool
 	tx := Gorm.Table("templates").Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "name"}, {Name: "namespace"}},
@@ -48,6 +55,67 @@ func GetAllSystemTemplates() ([]v1.SystemTemplate, error) {
 	return systemTemplates, nil
 }
 
+// Get all the components from table which has not null selectors
+func GetAllComponentWithSelectors() (components pkg.Components, err error) {
+	if err := Gorm.Table("components").Where("deleted_at is NULL and selectors != 'null'").Find(&components).Error; err != nil {
+		return nil, err
+	}
+	return
+}
+
+func GetComponensWithSelectors(resourceSelectors v1.ResourceSelectors) (components pkg.Components, err error) {
+	var uninqueComponents = make(map[string]*pkg.Component)
+	for _, resourceSelector := range resourceSelectors {
+		if resourceSelector.LabelSelector != "" {
+			labelComponents, err := GetComponensWithLabelSelector(resourceSelector.LabelSelector)
+			if err != nil {
+				continue
+			}
+			for _, c := range labelComponents {
+				uninqueComponents[c.ID.String()] = c
+			}
+		}
+		if resourceSelector.FieldSelector != "" {
+			fieldComponents, err := GetComponensWithFieldSelector(resourceSelector.FieldSelector)
+			if err != nil {
+				continue
+			}
+			for _, c := range fieldComponents {
+				uninqueComponents[c.ID.String()] = c
+			}
+		}
+	}
+	for _, comp := range uninqueComponents {
+		components = append(components, comp)
+	}
+	return
+}
+
+func GetComponentRelationships(relationshipID uuid.UUID, components pkg.Components) (relationships []*pkg.ComponentRelationship, err error) {
+	for _, component := range components {
+		relationships = append(relationships, &pkg.ComponentRelationship{
+			RelationshipID: relationshipID,
+			ComponentID:    component.ID,
+			SelectorID:     GetSelectorID(component.Selectors),
+		})
+	}
+	return
+}
+
+func GetSelectorID(selectors v1.ResourceSelectors) string {
+	data, err := json.Marshal(selectors)
+	if err != nil {
+		logger.Errorf("Error marshalling selectors %v", err)
+		return ""
+	}
+	hash := md5.Sum(data)
+	if err != nil {
+		logger.Errorf("Error hashing selector %v", err)
+		return ""
+	}
+	return hex.EncodeToString(hash[:])
+}
+
 func PersistSystem(system *pkg.System) error {
 	tx := Gorm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "type"}, {Name: "external_id"}},
@@ -73,6 +141,20 @@ func PersistSystem(system *pkg.System) error {
 		}
 	}
 	return nil
+}
+
+func PersisComponentRelationships(relationships []*pkg.ComponentRelationship) error {
+	for _, relationship := range relationships {
+		if err := PersistComponentRelationship(relationship); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func PersistComponentRelationship(relationship *pkg.ComponentRelationship) error {
+	tx := Gorm.Create(relationship)
+	return tx.Error
 }
 
 func PersistComponent(component *pkg.Component) (string, error) {

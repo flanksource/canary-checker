@@ -52,7 +52,7 @@ deploy: .bin/kustomize manifests
 	cd config && .bin/kustomize edit set image controller=${IMG}
 	kubectl $(KUSTOMIZE) config | kubectl apply -f -
 
-static: .bin/kustomize manifests generate .bin/yq
+static: .bin/kustomize generate manifests .bin/yq
 	.bin/kustomize build ./config | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/manifests.yaml
 	.bin/kustomize build ./config/base | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/base.yaml
 

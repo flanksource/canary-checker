@@ -111,14 +111,14 @@ WHERE component.id = :id OR component.parent_id = :id`
 func Query(params TopologyParams) ([]pkg.System, error) {
 	sql := fmt.Sprintf(`
 SELECT
-	to_json(system) :: jsonb       AS system,
+	to_json(systems) :: jsonb       AS system,
 	components.components :: jsonb AS components
-FROM   system
+FROM   systems
 	full join (SELECT system_id,
-										json_agg(To_json(component)) AS components
-						 FROM   component
+										json_agg(To_json(components)) AS components
+						 FROM   components
 						 GROUP  BY system_id) AS components
-	ON system.id = components.system_id
+	ON systems.id = components.system_id
 %s
 %s`, params.GetSystemWhereClause(), params.GetComponentWhereClause())
 

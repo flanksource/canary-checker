@@ -64,6 +64,7 @@ CREATE TABLE components (
   icon text,
   type text NULL,
   owner text,
+  selectors jsonb,
   properties jsonb,
   summary  jsonb,
   created_at timestamp NOT NULL DEFAULT now(),
@@ -73,12 +74,40 @@ CREATE TABLE components (
   FOREIGN KEY (system_id) REFERENCES systems(id),
   UNIQUE (system_id, type, name, parent_id)
 );
+
+
+CREATE TABLE component_relationships(
+  component_id UUID NOT NULL,
+  relationship_id UUID NOT NULL, -- parent component id
+  created_at timestamp NOT NULL DEFAULT now(),
+  updated_at timestamp NOT NULL DEFAULT now(),
+  deleted_at TIMESTAMP DEFAULT NULL,
+  selector_id text, -- hash of the selector from the components
+  FOREIGN KEY(component_id) REFERENCES components(id), 
+  FOREIGN KEY(relationship_id) REFERENCES components(id)
+);
+
+
+create OR REPLACE function lookup_component_by_property(text, text)
+returns setof components
+as
+$$
+begin
+  return query
+    select * from components where properties != 'null' and name in (select name  from components,jsonb_array_elements(properties) property where properties != 'null' and  property is not null and  property->>'name' = $1 and property->>'text' = $2);
+end;
+$$
+language plpgsql;
+
+
 -- +goose StatementEnd
 
 
 
 -- For local developemnent; one can run: `goose -dir ./pkg/db/migrations  postgres "postgres://tarun@localhost:5432/canary?sslmode=disable" down-to 0` to remove all the migr
 -- +goose Down
+DROP TABLE component_relationships;
+DROP FUNCTION GetComponentsWithProperties;
 DROP TABLE components;
 DROP TABLE systems;
 DROP TABLE templates;

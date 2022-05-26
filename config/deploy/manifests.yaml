@@ -6690,10 +6690,6 @@ spec:
                   type: string
                 owner:
                   type: string
-                pods:
-                  additionalProperties:
-                    type: string
-                  type: object
                 properties:
                   items:
                     properties:
@@ -9902,6 +9898,17 @@ spec:
                         type: string
                     type: object
                   type: array
+                selectors:
+                  items:
+                    properties:
+                      fieldSelector:
+                        type: string
+                      labelSelector:
+                        type: string
+                      name:
+                        type: string
+                    type: object
+                  type: array
                 summary:
                   properties:
                     healthy:
@@ -9969,7 +9976,6 @@ spec:
                     type: string
                   type: array
                 components:
-                  description: ComponentSelector []ComponentSelector `json:"componentSelector,omitempty"`
                   items:
                     properties:
                       components:
@@ -13130,10 +13136,6 @@ spec:
                         type: string
                       owner:
                         type: string
-                      pods:
-                        additionalProperties:
-                          type: string
-                        type: object
                       properties:
                         items:
                           properties:
@@ -16342,6 +16344,17 @@ spec:
                               type: string
                           type: object
                         type: array
+                      selectors:
+                        items:
+                          properties:
+                            fieldSelector:
+                              type: string
+                            labelSelector:
+                              type: string
+                            name:
+                              type: string
+                          type: object
+                        type: array
                       summary:
                         properties:
                           healthy:
@@ -16377,10 +16390,6 @@ spec:
                   type: string
                 owner:
                   type: string
-                pods:
-                  additionalProperties:
-                    type: string
-                  type: object
                 properties:
                   items:
                     properties:

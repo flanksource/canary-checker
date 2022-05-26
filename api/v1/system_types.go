@@ -14,16 +14,14 @@ type SystemTemplate struct {
 	Status            SystemTemplateStatus `json:"status,omitempty"`
 }
 type SystemTemplateSpec struct {
-	Type     string            `json:"type,omitempty"`
-	Id       *Template         `json:"id,omitempty"` //nolint
-	Schedule string            `json:"schedule,omitempty"`
-	Tooltip  string            `json:"tooltip,omitempty"`
-	Icon     string            `json:"icon,omitempty"`
-	Text     string            `json:"text,omitempty"`
-	Label    string            `json:"label,omitempty"`
-	Owner    Owner             `json:"owner,omitempty"`
-	Pods     map[string]string `json:"pods,omitempty"`
-	// ComponentSelector []ComponentSelector `json:"componentSelector,omitempty"`
+	Type       string           `json:"type,omitempty"`
+	Id         *Template        `json:"id,omitempty"` //nolint
+	Schedule   string           `json:"schedule,omitempty"`
+	Tooltip    string           `json:"tooltip,omitempty"`
+	Icon       string           `json:"icon,omitempty"`
+	Text       string           `json:"text,omitempty"`
+	Label      string           `json:"label,omitempty"`
+	Owner      Owner            `json:"owner,omitempty"`
 	Components []ComponentSpec  `json:"components,omitempty"`
 	Canaries   []CanarySelector `json:"canaries,omitempty"`
 	Properties Properties       `json:"properties,omitempty"`
@@ -35,11 +33,6 @@ func (s SystemTemplate) IsEmpty() bool {
 
 func (spec SystemTemplateSpec) GetSchedule() string {
 	return spec.Schedule
-}
-
-type ComponentSelector struct {
-	Selector   `json:",inline"`
-	Properties map[string]string `json:"properties,omitempty"`
 }
 
 type SystemTemplateStatus struct {
@@ -68,7 +61,7 @@ type CanarySelector string
 
 // +kubebuilder:object:root=true
 
-// SystemTemplateList contains a list of Canary
+// SystemTemplateList contains a list of SystemTemplate
 type SystemTemplateList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
