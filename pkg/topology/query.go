@@ -17,10 +17,6 @@ import (
 
 var json = jsontime.ConfigWithCustomTimeFormat
 
-func init() {
-	jsontime.AddTimeFormatAlias("postgres_timestamp", "2006-01-02T15:04:05.999999999")
-}
-
 func NewTopologyParams(values url.Values) TopologyParams {
 	params := TopologyParams{
 		Id:          values.Get("id"),

@@ -22,10 +22,6 @@ import (
 
 var json = jsontime.ConfigWithCustomTimeFormat
 
-func init() {
-	jsontime.AddTimeFormatAlias("postgres_timestamp", "2006-01-02T15:04:05.999")
-}
-
 const ComponentType = "component"
 
 type System struct {

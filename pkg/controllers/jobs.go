@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
@@ -15,13 +16,13 @@ func Start() {
 	SystemScheduler.Start()
 	CanaryScheduler.Start()
 	FuncScheduler.Start()
-	if _, err := ScheduleFunc("@every 120s", SyncCanaryJobs); err != nil {
+	if _, err := ScheduleFunc(v1.SyncCanaryJobsSchedule, SyncCanaryJobs); err != nil {
 		logger.Errorf("Failed to schedule sync jobs for canary: %v", err)
 	}
-	if _, err := ScheduleFunc("@every 5m", SyncSystemsJobs); err != nil {
+	if _, err := ScheduleFunc(v1.SyncSystemsJobsSchedule, SyncSystemsJobs); err != nil {
 		logger.Errorf("Failed to schedule sync jobs for systems: %v", err)
 	}
-	if _, err := ScheduleFunc("@every 120s", topology.ComponentRun); err != nil {
+	if _, err := ScheduleFunc(v1.ComponentRunSchedule, topology.ComponentRun); err != nil {
 		logger.Errorf("Failed to schedule component run: %v", err)
 	}
 }

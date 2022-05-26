@@ -12,8 +12,10 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/controllers"
 	"github.com/flanksource/canary-checker/pkg/db"
+	jsontime "github.com/liamylian/jsontime/v2/v2"
 
 	"github.com/flanksource/canary-checker/pkg/runner"
 
@@ -55,6 +57,7 @@ func setup() {
 }
 
 func serve() {
+	jsontime.AddTimeFormatAlias("postgres_timestamp", v1.PostgresTimestampFormat)
 	var allowedCors string
 	e := echo.New()
 	if dev {
