@@ -152,7 +152,6 @@ FROM   systems
 		system := &pkg.System{}
 		if len(rows.RawValues()[0]) > 0 {
 			if err := json.Unmarshal(rows.RawValues()[0], system); err != nil {
-				fmt.Println("error out from the first row")
 				return nil, errors.Wrapf(err, "failed to unmarshal: %s", rows.RawValues()[0])
 			}
 		}

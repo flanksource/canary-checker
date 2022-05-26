@@ -30,7 +30,7 @@ const ComponentType = "component"
 
 type System struct {
 	Object           `yaml:",inline"`
-	SystemTemplateID uuid.UUID           `json:"systemTemplateId,omitempty"`
+	SystemTemplateID *uuid.UUID          `json:"system_template_id,omitempty"`
 	ID               uuid.UUID           `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
 	Tooltip          string              `json:"tooltip,omitempty"`
 	Icon             string              `json:"icon,omitempty"`
@@ -47,7 +47,7 @@ type System struct {
 	UpdatedAt        time.Time           `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
 	DeletedAt        gorm.DeletedAt      `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
 	ExternalId       string              `json:"external_id,omitempty"` //nolint
-	TopologyType     string              `json:"topologyType,omitempty"`
+	TopologyType     string              `json:"topology_type,omitempty"`
 }
 
 type SystemTemplate struct {
@@ -157,7 +157,7 @@ type Component struct {
 	Name         string              `json:"name,omitempty"`
 	ID           uuid.UUID           `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
 	Text         string              `json:"text,omitempty"`
-	TopologyType string              `json:"topologyType,omitempty"`
+	TopologyType string              `json:"topology_type,omitempty"`
 	Namespace    string              `json:"namespace,omitempty"`
 	Labels       types.JSONStringMap `json:"labels,omitempty"`
 	Tooltip      string              `json:"tooltip,omitempty"`

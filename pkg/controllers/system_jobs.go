@@ -38,7 +38,8 @@ func (job SystemJob) Run() {
 		system.Name = job.SystemTemplate.Name
 		system.Namespace = job.SystemTemplate.Namespace
 		system.Labels = job.SystemTemplate.Labels
-		system.SystemTemplateID, _ = uuid.Parse(job.SystemTemplate.GetPersistedID())
+		systemTemplateID, _ := uuid.Parse(job.SystemTemplate.GetPersistedID())
+		system.SystemTemplateID = &systemTemplateID
 		err := db.PersistSystem(system)
 		if err != nil {
 			logger.Errorf("error persisting the system: %v", err)
