@@ -139,7 +139,7 @@ jobs:
           wget https://github.com/mikefarah/yq/releases/download/${VERSION}/${BINARY}.tar.gz -O - |\
           tar xz && sudo mv ${BINARY} /usr/bin/yq
         env:
-          VERSION: v4.2.0
+          VERSION: v4.25.1
           BINARY: yq_linux_amd64
       - name: Update canary-checker version in Incident-commander
         run: |
