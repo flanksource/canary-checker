@@ -126,3 +126,25 @@ jobs:
           commit_message: "Release ${{ needs.semantic-release.outputs.release-version }} of ${{ github.repository }}"
           branch: gh-pages
           repository: ./charts
+  update-incident-commander:
+    runs-on: ubuntu-latest
+    needs: [helm, semantic-release]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: "${{ github.repository_owner }}/incident-commander"
+          token: ${{ secrets.FLANKBOT }}
+      - name: Install yq
+        run: |
+          wget https://github.com/mikefarah/yq/releases/download/${VERSION}/${BINARY}.tar.gz -O - |\
+          tar xz && sudo mv ${BINARY} /usr/bin/yq
+        env:
+          VERSION: v4.2.0
+          BINARY: yq_linux_amd64
+      - name: Update canary-checker version in Incident-commander
+        run: |
+          yq e -i '.dependencies | .[] | select(.name == "canary-checker") | .version |= "${{ needs.semantic-release.outputs.release-version }}"'  chart/Chart.yaml
+      - name: Push changes to chart repo
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "chore: update canary-checker chart dependency to ${{ needs.semantic-release.outputs.release-version }}"
