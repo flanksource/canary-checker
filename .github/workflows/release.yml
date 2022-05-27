@@ -134,6 +134,7 @@ jobs:
         with:
           repository: "${{ github.repository_owner }}/incident-commander"
           token: ${{ secrets.FLANKBOT }}
+          path: ./incident-commander
       - name: Install yq
         run: |
           wget https://github.com/mikefarah/yq/releases/download/${VERSION}/${BINARY}.tar.gz -O - |\
@@ -143,8 +144,10 @@ jobs:
           BINARY: yq_linux_amd64
       - name: Update canary-checker version in Incident-commander
         run: |
-          yq eval-all -i  '(.dependencies[] | select(.name == "canary-checker")) as $d | $d.version = "${{ needs.semantic-release.outputs.release-version }}"' chart/Chart.yaml
+          cd incident-commander
+          yq eval-all -i  '(.dependencies[] | select(.name == "canary-checker")) ref $d | $d.version = "${{ needs.semantic-release.outputs.release-version }}"' chart/Chart.yaml
       - name: Push changes to chart repo
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "chore: update canary-checker chart dependency to ${{ needs.semantic-release.outputs.release-version }}"
+          repository: ./incident-commander
