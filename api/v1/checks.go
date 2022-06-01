@@ -433,7 +433,6 @@ func (c LDAPCheck) GetType() string {
 
 type NamespaceCheck struct {
 	Description          `yaml:",inline" json:",inline"`
-	CheckName            string            `yaml:"checkName" json:"checkName,omitempty" template:"true"`
 	NamespaceNamePrefix  string            `yaml:"namespaceNamePrefix,omitempty" json:"namespaceNamePrefix,omitempty"`
 	NamespaceLabels      map[string]string `yaml:"namespaceLabels,omitempty" json:"namespaceLabels,omitempty"`
 	NamespaceAnnotations map[string]string `yaml:"namespaceAnnotations,omitempty" json:"namespaceAnnotations,omitempty"`
@@ -455,11 +454,11 @@ type NamespaceCheck struct {
 }
 
 func (c NamespaceCheck) GetEndpoint() string {
-	return c.CheckName
+	return c.Name
 }
 
 func (c NamespaceCheck) String() string {
-	return "namespace/" + c.CheckName
+	return "namespace/" + c.Name
 }
 
 func (c NamespaceCheck) GetType() string {
