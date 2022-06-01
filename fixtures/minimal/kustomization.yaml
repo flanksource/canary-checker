@@ -4,5 +4,5 @@ resources:
   - dns_fail.yaml
   - dns_pass.yaml
   - http_fail.yaml
-  - http_pass.yaml
+  - http_pass_single.yaml
   - http_timeout_fail.yaml

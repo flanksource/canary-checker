@@ -6,6 +6,7 @@ spec:
   interval: 30
   mssql:
     - connection: "server=mssql.default.svc;user id=$(username);password=$(password);port=1433;database=master"
+      name: mssql pass
       auth:
         username:
           value: sa

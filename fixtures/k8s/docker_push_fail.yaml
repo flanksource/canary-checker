@@ -8,12 +8,14 @@ spec:
   interval: 30
   dockerPush:
     - image: docker.io/flanksource/busybox:1.30
+      name: push-1.30
       auth:
         username:
           value: test
         password:
           value: pass
     - image: ttl.sh/flanksource-busybox:not-found-tag
+      name: push-not-found
       auth:
         username:
           value: test

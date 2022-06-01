@@ -6,6 +6,7 @@ spec:
   interval: 30
   postgres:
     - connection: "postgres://$(username):$(password)@postgres.default.svc:5432/postgres?sslmode=disable"
+      name: postgres schemas check
       auth:
         username:
           value: postgresadmin

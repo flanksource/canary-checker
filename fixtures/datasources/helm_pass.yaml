@@ -6,6 +6,7 @@ spec:
   interval: 30
   helm:
     - chartmuseum: http://chartmuseum.default:8080
+      name: helm chart
       project: library
       auth:
         username:

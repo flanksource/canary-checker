@@ -1,10 +1,11 @@
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
-  name: folder-pass
+  name: folder-fail
 spec:
   interval: 30
   folder:
     - path: /etc/
+      name: min count fail
       minCount: 100000
       maxAge: 4m

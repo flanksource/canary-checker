@@ -7,6 +7,7 @@ spec:
   folder:
     # Check for any backup not older than 7 days and min size 25 bytes
     - path: s3://tests-e2e-1
+      name: mysql backup check 
       awsConnection:
         accessKey:
           valueFrom:
@@ -28,6 +29,7 @@ spec:
       minSize: 25b
     # Check for any mysql backup not older than 7 days and min size 25 bytes
     - path: s3://tests-e2e-1
+      name: mysql backup check (7 days and 25 bytes size)
       awsConnection:
         accessKey:
           valueFrom:
@@ -49,6 +51,7 @@ spec:
       minSize: 25b
     # Check for any pg backup not older than 7 days and min size 50 bytes
     - path: s3://tests-e2e-1
+      name: pg backup check (7 days and 50 bytes size)
       awsConnection:
         accessKey:
           valueFrom:

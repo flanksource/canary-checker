@@ -7,12 +7,14 @@ spec:
   interval: 30
   http:
     - endpoint: https://httpstat.us/200
+      name: http pass response 200 status code
       thresholdMillis: 3000
       responseCodes: [201, 301, 200]
       responseContent: ""
       maxSSLExpiry: 7
       description: "HTTP dummy test 2"
     - endpoint: https://httpstat.us/201
+      name: http pass response 201 status code
       thresholdMillis: 3000
       responseCodes: [201]
       responseContent: ""
