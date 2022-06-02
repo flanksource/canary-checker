@@ -2590,8 +2590,6 @@ spec:
                 namespace:
                   items:
                     properties:
-                      checkName:
-                        type: string
                       deadline:
                         format: int64
                         type: integer
@@ -6090,8 +6088,6 @@ spec:
                     namespace:
                       items:
                         properties:
-                          checkName:
-                            type: string
                           deadline:
                             format: int64
                             type: integer
@@ -9257,8 +9253,6 @@ spec:
                           namespace:
                             items:
                               properties:
-                                checkName:
-                                  type: string
                                 deadline:
                                   format: int64
                                   type: integer
@@ -12536,8 +12530,6 @@ spec:
                           namespace:
                             items:
                               properties:
-                                checkName:
-                                  type: string
                                 deadline:
                                   format: int64
                                   type: integer
@@ -15703,8 +15695,6 @@ spec:
                                 namespace:
                                   items:
                                     properties:
-                                      checkName:
-                                        type: string
                                       deadline:
                                         format: int64
                                         type: integer
@@ -18957,8 +18947,6 @@ spec:
                           namespace:
                             items:
                               properties:
-                                checkName:
-                                  type: string
                                 deadline:
                                   format: int64
                                   type: integer

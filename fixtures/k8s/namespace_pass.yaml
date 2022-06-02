@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 30
   namespace:
-    - checkName: check
+    - name: check
       namespaceNamePrefix: "test-foo-"
       podSpec: |
         apiVersion: v1

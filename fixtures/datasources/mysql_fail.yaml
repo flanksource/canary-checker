@@ -6,6 +6,7 @@ spec:
   interval: 30
   mysql:
     - connection: "$(username):$(password)@tcp(mysql.default.svc:3306)/mysqldb"
+      name: mysql wrong password
       auth:
         username:
           value: mysqladmin

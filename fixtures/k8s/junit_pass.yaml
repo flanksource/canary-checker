@@ -10,6 +10,7 @@ spec:
   severity: high
   junit:
     - testResults: "/tmp/junit-results/"
+      name: junit-pass
       display:
         template: |
           ✅ {{.results.passed}} ❌ {{.results.failed}} in 🕑 {{.results.duration}}

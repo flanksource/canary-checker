@@ -6,6 +6,7 @@ spec:
   interval: 30
   github:
     - query: "SELECT * FROM github_repo_checks('flanksource/template-operator') where branch='master'"
+      name: github-expresion-check
       test:
         expr: 'Age(results[0]["started_at"]) > Duration("10m")'
       githubToken:

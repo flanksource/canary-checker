@@ -9,6 +9,7 @@ spec:
   folder:
     # Check for any mysql backup not older than 7 days and min size 100 bytes
     - path: s3://tests-e2e-1
+      name: mysql backup check
       awsConnection:
         accessKey:
           valueFrom:
@@ -31,6 +32,7 @@ spec:
 
     # Check for any pg backup not older than 3 days and min size 20 bytes
     - path: s3://tests-e2e-1
+      name: mysql retension backup check
       awsConnection:
         accessKey:
           valueFrom:

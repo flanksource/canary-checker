@@ -7,6 +7,7 @@ metadata:
 spec:
   restic:
     - repository: s3:http://minio.minio:9000/restic-canary-checker
+      name: restic fail test
       password:
         value: S0m3p@sswd
       maxAge: 10s

@@ -6,6 +6,7 @@ spec:
   interval: 30
   dns:
     - server: 8.8.8.8
+      name: A record query
       port: 53
       query: "1.2.3.4.nip.io"
       querytype: "A"
@@ -16,6 +17,7 @@ spec:
     - server: 8.8.8.8
       port: 53
       query: "8.8.8.8"
+      name: ptr query
       querytype: "PTR"
       minrecords: 10
       exactreply: ["dns.google."]
@@ -23,6 +25,7 @@ spec:
       thresholdMillis: 1000
     - server: 8.8.8.8
       port: 53
+      name: cname query
       query: "dns.google"
       querytype: "CNAME"
       minrecords: 1
@@ -31,6 +34,7 @@ spec:
       thresholdMillis: 1000
     - server: 8.8.8.8
       port: 53
+      name: mx query
       query: "flanksource.com"
       querytype: "MX"
       minrecords: 1
@@ -42,6 +46,7 @@ spec:
       thresholdMillis: 1000
     - server: 8.8.8.8
       port: 53
+      name: txt query
       query: "flanksource.com"
       querytype: "TXT"
       minrecords: 5
@@ -50,6 +55,7 @@ spec:
       timeout: 10
       thresholdMillis: 1000
     - server: 8.8.8.8
+      name: NS query
       port: 53
       query: "flanksource.com"
       querytype: "NS"

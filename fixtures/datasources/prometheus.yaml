@@ -6,6 +6,7 @@ spec:
   interval: 30
   prometheus:
     - host: http://prometheus-k8s.monitoring.svc:9090
+      name: prometheus-check
       query: kubernetes_build_info{job!~"kube-dns|coredns"}
       display:
         template: "{{ (index .results 0).git_version }}"

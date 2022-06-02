@@ -23,6 +23,15 @@ spec:
             name: k8s
             display:
               javascript: JSON.stringify(k8s.getNodeTopology(results)) 
+      properties:
+        - name: node-metrics
+          lookup:
+            kubernetes:
+              - kind: NodeMetrics
+                ready: false
+                name: nodemetrics
+                display:
+                  javascript: JSON.stringify(k8s.getNodeMetrics(results))
     - name: pods
       icon: pods
       type: KubernetesPods
@@ -33,16 +42,15 @@ spec:
             ready: false
             display:
               javascript: JSON.stringify(k8s.getPodTopology(results)) 
-      # properties:
-      #   - name: metrics
-      #     lookup:
-      #       kubernetes:
-      #         - kind: NodeMetrics
-      #           ready: false
-      #           name: test
-                # display:
-                #   javascript: JSON.stringify(k8s.getNodeMetrics(results))
-
+      properties:
+        - name: pod-metrics
+          lookup:
+            kubernetes:
+              - kind: PodMetrics
+                ready: false
+                name: podmetrics
+                display:
+                  javascript: JSON.stringify(k8s.getPodMetrics(results))
   # properties:
   #   - name: name
   #     lookup:

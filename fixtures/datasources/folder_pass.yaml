@@ -6,4 +6,5 @@ spec:
   interval: 30
   folder:
     - path: /etc/
+      name: min count pass
       minCount: 10

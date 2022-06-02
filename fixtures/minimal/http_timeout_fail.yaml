@@ -8,5 +8,6 @@ spec:
   interval: 30
   http:
     - endpoint: http://httpstat.us/200?sleep=200
+      name: http fail timeout
       thresholdMillis: 100
       responseCodes: [200]

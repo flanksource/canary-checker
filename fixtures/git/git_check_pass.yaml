@@ -6,6 +6,7 @@ spec:
   interval: 30
   github:
     - query: "SELECT * FROM github_repo_checks('flanksource/template-operator') where branch='master' and conclusion='FAILURE'"
+      name: github-check
       test:
         template: |
           {{- if (eq (len .results) 0) }}

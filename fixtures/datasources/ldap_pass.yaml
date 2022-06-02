@@ -6,6 +6,7 @@ spec:
   interval: 30
   ldap:
     - host: ldap://apacheds.ldap.svc:10389
+      name: ldap user login
       auth:
         username:
           value: uid=admin,ou=system
@@ -14,6 +15,7 @@ spec:
       bindDN: ou=users,dc=example,dc=com
       userSearch: "(&(objectClass=organizationalPerson))"
     - host: ldap://apacheds.ldap.svc:10389
+      name: ldap group login
       auth:
         username:
           value: uid=admin,ou=system

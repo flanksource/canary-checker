@@ -8,5 +8,6 @@ spec:
    - description: "exec dummy check"
      script: |
        echo "hello"
+     name: exec-pass-check
      test:
        expr: 'results.Stdout == "hello"'

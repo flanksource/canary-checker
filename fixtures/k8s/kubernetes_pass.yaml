@@ -7,12 +7,14 @@ spec:
   kubernetes:
    - namespace:
        name: default
+     name: k8s-ready pods
      kind: Pod
      resource:
       labelSelector: app=k8s-ready
    - namespace:
        name: default
      kind: Pod
+     name: k8s-ready pods
      ready: false
      resource:
        labelSelector: app=k8s-not-ready

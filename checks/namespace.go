@@ -116,7 +116,7 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 	defer func() { c.lock.Release(1) }()
 	startTimer := NewTimer()
 
-	logger.Debugf("Running namespace check %s", check.CheckName)
+	logger.Debugf("Running namespace check %s", check.Name)
 	five := int64(5)
 	if _, err := c.k8s.CoreV1().Nodes().List(ctx, metav1.ListOptions{TimeoutSeconds: &five}); err != nil {
 		return results.Failf("cannot connect to API server: %v", err)
@@ -183,31 +183,31 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 		{
 			Name:   "schedule_time",
 			Type:   metrics.HistogramType,
-			Labels: map[string]string{"namespaceCheck": check.CheckName},
+			Labels: map[string]string{"namespaceCheck": check.Name},
 			Value:  float64(scheduled),
 		},
 		{
 			Name:   "creation_time",
 			Type:   metrics.HistogramType,
-			Labels: map[string]string{"namespaceCheck": check.CheckName},
+			Labels: map[string]string{"namespaceCheck": check.Name},
 			Value:  float64(started),
 		},
 		{
 			Name:   "delete_time",
 			Type:   metrics.HistogramType,
-			Labels: map[string]string{"namespaceCheck": check.CheckName},
+			Labels: map[string]string{"namespaceCheck": check.Name},
 			Value:  deletion.Elapsed(),
 		},
 		{
 			Name:   "ingress_time",
 			Type:   metrics.HistogramType,
-			Labels: map[string]string{"namespaceCheck": check.CheckName},
+			Labels: map[string]string{"namespaceCheck": check.Name},
 			Value:  ingressTime,
 		},
 		{
 			Name:   "request_time",
 			Type:   metrics.HistogramType,
-			Labels: map[string]string{"namespaceCheck": check.CheckName},
+			Labels: map[string]string{"namespaceCheck": check.Name},
 			Value:  requestTime,
 		},
 	}
@@ -400,7 +400,7 @@ func (c *NamespaceChecker) getHTTP(url string, timeout int64, deadline time.Time
 }
 
 func (c *NamespaceChecker) podCheckSelectorValue(check canaryv1.NamespaceCheck, ns *v1.Namespace) string {
-	return fmt.Sprintf("%s.%s", check.CheckName, ns.Name)
+	return fmt.Sprintf("%s.%s", check.Name, ns.Name)
 }
 
 // WaitForPod waits for a pod to be in the specified phase, or returns an

@@ -6,6 +6,7 @@ spec:
   interval: 30
   restic:
     - repository: s3:http://minio.minio:9000/restic-canary-checker
+      name: restic integrity check
       password:
         value: S0m3p@sswd
       maxAge: 1h
