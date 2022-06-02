@@ -3424,6 +3424,13 @@ rules:
     verbs:
       - '*'
   - apiGroups:
+      - metrics.k8s.io
+    resources:
+      - pods
+      - nodes
+    verbs:
+      - '*'
+  - apiGroups:
       - ""
     resources:
       - pods/exec

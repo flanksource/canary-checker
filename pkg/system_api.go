@@ -53,9 +53,9 @@ type SystemTemplate struct {
 	Labels    types.JSONStringMap
 	Spec      types.JSON
 	Schedule  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt
+	CreatedAt time.Time      `json:"created_at,omitempty" time_format:"postgres_timestamp"`
+	UpdatedAt time.Time      `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
 }
 
 func SystemTemplateFromV1(systemTemplate *v1.SystemTemplate) *SystemTemplate {
