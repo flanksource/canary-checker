@@ -47,6 +47,13 @@ rules:
       - services
     verbs:
       - "*"
+  - apiGroups:
+      - "metrics.k8s.io"
+    resources:
+      - pods
+      - nodes
+    verbs:
+      - "*"
   # for getting the  XML results from junit tests
   - apiGroups:
       - ""
