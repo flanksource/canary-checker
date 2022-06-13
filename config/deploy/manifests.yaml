@@ -2095,6 +2095,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      ignore:
+                        description: Ignore the specified resources from the fetched resources. Can be a glob pattern.
+                        items:
+                          type: string
+                        type: array
                       kind:
                         type: string
                       name:
@@ -5600,6 +5605,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          ignore:
+                            description: Ignore the specified resources from the fetched resources. Can be a glob pattern.
+                            items:
+                              type: string
+                            type: array
                           kind:
                             type: string
                           name:
@@ -8765,6 +8775,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                ignore:
+                                  description: Ignore the specified resources from the fetched resources. Can be a glob pattern.
+                                  items:
+                                    type: string
+                                  type: array
                                 kind:
                                   type: string
                                 name:
@@ -12042,6 +12057,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                ignore:
+                                  description: Ignore the specified resources from the fetched resources. Can be a glob pattern.
+                                  items:
+                                    type: string
+                                  type: array
                                 kind:
                                   type: string
                                 name:
@@ -15207,6 +15227,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      ignore:
+                                        description: Ignore the specified resources from the fetched resources. Can be a glob pattern.
+                                        items:
+                                          type: string
+                                        type: array
                                       kind:
                                         type: string
                                       name:
@@ -18459,6 +18484,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                ignore:
+                                  description: Ignore the specified resources from the fetched resources. Can be a glob pattern.
+                                  items:
+                                    type: string
+                                  type: array
                                 kind:
                                   type: string
                                 name:

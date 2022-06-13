@@ -650,8 +650,10 @@ type KubernetesCheck struct {
 	Templatable `yaml:",inline" json:",inline"`
 	Namespace   ResourceSelector `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Resource    ResourceSelector `yaml:"resource,omitempty" json:"resource,omitempty"`
-	Kind        string           `yaml:"kind" json:"kind"`
-	Ready       *bool            `yaml:"ready,omitempty" json:"ready,omitempty"`
+	// Ignore the specified resources from the fetched resources. Can be a glob pattern.
+	Ignore []string `yaml:"ignore,omitempty" json:"ignore,omitempty"`
+	Kind   string   `yaml:"kind" json:"kind"`
+	Ready  *bool    `yaml:"ready,omitempty" json:"ready,omitempty"`
 }
 
 func (c KubernetesCheck) GetType() string {

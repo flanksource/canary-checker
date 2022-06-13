@@ -1569,6 +1569,11 @@ func (in *KubernetesCheck) DeepCopyInto(out *KubernetesCheck) {
 	out.Templatable = in.Templatable
 	out.Namespace = in.Namespace
 	out.Resource = in.Resource
+	if in.Ignore != nil {
+		in, out := &in.Ignore, &out.Ignore
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Ready != nil {
 		in, out := &in.Ready, &out.Ready
 		*out = new(bool)
