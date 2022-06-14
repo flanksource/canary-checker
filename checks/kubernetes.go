@@ -2,6 +2,7 @@ package checks
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -9,7 +10,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
-	"github.com/gobwas/glob"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
@@ -134,12 +134,12 @@ func getNamespaces(ctx *context.Context, check v1.KubernetesCheck) ([]string, er
 
 func filterResources(resources []unstructured.Unstructured, filter string) ([]unstructured.Unstructured, error) {
 	var filtered []unstructured.Unstructured
-	ignoreGlob, err := glob.Compile(filter)
+	ignoreRegexp, err := regexp.Compile(filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile glob: %v", err)
 	}
 	for _, resource := range resources {
-		if ignoreGlob.Match(resource.GetName()) {
+		if ignoreRegexp.MatchString(resource.GetName()) {
 			continue
 		}
 		filtered = append(filtered, resource)
