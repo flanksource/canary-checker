@@ -51,7 +51,9 @@ func (job SystemJob) Run() {
 			continue
 		}
 		compIDs := difference(dbComps, comps)
-		db.DeleteComponentsWithID(compIDs, time.Now())
+		if err := db.DeleteComponentsWithID(compIDs, time.Now()); err != nil {
+			logger.Errorf("error deleting components: %v", err)
+		}
 	}
 	topology.ComponentRun()
 }
