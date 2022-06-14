@@ -9,6 +9,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
+	"github.com/gobwas/glob"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
@@ -53,6 +54,13 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 		resources, err := getResourcesFromNamespace(ctx, client, check, namespace)
 		if err != nil {
 			return results.Failf("failed to get resources: %v. namespace: %v", err, namespace)
+		}
+		for _, filter := range check.Ignore {
+			resources, err = filterResources(resources, filter)
+			if err != nil {
+				results.Failf("failed to filter resources: %v. filter: %v", err, filter)
+				return results
+			}
 		}
 		logger.Debugf("Found %d resources in namespace %s with label=%s field=%s", len(resources), namespace, check.Resource.LabelSelector, check.Resource.FieldSelector)
 		if check.CheckReady() {
@@ -122,4 +130,19 @@ func getNamespaces(ctx *context.Context, check v1.KubernetesCheck) ([]string, er
 		namespaces = append(namespaces, namespace.Name)
 	}
 	return namespaces, nil
+}
+
+func filterResources(resources []unstructured.Unstructured, filter string) ([]unstructured.Unstructured, error) {
+	var filtered []unstructured.Unstructured
+	ignoreGlob, err := glob.Compile(filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile glob: %v", err)
+	}
+	for _, resource := range resources {
+		if ignoreGlob.Match(resource.GetName()) {
+			continue
+		}
+		filtered = append(filtered, resource)
+	}
+	return filtered, nil
 }

@@ -40,6 +40,9 @@ spec:
           - kind: Pod
             name: k8s-pods
             ready: false
+            ignore:
+              - junit-fail**
+              - junit-pass**
             display:
               javascript: JSON.stringify(k8s.getPodTopology(results)) 
       properties:
