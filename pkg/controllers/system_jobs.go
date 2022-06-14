@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"reflect"
+
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -40,10 +41,17 @@ func (job SystemJob) Run() {
 		system.Labels = job.SystemTemplate.Labels
 		systemTemplateID, _ := uuid.Parse(job.SystemTemplate.GetPersistedID())
 		system.SystemTemplateID = &systemTemplateID
-		err := db.PersistSystem(system)
+		systemID, comps, err := db.PersistSystem(system)
 		if err != nil {
 			logger.Errorf("error persisting the system: %v", err)
 		}
+		dbComps, err := db.GetComponentsWithSystemID(systemID)
+		if err != nil {
+			logger.Errorf("error getting components for system: %v", err)
+			continue
+		}
+		compIDs := difference(dbComps, comps)
+		db.DeleteComponentsWithID(compIDs, time.Now())
 	}
 	topology.ComponentRun()
 }
@@ -131,4 +139,19 @@ func DeleteSystemJob(systemTemplate v1.SystemTemplate) {
 	}
 	logger.Tracef("deleting cron entry for system template %s/%s with entry ID: %v", systemTemplate.Name, systemTemplate.Namespace, entry.ID)
 	SystemScheduler.Remove(entry.ID)
+}
+
+// difference returns the elements in `a` that aren't in `b`.
+func difference(a, b []pkg.Component) []string {
+	mb := make(map[string]struct{}, len(b))
+	for _, x := range b {
+		mb[x.ID.String()] = struct{}{}
+	}
+	var diff []string
+	for _, x := range a {
+		if _, found := mb[x.ID.String()]; !found {
+			diff = append(diff, x.ID.String())
+		}
+	}
+	return diff
 }

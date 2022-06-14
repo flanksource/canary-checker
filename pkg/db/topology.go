@@ -5,13 +5,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
+	"time"
+
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"helm.sh/helm/v3/pkg/time"
 )
 
 func PersistSystemTemplate(system *v1.SystemTemplate) (string, bool, error) {
@@ -35,7 +36,7 @@ func PersistSystemTemplate(system *v1.SystemTemplate) (string, bool, error) {
 
 func PersistSystems(results []*pkg.System) error {
 	for _, system := range results {
-		err := PersistSystem(system)
+		_, _, err := PersistSystem(system)
 		if err != nil {
 			return err
 		}
@@ -116,14 +117,15 @@ func GetSelectorID(selectors v1.ResourceSelectors) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func PersistSystem(system *pkg.System) error {
+func PersistSystem(system *pkg.System) (string, []pkg.Component, error) {
 	tx := Gorm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "type"}, {Name: "external_id"}},
 		UpdateAll: true,
 	}).Create(system)
 	if tx.Error != nil {
-		return tx.Error
+		return "", nil, tx.Error
 	}
+	var components []pkg.Component
 	for _, component := range system.Components {
 		component.SystemId = &system.ID
 		var compID string
@@ -131,6 +133,7 @@ func PersistSystem(system *pkg.System) error {
 		if compID, err = PersistComponent(component); err != nil {
 			logger.Errorf("Error persisting component %v", err)
 		}
+		components = append(components, *component)
 		component.ID = uuid.MustParse(compID)
 		for _, child := range component.Components {
 			child.SystemId = &system.ID
@@ -138,9 +141,10 @@ func PersistSystem(system *pkg.System) error {
 			if _, err := PersistComponent(child); err != nil {
 				logger.Errorf("Error persisting child component of %v, :v", component.ID, err)
 			}
+			components = append(components, *child)
 		}
 	}
-	return nil
+	return system.ID.String(), components, nil
 }
 
 func PersisComponentRelationships(relationships []*pkg.ComponentRelationship) error {
@@ -182,7 +186,7 @@ func DeleteSystemTemplate(systemTemplate *v1.SystemTemplate) error {
 		logger.Errorf("System template %s/%s has not been persisted", systemTemplate.Namespace, systemTemplate.Name)
 		return nil
 	}
-	tx := Gorm.Table("templates").Find(model, "id = ?", systemTemplate.GetPersistedID()).UpdateColumn("deleted_at", deleteTime.Time)
+	tx := Gorm.Table("templates").Find(model, "id = ?", systemTemplate.GetPersistedID()).UpdateColumn("deleted_at", deleteTime)
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -190,25 +194,38 @@ func DeleteSystemTemplate(systemTemplate *v1.SystemTemplate) error {
 	if err != nil {
 		return err
 	}
-	return DeleteComponnent(systemID, deleteTime)
+	return DeleteComponnents(systemID, deleteTime)
 }
 
 func DeleteSystem(systemTemplateID string, deleteTime time.Time) (string, error) {
 	logger.Infof("Deleting system associated with template: %s", systemTemplateID)
 	systemModel := &pkg.System{}
-	tx := Gorm.Find(systemModel).Where("system_template_id = ?", systemTemplateID).UpdateColumn("deleted_at", deleteTime.Time)
+	tx := Gorm.Find(systemModel).Where("system_template_id = ?", systemTemplateID).UpdateColumn("deleted_at", deleteTime)
 	if tx.Error != nil {
 		return "", tx.Error
 	}
 	return systemModel.ID.String(), nil
 }
 
-func DeleteComponnent(systemID string, deleteTime time.Time) error {
-	logger.Infof("Deleting components associated with system: %s", systemID)
-	componentModel := &[]pkg.Component{}
-	tx := Gorm.Find(componentModel).Where("system_id = ?", systemID).UpdateColumn("deleted_at", deleteTime.Time)
-	if tx.Error != nil {
-		return tx.Error
-	}
-	return nil
+// DeleteComponents deletes all components associated with a system
+func DeleteComponnents(systemID string, deleteTime time.Time) error {
+	logger.Infof("Deleting all components associated with system: %s", systemID)
+	componentsModel := &[]pkg.Component{}
+	tx := Gorm.Find(componentsModel).Where("system_id = ?", systemID).UpdateColumn("deleted_at", deleteTime)
+	return tx.Error
+}
+
+// DeleteComponentsWithID deletes all components with specified ids.
+func DeleteComponentsWithID(compId []string, deleteTime time.Time) error {
+	logger.Infof("deleting component with id: %s", compId)
+	componentsModel := &[]pkg.Component{}
+	tx := Gorm.Find(componentsModel).Where("id in (?)", compId).UpdateColumn("deleted_at", deleteTime)
+	return tx.Error
+}
+
+func GetComponentsWithSystemID(systemID string) ([]pkg.Component, error) {
+	logger.Infof("Finding components with system id: %s", systemID)
+	componentsModel := &[]pkg.Component{}
+	tx := Gorm.Find(componentsModel).Where("system_id = ?", systemID)
+	return *componentsModel, tx.Error
 }

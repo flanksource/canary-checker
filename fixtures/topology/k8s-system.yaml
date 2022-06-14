@@ -8,7 +8,7 @@ metadata:
 spec:
   type: KubernetesCluster
   icon: kubernetes
-  schedule: "@every 20m"
+  schedule: "@every 10m"
   id:
     javascript: properties.id
   components:
