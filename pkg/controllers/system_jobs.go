@@ -45,13 +45,13 @@ func (job SystemJob) Run() {
 		if err != nil {
 			logger.Errorf("error persisting the system: %v", err)
 		}
-		dbComps, err := db.GetComponentsWithSystemID(systemID)
+		dbComps, err := db.GetActiveComponentsWithSystemID(systemID)
 		if err != nil {
 			logger.Errorf("error getting components for system: %v", err)
 			continue
 		}
 		compIDs := difference(dbComps, comps)
-		if err := db.DeleteComponentsWithID(compIDs, time.Now()); err != nil {
+		if err := db.DeleteComponentsWithIDs(compIDs, time.Now()); err != nil {
 			logger.Errorf("error deleting components: %v", err)
 		}
 	}

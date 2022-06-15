@@ -216,16 +216,16 @@ func DeleteComponnents(systemID string, deleteTime time.Time) error {
 }
 
 // DeleteComponentsWithID deletes all components with specified ids.
-func DeleteComponentsWithID(compID []string, deleteTime time.Time) error {
-	logger.Infof("deleting component with id: %s", compID)
+func DeleteComponentsWithIDs(compIDs []string, deleteTime time.Time) error {
+	logger.Infof("deleting component with ids: %v", compIDs)
 	componentsModel := &[]pkg.Component{}
-	tx := Gorm.Find(componentsModel).Where("id in (?)", compID).UpdateColumn("deleted_at", deleteTime)
+	tx := Gorm.Find(componentsModel).Where("id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime)
 	return tx.Error
 }
 
-func GetComponentsWithSystemID(systemID string) ([]pkg.Component, error) {
+func GetActiveComponentsWithSystemID(systemID string) ([]pkg.Component, error) {
 	logger.Infof("Finding components with system id: %s", systemID)
 	componentsModel := &[]pkg.Component{}
-	tx := Gorm.Find(componentsModel).Where("system_id = ?", systemID)
+	tx := Gorm.Find(componentsModel).Where("system_id = ? and deleted_at is not NULL", systemID)
 	return *componentsModel, tx.Error
 }
