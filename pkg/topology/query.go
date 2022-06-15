@@ -119,7 +119,7 @@ SELECT
 FROM   systems
 	full join (SELECT system_id,
 										json_agg(To_json(components)) AS components
-						 FROM   components
+						 FROM   components where deleted_at is NULL
 						 GROUP  BY system_id) AS components
 	ON systems.id = components.system_id
 %s
