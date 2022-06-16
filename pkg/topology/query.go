@@ -168,6 +168,23 @@ FROM   systems
 
 		results = append(results, *system)
 	}
-
+	for _, result := range results {
+		result.Components = filterComponentsWithDepth(result.Components, params.Depth)
+	}
 	return results, nil
+}
+
+func filterComponentsWithDepth(components []*pkg.Component, depth int) []*pkg.Component {
+	if depth == 0 {
+		return components
+	}
+	if depth == 1 {
+		for _, comp := range components {
+			comp.Components = nil
+		}
+	}
+	for _, comp := range components {
+		comp.Components = filterComponentsWithDepth(comp.Components, depth-1)
+	}
+	return components
 }
