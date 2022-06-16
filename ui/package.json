@@ -2,68 +2,15 @@
   "name": "canary-checker",
   "version": "0.1.0",
   "dependencies": {
-    "@babel/plugin-syntax-jsx": "^7.14.5",
-    "@craco/craco": "^6.2.0",
-    "@flanksource/flanksource-ui": "^1.0.45",
-    "@headlessui/react": "^1.4.0",
-    "@heroicons/react": "^1.0.3",
-    "@tailwindcss/forms": "^0.3.3",
-    "@tailwindcss/typography": "^0.4.1",
-    "prettier": "^2.3.2",
-    "react": "^17.0.2",
-    "react-country-flag": "^2.3.1",
-    "react-dom": "^17.0.2",
-    "react-icons": "^4.2.0",
-    "react-markdown": "^6.0.3",
-    "react-router-dom": "^5.2.0",
-    "react-scripts": "4.0.3",
-    "react-syntax-highlighter": "^15.4.4",
-    "remark-gfm": "^2.0.0",
-    "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.2.7",
-    "timeago-react": "^3.0.3",
-    "timeago.js": "^4.0.2",
-    "web-vitals": "^1.0.1"
+    "@flanksource/flanksource-ui": "^1.0.70"
   },
   "proxy": "https://canaries.canary.lab.flanksource.com/",
   "scripts": {
-    "start": "DISABLE_ESLINT_PLUGIN=true craco start",
-    "build": "DISABLE_ESLINT_PLUGIN=true craco build",
-    "test": "craco test",
-    "eject": "react-scripts eject",
-    "lint:eslint": "eslint --ext .js,.jsx,.ts,.tsx .",
-    "fix:eslint": "eslint --fix --ext .js,.jsx,.ts,.tsx ."
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "start": "node ./scripts/serve-build.js",
+    "build": "cp -r node_modules/@flanksource/flanksource-ui/build node_modules/@flanksource/flanksource-ui/scripts ./ && sed -i -e 's/__APP_DEPLOYMENT__/CANARY_CHECKER/' ./build/index.html"
   },
   "devDependencies": {
-    "@babel/cli": "^7.14.8",
-    "@babel/preset-env": "^7.15.0",
-    "@babel/preset-react": "^7.14.5",
-    "@testing-library/jest-dom": "^5.11.4",
-    "@testing-library/react": "^11.1.0",
-    "@testing-library/user-event": "^12.1.10",
-    "autoprefixer": "^9.8.6",
-    "babel-jest": "^26.6.0",
-    "cross-env": "^7.0.3",
-    "eslint": "^7.32.0",
-    "eslint-config-airbnb": "^18.2.1",
-    "eslint-config-import": "^0.13.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-import": "^2.24.0",
-    "eslint-plugin-jest": "^24.4.0",
-    "eslint-plugin-prettier": "^3.4.0",
-    "eslint-plugin-react": "^7.24.0",
-    "eslint-plugin-react-hooks": "^4.2.0",
-    "postcss": "^7.0.36"
+    "http-proxy": "^1.18.1",
+    "node-static": "^0.7.11"
   }
 }
