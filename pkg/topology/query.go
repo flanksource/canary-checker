@@ -175,7 +175,7 @@ FROM   systems
 }
 
 func filterComponentsWithDepth(components []*pkg.Component, depth int) []*pkg.Component {
-	if depth == 0 {
+	if depth <= 0 || components == nil {
 		return components
 	}
 	if depth == 1 {
