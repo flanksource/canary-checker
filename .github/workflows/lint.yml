@@ -30,16 +30,6 @@ on:
       - "**.tsx?"
       - "chart/**"
 jobs:
-  eslint:
-    runs-on: ubuntu-latest
-    container:
-      image: node:15.14-alpine
-    steps:
-      - uses: actions/checkout@master
-      - run: npm ci
-        working-directory: ./ui
-      - run: npm run lint:eslint
-        working-directory: ./ui
   golangci:
     name: lint
     runs-on: ubuntu-latest
