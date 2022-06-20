@@ -16,3 +16,4 @@ wait4x
 .vscode/
 chart/templates/crd.yaml
 postgres-db/
+ui/scripts/
