@@ -157,7 +157,10 @@ func PersisComponentRelationships(relationships []*pkg.ComponentRelationship) er
 }
 
 func PersistComponentRelationship(relationship *pkg.ComponentRelationship) error {
-	tx := Gorm.Create(relationship)
+	tx := Gorm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "component_id"}, {Name: "relationship_id"}, {Name: "selector_id"}},
+		UpdateAll: true,
+	}).Create(relationship)
 	return tx.Error
 }
 
