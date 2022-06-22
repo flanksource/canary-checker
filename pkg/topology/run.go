@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/templating"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
@@ -205,6 +206,9 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.System {
 			for _, component := range components {
 				for key, value := range ctx.SystemAPI.Labels {
 					// don't overwrite the component labels
+					if component.Labels == nil {
+						component.Labels = make(types.JSONStringMap)
+					}
 					if _, isPresent := component.Labels[key]; !isPresent {
 						component.Labels[key] = value
 					}
