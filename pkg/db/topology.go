@@ -133,8 +133,8 @@ func PersistSystem(system *pkg.System) (string, []pkg.Component, error) {
 		if compID, err = PersistComponent(component); err != nil {
 			logger.Errorf("Error persisting component %v", err)
 		}
-		components = append(components, *component)
 		component.ID = uuid.MustParse(compID)
+		components = append(components, *component)
 		for _, child := range component.Components {
 			child.SystemId = &system.ID
 			child.ParentId = &component.ID
@@ -226,9 +226,10 @@ func DeleteComponentsWithIDs(compIDs []string, deleteTime time.Time) error {
 	return tx.Error
 }
 
-func GetActiveComponentsWithSystemID(systemID string) ([]pkg.Component, error) {
+func GetActiveComponentsWithSystemID(systemID string) (components []pkg.Component, err error) {
 	logger.Infof("Finding components with system id: %s", systemID)
-	componentsModel := &[]pkg.Component{}
-	tx := Gorm.Find(componentsModel).Where("system_id = ? and deleted_at is not NULL", systemID)
-	return *componentsModel, tx.Error
+	if err := Gorm.Table("components").Where("deleted_at is NULL and system_id = ?", systemID).Find(&components).Error; err != nil {
+		return nil, err
+	}
+	return
 }

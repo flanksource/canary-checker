@@ -134,7 +134,7 @@ func init() {
 	Topology.PersistentFlags().StringVarP(&namespace, "namespace", "n", "default", "Namespace to query")
 	QueryTopology.Flags().StringVar(&queryParams.TopologyId, "topology", "", "The topology id to query")
 	QueryTopology.Flags().StringVar(&queryParams.ComponentId, "component", "", "The component id to query")
-	QueryTopology.Flags().IntVar(&queryParams.Depth, "depth", 3, "The depth of the components to return")
+	QueryTopology.Flags().IntVar(&queryParams.Depth, "depth", 1, "The depth of the components to return")
 
 	Topology.AddCommand(RunTopology, QueryTopology, AddTopology)
 	Root.AddCommand(Topology)
