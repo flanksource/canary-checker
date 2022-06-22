@@ -14,7 +14,7 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/flanksource/canary-checker/api/external"
-	"k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -199,7 +199,7 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	logger.Debugf("%s created=%s, scheduled=%d, started=%d, running=%d wall=%s nodeName=%s", pod.Name, created, scheduled, started, running, startTimer, nextNode)
 
 	if err := c.createServiceAndIngress(podCheck, pod); err != nil {
-		return results.Failf("failed to create ingress: %v", err)
+		return results.Failf("failed to create service or ingress: %v", err)
 	}
 
 	deadline := time.Now().Add(time.Duration(podCheck.Deadline) * time.Millisecond)
@@ -388,18 +388,22 @@ func (c *PodChecker) createServiceAndIngress(podCheck canaryv1.PodCheck, pod *v1
 		return perrors.Wrapf(err, "Failed to create service for pod %s in namespace %s", pod.Name, pod.Namespace)
 	}
 
-	ingress, err := c.k8s.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Get(gocontext.TODO(), podCheck.IngressName, metav1.GetOptions{})
+	ingress, err := c.k8s.NetworkingV1().Ingresses(podCheck.Namespace).Get(gocontext.TODO(), podCheck.IngressName, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return perrors.Wrapf(err, "Failed to get ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
 	} else if err == nil {
-		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServiceName = svc.Name
-		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServicePort = intstr.FromInt(int(podCheck.Port))
-		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Update(gocontext.TODO(), ingress, metav1.UpdateOptions{}); err != nil {
+		logger.Debugf("Updating ingress: %s", podCheck.IngressName)
+		pathType := networkingv1.PathTypePrefix
+		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.Service.Name = svc.Name
+		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.Service.Port.Number = int32(podCheck.Port)
+		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathType
+		if _, err := c.k8s.NetworkingV1().Ingresses(podCheck.Namespace).Update(gocontext.TODO(), ingress, metav1.UpdateOptions{}); err != nil {
 			return perrors.Wrapf(err, "failed to update ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
 		}
 	} else {
+		logger.Debugf("Creating ingress: %s", podCheck.IngressName)
 		ingress := c.newIngress(podCheck, svc.Name)
-		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(podCheck.Namespace).Create(gocontext.TODO(), ingress, metav1.CreateOptions{}); err != nil {
+		if _, err := c.k8s.NetworkingV1().Ingresses(podCheck.Namespace).Create(gocontext.TODO(), ingress, metav1.CreateOptions{}); err != nil {
 			return perrors.Wrapf(err, "failed to create ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
 		}
 	}
@@ -407,11 +411,12 @@ func (c *PodChecker) createServiceAndIngress(podCheck canaryv1.PodCheck, pod *v1
 	return nil
 }
 
-func (c *PodChecker) newIngress(podCheck canaryv1.PodCheck, svc string) *v1beta1.Ingress {
-	ingress := &v1beta1.Ingress{
+func (c *PodChecker) newIngress(podCheck canaryv1.PodCheck, svc string) *networkingv1.Ingress {
+	pathType := networkingv1.PathTypePrefix
+	ingress := &networkingv1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Ingress",
-			APIVersion: "extensions/v1beta1",
+			APIVersion: "networking/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podCheck.IngressName,
@@ -420,18 +425,23 @@ func (c *PodChecker) newIngress(podCheck canaryv1.PodCheck, svc string) *v1beta1
 				podCheckSelector: c.podCheckSelectorValue(podCheck),
 			},
 		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
+		Spec: networkingv1.IngressSpec{
+			Rules: []networkingv1.IngressRule{
 				{
 					Host: podCheck.IngressHost,
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
+					IngressRuleValue: networkingv1.IngressRuleValue{
+						HTTP: &networkingv1.HTTPIngressRuleValue{
+							Paths: []networkingv1.HTTPIngressPath{
 								{
-									Path: podCheck.Path,
-									Backend: v1beta1.IngressBackend{
-										ServiceName: svc,
-										ServicePort: intstr.FromInt(int(podCheck.Port)),
+									Path:     podCheck.Path,
+									PathType: &pathType,
+									Backend: networkingv1.IngressBackend{
+										Service: &networkingv1.IngressServiceBackend{
+											Name: svc,
+											Port: networkingv1.ServiceBackendPort{
+												Number: int32(podCheck.Port),
+											},
+										},
 									},
 								},
 							},
