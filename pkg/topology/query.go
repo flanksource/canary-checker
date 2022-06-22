@@ -17,6 +17,8 @@ import (
 
 var json = jsontime.ConfigWithCustomTimeFormat
 
+const DefaultDepth = 1
+
 func NewTopologyParams(values url.Values) TopologyParams {
 	params := TopologyParams{
 		Id:          values.Get("id"),
@@ -34,6 +36,8 @@ func NewTopologyParams(values url.Values) TopologyParams {
 
 	if depth := values.Get("depth"); depth != "" {
 		params.Depth, _ = strconv.Atoi(depth)
+	} else {
+		params.Depth = DefaultDepth
 	}
 	return params
 }
