@@ -107,7 +107,7 @@ UNION
 SELECT NULL :: jsonb                         AS systems,
 	json_agg(To_json(components)) :: jsonb AS components
 FROM components
-WHERE components.id = :id OR components.parent_id = :id`
+WHERE components.deleted_at IS NULL and (components.id = :id OR components.parent_id = :id) `
 
 	if p.Status != "" {
 		s += " AND components.status = :status"
