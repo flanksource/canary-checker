@@ -11,6 +11,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echopprof "github.com/sevennt/echo-pprof"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/controllers"
@@ -32,7 +33,7 @@ import (
 )
 
 var schedule, configFile string
-var executor bool
+var executor, debug bool
 
 var Serve = &cobra.Command{
 	Use:   "serve config.yaml",
@@ -81,6 +82,12 @@ func serve() {
 
 	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheusURL)
 
+	if debug {
+		logger.Infof("Starting pprof at /debug")
+		echopprof.Wrap(e)
+	}
+
+	e.Use(middleware.Logger())
 	e.GET("/api", api.CheckSummary)
 	e.GET("/about", api.About)
 	e.GET("/api/graph", api.CheckDetails)
@@ -89,13 +96,18 @@ func serve() {
 	e.GET("/api/topology", api.Topology)
 	e.GET("/metrics", echo.WrapHandler(promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{})))
 	e.GET("/api/changes", api.Changes)
-	if err := e.Start(fmt.Sprintf(":%d", httpPort)); err != nil {
-		e.Logger.Fatal(err)
-	}
+
+	// Start server
+	go func() {
+		if err := e.Start(fmt.Sprintf(":%d", httpPort)); err != nil && err != http.ErrServerClosed {
+			e.Logger.Fatal(err)
+		}
+	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
+	logger.Infof("Shutting down")
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
 	if err := db.StopServer(); err != nil {
@@ -116,7 +128,9 @@ func stripQuery(f echo.HandlerFunc) echo.HandlerFunc {
 
 func init() {
 	ServerFlags(Serve.Flags())
+	debugDefault := os.Getenv("DEBUG") == "true"
 	Serve.Flags().BoolVar(&executor, "executor", true, "If false, only serve the UI and sync the configs")
+	Serve.Flags().BoolVar(&debug, "debug", debugDefault, "If true, start pprof at /debug")
 	Serve.Flags().StringVarP(&configFile, "configfile", "c", "", "Specify configfile")
 	Serve.Flags().StringVarP(&schedule, "schedule", "s", "", "schedule to run checks on. Supports all cron expression and golang duration support in format: '@every duration'")
 }
