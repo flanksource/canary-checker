@@ -84,6 +84,7 @@ func serve() {
 		echopprof.Wrap(e)
 	}
 
+	e.Use(middleware.Logger())
 	e.GET("/api", api.CheckSummary)
 	e.GET("/about", api.About)
 	e.GET("/api/graph", api.CheckDetails)
@@ -92,13 +93,18 @@ func serve() {
 	e.GET("/api/topology", api.Topology)
 	e.GET("/metrics", echo.WrapHandler(promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{})))
 	e.GET("/api/changes", api.Changes)
-	if err := e.Start(fmt.Sprintf(":%d", httpPort)); err != nil {
-		e.Logger.Fatal(err)
-	}
+
+	// Start server
+	go func() {
+		if err := e.Start(fmt.Sprintf(":%d", httpPort)); err != nil && err != http.ErrServerClosed {
+			e.Logger.Fatal(err)
+		}
+	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
+	logger.Infof("Shutting down")
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
 	if err := db.StopServer(); err != nil {
