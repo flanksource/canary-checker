@@ -11,6 +11,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echopprof "github.com/sevennt/echo-pprof"
 
 	"github.com/flanksource/canary-checker/pkg/controllers"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -30,7 +31,7 @@ import (
 )
 
 var schedule, configFile string
-var executor bool
+var executor, debug bool
 
 var Serve = &cobra.Command{
 	Use:   "serve config.yaml",
@@ -78,6 +79,11 @@ func serve() {
 
 	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheusURL)
 
+	if debug {
+		logger.Infof("Starting pprof at /debug")
+		echopprof.Wrap(e)
+	}
+
 	e.GET("/api", api.CheckSummary)
 	e.GET("/about", api.About)
 	e.GET("/api/graph", api.CheckDetails)
@@ -113,7 +119,9 @@ func stripQuery(f echo.HandlerFunc) echo.HandlerFunc {
 
 func init() {
 	ServerFlags(Serve.Flags())
+	debugDefault := os.Getenv("DEBUG") == "true"
 	Serve.Flags().BoolVar(&executor, "executor", true, "If false, only serve the UI and sync the configs")
+	Serve.Flags().BoolVar(&debug, "debug", debugDefault, "If true, start pprof at /debug")
 	Serve.Flags().StringVarP(&configFile, "configfile", "c", "", "Specify configfile")
 	Serve.Flags().StringVarP(&schedule, "schedule", "s", "", "schedule to run checks on. Supports all cron expression and golang duration support in format: '@every duration'")
 }
