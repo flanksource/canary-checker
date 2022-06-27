@@ -12,7 +12,7 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/flanksource/canary-checker/api/external"
-	"k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/client-go/kubernetes"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -318,18 +318,22 @@ func (c *NamespaceChecker) createServiceAndIngress(check canaryv1.NamespaceCheck
 		return perrors.Wrapf(err, "Failed to create service for pod %s in namespace %s", pod.Name, pod.Namespace)
 	}
 
-	ingress, err := c.k8s.ExtensionsV1beta1().Ingresses(ns.Name).Get(c.ctx, check.IngressName, metav1.GetOptions{})
+	ingress, err := c.k8s.NetworkingV1().Ingresses(ns.Name).Get(c.ctx, check.IngressName, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return perrors.Wrapf(err, "Failed to get ingress %s in namespace %s", check.IngressName, ns.Name)
 	} else if err == nil {
-		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServiceName = svc.Name
-		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServicePort = intstr.FromInt(int(check.Port))
-		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(ns.Name).Update(c.ctx, ingress, metav1.UpdateOptions{}); err != nil {
+		logger.Debugf("Updating ingress: %s", check.IngressName)
+		pathType := networkingv1.PathTypePrefix
+		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.Service.Name = svc.Name
+		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.Service.Port.Number = int32(check.Port)
+		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathType
+		if _, err := c.k8s.NetworkingV1().Ingresses(ns.Name).Update(c.ctx, ingress, metav1.UpdateOptions{}); err != nil {
 			return perrors.Wrapf(err, "failed to update ingress %s in namespace %s", check.IngressName, ns.Name)
 		}
 	} else {
+		logger.Debugf("Creating ingress: %s", check.IngressName)
 		ingress := c.newIngress(check, ns, svc.Name)
-		if _, err := c.k8s.ExtensionsV1beta1().Ingresses(ns.Name).Create(c.ctx, ingress, metav1.CreateOptions{}); err != nil {
+		if _, err := c.k8s.NetworkingV1().Ingresses(ns.Name).Create(c.ctx, ingress, metav1.CreateOptions{}); err != nil {
 			return perrors.Wrapf(err, "failed to create ingress %s in namespace %s", check.IngressName, ns.Name)
 		}
 	}
@@ -337,28 +341,34 @@ func (c *NamespaceChecker) createServiceAndIngress(check canaryv1.NamespaceCheck
 	return nil
 }
 
-func (c *NamespaceChecker) newIngress(check canaryv1.NamespaceCheck, ns *v1.Namespace, svc string) *v1beta1.Ingress {
-	ingress := &v1beta1.Ingress{
+func (c *NamespaceChecker) newIngress(check canaryv1.NamespaceCheck, ns *v1.Namespace, svc string) *networkingv1.Ingress {
+	pathType := networkingv1.PathTypePrefix
+	ingress := &networkingv1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Ingress",
-			APIVersion: "extensions/v1beta1",
+			APIVersion: "networking/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      check.IngressName,
 			Namespace: ns.Name,
 		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
+		Spec: networkingv1.IngressSpec{
+			Rules: []networkingv1.IngressRule{
 				{
 					Host: check.IngressHost,
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
+					IngressRuleValue: networkingv1.IngressRuleValue{
+						HTTP: &networkingv1.HTTPIngressRuleValue{
+							Paths: []networkingv1.HTTPIngressPath{
 								{
-									Path: check.Path,
-									Backend: v1beta1.IngressBackend{
-										ServiceName: svc,
-										ServicePort: intstr.FromInt(int(check.Port)),
+									Path:     check.Path,
+									PathType: &pathType,
+									Backend: networkingv1.IngressBackend{
+										Service: &networkingv1.IngressServiceBackend{
+											Name: svc,
+											Port: networkingv1.ServiceBackendPort{
+												Number: int32(check.Port),
+											},
+										},
 									},
 								},
 							},
