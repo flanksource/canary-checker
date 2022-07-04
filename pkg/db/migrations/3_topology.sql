@@ -83,5 +83,4 @@ language plpgsql;
 DROP TABLE component_relationships;
 DROP FUNCTION lookup_component_by_property;
 DROP TABLE components;
--- DROP TABLE systems;
 DROP TABLE templates;

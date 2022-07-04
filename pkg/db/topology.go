@@ -152,8 +152,6 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 	}
 	persistedComponents = append(persistedComponents, component.ID)
 	for _, child := range component.Components {
-		var err error
-		var childIDs []uuid.UUID
 		child.SystemTemplateID = component.SystemTemplateID
 		if component.Path != "" {
 			child.Path = component.Path + "." + component.ID.String()
@@ -161,10 +159,11 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 			child.Path = component.ID.String()
 		}
 		child.ParentId = &component.ID
-		if childIDs, err = PersistComponent(child); err != nil {
+		if childIDs, err := PersistComponent(child); err != nil {
 			logger.Errorf("Error persisting child component of %v, :v", component.ID, err)
+		} else {
+			persistedComponents = append(persistedComponents, childIDs...)
 		}
-		persistedComponents = append(persistedComponents, childIDs...)
 	}
 	return persistedComponents, tx.Error
 }
@@ -184,11 +183,11 @@ func DeleteSystemTemplate(systemTemplate *v1.SystemTemplate) error {
 	return DeleteComponnents(systemTemplate.GetPersistedID(), deleteTime)
 }
 
-// DeleteComponents deletes all components associated with a system
-func DeleteComponnents(systemID string, deleteTime time.Time) error {
-	logger.Infof("Deleting all components associated with system: %s", systemID)
+// DeleteComponents deletes all components associated with a systemTemplate
+func DeleteComponnents(systemTemplateID string, deleteTime time.Time) error {
+	logger.Infof("Deleting all components associated with system: %s", systemTemplateID)
 	componentsModel := &[]pkg.Component{}
-	tx := Gorm.Find(componentsModel).Where("system_template_id = ?", systemID).UpdateColumn("deleted_at", deleteTime)
+	tx := Gorm.Find(componentsModel).Where("system_template_id = ?", systemTemplateID).UpdateColumn("deleted_at", deleteTime)
 	return tx.Error
 }
 
