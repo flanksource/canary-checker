@@ -16,39 +16,12 @@ CREATE TABLE templates (
   UNIQUE (name, namespace)
 );
 
-CREATE TABLE systems (
-  id UUID DEFAULT generate_ulid() PRIMARY KEY,
-  system_template_id UUID,
-  external_id text NULL,
-  name text NOT NULL, -- Corresponding to .metadata.name
-  namespace text,
-  text text NULL,
-  status text NOT NULL,
-  hidden boolean NOT NULL DEFAULT false,
-  silenced boolean NOT NULL DEFAULT false,
-  label text,
-  labels jsonb null,
-  tooltip text,
-  lifecycle text,
-  icon text,
-  owner text,
-  type text,
-  topology_type text,
-  properties jsonb,
-  summary  jsonb,
-  created_at timestamp NOT NULL DEFAULT now(),
-  updated_at timestamp NOT NULL DEFAULT now(),
-  deleted_at TIMESTAMP DEFAULT NULL,
-  FOREIGN KEY (system_template_id) REFERENCES templates(id),
-  unique (type, external_id)
-);
-
 
 CREATE TABLE components (
   id UUID DEFAULT generate_ulid() PRIMARY KEY,
+  system_template_id UUID,
   external_id text NOT NULL,
   parent_id UUID DEFAULT NULL,
-  system_id UUID NULL,
   name text NOT NULL, -- Corresponding to .metadata.name
   text text NULL,
   topology_type text,
@@ -66,13 +39,14 @@ CREATE TABLE components (
   owner text,
   selectors jsonb,
   properties jsonb,
+  path text,
   summary  jsonb,
   created_at timestamp NOT NULL DEFAULT now(),
   updated_at timestamp NOT NULL DEFAULT now(),
   deleted_at TIMESTAMP DEFAULT NULL,
   FOREIGN KEY (parent_id) REFERENCES components(id),
-  FOREIGN KEY (system_id) REFERENCES systems(id),
-  UNIQUE (system_id, type, name, parent_id)
+  FOREIGN KEY (system_template_id) REFERENCES templates(id),
+  UNIQUE (system_template_id, type, name, parent_id)
 );
 
 
@@ -109,5 +83,5 @@ language plpgsql;
 DROP TABLE component_relationships;
 DROP FUNCTION lookup_component_by_property;
 DROP TABLE components;
-DROP TABLE systems;
+-- DROP TABLE systems;
 DROP TABLE templates;

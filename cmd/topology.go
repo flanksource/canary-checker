@@ -86,7 +86,7 @@ var RunTopology = &cobra.Command{
 		}
 		opts := getTopologyRunOptions(10)
 
-		var results = []*pkg.System{}
+		var results = []*pkg.Component{}
 
 		wg := sync.WaitGroup{}
 
@@ -101,8 +101,8 @@ var RunTopology = &cobra.Command{
 				wg.Add(1)
 				_config := config
 				go func() {
-					systems := topology.Run(opts, _config)
-					results = append(results, systems...)
+					components := topology.Run(opts, _config)
+					results = append(results, components...)
 					wg.Done()
 				}()
 			}
@@ -112,7 +112,7 @@ var RunTopology = &cobra.Command{
 		logger.Infof("Checked %d systems in %v", len(results), timer)
 
 		if db.IsConnected() {
-			if err := db.PersistSystems(results); err != nil {
+			if err := db.PersistComponents(results); err != nil {
 				logger.Errorf("error persisting results: %v", err)
 			}
 			return

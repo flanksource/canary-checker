@@ -71,7 +71,7 @@ func (p TopologyParams) String() string {
 func (p TopologyParams) GetSystemWhereClause() string {
 	s := ""
 	if p.getID() != "" {
-		s = "WHERE systems.id = :id"
+		s = "WHERE templates.id = :id"
 	}
 
 	if p.Status != "" {
@@ -99,35 +99,20 @@ func (p TopologyParams) getID() string {
 }
 
 func (p TopologyParams) GetComponentWhereClause() string {
-	if p.getID() == "" {
-		return ""
+	s := "where deleted_at is null "
+	if p.getID() != "" {
+		s += " and (starts_with(path, (select concat(path,'.', id) as path from components where id = :id)) or id = :id)"
 	}
-	s := `
-UNION
-SELECT NULL :: jsonb                         AS systems,
-	json_agg(To_json(components)) :: jsonb AS components
-FROM components
-WHERE components.deleted_at IS NULL and (components.id = :id OR components.parent_id = :id) `
-
 	if p.Status != "" {
 		s += " AND components.status = :status"
 	}
 	return s
 }
 
-func Query(params TopologyParams) ([]pkg.System, error) {
+func Query(params TopologyParams) (pkg.Components, error) {
 	sql := fmt.Sprintf(`
-SELECT
-	to_json(systems) :: jsonb       AS systems,
-	components.components :: jsonb AS components
-FROM   systems
-	full join (SELECT system_id,
-										json_agg(To_json(components)) AS components
-						 FROM   components where deleted_at is NULL
-						 GROUP  BY system_id) AS components
-	ON systems.id = components.system_id
-%s
-%s`, params.GetSystemWhereClause(), params.GetComponentWhereClause())
+	Select json_agg(To_json(components)) :: jsonb as components from components 
+%s`, params.GetComponentWhereClause())
 
 	args := make(map[string]interface{})
 	if params.Status != "" {
@@ -143,52 +128,18 @@ FROM   systems
 
 	logger.Infof("Querying topology (%s) => %s", params, sql)
 
-	var results []pkg.System
+	var results pkg.Components
 	rows, err := db.QueryNamed(context.Background(), sql, args)
 	if err != nil {
 		return nil, errors.Wrapf(err, "db query failed")
 	}
 	for rows.Next() {
-		system := &pkg.System{}
-		if len(rows.RawValues()[0]) > 0 {
-			if err := json.Unmarshal(rows.RawValues()[0], system); err != nil {
-				return nil, errors.Wrapf(err, "failed to unmarshal: %s", rows.RawValues()[0])
-			}
+		var components pkg.Components
+		if err := json.Unmarshal(rows.RawValues()[0], &components); err != nil {
+			fmt.Println(err)
+			return nil, errors.Wrapf(err, "failed to unmarshal components: %s", rows.RawValues()[0])
 		}
-		if len(rows.RawValues()[1]) != 0 {
-			var components pkg.Components
-			if err := json.Unmarshal(rows.RawValues()[1], &components); err != nil {
-				return nil, errors.Wrapf(err, "failed to unmarshal components: %s", rows.RawValues()[1])
-			}
-			system.Components = components
-			for i := range system.Components {
-				if system.Components[i].ParentId == nil {
-					if system.ID.String() != "" {
-						system.Components[i].ParentId = &system.ID
-					}
-				}
-			}
-		}
-
-		results = append(results, *system)
-	}
-	for _, result := range results {
-		result.Components = filterComponentsWithDepth(result.Components, params.Depth)
+		results = append(results, components...)
 	}
 	return results, nil
-}
-
-func filterComponentsWithDepth(components []*pkg.Component, depth int) []*pkg.Component {
-	if depth <= 0 || components == nil {
-		return components
-	}
-	if depth == 1 {
-		for _, comp := range components {
-			comp.Components = nil
-		}
-	}
-	for _, comp := range components {
-		comp.Components = filterComponentsWithDepth(comp.Components, depth-1)
-	}
-	return components
 }

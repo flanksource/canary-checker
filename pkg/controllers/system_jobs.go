@@ -34,27 +34,31 @@ func (job SystemJob) Run() {
 		Depth:     10,
 		Namespace: job.Namespace,
 	}
-	systems := topology.Run(opts, job.SystemTemplate)
-	for _, system := range systems {
-		system.Name = job.SystemTemplate.Name
-		system.Namespace = job.SystemTemplate.Namespace
-		system.Labels = job.SystemTemplate.Labels
-		systemTemplateID, _ := uuid.Parse(job.SystemTemplate.GetPersistedID())
-		system.SystemTemplateID = &systemTemplateID
-		systemID, comps, err := db.PersistSystem(system)
+	components := topology.Run(opts, job.SystemTemplate)
+	systemTemplateID, err := uuid.Parse(job.SystemTemplate.GetPersistedID())
+	if err != nil {
+		logger.Errorf("error finding the systemTemplateID")
+	}
+	var compIDs []uuid.UUID
+	for _, component := range components {
+		component.Name = job.SystemTemplate.Name
+		component.Namespace = job.SystemTemplate.Namespace
+		component.Labels = job.SystemTemplate.Labels
+		component.SystemTemplateID = &systemTemplateID
+		componentsIDs, err := db.PersistComponent(component)
 		if err != nil {
-			logger.Errorf("error persisting the system: %v", err)
+			logger.Errorf("error persisting the component: %v", err)
 		}
-		dbComps, err := db.GetActiveComponentsWithSystemID(systemID)
-		if err != nil {
-			logger.Errorf("error getting components for system: %v", err)
-			continue
-		}
-		compIDs := difference(dbComps, comps)
-		if compIDs != nil {
-			if err := db.DeleteComponentsWithIDs(compIDs, time.Now()); err != nil {
-				logger.Errorf("error deleting components: %v", err)
-			}
+		compIDs = append(compIDs, componentsIDs...)
+	}
+	dbCompsIDs, err := db.GetActiveComponentsIDsWithSystemTemplateID(systemTemplateID.String())
+	if err != nil {
+		logger.Errorf("error getting components for system: %v", err)
+	}
+	deleteCompIDs := difference(dbCompsIDs, compIDs)
+	if deleteCompIDs != nil {
+		if err := db.DeleteComponentsWithIDs(deleteCompIDs, time.Now()); err != nil {
+			logger.Errorf("error deleting components: %v", err)
 		}
 	}
 	topology.ComponentRun()
@@ -146,15 +150,15 @@ func DeleteSystemJob(systemTemplate v1.SystemTemplate) {
 }
 
 // difference returns the elements in `a` that aren't in `b`.
-func difference(a, b []pkg.Component) []string {
+func difference(a, b []uuid.UUID) []string {
 	mb := make(map[string]struct{}, len(b))
 	for _, x := range b {
-		mb[x.ID.String()] = struct{}{}
+		mb[x.String()] = struct{}{}
 	}
 	var diff []string
 	for _, x := range a {
-		if _, found := mb[x.ID.String()]; !found {
-			diff = append(diff, x.ID.String())
+		if _, found := mb[x.String()]; !found {
+			diff = append(diff, x.String())
 		}
 	}
 	return diff
