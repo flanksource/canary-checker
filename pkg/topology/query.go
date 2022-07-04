@@ -101,7 +101,7 @@ func (p TopologyParams) getID() string {
 func (p TopologyParams) GetComponentWhereClause() string {
 	s := "where deleted_at is null "
 	if p.getID() != "" {
-		s += " and (starts_with(path, (select concat(path,'.', id) as path from components where id = :id)) or id = :id)"
+		s += " and (starts_with(path, (select concat(path,'.', id) as path from components where id = :id)) or id = :id or path = :id :: text)"
 	}
 	if p.Status != "" {
 		s += " AND components.status = :status"
@@ -136,7 +136,6 @@ func Query(params TopologyParams) (pkg.Components, error) {
 	for rows.Next() {
 		var components pkg.Components
 		if err := json.Unmarshal(rows.RawValues()[0], &components); err != nil {
-			fmt.Println(err)
 			return nil, errors.Wrapf(err, "failed to unmarshal components: %s", rows.RawValues()[0])
 		}
 		results = append(results, components...)

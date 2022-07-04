@@ -23,7 +23,6 @@ func mergeComponentLookup(ctx *ComponentContext, name string, spec *v1.CanarySpe
 		return nil, errors.Wrapf(err, "component lookup failed: %s", name)
 	}
 	if len(results) == 1 {
-		fmt.Println(results[0])
 		if err := json.Unmarshal([]byte(results[0].(string)), &components); err != nil {
 			return nil, errors.Wrapf(err, "component lookup returned invalid json: %s", name)
 		}

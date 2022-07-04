@@ -105,7 +105,6 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 			parent := components.FindByID(*c.ParentId)
 			if parent != nil {
 				parent.Components = append(parent.Components, &c)
-				fmt.Printf("adding %v to the parent %v\n", c.Name, parent.Name)
 				toRemoveCompIDs = append(toRemoveCompIDs, c.ID)
 			}
 		}
