@@ -24,28 +24,6 @@ var json = jsontime.ConfigWithCustomTimeFormat
 
 const ComponentType = "component"
 
-type System struct {
-	Object           `yaml:",inline"`
-	SystemTemplateID *uuid.UUID          `json:"system_template_id,omitempty"`
-	ID               uuid.UUID           `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
-	Tooltip          string              `json:"tooltip,omitempty"`
-	Icon             string              `json:"icon,omitempty"`
-	Text             string              `json:"text,omitempty"`
-	Label            string              `json:"label,omitempty"`
-	Labels           types.JSONStringMap `json:"labels,omitempty"`
-	Owner            string              `json:"owner,omitempty"`
-	Components       Components          `json:"components,omitempty" gorm:"-"`
-	Properties       Properties          `json:"properties,omitempty" gorm:"type:properties"`
-	Summary          v1.Summary          `json:"summary,omitempty" gorm:"type:summary"`
-	Status           string              `json:"status,omitempty"`
-	Type             string              `json:"type,omitempty"`
-	CreatedAt        time.Time           `json:"created_at,omitempty" time_format:"postgres_timestamp"`
-	UpdatedAt        time.Time           `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
-	DeletedAt        gorm.DeletedAt      `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
-	ExternalId       string              `json:"external_id,omitempty"` //nolint
-	TopologyType     string              `json:"topology_type,omitempty"`
-}
-
 type SystemTemplate struct {
 	ID        uuid.UUID `gorm:"default:generate_ulid()"`
 	Name      string
@@ -91,13 +69,6 @@ func (s *SystemTemplate) ToV1() v1.SystemTemplate {
 	}
 }
 
-func (s System) GetAsEnvironment() map[string]interface{} {
-	return map[string]interface{}{
-		"self":       s,
-		"properties": s.Properties.AsMap(),
-	}
-}
-
 type Object struct {
 	Name      string              `json:"name,omitempty"`
 	Namespace string              `json:"namespace,omitempty"`
@@ -120,30 +91,30 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &flat); err != nil {
 		return err
 	}
-	for _, c := range flat {
+	for _, _c := range flat {
+		c := _c
 		c.TopologyType = ComponentType
-		if c.ParentId == nil {
-			// first add parents
-			parent := c
-			*components = append(*components, &parent)
-		}
+		*components = append(*components, &c)
 	}
+	var toRemoveCompIDs []uuid.UUID
 
 	for _, _c := range flat {
 		c := _c
 		c.TopologyType = ComponentType
 		if c.ParentId != nil {
 			parent := components.FindByID(*c.ParentId)
-			if parent == nil {
-				*components = append(*components, &c)
-			} else {
+			if parent != nil {
 				parent.Components = append(parent.Components, &c)
+				toRemoveCompIDs = append(toRemoveCompIDs, c.ID)
 			}
 		}
 	}
-
+	for _, id := range toRemoveCompIDs {
+		i := components.FindIndexByID(id)
+		*components = append((*components)[:i], (*components)[i+1:]...)
+	}
 	for _, component := range *components {
-		component.Summary = component.Summarize()
+		(*component).Summary = component.Summarize()
 	}
 
 	return nil
@@ -161,20 +132,21 @@ type Component struct {
 	Owner        string              `json:"owner,omitempty"`
 	Status       string              `json:"status,omitempty"`
 	StatusReason string              `json:"statusReason,omitempty"`
+	Path         string              `json:"path,omitempty"`
 	// The type of component, e.g. service, API, website, library, database, etc.
 	Type    string     `json:"type,omitempty"`
 	Summary v1.Summary `json:"summary,omitempty" gorm:"type:summary"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
-	Lifecycle  string               `json:"lifecycle,omitempty"`
-	Properties Properties           `json:"properties,omitempty" gorm:"type:properties"`
-	Components Components           `json:"components,omitempty" gorm:"-"`
-	ParentId   *uuid.UUID           `json:"parent_id,omitempty"` //nolint
-	Selectors  v1.ResourceSelectors `json:"selector,omitempty" gorm:"resourceSelectors"`
-	SystemId   *uuid.UUID           `json:"system_id,omitempty"` //nolint
-	CreatedAt  time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
-	UpdatedAt  time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
-	DeletedAt  gorm.DeletedAt       `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
-	ExternalId string               `json:"external_id,omitempty"` //nolint
+	Lifecycle        string               `json:"lifecycle,omitempty"`
+	Properties       Properties           `json:"properties,omitempty" gorm:"type:properties"`
+	Components       Components           `json:"components,omitempty" gorm:"-"`
+	ParentId         *uuid.UUID           `json:"parent_id,omitempty"` //nolint
+	Selectors        v1.ResourceSelectors `json:"selector,omitempty" gorm:"resourceSelectors"`
+	SystemTemplateID *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
+	CreatedAt        time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
+	UpdatedAt        time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt        gorm.DeletedAt       `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
+	ExternalId       string               `json:"external_id,omitempty"` //nolint
 }
 
 type ComponentRelationship struct {
@@ -296,6 +268,15 @@ func (components Components) FindByID(id uuid.UUID) *Component {
 		}
 	}
 	return nil
+}
+
+func (components Components) FindIndexByID(id uuid.UUID) int {
+	for i, component := range components {
+		if component.ID == id {
+			return i
+		}
+	}
+	return -1
 }
 
 type ComponentStatus struct {

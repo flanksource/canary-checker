@@ -34,11 +34,12 @@ func PersistSystemTemplate(system *v1.SystemTemplate) (string, bool, error) {
 	return model.ID.String(), changed, nil
 }
 
-func PersistSystems(results []*pkg.System) error {
-	for _, system := range results {
-		_, _, err := PersistSystem(system)
+func PersistComponents(results []*pkg.Component) error {
+	for _, component := range results {
+		_, err := PersistComponent(component)
 		if err != nil {
-			return err
+			logger.Debugf("Error persisting component %v", err)
+			continue
 		}
 	}
 	return nil
@@ -117,36 +118,6 @@ func GetSelectorID(selectors v1.ResourceSelectors) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func PersistSystem(system *pkg.System) (string, []pkg.Component, error) {
-	tx := Gorm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "type"}, {Name: "external_id"}},
-		UpdateAll: true,
-	}).Create(system)
-	if tx.Error != nil {
-		return "", nil, tx.Error
-	}
-	var components []pkg.Component
-	for _, component := range system.Components {
-		component.SystemId = &system.ID
-		var compID string
-		var err error
-		if compID, err = PersistComponent(component); err != nil {
-			logger.Errorf("Error persisting component %v", err)
-		}
-		component.ID = uuid.MustParse(compID)
-		components = append(components, *component)
-		for _, child := range component.Components {
-			child.SystemId = &system.ID
-			child.ParentId = &component.ID
-			if _, err := PersistComponent(child); err != nil {
-				logger.Errorf("Error persisting child component of %v, :v", component.ID, err)
-			}
-			components = append(components, *child)
-		}
-	}
-	return system.ID.String(), components, nil
-}
-
 func PersisComponentRelationships(relationships []*pkg.ComponentRelationship) error {
 	for _, relationship := range relationships {
 		if err := PersistComponentRelationship(relationship); err != nil {
@@ -164,13 +135,14 @@ func PersistComponentRelationship(relationship *pkg.ComponentRelationship) error
 	return tx.Error
 }
 
-func PersistComponent(component *pkg.Component) (string, error) {
+func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 	existingComponenet := &pkg.Component{}
+	var persistedComponents []uuid.UUID
 	var tx *gorm.DB
 	if component.ParentId == nil {
-		tx = Gorm.Find(existingComponenet, "system_id = ? AND name = ? AND type = ? and parent_id is NULL", component.SystemId, component.Name, component.Type)
+		tx = Gorm.Find(existingComponenet, "system_template_id = ? AND name = ? AND type = ? and parent_id is NULL", component.SystemTemplateID, component.Name, component.Type)
 	} else {
-		tx = Gorm.Find(existingComponenet, "system_id = ? AND name = ? AND type = ? and parent_id = ?", component.SystemId, component.Name, component.Type, component.ParentId)
+		tx = Gorm.Find(existingComponenet, "system_template_id = ? AND name = ? AND type = ? and parent_id = ?", component.SystemTemplateID, component.Name, component.Type, component.ParentId)
 	}
 	if existingComponenet.ID != uuid.Nil {
 		component.ID = existingComponenet.ID
@@ -178,7 +150,22 @@ func PersistComponent(component *pkg.Component) (string, error) {
 	} else {
 		tx = Gorm.Create(component)
 	}
-	return component.ID.String(), tx.Error
+	persistedComponents = append(persistedComponents, component.ID)
+	for _, child := range component.Components {
+		child.SystemTemplateID = component.SystemTemplateID
+		if component.Path != "" {
+			child.Path = component.Path + "." + component.ID.String()
+		} else {
+			child.Path = component.ID.String()
+		}
+		child.ParentId = &component.ID
+		if childIDs, err := PersistComponent(child); err != nil {
+			logger.Errorf("Error persisting child component of %v, :v", component.ID, err)
+		} else {
+			persistedComponents = append(persistedComponents, childIDs...)
+		}
+	}
+	return persistedComponents, tx.Error
 }
 
 func DeleteSystemTemplate(systemTemplate *v1.SystemTemplate) error {
@@ -193,28 +180,14 @@ func DeleteSystemTemplate(systemTemplate *v1.SystemTemplate) error {
 	if tx.Error != nil {
 		return tx.Error
 	}
-	systemID, err := DeleteSystem(systemTemplate.GetPersistedID(), deleteTime)
-	if err != nil {
-		return err
-	}
-	return DeleteComponnents(systemID, deleteTime)
+	return DeleteComponnents(systemTemplate.GetPersistedID(), deleteTime)
 }
 
-func DeleteSystem(systemTemplateID string, deleteTime time.Time) (string, error) {
-	logger.Infof("Deleting system associated with template: %s", systemTemplateID)
-	systemModel := &pkg.System{}
-	tx := Gorm.Find(systemModel).Where("system_template_id = ?", systemTemplateID).UpdateColumn("deleted_at", deleteTime)
-	if tx.Error != nil {
-		return "", tx.Error
-	}
-	return systemModel.ID.String(), nil
-}
-
-// DeleteComponents deletes all components associated with a system
-func DeleteComponnents(systemID string, deleteTime time.Time) error {
-	logger.Infof("Deleting all components associated with system: %s", systemID)
+// DeleteComponents deletes all components associated with a systemTemplate
+func DeleteComponnents(systemTemplateID string, deleteTime time.Time) error {
+	logger.Infof("Deleting all components associated with system: %s", systemTemplateID)
 	componentsModel := &[]pkg.Component{}
-	tx := Gorm.Find(componentsModel).Where("system_id = ?", systemID).UpdateColumn("deleted_at", deleteTime)
+	tx := Gorm.Find(componentsModel).Where("system_template_id = ?", systemTemplateID).UpdateColumn("deleted_at", deleteTime)
 	return tx.Error
 }
 
@@ -226,9 +199,9 @@ func DeleteComponentsWithIDs(compIDs []string, deleteTime time.Time) error {
 	return tx.Error
 }
 
-func GetActiveComponentsWithSystemID(systemID string) (components []pkg.Component, err error) {
+func GetActiveComponentsIDsWithSystemTemplateID(systemID string) (compIDs []uuid.UUID, err error) {
 	logger.Infof("Finding components with system id: %s", systemID)
-	if err := Gorm.Table("components").Where("deleted_at is NULL and system_id = ?", systemID).Find(&components).Error; err != nil {
+	if err := Gorm.Table("components").Where("deleted_at is NULL and system_template_id = ?", systemID).Select("id").Find(&compIDs).Error; err != nil {
 		return nil, err
 	}
 	return

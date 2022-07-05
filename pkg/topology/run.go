@@ -16,14 +16,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-func mergeComponentLookup(ctx *SystemContext, name string, spec *v1.CanarySpec) (pkg.Components, error) {
+func mergeComponentLookup(ctx *ComponentContext, name string, spec *v1.CanarySpec) (pkg.Components, error) {
 	components := pkg.Components{}
 	results, err := lookup(ctx.Kommons, name, *spec)
 	if err != nil {
 		return nil, errors.Wrapf(err, "component lookup failed: %s", name)
 	}
 	if len(results) == 1 {
-		fmt.Println(results[0])
 		if err := json.Unmarshal([]byte(results[0].(string)), &components); err != nil {
 			return nil, errors.Wrapf(err, "component lookup returned invalid json: %s", name)
 		}
@@ -44,7 +43,7 @@ func mergeComponentLookup(ctx *SystemContext, name string, spec *v1.CanarySpec) 
 	return components, nil
 }
 
-func lookupComponents(ctx *SystemContext, component v1.ComponentSpec) ([]*pkg.Component, error) {
+func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg.Component, error) {
 	components := pkg.Components{}
 	for _, childRaw := range component.Components {
 		child := v1.ComponentSpec{}
@@ -124,7 +123,7 @@ func lookup(client *kommons.Client, name string, spec v1.CanarySpec) ([]interfac
 	return results, nil
 }
 
-func lookupProperty(ctx *SystemContext, property *v1.Property) (pkg.Properties, error) {
+func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Properties, error) {
 	prop := pkg.NewProperty(*property)
 	if property.Lookup == nil {
 		return pkg.Properties{prop}, nil
@@ -180,46 +179,44 @@ type TopologyRunOptions struct {
 	Namespace string
 }
 
-func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.System {
+func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 	logger.Debugf("Running topology %s depth=%d", s.Name, opts.Depth)
 	if s.Namespace == "" {
 		s.Namespace = opts.Namespace
 	}
-	ctx := NewSystemContext(opts.Client, s)
-	var results []*pkg.System
-	sys := &pkg.System{
-		Object: pkg.Object{
-			Name:      ctx.SystemAPI.Name,
-			Namespace: ctx.SystemAPI.Namespace,
-		},
-		Labels:  ctx.SystemAPI.Labels,
-		Tooltip: ctx.SystemAPI.Spec.Tooltip,
-		Icon:    ctx.SystemAPI.Spec.Icon,
-		Text:    ctx.SystemAPI.Spec.Text,
-		Type:    ctx.SystemAPI.Spec.Type,
+	ctx := NewComponentContext(opts.Client, s)
+	var results []*pkg.Component
+	component := &pkg.Component{
+		Name:      ctx.SystemTemplate.Name,
+		Namespace: ctx.SystemTemplate.Namespace,
+		Labels:    ctx.SystemTemplate.Labels,
+		Tooltip:   ctx.SystemTemplate.Spec.Tooltip,
+		Icon:      ctx.SystemTemplate.Spec.Icon,
+		Text:      ctx.SystemTemplate.Spec.Text,
+		Type:      ctx.SystemTemplate.Spec.Type,
 	}
 
 	if opts.Depth > 0 {
-		for _, comp := range ctx.SystemAPI.Spec.Components {
+		for _, comp := range ctx.SystemTemplate.Spec.Components {
 			components, err := lookupComponents(ctx, comp)
+			if err != nil {
+				logger.Errorf("Error looking up component %s: %s", comp.Name, err)
+				continue
+			}
 			// add systemTemplates lables to the components
 			for _, component := range components {
-				for key, value := range ctx.SystemAPI.Labels {
+				if component.Labels == nil {
+					component.Labels = make(types.JSONStringMap)
+				}
+				for key, value := range ctx.SystemTemplate.Labels {
 					// don't overwrite the component labels
-					if component.Labels == nil {
-						component.Labels = make(types.JSONStringMap)
-					}
 					if _, isPresent := component.Labels[key]; !isPresent {
 						component.Labels[key] = value
 					}
 				}
 			}
-			if err != nil {
-				logger.Errorf("Error looking up component %s: %s", comp.Name, err)
-				continue
-			}
 			if comp.Lookup == nil {
-				sys.Components = append(sys.Components, components...)
+				component.Components = append(component.Components, components...)
 				continue
 			}
 			group := pkg.NewComponent(comp)
@@ -230,39 +227,38 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.System {
 				group.Summary = *comp.Summary
 			}
 			group.Status = group.Summary.GetStatus()
-			sys.Components = append(sys.Components, group)
+			component.Components = append(component.Components, group)
 		}
 	}
-	ctx.System = sys
-	ctx.Components = &sys.Components
+	ctx.Components = &component.Components
 
-	for _, property := range ctx.SystemAPI.Spec.Properties {
+	for _, property := range ctx.SystemTemplate.Spec.Properties {
 		props, err := lookupProperty(ctx, &property)
 		if err != nil {
 			logger.Errorf("Failed to lookup property %s: %v", property.Name, err)
 		} else {
-			sys.Properties = append(sys.Properties, props...)
+			component.Properties = append(component.Properties, props...)
 		}
 	}
-	sys.Summary = sys.Components.Summarize()
-	if sys.ID.String() == "" && ctx.SystemAPI.Spec.Id != nil {
-		id, err := templating.Template(sys.GetAsEnvironment(), *ctx.SystemAPI.Spec.Id)
+	component.Summary = component.Components.Summarize()
+	if component.ID.String() == "" && ctx.SystemTemplate.Spec.Id != nil {
+		id, err := templating.Template(component.GetAsEnvironment(), *ctx.SystemTemplate.Spec.Id)
 		if err != nil {
 			logger.Errorf("Failed to lookup id: %v", err)
 		} else {
-			sys.ID, _ = uuid.Parse(id)
+			component.ID, _ = uuid.Parse(id)
 		}
 	}
 
-	if sys.ID.String() == "" {
-		sys.ID, _ = uuid.Parse(sys.Name)
+	if component.ID.String() == "" {
+		component.ID, _ = uuid.Parse(component.Name)
 	}
-	sys.Status = sys.Summary.GetStatus()
+	component.Status = component.Summary.GetStatus()
 	// if logger.IsTraceEnabled() {
-	logger.Debugf(sys.Components.Debug(""))
+	logger.Debugf(component.Components.Debug(""))
 	// }
-	results = append(results, sys)
-	logger.Infof("%s id=%s status=%s", sys.Name, sys.ID, sys.Status)
+	results = append(results, component)
+	logger.Infof("%s id=%s status=%s", component.Name, component.ID, component.Status)
 	return results
 }
 

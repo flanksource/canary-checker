@@ -7,11 +7,10 @@ import (
 	"github.com/flanksource/kommons"
 )
 
-type SystemContext struct {
+type ComponentContext struct {
 	*context.KubernetesContext
-	SystemAPI    v1.SystemTemplate
-	ComponentAPI v1.Component
-	System       *pkg.System
+	SystemTemplate v1.SystemTemplate
+	ComponentAPI   v1.Component
 	// Components keep track of the components that properties can apply to,
 	// properties can return a map of component names to properties to facilitate
 	// queries that are more efficient to perform for all components rather than a component at a time
@@ -20,25 +19,24 @@ type SystemContext struct {
 	CurrentComponent *pkg.Component
 }
 
-func (c *SystemContext) Clone() *SystemContext {
-	return &SystemContext{
+func (c *ComponentContext) Clone() *ComponentContext {
+	return &ComponentContext{
 		KubernetesContext: c.KubernetesContext.Clone(),
-		SystemAPI:         c.SystemAPI,
+		SystemTemplate:    c.SystemTemplate,
 		ComponentAPI:      c.ComponentAPI,
-		System:            c.System,
 		Components:        c.Components,
 	}
 }
-func (c *SystemContext) WithComponents(components *pkg.Components, current *pkg.Component) *SystemContext {
+func (c *ComponentContext) WithComponents(components *pkg.Components, current *pkg.Component) *ComponentContext {
 	cloned := c.Clone()
 	cloned.Components = components
 	cloned.CurrentComponent = current
 	return cloned
 }
 
-func NewSystemContext(client *kommons.Client, system v1.SystemTemplate) *SystemContext {
-	return &SystemContext{
+func NewComponentContext(client *kommons.Client, system v1.SystemTemplate) *ComponentContext {
+	return &ComponentContext{
 		KubernetesContext: context.NewKubernetesContext(client, system.Namespace),
-		SystemAPI:         system,
+		SystemTemplate:    system,
 	}
 }
