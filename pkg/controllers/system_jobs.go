@@ -38,6 +38,7 @@ func (job SystemJob) Run() {
 	systemTemplateID, err := uuid.Parse(job.SystemTemplate.GetPersistedID())
 	if err != nil {
 		logger.Errorf("error finding the systemTemplateID")
+		return
 	}
 	var compIDs []uuid.UUID
 	for _, component := range components {
@@ -48,6 +49,7 @@ func (job SystemJob) Run() {
 		componentsIDs, err := db.PersistComponent(component)
 		if err != nil {
 			logger.Errorf("error persisting the component: %v", err)
+			return
 		}
 		compIDs = append(compIDs, componentsIDs...)
 	}
