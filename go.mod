@@ -23,6 +23,7 @@ require (
 	github.com/denisenkom/go-mssqldb v0.11.0
 	github.com/docker/docker v20.10.7+incompatible
 	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
+	github.com/elastic/go-elasticsearch/v8 v8.1.0
 	github.com/fergusstrange/embedded-postgres v1.15.0
 	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
 	github.com/flanksource/commons v1.5.14
@@ -140,6 +141,7 @@ require (
 	github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/dustin/gojson v0.0.0-20160307161227-2e71ec9dd5ad // indirect
+	github.com/elastic/elastic-transport-go/v8 v8.1.0 // indirect
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect

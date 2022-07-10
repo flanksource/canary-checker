@@ -382,6 +382,32 @@ type Mongo struct {
 	MongoDBCheck `yaml:",inline" json:",inline"`
 }
 
+/*
+[include:datasources/elasticsearch_pass.yaml]
+*/
+
+type Elasticsearch struct {
+	ElasticsearchCheck `yaml:",inline" json:",inline"`
+}
+
+type ElasticsearchCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	URL         string          `yaml:"url" json:"url,omitempty" template:"true"`
+	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	Query       string          `yaml:"query" json:"query,omitempty" template:"true"`
+	Index       string          `yaml:"index" json:"index,omitempty" template:"true"`
+	Results     int             `yaml:"results" json:"results,omitempty" template:"true"`
+}
+
+func (c ElasticsearchCheck) GetType() string {
+	return "elasticsearch"
+}
+
+func (c ElasticsearchCheck) GetEndpoint() string {
+	return c.URL
+}
+
 type PodCheck struct {
 	Description          `yaml:",inline" json:",inline"`
 	Namespace            string `yaml:"namespace" json:"namespace,omitempty" template:"true"`
@@ -1110,4 +1136,5 @@ var AllChecks = []external.Check{
 	AwsConfigRuleCheck{},
 	DatabaseBackupCheck{},
 	ConfigDBCheck{},
+	ElasticsearchCheck{},
 }
