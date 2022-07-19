@@ -11,9 +11,18 @@ rm askgit.tar.gz
 
 #verification
 which askgit
-askgit --help
+if ! askgit --help > /dev/null; then
+    printf "`askgit --help` failed. Check the binary?"
+    exit 1;
+fi
 
 # creating a GITHUB_TOKEN Secret
-kubectl create secret generic github-token --from-literal=GITHUB_TOKEN="${GH_TOKEN}" --namespace default
+if [[ -z "${GH_TOKEN}" ]]; then
+    printf "\nEnvironment variable for github token (GH_TOKEN) is missing!!!\n"
+    exit 1;
+else
+    printf "\nCreating secret from github token ending with '${GH_TOKEN:(-8)}'\n"
+fi
 
+kubectl create secret generic github-token --from-literal=GITHUB_TOKEN="${GH_TOKEN}" --namespace default
 kubectl get secret github-token -o yaml --namespace default

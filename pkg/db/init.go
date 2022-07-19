@@ -33,6 +33,7 @@ var DefaultExpiryDays int
 var pgxConnectionString string
 var PostgresServer *embeddedpostgres.EmbeddedPostgres
 var Trace bool
+var HTTPEndpoint = "http://localhost:8080/db"
 
 func Start(ctx context.Context) error {
 	if err := Init(); err != nil {

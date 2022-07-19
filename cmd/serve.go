@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	_ "net/http/pprof" // required by serve
+	"net/url"
 	"os"
 	"os/signal"
 	"time"
@@ -53,6 +54,11 @@ func setup() {
 		logger.Fatalf("error connecting to db %v", err)
 	}
 	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
+
+	// PostgREST needs to know how it is exposed to create the correct links
+	db.HTTPEndpoint = publicEndpoint + "/db"
+	go db.StartPostgrest()
+
 	push.AddServers(pushServers)
 	go push.Start()
 }
@@ -88,6 +94,7 @@ func serve() {
 	}
 
 	e.Use(middleware.Logger())
+	forward(e, "/db", db.PostgRESTEndpoint())
 	e.GET("/api", api.CheckSummary)
 	e.GET("/about", api.About)
 	e.GET("/api/graph", api.CheckDetails)
@@ -116,6 +123,23 @@ func serve() {
 	if err := e.Shutdown(ctx); err != nil {
 		e.Logger.Fatal(err)
 	}
+}
+
+func forward(e *echo.Echo, prefix string, target string) {
+	targetURL, err := url.Parse(target)
+	if err != nil {
+		e.Logger.Fatal(err)
+	}
+	e.Group(prefix).Use(middleware.ProxyWithConfig(middleware.ProxyConfig{
+		Rewrite: map[string]string{
+			fmt.Sprintf("^%s/*", prefix): "/$1",
+		},
+		Balancer: middleware.NewRoundRobinBalancer([]*middleware.ProxyTarget{
+			{
+				URL: targetURL,
+			},
+		}),
+	}))
 }
 
 // stripQuery removes query parameters for static sites

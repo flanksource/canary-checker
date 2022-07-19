@@ -73,7 +73,7 @@ if [ "$SKIP_SETUP" != "true" ]; then
   fi
 
   if [ -e $TEST_FOLDER/_setup.sh ]; then
-    sh $TEST_FOLDER/_setup.sh || echo Setup failed, attempting tests anyway
+    bash $TEST_FOLDER/_setup.sh || echo Setup failed, attempting tests anyway
   fi
 
   if [ -e $TEST_FOLDER/_setup.yaml ]; then
@@ -85,7 +85,7 @@ if [ "$SKIP_SETUP" != "true" ]; then
   fi
 
   if [ -e $TEST_FOLDER/_post_setup.sh ]; then
-    sh $TEST_FOLDER/_post_setup.sh || echo Post setup failed, attempting tests anyway
+    bash $TEST_FOLDER/_post_setup.sh || echo Post setup failed, attempting tests anyway
   fi
 
   if [ -e $TEST_FOLDER/main.go ]; then
