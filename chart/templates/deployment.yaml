@@ -64,6 +64,10 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           env:
+            {{- if eq .Values.debug true }}
+            - name: DEBUG
+              value: "true"
+            {{- end }}
             - name: DOCKER_API_VERSION
               value: "1.39"
             - name: DB_URL
@@ -96,7 +100,7 @@ spec:
             - /app/canary-checker
           args:
             - operator
-            - -v
+            - {{ .Values.logLevel}}
             - --httpPort
             - "8080"
           resources:
