@@ -34,6 +34,7 @@ require (
 	github.com/go-logr/zapr v0.2.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-sql-driver/mysql v1.6.0
+	github.com/gobwas/glob v0.2.3
 	github.com/google/uuid v1.3.0
 	github.com/hairyhenderson/gomplate/v3 v3.6.0
 	github.com/henvic/httpretty v0.0.6
@@ -42,6 +43,7 @@ require (
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
 	github.com/labstack/echo/v4 v4.7.2
+	github.com/liamylian/jsontime/v2 v2.0.0
 	github.com/lib/pq v1.10.4
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.17.0
@@ -60,7 +62,6 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/vadimi/go-http-ntlm v1.0.3
 	github.com/vadimi/go-http-ntlm/v2 v2.4.1
-	github.com/volatiletech/sqlboiler/v4 v4.8.3
 	go.mongodb.org/mongo-driver v1.7.1
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
@@ -156,7 +157,6 @@ require (
 	github.com/go-openapi/spec v0.19.3 // indirect
 	github.com/go-openapi/swag v0.19.5 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
-	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
@@ -219,7 +219,6 @@ require (
 	github.com/labstack/gommon v0.3.1 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
-	github.com/liamylian/jsontime/v2 v2.0.0 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/mattn/go-colorable v0.1.11 // indirect
@@ -230,7 +229,6 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
-	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
@@ -269,8 +267,6 @@ require (
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	github.com/vbauerster/mpb/v5 v5.0.3 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
-	github.com/volatiletech/inflect v0.0.1 // indirect
-	github.com/volatiletech/strmangle v0.0.1 // indirect
 	github.com/xanzy/ssh-agent v0.2.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.0.2 // indirect

@@ -17,7 +17,6 @@ import (
 	"github.com/pressly/goose/v3"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	glogger "gorm.io/gorm/logger"
@@ -115,7 +114,6 @@ func Init() error {
 			ReportCaller: false,
 		}
 		config.ConnConfig.Logger = logrusadapter.NewLogger(logrusLogger)
-		boil.DebugMode = true
 	}
 	Pool, err = pgxpool.ConnectConfig(context.Background(), config)
 	if err != nil {
@@ -135,7 +133,6 @@ func Init() error {
 	if err != nil {
 		return err
 	}
-	boil.SetDB(db)
 
 	Gorm, err = gorm.Open(postgres.New(postgres.Config{
 		Conn: db,

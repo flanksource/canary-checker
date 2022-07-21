@@ -13,6 +13,10 @@ image:
 dockerSocket: true
 containerdSocket: false
 
+# Turn on pprof /debug endpoint
+debug: false
+logLevel: "-v"
+
 db:
   embedded:
     # If the database is embedded, setting this to true will persist the contents of the database
@@ -41,7 +45,8 @@ nameOverride: ""
 ingress:
   enabled: false
   className: ""
-  annotations: {}
+  annotations:
+    {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   host: canary-checker
