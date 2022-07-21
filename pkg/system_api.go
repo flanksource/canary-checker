@@ -269,10 +269,6 @@ func (components Components) FindByID(id uuid.UUID) *Component {
 		if component.ID == id {
 			return component
 		}
-		child := component.Components.FindByID(id)
-		if child != nil {
-			return child
-		}
 	}
 	return nil
 }
