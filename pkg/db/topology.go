@@ -96,9 +96,10 @@ func GetComponensWithSelectors(resourceSelectors v1.ResourceSelectors) (componen
 func GetComponentRelationships(relationshipID uuid.UUID, components pkg.Components) (relationships []*pkg.ComponentRelationship, err error) {
 	for _, component := range components {
 		relationships = append(relationships, &pkg.ComponentRelationship{
-			RelationshipID: relationshipID,
-			ComponentID:    component.ID,
-			SelectorID:     GetSelectorID(component.Selectors),
+			RelationshipID:   relationshipID,
+			ComponentID:      component.ID,
+			SelectorID:       GetSelectorID(component.Selectors),
+			RelationshipPath: component.Path,
 		})
 	}
 	return
@@ -188,6 +189,21 @@ func DeleteComponnents(systemTemplateID string, deleteTime time.Time) error {
 	logger.Infof("Deleting all components associated with system: %s", systemTemplateID)
 	componentsModel := &[]pkg.Component{}
 	tx := Gorm.Find(componentsModel).Where("system_template_id = ?", systemTemplateID).UpdateColumn("deleted_at", deleteTime)
+	DeleteComponentRelationshipForComponents(componentsModel, deleteTime)
+	return tx.Error
+}
+
+func DeleteComponentRelationshipForComponents(components *[]pkg.Component, deleteTime time.Time) {
+	for _, component := range *components {
+		if err := DeleteComponentRelationship(component.ID.String(), deleteTime); err != nil {
+			logger.Debugf("Error deleting component relationship for component %v", component.ID)
+		}
+	}
+}
+
+func DeleteComponentRelationship(componentID string, deleteTime time.Time) error {
+	logger.Infof("Deleting component relationship for components %s", componentID)
+	tx := Gorm.Delete(&pkg.ComponentRelationship{}, "component_id = ? or relationship_id = ?", componentID, componentID).UpdateColumn("deleted_at", deleteTime)
 	return tx.Error
 }
 

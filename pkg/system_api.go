@@ -96,28 +96,30 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 		c.TopologyType = ComponentType
 		*components = append(*components, &c)
 	}
-	var toRemoveCompIDs []uuid.UUID
+	return nil
+}
 
-	for _, _c := range flat {
+func (components Components) CreateTreeStrcuture() Components {
+	var toRemoveCompIDs []uuid.UUID
+	for _, _c := range components {
 		c := _c
 		c.TopologyType = ComponentType
 		if c.ParentId != nil {
 			parent := components.FindByID(*c.ParentId)
 			if parent != nil {
-				parent.Components = append(parent.Components, &c)
+				parent.Components = append(parent.Components, c)
 				toRemoveCompIDs = append(toRemoveCompIDs, c.ID)
 			}
 		}
 	}
 	for _, id := range toRemoveCompIDs {
 		i := components.FindIndexByID(id)
-		*components = append((*components)[:i], (*components)[i+1:]...)
+		components = append((components)[:i], (components)[i+1:]...)
 	}
-	for _, component := range *components {
-		(*component).Summary = component.Summarize()
+	for _, component := range components {
+		component.Summary = component.Summarize()
 	}
-
-	return nil
+	return components
 }
 
 type Component struct {
@@ -150,12 +152,13 @@ type Component struct {
 }
 
 type ComponentRelationship struct {
-	ComponentID    uuid.UUID      `json:"component_id,omitempty"`
-	RelationshipID uuid.UUID      `json:"relationship_id,omitempty"`
-	SelectorID     string         `json:"selector_id,omitempty"`
-	CreatedAt      time.Time      `json:"created_at,omitempty"`
-	UpdatedAt      time.Time      `json:"updated_at,omitempty"`
-	DeletedAt      gorm.DeletedAt `json:"deleted_at,omitempty"`
+	ComponentID      uuid.UUID      `json:"component_id,omitempty"`
+	RelationshipID   uuid.UUID      `json:"relationship_id,omitempty"`
+	SelectorID       string         `json:"selector_id,omitempty"`
+	RelationshipPath string         `json:"relationship_path,omitempty"`
+	CreatedAt        time.Time      `json:"created_at,omitempty"`
+	UpdatedAt        time.Time      `json:"updated_at,omitempty"`
+	DeletedAt        gorm.DeletedAt `json:"deleted_at,omitempty"`
 }
 
 func (component Component) Clone() Component {
@@ -265,6 +268,10 @@ func (components Components) FindByID(id uuid.UUID) *Component {
 	for _, component := range components {
 		if component.ID == id {
 			return component
+		}
+		child := component.Components.FindByID(id)
+		if child != nil {
+			return child
 		}
 	}
 	return nil
@@ -474,6 +481,7 @@ func (component Component) Summarize() v1.Summary {
 	}
 	for _, child := range component.Components {
 		s = s.Add(child.Summarize())
+		child.Summary = child.Summarize()
 	}
 	return s
 }
