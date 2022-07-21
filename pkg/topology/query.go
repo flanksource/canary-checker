@@ -99,9 +99,13 @@ func (p TopologyParams) getID() string {
 }
 
 func (p TopologyParams) GetComponentWhereClause() string {
-	s := "where deleted_at is null "
+	s := "where components.deleted_at is null "
 	if p.getID() != "" {
-		s += " and (starts_with(path, (select concat(path,'.', id) as path from components where id = :id)) or id = :id or path = :id :: text)"
+		s += `and (starts_with(path, 
+			(SELECT 
+				(CASE WHEN (path IS NULL OR path = '') THEN id :: text ELSE concat(path,'.', id) END)
+				FROM components where id = :id)
+			) or id = :id or path = :id :: text)`
 	}
 	if p.Status != "" {
 		s += " AND components.status = :status"
@@ -109,10 +113,27 @@ func (p TopologyParams) GetComponentWhereClause() string {
 	return s
 }
 
+// add a relationship_path on the table...
+
+func (p TopologyParams) GetComponentRelationWhereClause() string {
+	s := "where component_relationships.deleted_at is null"
+	if p.getID() != "" {
+		s += " and component_relationships.relationship_id = :id or starts_with(components.path, component_relationships.relationship_path)"
+	} else {
+		s += " and parent.parent_id is null or starts_with(components.path, component_relationships.relationship_path) "
+	}
+	return s
+}
+
 func Query(params TopologyParams) (pkg.Components, error) {
 	sql := fmt.Sprintf(`
-	Select json_agg(To_json(components)) :: jsonb as components from components 
-%s`, params.GetComponentWhereClause())
+	SELECT json_agg(to_jsonb(components)) :: jsonb as components from components %s
+	union
+	(SELECT json_agg(jsonb_set(to_jsonb(components), '{parent_id}', to_jsonb(component_relationships.relationship_id), true)) :: jsonb 
+	AS components from component_relationships INNER JOIN components 
+	ON components.id = component_relationships.component_id INNER JOIN components AS parent 
+	ON component_relationships.relationship_id = parent.id %s)
+`, params.GetComponentWhereClause(), params.GetComponentRelationWhereClause())
 
 	args := make(map[string]interface{})
 	if params.Status != "" {
@@ -135,10 +156,32 @@ func Query(params TopologyParams) (pkg.Components, error) {
 	}
 	for rows.Next() {
 		var components pkg.Components
+		if rows.RawValues()[0] == nil {
+			continue
+		}
 		if err := json.Unmarshal(rows.RawValues()[0], &components); err != nil {
 			return nil, errors.Wrapf(err, "failed to unmarshal components: %s", rows.RawValues()[0])
 		}
 		results = append(results, components...)
 	}
+	results = results.CreateTreeStrcuture()
+	for _, result := range results {
+		result.Components = filterComponentsWithDepth(result.Components, params.Depth)
+	}
 	return results, nil
+}
+
+func filterComponentsWithDepth(components []*pkg.Component, depth int) []*pkg.Component {
+	if depth <= 0 || components == nil {
+		return components
+	}
+	if depth == 1 {
+		for _, comp := range components {
+			comp.Components = nil
+		}
+	}
+	for _, comp := range components {
+		comp.Components = filterComponentsWithDepth(comp.Components, depth-1)
+	}
+	return components
 }

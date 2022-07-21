@@ -68,12 +68,20 @@ func (s Summary) GetStatus() string {
 }
 
 func (s Summary) Add(b Summary) Summary {
-	return Summary{
-		Healthy:   s.Healthy + b.Healthy,
-		Unhealthy: s.Unhealthy + b.Unhealthy,
-		Warning:   s.Warning + b.Warning,
-		Info:      s.Info + b.Info,
+	if b.Healthy > 0 && b.Unhealthy > 0 {
+		s.Warning += 1
+	} else if b.Unhealthy > 0 {
+		s.Unhealthy += 1
+	} else if b.Healthy > 0 {
+		s.Healthy += 1
 	}
+	if b.Warning > 0 {
+		s.Warning += b.Warning
+	}
+	if b.Info > 0 {
+		s.Info += b.Info
+	}
+	return s
 }
 
 type ComponentStatus struct {
