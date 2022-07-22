@@ -1,7 +1,7 @@
 apiVersion: canaries.flanksource.com/v1
 kind: SystemTemplate
 metadata:
-  name: cluster
+  name: selector
   labels:
     canary: pods
 spec:
@@ -11,29 +11,26 @@ spec:
   id:
     javascript: properties.id
   components:
-    # - pods:
-    #     k8s-app: kube-dns
-    - lookup:
-        kubernetes:
-          - kind: Pod
----
-apiVersion: canaries.flanksource.com/v1
-kind: SystemTemplate
-metadata:
-  name: acme-app
-  labels:
-    canary: pods
-spec:
-  type: KubernetesCluster
-  icon: kubernetes
-  schedule: "@every 20m"
-  id:
-    javascript: properties.id
-  components:
-    # - pods:
-    #     k8s-app: kube-dns
     - selectors:
-        labels:
-          canary: pods
-          kind: pod
+        - labelSelector: "k8s-app=kube-dns"
+# ---
+# apiVersion: canaries.flanksource.com/v1
+# kind: SystemTemplate
+# metadata:
+#   name: acme-app
+#   labels:
+#     canary: pods
+# spec:
+#   type: KubernetesCluster
+#   icon: kubernetes
+#   schedule: "@every 20m"
+#   id:
+#     javascript: properties.id
+#   components:
+#     # - pods:
+#     #     k8s-app: kube-dns
+#     - selectors:
+#         labels:
+#           canary: pods
+#           kind: pod
         
