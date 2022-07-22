@@ -103,6 +103,7 @@ func (components Components) CreateTreeStrcuture() Components {
 	var toRemoveCompIDs []uuid.UUID
 	for _, _c := range components {
 		c := _c
+
 		c.TopologyType = ComponentType
 		if c.ParentId != nil {
 			parent := components.FindByID(*c.ParentId)
@@ -114,7 +115,9 @@ func (components Components) CreateTreeStrcuture() Components {
 	}
 	for _, id := range toRemoveCompIDs {
 		i := components.FindIndexByID(id)
-		components = append((components)[:i], (components)[i+1:]...)
+		if i != -1 {
+			components = append((components)[:i], (components)[i+1:]...)
+		}
 	}
 	for _, component := range components {
 		component.Summary = component.Summarize()

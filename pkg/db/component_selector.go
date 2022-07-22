@@ -29,28 +29,35 @@ func GetComponensWithLabelSelector(labelSelector string) (components pkg.Compone
 	}
 	var uninqueComponents = make(map[string]*pkg.Component)
 	matchLabels := GetLabelsFromSelector(labelSelector)
+	var labels = make(map[string]string)
+	var onlyKeys []string
 	for k, v := range matchLabels {
-		var comp pkg.Components
 		if v != "" {
-			if err := Gorm.Table("components").Where("labels @> ?", types.JSONStringMap{k: v}).Find(&comp).Error; err != nil {
-				continue
-			}
-			for _, c := range comp {
-				uninqueComponents[c.ID.String()] = c
-			}
+			labels[k] = v
 		} else {
-			if err := Gorm.Table("components").Where("labels ?? ?", k).Find(&comp).Error; err != nil {
-				continue
-			}
-			for _, c := range comp {
-				uninqueComponents[c.ID.String()] = c
-			}
+			onlyKeys = append(onlyKeys, k)
+		}
+	}
+	var comps pkg.Components
+	if err := Gorm.Table("components").Where("labels @> ?", types.JSONStringMap(labels)).Find(&comps).Error; err != nil {
+		return nil, err
+	}
+	for _, c := range comps {
+		uninqueComponents[c.ID.String()] = c
+	}
+	for _, k := range onlyKeys {
+		var comps pkg.Components
+		if err := Gorm.Table("components").Where("labels ?? ?", k).Find(&comps).Error; err != nil {
+			continue
+		}
+		for _, c := range comps {
+			uninqueComponents[c.ID.String()] = c
 		}
 	}
 	for _, c := range uninqueComponents {
 		components = append(components, c)
 	}
-	return
+	return components, nil
 }
 
 func GetComponensWithFieldSelector(fieldSelector string) (components pkg.Components, err error) {
