@@ -1,0 +1,7 @@
+SELECT json_agg(jsonb_set(to_jsonb(components), '{parent_id}', to_jsonb(component_relationships.relationship_id), true)) :: jsonb 
+        AS components from component_relationships INNER JOIN components 
+        ON components.id = component_relationships.component_id INNER JOIN components AS parent 
+        ON component_relationships.relationship_id = parent.id where component_relationships.deleted_at is null and component_relationships.relationship_id = '01822447-b39c-e5fe-ddc1-ed84127a64cd' or starts_with((SELECT 
+                        (CASE WHEN (path IS NULL OR path = '') THEN id :: text ELSE path END)
+                        FROM components where id = '01822447-b39c-e5fe-ddc1-ed84127a64cd')
+                , component_relationships.relationship_path)
