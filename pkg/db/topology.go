@@ -93,13 +93,13 @@ func GetComponensWithSelectors(resourceSelectors v1.ResourceSelectors) (componen
 	return
 }
 
-func GetComponentRelationships(relationshipID uuid.UUID, components pkg.Components) (relationships []*pkg.ComponentRelationship, err error) {
+func GetComponentRelationships(relationshipID uuid.UUID, path string, components pkg.Components) (relationships []*pkg.ComponentRelationship, err error) {
 	for _, component := range components {
 		relationships = append(relationships, &pkg.ComponentRelationship{
 			RelationshipID:   relationshipID,
 			ComponentID:      component.ID,
 			SelectorID:       GetSelectorID(component.Selectors),
-			RelationshipPath: component.Path,
+			RelationshipPath: path,
 		})
 	}
 	return

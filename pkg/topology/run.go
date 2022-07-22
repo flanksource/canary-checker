@@ -276,7 +276,7 @@ func ComponentRun() {
 			logger.Errorf("error getting components with selectors: %s. err: %v", component.Selectors, err)
 			continue
 		}
-		relationships, err := db.GetComponentRelationships(component.ID, comps)
+		relationships, err := db.GetComponentRelationships(component.ID, component.Path, comps)
 		if err != nil {
 			logger.Errorf("error getting relationships: %v", err)
 			continue

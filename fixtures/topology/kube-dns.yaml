@@ -1,0 +1,16 @@
+apiVersion: canaries.flanksource.com/v1
+kind: SystemTemplate
+metadata:
+  name: kube-dns
+  labels:
+    canary: kube-dns-pods
+spec:
+  type: KubernetesCluster
+  icon: kubernetes
+  schedule: "@every 20m"
+  id:
+    javascript: properties.id
+  components:
+    - selectors:
+        - labelSelector: "k8s-app=kube-dns"
+        
