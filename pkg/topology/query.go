@@ -118,15 +118,13 @@ func (p TopologyParams) GetComponentWhereClause() string {
 func (p TopologyParams) GetComponentRelationWhereClause() string {
 	s := "where component_relationships.deleted_at is null"
 	if p.getID() != "" {
-		s += ` and component_relationships.relationship_id = :id or starts_with((SELECT 
-			(CASE WHEN (path IS NULL OR path = '') THEN id :: text ELSE path END)
-			FROM components where id = :id)
-		, component_relationships.relationship_path)`
+		s += ` and component_relationships.relationship_id = :id or starts_with(component_relationships.relationship_path, (SELECT 
+			(CASE WHEN (path IS NULL OR path = '') THEN id :: text ELSE concat(path,'.', id) END)
+			FROM components where id = :id))`
 	} else {
-		s += ` and parent.parent_id is null or starts_with((SELECT 
-			(CASE WHEN (path IS NULL OR path = '') THEN id :: text ELSE path END)
-			FROM components where id = parent.id)
-		, component_relationships.relationship_path)`
+		s += ` and parent.parent_id is null or starts_with(component_relationships.relationship_path, (SELECT 
+			(CASE WHEN (path IS NULL OR path = '') THEN id :: text ELSE concat(path,'.', id) END)
+			FROM components where id = parent.id))`
 	}
 	return s
 }

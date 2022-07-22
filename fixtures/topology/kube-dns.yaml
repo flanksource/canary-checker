@@ -13,4 +13,8 @@ spec:
   components:
     - selectors:
         - labelSelector: "k8s-app=kube-dns"
+      name: kube-dns
+    - selectors:
+        - labelSelector: "component=kube-scheduler"
+      name: kube-scheduler
         
