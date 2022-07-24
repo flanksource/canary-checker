@@ -99,7 +99,7 @@ func GetComponentRelationships(relationshipID uuid.UUID, path string, components
 			RelationshipID:   relationshipID,
 			ComponentID:      component.ID,
 			SelectorID:       GetSelectorID(component.Selectors),
-			RelationshipPath: path,
+			RelationshipPath: path + "." + relationshipID.String(),
 		})
 	}
 	return
