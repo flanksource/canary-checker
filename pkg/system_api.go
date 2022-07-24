@@ -31,9 +31,9 @@ type SystemTemplate struct {
 	Labels    types.JSONStringMap
 	Spec      types.JSON
 	Schedule  string
-	CreatedAt time.Time      `json:"created_at,omitempty" time_format:"postgres_timestamp"`
-	UpdatedAt time.Time      `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
+	CreatedAt time.Time  `json:"created_at,omitempty" time_format:"postgres_timestamp"`
+	UpdatedAt time.Time  `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
 }
 
 func SystemTemplateFromV1(systemTemplate *v1.SystemTemplate) *SystemTemplate {
@@ -150,18 +150,18 @@ type Component struct {
 	SystemTemplateID *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
 	CreatedAt        time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
 	UpdatedAt        time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
-	DeletedAt        gorm.DeletedAt       `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt        *time.Time           `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
 	ExternalId       string               `json:"external_id,omitempty"` //nolint
 }
 
 type ComponentRelationship struct {
-	ComponentID      uuid.UUID      `json:"component_id,omitempty"`
-	RelationshipID   uuid.UUID      `json:"relationship_id,omitempty"`
-	SelectorID       string         `json:"selector_id,omitempty"`
-	RelationshipPath string         `json:"relationship_path,omitempty"`
-	CreatedAt        time.Time      `json:"created_at,omitempty"`
-	UpdatedAt        time.Time      `json:"updated_at,omitempty"`
-	DeletedAt        gorm.DeletedAt `json:"deleted_at,omitempty"`
+	ComponentID      uuid.UUID  `json:"component_id,omitempty"`
+	RelationshipID   uuid.UUID  `json:"relationship_id,omitempty"`
+	SelectorID       string     `json:"selector_id,omitempty"`
+	RelationshipPath string     `json:"relationship_path,omitempty"`
+	CreatedAt        time.Time  `json:"created_at,omitempty"`
+	UpdatedAt        time.Time  `json:"updated_at,omitempty"`
+	DeletedAt        *time.Time `json:"deleted_at,omitempty"`
 }
 
 func (component Component) Clone() Component {
