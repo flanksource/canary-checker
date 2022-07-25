@@ -173,7 +173,8 @@ type Component struct {
 	Properties       Properties           `json:"properties,omitempty" gorm:"type:properties"`
 	Components       Components           `json:"components,omitempty" gorm:"-"`
 	ParentId         *uuid.UUID           `json:"parent_id,omitempty"` //nolint
-	Selectors        v1.ResourceSelectors `json:"selector,omitempty" gorm:"resourceSelectors"`
+	Selectors        v1.ResourceSelectors `json:"resourceSelectors,omitempty" gorm:"resourceSelectors"`
+	CanarySelectors  v1.CanarySelectors   `json:"canarySelectors,omitempty" gorm:"canarySelectors"`
 	SystemTemplateID *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
 	CreatedAt        time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
 	UpdatedAt        time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
@@ -189,6 +190,16 @@ type ComponentRelationship struct {
 	CreatedAt        time.Time  `json:"created_at,omitempty"`
 	UpdatedAt        time.Time  `json:"updated_at,omitempty"`
 	DeletedAt        *time.Time `json:"deleted_at,omitempty"`
+}
+
+type CheckComponentRelationship struct {
+	ComponentID uuid.UUID  `json:"component_id,omitempty"`
+	CheckID     string     `json:"check_id,omitempty"`
+	CanaryID    uuid.UUID  `json:"canary_id,omitempty"`
+	SelectorID  string     `json:"selector_id,omitempty"`
+	CreatedAt   time.Time  `json:"created_at,omitempty"`
+	UpdatedAt   time.Time  `json:"updated_at,omitempty"`
+	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
 }
 
 func (component Component) Clone() Component {
@@ -238,13 +249,14 @@ func (component Component) GetAsEnvironment() map[string]interface{} {
 
 func NewComponent(c v1.ComponentSpec) *Component {
 	return &Component{
-		Name:      c.Name,
-		Owner:     c.Owner,
-		Type:      c.Type,
-		Lifecycle: c.Lifecycle,
-		Tooltip:   c.Tooltip,
-		Icon:      c.Icon,
-		Selectors: c.Selectors,
+		Name:            c.Name,
+		Owner:           c.Owner,
+		Type:            c.Type,
+		Lifecycle:       c.Lifecycle,
+		Tooltip:         c.Tooltip,
+		Icon:            c.Icon,
+		Selectors:       c.Selectors,
+		CanarySelectors: c.CanarySelectors,
 	}
 }
 

@@ -271,7 +271,7 @@ func ComponentRun() {
 		return
 	}
 	for _, component := range components {
-		comps, err := db.GetComponensWithSelectors(component.Selectors)
+		comps, err := db.GetComponentsWithSelectors(component.Selectors)
 		if err != nil {
 			logger.Errorf("error getting components with selectors: %s. err: %v", component.Selectors, err)
 			continue
@@ -303,6 +303,40 @@ func ComponentStatusSummarySync() {
 		if err != nil {
 			logger.Errorf("error persisting component: %v", err)
 			continue
+		}
+	}
+}
+func ComponentCheckRun() {
+	logger.Debugf("Syncing Check Relationships")
+	components, err := db.GetAllComponentWithCanarySelector()
+	if err != nil {
+		logger.Errorf("error getting components: %v", err)
+		return
+	}
+
+	for _, component := range components {
+		canaries, err := db.GetCanariesWithSelectors(component.CanarySelectors)
+		if err != nil {
+			logger.Errorf("error getting canaries with selectors: %s. err: %v", component.CanarySelectors, err)
+			continue
+		}
+		for _, c := range canaries {
+			checks, err := db.GetAllChecksForCanary(c.ID)
+			if err != nil {
+				logger.Debugf("error getting checks for canary: %s. err: %v", c.ID, err)
+				continue
+			}
+
+			relationships, err := db.GetCheckRelationships(c.ID, component.ID, checks)
+			if err != nil {
+				logger.Errorf("error getting relationships: %v", err)
+				continue
+			}
+			err = db.PersisteCheckComponentRelationships(relationships)
+			if err != nil {
+				logger.Errorf("error persisting relationships: %v", err)
+				continue
+			}
 		}
 	}
 }

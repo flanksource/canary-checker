@@ -14,6 +14,8 @@ import (
 
 type ResourceSelectors []ResourceSelector
 
+type CanarySelectors []CanarySelector
+
 func (rs ResourceSelectors) Value() (driver.Value, error) {
 	if len(rs) == 0 {
 		return []byte("[]"), nil
@@ -56,6 +58,51 @@ func (ResourceSelectors) GormDBDataType(db *gorm.DB, field *schema.Field) string
 
 func (rs ResourceSelectors) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	data, _ := json.Marshal(rs)
+	return gorm.Expr("?", string(data))
+}
+
+func (cs CanarySelectors) Value() (driver.Value, error) {
+	if len(cs) == 0 {
+		return []byte("[]"), nil
+	}
+	return json.Marshal(cs)
+}
+
+func (cs *CanarySelectors) Scan(val interface{}) error {
+	if val == nil {
+		*cs = CanarySelectors{}
+		return nil
+	}
+	var ba []byte
+	switch v := val.(type) {
+	case []byte:
+		ba = v
+	default:
+		return errors.New(fmt.Sprint("Failed to unmarshal CanarySelectors value:", val))
+	}
+	return json.Unmarshal(ba, cs)
+}
+
+// GormDataType gorm common data type
+func (cs CanarySelectors) GormDataType() string {
+	return "canarySelectors"
+}
+
+// GormDBDataType gorm db data type
+func (CanarySelectors) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	switch db.Dialector.Name() {
+	case "sqlite":
+		return "JSON"
+	case "postgres":
+		return "JSONB"
+	case "sqlserver":
+		return "NVARCHAR(MAX)"
+	}
+	return ""
+}
+
+func (cs CanarySelectors) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
+	data, _ := json.Marshal(cs)
 	return gorm.Expr("?", string(data))
 }
 

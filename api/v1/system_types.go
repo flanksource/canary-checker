@@ -14,21 +14,20 @@ type SystemTemplate struct {
 	Status            SystemTemplateStatus `json:"status,omitempty"`
 }
 type SystemTemplateSpec struct {
-	Type       string           `json:"type,omitempty"`
-	Id         *Template        `json:"id,omitempty"` //nolint
-	Schedule   string           `json:"schedule,omitempty"`
-	Tooltip    string           `json:"tooltip,omitempty"`
-	Icon       string           `json:"icon,omitempty"`
-	Text       string           `json:"text,omitempty"`
-	Label      string           `json:"label,omitempty"`
-	Owner      Owner            `json:"owner,omitempty"`
-	Components []ComponentSpec  `json:"components,omitempty"`
-	Canaries   []CanarySelector `json:"canaries,omitempty"`
-	Properties Properties       `json:"properties,omitempty"`
+	Type       string          `json:"type,omitempty"`
+	Id         *Template       `json:"id,omitempty"` //nolint
+	Schedule   string          `json:"schedule,omitempty"`
+	Tooltip    string          `json:"tooltip,omitempty"`
+	Icon       string          `json:"icon,omitempty"`
+	Text       string          `json:"text,omitempty"`
+	Label      string          `json:"label,omitempty"`
+	Owner      Owner           `json:"owner,omitempty"`
+	Components []ComponentSpec `json:"components,omitempty"`
+	Properties Properties      `json:"properties,omitempty"`
 }
 
 func (s SystemTemplate) IsEmpty() bool {
-	return len(s.Spec.Properties) == 0 && len(s.Spec.Canaries) == 0 && len(s.Spec.Components) == 0 && s.Name == ""
+	return len(s.Spec.Properties) == 0 && len(s.Spec.Components) == 0 && s.Name == ""
 }
 
 func (spec SystemTemplateSpec) GetSchedule() string {
@@ -57,7 +56,10 @@ type NamespaceSelector struct {
 	Selector `json:",inline"`
 }
 
-type CanarySelector string
+type CanarySelector struct {
+	ResourceSelector `json:",inline"`
+	Lookup           *CanarySpec `json:"lookup,omitempty"`
+}
 
 // +kubebuilder:object:root=true
 
