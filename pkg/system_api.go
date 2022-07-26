@@ -122,7 +122,22 @@ func (components Components) CreateTreeStrcuture() Components {
 	for _, component := range components {
 		component.Summary = component.Summarize()
 	}
+	for _, component := range components.Walk() {
+		component.Status = component.GetStatus()
+	}
 	return components
+}
+
+func (commponents Components) Walk() Components {
+	var comps Components
+	for _, _c := range commponents {
+		c := _c
+		comps = append(comps, c)
+		if c.Components != nil {
+			comps = append(comps, c.Components.Walk()...)
+		}
+	}
+	return comps
 }
 
 type Component struct {
@@ -491,6 +506,20 @@ func (components Components) Summarize() v1.Summary {
 		s = s.Add(component.Summarize())
 	}
 	return s
+}
+
+func (component Component) GetStatus() string {
+	if component.Summary.Healthy > 0 && component.Summary.Unhealthy > 0 {
+		return "warning"
+	} else if component.Summary.Unhealthy > 0 {
+		return "unhealthy"
+	} else if component.Summary.Healthy > 0 {
+		return "healthy"
+	} else if component.Summary.Warning > 0 {
+		return "warning"
+	} else {
+		return "info"
+	}
 }
 
 // Scan scan value into Jsonb, implements sql.Scanner interface

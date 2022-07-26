@@ -25,6 +25,9 @@ func Start() {
 	if _, err := ScheduleFunc(v1.ComponentRunSchedule, topology.ComponentRun); err != nil {
 		logger.Errorf("Failed to schedule component run: %v", err)
 	}
+	if _, err := ScheduleFunc(v1.ComponentStatusSummarySyncSchedule, topology.ComponentStatusSummarySync); err != nil {
+		logger.Errorf("Failed to schedule component status summary sync: %v", err)
+	}
 }
 
 func ScheduleFunc(schedule string, fn func()) (interface{}, error) {

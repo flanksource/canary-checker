@@ -288,3 +288,21 @@ func ComponentRun() {
 		}
 	}
 }
+
+func ComponentStatusSummarySync() {
+	logger.Debugf("Syncing Status and Summary for components")
+	components, err := Query(TopologyParams{
+		Depth: 0,
+	})
+	if err != nil {
+		logger.Errorf("error getting components: %v", err)
+		return
+	}
+	for _, component := range components.Walk() {
+		err = db.UpdateStatusAndSummarForComponent(component.ID, component.Status, component.Summary)
+		if err != nil {
+			logger.Errorf("error persisting component: %v", err)
+			continue
+		}
+	}
+}

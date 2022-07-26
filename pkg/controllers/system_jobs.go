@@ -64,6 +64,7 @@ func (job SystemJob) Run() {
 		}
 	}
 	topology.ComponentRun()
+	topology.ComponentStatusSummarySync()
 }
 
 func SyncSystemsJobs() {
