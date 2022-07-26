@@ -56,13 +56,13 @@ func (s Summary) String() string {
 	return strings.TrimSpace(str)
 }
 
-func (s Summary) GetStatus() string {
+func (s Summary) GetStatus() ComponentPropertyStatus {
 	if s.Unhealthy > 0 {
-		return "unhealthy"
+		return ComponentPropertyStatusUnhealthy
 	} else if s.Warning > 0 {
-		return "warning"
+		return ComponentPropertyStatusWarning
 	} else if s.Healthy > 0 {
-		return "healthy"
+		return ComponentPropertyStatusHealthy
 	}
 	return "unknown"
 }

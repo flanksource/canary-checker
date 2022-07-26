@@ -169,6 +169,11 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 	return persistedComponents, tx.Error
 }
 
+func UpdateStatusAndSummaryForComponent(id uuid.UUID, status pkg.ComponentStatus, summary v1.Summary) (int64, error) {
+	tx := Gorm.Table("components").Where("id = ? and (status != ? or summary != ?)", id, status, summary).UpdateColumns(pkg.Component{Status: status, Summary: summary})
+	return tx.RowsAffected, tx.Error
+}
+
 func DeleteSystemTemplate(systemTemplate *v1.SystemTemplate) error {
 	logger.Infof("Deleting system template %s/%s", systemTemplate.Namespace, systemTemplate.Name)
 	model := pkg.SystemTemplateFromV1(systemTemplate)

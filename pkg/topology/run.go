@@ -226,7 +226,7 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 			} else {
 				group.Summary = *comp.Summary
 			}
-			group.Status = group.Summary.GetStatus()
+			group.Status = pkg.ComponentStatus(group.Summary.GetStatus())
 			component.Components = append(component.Components, group)
 		}
 	}
@@ -253,7 +253,7 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 	if component.ID.String() == "" {
 		component.ID, _ = uuid.Parse(component.Name)
 	}
-	component.Status = component.Summary.GetStatus()
+	component.Status = pkg.ComponentStatus(component.Summary.GetStatus())
 	// if logger.IsTraceEnabled() {
 	logger.Debugf(component.Components.Debug(""))
 	// }
@@ -284,6 +284,24 @@ func ComponentRun() {
 		err = db.PersisComponentRelationships(relationships)
 		if err != nil {
 			logger.Errorf("error persisting relationships: %v", err)
+			continue
+		}
+	}
+}
+
+func ComponentStatusSummarySync() {
+	logger.Debugf("Syncing Status and Summary for components")
+	components, err := Query(TopologyParams{
+		Depth: 0,
+	})
+	if err != nil {
+		logger.Errorf("error getting components: %v", err)
+		return
+	}
+	for _, component := range components.Walk() {
+		_, err = db.UpdateStatusAndSummaryForComponent(component.ID, component.Status, component.Summary)
+		if err != nil {
+			logger.Errorf("error persisting component: %v", err)
 			continue
 		}
 	}
