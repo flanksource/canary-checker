@@ -22,6 +22,16 @@ import (
 
 var json = jsontime.ConfigWithCustomTimeFormat
 
+type ComponentStatus string
+
+var (
+	ComponentPropertyStatusHealthy   ComponentStatus = "healthy"
+	ComponentPropertyStatusUnhealthy ComponentStatus = "unhealthy"
+	ComponentPropertyStatusWarning   ComponentStatus = "warning"
+	ComponentPropertyStatusError     ComponentStatus = "error"
+	ComponentPropertyStatusInfo      ComponentStatus = "info"
+)
+
 const ComponentType = "component"
 
 type SystemTemplate struct {
@@ -150,7 +160,7 @@ type Component struct {
 	Tooltip      string              `json:"tooltip,omitempty"`
 	Icon         string              `json:"icon,omitempty"`
 	Owner        string              `json:"owner,omitempty"`
-	Status       string              `json:"status,omitempty"`
+	Status       ComponentStatus     `json:"status,omitempty"`
 	StatusReason string              `json:"statusReason,omitempty"`
 	Path         string              `json:"path,omitempty"`
 	// The type of component, e.g. service, API, website, library, database, etc.
@@ -252,9 +262,9 @@ func (components Components) Debug(prefix string) string {
 		status := component.Status
 
 		if component.IsHealthy() {
-			status = console.Greenf(status)
+			status = ComponentStatus(console.Greenf(string(status)))
 		} else {
-			status = console.Redf(status)
+			status = ComponentStatus(console.Redf(string(status)))
 		}
 
 		s += fmt.Sprintf("%s%s (%s) => %s\n", prefix, component, component.GetID(), status)
@@ -299,20 +309,6 @@ func (components Components) FindIndexByID(id uuid.UUID) int {
 	}
 	return -1
 }
-
-type ComponentStatus struct {
-	Status ComponentPropertyStatus `json:"status,omitempty"`
-}
-
-type ComponentPropertyStatus string
-
-var (
-	ComponentPropertyStatusHealthy   ComponentPropertyStatus = "healthy"
-	ComponentPropertyStatusUnhealthy ComponentPropertyStatus = "unhealthy"
-	ComponentPropertyStatusWarning   ComponentPropertyStatus = "warning"
-	ComponentPropertyStatusError     ComponentPropertyStatus = "error"
-	ComponentPropertyStatusInfo      ComponentPropertyStatus = "info"
-)
 
 type Owner string
 
@@ -484,12 +480,14 @@ func (component Component) Summarize() v1.Summary {
 	s := v1.Summary{}
 	if len(component.Components) == 0 {
 		switch component.Status {
-		case "healthy":
+		case ComponentPropertyStatusHealthy:
 			s.Healthy++
-		case "unhealthy":
+		case ComponentPropertyStatusUnhealthy:
 			s.Unhealthy++
-		case "warning": //nolint:goconst
+		case ComponentPropertyStatusWarning:
 			s.Warning++
+		case ComponentPropertyStatusInfo:
+			s.Info++
 		}
 		return s
 	}
@@ -508,17 +506,17 @@ func (components Components) Summarize() v1.Summary {
 	return s
 }
 
-func (component Component) GetStatus() string {
+func (component Component) GetStatus() ComponentStatus {
 	if component.Summary.Healthy > 0 && component.Summary.Unhealthy > 0 {
-		return "warning"
+		return ComponentPropertyStatusWarning
 	} else if component.Summary.Unhealthy > 0 {
-		return "unhealthy"
-	} else if component.Summary.Healthy > 0 {
-		return "healthy"
+		return ComponentPropertyStatusUnhealthy
 	} else if component.Summary.Warning > 0 {
-		return "warning"
+		return ComponentPropertyStatusWarning
+	} else if component.Summary.Healthy > 0 {
+		return ComponentPropertyStatusHealthy
 	} else {
-		return "info"
+		return ComponentPropertyStatusInfo
 	}
 }
 

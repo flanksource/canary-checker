@@ -169,16 +169,9 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 	return persistedComponents, tx.Error
 }
 
-func UpdateStatusAndSummarForComponent(id uuid.UUID, status string, summary v1.Summary) error {
-	component := &pkg.Component{}
-	tx := Gorm.Where("id = ?", id).Find(component)
-	if tx.Error != nil {
-		return tx.Error
-	}
-	component.Status = status
-	component.Summary = summary
-	tx = Gorm.Save(component)
-	return tx.Error
+func UpdateStatusAndSummaryForComponent(id uuid.UUID, status pkg.ComponentStatus, summary v1.Summary) (int64, error) {
+	tx := Gorm.Table("components").Where("id = ? and (status != ? or summary != ?)", id, status, summary).UpdateColumns(pkg.Component{Status: status, Summary: summary})
+	return tx.RowsAffected, tx.Error
 }
 
 func DeleteSystemTemplate(systemTemplate *v1.SystemTemplate) error {
