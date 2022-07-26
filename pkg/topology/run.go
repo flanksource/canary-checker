@@ -299,10 +299,6 @@ func ComponentStatusSummarySync() {
 		return
 	}
 	for _, component := range components.Walk() {
-		if component.Name == "cluster" {
-			fmt.Println("cluster is found")
-			fmt.Println(component.Summary)
-		}
 		_, err = db.UpdateStatusAndSummaryForComponent(component.ID, component.Status, component.Summary)
 		if err != nil {
 			logger.Errorf("error persisting component: %v", err)
