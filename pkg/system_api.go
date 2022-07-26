@@ -128,9 +128,9 @@ func (components Components) CreateTreeStrcuture() Components {
 	return components
 }
 
-func (commponents Components) Walk() Components {
+func (components Components) Walk() Components {
 	var comps Components
-	for _, _c := range commponents {
+	for _, _c := range components {
 		c := _c
 		comps = append(comps, c)
 		if c.Components != nil {
@@ -488,7 +488,7 @@ func (component Component) Summarize() v1.Summary {
 			s.Healthy++
 		case "unhealthy":
 			s.Unhealthy++
-		case "warning":
+		case "warning": //nolint:goconst
 			s.Warning++
 		}
 		return s
