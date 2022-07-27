@@ -12,7 +12,7 @@ CREATE TABLE check_component_relationships(
     FOREIGN KEY (canary_id) REFERENCES canaries(id),
     FOREIGN KEY(component_id) REFERENCES components(id), 
     FOREIGN KEY(check_id) REFERENCES checks(id),
-    UNIQUE (component_id, check_id, selector_id)
+    UNIQUE (component_id, check_id, canary_id, selector_id)
 )
 -- +goose StatementEnd
 

@@ -94,16 +94,16 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 }
 
 func GetAllComponentWithCanarySelector() (components pkg.Components, err error) {
-	if err := Gorm.Table("components").Where("deleted_at is NULL and canary_selectors != 'null'").Find(&components).Error; err != nil {
+	if err := Gorm.Table("components").Where("deleted_at is NULL and component_canaries != 'null'").Find(&components).Error; err != nil {
 		return nil, err
 	}
 	return
 }
 
-func GetCanariesWithSelectors(canarySelectors []v1.CanarySelector) (canaries []pkg.Canary, err error) {
-	for _, canarySelector := range canarySelectors {
-		if canarySelector.LabelSelector != "" {
-			return GetCanariesWithLabelSelector(canarySelector.LabelSelector)
+func GetCanariesWithSelectors(componentCanaries []v1.ComponentCanary) (canaries []pkg.Canary, err error) {
+	for _, componentCanary := range componentCanaries {
+		if componentCanary.Selector.LabelSelector != "" {
+			return GetCanariesWithLabelSelector(componentCanary.Selector.LabelSelector)
 		}
 	}
 	return
@@ -114,26 +114,26 @@ func GetComponentRelationships(relationshipID uuid.UUID, path string, components
 		relationships = append(relationships, &pkg.ComponentRelationship{
 			RelationshipID:   relationshipID,
 			ComponentID:      component.ID,
-			SelectorID:       GetSelectorID(component.Selectors),
+			SelectorID:       GetSelectorIDFromResourceSelectors(component.Selectors),
 			RelationshipPath: path + "." + relationshipID.String(),
 		})
 	}
 	return
 }
 
-func GetCheckRelationships(canaryID, compID uuid.UUID, checks []pkg.Check) (relationships []*pkg.CheckComponentRelationship, err error) {
+func GetCheckRelationships(canaryID, compID uuid.UUID, checks []pkg.Check, componentCanaries v1.ComponentCanaries) (relationships []*pkg.CheckComponentRelationship, err error) {
 	for _, check := range checks {
 		relationships = append(relationships, &pkg.CheckComponentRelationship{
 			CanaryID:    canaryID,
 			CheckID:     check.ID,
 			ComponentID: compID,
-			// SelectorID:  GetSelectorID(selectors),
+			SelectorID:  GetSelectorIDFromComponentCanaries(componentCanaries),
 		})
 	}
 	return
 }
 
-func GetSelectorID(selectors v1.ResourceSelectors) string {
+func GetSelectorIDFromResourceSelectors(selectors v1.ResourceSelectors) string {
 	data, err := json.Marshal(selectors)
 	if err != nil {
 		logger.Errorf("Error marshalling selectors %v", err)
@@ -142,6 +142,20 @@ func GetSelectorID(selectors v1.ResourceSelectors) string {
 	hash := md5.Sum(data)
 	if err != nil {
 		logger.Errorf("Error hashing selector %v", err)
+		return ""
+	}
+	return hex.EncodeToString(hash[:])
+}
+
+func GetSelectorIDFromComponentCanaries(componentCanaries v1.ComponentCanaries) string {
+	data, err := json.Marshal(componentCanaries)
+	if err != nil {
+		logger.Errorf("Error marshalling component canaries %v", err)
+		return ""
+	}
+	hash := md5.Sum(data)
+	if err != nil {
+		logger.Errorf("Error hashing component canaries %v", err)
 		return ""
 	}
 	return hex.EncodeToString(hash[:])
@@ -175,7 +189,7 @@ func PersisteCheckComponentRelationships(relationships []*pkg.CheckComponentRela
 
 func PersistCheckComponentRelationship(relationship *pkg.CheckComponentRelationship) error {
 	tx := Gorm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "canary_id"}, {Name: "check_id"}, {Name: "component_id"}},
+		Columns:   []clause.Column{{Name: "canary_id"}, {Name: "check_id"}, {Name: "component_id"}, {Name: "selector_id"}},
 		UpdateAll: true,
 	}).Create(relationship)
 	return tx.Error

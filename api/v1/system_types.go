@@ -56,9 +56,9 @@ type NamespaceSelector struct {
 	Selector `json:",inline"`
 }
 
-type CanarySelector struct {
-	ResourceSelector `json:",inline"`
-	Lookup           *CanarySpec `json:"lookup,omitempty"`
+type ComponentCanary struct {
+	Selector ResourceSelector `json:"selector,omitempty"`
+	Inline   *CanarySpec      `json:"inline,omitempty"`
 }
 
 // +kubebuilder:object:root=true

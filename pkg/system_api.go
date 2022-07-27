@@ -169,17 +169,17 @@ type Component struct {
 	Type    string     `json:"type,omitempty"`
 	Summary v1.Summary `json:"summary,omitempty" gorm:"type:summary"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
-	Lifecycle        string               `json:"lifecycle,omitempty"`
-	Properties       Properties           `json:"properties,omitempty" gorm:"type:properties"`
-	Components       Components           `json:"components,omitempty" gorm:"-"`
-	ParentId         *uuid.UUID           `json:"parent_id,omitempty"` //nolint
-	Selectors        v1.ResourceSelectors `json:"resourceSelectors,omitempty" gorm:"resourceSelectors"`
-	CanarySelectors  v1.CanarySelectors   `json:"canarySelectors,omitempty" gorm:"canarySelectors"`
-	SystemTemplateID *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
-	CreatedAt        time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
-	UpdatedAt        time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
-	DeletedAt        *time.Time           `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
-	ExternalId       string               `json:"external_id,omitempty"` //nolint
+	Lifecycle         string               `json:"lifecycle,omitempty"`
+	Properties        Properties           `json:"properties,omitempty" gorm:"type:properties"`
+	Components        Components           `json:"components,omitempty" gorm:"-"`
+	ParentId          *uuid.UUID           `json:"parent_id,omitempty"` //nolint
+	Selectors         v1.ResourceSelectors `json:"resource_selectors,omitempty" gorm:"resourceSelectors"`
+	ComponentCanaries v1.ComponentCanaries `json:"component_canaries,omitempty" gorm:"componentCanaries"`
+	SystemTemplateID  *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
+	CreatedAt         time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
+	UpdatedAt         time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt         *time.Time           `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
+	ExternalId        string               `json:"external_id,omitempty"` //nolint
 }
 
 type ComponentRelationship struct {
@@ -249,14 +249,14 @@ func (component Component) GetAsEnvironment() map[string]interface{} {
 
 func NewComponent(c v1.ComponentSpec) *Component {
 	return &Component{
-		Name:            c.Name,
-		Owner:           c.Owner,
-		Type:            c.Type,
-		Lifecycle:       c.Lifecycle,
-		Tooltip:         c.Tooltip,
-		Icon:            c.Icon,
-		Selectors:       c.Selectors,
-		CanarySelectors: c.CanarySelectors,
+		Name:              c.Name,
+		Owner:             c.Owner,
+		Type:              c.Type,
+		Lifecycle:         c.Lifecycle,
+		Tooltip:           c.Tooltip,
+		Icon:              c.Icon,
+		Selectors:         c.Selectors,
+		ComponentCanaries: c.ComponentCanaries,
 	}
 }
 

@@ -1,0 +1,17 @@
+apiVersion: canaries.flanksource.com/v1
+kind: SystemTemplate
+metadata:
+  name: canary-selector
+  labels:
+    canary: canary-selector
+spec:
+  type: Website
+  icon: Application
+  schedule: "@every 5m"
+
+  components:
+    - canaries:
+       - selector:
+            labelSelector: "canary=http"
+
+        

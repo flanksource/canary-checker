@@ -315,9 +315,9 @@ func ComponentCheckRun() {
 	}
 
 	for _, component := range components {
-		canaries, err := db.GetCanariesWithSelectors(component.CanarySelectors)
+		canaries, err := db.GetCanariesWithSelectors(component.ComponentCanaries)
 		if err != nil {
-			logger.Errorf("error getting canaries with selectors: %s. err: %v", component.CanarySelectors, err)
+			logger.Errorf("error getting canaries with selectors: %s. err: %v", component.ComponentCanaries, err)
 			continue
 		}
 		for _, c := range canaries {
@@ -327,7 +327,7 @@ func ComponentCheckRun() {
 				continue
 			}
 
-			relationships, err := db.GetCheckRelationships(c.ID, component.ID, checks)
+			relationships, err := db.GetCheckRelationships(c.ID, component.ID, checks, component.ComponentCanaries)
 			if err != nil {
 				logger.Errorf("error getting relationships: %v", err)
 				continue

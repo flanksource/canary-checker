@@ -14,7 +14,7 @@ import (
 
 type ResourceSelectors []ResourceSelector
 
-type CanarySelectors []CanarySelector
+type ComponentCanaries []ComponentCanary
 
 func (rs ResourceSelectors) Value() (driver.Value, error) {
 	if len(rs) == 0 {
@@ -61,16 +61,16 @@ func (rs ResourceSelectors) GormValue(ctx context.Context, db *gorm.DB) clause.E
 	return gorm.Expr("?", string(data))
 }
 
-func (cs CanarySelectors) Value() (driver.Value, error) {
+func (cs ComponentCanaries) Value() (driver.Value, error) {
 	if len(cs) == 0 {
 		return []byte("[]"), nil
 	}
 	return json.Marshal(cs)
 }
 
-func (cs *CanarySelectors) Scan(val interface{}) error {
+func (cs *ComponentCanaries) Scan(val interface{}) error {
 	if val == nil {
-		*cs = CanarySelectors{}
+		*cs = ComponentCanaries{}
 		return nil
 	}
 	var ba []byte
@@ -78,18 +78,18 @@ func (cs *CanarySelectors) Scan(val interface{}) error {
 	case []byte:
 		ba = v
 	default:
-		return errors.New(fmt.Sprint("Failed to unmarshal CanarySelectors value:", val))
+		return errors.New(fmt.Sprint("Failed to unmarshal componentCanaries value:", val))
 	}
 	return json.Unmarshal(ba, cs)
 }
 
 // GormDataType gorm common data type
-func (cs CanarySelectors) GormDataType() string {
-	return "canarySelectors"
+func (cs ComponentCanaries) GormDataType() string {
+	return "componentCanaries"
 }
 
 // GormDBDataType gorm db data type
-func (CanarySelectors) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+func (ComponentCanaries) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	switch db.Dialector.Name() {
 	case "sqlite":
 		return "JSON"
@@ -101,7 +101,7 @@ func (CanarySelectors) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	return ""
 }
 
-func (cs CanarySelectors) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
+func (cs ComponentCanaries) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	data, _ := json.Marshal(cs)
 	return gorm.Expr("?", string(data))
 }

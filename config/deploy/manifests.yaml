@@ -3669,14 +3669,10 @@ spec:
               type: object
             spec:
               properties:
-                canarySelectors:
+                canaries:
                   items:
                     properties:
-                      fieldSelector:
-                        type: string
-                      labelSelector:
-                        type: string
-                      lookup:
+                      inline:
                         description: CanarySpec defines the desired state of Canary
                         properties:
                           awsConfig:
@@ -6938,8 +6934,15 @@ spec:
                               type: object
                             type: array
                         type: object
-                      name:
-                        type: string
+                      selector:
+                        properties:
+                          fieldSelector:
+                            type: string
+                          labelSelector:
+                            type: string
+                          name:
+                            type: string
+                        type: object
                     type: object
                   type: array
                 components:
@@ -13644,14 +13647,10 @@ spec:
                 components:
                   items:
                     properties:
-                      canarySelectors:
+                      canaries:
                         items:
                           properties:
-                            fieldSelector:
-                              type: string
-                            labelSelector:
-                              type: string
-                            lookup:
+                            inline:
                               description: CanarySpec defines the desired state of Canary
                               properties:
                                 awsConfig:
@@ -16913,8 +16912,15 @@ spec:
                                     type: object
                                   type: array
                               type: object
-                            name:
-                              type: string
+                            selector:
+                              properties:
+                                fieldSelector:
+                                  type: string
+                                labelSelector:
+                                  type: string
+                                name:
+                                  type: string
+                              type: object
                           type: object
                         type: array
                       components:
