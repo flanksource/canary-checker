@@ -172,7 +172,7 @@ func Query(params TopologyParams) (pkg.Components, error) {
 		results = append(results, components...)
 	}
 
-	results = results.CreateTreeStrcuture(params.getID(), params.Status)
+	results = results.CreateTreeStructure(params.getID(), params.Status)
 	for _, result := range results {
 		result.Components = filterComponentsWithDepth(result.Components, params.Depth)
 	}

@@ -109,7 +109,7 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (components Components) CreateTreeStrcuture(queryID, status string) Components {
+func (components Components) CreateTreeStructure(queryID, status string) Components {
 	var toRemoveCompIDs []uuid.UUID
 	for _, _c := range components {
 		c := _c
