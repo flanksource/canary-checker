@@ -108,7 +108,7 @@ func (p TopologyParams) GetComponentWhereClause() string {
 			) or id = :id or path = :id :: text)`
 	}
 	if p.Status != "" {
-		s += " AND components.status = :status"
+		s += " AND components.status = :status or id = :id"
 	}
 	return s
 }
@@ -172,7 +172,7 @@ func Query(params TopologyParams) (pkg.Components, error) {
 		results = append(results, components...)
 	}
 
-	results = results.CreateTreeStrcuture()
+	results = results.CreateTreeStrcuture(params.getID(), params.Status)
 	for _, result := range results {
 		result.Components = filterComponentsWithDepth(result.Components, params.Depth)
 	}

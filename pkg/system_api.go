@@ -109,7 +109,7 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (components Components) CreateTreeStrcuture() Components {
+func (components Components) CreateTreeStrcuture(queryID, status string) Components {
 	var toRemoveCompIDs []uuid.UUID
 	for _, _c := range components {
 		c := _c
@@ -132,8 +132,10 @@ func (components Components) CreateTreeStrcuture() Components {
 	for _, component := range components {
 		component.Summary = component.Summarize()
 	}
-	for _, component := range components.Walk() {
-		component.Status = component.GetStatus()
+	if queryID == "" && status == "" {
+		for _, component := range components.Walk() {
+			component.Status = component.GetStatus()
+		}
 	}
 	return components
 }
