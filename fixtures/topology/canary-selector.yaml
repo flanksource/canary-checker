@@ -11,7 +11,13 @@ spec:
 
   components:
     - canaries:
-       - selector:
+       -  selector:
             labelSelector: "canary=http"
-
-        
+          inline:
+            schedule: "@every 1m"
+            http:
+              - name: inline component test
+                endpoint: http://status.savanttools.com/?code=202
+                responseCodes:
+                  - 202
+      name: http-component-canary

@@ -194,6 +194,7 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 		Icon:      ctx.SystemTemplate.Spec.Icon,
 		Text:      ctx.SystemTemplate.Spec.Text,
 		Type:      ctx.SystemTemplate.Spec.Type,
+		Schedule:  ctx.SystemTemplate.Spec.Schedule,
 	}
 
 	if opts.Depth > 0 {
@@ -308,14 +309,14 @@ func ComponentStatusSummarySync() {
 }
 func ComponentCheckRun() {
 	logger.Debugf("Syncing Check Relationships")
-	components, err := db.GetAllComponentWithCanarySelector()
+	components, err := db.GetAllComponentWithCanaries()
 	if err != nil {
 		logger.Errorf("error getting components: %v", err)
 		return
 	}
 
 	for _, component := range components {
-		canaries, err := db.GetCanariesWithSelectors(component.ComponentCanaries)
+		canaries, err := db.GetCanariesWithSelectors(*component)
 		if err != nil {
 			logger.Errorf("error getting canaries with selectors: %s. err: %v", component.ComponentCanaries, err)
 			continue

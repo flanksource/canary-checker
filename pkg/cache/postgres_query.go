@@ -154,6 +154,11 @@ func (q QueryParams) ExecuteSummary(db Querier) (pkg.Checks, error) {
 	if err != nil {
 		return nil, err
 	}
+	var canaryClause string
+	if q.CanaryID != "" {
+		canaryClause += " AND checks.canary_id = :canary_id "
+		namedArgs["canary_id"] = q.CanaryID
+	}
 
 	statusColumns := ""
 	if q.IncludeMessages {
@@ -222,8 +227,8 @@ checks.deleted_at
 	WHERE rank <= :count
 	GROUP by check_id
 		) as statuses ON statuses.check_id = checks.id
-		WHERE passed.passed > 0 OR failed.failed > 0
-	`, clause, clause, clause, statusColumns, clause)
+		WHERE (passed.passed > 0 OR failed.failed > 0) %s
+	`, clause, clause, clause, statusColumns, clause, canaryClause)
 
 	if q.StatusCount == 0 {
 		q.StatusCount = 5

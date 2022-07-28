@@ -121,6 +121,7 @@ func CanaryFromV1(canary v1.Canary) (Canary, error) {
 	if err != nil {
 		return Canary{}, err
 	}
+	fmt.Println(canary.Spec.Schedule)
 	return Canary{
 		Spec:      spec,
 		Labels:    types.JSONStringMap(canary.Labels),

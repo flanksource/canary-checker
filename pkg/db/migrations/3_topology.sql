@@ -34,6 +34,7 @@ CREATE TABLE components (
   lifecycle text,
   tooltip text,
   status_reason text,
+  schedule text,
   icon text,
   type text NULL,
   owner text,

@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -99,10 +100,11 @@ func DeleteCanary(canary v1.Canary) error {
 
 func GetCanary(id string) (*pkg.Canary, error) {
 	var model *pkg.Canary
-	if err := Gorm.Where("id = ?", id).First(model).Error; err != nil {
+	if err := Gorm.Where("id = ?", id).First(&model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
+		fmt.Println("returning the error from here")
 		return nil, err
 	}
 	return model, nil

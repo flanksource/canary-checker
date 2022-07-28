@@ -19,6 +19,7 @@ const AllStatuses = -1
 
 type QueryParams struct {
 	Check           string
+	CanaryID        string
 	Start, End      string
 	Window          string
 	IncludeMessages bool
@@ -99,6 +100,7 @@ func ParseQuery(c echo.Context) (*QueryParams, error) {
 		Check:           queryParams.Get("check"),
 		StatusCount:     int(cacheCount),
 		Trace:           isTrue(queryParams.Get("trace")),
+		CanaryID:        queryParams.Get("canary_id"),
 	}
 
 	if err := q.Validate(); err != nil {

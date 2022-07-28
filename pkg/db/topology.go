@@ -93,17 +93,28 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 	return
 }
 
-func GetAllComponentWithCanarySelector() (components pkg.Components, err error) {
+func GetAllComponentWithCanaries() (components pkg.Components, err error) {
 	if err := Gorm.Table("components").Where("deleted_at is NULL and component_canaries != 'null'").Find(&components).Error; err != nil {
 		return nil, err
 	}
 	return
 }
 
-func GetCanariesWithSelectors(componentCanaries []v1.ComponentCanary) (canaries []pkg.Canary, err error) {
-	for _, componentCanary := range componentCanaries {
+func GetCanariesWithSelectors(component pkg.Component) (canaries []pkg.Canary, err error) {
+	for _, componentCanary := range component.ComponentCanaries {
 		if componentCanary.Selector.LabelSelector != "" {
-			return GetCanariesWithLabelSelector(componentCanary.Selector.LabelSelector)
+			labelCanaries, err := GetCanariesWithLabelSelector(componentCanary.Selector.LabelSelector)
+			if err != nil {
+				logger.Debugf("error getting canaries with label selector %v", err)
+			}
+			canaries = append(canaries, labelCanaries...)
+		}
+		if componentCanary.Inline != nil {
+			inlineCanaries, err := CreateComponentCanaryFromInline(component.Name, component.Namespace, component.Schedule, componentCanary.Inline)
+			if err != nil {
+				logger.Debugf("error creating canary from inline %v", err)
+			}
+			canaries = append(canaries, inlineCanaries...)
 		}
 	}
 	return
@@ -276,6 +287,7 @@ func DeleteComponentsWithIDs(compIDs []string, deleteTime time.Time) error {
 	logger.Infof("deleting component with ids: %v", compIDs)
 	componentsModel := &[]pkg.Component{}
 	tx := Gorm.Find(componentsModel).Where("id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime)
+	Gorm.Table("component_relationships").Where("component_id in (?) or relationship_id in (?)", compIDs, compIDs).UpdateColumn("deleted_at", deleteTime)
 	return tx.Error
 }
 

@@ -156,6 +156,7 @@ type Component struct {
 	Name         string              `json:"name,omitempty"`
 	ID           uuid.UUID           `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
 	Text         string              `json:"text,omitempty"`
+	Schedule     string              `json:"schedule,omitempty"`
 	TopologyType string              `json:"topology_type,omitempty"`
 	Namespace    string              `json:"namespace,omitempty"`
 	Labels       types.JSONStringMap `json:"labels,omitempty"`
@@ -174,12 +175,13 @@ type Component struct {
 	Components        Components           `json:"components,omitempty" gorm:"-"`
 	ParentId          *uuid.UUID           `json:"parent_id,omitempty"` //nolint
 	Selectors         v1.ResourceSelectors `json:"resource_selectors,omitempty" gorm:"resourceSelectors"`
-	ComponentCanaries v1.ComponentCanaries `json:"component_canaries,omitempty" gorm:"componentCanaries"`
-	SystemTemplateID  *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
-	CreatedAt         time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
-	UpdatedAt         time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
-	DeletedAt         *time.Time           `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
-	ExternalId        string               `json:"external_id,omitempty"` //nolint
+	ComponentCanaries v1.ComponentCanaries `json:"-" gorm:"componentCanaries"`
+	// Canaries          []Canary             `json:"canaries,omitempty"`
+	SystemTemplateID *uuid.UUID `json:"system_template_id,omitempty"` //nolint
+	CreatedAt        time.Time  `json:"created_at,omitempty" time_format:"postgres_timestamp"`
+	UpdatedAt        time.Time  `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt        *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
+	ExternalId       string     `json:"external_id,omitempty"` //nolint
 }
 
 type ComponentRelationship struct {
