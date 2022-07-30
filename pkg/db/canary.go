@@ -158,11 +158,5 @@ func PersistCanary(canary v1.Canary, source string) (string, bool, error) {
 		return "", changed, tx.Error
 	}
 
-	for _, config := range canary.Spec.GetAllChecks() {
-		if _, err := PersistCheck(pkg.FromExternalCheck(model, config)); err != nil {
-			return "", changed, err
-		}
-	}
-
 	return model.ID.String(), changed, nil
 }

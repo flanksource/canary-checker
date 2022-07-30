@@ -185,10 +185,10 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 		s.Namespace = opts.Namespace
 	}
 	ctx := NewComponentContext(opts.Client, s)
-	var results []*pkg.Component
+	var results pkg.Components
 	component := &pkg.Component{
-		Name:      ctx.SystemTemplate.Name,
-		Namespace: ctx.SystemTemplate.Namespace,
+		Name:      ctx.SystemTemplate.GetName(),
+		Namespace: ctx.SystemTemplate.GetNamespace(),
 		Labels:    ctx.SystemTemplate.Labels,
 		Tooltip:   ctx.SystemTemplate.Spec.Tooltip,
 		Icon:      ctx.SystemTemplate.Spec.Icon,
@@ -260,6 +260,10 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 	// }
 	results = append(results, component)
 	logger.Infof("%s id=%s status=%s", component.Name, component.ID, component.Status)
+	for _, c := range results.Walk() {
+		c.Namespace = ctx.SystemTemplate.GetNamespace()
+		c.Schedule = ctx.SystemTemplate.Spec.Schedule
+	}
 	return results
 }
 

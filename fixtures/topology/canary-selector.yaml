@@ -16,7 +16,7 @@ spec:
           inline:
             schedule: "@every 1m"
             http:
-              - name: inline component test
+              - name: http-pass
                 endpoint: http://status.savanttools.com/?code=202
                 responseCodes:
                   - 202
@@ -25,7 +25,7 @@ spec:
         - inline:
             schedule: "@every 1m"
             http:
-              - name: inline component test
+              - name: http-202
                 endpoint: http://status.savanttools.com/?code=201
                 responseCodes:
                   - 202

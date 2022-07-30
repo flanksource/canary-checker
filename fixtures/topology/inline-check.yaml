@@ -1,0 +1,17 @@
+apiVersion: canaries.flanksource.com/v1
+kind: SystemTemplate
+metadata:
+  name: inline-check
+spec:
+  type: Website
+  icon: Application
+  schedule: "@every 5m"
+  components:
+    - canaries:
+       - inline:
+            http:
+              - name: inline-check
+                endpoint: http://status.savanttools.com/?code=202
+                responseCodes:
+                  - 202
+      name: inline-check
