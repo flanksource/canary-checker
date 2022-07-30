@@ -25,6 +25,7 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/kommons"
 	"github.com/go-logr/logr"
 	"github.com/robfig/cron/v3"
@@ -87,7 +88,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		if err := db.DeleteCanary(*canary); err != nil {
 			logger.Error(err, "failed to delete canary")
 		}
-		DeleteCanaryJob(*canary)
+		canaryJobs.DeleteCanaryJob(*canary)
 		controllerutil.RemoveFinalizer(canary, FinalizerName)
 		return ctrl.Result{}, r.Update(ctx, canary)
 	}
@@ -101,7 +102,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	canary.Status.PersistedID = &id
 	// Sync jobs if canary is created or updated
 	if canary.Generation == 1 || changed {
-		if err := SyncCanaryJob(*canary); err != nil {
+		if err := canaryJobs.SyncCanaryJob(*canary); err != nil {
 			logger.Error(err, "failed to sync canary job")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}

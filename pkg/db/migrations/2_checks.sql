@@ -27,6 +27,7 @@ CREATE TABLE checks(
 	last_runtime TIMESTAMP,
 	next_runtime TIMESTAMP,
 	silenced_at TIMESTAMP NULL,
+	status boolean, -- status of last check executed
 	created_at TIMESTAMP,
 	updated_at TIMESTAMP NULL,
 	deleted_at TIMESTAMP DEFAULT NULL,

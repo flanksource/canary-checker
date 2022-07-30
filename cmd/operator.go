@@ -7,6 +7,8 @@ import (
 
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/jobs"
+	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/runner"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
@@ -46,8 +48,8 @@ func run(cmd *cobra.Command, args []string) {
 		logger.Fatalf("failed to get zap logger")
 		return
 	}
-	controllers.LogFail = logFail
-	controllers.LogPass = logPass
+	canaryJobs.LogFail = logFail
+	canaryJobs.LogPass = logPass
 
 	loggr := ctrlzap.NewRaw(
 		ctrlzap.UseDevMode(true),
@@ -68,7 +70,7 @@ func run(cmd *cobra.Command, args []string) {
 	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 	if operatorExecutor {
 		logger.Infof("Starting executors")
-		controllers.Start()
+		jobs.Start()
 	}
 	go serve()
 

@@ -21,6 +21,7 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
+	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/system"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -60,7 +61,7 @@ func (r *SystemReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		if err := db.DeleteSystemTemplate(systemTemplate); err != nil {
 			logger.Error(err, "failed to delete system template")
 		}
-		DeleteSystemJob(*systemTemplate)
+		systemJobs.DeleteSystemJob(*systemTemplate)
 		controllerutil.RemoveFinalizer(systemTemplate, SystemTemplateFinalizerName)
 		return ctrl.Result{}, r.Update(ctx, systemTemplate)
 	}
@@ -72,7 +73,7 @@ func (r *SystemReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	systemTemplate.Status.PersistedID = &id
 	// Sync jobs if system template is created or updated
 	if changed || systemTemplate.Status.ObservedGeneration == 1 {
-		if err := SyncSystemJob(*systemTemplate); err != nil {
+		if err := systemJobs.SyncSystemJob(*systemTemplate); err != nil {
 			logger.Error(err, "failed to sync system template job")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}

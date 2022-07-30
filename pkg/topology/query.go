@@ -132,15 +132,17 @@ func (p TopologyParams) GetComponentRelationWhereClause() string {
 	return s
 }
 
+//	SELECT json_agg(to_jsonb(components)) :: jsonb as components from components LEFT JOIN ((SELECT json_agg(checks) from checks LEFT JOIN check_component_relationships ON checks.id = check_component_relationships.check_id GROUP BY check_component_relationships.component_id) :: jsonb) AS checks ON components.id = checks.component_id
+
 func Query(params TopologyParams) (pkg.Components, error) {
 	sql := fmt.Sprintf(`
-	SELECT json_agg(to_jsonb(components)) :: jsonb as components from components %s
+	SELECT json_agg(jsonb_set_lax(to_jsonb(components),'{checks}', %s)) :: jsonb as components from components %s
 	union
-	(SELECT json_agg(jsonb_set(to_jsonb(components), '{parent_id}', to_jsonb(component_relationships.relationship_id), true)) :: jsonb 
+	(SELECT json_agg(jsonb_set_lax(jsonb_set_lax(to_jsonb(components), '{parent_id}', to_jsonb(component_relationships.relationship_id), true),'{checks}', %s)) :: jsonb 
 	AS components from component_relationships INNER JOIN components 
 	ON components.id = component_relationships.component_id INNER JOIN components AS parent 
 	ON component_relationships.relationship_id = parent.id %s)
-`, params.GetComponentWhereClause(), params.GetComponentRelationWhereClause())
+`, getChecksForComponents(), params.GetComponentWhereClause(), getChecksForComponents(), params.GetComponentRelationWhereClause())
 
 	args := make(map[string]interface{})
 	if params.Status != "" {
@@ -192,4 +194,10 @@ func filterComponentsWithDepth(components []*pkg.Component, depth int) []*pkg.Co
 		comp.Components = filterComponentsWithDepth(comp.Components, depth-1)
 	}
 	return components
+}
+
+func getChecksForComponents() string {
+	return `
+			(SELECT json_agg(checks) from checks LEFT JOIN check_component_relationships ON checks.id = check_component_relationships.check_id WHERE check_component_relationships.component_id = components.id  GROUP BY check_component_relationships.component_id) :: jsonb
+			 `
 }

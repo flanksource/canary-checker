@@ -1,4 +1,4 @@
-package controllers
+package system
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/topology"
+	"github.com/flanksource/canary-checker/pkg/topology/checks"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
 	"github.com/google/uuid"
@@ -18,6 +19,8 @@ import (
 )
 
 var SystemScheduler = cron.New()
+
+var Kommons *kommons.Client
 
 type SystemJob struct {
 	*kommons.Client
@@ -65,7 +68,7 @@ func (job SystemJob) Run() {
 	}
 	topology.ComponentRun()
 	topology.ComponentStatusSummarySync()
-	topology.ComponentCheckRun()
+	checks.ComponentCheckRun()
 }
 
 func SyncSystemsJobs() {

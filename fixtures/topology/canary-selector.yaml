@@ -21,3 +21,12 @@ spec:
                 responseCodes:
                   - 202
       name: http-component-canary
+    - canaries:
+        - inline:
+            schedule: "@every 1m"
+            http:
+              - name: inline component test
+                endpoint: http://status.savanttools.com/?code=201
+                responseCodes:
+                  - 202
+      name: second-inline-canary

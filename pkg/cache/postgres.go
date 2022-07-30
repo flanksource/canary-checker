@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -36,11 +37,13 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 		logger.Errorf("error marshalling details: %v", err)
 	}
 
-	row := c.QueryRow(context.TODO(), "UPDATE checks SET last_runtime = NOW() WHERE canary_id = $1 AND type = $2 AND name = $3 RETURNING id", check.CanaryID, check.Type, check.GetName())
+	row := c.QueryRow(context.TODO(), "UPDATE checks SET last_runtime = NOW(), status = $1 WHERE canary_id = $2 AND type = $3 AND name = $4 RETURNING id", status.Status, check.CanaryID, check.Type, check.GetName())
 	var id string
 
 	if err := row.Scan(&id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
+			fmt.Println("I am coming here")
+			check.Status = status.Status
 			if id, err = db.PersistCheck(check); err != nil {
 				logger.Errorf("error inserting check: %v", err)
 				return
@@ -50,7 +53,6 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 			return
 		}
 	}
-
 	_, err = c.Exec(context.TODO(), `INSERT INTO check_statuses(
 		check_id,
 		details,

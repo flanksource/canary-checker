@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"helm.sh/helm/v3/pkg/time"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func GetAllCanaries() ([]v1.Canary, error) {
@@ -23,24 +22,7 @@ func GetAllCanaries() ([]v1.Canary, error) {
 		return nil, err
 	}
 	for _, _canary := range _canaries {
-		canary := v1.Canary{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      _canary.Name,
-				Namespace: _canary.Namespace,
-				Labels:    _canary.Labels,
-			},
-		}
-		var deletionTimestamp metav1.Time
-		if _canary.DeletedAt.Valid {
-			deletionTimestamp = metav1.NewTime(_canary.DeletedAt.Time)
-			canary.ObjectMeta.DeletionTimestamp = &deletionTimestamp
-		}
-		if err := json.Unmarshal(_canary.Spec, &canary.Spec); err != nil {
-			return nil, err
-		}
-		id := _canary.ID.String()
-		canary.Status.PersistedID = &id
-		canaries = append(canaries, canary)
+		canaries = append(canaries, *_canary.V1CanaryFromPkg())
 	}
 	return canaries, nil
 }

@@ -1,4 +1,4 @@
-package controllers
+package canary
 
 import (
 	"fmt"
@@ -25,6 +25,9 @@ var CanaryConfigFiles []string
 var DataFile string
 var Executor bool
 var LogPass, LogFail bool
+
+var Kommons *kommons.Client
+var FuncScheduler = cron.New()
 
 func StartScanCanaryConfigs(dataFile string, configFiles []string) {
 	DataFile = dataFile
@@ -163,4 +166,8 @@ func DeleteCanaryJob(canary v1.Canary) {
 	}
 	logger.Tracef("deleting cron entry for canary %s/%s with entry ID: %v", canary.Name, canary.Namespace, entry.ID)
 	CanaryScheduler.Remove(entry.ID)
+}
+
+func ScheduleFunc(schedule string, fn func()) (interface{}, error) {
+	return FuncScheduler.AddFunc(schedule, fn)
 }
