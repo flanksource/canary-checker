@@ -110,7 +110,7 @@ func GetCanariesWithSelectors(component pkg.Component) (canaries []pkg.Canary, e
 			canaries = append(canaries, labelCanaries...)
 		}
 		if componentCanary.Inline != nil {
-			inlineCanaries, err := CreateComponentCanaryFromInline(component.Name, component.Namespace, component.Schedule, componentCanary.Inline)
+			inlineCanaries, err := CreateComponentCanaryFromInline(component.ID.String(), component.Name, component.Namespace, component.Schedule, componentCanary.Inline)
 			if err != nil {
 				logger.Debugf("error creating canary from inline %v", err)
 			}

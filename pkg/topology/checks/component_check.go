@@ -15,14 +15,15 @@ func ComponentCheckRun() {
 	}
 
 	for _, component := range components {
-		//TODO: we only care about the checkIds... optimize it to just return the checkIds
 		canaries, err := db.GetCanariesWithSelectors(*component)
 		if err != nil {
 			logger.Errorf("error getting canaries with selectors: %s. err: %v", component.ComponentCanaries, err)
 			continue
 		}
 		for _, c := range canaries {
-			canaryJobs.SyncCanaryJob(*c.V1CanaryFromPkg())
+			if err := canaryJobs.SyncCanaryJob(*c.ToV1()); err != nil {
+				logger.Debugf("error syncing canary job: %v. Continuing anyway...", err)
+			}
 			checks, err := db.GetAllChecksForCanary(c.ID)
 			if err != nil {
 				logger.Debugf("error getting checks for canary: %s. err: %v", c.ID, err)

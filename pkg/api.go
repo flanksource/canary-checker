@@ -118,7 +118,7 @@ type Canary struct {
 	DeletedAt gorm.DeletedAt
 }
 
-func (c Canary) V1CanaryFromPkg() *v1.Canary {
+func (c Canary) ToV1() *v1.Canary {
 	canary := v1.Canary{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.Name,
@@ -145,7 +145,6 @@ func CanaryFromV1(canary v1.Canary) (Canary, error) {
 	if err != nil {
 		return Canary{}, err
 	}
-	fmt.Println(canary.Spec.Schedule)
 	return Canary{
 		Spec:      spec,
 		Labels:    types.JSONStringMap(canary.Labels),

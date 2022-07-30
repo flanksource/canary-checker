@@ -3,7 +3,6 @@ package db
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -22,7 +21,7 @@ func GetAllCanaries() ([]v1.Canary, error) {
 		return nil, err
 	}
 	for _, _canary := range _canaries {
-		canaries = append(canaries, *_canary.V1CanaryFromPkg())
+		canaries = append(canaries, *_canary.ToV1())
 	}
 	return canaries, nil
 }
@@ -86,7 +85,6 @@ func GetCanary(id string) (*pkg.Canary, error) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		fmt.Println("returning the error from here")
 		return nil, err
 	}
 	return model, nil
@@ -150,7 +148,7 @@ func PersistCanary(canary v1.Canary, source string) (string, bool, error) {
 	}
 	model.Source = source
 	tx := Gorm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "name"}, clause.Column{Name: "namespace"}},
+		Columns:   []clause.Column{{Name: "name"}, {Name: "namespace"}, {Name: "source"}},
 		UpdateAll: true,
 	}).Create(&model)
 	if tx.RowsAffected > 0 {

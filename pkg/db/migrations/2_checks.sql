@@ -11,7 +11,7 @@ CREATE TABLE canaries (
 	created_at TIMESTAMP,
 	updated_at TIMESTAMP,
 	deleted_at TIMESTAMP DEFAULT NULL,
-	UNIQUE (name, namespace)
+	UNIQUE (name, namespace, source)
 );
 
 CREATE TABLE checks(

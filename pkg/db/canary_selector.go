@@ -55,9 +55,8 @@ func GetAllChecksForCanary(canaryID uuid.UUID) (checks []pkg.Check, err error) {
 	return checks, nil
 }
 
-func CreateComponentCanaryFromInline(name, namespace, schedule string, spec *v1.CanarySpec) ([]pkg.Canary, error) {
+func CreateComponentCanaryFromInline(id, name, namespace, schedule string, spec *v1.CanarySpec) ([]pkg.Canary, error) {
 	if spec.GetSchedule() == "@never" {
-		fmt.Println("setting the schedule here to", schedule)
 		spec.Schedule = schedule
 	}
 	obj := v1.Canary{
@@ -67,7 +66,7 @@ func CreateComponentCanaryFromInline(name, namespace, schedule string, spec *v1.
 		},
 		Spec: *spec,
 	}
-	id, _, err := PersistCanary(obj, "component/inline")
+	id, _, err := PersistCanary(obj, fmt.Sprintf("component/%s", id))
 	if err != nil {
 		logger.Debugf("error persisting component inline canary: %v", err)
 		return nil, err

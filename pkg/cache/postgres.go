@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -42,7 +41,6 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 
 	if err := row.Scan(&id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			fmt.Println("I am coming here")
 			check.Status = status.Status
 			if id, err = db.PersistCheck(check); err != nil {
 				logger.Errorf("error inserting check: %v", err)
