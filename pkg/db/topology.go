@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 
 	"time"
 
@@ -263,8 +264,15 @@ func DeleteSystemTemplate(systemTemplate *v1.SystemTemplate) error {
 func DeleteComponnents(systemTemplateID string, deleteTime time.Time) error {
 	logger.Infof("Deleting all components associated with system: %s", systemTemplateID)
 	componentsModel := &[]pkg.Component{}
-	tx := Gorm.Find(componentsModel).Where("system_template_id = ?", systemTemplateID).UpdateColumn("deleted_at", deleteTime)
+	tx := Gorm.Where("system_template_id = ?", systemTemplateID).Find(componentsModel).UpdateColumn("deleted_at", deleteTime)
 	DeleteComponentRelationshipForComponents(componentsModel, deleteTime)
+	for _, component := range *componentsModel {
+		fmt.Printf("going to delete inline canaries for the component %s\n", component.ID)
+		if err := DeleteInlineCanariesForComponent(component.ID.String(), deleteTime); err != nil {
+			logger.Debugf("Error deleting inline canaries for component %s: %v", component.ID, err)
+			continue
+		}
+	}
 	return tx.Error
 }
 
@@ -277,7 +285,7 @@ func DeleteComponentRelationshipForComponents(components *[]pkg.Component, delet
 }
 
 func DeleteComponentRelationship(componentID string, deleteTime time.Time) error {
-	logger.Infof("Deleting component relationship for components %s", componentID)
+	// logger.Infof("Deleting component relationship for components %s", componentID)
 	tx := Gorm.Delete(&pkg.ComponentRelationship{}, "component_id = ? or relationship_id = ?", componentID, componentID).UpdateColumn("deleted_at", deleteTime)
 	return tx.Error
 }
@@ -285,10 +293,43 @@ func DeleteComponentRelationship(componentID string, deleteTime time.Time) error
 // DeleteComponentsWithID deletes all components with specified ids.
 func DeleteComponentsWithIDs(compIDs []string, deleteTime time.Time) error {
 	logger.Infof("deleting component with ids: %v", compIDs)
-	componentsModel := &[]pkg.Component{}
-	tx := Gorm.Find(componentsModel).Where("id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime)
-	Gorm.Table("component_relationships").Where("component_id in (?) or relationship_id in (?)", compIDs, compIDs).UpdateColumn("deleted_at", deleteTime)
+	// componentsModel := &[]pkg.Component{}
+	tx := Gorm.Table("components").Where("id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	tx = Gorm.Table("component_relationships").Where("component_id in (?) or relationship_id in (?)", compIDs, compIDs).UpdateColumn("deleted_at", deleteTime)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	if err := Gorm.Table("check_component_relationships").Where("component_id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+		return err
+	}
+	for _, compID := range compIDs {
+		if err := DeleteInlineCanariesForComponent(compID, deleteTime); err != nil {
+			logger.Debugf("Error deleting component relationship for component %v", compID)
+		}
+	}
 	return tx.Error
+}
+
+func DeleteInlineCanariesForComponent(componentID string, deleteTime time.Time) error {
+	var canaries = []*pkg.Canary{}
+	source := "component/" + componentID
+	if err := Gorm.Where("source = ?", source).Find(&canaries).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+		return err
+	}
+	for _, c := range canaries {
+		if err := DeleteChecksForCanary(c.ID.String(), deleteTime); err != nil {
+			logger.Debugf("Error deleting checks for canary %v", c.ID)
+			continue
+		}
+		if err := DeleteCheckComponentRelationshipsForCanary(c.ID.String(), deleteTime); err != nil {
+			logger.Debugf("Error deleting check component relationships for canary %v", c.ID)
+			continue
+		}
+	}
+	return nil
 }
 
 func GetActiveComponentsIDsWithSystemTemplateID(systemID string) (compIDs []uuid.UUID, err error) {

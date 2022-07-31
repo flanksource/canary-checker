@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	"time"
+
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db/types"
@@ -11,13 +13,12 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"helm.sh/helm/v3/pkg/time"
 )
 
 func GetAllCanaries() ([]v1.Canary, error) {
 	var canaries []v1.Canary
 	var _canaries []pkg.Canary
-	if err := Gorm.Find(&_canaries).Where("deleted_at is NULL").Error; err != nil {
+	if err := Gorm.Where("deleted_at is NULL").Find(&_canaries).Error; err != nil {
 		return nil, err
 	}
 	for _, _canary := range _canaries {
@@ -64,19 +65,30 @@ func DeleteCanary(canary v1.Canary) error {
 	if err != nil {
 		return err
 	}
-	deleteTime := time.Now().Time
+	deleteTime := time.Now()
 	persistedID := canary.GetPersistedID()
 	if persistedID == "" {
 		logger.Errorf("System template %s/%s has not been persisted", canary.Namespace, canary.Name)
 		return nil
 	}
-	tx := Gorm.Find(&model).Where("id = ?", persistedID).UpdateColumn("deleted_at", deleteTime)
-	if tx.Error != nil {
-		return tx.Error
+	if err := Gorm.Where("id = ?", persistedID).Find(&model).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+		return err
 	}
-	var checkmodel = &pkg.Check{}
-	tx = Gorm.Find(&checkmodel).Where("canary_id = ?", model.ID.String()).UpdateColumn("deleted_at", deleteTime)
-	return tx.Error
+	if err := DeleteChecksForCanary(persistedID, deleteTime); err != nil {
+		return err
+	}
+	if err := DeleteCheckComponentRelationshipsForCanary(persistedID, deleteTime); err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteChecksForCanary(id string, deleteTime time.Time) error {
+	return Gorm.Table("checks").Where("canary_id = ?", id).UpdateColumn("deleted_at", deleteTime).Error
+}
+
+func DeleteCheckComponentRelationshipsForCanary(id string, deleteTime time.Time) error {
+	return Gorm.Table("check_component_relationships").Where("canary_id = ?", id).UpdateColumn("deleted_at", deleteTime).Error
 }
 
 func GetCanary(id string) (*pkg.Canary, error) {

@@ -14,4 +14,4 @@ spec:
                 endpoint: http://status.savanttools.com/?code=202
                 responseCodes:
                   - 202
-      name: inline-check
+      name: inline-canary

@@ -198,6 +198,6 @@ func filterComponentsWithDepth(components []*pkg.Component, depth int) []*pkg.Co
 
 func getChecksForComponents() string {
 	return `
-			(SELECT json_agg(checks) from checks LEFT JOIN check_component_relationships ON checks.id = check_component_relationships.check_id WHERE check_component_relationships.component_id = components.id  GROUP BY check_component_relationships.component_id) :: jsonb
+			(SELECT json_agg(checks) from checks LEFT JOIN check_component_relationships ON checks.id = check_component_relationships.check_id WHERE check_component_relationships.component_id = components.id AND check_component_relationships.deleted_at is null   GROUP BY check_component_relationships.component_id) :: jsonb
 			 `
 }
