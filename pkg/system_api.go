@@ -174,7 +174,7 @@ type Component struct {
 	Properties        Properties           `json:"properties,omitempty" gorm:"type:properties"`
 	Components        Components           `json:"components,omitempty" gorm:"-"`
 	ParentId          *uuid.UUID           `json:"parent_id,omitempty"` //nolint
-	Selectors         v1.ResourceSelectors `json:"resource_selectors,omitempty" gorm:"resourceSelectors"`
+	Selectors         v1.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors"`
 	ComponentCanaries v1.ComponentCanaries `json:"-" gorm:"componentCanaries"`
 	Checks            Checks               `json:"checks,omitempty" gorm:"-"`
 	SystemTemplateID  *uuid.UUID           `json:"system_template_id,omitempty"` //nolint

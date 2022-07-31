@@ -274,7 +274,7 @@ k8s = {
         type: "KubernetesNode",
         external_id: node.metadata.name,
         labels: k8s.filterLabels(node.metadata.labels),
-        selector: [{
+        selectors: [{
           name: "",
           labelSelector: "",
           fieldSelector: "node="+node.metadata.name

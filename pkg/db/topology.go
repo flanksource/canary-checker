@@ -267,7 +267,9 @@ func DeleteComponnents(systemTemplateID string, deleteTime time.Time) error {
 	tx := Gorm.Where("system_template_id = ?", systemTemplateID).Find(componentsModel).UpdateColumn("deleted_at", deleteTime)
 	DeleteComponentRelationshipForComponents(componentsModel, deleteTime)
 	for _, component := range *componentsModel {
-		fmt.Printf("going to delete inline canaries for the component %s\n", component.ID)
+		if component.ComponentCanaries == nil {
+			return tx.Error
+		}
 		if err := DeleteInlineCanariesForComponent(component.ID.String(), deleteTime); err != nil {
 			logger.Debugf("Error deleting inline canaries for component %s: %v", component.ID, err)
 			continue
@@ -285,21 +287,19 @@ func DeleteComponentRelationshipForComponents(components *[]pkg.Component, delet
 }
 
 func DeleteComponentRelationship(componentID string, deleteTime time.Time) error {
-	// logger.Infof("Deleting component relationship for components %s", componentID)
-	tx := Gorm.Delete(&pkg.ComponentRelationship{}, "component_id = ? or relationship_id = ?", componentID, componentID).UpdateColumn("deleted_at", deleteTime)
-	return tx.Error
+	return Gorm.Table("component_relationships").Where("component_id = ? or relationship_id = ?", componentID, componentID).UpdateColumn("deleted_at", deleteTime).Error
 }
 
 // DeleteComponentsWithID deletes all components with specified ids.
 func DeleteComponentsWithIDs(compIDs []string, deleteTime time.Time) error {
 	logger.Infof("deleting component with ids: %v", compIDs)
-	// componentsModel := &[]pkg.Component{}
 	tx := Gorm.Table("components").Where("id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime)
 	if tx.Error != nil {
 		return tx.Error
 	}
-	tx = Gorm.Table("component_relationships").Where("component_id in (?) or relationship_id in (?)", compIDs, compIDs).UpdateColumn("deleted_at", deleteTime)
+	tx = Gorm.Table("component_relationships").Where("component_id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime)
 	if tx.Error != nil {
+		fmt.Println("done from here")
 		return tx.Error
 	}
 	if err := Gorm.Table("check_component_relationships").Where("component_id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
