@@ -12,6 +12,16 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+const (
+	SQLServerType = "sqlserver"
+	PostgresType  = "postgres"
+	SqliteType    = "sqlite"
+	text          = "TEXT"
+	jsonType      = "json"
+	jsonbType     = "JSONB"
+	nvarcharType  = "NVARCHAR(MAX)"
+)
+
 type ResourceSelectors []ResourceSelector
 
 type ComponentCanaries []ComponentCanary
@@ -46,12 +56,12 @@ func (rs ResourceSelectors) GormDataType() string {
 // GormDBDataType gorm db data type
 func (ResourceSelectors) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	switch db.Dialector.Name() {
-	case "sqlite":
-		return "JSON"
-	case "postgres":
-		return "JSONB"
-	case "sqlserver":
-		return "NVARCHAR(MAX)"
+	case SqliteType:
+		return jsonType
+	case PostgresType:
+		return jsonbType
+	case SQLServerType:
+		return nvarcharType
 	}
 	return ""
 }
@@ -91,12 +101,12 @@ func (cs ComponentCanaries) GormDataType() string {
 // GormDBDataType gorm db data type
 func (ComponentCanaries) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	switch db.Dialector.Name() {
-	case "sqlite":
-		return "JSON"
-	case "postgres":
-		return "JSONB"
-	case "sqlserver":
-		return "NVARCHAR(MAX)"
+	case SqliteType:
+		return jsonType
+	case PostgresType:
+		return jsonbType
+	case SQLServerType:
+		return nvarcharType
 	}
 	return ""
 }
@@ -135,12 +145,12 @@ func (Summary) GormDataType() string {
 
 func (Summary) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	switch db.Dialector.Name() {
-	case "sqlite":
-		return "TEXT"
-	case "postgres":
-		return "JSONB"
-	case "sqlserver":
-		return "NVARCHAR(MAX)"
+	case SqliteType:
+		return text
+	case PostgresType:
+		return jsonbType
+	case SQLServerType:
+		return nvarcharType
 	}
 	return ""
 }
