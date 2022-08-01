@@ -206,21 +206,24 @@ type CheckComponentRelationship struct {
 
 func (component Component) Clone() Component {
 	return Component{
-		Name:         component.Name,
-		TopologyType: component.TopologyType,
-		ID:           component.ID,
-		Text:         component.Text,
-		Namespace:    component.Namespace,
-		Labels:       component.Labels,
-		Tooltip:      component.Tooltip,
-		Icon:         component.Icon,
-		Owner:        component.Owner,
-		Status:       component.Status,
-		StatusReason: component.StatusReason,
-		Type:         component.Type,
-		Lifecycle:    component.Lifecycle,
-		Properties:   component.Properties,
-		ExternalId:   component.ExternalId,
+		Name:              component.Name,
+		TopologyType:      component.TopologyType,
+		ID:                component.ID,
+		Text:              component.Text,
+		Namespace:         component.Namespace,
+		Labels:            component.Labels,
+		Tooltip:           component.Tooltip,
+		Icon:              component.Icon,
+		Owner:             component.Owner,
+		Status:            component.Status,
+		StatusReason:      component.StatusReason,
+		Type:              component.Type,
+		Lifecycle:         component.Lifecycle,
+		Checks:            component.Checks,
+		ComponentCanaries: component.ComponentCanaries,
+		Properties:        component.Properties,
+		ExternalId:        component.ExternalId,
+		Schedule:          component.Schedule,
 	}
 }
 
@@ -494,6 +497,16 @@ func (component Component) IsHealthy() bool {
 
 func (component Component) Summarize() v1.Summary {
 	s := v1.Summary{}
+	if component.Checks != nil && component.Components == nil {
+		for _, check := range component.Checks {
+			if check.Status {
+				s.Healthy++
+			} else {
+				s.Unhealthy++
+			}
+		}
+		return s
+	}
 	if len(component.Components) == 0 {
 		switch component.Status {
 		case ComponentPropertyStatusHealthy:
