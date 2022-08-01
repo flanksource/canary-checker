@@ -159,6 +159,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -301,6 +306,11 @@ spec:
                         items:
                           type: string
                         type: array
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -402,6 +412,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -566,6 +581,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -685,6 +705,11 @@ spec:
                         type: string
                       image:
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -704,6 +729,11 @@ spec:
                         type: string
                       image:
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -783,6 +813,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       maxAge:
                         type: string
                       name:
@@ -827,6 +862,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       minrecords:
                         type: integer
                       name:
@@ -934,6 +974,11 @@ spec:
                         type: string
                       image:
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -1023,6 +1068,11 @@ spec:
                         type: string
                       image:
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -1087,6 +1137,11 @@ spec:
                         type: string
                       keepAlive:
                         type: boolean
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -1237,6 +1292,11 @@ spec:
                         type: string
                       index:
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -1342,6 +1402,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -1525,6 +1590,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       maxAge:
                         description: MaxAge the latest object should be younger than defined age
                         type: string
@@ -1718,6 +1788,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -1834,6 +1909,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -1975,6 +2055,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       maxSSLExpiry:
                         description: Maximum number of days until the SSL Certificate expires.
                         type: integer
@@ -2052,6 +2137,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2118,6 +2208,11 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2163,6 +2258,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2229,6 +2329,11 @@ spec:
                         type: array
                       kind:
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2362,6 +2467,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2457,6 +2567,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2557,6 +2672,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2684,6 +2804,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2754,6 +2879,11 @@ spec:
                       ingressTimeout:
                         format: int64
                         type: integer
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2823,6 +2953,11 @@ spec:
                       ingressTimeout:
                         format: int64
                         type: integer
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2939,6 +3074,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2997,6 +3137,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -3114,6 +3259,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -3171,6 +3321,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       maxAge:
                         description: MaxAge for backup freshness
                         type: string
@@ -3275,6 +3430,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -3305,6 +3465,11 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -3777,6 +3942,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -3919,6 +4089,11 @@ spec:
                                   items:
                                     type: string
                                   type: array
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -4020,6 +4195,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -4184,6 +4364,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -4303,6 +4488,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -4322,6 +4512,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -4401,6 +4596,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxAge:
                                   type: string
                                 name:
@@ -4445,6 +4645,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 minrecords:
                                   type: integer
                                 name:
@@ -4552,6 +4757,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -4641,6 +4851,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -4705,6 +4920,11 @@ spec:
                                   type: string
                                 keepAlive:
                                   type: boolean
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -4855,6 +5075,11 @@ spec:
                                   type: string
                                 index:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -4960,6 +5185,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -5143,6 +5373,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxAge:
                                   description: MaxAge the latest object should be younger than defined age
                                   type: string
@@ -5336,6 +5571,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -5452,6 +5692,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -5593,6 +5838,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxSSLExpiry:
                                   description: Maximum number of days until the SSL Certificate expires.
                                   type: integer
@@ -5670,6 +5920,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -5736,6 +5991,11 @@ spec:
                                           type: object
                                       type: object
                                   type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -5781,6 +6041,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -5847,6 +6112,11 @@ spec:
                                   type: array
                                 kind:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -5980,6 +6250,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -6075,6 +6350,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -6175,6 +6455,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -6302,6 +6587,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -6372,6 +6662,11 @@ spec:
                                 ingressTimeout:
                                   format: int64
                                   type: integer
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -6441,6 +6736,11 @@ spec:
                                 ingressTimeout:
                                   format: int64
                                   type: integer
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -6557,6 +6857,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -6615,6 +6920,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -6732,6 +7042,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -6789,6 +7104,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxAge:
                                   description: MaxAge for backup freshness
                                   type: string
@@ -6893,6 +7213,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -6923,6 +7248,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -7072,6 +7402,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -7214,6 +7549,11 @@ spec:
                             items:
                               type: string
                             type: array
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -7315,6 +7655,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -7479,6 +7824,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -7598,6 +7948,11 @@ spec:
                             type: string
                           image:
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -7617,6 +7972,11 @@ spec:
                             type: string
                           image:
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -7696,6 +8056,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           maxAge:
                             type: string
                           name:
@@ -7740,6 +8105,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           minrecords:
                             type: integer
                           name:
@@ -7847,6 +8217,11 @@ spec:
                             type: string
                           image:
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -7936,6 +8311,11 @@ spec:
                             type: string
                           image:
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -8000,6 +8380,11 @@ spec:
                             type: string
                           keepAlive:
                             type: boolean
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -8150,6 +8535,11 @@ spec:
                             type: string
                           index:
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -8255,6 +8645,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -8438,6 +8833,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           maxAge:
                             description: MaxAge the latest object should be younger than defined age
                             type: string
@@ -8631,6 +9031,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -8747,6 +9152,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -8888,6 +9298,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           maxSSLExpiry:
                             description: Maximum number of days until the SSL Certificate expires.
                             type: integer
@@ -8965,6 +9380,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -9031,6 +9451,11 @@ spec:
                                     type: object
                                 type: object
                             type: object
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -9076,6 +9501,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -9142,6 +9572,11 @@ spec:
                             type: array
                           kind:
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -9275,6 +9710,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -9370,6 +9810,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -9470,6 +9915,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -9597,6 +10047,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -9667,6 +10122,11 @@ spec:
                           ingressTimeout:
                             format: int64
                             type: integer
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -9736,6 +10196,11 @@ spec:
                           ingressTimeout:
                             format: int64
                             type: integer
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -9852,6 +10317,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -9910,6 +10380,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -10027,6 +10502,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -10084,6 +10564,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           maxAge:
                             description: MaxAge for backup freshness
                             type: string
@@ -10188,6 +10673,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -10218,6 +10708,11 @@ spec:
                           icon:
                             description: Icon for overwriting default icon on the dashboard
                             type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
                           name:
                             description: Name of the check
                             type: string
@@ -10369,6 +10864,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -10511,6 +11011,11 @@ spec:
                                   items:
                                     type: string
                                   type: array
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -10612,6 +11117,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -10776,6 +11286,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -10895,6 +11410,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -10914,6 +11434,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -10993,6 +11518,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxAge:
                                   type: string
                                 name:
@@ -11037,6 +11567,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 minrecords:
                                   type: integer
                                 name:
@@ -11144,6 +11679,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -11233,6 +11773,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -11297,6 +11842,11 @@ spec:
                                   type: string
                                 keepAlive:
                                   type: boolean
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -11447,6 +11997,11 @@ spec:
                                   type: string
                                 index:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -11552,6 +12107,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -11735,6 +12295,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxAge:
                                   description: MaxAge the latest object should be younger than defined age
                                   type: string
@@ -11928,6 +12493,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -12044,6 +12614,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -12185,6 +12760,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxSSLExpiry:
                                   description: Maximum number of days until the SSL Certificate expires.
                                   type: integer
@@ -12262,6 +12842,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -12328,6 +12913,11 @@ spec:
                                           type: object
                                       type: object
                                   type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -12373,6 +12963,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -12439,6 +13034,11 @@ spec:
                                   type: array
                                 kind:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -12572,6 +13172,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -12667,6 +13272,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -12767,6 +13377,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -12894,6 +13509,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -12964,6 +13584,11 @@ spec:
                                 ingressTimeout:
                                   format: int64
                                   type: integer
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -13033,6 +13658,11 @@ spec:
                                 ingressTimeout:
                                   format: int64
                                   type: integer
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -13149,6 +13779,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -13207,6 +13842,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -13324,6 +13964,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -13381,6 +14026,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxAge:
                                   description: MaxAge for backup freshness
                                   type: string
@@ -13485,6 +14135,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -13515,6 +14170,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -13755,6 +14415,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -13897,6 +14562,11 @@ spec:
                                         items:
                                           type: string
                                         type: array
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -13998,6 +14668,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -14162,6 +14837,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -14281,6 +14961,11 @@ spec:
                                         type: string
                                       image:
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -14300,6 +14985,11 @@ spec:
                                         type: string
                                       image:
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -14379,6 +15069,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       maxAge:
                                         type: string
                                       name:
@@ -14423,6 +15118,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       minrecords:
                                         type: integer
                                       name:
@@ -14530,6 +15230,11 @@ spec:
                                         type: string
                                       image:
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -14619,6 +15324,11 @@ spec:
                                         type: string
                                       image:
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -14683,6 +15393,11 @@ spec:
                                         type: string
                                       keepAlive:
                                         type: boolean
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -14833,6 +15548,11 @@ spec:
                                         type: string
                                       index:
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -14938,6 +15658,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -15121,6 +15846,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       maxAge:
                                         description: MaxAge the latest object should be younger than defined age
                                         type: string
@@ -15314,6 +16044,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -15430,6 +16165,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -15571,6 +16311,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       maxSSLExpiry:
                                         description: Maximum number of days until the SSL Certificate expires.
                                         type: integer
@@ -15648,6 +16393,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -15714,6 +16464,11 @@ spec:
                                                 type: object
                                             type: object
                                         type: object
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -15759,6 +16514,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -15825,6 +16585,11 @@ spec:
                                         type: array
                                       kind:
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -15958,6 +16723,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -16053,6 +16823,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -16153,6 +16928,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -16280,6 +17060,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -16350,6 +17135,11 @@ spec:
                                       ingressTimeout:
                                         format: int64
                                         type: integer
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -16419,6 +17209,11 @@ spec:
                                       ingressTimeout:
                                         format: int64
                                         type: integer
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -16535,6 +17330,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -16593,6 +17393,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -16710,6 +17515,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -16767,6 +17577,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       maxAge:
                                         description: MaxAge for backup freshness
                                         type: string
@@ -16871,6 +17686,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -16901,6 +17721,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -17050,6 +17875,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -17192,6 +18022,11 @@ spec:
                                   items:
                                     type: string
                                   type: array
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -17293,6 +18128,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -17457,6 +18297,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -17576,6 +18421,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -17595,6 +18445,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -17674,6 +18529,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxAge:
                                   type: string
                                 name:
@@ -17718,6 +18578,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 minrecords:
                                   type: integer
                                 name:
@@ -17825,6 +18690,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -17914,6 +18784,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -17978,6 +18853,11 @@ spec:
                                   type: string
                                 keepAlive:
                                   type: boolean
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -18128,6 +19008,11 @@ spec:
                                   type: string
                                 index:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -18233,6 +19118,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -18416,6 +19306,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxAge:
                                   description: MaxAge the latest object should be younger than defined age
                                   type: string
@@ -18609,6 +19504,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -18725,6 +19625,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -18866,6 +19771,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxSSLExpiry:
                                   description: Maximum number of days until the SSL Certificate expires.
                                   type: integer
@@ -18943,6 +19853,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -19009,6 +19924,11 @@ spec:
                                           type: object
                                       type: object
                                   type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -19054,6 +19974,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -19120,6 +20045,11 @@ spec:
                                   type: array
                                 kind:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -19253,6 +20183,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -19348,6 +20283,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -19448,6 +20388,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -19575,6 +20520,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -19645,6 +20595,11 @@ spec:
                                 ingressTimeout:
                                   format: int64
                                   type: integer
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -19714,6 +20669,11 @@ spec:
                                 ingressTimeout:
                                   format: int64
                                   type: integer
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -19830,6 +20790,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -19888,6 +20853,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -20005,6 +20975,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -20062,6 +21037,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxAge:
                                   description: MaxAge for backup freshness
                                   type: string
@@ -20166,6 +21146,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -20196,6 +21181,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -20347,6 +21337,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -20489,6 +21484,11 @@ spec:
                                         items:
                                           type: string
                                         type: array
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -20590,6 +21590,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -20754,6 +21759,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -20873,6 +21883,11 @@ spec:
                                         type: string
                                       image:
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -20892,6 +21907,11 @@ spec:
                                         type: string
                                       image:
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -20971,6 +21991,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       maxAge:
                                         type: string
                                       name:
@@ -21015,6 +22040,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       minrecords:
                                         type: integer
                                       name:
@@ -21122,6 +22152,11 @@ spec:
                                         type: string
                                       image:
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -21211,6 +22246,11 @@ spec:
                                         type: string
                                       image:
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -21275,6 +22315,11 @@ spec:
                                         type: string
                                       keepAlive:
                                         type: boolean
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -21425,6 +22470,11 @@ spec:
                                         type: string
                                       index:
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -21530,6 +22580,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -21713,6 +22768,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       maxAge:
                                         description: MaxAge the latest object should be younger than defined age
                                         type: string
@@ -21906,6 +22966,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -22022,6 +23087,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -22163,6 +23233,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       maxSSLExpiry:
                                         description: Maximum number of days until the SSL Certificate expires.
                                         type: integer
@@ -22240,6 +23315,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -22306,6 +23386,11 @@ spec:
                                                 type: object
                                             type: object
                                         type: object
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -22351,6 +23436,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -22417,6 +23507,11 @@ spec:
                                         type: array
                                       kind:
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -22550,6 +23645,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -22645,6 +23745,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -22745,6 +23850,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -22872,6 +23982,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -22942,6 +24057,11 @@ spec:
                                       ingressTimeout:
                                         format: int64
                                         type: integer
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -23011,6 +24131,11 @@ spec:
                                       ingressTimeout:
                                         format: int64
                                         type: integer
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -23127,6 +24252,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -23185,6 +24315,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -23302,6 +24437,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -23359,6 +24499,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       maxAge:
                                         description: MaxAge for backup freshness
                                         type: string
@@ -23463,6 +24608,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -23493,6 +24643,11 @@ spec:
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
                                         type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
                                       name:
                                         description: Name of the check
                                         type: string
@@ -23731,6 +24886,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -23873,6 +25033,11 @@ spec:
                                   items:
                                     type: string
                                   type: array
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -23974,6 +25139,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -24138,6 +25308,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -24257,6 +25432,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -24276,6 +25456,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -24355,6 +25540,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxAge:
                                   type: string
                                 name:
@@ -24399,6 +25589,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 minrecords:
                                   type: integer
                                 name:
@@ -24506,6 +25701,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -24595,6 +25795,11 @@ spec:
                                   type: string
                                 image:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -24659,6 +25864,11 @@ spec:
                                   type: string
                                 keepAlive:
                                   type: boolean
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -24809,6 +26019,11 @@ spec:
                                   type: string
                                 index:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -24914,6 +26129,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -25097,6 +26317,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxAge:
                                   description: MaxAge the latest object should be younger than defined age
                                   type: string
@@ -25290,6 +26515,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -25406,6 +26636,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -25547,6 +26782,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxSSLExpiry:
                                   description: Maximum number of days until the SSL Certificate expires.
                                   type: integer
@@ -25624,6 +26864,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -25690,6 +26935,11 @@ spec:
                                           type: object
                                       type: object
                                   type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -25735,6 +26985,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -25801,6 +27056,11 @@ spec:
                                   type: array
                                 kind:
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -25934,6 +27194,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -26029,6 +27294,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -26129,6 +27399,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -26256,6 +27531,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -26326,6 +27606,11 @@ spec:
                                 ingressTimeout:
                                   format: int64
                                   type: integer
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -26395,6 +27680,11 @@ spec:
                                 ingressTimeout:
                                   format: int64
                                   type: integer
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -26511,6 +27801,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -26569,6 +27864,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -26686,6 +27986,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -26743,6 +28048,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 maxAge:
                                   description: MaxAge for backup freshness
                                   type: string
@@ -26847,6 +28157,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string
@@ -26877,6 +28192,11 @@ spec:
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
                                   type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
                                 name:
                                   description: Name of the check
                                   type: string

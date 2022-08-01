@@ -22,6 +22,7 @@ CREATE TABLE checks(
 	description TEXT,
 	icon TEXT,
 	spec jsonb  NULL,
+	labels jsonb NULL,
 	owner text,
 	severity TEXT,
 	last_runtime TIMESTAMP,

@@ -162,7 +162,7 @@ type Check struct {
 	Name        string              `json:"name"`
 	CanaryName  string              `json:"canary_name" gorm:"-"`
 	Namespace   string              `json:"namespace"  gorm:"-"`
-	Labels      types.JSONStringMap `json:"labels" gorm:"type:jsonstringmap;<-:false"`
+	Labels      types.JSONStringMap `json:"labels" gorm:"type:jsonstringmap"`
 	Description string              `json:"description,omitempty"`
 	Status      bool                `josn:"status,omitempty"`
 	Uptime      Uptime              `json:"uptime"  gorm:"-"`
@@ -214,7 +214,7 @@ func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Che
 		Icon:        check.GetIcon(),
 		Namespace:   canary.Namespace,
 		CanaryName:  canary.Name,
-		Labels:      labels.FilterLabels(canary.GetAllLabels(nil)),
+		Labels:      labels.FilterLabels(canary.GetAllLabels(check.GetLabels())),
 		Statuses:    statuses,
 		Type:        check.GetType(),
 	}
