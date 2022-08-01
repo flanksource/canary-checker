@@ -6,4 +6,5 @@ const (
 	SyncSystemsJobsSchedule            = "@every 5m"
 	ComponentRunSchedule               = "@every 2m"
 	ComponentStatusSummarySyncSchedule = "@every 1m"
+	ComponentCheckSchedule             = "@every 2m"
 )
