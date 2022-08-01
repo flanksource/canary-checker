@@ -11,9 +11,9 @@ spec:
 
   components:
     - checks:
-       -  selector:
+       - selector:
             labelSelector: "canary=http"
-          inline:
+         inline:
             schedule: "@every 1m"
             http:
               - name: http-pass

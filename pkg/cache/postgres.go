@@ -36,7 +36,12 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 	if err != nil {
 		logger.Errorf("error marshalling details: %v", err)
 	}
-	row := c.QueryRow(context.TODO(), "UPDATE checks SET last_runtime = NOW(), status = $1 WHERE canary_id = $2 AND type = $3 AND name = $4 RETURNING id", status.Status, check.CanaryID, check.Type, check.GetName())
+	row := c.QueryRow(context.TODO(), `UPDATE checks SET 
+										last_runtime = NOW(), 
+										status = $1 
+										WHERE canary_id = $2 AND type = $3 AND name = $4 
+										RETURNING id`,
+		status.Status, check.CanaryID, check.Type, check.GetName())
 	var id string
 
 	if err := row.Scan(&id); err != nil {

@@ -154,7 +154,7 @@ func GetSelectorIDFromComponentChecks(componentChecks v1.ComponentChecks) string
 	return hex.EncodeToString(hash[:])
 }
 
-func PersisComponentRelationships(relationships []*pkg.ComponentRelationship) error {
+func PersistComponentRelationships(relationships []*pkg.ComponentRelationship) error {
 	for _, relationship := range relationships {
 		if err := PersistComponentRelationship(relationship); err != nil {
 			return err
@@ -171,7 +171,7 @@ func PersistComponentRelationship(relationship *pkg.ComponentRelationship) error
 	return tx.Error
 }
 
-func PersisteCheckComponentRelationships(relationships []*pkg.CheckComponentRelationship) error {
+func PersistCheckComponentRelationships(relationships []*pkg.CheckComponentRelationship) error {
 	for _, relationship := range relationships {
 		if err := PersistCheckComponentRelationship(relationship); err != nil {
 			return err

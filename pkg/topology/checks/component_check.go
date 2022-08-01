@@ -21,7 +21,7 @@ func ComponentCheckRun() {
 			logger.Errorf("error getting relationships: %v", err)
 			continue
 		}
-		err = db.PersisteCheckComponentRelationships(relationships)
+		err = db.PersistCheckComponentRelationships(relationships)
 		if err != nil {
 			logger.Errorf("error persisting relationships: %v", err)
 			continue
