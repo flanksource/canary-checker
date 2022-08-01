@@ -95,28 +95,8 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 }
 
 func GetAllComponentWithCanaries() (components pkg.Components, err error) {
-	if err := Gorm.Table("components").Where("deleted_at is NULL and component_canaries != 'null'").Find(&components).Error; err != nil {
+	if err := Gorm.Table("components").Where("deleted_at is NULL and component_checks != 'null'").Find(&components).Error; err != nil {
 		return nil, err
-	}
-	return
-}
-
-func GetCanariesWithSelectors(component pkg.Component) (canaries []pkg.Canary, err error) {
-	for _, componentCanary := range component.ComponentCanaries {
-		if componentCanary.Selector.LabelSelector != "" {
-			labelCanaries, err := GetCanariesWithLabelSelector(componentCanary.Selector.LabelSelector)
-			if err != nil {
-				logger.Debugf("error getting canaries with label selector %v", err)
-			}
-			canaries = append(canaries, labelCanaries...)
-		}
-		if componentCanary.Inline != nil {
-			inlineCanaries, err := CreateComponentCanaryFromInline(component.ID.String(), component.Name, component.Namespace, component.Schedule, componentCanary.Inline)
-			if err != nil {
-				logger.Debugf("error creating canary from inline %v", err)
-			}
-			canaries = append(canaries, inlineCanaries...)
-		}
 	}
 	return
 }
@@ -133,13 +113,14 @@ func GetComponentRelationships(relationshipID uuid.UUID, path string, components
 	return
 }
 
-func GetCheckRelationships(canaryID, compID uuid.UUID, checks []pkg.Check, componentCanaries v1.ComponentCanaries) (relationships []*pkg.CheckComponentRelationship, err error) {
+func GetCheckRelationships(compID uuid.UUID, checks pkg.Checks, componentChecks v1.ComponentChecks) (relationships []*pkg.CheckComponentRelationship, err error) {
 	for _, check := range checks {
+		canaryID, _ := uuid.Parse(check.CanaryID)
 		relationships = append(relationships, &pkg.CheckComponentRelationship{
 			CanaryID:    canaryID,
 			CheckID:     check.ID,
 			ComponentID: compID,
-			SelectorID:  GetSelectorIDFromComponentCanaries(componentCanaries),
+			SelectorID:  GetSelectorIDFromComponentChecks(componentChecks),
 		})
 	}
 	return
@@ -159,8 +140,8 @@ func GetSelectorIDFromResourceSelectors(selectors v1.ResourceSelectors) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func GetSelectorIDFromComponentCanaries(componentCanaries v1.ComponentCanaries) string {
-	data, err := json.Marshal(componentCanaries)
+func GetSelectorIDFromComponentChecks(componentChecks v1.ComponentChecks) string {
+	data, err := json.Marshal(componentChecks)
 	if err != nil {
 		logger.Errorf("Error marshalling component canaries %v", err)
 		return ""
@@ -267,7 +248,7 @@ func DeleteComponnents(systemTemplateID string, deleteTime time.Time) error {
 	tx := Gorm.Where("system_template_id = ?", systemTemplateID).Find(componentsModel).UpdateColumn("deleted_at", deleteTime)
 	DeleteComponentRelationshipForComponents(componentsModel, deleteTime)
 	for _, component := range *componentsModel {
-		if component.ComponentCanaries == nil {
+		if component.ComponentChecks == nil {
 			return tx.Error
 		}
 		if err := DeleteInlineCanariesForComponent(component.ID.String(), deleteTime); err != nil {

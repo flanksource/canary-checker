@@ -10,7 +10,7 @@ spec:
   schedule: "@every 5m"
 
   components:
-    - canaries:
+    - checks:
        -  selector:
             labelSelector: "canary=http"
           inline:
@@ -21,7 +21,7 @@ spec:
                 responseCodes:
                   - 202
       name: http-component-canary
-    - canaries:
+    - checks:
         - inline:
             schedule: "@every 1m"
             http:

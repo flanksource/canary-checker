@@ -56,7 +56,7 @@ type NamespaceSelector struct {
 	Selector `json:",inline"`
 }
 
-type ComponentCanary struct {
+type ComponentCheck struct {
 	Selector ResourceSelector `json:"selector,omitempty"`
 	Inline   *CanarySpec      `json:"inline,omitempty"`
 }

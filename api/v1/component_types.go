@@ -26,14 +26,14 @@ type ComponentSpec struct {
 	// The type of component, e.g. service, API, website, library, database, etc.
 	Type string `json:"type,omitempty"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
-	Lifecycle         string             `json:"lifecycle,omitempty"`
-	Relationships     []RelationshipSpec `json:"relationships,omitempty"`
-	Properties        []*Property        `json:"properties,omitempty"`
-	Lookup            *CanarySpec        `json:"lookup,omitempty"`
-	Components        []json.RawMessage  `json:"components,omitempty"`
-	Selectors         ResourceSelectors  `json:"selectors,omitempty"`
-	ComponentCanaries ComponentCanaries  `json:"canaries,omitempty"`
-	Summary           *Summary           `json:"summary,omitempty"`
+	Lifecycle       string             `json:"lifecycle,omitempty"`
+	Relationships   []RelationshipSpec `json:"relationships,omitempty"`
+	Properties      []*Property        `json:"properties,omitempty"`
+	Lookup          *CanarySpec        `json:"lookup,omitempty"`
+	Components      []json.RawMessage  `json:"components,omitempty"`
+	Selectors       ResourceSelectors  `json:"selectors,omitempty"`
+	ComponentChecks ComponentChecks    `json:"checks,omitempty"`
+	Summary         *Summary           `json:"summary,omitempty"`
 }
 
 type Summary struct {

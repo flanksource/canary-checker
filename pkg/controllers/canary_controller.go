@@ -93,12 +93,13 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		return ctrl.Result{}, r.Update(ctx, canary)
 	}
 
-	id, changed, err := db.PersistCanary(*canary, "kubernetes/"+string(canary.ObjectMeta.UID))
+	c, changed, err := db.PersistCanary(*canary, "kubernetes/"+string(canary.ObjectMeta.UID))
 	if err != nil {
 		return ctrl.Result{
 			Requeue: true,
 		}, err
 	}
+	id := c.ID.String() // id is the uuid of the canary
 	canary.Status.PersistedID = &id
 	// Sync jobs if canary is created or updated
 	if canary.Generation == 1 || changed {

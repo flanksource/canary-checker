@@ -39,7 +39,7 @@ CREATE TABLE components (
   type text NULL,
   owner text,
   selectors jsonb,
-  component_canaries jsonb,
+  component_checks jsonb,
   properties jsonb,
   path text,
   summary  jsonb,

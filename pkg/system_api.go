@@ -170,18 +170,18 @@ type Component struct {
 	Type    string     `json:"type,omitempty"`
 	Summary v1.Summary `json:"summary,omitempty" gorm:"type:summary"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
-	Lifecycle         string               `json:"lifecycle,omitempty"`
-	Properties        Properties           `json:"properties,omitempty" gorm:"type:properties"`
-	Components        Components           `json:"components,omitempty" gorm:"-"`
-	ParentId          *uuid.UUID           `json:"parent_id,omitempty"` //nolint
-	Selectors         v1.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors"`
-	ComponentCanaries v1.ComponentCanaries `json:"-" gorm:"componentCanaries"`
-	Checks            Checks               `json:"checks,omitempty" gorm:"-"`
-	SystemTemplateID  *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
-	CreatedAt         time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
-	UpdatedAt         time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
-	DeletedAt         *time.Time           `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
-	ExternalId        string               `json:"external_id,omitempty"` //nolint
+	Lifecycle        string               `json:"lifecycle,omitempty"`
+	Properties       Properties           `json:"properties,omitempty" gorm:"type:properties"`
+	Components       Components           `json:"components,omitempty" gorm:"-"`
+	ParentId         *uuid.UUID           `json:"parent_id,omitempty"` //nolint
+	Selectors        v1.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors"`
+	ComponentChecks  v1.ComponentChecks   `json:"-" gorm:"componentChecks"`
+	Checks           Checks               `json:"checks,omitempty" gorm:"-"`
+	SystemTemplateID *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
+	CreatedAt        time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
+	UpdatedAt        time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt        *time.Time           `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
+	ExternalId       string               `json:"external_id,omitempty"` //nolint
 }
 
 type ComponentRelationship struct {
@@ -206,24 +206,24 @@ type CheckComponentRelationship struct {
 
 func (component Component) Clone() Component {
 	return Component{
-		Name:              component.Name,
-		TopologyType:      component.TopologyType,
-		ID:                component.ID,
-		Text:              component.Text,
-		Namespace:         component.Namespace,
-		Labels:            component.Labels,
-		Tooltip:           component.Tooltip,
-		Icon:              component.Icon,
-		Owner:             component.Owner,
-		Status:            component.Status,
-		StatusReason:      component.StatusReason,
-		Type:              component.Type,
-		Lifecycle:         component.Lifecycle,
-		Checks:            component.Checks,
-		ComponentCanaries: component.ComponentCanaries,
-		Properties:        component.Properties,
-		ExternalId:        component.ExternalId,
-		Schedule:          component.Schedule,
+		Name:            component.Name,
+		TopologyType:    component.TopologyType,
+		ID:              component.ID,
+		Text:            component.Text,
+		Namespace:       component.Namespace,
+		Labels:          component.Labels,
+		Tooltip:         component.Tooltip,
+		Icon:            component.Icon,
+		Owner:           component.Owner,
+		Status:          component.Status,
+		StatusReason:    component.StatusReason,
+		Type:            component.Type,
+		Lifecycle:       component.Lifecycle,
+		Checks:          component.Checks,
+		ComponentChecks: component.ComponentChecks,
+		Properties:      component.Properties,
+		ExternalId:      component.ExternalId,
+		Schedule:        component.Schedule,
 	}
 }
 
@@ -254,14 +254,14 @@ func (component Component) GetAsEnvironment() map[string]interface{} {
 
 func NewComponent(c v1.ComponentSpec) *Component {
 	return &Component{
-		Name:              c.Name,
-		Owner:             c.Owner,
-		Type:              c.Type,
-		Lifecycle:         c.Lifecycle,
-		Tooltip:           c.Tooltip,
-		Icon:              c.Icon,
-		Selectors:         c.Selectors,
-		ComponentCanaries: c.ComponentCanaries,
+		Name:            c.Name,
+		Owner:           c.Owner,
+		Type:            c.Type,
+		Lifecycle:       c.Lifecycle,
+		Tooltip:         c.Tooltip,
+		Icon:            c.Icon,
+		Selectors:       c.Selectors,
+		ComponentChecks: c.ComponentChecks,
 	}
 }
 

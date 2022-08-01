@@ -11,11 +11,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GetCanariesWithLabelSelector(labelSelector string) (selectedCanaries []pkg.Canary, err error) {
+func GetChecksWithLabelSelector(labelSelector string) (selectedChecks pkg.Checks, err error) {
 	if labelSelector == "" {
 		return nil, nil
 	}
-	var uninqueCanaries = make(map[string]pkg.Canary)
+	var uninqueChecks = make(map[string]*pkg.Check)
 	matchLabels := GetLabelsFromSelector(labelSelector)
 	var labels = make(map[string]string)
 	var onlyKeys []string
@@ -26,38 +26,41 @@ func GetCanariesWithLabelSelector(labelSelector string) (selectedCanaries []pkg.
 			onlyKeys = append(onlyKeys, k)
 		}
 	}
-	var canaries []pkg.Canary
-	if err := Gorm.Table("canaries").Where("labels @> ?", types.JSONStringMap(labels)).Find(&canaries).Error; err != nil {
+	var checks pkg.Checks
+	if err := Gorm.Table("checks").Where("labels @> ?", types.JSONStringMap(labels)).Find(&checks).Error; err != nil {
 		return nil, err
 	}
-	for _, c := range canaries {
-		uninqueCanaries[c.ID.String()] = c
+	for _, c := range checks {
+		uninqueChecks[c.ID] = c
 	}
 	for _, k := range onlyKeys {
-		var canaries []pkg.Canary
-		if err := Gorm.Table("canaries").Where("labels ?? ?", k).Find(&canaries).Error; err != nil {
+		var canaries pkg.Checks
+		if err := Gorm.Table("checks").Where("labels ?? ?", k).Find(&canaries).Error; err != nil {
 			continue
 		}
 		for _, c := range canaries {
-			uninqueCanaries[c.ID.String()] = c
+			uninqueChecks[c.ID] = c
 		}
 	}
-	for _, c := range uninqueCanaries {
-		selectedCanaries = append(selectedCanaries, c)
+	for _, c := range uninqueChecks {
+		selectedChecks = append(selectedChecks, c)
 	}
-	return selectedCanaries, nil
+	return selectedChecks, nil
 }
 
-func GetAllChecksForCanary(canaryID uuid.UUID) (checks []pkg.Check, err error) {
+func GetAllChecksForCanary(canaryID uuid.UUID) (checks pkg.Checks, err error) {
 	if err := Gorm.Table("checks").Where("canary_id = ?", canaryID).Find(&checks).Error; err != nil {
 		return nil, err
 	}
 	return checks, nil
 }
 
-func CreateComponentCanaryFromInline(id, name, namespace, schedule string, spec *v1.CanarySpec) ([]pkg.Canary, error) {
+func CreateComponentCanaryFromInline(id, name, namespace, schedule, owner string, spec *v1.CanarySpec) (*pkg.Canary, error) {
 	if spec.GetSchedule() == "@never" {
 		spec.Schedule = schedule
+	}
+	if spec.Owner == "" {
+		spec.Owner = owner
 	}
 	obj := v1.Canary{
 		ObjectMeta: metav1.ObjectMeta{
@@ -66,15 +69,10 @@ func CreateComponentCanaryFromInline(id, name, namespace, schedule string, spec 
 		},
 		Spec: *spec,
 	}
-	id, _, err := PersistCanary(obj, fmt.Sprintf("component/%s", id))
+	canary, _, err := PersistCanary(obj, fmt.Sprintf("component/%s", id))
 	if err != nil {
 		logger.Debugf("error persisting component inline canary: %v", err)
 		return nil, err
 	}
-	canary, err := GetCanary(id)
-	if err != nil {
-		logger.Debugf("error getting component inline canary: %v", err)
-		return nil, err
-	}
-	return []pkg.Canary{*canary}, nil
+	return canary, nil
 }

@@ -7,7 +7,7 @@ spec:
   icon: Application
   schedule: "@every 5m"
   components:
-    - canaries:
+    - checks:
        - inline:
             http:
               - name: inline-check

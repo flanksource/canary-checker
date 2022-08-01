@@ -3571,7 +3571,7 @@ spec:
               type: object
             spec:
               properties:
-                canaries:
+                checks:
                   items:
                     properties:
                       inline:
@@ -14044,7 +14044,7 @@ spec:
                 components:
                   items:
                     properties:
-                      canaries:
+                      checks:
                         items:
                           properties:
                             inline:

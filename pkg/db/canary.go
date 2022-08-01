@@ -149,11 +149,11 @@ func CreateCheck(canary pkg.Canary, check *pkg.Check) error {
 	return Gorm.Create(&check).Error
 }
 
-func PersistCanary(canary v1.Canary, source string) (string, bool, error) {
+func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, bool, error) {
 	changed := false
 	model, err := pkg.CanaryFromV1(canary)
 	if err != nil {
-		return "", changed, err
+		return nil, changed, err
 	}
 	if canary.GetPersistedID() != "" {
 		model.ID = uuid.MustParse(canary.GetPersistedID())
@@ -167,8 +167,8 @@ func PersistCanary(canary v1.Canary, source string) (string, bool, error) {
 		changed = true
 	}
 	if tx.Error != nil {
-		return "", changed, tx.Error
+		return nil, changed, tx.Error
 	}
 
-	return model.ID.String(), changed, nil
+	return &model, changed, nil
 }
