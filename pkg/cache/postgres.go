@@ -38,10 +38,10 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 	}
 	row := c.QueryRow(context.TODO(), `UPDATE checks SET 
 										last_runtime = NOW(), 
-										status = $1 
-										WHERE canary_id = $2 AND type = $3 AND name = $4 
+										status = $1 , labels = $2
+										WHERE canary_id = $3 AND type = $4 AND name = $5 
 										RETURNING id`,
-		status.Status, check.CanaryID, check.Type, check.GetName())
+		status.Status, check.Labels, check.CanaryID, check.Type, check.GetName())
 	var id string
 
 	if err := row.Scan(&id); err != nil {
