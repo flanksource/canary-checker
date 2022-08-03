@@ -8,6 +8,7 @@ RUN  ls && npm run build
 
 FROM golang:1.17 as builder
 WORKDIR /app
+
 ARG NAME
 ARG VERSION
 COPY go.mod /app/go.mod
@@ -49,8 +50,13 @@ RUN apt-get update && \
   rm -Rf /var/lib/apt/lists/*  && \
   rm -Rf /usr/share/doc && rm -Rf /usr/share/man  && \
   apt-get clean
+
+COPY --from=builder /app/.bin/canary-checker /app
+
+RUN /app/canary-checker go-offline
+
 RUN groupadd --gid 1000 canary
 RUN useradd canary --uid 1000 -g canary -m -d /var/lib/canary
 USER canary:canary
-COPY --from=builder /app/.bin/canary-checker /app
+
 ENTRYPOINT ["/app/canary-checker"]

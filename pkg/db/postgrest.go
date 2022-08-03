@@ -14,6 +14,10 @@ func PostgRESTEndpoint() string {
 	return "http://localhost:" + strconv.Itoa(PostgRESTServerPort)
 }
 
+func GoOffline() error {
+	return getBinary()("--help")
+}
+
 func getBinary() deps.BinaryFunc {
 	return deps.BinaryWithEnv("postgREST", PostgRESTVersion, ".bin", map[string]string{
 		"PGRST_DB_URI":                   ConnectionString,
@@ -24,6 +28,7 @@ func getBinary() deps.BinaryFunc {
 		"PGRST_LOG_LEVEL":                "info", // https://postgrest.org/en/stable/configuration.html?highlight=log_level#log-level
 	})
 }
+
 func StartPostgrest() {
 	if err := getBinary()(""); err != nil {
 		logger.Errorf("Failed to start postgREST: %v", err)
