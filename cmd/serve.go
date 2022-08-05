@@ -55,10 +55,6 @@ func setup() {
 	}
 	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 
-	// PostgREST needs to know how it is exposed to create the correct links
-	db.HTTPEndpoint = publicEndpoint + "/db"
-	go db.StartPostgrest()
-
 	push.AddServers(pushServers)
 	go push.Start()
 }
@@ -82,6 +78,10 @@ func serve() {
 	if db.ConnectionString != "" {
 		cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 	}
+
+	// PostgREST needs to know how it is exposed to create the correct links
+	db.HTTPEndpoint = publicEndpoint + "/db"
+	go db.StartPostgrest()
 
 	push.AddServers(pushServers)
 	go push.Start()
