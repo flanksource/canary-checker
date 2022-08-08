@@ -26,7 +26,11 @@ func NewPostgresCache(pool *pgxpool.Pool) *postgresCache {
 
 func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) {
 	for _, status := range statii {
-		check.Status = status.Status
+		if status.Status {
+			check.Status = "healthy"
+		} else {
+			check.Status = "unhealthy"
+		}
 		c.AddCheckStatus(check, status)
 	}
 }
@@ -41,12 +45,16 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 										status = $1 , labels = $2
 										WHERE canary_id = $3 AND type = $4 AND name = $5 
 										RETURNING id`,
-		status.Status, check.Labels, check.CanaryID, check.Type, check.GetName())
+		check.Status, check.Labels, check.CanaryID, check.Type, check.GetName())
 	var id string
 
 	if err := row.Scan(&id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			check.Status = status.Status
+			if status.Status {
+				check.Status = "healthy"
+			} else {
+				check.Status = "unhealthy"
+			}
 			if id, err = db.PersistCheck(check); err != nil {
 				logger.Errorf("error inserting check: %v", err)
 				return

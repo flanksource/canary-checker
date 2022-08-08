@@ -59,9 +59,29 @@ CREATE TABLE component_relationships(
   updated_at timestamp NOT NULL DEFAULT now(),
   deleted_at TIMESTAMP DEFAULT NULL,
   selector_id text, -- hash of the selector from the components
+  relationship_path text,
   FOREIGN KEY(component_id) REFERENCES components(id), 
-  FOREIGN KEY(relationship_id) REFERENCES components(id)
+  FOREIGN KEY(relationship_id) REFERENCES components(id),
+  UNIQUE(component_id,relationship_id,selector_id)
 );
+
+CREATE TABLE check_component_relationships(
+    component_id UUID NOT NULL,
+    check_id UUID NOT NULL,
+    canary_id UUID NOT NULL,
+    created_at timestamp NOT NULL DEFAULT now(),
+    updated_at timestamp NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMP DEFAULT NULL,
+    selector_id text, -- hash of the selector from the components
+    FOREIGN KEY (canary_id) REFERENCES canaries(id),
+    FOREIGN KEY(component_id) REFERENCES components(id), 
+    FOREIGN KEY(check_id) REFERENCES checks(id),
+    UNIQUE (component_id, check_id, canary_id, selector_id)
+);
+
+-- Skip check_component_relationships migration for a new deployment
+
+INSERT into canary_checker_db_version(version_id, tstamp, is_applied) VALUES(7, NOW(), true);
 
 
 create OR REPLACE function lookup_component_by_property(text, text)
@@ -82,6 +102,7 @@ language plpgsql;
 
 -- For local developemnent; one can run: `goose -dir ./pkg/db/migrations  postgres "postgres://tarun@localhost:5432/canary?sslmode=disable" down-to 0` to remove all the migr
 -- +goose Down
+DROP TABLE check_component_relationships;
 DROP TABLE component_relationships;
 DROP FUNCTION lookup_component_by_property;
 DROP TABLE components;

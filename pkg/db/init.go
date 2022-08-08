@@ -151,15 +151,21 @@ func Init() error {
 }
 
 func Migrate() error {
+	goose.SetTableName("canary_checker_db_version")
 	goose.SetBaseFS(embedMigrations)
 	db, err := GetDB()
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-
-	if err := goose.Up(db, "migrations"); err != nil {
-		return err
+	for {
+		err = goose.UpByOne(db, "migrations", goose.WithAllowMissing())
+		if err == goose.ErrNoNextVersion {
+			break
+		}
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
