@@ -1,0 +1,21 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-checks
+  labels:
+    canary: http-checks
+spec:
+  interval: 30
+  http:
+    - endpoint: http://status.savanttools.com/?code=200
+      name: http-pass-single
+      labels:
+        check: http-200
+      responseCodes: [201, 200, 301]
+      responseContent: ""
+      maxSSLExpiry: 7
+    - endpoint: http://status.savanttools.com/?code=202
+      name: http-pass-multiple
+      labels:
+        check: http-202
+      responseCodes: [201, 202, 301]

@@ -156,6 +156,7 @@ type Component struct {
 	Name         string              `json:"name,omitempty"`
 	ID           uuid.UUID           `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
 	Text         string              `json:"text,omitempty"`
+	Schedule     string              `json:"schedule,omitempty"`
 	TopologyType string              `json:"topology_type,omitempty"`
 	Namespace    string              `json:"namespace,omitempty"`
 	Labels       types.JSONStringMap `json:"labels,omitempty"`
@@ -173,7 +174,9 @@ type Component struct {
 	Properties       Properties           `json:"properties,omitempty" gorm:"type:properties"`
 	Components       Components           `json:"components,omitempty" gorm:"-"`
 	ParentId         *uuid.UUID           `json:"parent_id,omitempty"` //nolint
-	Selectors        v1.ResourceSelectors `json:"selector,omitempty" gorm:"resourceSelectors"`
+	Selectors        v1.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors"`
+	ComponentChecks  v1.ComponentChecks   `json:"-" gorm:"componentChecks"`
+	Checks           Checks               `json:"checks,omitempty" gorm:"-"`
 	SystemTemplateID *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
 	CreatedAt        time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
 	UpdatedAt        time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
@@ -191,23 +194,36 @@ type ComponentRelationship struct {
 	DeletedAt        *time.Time `json:"deleted_at,omitempty"`
 }
 
+type CheckComponentRelationship struct {
+	ComponentID uuid.UUID  `json:"component_id,omitempty"`
+	CheckID     string     `json:"check_id,omitempty"`
+	CanaryID    uuid.UUID  `json:"canary_id,omitempty"`
+	SelectorID  string     `json:"selector_id,omitempty"`
+	CreatedAt   time.Time  `json:"created_at,omitempty"`
+	UpdatedAt   time.Time  `json:"updated_at,omitempty"`
+	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
+}
+
 func (component Component) Clone() Component {
 	return Component{
-		Name:         component.Name,
-		TopologyType: component.TopologyType,
-		ID:           component.ID,
-		Text:         component.Text,
-		Namespace:    component.Namespace,
-		Labels:       component.Labels,
-		Tooltip:      component.Tooltip,
-		Icon:         component.Icon,
-		Owner:        component.Owner,
-		Status:       component.Status,
-		StatusReason: component.StatusReason,
-		Type:         component.Type,
-		Lifecycle:    component.Lifecycle,
-		Properties:   component.Properties,
-		ExternalId:   component.ExternalId,
+		Name:            component.Name,
+		TopologyType:    component.TopologyType,
+		ID:              component.ID,
+		Text:            component.Text,
+		Namespace:       component.Namespace,
+		Labels:          component.Labels,
+		Tooltip:         component.Tooltip,
+		Icon:            component.Icon,
+		Owner:           component.Owner,
+		Status:          component.Status,
+		StatusReason:    component.StatusReason,
+		Type:            component.Type,
+		Lifecycle:       component.Lifecycle,
+		Checks:          component.Checks,
+		ComponentChecks: component.ComponentChecks,
+		Properties:      component.Properties,
+		ExternalId:      component.ExternalId,
+		Schedule:        component.Schedule,
 	}
 }
 
@@ -238,13 +254,14 @@ func (component Component) GetAsEnvironment() map[string]interface{} {
 
 func NewComponent(c v1.ComponentSpec) *Component {
 	return &Component{
-		Name:      c.Name,
-		Owner:     c.Owner,
-		Type:      c.Type,
-		Lifecycle: c.Lifecycle,
-		Tooltip:   c.Tooltip,
-		Icon:      c.Icon,
-		Selectors: c.Selectors,
+		Name:            c.Name,
+		Owner:           c.Owner,
+		Type:            c.Type,
+		Lifecycle:       c.Lifecycle,
+		Tooltip:         c.Tooltip,
+		Icon:            c.Icon,
+		Selectors:       c.Selectors,
+		ComponentChecks: c.ComponentChecks,
 	}
 }
 
@@ -480,6 +497,16 @@ func (component Component) IsHealthy() bool {
 
 func (component Component) Summarize() v1.Summary {
 	s := v1.Summary{}
+	if component.Checks != nil && component.Components == nil {
+		for _, check := range component.Checks {
+			if check.Status == ComponentPropertyStatusHealthy {
+				s.Healthy++
+			} else {
+				s.Unhealthy++
+			}
+		}
+		return s
+	}
 	if len(component.Components) == 0 {
 		switch component.Status {
 		case ComponentPropertyStatusHealthy:

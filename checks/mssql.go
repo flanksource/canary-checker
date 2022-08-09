@@ -31,7 +31,9 @@ func (c *MssqlChecker) Run(ctx *context.Context) pkg.Results {
 }
 
 // Check CheckConfig : Attempts to connect to a DB using the specified
-//               driver and connection string
+//
+//	driver and connection string
+//
 // Returns check result and metrics
 func (c *MssqlChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	return CheckSQL(ctx, extConfig.(v1.MssqlCheck))

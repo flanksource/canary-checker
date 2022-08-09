@@ -62,7 +62,9 @@ func querySQL(driver string, connection string, query string) (*SQLDetails, erro
 }
 
 // CheckSQL : Attempts to connect to a DB using the specified
-//               driver and connection string
+//
+//	driver and connection string
+//
 // Returns check result and metrics
 func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint: golint
 	check := checker.GetSQLCheck()

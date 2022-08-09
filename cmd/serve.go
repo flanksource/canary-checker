@@ -15,8 +15,9 @@ import (
 	echopprof "github.com/sevennt/echo-pprof"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/pkg/controllers"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/jobs"
+	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
 
 	"github.com/flanksource/canary-checker/pkg/runner"
@@ -41,9 +42,9 @@ var Serve = &cobra.Command{
 	Short: "Start a server to execute checks",
 	Run: func(cmd *cobra.Command, configFiles []string) {
 		setup()
-		controllers.StartScanCanaryConfigs(dataFile, configFiles)
+		canaryJobs.StartScanCanaryConfigs(dataFile, configFiles)
 		if executor {
-			controllers.Start()
+			jobs.Start()
 		}
 		serve()
 	},

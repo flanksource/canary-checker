@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -247,6 +248,24 @@ func (t Templatable) GetTransformer() Template {
 	return t.Transform
 }
 
+type Labels map[string]string
+
+func (l Labels) AddLabels(extra map[string]interface{}) map[string]string {
+	var labels = make(map[string]string)
+	for k, v := range l {
+		labels[k] = v
+	}
+	for k, v := range extra {
+		switch val := v.(type) {
+		case string:
+			labels[k] = val
+		case int:
+			labels[k] = strconv.Itoa(val)
+		}
+	}
+	return labels
+}
+
 type Description struct {
 	// Description for the check
 	Description string `yaml:"description,omitempty" json:"description,omitempty" template:"true"`
@@ -254,6 +273,8 @@ type Description struct {
 	Name string `yaml:"name" json:"name" template:"true"`
 	// Icon for overwriting default icon on the dashboard
 	Icon string `yaml:"icon,omitempty" json:"icon,omitempty" template:"true"`
+	// Labels for the check
+	Labels Labels `yaml:"labels,omitempty" json:"labels,omitempty"`
 }
 
 func (d Description) String() string {
@@ -273,6 +294,10 @@ func (d Description) GetIcon() string {
 
 func (d Description) GetName() string {
 	return d.Name
+}
+
+func (d Description) GetLabels() map[string]string {
+	return d.Labels
 }
 
 type Connection struct {

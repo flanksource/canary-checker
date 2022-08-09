@@ -1,0 +1,32 @@
+apiVersion: canaries.flanksource.com/v1
+kind: SystemTemplate
+metadata:
+  name: canary-selector
+  labels:
+    canary: canary-selector
+spec:
+  type: Website
+  icon: Application
+  schedule: "@every 5m"
+
+  components:
+    - checks:
+       - selector:
+            labelSelector: "canary=http"
+         inline:
+            schedule: "@every 1m"
+            http:
+              - name: http-pass
+                endpoint: http://status.savanttools.com/?code=202
+                responseCodes:
+                  - 202
+      name: http-component-canary
+    - checks:
+        - inline:
+            schedule: "@every 1m"
+            http:
+              - name: http-202
+                endpoint: http://status.savanttools.com/?code=201
+                responseCodes:
+                  - 202
+      name: second-inline-canary

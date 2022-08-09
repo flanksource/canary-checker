@@ -12,7 +12,19 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+const (
+	SQLServerType = "sqlserver"
+	PostgresType  = "postgres"
+	SqliteType    = "sqlite"
+	text          = "TEXT"
+	jsonType      = "json"
+	jsonbType     = "JSONB"
+	nvarcharType  = "NVARCHAR(MAX)"
+)
+
 type ResourceSelectors []ResourceSelector
+
+type ComponentChecks []ComponentCheck
 
 func (rs ResourceSelectors) Value() (driver.Value, error) {
 	if len(rs) == 0 {
@@ -44,18 +56,63 @@ func (rs ResourceSelectors) GormDataType() string {
 // GormDBDataType gorm db data type
 func (ResourceSelectors) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	switch db.Dialector.Name() {
-	case "sqlite":
-		return "JSON"
-	case "postgres":
-		return "JSONB"
-	case "sqlserver":
-		return "NVARCHAR(MAX)"
+	case SqliteType:
+		return jsonType
+	case PostgresType:
+		return jsonbType
+	case SQLServerType:
+		return nvarcharType
 	}
 	return ""
 }
 
 func (rs ResourceSelectors) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	data, _ := json.Marshal(rs)
+	return gorm.Expr("?", string(data))
+}
+
+func (cs ComponentChecks) Value() (driver.Value, error) {
+	if len(cs) == 0 {
+		return []byte("[]"), nil
+	}
+	return json.Marshal(cs)
+}
+
+func (cs *ComponentChecks) Scan(val interface{}) error {
+	if val == nil {
+		*cs = ComponentChecks{}
+		return nil
+	}
+	var ba []byte
+	switch v := val.(type) {
+	case []byte:
+		ba = v
+	default:
+		return errors.New(fmt.Sprint("Failed to unmarshal componentChecks value:", val))
+	}
+	return json.Unmarshal(ba, cs)
+}
+
+// GormDataType gorm common data type
+func (cs ComponentChecks) GormDataType() string {
+	return "componentChecks"
+}
+
+// GormDBDataType gorm db data type
+func (ComponentChecks) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	switch db.Dialector.Name() {
+	case SqliteType:
+		return jsonType
+	case PostgresType:
+		return jsonbType
+	case SQLServerType:
+		return nvarcharType
+	}
+	return ""
+}
+
+func (cs ComponentChecks) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
+	data, _ := json.Marshal(cs)
 	return gorm.Expr("?", string(data))
 }
 
@@ -88,12 +145,12 @@ func (Summary) GormDataType() string {
 
 func (Summary) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	switch db.Dialector.Name() {
-	case "sqlite":
-		return "TEXT"
-	case "postgres":
-		return "JSONB"
-	case "sqlserver":
-		return "NVARCHAR(MAX)"
+	case SqliteType:
+		return text
+	case PostgresType:
+		return jsonbType
+	case SQLServerType:
+		return nvarcharType
 	}
 	return ""
 }

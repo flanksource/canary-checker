@@ -13,5 +13,13 @@ spec:
     #     k8s-app: kube-dns
     - selectors:
         - labelSelector: "namespace=kube-system"
+    - canarySelector:
+        - labelSelector: "canary=http-check"
+        - inline:
+            - http:
+                endpoint: "http://status.savanttools.com/?code=200"
+                test:
+                  expr: 'code == 200'
+            
       name: selector
       type: aggregator

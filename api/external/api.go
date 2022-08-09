@@ -10,6 +10,7 @@ type Describable interface {
 	GetDescription() string
 	GetIcon() string
 	GetName() string
+	GetLabels() map[string]string
 }
 
 type WithType interface {

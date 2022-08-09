@@ -50,7 +50,7 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	var prometheusResults = make([]map[string]interface{}, 0)
 	var data = map[string]interface{}{
 		"value":       0,
-		"firstResult": make(map[string]interface{}),
+		"firstResult": make(map[string]string),
 	}
 	if modelValue != nil {
 		for i, value := range modelValue.(model.Vector) {
@@ -61,11 +61,13 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 				data["value"] = float64(value.Value)
 			}
 			for k, v := range value.Metric {
-				val[string(k)] = v
+				val[string(k)] = string(v)
 			}
 			prometheusResults = append(prometheusResults, val)
 		}
 	}
+	check.Labels = check.Labels.AddLabels(data["firstResult"].(map[string]interface{}))
+	result.UpdateCheck(check)
 	data["results"] = prometheusResults
 	result.AddData(data)
 	return results

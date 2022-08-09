@@ -26,6 +26,11 @@ func NewPostgresCache(pool *pgxpool.Pool) *postgresCache {
 
 func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) {
 	for _, status := range statii {
+		if status.Status {
+			check.Status = "healthy"
+		} else {
+			check.Status = "unhealthy"
+		}
 		c.AddCheckStatus(check, status)
 	}
 }
@@ -35,12 +40,21 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 	if err != nil {
 		logger.Errorf("error marshalling details: %v", err)
 	}
-
-	row := c.QueryRow(context.TODO(), "UPDATE checks SET last_runtime = NOW() WHERE canary_id = $1 AND type = $2 AND name = $3 RETURNING id", check.CanaryID, check.Type, check.GetName())
+	row := c.QueryRow(context.TODO(), `UPDATE checks SET 
+										last_runtime = NOW(), 
+										status = $1 , labels = $2
+										WHERE canary_id = $3 AND type = $4 AND name = $5 
+										RETURNING id`,
+		check.Status, check.Labels, check.CanaryID, check.Type, check.GetName())
 	var id string
 
 	if err := row.Scan(&id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
+			if status.Status {
+				check.Status = "healthy"
+			} else {
+				check.Status = "unhealthy"
+			}
 			if id, err = db.PersistCheck(check); err != nil {
 				logger.Errorf("error inserting check: %v", err)
 				return
@@ -50,7 +64,6 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 			return
 		}
 	}
-
 	_, err = c.Exec(context.TODO(), `INSERT INTO check_statuses(
 		check_id,
 		details,

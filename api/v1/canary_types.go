@@ -309,10 +309,10 @@ func (c Canary) String() string {
 
 func (c Canary) GetAllLabels(extra map[string]string) map[string]string {
 	labels := make(map[string]string)
-	for k, v := range extra {
-		labels["__"+k] = v
-	}
 	for k, v := range c.GetLabels() {
+		labels[k] = v
+	}
+	for k, v := range extra {
 		labels[k] = v
 	}
 	if c.Spec.Severity != "" {

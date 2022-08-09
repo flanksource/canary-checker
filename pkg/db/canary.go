@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	"time"
+
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db/types"
@@ -11,35 +13,16 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"helm.sh/helm/v3/pkg/time"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func GetAllCanaries() ([]v1.Canary, error) {
 	var canaries []v1.Canary
 	var _canaries []pkg.Canary
-	if err := Gorm.Find(&_canaries).Where("deleted_at is NULL").Error; err != nil {
+	if err := Gorm.Where("deleted_at is NULL").Find(&_canaries).Error; err != nil {
 		return nil, err
 	}
 	for _, _canary := range _canaries {
-		canary := v1.Canary{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      _canary.Name,
-				Namespace: _canary.Namespace,
-				Labels:    _canary.Labels,
-			},
-		}
-		var deletionTimestamp metav1.Time
-		if _canary.DeletedAt.Valid {
-			deletionTimestamp = metav1.NewTime(_canary.DeletedAt.Time)
-			canary.ObjectMeta.DeletionTimestamp = &deletionTimestamp
-		}
-		if err := json.Unmarshal(_canary.Spec, &canary.Spec); err != nil {
-			return nil, err
-		}
-		id := _canary.ID.String()
-		canary.Status.PersistedID = &id
-		canaries = append(canaries, canary)
+		canaries = append(canaries, *_canary.ToV1())
 	}
 	return canaries, nil
 }
@@ -82,24 +65,35 @@ func DeleteCanary(canary v1.Canary) error {
 	if err != nil {
 		return err
 	}
-	deleteTime := time.Now().Time
+	deleteTime := time.Now()
 	persistedID := canary.GetPersistedID()
 	if persistedID == "" {
 		logger.Errorf("System template %s/%s has not been persisted", canary.Namespace, canary.Name)
 		return nil
 	}
-	tx := Gorm.Find(&model).Where("id = ?", persistedID).UpdateColumn("deleted_at", deleteTime)
-	if tx.Error != nil {
-		return tx.Error
+	if err := Gorm.Where("id = ?", persistedID).Find(&model).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+		return err
 	}
-	var checkmodel = &pkg.Check{}
-	tx = Gorm.Find(&checkmodel).Where("canary_id = ?", model.ID.String()).UpdateColumn("deleted_at", deleteTime)
-	return tx.Error
+	if err := DeleteChecksForCanary(persistedID, deleteTime); err != nil {
+		return err
+	}
+	if err := DeleteCheckComponentRelationshipsForCanary(persistedID, deleteTime); err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteChecksForCanary(id string, deleteTime time.Time) error {
+	return Gorm.Table("checks").Where("canary_id = ?", id).UpdateColumn("deleted_at", deleteTime).Error
+}
+
+func DeleteCheckComponentRelationshipsForCanary(id string, deleteTime time.Time) error {
+	return Gorm.Table("check_component_relationships").Where("canary_id = ?", id).UpdateColumn("deleted_at", deleteTime).Error
 }
 
 func GetCanary(id string) (*pkg.Canary, error) {
 	var model *pkg.Canary
-	if err := Gorm.Where("id = ?", id).First(model).Error; err != nil {
+	if err := Gorm.Where("id = ?", id).First(&model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -155,32 +149,26 @@ func CreateCheck(canary pkg.Canary, check *pkg.Check) error {
 	return Gorm.Create(&check).Error
 }
 
-func PersistCanary(canary v1.Canary, source string) (string, bool, error) {
+func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, bool, error) {
 	changed := false
 	model, err := pkg.CanaryFromV1(canary)
 	if err != nil {
-		return "", changed, err
+		return nil, changed, err
 	}
 	if canary.GetPersistedID() != "" {
 		model.ID = uuid.MustParse(canary.GetPersistedID())
 	}
 	model.Source = source
 	tx := Gorm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "name"}, clause.Column{Name: "namespace"}},
+		Columns:   []clause.Column{{Name: "name"}, {Name: "namespace"}, {Name: "source"}},
 		UpdateAll: true,
 	}).Create(&model)
 	if tx.RowsAffected > 0 {
 		changed = true
 	}
 	if tx.Error != nil {
-		return "", changed, tx.Error
+		return nil, changed, tx.Error
 	}
 
-	for _, config := range canary.Spec.GetAllChecks() {
-		if _, err := PersistCheck(pkg.FromExternalCheck(model, config)); err != nil {
-			return "", changed, err
-		}
-	}
-
-	return model.ID.String(), changed, nil
+	return &model, changed, nil
 }

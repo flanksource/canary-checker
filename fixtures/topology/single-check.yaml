@@ -1,0 +1,13 @@
+apiVersion: canaries.flanksource.com/v1
+kind: SystemTemplate
+metadata:
+  name: single-check
+spec:
+  type: Website
+  icon: Application
+  schedule: "@every 5m"
+  components:
+    - checks:
+       - selector:
+          labelSelector: "check=http-200"
+      name: single-check

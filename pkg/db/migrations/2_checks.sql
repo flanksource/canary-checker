@@ -11,7 +11,7 @@ CREATE TABLE canaries (
 	created_at TIMESTAMP,
 	updated_at TIMESTAMP,
 	deleted_at TIMESTAMP DEFAULT NULL,
-	UNIQUE (name, namespace)
+	UNIQUE (name, namespace, source)
 );
 
 CREATE TABLE checks(
@@ -22,11 +22,13 @@ CREATE TABLE checks(
 	description TEXT,
 	icon TEXT,
 	spec jsonb  NULL,
+	labels jsonb NULL,
 	owner text,
 	severity TEXT,
 	last_runtime TIMESTAMP,
 	next_runtime TIMESTAMP,
 	silenced_at TIMESTAMP NULL,
+	status TEXT, -- status of last check executed
 	created_at TIMESTAMP,
 	updated_at TIMESTAMP NULL,
 	deleted_at TIMESTAMP DEFAULT NULL,

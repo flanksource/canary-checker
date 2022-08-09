@@ -11,8 +11,10 @@ import (
 	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/console"
+	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Endpoint struct {
@@ -116,6 +118,28 @@ type Canary struct {
 	DeletedAt gorm.DeletedAt
 }
 
+func (c Canary) ToV1() *v1.Canary {
+	canary := v1.Canary{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      c.Name,
+			Namespace: c.Namespace,
+			Labels:    c.Labels,
+		},
+	}
+	var deletionTimestamp metav1.Time
+	if c.DeletedAt.Valid {
+		deletionTimestamp = metav1.NewTime(c.DeletedAt.Time)
+		canary.ObjectMeta.DeletionTimestamp = &deletionTimestamp
+	}
+	if err := json.Unmarshal(c.Spec, &canary.Spec); err != nil {
+		logger.Debugf("Failed to unmarshal canary spec: %s", err)
+		return nil
+	}
+	id := c.ID.String()
+	canary.Status.PersistedID = &id
+	return &canary
+}
+
 func CanaryFromV1(canary v1.Canary) (Canary, error) {
 	spec, err := json.Marshal(canary.Spec)
 	if err != nil {
@@ -138,8 +162,9 @@ type Check struct {
 	Name        string              `json:"name"`
 	CanaryName  string              `json:"canary_name" gorm:"-"`
 	Namespace   string              `json:"namespace"  gorm:"-"`
-	Labels      types.JSONStringMap `json:"labels" gorm:"type:jsonstringmap;<-:false"`
+	Labels      types.JSONStringMap `json:"labels" gorm:"type:jsonstringmap"`
 	Description string              `json:"description,omitempty"`
+	Status      ComponentStatus     `josn:"status,omitempty"`
 	Uptime      Uptime              `json:"uptime"  gorm:"-"`
 	Latency     Latency             `json:"latency"  gorm:"-"`
 	Statuses    []CheckStatus       `json:"checkStatuses"  gorm:"-"`
@@ -189,7 +214,7 @@ func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Che
 		Icon:        check.GetIcon(),
 		Namespace:   canary.Namespace,
 		CanaryName:  canary.Name,
-		Labels:      labels.FilterLabels(canary.GetAllLabels(nil)),
+		Labels:      labels.FilterLabels(canary.GetAllLabels(check.GetLabels())),
 		Statuses:    statuses,
 		Type:        check.GetType(),
 	}

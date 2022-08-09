@@ -52,6 +52,11 @@ func (result *CheckResult) ErrorMessage(err error) *CheckResult {
 	return result.Failf(err.Error())
 }
 
+func (result *CheckResult) UpdateCheck(check external.Check) *CheckResult {
+	result.Check = check
+	return result
+}
+
 func (result *CheckResult) ResultMessage(message string, args ...interface{}) *CheckResult {
 	result.Message = fmt.Sprintf(message, args...)
 	return result

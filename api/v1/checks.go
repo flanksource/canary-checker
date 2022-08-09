@@ -12,6 +12,7 @@ import (
 
 type Check struct {
 	Name, Type, Endpoint, Description, Icon string
+	Labels                                  map[string]string
 }
 
 func (c Check) GetType() string {
@@ -32,6 +33,10 @@ func (c Check) GetIcon() string {
 
 func (c Check) GetName() string {
 	return c.Name
+}
+
+func (c Check) GetLabels() map[string]string {
+	return c.Labels
 }
 
 type HTTPCheck struct {
