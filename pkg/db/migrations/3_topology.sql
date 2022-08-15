@@ -102,7 +102,7 @@ language plpgsql;
 
 -- For local developemnent; one can run: `goose -dir ./pkg/db/migrations  postgres "postgres://tarun@localhost:5432/canary?sslmode=disable" down-to 0` to remove all the migr
 -- +goose Down
-DROP TABLE check_component_relationships;
+DROP TABLE IF EXISTS check_component_relationships;
 DROP TABLE component_relationships;
 DROP FUNCTION lookup_component_by_property;
 DROP TABLE components;
