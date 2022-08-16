@@ -19,4 +19,4 @@ CREATE TABLE check_component_relationships(
 
 -- +goose Down
 
-DROP TABLE check_component_relationships;
+DROP TABLE IF EXISTS check_component_relationships;

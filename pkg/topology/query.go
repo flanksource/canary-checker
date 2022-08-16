@@ -21,18 +21,20 @@ const DefaultDepth = 1
 
 func NewTopologyParams(values url.Values) TopologyParams {
 	params := TopologyParams{
-		Id:          values.Get("id"),
-		TopologyId:  values.Get("topologyId"),
-		ComponentId: values.Get("componentId"),
+		ID:          values.Get("id"),
+		TopologyID:  values.Get("topologyId"),
+		ComponentID: values.Get("componentId"),
 		Status:      values.Get("status"),
+		Owner:       values.Get("owner"),
+		Labels:      values.Get("labels"),
 	}
 
-	if params.Id != "" && strings.HasPrefix(params.Id, "c-") {
-		params.ComponentId = params.Id[2:]
-	} else if params.Id != "" {
-		params.TopologyId = params.Id
+	if params.ID != "" && strings.HasPrefix(params.ID, "c-") {
+		params.ComponentID = params.ID[2:]
+	} else if params.ID != "" {
+		params.TopologyID = params.ID
 	}
-	params.ComponentId = strings.TrimPrefix(params.ComponentId, "c-")
+	params.ComponentID = strings.TrimPrefix(params.ComponentID, "c-")
 
 	if depth := values.Get("depth"); depth != "" {
 		params.Depth, _ = strconv.Atoi(depth)
@@ -42,22 +44,23 @@ func NewTopologyParams(values url.Values) TopologyParams {
 	return params
 }
 
-//nolint
 type TopologyParams struct {
-	Id          string
-	TopologyId  string
-	ComponentId string
+	ID          string
+	TopologyID  string
+	ComponentID string
+	Owner       string
+	Labels      string
 	Status      string
 	Depth       int
 }
 
 func (p TopologyParams) String() string {
 	s := ""
-	if p.TopologyId != "" {
-		s += "topologyId=" + p.TopologyId
+	if p.TopologyID != "" {
+		s += "topologyId=" + p.TopologyID
 	}
-	if p.ComponentId != "" {
-		s += " componentId=" + p.ComponentId
+	if p.ComponentID != "" {
+		s += " componentId=" + p.ComponentID
 	}
 	if p.Depth > 0 {
 		s += fmt.Sprintf(" depth=%d", p.Depth)
@@ -68,32 +71,29 @@ func (p TopologyParams) String() string {
 	return strings.TrimSpace(s)
 }
 
-func (p TopologyParams) GetSystemWhereClause() string {
-	s := ""
-	if p.getID() != "" {
-		s = "WHERE templates.id = :id"
+func (p TopologyParams) getLabels() map[string]string {
+	if p.Labels == "" {
+		return nil
 	}
-
-	if p.Status != "" {
-		if s != "" {
-			s += " AND "
-		} else {
-			s += "WHERE "
+	labels := make(map[string]string)
+	for _, label := range strings.Split(p.Labels, ",") {
+		parts := strings.Split(label, "=")
+		if len(parts) == 2 {
+			labels[parts[0]] = parts[1]
 		}
-		s += "systems.status = :status"
 	}
-	return s
+	return labels
 }
 
 func (p TopologyParams) getID() string {
-	if p.Id != "" {
-		return p.Id
+	if p.ID != "" {
+		return p.ID
 	}
-	if p.ComponentId != "" {
-		return p.ComponentId
+	if p.ComponentID != "" {
+		return p.ComponentID
 	}
-	if p.TopologyId != "" {
-		return p.TopologyId
+	if p.TopologyID != "" {
+		return p.TopologyID
 	}
 	return ""
 }
@@ -107,18 +107,22 @@ func (p TopologyParams) GetComponentWhereClause() string {
 				FROM components where id = :id)
 			) or id = :id or path = :id :: text)`
 	}
-	if p.Status != "" {
-		s += " AND components.status = :status or id = :id"
+	if p.Owner != "" {
+		s += " AND (components.owner = :owner or id = :id)"
+	}
+	if p.Labels != "" {
+		s += " AND (components.labels @> :labels or id = :id)"
 	}
 	return s
 }
 
-// add a relationship_path on the table...
-
 func (p TopologyParams) GetComponentRelationWhereClause() string {
 	s := "where component_relationships.deleted_at is null"
-	if p.Status != "" {
-		s += " AND parent.status = :status"
+	if p.Owner != "" {
+		s += " AND (parent.owner = :owner)"
+	}
+	if p.Labels != "" {
+		s += " AND (parent.labels @> :labels)"
 	}
 	if p.getID() != "" {
 		s += ` and (component_relationships.relationship_id = :id or starts_with(component_relationships.relationship_path, (SELECT 
@@ -132,8 +136,6 @@ func (p TopologyParams) GetComponentRelationWhereClause() string {
 	return s
 }
 
-//	SELECT json_agg(to_jsonb(components)) :: jsonb as components from components LEFT JOIN ((SELECT json_agg(checks) from checks LEFT JOIN check_component_relationships ON checks.id = check_component_relationships.check_id GROUP BY check_component_relationships.component_id) :: jsonb) AS checks ON components.id = checks.component_id
-
 func Query(params TopologyParams) (pkg.Components, error) {
 	sql := fmt.Sprintf(`
 	SELECT json_agg(jsonb_set_lax(to_jsonb(components),'{checks}', %s)) :: jsonb as components from components %s
@@ -145,15 +147,15 @@ func Query(params TopologyParams) (pkg.Components, error) {
 `, getChecksForComponents(), params.GetComponentWhereClause(), getChecksForComponents(), params.GetComponentRelationWhereClause())
 
 	args := make(map[string]interface{})
-	if params.Status != "" {
-		args["status"] = params.Status
+	if params.getID() != "" {
+		args["id"] = params.getID()
 	}
-	if params.TopologyId != "" {
-		args["id"] = params.TopologyId
-	} else if params.ComponentId != "" {
-		args["id"] = params.ComponentId
-	} else if params.Id != "" {
-		args["id"] = params.Id
+	if params.Owner != "" {
+		args["owner"] = params.Owner
+	}
+	if params.Labels != "" {
+		fmt.Println(params.Labels)
+		args["labels"] = params.getLabels()
 	}
 
 	logger.Infof("Querying topology (%s) => %s", params, sql)
@@ -177,6 +179,9 @@ func Query(params TopologyParams) (pkg.Components, error) {
 	results = results.CreateTreeStructure(params.getID(), params.Status)
 	for _, result := range results {
 		result.Components = filterComponentsWithDepth(result.Components, params.Depth)
+	}
+	if params.Status != "" {
+		results = results.FilterChildByStatus(pkg.ComponentStatus(params.Status))
 	}
 	return results, nil
 }

@@ -329,6 +329,19 @@ func (components Components) FindIndexByID(id uuid.UUID) int {
 	return -1
 }
 
+func (components Components) FilterChildByStatus(status ComponentStatus) Components {
+	for _, component := range components {
+		filtered := Components{}
+		for _, child := range component.Components {
+			if child.Status == status {
+				filtered = append(filtered, child)
+			}
+		}
+		component.Components = filtered
+	}
+	return components
+}
+
 type Owner string
 
 type Text struct {

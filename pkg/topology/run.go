@@ -204,7 +204,7 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 				logger.Errorf("Error looking up component %s: %s", comp.Name, err)
 				continue
 			}
-			// add systemTemplates lables to the components
+			// add systemTemplates labels to the components
 			for _, component := range components {
 				if component.Labels == nil {
 					component.Labels = make(types.JSONStringMap)
