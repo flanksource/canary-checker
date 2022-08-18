@@ -58,10 +58,10 @@ func getSMBFolderCheck(fs Filesystem, dir string, filter v1.FolderFilter) (*Fold
 	return &result, nil
 }
 
-func smbConnect(server string, share string, auth *v1.Authentication) (Filesystem, error) {
+func smbConnect(server string, port int, share string, auth *v1.Authentication) (Filesystem, error) {
 	var err error
 	var smb *SMBSession
-
+	server = server + ":" + fmt.Sprintf("%d", port)
 	conn, err := net.Dial("tcp", server)
 	if err != nil {
 		return nil, err
@@ -96,8 +96,8 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 	namespace := ctx.Canary.Namespace
-	var server = strings.TrimPrefix(check.Path, "smb://")
-	server, sharename, path, err := getServerDetails(server)
+	var serverPath = strings.TrimPrefix(check.Path, "smb://")
+	server, sharename, path, err := getServerDetails(serverPath)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
@@ -107,7 +107,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.ErrorMessage(err)
 	}
 
-	session, err := smbConnect(server, sharename, auth)
+	session, err := smbConnect(server, check.SMBConnection.GetPort(), sharename, auth)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
