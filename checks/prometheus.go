@@ -66,7 +66,9 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 			prometheusResults = append(prometheusResults, val)
 		}
 	}
-	check.Labels = check.Labels.AddLabels(data["firstResult"].(map[string]interface{}))
+	if len(prometheusResults) != 0 {
+		check.Labels = check.Labels.AddLabels(data["firstResult"].(map[string]interface{}))
+	}
 	result.UpdateCheck(check)
 	data["results"] = prometheusResults
 	result.AddData(data)
