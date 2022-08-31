@@ -83,7 +83,7 @@ Before installing the Canary Checker, please ensure you have the [prerequisites 
 
 ```bash
 # install the operator
-kubectl apply -f https://github.com/flanksource/canary-checker/releases/download/v0.13.5/release.yaml
+kubectl apply -f https://github.com/flanksource/canary-checker/releases/download/v0.38.154/release.yaml
 # deploy a sample canary
 kubectl apply -f https://raw.githubusercontent.com/flanksource/canary-checker/master/fixtures-crd/http_pass.yaml
 # check the results of the canary
@@ -133,21 +133,21 @@ dns:
     timeout: 10
 ```
 
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| server |  | string | Yes |
-| port |  | int | Yes |
-| query |  | string |  |
-| querytype |  | string | Yes |
-| minrecords |  | int |  |
-| exactreply |  | []string |  |
-| timeout |  | int | Yes |
-| thresholdMillis |  | int | Yes |
+| Field | Description                             | Scheme | Required |
+| ----- |-----------------------------------------| ------ | -------- |
+| description | Description of check                    | string | Yes |
+| server | Address of DNS server to query          | string | Yes |
+| port | Port to query DNS server on             | int | Yes |
+| query | Domain name to lookup                   | string |  |
+| querytype | Record type to query                    | string | Yes |
+| minrecords | Minimum records                         | int |  |
+| exactreply | Expected exact match result(s)          | []string |  |
+| timeout | Maximum timeout for DNS query           | int | Yes |
+| thresholdMillis | Threshold response time from DNS server | int | Yes |
 
 ### Containerd Pull - Pull an image using containerd
 
-This check will try to pull a Docker image from specified registry using containers and then verify its checksum and size.
+This check will try to pull a Docker image from specified registry using containerd and then verify its checksum and size.
 
 ```yaml
 containerdPull:
@@ -158,13 +158,13 @@ containerdPull:
     expectedSize: 1219782
 ```
 
-| Field          | Description | Scheme | Required |
-| -------------- | ----------- | ------ | -------- |
-| description    |             | string | Yes      |
-| image          |             | string | Yes      |
-| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | Object | No |
-| expectedDigest |             | string | Yes      |
-| expectedSize   |             | int64  | Yes      |
+| Field          | Description                                                               | Scheme | Required |
+| -------------- |---------------------------------------------------------------------------| ------ | -------- |
+| description    | Description of check                                                      | string | Yes      |
+| image          | Full path to image, including registry                                    | string | Yes      |
+| auth | Username and password value, configMapKeyRef or SecretKeyRef for registry | Object | No |
+| expectedDigest | Expected digest of the pulled image                                       | string | Yes      |
+| expectedSize   | Expected size of the pulled image                                         | int64  | Yes      |
 
 ### Docker Pull - Pull an image using docker
 
@@ -182,31 +182,14 @@ docker:
     expectedSize: 1219782
 ```
 
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| image |  | string | Yes |
-| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | Object | No |
-| expectedDigest |  | string | Yes |
-| expectedSize |  | int64 | Yes |
+| Field | Description                                                               | Scheme | Required |
+| ----- |---------------------------------------------------------------------------| ------ | -------- |
+| description | Description of check                                                      | string | Yes |
+| image | Full path to image, including registry                                    | string | Yes |
+| auth | Username and password value, configMapKeyRef or SecretKeyRef for registry | Object | No |
+| expectedDigest | Expected digest of the pulled image                                       | string | Yes |
+| expectedSize | Expected size of the pulled image                                         | int64 | Yes |
 
-
-### Docker Push - Create and push a docker image
-
-```yaml
-dockerPush:
-  - image: ttl.sh/flanksource-busybox:1.30
-    auth:
-      username:
-        value: $DOCKER_USERNAME
-      password:
-        value: $DOCKER_PASSWORD
-```
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| image |  | string | Yes |
-| auth | username and password value, configMapKeyRef or SecretKeyRef for registry | Object | Yes |
 
 
 ### HTTP - Query an HTTP endpoint or namespace
@@ -296,15 +279,6 @@ The fields for `displayTemplate` (see [Display Types]((#display-types))) are :
 - `.headers`: response headers
 - `.content`: content from the http request
 
-### Helm - Build and push a helm chart
-
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| chartmuseum |  | string | Yes |
-| project |  | string |  |
-| auth | username and password value, configMapKeyRef or SecretKeyRef for helm | Object | Yes |
-| cafile |  | *string |  |
 
 
 ### ICMP - Ping a destination and check for packet loss
@@ -317,17 +291,17 @@ icmp:
       - https://google.com
       - https://yahoo.com
     thresholdMillis: 400
-    packetLossThreshold: 0.5
+    packetLossThreshold: 50
     packetCount: 2
 ```
 
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| endpoint |  | string | Yes |
-| thresholdMillis |  | int64 | Yes |
-| packetLossThreshold |  | int64 | Yes |
-| packetCount |  | int | Yes |
+| Field | Description                                          | Scheme | Required |
+| ----- |------------------------------------------------------| ------ | -------- |
+| description | Description of check                                 | string | Yes |
+| endpoint | Address to query using ICMP                          | string | Yes |
+| thresholdMillis | Expected response time threshold in ms               | int64 | Yes |
+| packetLossThreshold | Percent of total packets that are allowed to be lost | int64 | Yes |
+| packetCount | Total number of packets to send per check            | int | Yes |
 
 
 ### LDAP - Query a ldap(s) server
@@ -357,21 +331,24 @@ ldap:
     userSearch: "(&(objectClass=groupOfNames))"
 ```
 
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| host |  | string | Yes |
+| Field | Description                                                                  | Scheme | Required |
+| ----- |------------------------------------------------------------------------------| ------ | -------- |
+| description | Description of check                                                         | string | Yes |
+| host | URL of LDAP server to be qeuried                                             | string | Yes |
 | auth | username and password value, configMapKeyRef or SecretKeyRef for LDAP server | Object | Yes |
-| bindDN |  | string | Yes |
-| userSearch |  | string | Yes |
-| skipTLSVerify |  | bool | Yes |
+| bindDN | BindDN to use in query                                                       | string | Yes |
+| userSearch | UserSearch to use in query                                                   | string | Yes |
+| skipTLSVerify | Skip check of LDAP server TLS certificates                                   | bool | Yes |
 
 
 ### Namespace - Create a new kubernetes namespace and pod
 
 The namespace check will:
 
-* create a new namespace using the labels/annotations provided
+* Create a new namespace using the labels/annotations provided
+* Create a new pod in the namespace using the provided PodSpec
+* Expose the pod using the provided ingress URL
+* Test an HTTP connection to the pod
 
 ```yaml
 namespace:
@@ -382,28 +359,27 @@ namespace:
       "foo.baz.com/foo": "bar"
 ```
 
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| checkName |  | string | Yes |
-| namespaceNamePrefix |  | string | Yes |
-| namespaceLabels |  | map[string]string | Yes |
-| namespaceAnnotations |  | map[string]string | Yes |
-| podSpec |  | string | Yes |
-| scheduleTimeout |  | int64 | Yes |
-| readyTimeout |  | int64 | Yes |
-| httpTimeout |  | int64 | Yes |
-| deleteTimeout |  | int64 | Yes |
-| ingressTimeout |  | int64 | Yes |
-| httpRetryInterval |  | int64 | Yes |
-| deadline |  | int64 | Yes |
-| port |  | int64 | Yes |
-| path |  | string | Yes |
-| ingressName |  | string | Yes |
-| ingressHost |  | string | Yes |
-| expectedContent |  | string | Yes |
-| expectedHttpStatuses |  | []int64 | Yes |
-| priorityClass |  | string | Yes |
+| Field | Description                                                                                                                          | Scheme | Required |
+| ----- |--------------------------------------------------------------------------------------------------------------------------------------| ------ | -------- |
+| description | Description of check                                                                                                                 | string | Yes |
+| namespaceNamePrefix | Prefix string to identity namespace                                                                                                  | string | Yes |
+| namespaceLabels | Metadata labels to apply to created namespace                                                                                        | map[string]string | Yes |
+| namespaceAnnotations | Metadata annotations to apply to created namespace                                                                                   | map[string]string | Yes |
+| podSpec | [Spec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podspec-v1-core) of pod to be created in check namespace | string | Yes |
+| scheduleTimeout | Maximum time between pod created and pod running                                                                                     | int64 | Yes |
+| readyTimeout |                                                                                                                                      | int64 | Yes |
+| httpTimeout | Maximum time to wait for an HTTP connection to the created pod                                                                       | int64 | Yes |
+| deleteTimeout |                                                                                                                                      | int64 | Yes |
+| ingressTimeout | Maximum time to create an ingress connected to the pod                                                                               | int64 | Yes |
+| httpRetryInterval | Interval in ms to retry HTTP connections to the created pod                                                                          | int64 | Yes |
+| deadline | Overall time before which an HTTP connection to the pod must be established                                                          | int64 | Yes |
+| port | Port on which the created pod will serve traffic                                                                                     | int64 | Yes |
+| path | Path on whcih the created pod will respond to requests                                                                               | string | Yes |
+| ingressName | Name to use for the ingress object that will expose the created pod                                                                  | string | Yes |
+| ingressHost | URL to be used by the ingress to expose the created pod                                                                              | string | Yes |
+| expectedContent | Expected content of an HTTP response from the created pod                                                                            | string | Yes |
+| expectedHttpStatuses | Expected HTTP status code of the response from the created pod                                                                       | []int64 | Yes |
+| priorityClass | Pod priority class                                                                                                                   | string | Yes |
 
 
 ### Pod - Create a new pod and verify reachability
@@ -439,27 +415,26 @@ pod:
     expectedHttpStatuses: [200, 201, 202]
 ```
 
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| name |  | string | Yes |
-| namespace |  | string | Yes |
-| spec |  | string | Yes |
-| scheduleTimeout |  | int64 | Yes |
-| readyTimeout |  | int64 | Yes |
-| httpTimeout |  | int64 | Yes |
-| deleteTimeout |  | int64 | Yes |
-| ingressTimeout |  | int64 | Yes |
-| httpRetryInterval |  | int64 | Yes |
-| deadline |  | int64 | Yes |
-| port |  | int64 | Yes |
-| path |  | string | Yes |
-| ingressName |  | string | Yes |
-| ingressHost |  | string | Yes |
-| expectedContent |  | string | Yes |
-| expectedHttpStatuses |  | []int | Yes |
-| priorityClass |  | string | Yes |
-
+| Field | Description                                                                                                       | Scheme | Required |
+| ----- |-------------------------------------------------------------------------------------------------------------------| ------ | -------- |
+| description | Description of the check                                                                                          | string | Yes |
+| name | Name of the pod to be created                                                                                     | string | Yes |
+| namespace | Namespace to create the pod in                                                                                    | string | Yes |
+| spec | [Spec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podspec-v1-core) of pod to be created | string | Yes |
+| scheduleTimeout | Maximum time between pod created and pod running                                                                  | int64 | Yes |
+| readyTimeout |                                                                                                                   | int64 | Yes |
+| httpTimeout | Maximum time to wait for an HTTP connection to the created pod                                                    | int64 | Yes |
+| deleteTimeout |                                                                                                                   | int64 | Yes |
+| ingressTimeout | Maximum time to create an ingress connected to the pod                                                                                                                  | int64 | Yes |
+| httpRetryInterval | Interval in ms to retry HTTP connections to the created pod                                                                                                                  | int64 | Yes |
+| deadline | Overall time before which an HTTP connection to the pod must be established                                                          | int64 | Yes |
+| port | Port on which the created pod will serve traffic                                                                                     | int64 | Yes |
+| path | Path on whcih the created pod will respond to requests                                                                               | string | Yes |
+| ingressName | Name to use for the ingress object that will expose the created pod                                                                  | string | Yes |
+| ingressHost | URL to be used by the ingress to expose the created pod                                                                              | string | Yes |
+| expectedContent | Expected content of an HTTP response from the created pod                                                                            | string | Yes |
+| expectedHttpStatuses | Expected HTTP status code of the response from the created pod                                                                       | []int64 | Yes |
+| priorityClass | Pod priority class                                                                                                                   | string | Yes |
 
 ### Postgres - Query a Postgresql DB using SQL
 
@@ -583,14 +558,14 @@ s3:
     objectPath: "path/to/object"
 ```
 
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| bucket |  | [Bucket](#bucket) | Yes |
-| accessKey |  | string | Yes |
-| secretKey |  | string | Yes |
-| objectPath |  | string | Yes |
-| skipTLSVerify | skip TLS verify when connecting to s3 | bool | Yes |
+| Field | Description                                      | Scheme | Required |
+| ----- |--------------------------------------------------| ------ | -------- |
+| description | Description for the check                        | string | Yes |
+| bucket | Array of [Bucket](#bucket) objects to be checked | [Bucket](#bucket) | Yes |
+| accessKey | AWS access Key to access Bucket                  | string | Yes |
+| secretKey | AWS secret Key to access Bucket                  | string | Yes |
+| objectPath | Path of object in bucket to                      | string | Yes |
+| skipTLSVerify | skip TLS verify when connecting to s3            | bool | Yes |
 
 
 ### Folder Check
@@ -598,19 +573,19 @@ s3:
 Folder Check provides an abstraction over checker related to folder.
 Currently, used to perform the following checks:
 
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| description |  | string | No |
-| name | name for the check | string | No |
-| Icon | custom icon to display on the UI | string | No |
-| Test | Template to test the result against | Object | No |
-| Display | Template to display the result in  | Object | No |
+| Field | Description                                                                   | Scheme | Required |
+| ----- |-------------------------------------------------------------------------------| ------ | -------- |
+| description | Description of check                                                          | string | No |
+| name | name for the check                                                            | string | No |
+| Icon | custom icon to display on the UI                                              | string | No |
+| Test | Template to test the result against                                           | Object | No |
+| Display | Template to display the result in                                             | Object | No |
 | Path | Path to the object, needs to be prefixed with the protocol. See example below | string | Yes |
-| SMBConnection | | Object | No |
-| AWSConnection | | Object | No |
-| GCPConnection | | Object | No |
-| Filter | Used to filter the objects | Object | No |
-| FolderTest | Parameters to test the folder against | Object | No |
+| SMBConnection |                                                                               | Object | No |
+| AWSConnection |                                                                               | Object | No |
+| GCPConnection |                                                                               | Object | No |
+| Filter | Used to filter the objects                                                    | Object | No |
+| FolderTest | Parameters to test the folder against                                         | Object | No |
 
 #### S3 Bucket - Query the contents of an S3 bucket for freshness
 
@@ -791,10 +766,10 @@ jmeter:
 
 ### SSL - Verify the expiry date of a SSL cert
 
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| endpoint | HTTP endpoint to crawl | string | Yes |
+| Field | Description                                               | Scheme | Required |
+| ----- |-----------------------------------------------------------| ------ | -------- |
+| description | Description of check                                      | string | Yes |
+| endpoint | HTTP endpoint to crawl                                    | string | Yes |
 | maxSSLExpiry | maximum number of days until the SSL Certificate expires. | int | Yes |
 
 
@@ -810,11 +785,11 @@ jmeter:
 
 ### TCP
 
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| description |  | string | Yes |
-| endpoint |  | string | Yes |
-| thresholdMillis |  | int64 | Yes |
+| Field | Description                                                 | Scheme | Required |
+| ----- |-------------------------------------------------------------| ------ | -------- |
+| description | Description of cGit heck                                    | string | Yes |
+| endpoint | Endpoint to establish a TCP connection with                 | string | Yes |
+| thresholdMillis | Maximum time in ms to wait for connection to be established | int64 | Yes |
 
 ### Junit
 
