@@ -133,15 +133,24 @@ type Property struct {
 	Type     string `json:"type,omitempty"`
 	Color    string `json:"color,omitempty"`
 	// e.g. milliseconds, bytes, millicores, epoch etc.
-	Unit           string      `json:"unit,omitempty"`
-	Value          int64       `json:"value,omitempty"`
-	Max            *int64      `json:"max,omitempty"`
-	Min            int64       `json:"min,omitempty"`
-	Status         string      `json:"status,omitempty"`
-	LastTransition string      `json:"lastTransition,omitempty"`
-	Links          []Link      `json:"links,omitempty"`
-	Lookup         *CanarySpec `json:"lookup,omitempty"`
-	Summary        *Template   `json:"summary,omitempty"`
+	Unit           string        `json:"unit,omitempty"`
+	Value          int64         `json:"value,omitempty"`
+	Max            *int64        `json:"max,omitempty"`
+	Min            int64         `json:"min,omitempty"`
+	Status         string        `json:"status,omitempty"`
+	LastTransition string        `json:"lastTransition,omitempty"`
+	Links          []Link        `json:"links,omitempty"`
+	Lookup         *CanarySpec   `json:"lookup,omitempty"`
+	ConfigLookup   *ConfigLookup `json:"configLookup,omitempty"`
+	Summary        *Template     `json:"summary,omitempty"`
+}
+
+type ConfigLookup struct {
+	Type    string  `json:"type,omitempty"`
+	ID      string  `json"id",omitempty"`
+	Name    string  `json:"name,omitempty"`
+	Field   string  `json"field,omitempty"`
+	Display Display `json:"display,omitempty"`
 }
 
 // +kubebuilder:object:root=true

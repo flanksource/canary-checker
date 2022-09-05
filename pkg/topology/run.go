@@ -1,8 +1,10 @@
 package topology
 
 import (
+	"encoding/json"
 	"fmt"
 
+	"github.com/PaesslerAG/jsonpath"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
@@ -77,6 +79,18 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg
 			comp.Properties = append(comp.Properties, props...)
 		}
 
+		// Fill config
+		for _, property := range component.Properties {
+			if property.ConfigLookup == nil {
+				continue
+			}
+			prop, err := lookupConfig(property, comp.Properties)
+			if err != nil {
+				return nil, errors.Wrapf(err, "property config lookup failed: %s", property.Name)
+			}
+			comp.Properties = append(comp.Properties, prop)
+		}
+
 		if comp.Icon == "" && component.Icon != "" {
 			comp.Icon = component.Icon
 		}
@@ -121,6 +135,41 @@ func lookup(client *kommons.Client, name string, spec v1.CanarySpec) ([]interfac
 		}
 	}
 	return results, nil
+}
+
+func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.Property, error) {
+	prop := pkg.NewProperty(*property)
+
+	configName := property.ConfigLookup.Name
+	if property.ConfigLookup.ID != "" {
+		// Lookup in the same properties
+		for _, prop := range sisterProperties {
+			if prop.Name == property.ConfigLookup.ID {
+				// TODO: This has to be text because value itself is calculated
+				// TODO: Confirm
+				configName = prop.Text
+			}
+		}
+	}
+
+	var jsonValue interface{}
+	config, err := db.FetchConfig(property.ConfigLookup.Type, configName)
+	if err != nil {
+		return prop, err
+	}
+
+	err = json.Unmarshal([]byte(config), &jsonValue)
+	if err != nil {
+		return prop, err
+	}
+
+	result, err := jsonpath.Get(property.ConfigLookup.Field, jsonValue)
+	if err != nil {
+		return prop, err
+	}
+
+	prop.Text = fmt.Sprintf("%s", result)
+	return prop, nil
 }
 
 func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Properties, error) {
