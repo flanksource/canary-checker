@@ -11,7 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 )
 
-//FIXME: disabling due to the following error
+// FIXME: disabling due to the following error
 // Error: ../../../go/pkg/mod/github.com/containerd/containerd@v1.4.0/archive/tar_windows.go:234:3: cannot use syscall.NsecToFiletime(hdr.AccessTime.UnixNano()) (type syscall.Filetime) as type "golang.org/x/sys/windows".Filetime in field value
 type ContainerdPullChecker struct{}
 

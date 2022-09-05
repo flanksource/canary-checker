@@ -2,6 +2,7 @@ package ui
 
 import "embed"
 
-//nolint
+// nolint
+//
 //go:embed build/*
 var StaticContent embed.FS

@@ -601,7 +601,6 @@ func (c SMBConnection) GetPort() int {
 
 /*
 [include:datasources/prometheus.yaml]
-
 */
 type Prometheus struct {
 	PrometheusCheck `yaml:",inline" json:",inline"`
@@ -835,9 +834,7 @@ type HTTP struct {
 }
 
 /*
-
 [include:minimal/dns_pass.yaml]
-
 */
 type DNS struct {
 	DNSCheck `yaml:",inline" json:"inline"`
@@ -884,27 +881,23 @@ type Pod struct {
 }
 
 /*
-
 The LDAP check will:
 
 * bind using provided user/password to the ldap host. Supports ldap/ldaps protocols.
 * search an object type in the provided bind DN.s
 
 [include:datasources/ldap_pass.yaml]
-
 */
 type LDAP struct {
 	LDAPCheck `yaml:",inline" json:"inline"`
 }
 
 /*
-
 The Namespace check will:
 
 * create a new namespace using the labels/annotations provided
 
 [include:k8s/namespace_pass.yaml]
-
 */
 type Namespace struct {
 	NamespaceCheck `yaml:",inline" json:"inline"`
@@ -914,7 +907,6 @@ type Namespace struct {
 This test will check ICMP packet loss and duration.
 
 [include:quarantine/icmp_pass.yaml]
-
 */
 type ICMP struct {
 	ICMPCheck `yaml:",inline" json:"inline"`
@@ -933,16 +925,13 @@ type Postgres struct {
 This check will try to connect to a specified MsSQL database, run a query against it and verify the results.
 
 [include:datasources/mssql_pass.yaml]
-
 */
 type MsSQL struct {
 	MssqlCheck `yaml:",inline" json:"inline"`
 }
 
 /*
-
 [include:datasources/helm_pass.yaml]
-
 */
 type Helm struct {
 	HelmCheck `yaml:",inline" json:"inline"`
@@ -1032,7 +1021,6 @@ type Kubernetes struct {
 }
 
 /*
-
 The folder check lists files in a folder (local or SMB/CIFS) or object storage platform like S3 or GCS and provides a mechanism to test:
 
 * `minAge` - A file has been added within at least minAge e.g Has a backup been created in the last 24h
@@ -1041,7 +1029,6 @@ The folder check lists files in a folder (local or SMB/CIFS) or object storage p
 * `maxSize` -
 * `minCount` -
 * `maxCount` -
-
 
 [include:quarantine/smb_pass.yaml]
 [include:datasources/s3_bucket_pass.yaml]
