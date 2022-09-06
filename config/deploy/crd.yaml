@@ -2097,6 +2097,9 @@ spec:
                           - path
                           - value
                         type: object
+                      templateBody:
+                        description: Template the request body
+                        type: boolean
                       test:
                         properties:
                           expr:
@@ -5617,6 +5620,9 @@ spec:
                                     - path
                                     - value
                                   type: object
+                                templateBody:
+                                  description: Template the request body
+                                  type: boolean
                                 test:
                                   properties:
                                     expr:
@@ -9077,6 +9083,9 @@ spec:
                               - path
                               - value
                             type: object
+                          templateBody:
+                            description: Template the request body
+                            type: boolean
                           test:
                             properties:
                               expr:
@@ -12539,6 +12548,9 @@ spec:
                                     - path
                                     - value
                                   type: object
+                                templateBody:
+                                  description: Template the request body
+                                  type: boolean
                                 test:
                                   properties:
                                     expr:
@@ -16090,6 +16102,9 @@ spec:
                                           - path
                                           - value
                                         type: object
+                                      templateBody:
+                                        description: Template the request body
+                                        type: boolean
                                       test:
                                         properties:
                                           expr:
@@ -19550,6 +19565,9 @@ spec:
                                     - path
                                     - value
                                   type: object
+                                templateBody:
+                                  description: Template the request body
+                                  type: boolean
                                 test:
                                   properties:
                                     expr:
@@ -23012,6 +23030,9 @@ spec:
                                           - path
                                           - value
                                         type: object
+                                      templateBody:
+                                        description: Template the request body
+                                        type: boolean
                                       test:
                                         properties:
                                           expr:
@@ -26561,6 +26582,9 @@ spec:
                                     - path
                                     - value
                                   type: object
+                                templateBody:
+                                  description: Template the request body
+                                  type: boolean
                                 test:
                                   properties:
                                     expr:
