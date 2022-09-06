@@ -75,6 +75,12 @@ rules:
       - ingresses
     verbs:
       - "*"
+  - apiGroups:
+      - "networking.k8s.io"
+    resources:
+      - ingresses
+    verbs:
+      - "*"
   # for reading configuration from canaries
   - apiGroups:
       - ""
