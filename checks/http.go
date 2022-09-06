@@ -116,7 +116,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	endpoint := check.Endpoint
 	body := check.Body
 	if check.TemplateBody {
-		body, err = text.Template(body, nil)
+		body, err = text.Template(body, ctx.Canary)
 		if err != nil {
 			return results.ErrorMessage(err)
 		}
