@@ -68,6 +68,8 @@ type HTTPCheck struct {
 	Headers []kommons.EnvVar `yaml:"headers,omitempty" json:"headers,omitempty"`
 	// Credentials for authentication headers
 	Authentication *Authentication `yaml:"authentication,omitempty" json:"authentication,omitempty"`
+	//Template the request body
+	TemplateBody bool `yaml:"templateBody,omitempty" json:"templateBody,omitempty"`
 }
 
 func (c HTTPCheck) GetEndpoint() string {

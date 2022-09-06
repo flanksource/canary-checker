@@ -41,6 +41,8 @@ jobs:
           go-version: 1.17.x
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.46.0
       - name: setup node
         uses: actions/setup-node@v2
         with:

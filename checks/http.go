@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/commons/text"
 	"github.com/flanksource/kommons"
 	"github.com/pkg/errors"
 
@@ -111,8 +112,16 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	if _, err := url.Parse(check.Endpoint); err != nil {
 		return results.ErrorMessage(err)
 	}
-
+	var err error
 	endpoint := check.Endpoint
+	body := check.Body
+	if check.TemplateBody {
+		body, err = text.Template(body, ctx.Canary)
+		if err != nil {
+			return results.ErrorMessage(err)
+		}
+	}
+
 	req := http.NewRequest(check.Endpoint).Method(check.GetMethod())
 
 	if err := c.configure(req, ctx, check, ctx.Kommons); err != nil {
@@ -121,7 +130,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	start := time.Now()
 
-	resp := req.Do(check.Body)
+	resp := req.Do(body)
 	elapsed := time.Since(start)
 	status := resp.GetStatusCode()
 	result.AddMetric(pkg.Metric{
@@ -139,7 +148,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		sslExpiration.WithLabelValues(endpoint).Set(age.Hours() * 24)
 	}
 
-	body, _ := resp.AsString()
+	body, _ = resp.AsString()
 
 	data := map[string]interface{}{
 		"code":    status,
