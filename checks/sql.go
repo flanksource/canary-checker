@@ -45,7 +45,7 @@ func querySQL(driver string, connection string, query string) (*SQLDetails, erro
 	for rows.Next() {
 		var rowValues = make([]interface{}, len(columns))
 		for i := range rowValues {
-			s := ""
+			var s interface{}
 			rowValues[i] = &s
 		}
 		if err := rows.Scan(rowValues...); err != nil {
@@ -53,7 +53,7 @@ func querySQL(driver string, connection string, query string) (*SQLDetails, erro
 		}
 		var row = make(map[string]interface{})
 		for i, val := range rowValues {
-			row[columns[i]] = *val.(*string)
+			row[columns[i]] = *val.(*interface{})
 		}
 		result.Rows = append(result.Rows, row)
 	}
