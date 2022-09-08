@@ -222,11 +222,10 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 			}
 			group := pkg.NewComponent(comp)
 			group.Components = append(group.Components, components...)
-			if comp.Summary == nil {
+			if len(group.Components) > 0 {
 				group.Summary = group.Components.Summarize()
-			} else {
-				group.Summary = *comp.Summary
 			}
+
 			group.Status = pkg.ComponentStatus(group.Summary.GetStatus())
 			component.Components = append(component.Components, group)
 		}
@@ -241,7 +240,9 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 			component.Properties = append(component.Properties, props...)
 		}
 	}
-	component.Summary = component.Components.Summarize()
+	if len(component.Components) > 0 {
+		component.Summary = component.Components.Summarize()
+	}
 	if component.ID.String() == "" && ctx.SystemTemplate.Spec.Id != nil {
 		id, err := templating.Template(component.GetAsEnvironment(), *ctx.SystemTemplate.Spec.Id)
 		if err != nil {

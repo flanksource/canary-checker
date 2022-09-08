@@ -253,7 +253,7 @@ func (component Component) GetAsEnvironment() map[string]interface{} {
 }
 
 func NewComponent(c v1.ComponentSpec) *Component {
-	return &Component{
+	_c := Component{
 		Name:            c.Name,
 		Owner:           c.Owner,
 		Type:            c.Type,
@@ -263,6 +263,10 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Selectors:       c.Selectors,
 		ComponentChecks: c.ComponentChecks,
 	}
+	if c.Summary != nil {
+		_c.Summary = *c.Summary
+	}
+	return &_c
 }
 
 func (component Component) GetID() string {
