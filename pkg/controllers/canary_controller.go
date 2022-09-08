@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/google/uuid"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -71,7 +72,6 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 
 	logger := r.Log.WithValues("canary", req.NamespacedName)
-
 	canary := &v1.Canary{}
 	err := r.Get(ctx, req.NamespacedName, canary)
 	if errors.IsNotFound(err) {
@@ -93,14 +93,28 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		return ctrl.Result{}, r.Update(ctx, canary)
 	}
 
-	c, changed, err := db.PersistCanary(*canary, "kubernetes/"+string(canary.ObjectMeta.UID))
+	c, checkIds, changed, err := db.PersistCanary(*canary, "kubernetes/"+string(canary.ObjectMeta.UID))
 	if err != nil {
 		return ctrl.Result{
 			Requeue: true,
 		}, err
 	}
-	id := c.ID.String() // id is the uuid of the canary
-	canary.Status.PersistedID = &id
+
+	dbCheckIds := getCheckIDsForCanary(c.ID)
+	// delete checks which are no longer in the canary
+	// fetching the checkIds present in the db but not present on the canary
+	toRemoveCheckIDs := getRemovedChecks(dbCheckIds, checkIds)
+	// delete the check and update the cron for now
+	if len(toRemoveCheckIDs) > 0 {
+		logger.Info("removing checks from canary", "checkIDs", toRemoveCheckIDs)
+		if err := db.DeleteChecks(toRemoveCheckIDs); err != nil {
+			logger.Error(err, "failed to delete checks")
+		}
+		if err := canaryJobs.SyncCanaryJob(*canary); err != nil {
+			logger.Error(err, "failed to sync canary job")
+		}
+	}
+
 	// Sync jobs if canary is created or updated
 	if canary.Generation == 1 || changed {
 		if err := canaryJobs.SyncCanaryJob(*canary); err != nil {
@@ -108,6 +122,10 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}
 	}
+
+	// update status
+	id := c.ID.String() // id is the uuid of the canary
+	canary.Status.PersistedID = &id
 	canary.Status.ObservedGeneration = canary.Generation
 	r.Patch(canary)
 	return ctrl.Result{}, nil
@@ -212,7 +230,7 @@ func (r *CanaryReconciler) Patch(canary *v1.Canary) {
 	if err := r.Update(gocontext.Background(), canary, &client.UpdateOptions{}); err != nil {
 		r.Log.Error(err, "failed to patch", "canary", canary.Name)
 	}
-	if err := r.Status().Update(gocontext.Background(), canary); err != nil {
+	if err := r.Status().Update(gocontext.Background(), canary, &client.UpdateOptions{}); err != nil {
 		r.Log.Error(err, "failed to update status", "canary", canary.Name)
 	}
 }
@@ -224,4 +242,28 @@ func (r *CanaryReconciler) includeNamespace(namespace string) bool {
 		}
 	}
 	return false
+}
+
+func getCheckIDsForCanary(canaryID uuid.UUID) []string {
+	checks, _ := db.GetAllChecksForCanary(canaryID)
+	var checkIDs []string
+	for _, check := range checks {
+		checkIDs = append(checkIDs, check.ID)
+	}
+	return checkIDs
+}
+
+// getRemovedChecks returns the checkIds which are present in status but not present in the canary.
+func getRemovedChecks(a, b []string) []string {
+	mb := make(map[string]struct{}, len(b))
+	for _, x := range b {
+		mb[x] = struct{}{}
+	}
+	var diff []string
+	for _, x := range a {
+		if _, found := mb[x]; !found {
+			diff = append(diff, x)
+		}
+	}
+	return diff
 }

@@ -50,15 +50,8 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 
 	if err := row.Scan(&id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			if status.Status {
-				check.Status = "healthy"
-			} else {
-				check.Status = "unhealthy"
-			}
-			if id, err = db.PersistCheck(check); err != nil {
-				logger.Errorf("error inserting check: %v", err)
-				return
-			}
+			logger.Debugf("check %s not found", check.GetName())
+			return
 		} else {
 			logger.Errorf("error fetching check id: %v", err)
 			return
