@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/google/uuid"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -103,7 +104,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	dbCheckIds := getCheckIDsForCanary(c.ID)
 	// delete checks which are no longer in the canary
 	// fetching the checkIds present in the db but not present on the canary
-	toRemoveCheckIDs := getRemovedChecks(dbCheckIds, checkIds)
+	toRemoveCheckIDs := utils.SetDifference(dbCheckIds, checkIds)
 	// delete the check and update the cron for now
 	if len(toRemoveCheckIDs) > 0 {
 		logger.Info("removing checks from canary", "checkIDs", toRemoveCheckIDs)
@@ -245,25 +246,10 @@ func (r *CanaryReconciler) includeNamespace(namespace string) bool {
 }
 
 func getCheckIDsForCanary(canaryID uuid.UUID) []string {
-	checks, _ := db.GetAllChecksForCanary(canaryID)
+	checks, _ := db.GetAllActiveChecksForCanary(canaryID)
 	var checkIDs []string
 	for _, check := range checks {
 		checkIDs = append(checkIDs, check.ID)
 	}
 	return checkIDs
-}
-
-// getRemovedChecks returns the checkIds which are present in status but not present in the canary.
-func getRemovedChecks(a, b []string) []string {
-	mb := make(map[string]struct{}, len(b))
-	for _, x := range b {
-		mb[x] = struct{}{}
-	}
-	var diff []string
-	for _, x := range a {
-		if _, found := mb[x]; !found {
-			diff = append(diff, x)
-		}
-	}
-	return diff
 }

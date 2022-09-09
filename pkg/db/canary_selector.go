@@ -48,12 +48,22 @@ func GetChecksWithLabelSelector(labelSelector string) (selectedChecks pkg.Checks
 	return selectedChecks, nil
 }
 
+// returns all the checks associated with canary.
 func GetAllChecksForCanary(canaryID uuid.UUID) (checks pkg.Checks, err error) {
 	if err := Gorm.Table("checks").Where("canary_id = ?", canaryID).Find(&checks).Error; err != nil {
 		return nil, err
 	}
 	return checks, nil
 }
+
+// returns all the checks associated with canary which are currently executing
+func GetAllActiveChecksForCanary(canaryID uuid.UUID) (checks pkg.Checks, err error) {
+	if err := Gorm.Table("checks").Where("canary_id = ? AND deleted_at is null ", canaryID).Find(&checks).Error; err != nil {
+		return nil, err
+	}
+	return checks, nil
+}
+
 func CreateComponentCanaryFromInline(id, name, namespace, schedule, owner string, spec *v1.CanarySpec) (*pkg.Canary, error) {
 	if spec.GetSchedule() == "@never" {
 		spec.Schedule = schedule
