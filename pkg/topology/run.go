@@ -147,12 +147,15 @@ func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.
 				// TODO: This has to be text because value itself is calculated
 				// TODO: Confirm
 				configName = prop.Text
+				break
 			}
 		}
 	}
 
+	pkgConfig := pkg.NewConfig(property.ConfigLookup.Config)
+	pkgConfig.Name = configName
 	var jsonValue interface{}
-	config, err := db.FetchConfig(property.ConfigLookup.Type, configName)
+	config, err := db.FetchConfig(*pkgConfig)
 	if err != nil {
 		return prop, err
 	}

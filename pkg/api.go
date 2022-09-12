@@ -279,6 +279,15 @@ type Config struct {
 	ExternalType string              `json:"external_type"`
 }
 
+func NewConfig(config v1.Config) *Config {
+	return *Config{
+		Name:         config.Name,
+		ConfigType:   config.ConfigType,
+		ExternalId:   config.ExternalId,
+		ExternalType: config.ExternalType,
+	}
+}
+
 type Configs []*Config
 
 // URL information

@@ -5,14 +5,33 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
-func FetchConfig(configType, name string) (string, error) {
-	var config string
-	err := Gorm.Table("config_item").Select("config").Where("name = ? AND config_type = ?", name, configType).
-		Find(&config).Error
-	return config, err
+func configQuery(config pkg.Config) *gorm.DB {
+	query := Gorm.Table("config_item")
+
+	if config.ConfigType != "" {
+		query = query.Where("config_type = ?", config.ConfigType)
+	}
+	if config.Name != "" {
+		query = query.Where("name = ?", config.Name)
+	}
+	if config.ExternalType != "" {
+		query = query.Where("external_type = ?", config.ExternalType)
+	}
+	if len(config.ExternalId) > 0 {
+		query = query.Where("external_id = ?", pq.StringArray(config.ExternalId))
+	}
+	return query
+}
+
+func FetchConfig(config pkg.Config) (string, error) {
+	var configSpec string
+	query := configQuery(config)
+	err := query.Select("config").Find(&config).Error
+	return configSpec, err
 }
 
 func PersistConfigComponentRelationship(config pkg.Config, componentID uuid.UUID) error {
