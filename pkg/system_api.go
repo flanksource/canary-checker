@@ -177,6 +177,7 @@ type Component struct {
 	Selectors        v1.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors"`
 	ComponentChecks  v1.ComponentChecks   `json:"-" gorm:"componentChecks"`
 	Checks           Checks               `json:"checks,omitempty" gorm:"-"`
+	Configs          Configs              `json:"configs,omitempty"`
 	SystemTemplateID *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
 	CreatedAt        time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
 	UpdatedAt        time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
@@ -220,6 +221,7 @@ func (component Component) Clone() Component {
 		Type:            component.Type,
 		Lifecycle:       component.Lifecycle,
 		Checks:          component.Checks,
+		Configs:         component.Configs,
 		ComponentChecks: component.ComponentChecks,
 		Properties:      component.Properties,
 		ExternalId:      component.ExternalId,

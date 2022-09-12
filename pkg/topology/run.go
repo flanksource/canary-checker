@@ -340,6 +340,15 @@ func ComponentRun() {
 			logger.Errorf("error persisting relationships: %v", err)
 			continue
 		}
+
+		// Sync config relationships
+		for _, config := range component.Configs {
+			err = db.PersistConfigComponentRelationship(*config, component.ID)
+			if err != nil {
+				logger.Errorf("error persisting config relationships: %v", err)
+				continue
+			}
+		}
 	}
 }
 

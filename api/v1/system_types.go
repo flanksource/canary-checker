@@ -52,6 +52,7 @@ type Selector struct {
 	Name   string            `json:"name,omitempty"`
 	Labels map[string]string `json:"labels,omitempty"`
 }
+
 type NamespaceSelector struct {
 	Selector `json:",inline"`
 }
@@ -59,6 +60,15 @@ type NamespaceSelector struct {
 type ComponentCheck struct {
 	Selector ResourceSelector `json:"selector,omitempty"`
 	Inline   *CanarySpec      `json:"inline,omitempty"`
+}
+
+type Config struct {
+	ConfigType   string   `json:"config_type,omitempty"`
+	Name         string   `json:"name,omitempty"`
+	ExternalId   []string `json:"external_id,omitempty"`
+	ExternalType string   `json:"external_type,omitempty"`
+	// TODO:
+	// Should I add fields like namespace, account, region, zone, tags
 }
 
 // +kubebuilder:object:root=true

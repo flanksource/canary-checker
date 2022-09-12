@@ -270,6 +270,17 @@ type Checker interface {
 	CheckArgs(args map[string]interface{}) *CheckResult
 }
 
+type Config struct {
+	ID           string              `json:"id"`
+	ConfigType   string              `json:"config_type"`
+	Name         string              `json:"name"`
+	Spec         types.JSONStringMap `json:"spec"`
+	ExternalId   []string            `json:"external_id"`
+	ExternalType string              `json:"external_type"`
+}
+
+type Configs []*Config
+
 // URL information
 type URL struct {
 	IP       string

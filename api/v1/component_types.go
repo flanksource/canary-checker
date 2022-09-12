@@ -33,6 +33,7 @@ type ComponentSpec struct {
 	Components      []json.RawMessage  `json:"components,omitempty"`
 	Selectors       ResourceSelectors  `json:"selectors,omitempty"`
 	ComponentChecks ComponentChecks    `json:"checks,omitempty"`
+	Config          Config             `json:"configs,omitempty"`
 	Summary         *Summary           `json:"summary,omitempty"`
 }
 
@@ -147,7 +148,7 @@ type Property struct {
 
 type ConfigLookup struct {
 	Type    string  `json:"type,omitempty"`
-	ID      string  `json:"id",omitempty"`
+	ID      string  `json:"id,omitempty"`
 	Name    string  `json:"name,omitempty"`
 	Field   string  `json:"field,omitempty"`
 	Display Display `json:"display,omitempty"`
