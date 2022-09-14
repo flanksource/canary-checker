@@ -276,7 +276,7 @@ type Config struct {
 	Name         string              `json:"name,omitempty"`
 	Namespace    string              `json:"namespace,omitempty"`
 	Spec         types.JSONStringMap `json:"spec,omitempty"`
-	ExternalId   []string            `json:"external_id,omitempty"`
+	ExternalID   []string            `json:"external_id,omitempty"`
 	ExternalType string              `json:"external_type,omitempty"`
 }
 
@@ -284,7 +284,7 @@ func NewConfig(config v1.Config) *Config {
 	return &Config{
 		Name:         config.Name,
 		Namespace:    config.Namespace,
-		ExternalId:   config.ID,
+		ExternalID:   config.ID,
 		ExternalType: config.Type,
 	}
 }

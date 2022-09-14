@@ -29,8 +29,8 @@ func configQuery(config pkg.Config) *gorm.DB {
 	if config.ExternalType != "" {
 		query = query.Where("external_type = @external_type OR config_type = @external_type", sql.Named("external_type", config.ExternalType))
 	}
-	if len(config.ExternalId) > 0 {
-		query = query.Where("external_id @> ?", pq.StringArray(config.ExternalId))
+	if len(config.ExternalID) > 0 {
+		query = query.Where("external_id @> ?", pq.StringArray(config.ExternalID))
 	}
 	return query
 }
