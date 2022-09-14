@@ -271,20 +271,21 @@ type Checker interface {
 }
 
 type Config struct {
-	ID           string              `json:"id"`
-	ConfigType   string              `json:"config_type"`
-	Name         string              `json:"name"`
-	Spec         types.JSONStringMap `json:"spec"`
-	ExternalId   []string            `json:"external_id"`
-	ExternalType string              `json:"external_type"`
+	ID           uuid.UUID           `json:"id,omitempty"`
+	ConfigType   string              `json:"config_type,omitempty"`
+	Name         string              `json:"name,omitempty"`
+	Namespace    string              `json:"namespace,omitempty"`
+	Spec         types.JSONStringMap `json:"spec,omitempty"`
+	ExternalId   []string            `json:"external_id,omitempty"`
+	ExternalType string              `json:"external_type,omitempty"`
 }
 
 func NewConfig(config v1.Config) *Config {
-	return *Config{
+	return &Config{
 		Name:         config.Name,
-		ConfigType:   config.ConfigType,
-		ExternalId:   config.ExternalId,
-		ExternalType: config.ExternalType,
+		Namespace:    config.Namespace,
+		ExternalId:   config.ID,
+		ExternalType: config.Type,
 	}
 }
 

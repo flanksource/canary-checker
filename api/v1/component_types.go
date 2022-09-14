@@ -33,7 +33,7 @@ type ComponentSpec struct {
 	Components      []json.RawMessage  `json:"components,omitempty"`
 	Selectors       ResourceSelectors  `json:"selectors,omitempty"`
 	ComponentChecks ComponentChecks    `json:"checks,omitempty"`
-	Config          Config             `json:"configs,omitempty"`
+	Configs         []Config           `json:"configs,omitempty"`
 	Summary         *Summary           `json:"summary,omitempty"`
 }
 

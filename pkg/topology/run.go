@@ -144,9 +144,7 @@ func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.
 		// Lookup in the same properties
 		for _, prop := range sisterProperties {
 			if prop.Name == property.ConfigLookup.ID {
-				// TODO: This has to be text because value itself is calculated
-				// TODO: Confirm
-				configName = prop.Text
+				configName = fmt.Sprintf("%v", prop.GetValue())
 				break
 			}
 		}
@@ -154,18 +152,11 @@ func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.
 
 	pkgConfig := pkg.NewConfig(property.ConfigLookup.Config)
 	pkgConfig.Name = configName
-	var jsonValue interface{}
 	config, err := db.FetchConfig(*pkgConfig)
 	if err != nil {
 		return prop, err
 	}
-
-	err = json.Unmarshal([]byte(config), &jsonValue)
-	if err != nil {
-		return prop, err
-	}
-
-	result, err := jsonpath.Get(property.ConfigLookup.Field, jsonValue)
+	result, err := jsonpath.Get(property.ConfigLookup.Field, config.Spec)
 	if err != nil {
 		return prop, err
 	}
@@ -346,7 +337,12 @@ func ComponentRun() {
 
 		// Sync config relationships
 		for _, config := range component.Configs {
-			err = db.PersistConfigComponentRelationship(*config, component.ID)
+			dbConfig, err := db.FetchConfig(*config)
+			if err != nil {
+				logger.Errorf("error fetching config from database: %v", err)
+				continue
+			}
+			err = db.PersistConfigComponentRelationship(dbConfig.ID, component.ID)
 			if err != nil {
 				logger.Errorf("error persisting config relationships: %v", err)
 				continue

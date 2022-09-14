@@ -63,12 +63,10 @@ type ComponentCheck struct {
 }
 
 type Config struct {
-	ConfigType   string   `json:"config_type,omitempty"`
-	Name         string   `json:"name,omitempty"`
-	ExternalId   []string `json:"external_id,omitempty"`
-	ExternalType string   `json:"external_type,omitempty"`
-	// TODO:
-	// Should I add fields like namespace, account, region, zone, tags
+	ID        []string `json:"id,omitempty"`
+	Type      string   `json:"type,omitempty"`
+	Name      string   `json:"name,omitempty"`
+	Namespace string   `json:"namespace,omitempty"`
 }
 
 // +kubebuilder:object:root=true
