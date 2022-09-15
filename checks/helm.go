@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -139,7 +138,7 @@ func cleanUp(chartname string, chartmuseum string, config v1.HelmCheck, username
 }
 
 func createTestChart() (*string, error) {
-	dir, err := ioutil.TempDir("/tmp", "canary_checker_helm_test_chart")
+	dir, err := os.MkdirTemp("/tmp", "canary_checker_helm_test_chart")
 	if err != nil {
 		return nil, fmt.Errorf("createTestChart: failed to create temp directory: %v", err)
 	}
