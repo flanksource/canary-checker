@@ -3,7 +3,7 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -50,7 +50,7 @@ func (c *ConfigdbChecker) Check(ctx *canaryContext.Context, extConfig external.C
 	if resp.StatusCode != http.StatusAccepted && resp.StatusCode != http.StatusCreated {
 		return results.Failf("Failed to get response, %v", resp.Status)
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return results.Failf("Failed to read the response body: %v", err)
 	}

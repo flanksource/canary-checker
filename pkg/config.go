@@ -3,7 +3,7 @@ package pkg
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -21,7 +21,7 @@ func readFile(path string) (string, error) {
 	var data []byte
 	var err error
 	if path == "-" {
-		if data, err = ioutil.ReadAll(os.Stdin); err != nil {
+		if data, err = io.ReadAll(os.Stdin); err != nil {
 			return "", err
 		}
 	} else {

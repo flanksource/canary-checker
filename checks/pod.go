@@ -2,7 +2,7 @@ package checks
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math"
 	"net/http"
 	"sort"
@@ -476,7 +476,7 @@ func (c *PodChecker) getHTTP(url string, timeout int64, deadline time.Time) (str
 	}
 	defer resp.Body.Close()
 
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", 0, perrors.Wrapf(err, "failed to read body for url %s", url)
 	}
