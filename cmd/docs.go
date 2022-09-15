@@ -21,7 +21,7 @@ import (
 	"go/doc"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"regexp"
 	"sort"
@@ -122,7 +122,7 @@ TYPES:
 	}
 	_, lastPart := print(last, types)
 	s += lastPart
-	if err := ioutil.WriteFile(out, []byte(s), 0644); err != nil {
+	if err := os.WriteFile(out, []byte(s), 0644); err != nil {
 		logger.Errorf("error writing %s: %v", out, err)
 	}
 }

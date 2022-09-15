@@ -2,7 +2,6 @@ package checks
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -47,7 +46,7 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	}
 	testPlanFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jmx", namespace, check.Jmx.Name, rand.Int())
 	logFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jtl", namespace, check.Jmx.Name, rand.Int())
-	err = ioutil.WriteFile(testPlanFilename, []byte(value), 0755)
+	err = os.WriteFile(testPlanFilename, []byte(value), 0755)
 	defer os.Remove(testPlanFilename) // nolint: errcheck
 	if err != nil {
 		return results.Failf("unable to write test plan file")
