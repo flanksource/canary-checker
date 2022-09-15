@@ -2,7 +2,7 @@
   "name": "canary-checker",
   "version": "0.1.0",
   "dependencies": {
-    "@flanksource/flanksource-ui": "^1.0.98"
+    "@flanksource/flanksource-ui": "^v1.0.113"
   },
   "proxy": "https://canaries.canary.lab.flanksource.com/",
   "scripts": {
