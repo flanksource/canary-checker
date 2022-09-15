@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -93,11 +92,11 @@ func getLocalFolderCheck(path string, filter v1.FolderFilter) (*FolderCheck, err
 	if err != nil {
 		return nil, err
 	}
-	files, err := ioutil.ReadDir(path)
+	entries, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}
-	if len(files) == 0 {
+	if len(entries) == 0 {
 		// directory is empty. returning duration of directory
 		info, err := os.Stat(path)
 		if err != nil {
@@ -106,12 +105,17 @@ func getLocalFolderCheck(path string, filter v1.FolderFilter) (*FolderCheck, err
 		return &FolderCheck{Oldest: info, Newest: info}, nil
 	}
 
-	for _, file := range files {
-		if file.IsDir() || !_filter.Filter(file) {
+	for _, entry := range entries {
+		info, err := entry.Info()
+		if err != nil {
+			return nil, err
+		}
+
+		if !_filter.Filter(info) {
 			continue
 		}
 
-		result.Append(file)
+		result.Append(info)
 	}
 	return &result, err
 }
