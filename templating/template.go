@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	gotemplate "text/template"
@@ -23,7 +23,7 @@ import (
 
 func LoadSharedLibrary(source string) error {
 	source = strings.TrimSpace(source)
-	data, err := ioutil.ReadFile(source)
+	data, err := os.ReadFile(source)
 	if err != nil {
 		return fmt.Errorf("failed to read shared library %s: %s", source, err)
 	}

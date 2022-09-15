@@ -25,7 +25,7 @@ func readFile(path string) (string, error) {
 			return "", err
 		}
 	} else {
-		if data, err = ioutil.ReadFile(path); err != nil {
+		if data, err = os.ReadFile(path); err != nil {
 			return "", err
 		}
 	}

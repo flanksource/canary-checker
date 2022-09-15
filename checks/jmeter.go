@@ -66,7 +66,7 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	if !ok {
 		return results.Failf("error running the jmeter command: %v", jmeterCmd)
 	}
-	raw, err := ioutil.ReadFile(logFilename)
+	raw, err := os.ReadFile(logFilename)
 	if err != nil {
 		return results.Failf("error opening the log file: %v", err)
 	}

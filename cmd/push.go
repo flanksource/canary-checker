@@ -3,7 +3,7 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg"
@@ -22,7 +22,7 @@ func init() {
 		Short: "Push a check to multiple canary-checker servers",
 		Run: func(cmd *cobra.Command, servers []string) {
 			if details != "" && files.Exists(details) {
-				detailsContent, err := ioutil.ReadFile(details)
+				detailsContent, err := os.ReadFile(details)
 				if err != nil {
 					logger.Fatalf("Failed to read check details: %s", err)
 				}

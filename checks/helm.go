@@ -103,7 +103,7 @@ func (c *HelmChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 }
 
 func cleanUp(chartname string, chartmuseum string, config v1.HelmCheck, username, password string) error {
-	caCert, err := ioutil.ReadFile(config.CaFile)
+	caCert, err := os.ReadFile(config.CaFile)
 	if err != nil {
 		return fmt.Errorf("failed to read certificate file: %v", err)
 	}

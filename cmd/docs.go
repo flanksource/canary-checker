@@ -291,7 +291,7 @@ func fmtRawDoc(rawDoc string) string {
 
 	include := regexp.MustCompile(`\[include:(.*)\]`)
 	for _, fixture := range include.FindAllStringSubmatch(rawDoc, -1) {
-		content, err := ioutil.ReadFile("fixtures/" + fixture[1])
+		content, err := os.ReadFile("fixtures/" + fixture[1])
 		if err != nil {
 			logger.Warnf("cannot find fixture: %s: %v", fixture[1], err)
 		}
