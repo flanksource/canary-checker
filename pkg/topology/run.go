@@ -139,7 +139,8 @@ func lookup(client *kommons.Client, name string, spec v1.CanarySpec) ([]interfac
 func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.Property, error) {
 	prop := pkg.NewProperty(*property)
 
-	configName := property.ConfigLookup.Name
+	logger.Infof("YASH: Querying DB for config lookup start")
+	configName := property.ConfigLookup.Config.Name
 	if property.ConfigLookup.ID != "" {
 		// Lookup in the same properties
 		for _, prop := range sisterProperties {
@@ -152,12 +153,15 @@ func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.
 
 	pkgConfig := pkg.NewConfig(property.ConfigLookup.Config)
 	pkgConfig.Name = configName
+	logger.Infof("YASH: Querying DB for config lookup")
 	config, err := db.FetchConfig(*pkgConfig)
 	if err != nil {
 		return prop, err
 	}
+	logger.Infof("YASH: Querying DB for config lookup result: %v", config)
 	result, err := jsonpath.Get(property.ConfigLookup.Field, config.Spec)
 	if err != nil {
+		logger.Infof("YASH: Error with jsonpath: %v", err)
 		return prop, err
 	}
 
@@ -336,8 +340,11 @@ func ComponentRun() {
 		}
 
 		// Sync config relationships
+		logger.Infof("YASH: For looping config components")
 		for _, config := range component.Configs {
+			logger.Infof("YASH: Fetching config: %v", *config)
 			dbConfig, err := db.FetchConfig(*config)
+			logger.Infof("YASH: Fetched config: %v", dbConfig)
 			if err != nil {
 				logger.Errorf("error fetching config from database: %v", err)
 				continue

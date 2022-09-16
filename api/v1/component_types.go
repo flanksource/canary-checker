@@ -147,8 +147,8 @@ type Property struct {
 }
 
 type ConfigLookup struct {
-	ID      string `json:"id"`
-	Config  `json:",inline"`
+	ID      string  `json:"id"`
+	Config  Config  `json:"config",inline"`
 	Field   string  `json:"field,omitempty"`
 	Display Display `json:"display,omitempty"`
 }
