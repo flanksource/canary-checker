@@ -45,10 +45,10 @@ func FetchConfig(config pkg.Config) (pkg.Config, error) {
 func PersistConfigComponentRelationship(configID uuid.UUID, componentID uuid.UUID) error {
 	// Store entry in config_component_relationship table
 	type configComponentRelationship struct {
-		componentID uuid.UUID
-		configID    uuid.UUID
+		ComponentID uuid.UUID
+		ConfigID    uuid.UUID
 	}
 
-	relationship := configComponentRelationship{componentID: componentID, configID: configID}
+	relationship := configComponentRelationship{ComponentID: componentID, ConfigID: configID}
 	return Gorm.Clauses(clause.OnConflict{DoNothing: true}).Create(&relationship).Error
 }
