@@ -84,11 +84,15 @@ func DeleteCanary(canary v1.Canary) error {
 }
 
 func DeleteChecksForCanary(id string, deleteTime time.Time) error {
-	return Gorm.Table("checks").Where("canary_id = ?", id).UpdateColumn("deleted_at", deleteTime).Error
+	return Gorm.Table("checks").Where("canary_id = ? and deleted_at is null", id).UpdateColumn("deleted_at", deleteTime).Error
 }
 
 func DeleteCheckComponentRelationshipsForCanary(id string, deleteTime time.Time) error {
 	return Gorm.Table("check_component_relationships").Where("canary_id = ?", id).UpdateColumn("deleted_at", deleteTime).Error
+}
+
+func DeleteChecks(id []string) error {
+	return Gorm.Table("checks").Where("id IN (?)", id).UpdateColumn("deleted_at", time.Now()).Error
 }
 
 func GetCanary(id string) (*pkg.Canary, error) {
@@ -149,11 +153,11 @@ func CreateCheck(canary pkg.Canary, check *pkg.Check) error {
 	return Gorm.Create(&check).Error
 }
 
-func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, bool, error) {
+func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, []string, bool, error) {
 	changed := false
 	model, err := pkg.CanaryFromV1(canary)
 	if err != nil {
-		return nil, changed, err
+		return nil, nil, changed, err
 	}
 	if canary.GetPersistedID() != "" {
 		model.ID = uuid.MustParse(canary.GetPersistedID())
@@ -166,9 +170,20 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, bool, error) {
 	if tx.RowsAffected > 0 {
 		changed = true
 	}
+
+	var checkIDs []string
+
+	for _, config := range canary.Spec.GetAllChecks() {
+		id, err := PersistCheck(pkg.FromExternalCheck(model, config))
+		if err != nil {
+			logger.Errorf("error persisting check", err)
+		} else {
+			checkIDs = append(checkIDs, id)
+		}
+	}
 	if tx.Error != nil {
-		return nil, changed, tx.Error
+		return nil, checkIDs, changed, tx.Error
 	}
 
-	return &model, changed, nil
+	return &model, checkIDs, changed, nil
 }
