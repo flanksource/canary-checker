@@ -1,14 +1,13 @@
 -- +goose Up
 -- +goose StatementBegin
 
-CREATE TABLE config_component_relationships(
+CREATE TABLE IF NOT EXISTS config_component_relationships(
     component_id UUID NOT NULL,
     config_id UUID NOT NULL,
     created_at timestamp NOT NULL DEFAULT now(),
     updated_at timestamp NOT NULL DEFAULT now(),
     deleted_at TIMESTAMP DEFAULT NULL,
     FOREIGN KEY(component_id) REFERENCES components(id), 
-    FOREIGN KEY (config_id) REFERENCES config_items(id),
     UNIQUE (component_id, config_id)
 );
 

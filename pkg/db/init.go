@@ -25,6 +25,9 @@ import (
 //go:embed migrations/*.sql
 var embedMigrations embed.FS
 
+//go:embed always.sql
+var embedAlwaysSQL string
+
 var Pool *pgxpool.Pool
 var Gorm *gorm.DB
 var ConnectionString string
@@ -167,7 +170,13 @@ func Migrate() error {
 			return err
 		}
 	}
-	return nil
+
+	// Run idempotent migrations which are written in
+	// the pkg/db/always.sql file. There may be race conditions where certain tables
+	// may not exist or dependent on other migrations which is why it is always run
+	// after migrations are completed
+	_, err = db.Exec(embedAlwaysSQL)
+	return err
 }
 
 func Cleanup() {
