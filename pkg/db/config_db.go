@@ -35,7 +35,7 @@ func configQuery(config pkg.Config) *gorm.DB {
 	return query
 }
 
-func FetchConfig(config pkg.Config) (pkg.Config, error) {
+func FindConfig(config pkg.Config) (pkg.Config, error) {
 	var dbConfigObject pkg.Config
 	query := configQuery(config)
 	err := query.First(&dbConfigObject).Error

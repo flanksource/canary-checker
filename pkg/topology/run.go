@@ -78,7 +78,7 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg
 			comp.Properties = append(comp.Properties, props...)
 		}
 
-		// Fill config
+		// Lookup config and populate properties
 		for _, property := range component.Properties {
 			if property.ConfigLookup == nil {
 				continue
@@ -152,7 +152,7 @@ func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.
 
 	pkgConfig := pkg.NewConfig(property.ConfigLookup.Config)
 	pkgConfig.Name = configName
-	config, err := db.FetchConfig(*pkgConfig)
+	config, err := db.FindConfig(*pkgConfig)
 	if err != nil {
 		return prop, err
 	}
@@ -350,7 +350,7 @@ func ComponentRun() {
 
 		// Sync config relationships
 		for _, config := range *component.Configs {
-			dbConfig, err := db.FetchConfig(*config)
+			dbConfig, err := db.FindConfig(*config)
 			if err != nil {
 				logger.Errorf("error fetching config from database: %v", err)
 				continue
