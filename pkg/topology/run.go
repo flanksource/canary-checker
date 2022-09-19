@@ -139,7 +139,6 @@ func lookup(client *kommons.Client, name string, spec v1.CanarySpec) ([]interfac
 func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.Property, error) {
 	prop := pkg.NewProperty(*property)
 
-	logger.Infof("YASH: Querying DB for config lookup start")
 	configName := property.ConfigLookup.Config.Name
 	if property.ConfigLookup.ID != "" {
 		// Lookup in the same properties
@@ -153,19 +152,27 @@ func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.
 
 	pkgConfig := pkg.NewConfig(property.ConfigLookup.Config)
 	pkgConfig.Name = configName
-	logger.Infof("YASH: Querying DB for config lookup")
 	config, err := db.FetchConfig(*pkgConfig)
 	if err != nil {
 		return prop, err
 	}
-	logger.Infof("YASH: Querying DB for config lookup result: %v", config)
-	result, err := jsonpath.Get(property.ConfigLookup.Field, config.Spec)
+
+	var v interface{}
+	rawJSON, err := config.Spec.MarshalJSON()
 	if err != nil {
-		logger.Infof("YASH: Error with jsonpath: %v", err)
+		return prop, err
+	}
+	err = json.Unmarshal(rawJSON, &v)
+	if err != nil {
+		return prop, err
+	}
+	result, err := jsonpath.Get(property.ConfigLookup.Field, v)
+	if err != nil {
 		return prop, err
 	}
 
 	prop.Text = fmt.Sprintf("%s", result)
+	logger.Infof("YASH: Setting property text as: %s", prop.Text)
 	return prop, nil
 }
 
@@ -317,11 +324,13 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 // Fetches and updates the selected component for components
 func ComponentRun() {
 	logger.Debugf("Syncing Component Relationships")
+
 	components, err := db.GetAllComponentWithSelectors()
 	if err != nil {
 		logger.Errorf("error getting components: %v", err)
 		return
 	}
+
 	for _, component := range components {
 		comps, err := db.GetComponentsWithSelectors(component.Selectors)
 		if err != nil {
@@ -340,11 +349,8 @@ func ComponentRun() {
 		}
 
 		// Sync config relationships
-		logger.Infof("YASH: For looping config components")
 		for _, config := range component.Configs {
-			logger.Infof("YASH: Fetching config: %v", *config)
 			dbConfig, err := db.FetchConfig(*config)
-			logger.Infof("YASH: Fetched config: %v", dbConfig)
 			if err != nil {
 				logger.Errorf("error fetching config from database: %v", err)
 				continue
