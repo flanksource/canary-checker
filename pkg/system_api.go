@@ -177,7 +177,7 @@ type Component struct {
 	Selectors        v1.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors"`
 	ComponentChecks  v1.ComponentChecks   `json:"-" gorm:"componentChecks"`
 	Checks           Checks               `json:"checks,omitempty" gorm:"-"`
-	Configs          Configs              `json:"-" gorm:"type:configs"`
+	Configs          *Configs             `json:"-" gorm:"type:configs"`
 	SystemTemplateID *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
 	CreatedAt        time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
 	UpdatedAt        time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
@@ -268,7 +268,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Icon:            c.Icon,
 		Selectors:       c.Selectors,
 		ComponentChecks: c.ComponentChecks,
-		Configs:         configs,
+		Configs:         &configs,
 	}
 	if c.Summary != nil {
 		_c.Summary = *c.Summary
@@ -632,7 +632,6 @@ func (c Configs) Value() (driver.Value, error) {
 
 // Scan scan value into Jsonb, implements sql.Scanner interface
 func (c *Configs) Scan(val interface{}) error {
-	logger.Infof("YASH: IN SCANNER")
 	if val == nil {
 		*c = Configs{}
 		return nil

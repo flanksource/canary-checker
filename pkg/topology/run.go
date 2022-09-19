@@ -349,7 +349,7 @@ func ComponentRun() {
 		}
 
 		// Sync config relationships
-		for _, config := range component.Configs {
+		for _, config := range *component.Configs {
 			dbConfig, err := db.FetchConfig(*config)
 			if err != nil {
 				logger.Errorf("error fetching config from database: %v", err)
