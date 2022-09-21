@@ -113,7 +113,6 @@ func getServerDetails(serverPath string) (server, sharename, searchPath string, 
 	case 2:
 		sharename = serverDetails[1]
 		searchPath = "."
-		fmt.Println("returning from here")
 		return
 	default:
 		sharename = serverDetails[1]

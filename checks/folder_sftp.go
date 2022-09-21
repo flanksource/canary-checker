@@ -1,7 +1,7 @@
 package checks
 
 import (
-	"strconv"
+	"fmt"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -52,9 +52,5 @@ func sshConnect(host string, port int, user string, password string) (*ssh.Clien
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	client, err := ssh.Dial("tcp", host+":"+strconv.Itoa(port), config)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
+	return ssh.Dial("tcp", fmt.Sprintf("%s:%d", host, port), config)
 }
