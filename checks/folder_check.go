@@ -15,11 +15,15 @@ type Filesystem interface {
 }
 
 type FolderCheck struct {
-	Oldest  os.FileInfo
-	Newest  os.FileInfo
-	MinSize os.FileInfo
-	MaxSize os.FileInfo
-	Files   []os.FileInfo
+	Oldest                os.FileInfo
+	Newest                os.FileInfo
+	MinSize               os.FileInfo
+	MaxSize               os.FileInfo
+	SupportsTotalSize     bool
+	SupportsAvailableSize bool
+	TotalSize             int64
+	AvailableSize         int64
+	Files                 []os.FileInfo
 }
 
 func (f *FolderCheck) Append(file os.FileInfo) {
@@ -84,6 +88,32 @@ func (f FolderCheck) Test(test v1.FolderTest) string {
 		}
 		if f.MaxSize.Size() < *size {
 			return fmt.Sprintf("%s is too large: %v > %v", f.MaxSize.Name(), mb(f.MaxSize.Size()), test.MaxSize)
+		}
+	}
+
+	if test.AvailableSize != "" {
+		if !f.SupportsAvailableSize {
+			return "available size not supported"
+		}
+		size, err := test.AvailableSize.Value()
+		if err != nil {
+			return fmt.Sprintf("%s is an invalid size: %s", test.AvailableSize, err)
+		}
+		if f.AvailableSize < *size {
+			return fmt.Sprintf("available size too small: %v < %v", mb(f.AvailableSize), test.AvailableSize)
+		}
+	}
+
+	if test.TotalSize != "" {
+		if !f.SupportsTotalSize {
+			return "total size not supported"
+		}
+		size, err := test.TotalSize.Value()
+		if err != nil {
+			return fmt.Sprintf("%s is an invalid size: %s", test.TotalSize, err)
+		}
+		if f.TotalSize < *size {
+			return fmt.Sprintf("total size too small: %v < %v", mb(f.TotalSize), test.TotalSize)
 		}
 	}
 	return ""

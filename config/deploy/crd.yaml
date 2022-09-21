@@ -1443,6 +1443,9 @@ spec:
                 folder:
                   items:
                     properties:
+                      availableSize:
+                        description: AvailableSize present on the filesystem
+                        type: string
                       awsConnection:
                         properties:
                           accessKey:
@@ -1801,6 +1804,9 @@ spec:
                           template:
                             type: string
                         type: object
+                      totalSize:
+                        description: TotalSize present on the filesystem
+                        type: string
                       transform:
                         properties:
                           expr:
@@ -5047,6 +5053,9 @@ spec:
                           folder:
                             items:
                               properties:
+                                availableSize:
+                                  description: AvailableSize present on the filesystem
+                                  type: string
                                 awsConnection:
                                   properties:
                                     accessKey:
@@ -5405,6 +5414,9 @@ spec:
                                     template:
                                       type: string
                                   type: object
+                                totalSize:
+                                  description: TotalSize present on the filesystem
+                                  type: string
                                 transform:
                                   properties:
                                     expr:
@@ -8591,6 +8603,9 @@ spec:
                     folder:
                       items:
                         properties:
+                          availableSize:
+                            description: AvailableSize present on the filesystem
+                            type: string
                           awsConnection:
                             properties:
                               accessKey:
@@ -8949,6 +8964,9 @@ spec:
                               template:
                                 type: string
                             type: object
+                          totalSize:
+                            description: TotalSize present on the filesystem
+                            type: string
                           transform:
                             properties:
                               expr:
@@ -12137,6 +12155,9 @@ spec:
                           folder:
                             items:
                               properties:
+                                availableSize:
+                                  description: AvailableSize present on the filesystem
+                                  type: string
                                 awsConnection:
                                   properties:
                                     accessKey:
@@ -12495,6 +12516,9 @@ spec:
                                     template:
                                       type: string
                                   type: object
+                                totalSize:
+                                  description: TotalSize present on the filesystem
+                                  type: string
                                 transform:
                                   properties:
                                     expr:
@@ -15772,6 +15796,9 @@ spec:
                                 folder:
                                   items:
                                     properties:
+                                      availableSize:
+                                        description: AvailableSize present on the filesystem
+                                        type: string
                                       awsConnection:
                                         properties:
                                           accessKey:
@@ -16130,6 +16157,9 @@ spec:
                                           template:
                                             type: string
                                         type: object
+                                      totalSize:
+                                        description: TotalSize present on the filesystem
+                                        type: string
                                       transform:
                                         properties:
                                           expr:
@@ -19316,6 +19346,9 @@ spec:
                           folder:
                             items:
                               properties:
+                                availableSize:
+                                  description: AvailableSize present on the filesystem
+                                  type: string
                                 awsConnection:
                                   properties:
                                     accessKey:
@@ -19674,6 +19707,9 @@ spec:
                                     template:
                                       type: string
                                   type: object
+                                totalSize:
+                                  description: TotalSize present on the filesystem
+                                  type: string
                                 transform:
                                   properties:
                                     expr:
@@ -22862,6 +22898,9 @@ spec:
                                 folder:
                                   items:
                                     properties:
+                                      availableSize:
+                                        description: AvailableSize present on the filesystem
+                                        type: string
                                       awsConnection:
                                         properties:
                                           accessKey:
@@ -23220,6 +23259,9 @@ spec:
                                           template:
                                             type: string
                                         type: object
+                                      totalSize:
+                                        description: TotalSize present on the filesystem
+                                        type: string
                                       transform:
                                         properties:
                                           expr:
@@ -26495,6 +26537,9 @@ spec:
                           folder:
                             items:
                               properties:
+                                availableSize:
+                                  description: AvailableSize present on the filesystem
+                                  type: string
                                 awsConnection:
                                   properties:
                                     accessKey:
@@ -26853,6 +26898,9 @@ spec:
                                     template:
                                       type: string
                                   type: object
+                                totalSize:
+                                  description: TotalSize present on the filesystem
+                                  type: string
                                 transform:
                                   properties:
                                     expr:
