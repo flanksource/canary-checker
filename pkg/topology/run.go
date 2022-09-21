@@ -172,7 +172,6 @@ func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.
 	}
 
 	prop.Text = fmt.Sprintf("%s", result)
-	logger.Infof("YASH: Setting property text as: %s", prop.Text)
 	return prop, nil
 }
 
@@ -355,7 +354,7 @@ func ComponentRun() {
 				logger.Errorf("error fetching config from database: %v", err)
 				continue
 			}
-			err = db.PersistConfigComponentRelationship(dbConfig.ID, component.ID)
+			err = db.PersistConfigComponentRelationship(dbConfig.ID, component.ID, config.GetSelectorID())
 			if err != nil {
 				logger.Errorf("error persisting config relationships: %v", err)
 				continue

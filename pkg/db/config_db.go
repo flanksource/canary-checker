@@ -2,14 +2,21 @@ package db
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/flanksource/canary-checker/pkg"
-
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
+
+// Store entry in config_component_relationship table
+type configComponentRelationship struct {
+	ComponentID uuid.UUID
+	ConfigID    uuid.UUID
+	SelectorID  string
+}
 
 func configQuery(config pkg.Config) *gorm.DB {
 	query := Gorm.Table("config_items")
@@ -42,13 +49,11 @@ func FindConfig(config pkg.Config) (pkg.Config, error) {
 	return dbConfigObject, err
 }
 
-func PersistConfigComponentRelationship(configID uuid.UUID, componentID uuid.UUID) error {
-	// Store entry in config_component_relationship table
-	type configComponentRelationship struct {
-		ComponentID uuid.UUID
-		ConfigID    uuid.UUID
-	}
-
-	relationship := configComponentRelationship{ComponentID: componentID, ConfigID: configID}
+func PersistConfigComponentRelationship(configID, componentID uuid.UUID, selectorID string) error {
+	relationship := configComponentRelationship{ComponentID: componentID, ConfigID: configID, SelectorID: selectorID}
 	return Gorm.Clauses(clause.OnConflict{DoNothing: true}).Create(&relationship).Error
+}
+
+func DeleteConfigRelationshipForComponent(componentID uuid.UUID, deleteTime time.Time) error {
+	return Gorm.Model(&configComponentRelationship{}).Where("component_id = ?", componentID).Update("deleted_at", deleteTime).Error
 }

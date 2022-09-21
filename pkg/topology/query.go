@@ -144,7 +144,10 @@ func Query(params TopologyParams) (pkg.Components, error) {
 	AS components from component_relationships INNER JOIN components 
 	ON components.id = component_relationships.component_id INNER JOIN components AS parent 
 	ON component_relationships.relationship_id = parent.id %s)
-`, getChecksForComponents(), params.GetComponentWhereClause(), getChecksForComponents(), params.GetComponentRelationWhereClause())
+    UNION
+	SELECT json_agg(jsonb_set_lax(to_jsonb(components),'{configs}', %s)) :: jsonb as components from components %s
+`, getChecksForComponents(), params.GetComponentWhereClause(), getChecksForComponents(),
+		params.GetComponentRelationWhereClause(), getConfigForComponents(), params.GetComponentWhereClause())
 
 	args := make(map[string]interface{})
 	if params.getID() != "" {
@@ -205,4 +208,13 @@ func getChecksForComponents() string {
 	return `
 			(SELECT json_agg(checks) from checks LEFT JOIN check_component_relationships ON checks.id = check_component_relationships.check_id WHERE check_component_relationships.component_id = components.id AND check_component_relationships.deleted_at is null   GROUP BY check_component_relationships.component_id) :: jsonb
 			 `
+}
+
+func getConfigForComponents() string {
+	return `
+       (SELECT json_agg(config_items.config) from config_items
+        LEFT JOIN config_component_relationships ON config_items.id = config_component_relationships.config_id
+        WHERE config_component_relationships.component_id = components.id AND config_component_relationships.deleted_at IS NULL
+        GROUP BY config_component_relationships.component_id) :: jsonb
+	`
 }
