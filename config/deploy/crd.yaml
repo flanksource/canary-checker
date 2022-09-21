@@ -10786,7 +10786,6 @@ spec:
                           id:
                             type: string
                         required:
-                          - config
                           - id
                         type: object
                       headline:
@@ -21578,7 +21577,6 @@ spec:
                                 id:
                                   type: string
                               required:
-                                - config
                                 - id
                               type: object
                             headline:
@@ -25251,7 +25249,6 @@ spec:
                           id:
                             type: string
                         required:
-                          - config
                           - id
                         type: object
                       headline:
