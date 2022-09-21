@@ -601,6 +601,20 @@ func (c SMBConnection) GetPort() int {
 	return 445
 }
 
+type SFTPConnection struct {
+	// Port for the SSH server. Defaults to 22
+	Port int             `yaml:"port,omitempty" json:"port,omitempty"`
+	Host string          `yaml:"host" json:"host"`
+	Auth *Authentication `yaml:"auth" json:"auth"`
+}
+
+func (c SFTPConnection) GetPort() int {
+	if c.Port != 0 {
+		return c.Port
+	}
+	return 22
+}
+
 /*
 [include:datasources/prometheus.yaml]
 */
@@ -732,12 +746,13 @@ type FolderCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 	// Path  to folder or object storage, e.g. `s3://<bucket-name>`,  `gcs://<bucket-name>`, `/path/tp/folder`
-	Path           string       `yaml:"path" json:"path"`
-	Filter         FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
-	FolderTest     `yaml:",inline" json:",inline"`
-	*AWSConnection `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
-	*GCPConnection `yaml:"gcpConnection,omitempty" json:"gcpConnection,omitempty"`
-	*SMBConnection `yaml:"smbConnection,omitempty" json:"smbConnection,omitempty"`
+	Path            string       `yaml:"path" json:"path"`
+	Filter          FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
+	FolderTest      `yaml:",inline" json:",inline"`
+	*AWSConnection  `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
+	*GCPConnection  `yaml:"gcpConnection,omitempty" json:"gcpConnection,omitempty"`
+	*SMBConnection  `yaml:"smbConnection,omitempty" json:"smbConnection,omitempty"`
+	*SFTPConnection `yaml:"sftpConnection,omitempty" json:"sftpConnection,omitempty"`
 }
 
 func (c FolderCheck) GetType() string {

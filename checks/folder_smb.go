@@ -17,7 +17,7 @@ type SMBSession struct {
 	*smb2.Share
 }
 
-func (s *SMBSession) Close() {
+func (s *SMBSession) Close() error {
 	if s.Conn != nil {
 		_ = s.Conn.Close()
 	}
@@ -27,35 +27,7 @@ func (s *SMBSession) Close() {
 	if s.Share != nil {
 		_ = s.Share.Umount()
 	}
-}
-
-func getSMBFolderCheck(fs Filesystem, dir string, filter v1.FolderFilter) (*FolderCheck, error) {
-	result := FolderCheck{}
-	_filter, err := filter.New()
-	if err != nil {
-		return nil, err
-	}
-	files, err := fs.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	if len(files) == 0 {
-		// directory is empty. returning duration of directory
-		info, err := fs.Stat(dir)
-		if err != nil {
-			return nil, err
-		}
-		return &FolderCheck{Oldest: info, Newest: info}, nil
-	}
-
-	for _, file := range files {
-		if file.IsDir() || !_filter.Filter(file) {
-			continue
-		}
-
-		result.Append(file)
-	}
-	return &result, nil
+	return nil
 }
 
 func smbConnect(server string, port int, share string, auth *v1.Authentication) (Filesystem, error) {
@@ -115,7 +87,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		defer session.Close()
 	}
 
-	folders, err := getSMBFolderCheck(session, path, check.Filter)
+	folders, err := getGenericFolderCheck(session, path, check.Filter)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
@@ -141,6 +113,7 @@ func getServerDetails(serverPath string) (server, sharename, searchPath string, 
 	case 2:
 		sharename = serverDetails[1]
 		searchPath = "."
+		fmt.Println("returning from here")
 		return
 	default:
 		sharename = serverDetails[1]
