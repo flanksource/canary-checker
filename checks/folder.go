@@ -66,6 +66,8 @@ func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) pk
 		return CheckGCSBucket(ctx, check)
 	case strings.HasPrefix(path, "smb://") || strings.HasPrefix(path, `\\`):
 		return CheckSmb(ctx, check)
+	case check.SFTPConnection != nil:
+		return CheckSFTP(ctx, check)
 	default:
 		return checkLocalFolder(ctx, check)
 	}
@@ -114,4 +116,33 @@ func getLocalFolderCheck(path string, filter v1.FolderFilter) (*FolderCheck, err
 		result.Append(file)
 	}
 	return &result, err
+}
+
+func getGenericFolderCheck(fs Filesystem, dir string, filter v1.FolderFilter) (*FolderCheck, error) {
+	result := FolderCheck{}
+	_filter, err := filter.New()
+	if err != nil {
+		return nil, err
+	}
+	files, err := fs.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	if len(files) == 0 {
+		// directory is empty. returning duration of directory
+		info, err := fs.Stat(dir)
+		if err != nil {
+			return nil, err
+		}
+		return &FolderCheck{Oldest: info, Newest: info}, nil
+	}
+
+	for _, file := range files {
+		if file.IsDir() || !_filter.Filter(file) {
+			continue
+		}
+
+		result.Append(file)
+	}
+	return &result, nil
 }

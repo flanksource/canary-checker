@@ -17,7 +17,7 @@ type SMBSession struct {
 	*smb2.Share
 }
 
-func (s *SMBSession) Close() {
+func (s *SMBSession) Close() error {
 	if s.Conn != nil {
 		_ = s.Conn.Close()
 	}
@@ -27,44 +27,16 @@ func (s *SMBSession) Close() {
 	if s.Share != nil {
 		_ = s.Share.Umount()
 	}
+	return nil
 }
 
-func getSMBFolderCheck(fs Filesystem, dir string, filter v1.FolderFilter) (*FolderCheck, error) {
-	result := FolderCheck{}
-	_filter, err := filter.New()
-	if err != nil {
-		return nil, err
-	}
-	files, err := fs.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	if len(files) == 0 {
-		// directory is empty. returning duration of directory
-		info, err := fs.Stat(dir)
-		if err != nil {
-			return nil, err
-		}
-		return &FolderCheck{Oldest: info, Newest: info}, nil
-	}
-
-	for _, file := range files {
-		if file.IsDir() || !_filter.Filter(file) {
-			continue
-		}
-
-		result.Append(file)
-	}
-	return &result, nil
-}
-
-func smbConnect(server string, port int, share string, auth *v1.Authentication) (Filesystem, error) {
+func smbConnect(server string, port int, share string, auth *v1.Authentication) (Filesystem, uint64, uint64, uint64, error) {
 	var err error
 	var smb *SMBSession
 	server = server + ":" + fmt.Sprintf("%d", port)
 	conn, err := net.Dial("tcp", server)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, 0, err
 	}
 	smb = &SMBSession{
 		Conn: conn,
@@ -80,15 +52,19 @@ func smbConnect(server string, port int, share string, auth *v1.Authentication) 
 
 	s, err := d.Dial(conn)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, 0, err
 	}
 	smb.Session = s
 	fs, err := s.Mount(share)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, 0, err
 	}
 	smb.Share = fs
-	return smb, nil
+	info, err := fs.Statfs(".")
+	if err != nil {
+		return nil, 0, 0, 0, err
+	}
+	return smb, info.TotalBlockCount(), info.FreeBlockCount(), info.BlockSize(), err
 }
 
 func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
@@ -107,7 +83,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.ErrorMessage(err)
 	}
 
-	session, err := smbConnect(server, check.SMBConnection.GetPort(), sharename, auth)
+	session, totalBlockCount, freeBlockCount, blockSize, err := smbConnect(server, check.SMBConnection.GetPort(), sharename, auth)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
@@ -115,10 +91,16 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		defer session.Close()
 	}
 
-	folders, err := getSMBFolderCheck(session, path, check.Filter)
+	folders, err := getGenericFolderCheck(session, path, check.Filter)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
+
+	folders.SupportsAvailableSize = true
+	folders.SupportsTotalSize = true
+
+	folders.AvailableSize = int64(freeBlockCount * blockSize)
+	folders.TotalSize = int64(totalBlockCount * blockSize)
 
 	result.AddDetails(folders)
 

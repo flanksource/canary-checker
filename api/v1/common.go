@@ -134,6 +134,11 @@ type FolderTest struct {
 	MinSize Size `yaml:"minSize,omitempty" json:"minSize,omitempty"`
 	//MaxSize of the files inside the searchPath
 	MaxSize Size `yaml:"maxSize,omitempty" json:"maxSize,omitempty"`
+
+	// AvailableSize present on the filesystem
+	AvailableSize Size `yaml:"availableSize,omitempty" json:"availableSize,omitempty"`
+	// TotalSize present on the filesystem
+	TotalSize Size `yaml:"totalSize,omitempty" json:"totalSize,omitempty"`
 }
 
 func (f FolderTest) GetMinAge() (*time.Duration, error) {
