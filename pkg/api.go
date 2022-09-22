@@ -15,7 +15,6 @@ import (
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -117,7 +116,7 @@ type Canary struct {
 	Schedule  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt
+	DeletedAt *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
 }
 
 func (c Canary) ToV1() *v1.Canary {
@@ -129,8 +128,8 @@ func (c Canary) ToV1() *v1.Canary {
 		},
 	}
 	var deletionTimestamp metav1.Time
-	if c.DeletedAt.Valid {
-		deletionTimestamp = metav1.NewTime(c.DeletedAt.Time)
+	if c.DeletedAt != nil && !c.DeletedAt.IsZero() {
+		deletionTimestamp = metav1.NewTime(*c.DeletedAt)
 		canary.ObjectMeta.DeletionTimestamp = &deletionTimestamp
 	}
 	if err := json.Unmarshal(c.Spec, &canary.Spec); err != nil {
@@ -178,7 +177,7 @@ type Check struct {
 	NextRuntime *time.Time          `json:"nextRuntime,omitempty"`
 	UpdatedAt   *time.Time          `json:"updatedAt,omitempty"`
 	CreatedAt   *time.Time          `json:"createdAt,omitempty"`
-	DeletedAt   *gorm.DeletedAt     `json:"deletedAt,omitempty"`
+	DeletedAt   *time.Time          `json:"deletedAt,omitempty"`
 	Canary      *v1.Canary          `json:"-" gorm:"-"`
 }
 
