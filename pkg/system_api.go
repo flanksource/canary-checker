@@ -30,7 +30,25 @@ var (
 	ComponentPropertyStatusWarning   ComponentStatus = "warning"
 	ComponentPropertyStatusError     ComponentStatus = "error"
 	ComponentPropertyStatusInfo      ComponentStatus = "info"
+
+	ComponentStatusOrder = map[ComponentStatus]int{
+		ComponentPropertyStatusInfo:      0,
+		ComponentPropertyStatusHealthy:   1,
+		ComponentPropertyStatusUnhealthy: 2,
+		ComponentPropertyStatusWarning:   3,
+		ComponentPropertyStatusError:     4,
+	}
 )
+
+func (status ComponentStatus) Compare(other ComponentStatus) int {
+	if status == other {
+		return 0
+	}
+	if ComponentStatusOrder[status] > ComponentStatusOrder[other] {
+		return 1
+	}
+	return -1
+}
 
 const ComponentType = "component"
 
@@ -109,7 +127,7 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (components Components) CreateTreeStructure(queryID, status string) Components {
+func (components Components) CreateTreeStructure() Components {
 	var toRemoveCompIDs []uuid.UUID
 	for _, _c := range components {
 		c := _c
@@ -132,11 +150,7 @@ func (components Components) CreateTreeStructure(queryID, status string) Compone
 	for _, component := range components {
 		component.Summary = component.Summarize()
 	}
-	if queryID == "" && status == "" {
-		for _, component := range components.Walk() {
-			component.Status = component.GetStatus()
-		}
-	}
+
 	return components
 }
 
@@ -341,11 +355,23 @@ func (components Components) FindIndexByID(id uuid.UUID) int {
 	return -1
 }
 
-func (components Components) FilterChildByStatus(status ComponentStatus) Components {
+func contains(list []string, item string) bool {
+	for _, i := range list {
+		if i == item {
+			return true
+		}
+	}
+	return false
+}
+
+func (components Components) FilterChildByStatus(status ...string) Components {
+	if len(status) == 0 {
+		return components
+	}
 	for _, component := range components {
 		filtered := Components{}
 		for _, child := range component.Components {
-			if child.Status == status {
+			if contains(status, string(child.Status)) {
 				filtered = append(filtered, child)
 			}
 		}
@@ -478,6 +504,9 @@ func (p *Property) Merge(other *Property) {
 	if other.Min != 0 {
 		p.Min = other.Min
 	}
+	if other.Order > 0 {
+		p.Order = other.Order
+	}
 	if other.Status != "" {
 		p.Status = other.Status
 	}
@@ -522,6 +551,9 @@ func (component Component) IsHealthy() bool {
 }
 
 func (component Component) Summarize() v1.Summary {
+	if len(component.Components) == 0 {
+		return component.Summary
+	}
 	s := v1.Summary{}
 	if component.Checks != nil && component.Components == nil {
 		for _, check := range component.Checks {
