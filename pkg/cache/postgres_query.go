@@ -10,7 +10,6 @@ import (
 	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/commons/logger"
 	"github.com/jackc/pgx/v4"
-	"gorm.io/gorm"
 )
 
 type Querier interface {
@@ -267,7 +266,7 @@ checks.deleted_at
 		check.CreatedAt, _ = timeV(vals[18])
 		check.UpdatedAt, _ = timeV(vals[19])
 		if vals[20] != nil {
-			check.DeletedAt = &gorm.DeletedAt{Time: vals[20].(time.Time), Valid: true}
+			check.DeletedAt, _ = timeV(vals[20])
 		}
 		if vals[7] != nil {
 			for _, status := range vals[7].([]interface{}) {
