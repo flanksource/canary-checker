@@ -36,8 +36,12 @@ func (t *JSONTime) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	x, err := time.Parse("2006-01-02 15:04:05", s)
+	if err != nil {
+		logger.Warnf("failed to parse time: %s", err)
+		return nil
+	}
 	*t = JSONTime(x)
-	return err
+	return nil
 }
 
 type CheckStatus struct {
