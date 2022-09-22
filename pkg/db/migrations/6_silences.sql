@@ -1,3 +1,0 @@
--- +goose Up
-
-ALTER TABLE checks ADD COLUMN  IF NOT EXISTS silenced_at TIMESTAMP NULL;
