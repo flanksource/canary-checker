@@ -166,6 +166,7 @@ type Component struct {
 	Status       ComponentStatus     `json:"status,omitempty"`
 	StatusReason string              `json:"statusReason,omitempty"`
 	Path         string              `json:"path,omitempty"`
+	Order        int                 `json:"order,omitempty"  gorm:"-"`
 	// The type of component, e.g. service, API, website, library, database, etc.
 	Type    string     `json:"type,omitempty"`
 	Summary v1.Summary `json:"summary,omitempty" gorm:"type:summary"`
@@ -209,6 +210,7 @@ func (component Component) Clone() Component {
 	return Component{
 		Name:            component.Name,
 		TopologyType:    component.TopologyType,
+		Order:           component.Order,
 		ID:              component.ID,
 		Text:            component.Text,
 		Namespace:       component.Namespace,
@@ -263,6 +265,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Name:            c.Name,
 		Owner:           c.Owner,
 		Type:            c.Type,
+		Order:           c.Order,
 		Lifecycle:       c.Lifecycle,
 		Tooltip:         c.Tooltip,
 		Icon:            c.Icon,
@@ -371,14 +374,14 @@ type Link struct {
 
 // Property is a realized v1.Property without the lookup definition
 type Property struct {
-	Label   string `json:"label,omitempty"`
-	Name    string `json:"name,omitempty"`
-	Tooltip string `json:"tooltip,omitempty"`
-	Icon    string `json:"icon,omitempty"`
-	Type    string `json:"type,omitempty"`
-	Color   string `json:"color,omitempty"`
-
-	Headline bool `json:"headline,omitempty"`
+	Label    string `json:"label,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Tooltip  string `json:"tooltip,omitempty"`
+	Icon     string `json:"icon,omitempty"`
+	Type     string `json:"type,omitempty"`
+	Color    string `json:"color,omitempty"`
+	Order    int    `json:"order,omitempty"`
+	Headline bool   `json:"headline,omitempty"`
 
 	// Either text or value is required, but not both.
 	Text  string `json:"text,omitempty"`
@@ -500,6 +503,7 @@ func NewProperty(property v1.Property) *Property {
 		Name:           property.Name,
 		Tooltip:        property.Tooltip,
 		Icon:           property.Icon,
+		Order:          property.Order,
 		Text:           property.Text,
 		Value:          property.Value,
 		Unit:           property.Unit,
