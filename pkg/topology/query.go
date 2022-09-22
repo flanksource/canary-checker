@@ -28,14 +28,16 @@ func parseItems(items string) []string {
 
 func NewTopologyParams(values url.Values) TopologyParams {
 	params := TopologyParams{
-		ID:          values.Get("id"),
-		TopologyID:  values.Get("topologyId"),
-		ComponentID: values.Get("componentId"),
-		Status:      parseItems(values.Get("status")),
-		Types:       parseItems(values.Get("type")),
-		Owner:       values.Get("owner"),
-		Flatten:     values.Get("flatten") == "true",
-		Labels:      values.Get("labels"),
+		ID:            values.Get("id"),
+		TopologyID:    values.Get("topologyId"),
+		ComponentID:   values.Get("componentId"),
+		Status:        parseItems(values.Get("status")),
+		Types:         parseItems(values.Get("type")),
+		Owner:         values.Get("owner"),
+		Flatten:       values.Get("flatten") == "true",
+		Labels:        values.Get("labels"),
+		IncludeConfig: values.Get("includeConfig") != "false",
+		IncludeHealth: values.Get("includeHealth") != "false",
 	}
 
 	if params.ID != "" && strings.HasPrefix(params.ID, "c-") {
@@ -54,15 +56,17 @@ func NewTopologyParams(values url.Values) TopologyParams {
 }
 
 type TopologyParams struct {
-	ID          string   `query:"id"`
-	TopologyID  string   `query:"topologyId"`
-	ComponentID string   `query:"componentId"`
-	Owner       string   `query:"owner"`
-	Labels      string   `query:"labels"`
-	Status      []string `query:"status"`
-	Types       []string `query:"types"`
-	Depth       int      `query:"depth"`
-	Flatten     bool     `query:"flatten"`
+	ID            string   `query:"id"`
+	TopologyID    string   `query:"topologyId"`
+	ComponentID   string   `query:"componentId"`
+	Owner         string   `query:"owner"`
+	Labels        string   `query:"labels"`
+	Status        []string `query:"status"`
+	Types         []string `query:"types"`
+	Depth         int      `query:"depth"`
+	Flatten       bool     `query:"flatten"`
+	IncludeConfig bool     `query:"includeConfig"`
+	IncludeHealth bool     `query:"includeHealth"`
 }
 
 func (p TopologyParams) String() string {
@@ -93,6 +97,12 @@ func (p TopologyParams) String() string {
 	}
 	if p.Owner != "" {
 		s += " owner=" + p.Owner
+	}
+	if p.IncludeConfig {
+		s += " includeConfig=true"
+	}
+	if p.IncludeHealth {
+		s += " includeHealth=true"
 	}
 	return strings.TrimSpace(s)
 }
