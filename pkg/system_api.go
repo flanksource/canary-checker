@@ -189,14 +189,14 @@ type Component struct {
 	Properties       Properties           `json:"properties,omitempty" gorm:"type:properties"`
 	Components       Components           `json:"components,omitempty" gorm:"-"`
 	ParentId         *uuid.UUID           `json:"parent_id,omitempty"` //nolint
-	Selectors        v1.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors"`
-	ComponentChecks  v1.ComponentChecks   `json:"-" gorm:"componentChecks"`
+	Selectors        v1.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors" swaggerignore:"true"`
+	ComponentChecks  v1.ComponentChecks   `json:"-" gorm:"componentChecks" swaggerignore:"true"`
 	Checks           Checks               `json:"checks,omitempty" gorm:"-"`
-	Configs          *Configs             `json:"-" gorm:"type:configs"`
+	Configs          Configs              `json:"configs" gorm:"type:configs"`
 	SystemTemplateID *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
 	CreatedAt        time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
 	UpdatedAt        time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
-	DeletedAt        *time.Time           `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt        *time.Time           `json:"deleted_at,omitempty" time_format:"postgres_timestamp" swaggerignore:"true"`
 	ExternalId       string               `json:"external_id,omitempty"` //nolint
 }
 
@@ -283,7 +283,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Icon:            c.Icon,
 		Selectors:       c.Selectors,
 		ComponentChecks: c.ComponentChecks,
-		Configs:         &configs,
+		Configs:         configs,
 	}
 	if c.Summary != nil {
 		_c.Summary = *c.Summary
