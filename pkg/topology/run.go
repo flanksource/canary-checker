@@ -3,6 +3,7 @@ package topology
 import (
 	"fmt"
 
+	"github.com/PaesslerAG/jsonpath"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
@@ -77,6 +78,18 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg
 			comp.Properties = append(comp.Properties, props...)
 		}
 
+		// Lookup config and populate properties
+		for _, property := range component.Properties {
+			if property.ConfigLookup == nil {
+				continue
+			}
+			prop, err := lookupConfig(property, comp.Properties)
+			if err != nil {
+				return nil, errors.Wrapf(err, "property config lookup failed: %s", property.Name)
+			}
+			comp.Properties = append(comp.Properties, prop)
+		}
+
 		if comp.Icon == "" && component.Icon != "" {
 			comp.Icon = component.Icon
 		}
@@ -121,6 +134,45 @@ func lookup(client *kommons.Client, name string, spec v1.CanarySpec) ([]interfac
 		}
 	}
 	return results, nil
+}
+
+func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.Property, error) {
+	prop := pkg.NewProperty(*property)
+
+	configName := property.ConfigLookup.Config.Name
+	if property.ConfigLookup.ID != "" {
+		// Lookup in the same properties
+		for _, prop := range sisterProperties {
+			if prop.Name == property.ConfigLookup.ID {
+				configName = fmt.Sprintf("%v", prop.GetValue())
+				break
+			}
+		}
+	}
+
+	pkgConfig := pkg.NewConfig(property.ConfigLookup.Config)
+	pkgConfig.Name = configName
+	config, err := db.FindConfig(*pkgConfig)
+	if err != nil {
+		return prop, err
+	}
+
+	var v interface{}
+	rawJSON, err := config.Spec.MarshalJSON()
+	if err != nil {
+		return prop, err
+	}
+	err = json.Unmarshal(rawJSON, &v)
+	if err != nil {
+		return prop, err
+	}
+	result, err := jsonpath.Get(property.ConfigLookup.Field, v)
+	if err != nil {
+		return prop, err
+	}
+
+	prop.Text = fmt.Sprintf("%s", result)
+	return prop, nil
 }
 
 func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Properties, error) {
@@ -271,11 +323,13 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 // Fetches and updates the selected component for components
 func ComponentRun() {
 	logger.Debugf("Syncing Component Relationships")
+
 	components, err := db.GetAllComponentWithSelectors()
 	if err != nil {
 		logger.Errorf("error getting components: %v", err)
 		return
 	}
+
 	for _, component := range components {
 		comps, err := db.GetComponentsWithSelectors(component.Selectors)
 		if err != nil {
@@ -291,6 +345,11 @@ func ComponentRun() {
 		if err != nil {
 			logger.Errorf("error persisting relationships: %v", err)
 			continue
+		}
+
+		// Sync config relationships
+		if err := db.UpsertComponentConfigRelationship(component.ID, component.Configs); err != nil {
+			logger.Errorf("error upserting config relationships: %v", err)
 		}
 	}
 }

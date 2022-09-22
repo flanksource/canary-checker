@@ -177,6 +177,7 @@ type Component struct {
 	Selectors        v1.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors"`
 	ComponentChecks  v1.ComponentChecks   `json:"-" gorm:"componentChecks"`
 	Checks           Checks               `json:"checks,omitempty" gorm:"-"`
+	Configs          *Configs             `json:"-" gorm:"type:configs"`
 	SystemTemplateID *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
 	CreatedAt        time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
 	UpdatedAt        time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
@@ -220,6 +221,7 @@ func (component Component) Clone() Component {
 		Type:            component.Type,
 		Lifecycle:       component.Lifecycle,
 		Checks:          component.Checks,
+		Configs:         component.Configs,
 		ComponentChecks: component.ComponentChecks,
 		Properties:      component.Properties,
 		ExternalId:      component.ExternalId,
@@ -253,6 +255,10 @@ func (component Component) GetAsEnvironment() map[string]interface{} {
 }
 
 func NewComponent(c v1.ComponentSpec) *Component {
+	var configs Configs
+	for _, config := range c.Configs {
+		configs = append(configs, NewConfig(config))
+	}
 	_c := Component{
 		Name:            c.Name,
 		Owner:           c.Owner,
@@ -262,6 +268,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Icon:            c.Icon,
 		Selectors:       c.Selectors,
 		ComponentChecks: c.ComponentChecks,
+		Configs:         &configs,
 	}
 	if c.Summary != nil {
 		_c.Summary = *c.Summary
@@ -611,4 +618,48 @@ func (Properties) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 func (p Properties) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	data, _ := json.Marshal(p)
 	return gorm.Expr("?", data)
+}
+
+func (c Configs) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
+	data, _ := json.Marshal(c)
+	return gorm.Expr("?", data)
+}
+
+// Scan scan value into Jsonb, implements sql.Scanner interface
+func (c Configs) Value() (driver.Value, error) {
+	return json.Marshal(c)
+}
+
+// Scan scan value into Jsonb, implements sql.Scanner interface
+func (c *Configs) Scan(val interface{}) error {
+	if val == nil {
+		*c = Configs{}
+		return nil
+	}
+	var ba []byte
+	switch v := val.(type) {
+	case []byte:
+		ba = v
+	default:
+		return errors.New(fmt.Sprint("Failed to unmarshal properties value:", val))
+	}
+	err := json.Unmarshal(ba, c)
+	return err
+}
+
+// GormDataType gorm common data type
+func (Configs) GormDataType() string {
+	return "configs"
+}
+
+func (Configs) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	switch db.Dialector.Name() {
+	case "sqlite":
+		return "TEXT"
+	case "postgres":
+		return "JSONB"
+	case "sqlserver":
+		return "NVARCHAR(MAX)"
+	}
+	return ""
 }

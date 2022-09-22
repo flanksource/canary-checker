@@ -33,6 +33,7 @@ type ComponentSpec struct {
 	Components      []json.RawMessage  `json:"components,omitempty"`
 	Selectors       ResourceSelectors  `json:"selectors,omitempty"`
 	ComponentChecks ComponentChecks    `json:"checks,omitempty"`
+	Configs         []Config           `json:"configs,omitempty"`
 	Summary         *Summary           `json:"summary,omitempty"`
 }
 
@@ -133,15 +134,23 @@ type Property struct {
 	Type     string `json:"type,omitempty"`
 	Color    string `json:"color,omitempty"`
 	// e.g. milliseconds, bytes, millicores, epoch etc.
-	Unit           string      `json:"unit,omitempty"`
-	Value          int64       `json:"value,omitempty"`
-	Max            *int64      `json:"max,omitempty"`
-	Min            int64       `json:"min,omitempty"`
-	Status         string      `json:"status,omitempty"`
-	LastTransition string      `json:"lastTransition,omitempty"`
-	Links          []Link      `json:"links,omitempty"`
-	Lookup         *CanarySpec `json:"lookup,omitempty"`
-	Summary        *Template   `json:"summary,omitempty"`
+	Unit           string        `json:"unit,omitempty"`
+	Value          int64         `json:"value,omitempty"`
+	Max            *int64        `json:"max,omitempty"`
+	Min            int64         `json:"min,omitempty"`
+	Status         string        `json:"status,omitempty"`
+	LastTransition string        `json:"lastTransition,omitempty"`
+	Links          []Link        `json:"links,omitempty"`
+	Lookup         *CanarySpec   `json:"lookup,omitempty"`
+	ConfigLookup   *ConfigLookup `json:"configLookup,omitempty"`
+	Summary        *Template     `json:"summary,omitempty"`
+}
+
+type ConfigLookup struct {
+	ID      string  `json:"id"`
+	Config  Config  `json:"config,omitempty"`
+	Field   string  `json:"field,omitempty"`
+	Display Display `json:"display,omitempty"`
 }
 
 // +kubebuilder:object:root=true

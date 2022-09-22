@@ -40,6 +40,7 @@ CREATE TABLE components (
   owner text,
   selectors jsonb,
   component_checks jsonb,
+  configs jsonb,
   properties jsonb,
   path text,
   summary  jsonb,

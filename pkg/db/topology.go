@@ -248,12 +248,18 @@ func DeleteComponnents(systemTemplateID string, deleteTime time.Time) error {
 	tx := Gorm.Where("system_template_id = ?", systemTemplateID).Find(componentsModel).UpdateColumn("deleted_at", deleteTime)
 	DeleteComponentRelationshipForComponents(componentsModel, deleteTime)
 	for _, component := range *componentsModel {
-		if component.ComponentChecks == nil {
-			return tx.Error
+		if component.ComponentChecks != nil {
+			if err := DeleteInlineCanariesForComponent(component.ID.String(), deleteTime); err != nil {
+				logger.Debugf("Error deleting inline canaries for component %s: %v", component.ID, err)
+				continue
+			}
 		}
-		if err := DeleteInlineCanariesForComponent(component.ID.String(), deleteTime); err != nil {
-			logger.Debugf("Error deleting inline canaries for component %s: %v", component.ID, err)
-			continue
+
+		if component.Configs != nil {
+			if err := DeleteConfigRelationshipForComponent(component.ID, deleteTime); err != nil {
+				logger.Debugf("Error deleting config relationships for component %s: %v", component.ID, err)
+				continue
+			}
 		}
 	}
 	return tx.Error
