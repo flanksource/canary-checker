@@ -348,17 +348,8 @@ func ComponentRun() {
 		}
 
 		// Sync config relationships
-		for _, config := range *component.Configs {
-			dbConfig, err := db.FindConfig(*config)
-			if err != nil {
-				logger.Errorf("error fetching config from database: %v", err)
-				continue
-			}
-			err = db.PersistConfigComponentRelationship(dbConfig.ID, component.ID, config.GetSelectorID())
-			if err != nil {
-				logger.Errorf("error persisting config relationships: %v", err)
-				continue
-			}
+		if err := db.UpsertComponentConfigRelationship(component.ID, component.Configs); err != nil {
+			logger.Errorf("error upserting config relationships: %v", err)
 		}
 	}
 }
