@@ -162,11 +162,9 @@ func Migrate() error {
 	}
 	defer db.Close()
 	for {
-		err = goose.UpByOne(db, "migrations", goose.WithAllowMissing())
-		if err == goose.ErrNoNextVersion {
+		if err := goose.UpByOne(db, "migrations", goose.WithAllowMissing()); err == goose.ErrNoNextVersion {
 			break
-		}
-		if err != nil {
+		} else if err != nil {
 			return err
 		}
 	}

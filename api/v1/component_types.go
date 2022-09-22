@@ -23,6 +23,7 @@ type ComponentSpec struct {
 	Icon    string    `json:"icon,omitempty"`
 	Owner   string    `json:"owner,omitempty"`
 	Id      *Template `json:"id,omitempty"` //nolint
+	Order   int       `json:"order,omitempty"`
 	// The type of component, e.g. service, API, website, library, database, etc.
 	Type string `json:"type,omitempty"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.

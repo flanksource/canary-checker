@@ -78,7 +78,7 @@ func GetConfigRelationshipsForComponent(componentID uuid.UUID) ([]configComponen
 	return relationships, nil
 }
 
-func UpsertComponentConfigRelationship(componentID uuid.UUID, configs *pkg.Configs) error {
+func UpsertComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs) error {
 	var selectorIDs []string
 	var configIDs []string
 	relationships, err := GetConfigRelationshipsForComponent(componentID)
@@ -90,7 +90,7 @@ func UpsertComponentConfigRelationship(componentID uuid.UUID, configs *pkg.Confi
 		configIDs = append(configIDs, r.ConfigID.String())
 	}
 
-	for _, config := range *configs {
+	for _, config := range configs {
 		dbConfig, err := FindConfig(*config)
 		if err != nil {
 			return errors.Wrap(err, "error fetching config from database")
