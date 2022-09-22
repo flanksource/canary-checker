@@ -30,3 +30,7 @@ language plpgsql;
 CREATE OR REPLACE VIEW component_names AS
       SELECT id, external_id, type, name, created_at, updated_at, icon, parent_id FROM components where deleted_at is null AND hidden != true ;
 
+
+CREATE OR REPLACE VIEW check_names AS
+      SELECT id, canary_id, type, name, status FROM checks where deleted_at is null AND silenced_at is null;
+

@@ -8,8 +8,9 @@ import (
 )
 
 // TopologyQuery godoc
+// @Id TopologyQuery
 // @Summary      Topology query
-// @Description  get string by ID
+// @Description Query the topology graph
 // @Tags         topology
 // @Produce      json
 // @Param        id  query   string false "Topology ID"
@@ -22,10 +23,7 @@ import (
 // @Success      200  {object}  pkg.Components
 // @Router /api/topology [get]
 func Topology(c echo.Context) error {
-	params := topology.TopologyParams{}
-	if err := c.Bind(&params); err != nil {
-		return errorResonse(c, err, http.StatusBadRequest)
-	}
+	params := topology.NewTopologyParams(c.QueryParams())
 	results, err := topology.Query(params)
 	if err != nil {
 		return errorResonse(c, err, http.StatusBadRequest)
