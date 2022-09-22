@@ -336,7 +336,7 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 		return results.ErrorMessage(err)
 	}
 
-	idString := fmt.Sprintf("%v/%v/%v", ctx.Canary.ClusterName, namespace, ctx.Canary.Name)
+	idString := fmt.Sprintf("%v/%v", namespace, ctx.Canary.Name)
 
 	ids, err := aws.GetExistingInstanceIds(idString)
 	if err != nil {
