@@ -130,6 +130,7 @@ type Property struct {
 	Tooltip  string `json:"tooltip,omitempty"`
 	Icon     string `json:"icon,omitempty"`
 	Text     string `json:"text,omitempty"`
+	Order    int    `json:"order,omitempty"`
 	Headline bool   `json:"headline,omitempty"`
 	Type     string `json:"type,omitempty"`
 	Color    string `json:"color,omitempty"`
