@@ -17,3 +17,5 @@ wait4x
 chart/templates/crd.yaml
 postgres-db/
 ui/scripts/
+Chart.lock
+chart/charts/

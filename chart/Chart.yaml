@@ -8,3 +8,8 @@ maintainers:
   - name: Flanksource
     url: https://www.flanksource.com
 icon: https://avatars.githubusercontent.com/u/58787470
+dependencies:
+  - name: flanksource-ui
+    version: "1.0.117"
+    repository: https://flanksource.github.io/charts
+    condition: flanksource-ui.enabled

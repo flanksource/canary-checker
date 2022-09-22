@@ -55,6 +55,17 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
+flanksource-ui:
+  enabled: false                # Disable canary-checker-ui by default.
+  withoutOrySession: true
+  nameOverride: "canary-checker-ui"
+  fullnameOverride: "canary-checker-ui"
+  oryKratosURI: ""
+  ingress:
+    enabled: true
+    host: "canary-checker-ui.local"
+
+
 resources:
   requests:
     cpu: 200m
