@@ -189,21 +189,29 @@ func PersistCheckComponentRelationship(relationship *pkg.CheckComponentRelations
 }
 
 func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
-	existingComponenet := &pkg.Component{}
-	var persistedComponents []uuid.UUID
+	existing := &pkg.Component{}
+	var persisted []uuid.UUID
 	var tx *gorm.DB
-	if component.ParentId == nil {
-		tx = Gorm.Find(existingComponenet, "system_template_id = ? AND name = ? AND type = ? and parent_id is NULL", component.SystemTemplateID, component.Name, component.Type)
+	if component.SystemTemplateID == nil {
+		if component.ParentId == nil {
+			tx = Gorm.Find(existing, "name = ? AND type = ? and parent_id is NULL", component.Name, component.Type)
+		} else {
+			tx = Gorm.Find(existing, "name = ? AND type = ? and parent_id = ?", component.Name, component.Type, component.ParentId)
+		}
 	} else {
-		tx = Gorm.Find(existingComponenet, "system_template_id = ? AND name = ? AND type = ? and parent_id = ?", component.SystemTemplateID, component.Name, component.Type, component.ParentId)
+		if component.ParentId == nil {
+			tx = Gorm.Find(existing, "system_template_id = ? AND name = ? AND type = ? and parent_id is NULL", component.SystemTemplateID, component.Name, component.Type)
+		} else {
+			tx = Gorm.Find(existing, "system_template_id = ? AND name = ? AND type = ? and parent_id = ?", component.SystemTemplateID, component.Name, component.Type, component.ParentId)
+		}
 	}
-	if existingComponenet.ID != uuid.Nil {
-		component.ID = existingComponenet.ID
+	if existing.ID != uuid.Nil {
+		component.ID = existing.ID
 		tx.UpdateColumns(component)
 	} else {
 		tx = Gorm.Create(component)
 	}
-	persistedComponents = append(persistedComponents, component.ID)
+	persisted = append(persisted, component.ID)
 	for _, child := range component.Components {
 		child.SystemTemplateID = component.SystemTemplateID
 		if component.Path != "" {
@@ -215,10 +223,10 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 		if childIDs, err := PersistComponent(child); err != nil {
 			logger.Errorf("Error persisting child component of %v, :v", component.ID, err)
 		} else {
-			persistedComponents = append(persistedComponents, childIDs...)
+			persisted = append(persisted, childIDs...)
 		}
 	}
-	return persistedComponents, tx.Error
+	return persisted, tx.Error
 }
 
 func UpdateStatusAndSummaryForComponent(id uuid.UUID, status pkg.ComponentStatus, summary v1.Summary) (int64, error) {
@@ -320,7 +328,7 @@ func DeleteInlineCanariesForComponent(componentID string, deleteTime time.Time) 
 }
 
 func GetActiveComponentsIDsWithSystemTemplateID(systemID string) (compIDs []uuid.UUID, err error) {
-	logger.Infof("Finding components with system id: %s", systemID)
+	logger.Tracef("Finding components with system id: %s", systemID)
 	if err := Gorm.Table("components").Where("deleted_at is NULL and system_template_id = ?", systemID).Select("id").Find(&compIDs).Error; err != nil {
 		return nil, err
 	}

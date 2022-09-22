@@ -240,7 +240,7 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 	var results pkg.Components
 	systemTemplateConfigs := pkg.NewConfigs(ctx.SystemTemplate.Spec.Configs)
 	component := &pkg.Component{
-		Name:      ctx.SystemTemplate.GetName(),
+		Name:      ctx.SystemTemplate.Spec.Text,
 		Namespace: ctx.SystemTemplate.GetNamespace(),
 		Labels:    ctx.SystemTemplate.Labels,
 		Tooltip:   ctx.SystemTemplate.Spec.Tooltip,
@@ -249,6 +249,10 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 		Type:      ctx.SystemTemplate.Spec.Type,
 		Schedule:  ctx.SystemTemplate.Spec.Schedule,
 		Configs:   &systemTemplateConfigs,
+	}
+
+	if component.Name == "" {
+		component.Name = ctx.SystemTemplate.Name
 	}
 
 	if opts.Depth > 0 {
@@ -309,12 +313,17 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 	if component.ID.String() == "" {
 		component.ID, _ = uuid.Parse(component.Name)
 	}
+
+	if component.ExternalId == "" {
+		component.ExternalId = component.Name
+	}
+
 	component.Status = pkg.ComponentStatus(component.Summary.GetStatus())
 	// if logger.IsTraceEnabled() {
 	logger.Debugf(component.Components.Debug(""))
 	// }
 	results = append(results, component)
-	logger.Infof("%s id=%s status=%s", component.Name, component.ID, component.Status)
+	logger.Infof("%s id=%s external_id=%s status=%s", component.Name, component.ID, component.ExternalId, component.Status)
 	for _, c := range results.Walk() {
 		c.Namespace = ctx.SystemTemplate.GetNamespace()
 		c.Schedule = ctx.SystemTemplate.Spec.Schedule
