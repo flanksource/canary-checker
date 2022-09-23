@@ -111,7 +111,7 @@ func getLocalFolderCheck(path string, filter v1.FolderFilter) (*FolderCheck, err
 			return nil, err
 		}
 
-		if !_filter.Filter(info) {
+		if file.IsDir || !_filter.Filter(info) {
 			continue
 		}
 
