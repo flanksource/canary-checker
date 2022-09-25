@@ -36,6 +36,9 @@ func GetAllCanaries() ([]v1.Canary, error) {
 			return nil, err
 		}
 	}
+	if rawCanaries == nil {
+		return nil, nil
+	}
 	if err := json.Unmarshal(rawCanaries.([]byte), &_canaries); err != nil {
 		return nil, err
 	}
