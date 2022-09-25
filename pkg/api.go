@@ -114,10 +114,15 @@ type Canary struct {
 	Source    string
 	Name      string
 	Namespace string
+	Checks    types.JSONStringMap `gorm:"-"`
 	Schedule  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt
+}
+
+func (c Canary) GetCheckID(checkName string) string {
+	return c.Checks[checkName]
 }
 
 func (c Canary) ToV1() *v1.Canary {
@@ -139,6 +144,7 @@ func (c Canary) ToV1() *v1.Canary {
 	}
 	id := c.ID.String()
 	canary.Status.PersistedID = &id
+	canary.Status.Checks = c.Checks
 	return &canary
 }
 
@@ -147,12 +153,17 @@ func CanaryFromV1(canary v1.Canary) (Canary, error) {
 	if err != nil {
 		return Canary{}, err
 	}
+	var checks = make(map[string]string)
+	if canary.Status.Checks != nil {
+		checks = canary.Status.Checks
+	}
 	return Canary{
 		Spec:      spec,
 		Labels:    types.JSONStringMap(canary.Labels),
 		Name:      canary.Name,
 		Namespace: canary.Namespace,
 		Schedule:  canary.Spec.GetSchedule(),
+		Checks:    types.JSONStringMap(checks),
 	}, nil
 }
 
@@ -216,6 +227,7 @@ func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Che
 		Icon:        check.GetIcon(),
 		Namespace:   canary.Namespace,
 		CanaryName:  canary.Name,
+		CanaryID:    canary.GetPersistedID(),
 		Labels:      labels.FilterLabels(canary.GetAllLabels(check.GetLabels())),
 		Statuses:    statuses,
 		Type:        check.GetType(),

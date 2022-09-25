@@ -516,6 +516,13 @@ func (in *CanaryStatus) DeepCopyInto(out *CanaryStatus) {
 		*out = new(CanaryStatusCondition)
 		**out = **in
 	}
+	if in.Checks != nil {
+		in, out := &in.Checks, &out.Checks
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	if in.ChecksStatus != nil {
 		in, out := &in.ChecksStatus, &out.ChecksStatus
 		*out = make(map[string]*CheckStatus, len(*in))

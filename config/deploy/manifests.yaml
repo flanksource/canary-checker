@@ -3595,6 +3595,11 @@ spec:
                         type: string
                     type: object
                   type: object
+                checks:
+                  additionalProperties:
+                    type: string
+                  description: contains the name and id of the checks associated with the canary
+                  type: object
                 errorMessage:
                   type: string
                 lastCheck:

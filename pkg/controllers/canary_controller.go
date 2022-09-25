@@ -18,9 +18,11 @@ package controllers
 
 import (
 	gocontext "context"
+	"fmt"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/google/uuid"
 
@@ -94,23 +96,29 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		return ctrl.Result{}, r.Update(ctx, canary)
 	}
 
-	c, checkIds, changed, err := db.PersistCanary(*canary, "kubernetes/"+string(canary.ObjectMeta.UID))
+	c, checks, changed, err := db.PersistCanary(*canary, "kubernetes/"+string(canary.ObjectMeta.UID))
 	if err != nil {
 		return ctrl.Result{
 			Requeue: true,
 		}, err
 	}
 
+	var checkIDs []string
+	for _, id := range checks {
+		checkIDs = append(checkIDs, id)
+	}
+
 	dbCheckIds := getCheckIDsForCanary(c.ID)
 	// delete checks which are no longer in the canary
 	// fetching the checkIds present in the db but not present on the canary
-	toRemoveCheckIDs := utils.SetDifference(dbCheckIds, checkIds)
+	toRemoveCheckIDs := utils.SetDifference(dbCheckIds, checkIDs)
 	// delete the check and update the cron for now
 	if len(toRemoveCheckIDs) > 0 {
 		logger.Info("removing checks from canary", "checkIDs", toRemoveCheckIDs)
 		if err := db.DeleteChecks(toRemoveCheckIDs); err != nil {
 			logger.Error(err, "failed to delete checks")
 		}
+		metrics.UnregisterGauge(toRemoveCheckIDs)
 		if err := canaryJobs.SyncCanaryJob(*canary); err != nil {
 			logger.Error(err, "failed to sync canary job")
 		}
@@ -127,6 +135,8 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	// update status
 	id := c.ID.String() // id is the uuid of the canary
 	canary.Status.PersistedID = &id
+	canary.Status.Checks = checks
+	fmt.Println(checks)
 	canary.Status.ObservedGeneration = canary.Generation
 	r.Patch(canary)
 	return ctrl.Result{}, nil
