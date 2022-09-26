@@ -18,7 +18,6 @@ package controllers
 
 import (
 	gocontext "context"
-	"fmt"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -136,7 +135,6 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	id := c.ID.String() // id is the uuid of the canary
 	canary.Status.PersistedID = &id
 	canary.Status.Checks = checks
-	fmt.Println(checks)
 	canary.Status.ObservedGeneration = canary.Generation
 	r.Patch(canary)
 	return ctrl.Result{}, nil
@@ -238,11 +236,11 @@ func (r *CanaryReconciler) Report(ctx *context.Context, canary v1.Canary, result
 
 func (r *CanaryReconciler) Patch(canary *v1.Canary) {
 	r.Log.V(3).Info("patching", "canary", canary.Name, "namespace", canary.Namespace, "status", canary.Status.Status)
+	if err := r.Status().Update(gocontext.Background(), canary); err != nil {
+		r.Log.Error(err, "failed to update status", "canary", canary.Name)
+	}
 	if err := r.Update(gocontext.Background(), canary, &client.UpdateOptions{}); err != nil {
 		r.Log.Error(err, "failed to patch", "canary", canary.Name)
-	}
-	if err := r.Status().Update(gocontext.Background(), canary, &client.UpdateOptions{}); err != nil {
-		r.Log.Error(err, "failed to update status", "canary", canary.Name)
 	}
 }
 

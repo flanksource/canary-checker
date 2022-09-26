@@ -190,11 +190,6 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		pass.Append(1)
 		Gauge.WithLabelValues(key, checkType, canaryName, canaryNamespace, name).Set(0)
 		CanaryCheckInfo.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Set(0)
-		// TODO: remove the metric in case the check is removed
-		// use uuid as key
-		// store the check ids in a map[checkName]uuid in the v1.Canary struct``
-
-		// prometheus.Unregister(Gauge.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name))
 		OpsSuccessCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 		// always add a failed count to ensure the metric is present in prometheus
 		// for an uptime calculation
