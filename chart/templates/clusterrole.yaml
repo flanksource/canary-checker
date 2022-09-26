@@ -57,6 +57,12 @@ rules:
       - get
       - list
   - apiGroups:
+      - "networking.k8s.io"
+    resources:
+      - ingresses
+    verbs:
+      - "*"
+  - apiGroups:
       - "extensions"
     resources:
       - ingresses
