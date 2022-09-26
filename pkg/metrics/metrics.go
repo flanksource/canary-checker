@@ -255,8 +255,8 @@ func FillUptime(checkKey, duration string, uptime *pkg.Uptime) error {
 	return nil
 }
 
-func UnregisterGauge(checkIds []string) {
-	for _, checkID := range checkIds {
+func UnregisterGauge(checkIDs []string) {
+	for _, checkID := range checkIDs {
 		logger.Debugf("Unregistering gauge for checkID %s", checkID)
 		Gauge.DeletePartialMatch(prometheus.Labels{"key": checkID})
 	}

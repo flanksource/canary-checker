@@ -21,9 +21,9 @@ func GetAllCanaries() ([]v1.Canary, error) {
 	var canaries []v1.Canary
 	var _canaries []pkg.Canary
 	var rawCanaries interface{}
-	sql := fmt.Sprintf("SELECT json_agg(jsonb_set_lax(to_jsonb(canaries),'{checks}', %s)) :: jsonb as canaries from canaries where deleted_at is null", getChecksForCanaries())
+	query := fmt.Sprintf("SELECT json_agg(jsonb_set_lax(to_jsonb(canaries),'{checks}', %s)) :: jsonb as canaries from canaries where deleted_at is null", getChecksForCanaries())
 
-	rows, err := Gorm.Raw(sql).Rows()
+	rows, err := Gorm.Raw(query).Rows()
 	if err != nil {
 		return nil, err
 	}
@@ -204,8 +204,8 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 		check := pkg.FromExternalCheck(model, config)
 		// not creating the new check if already exists in the status
 		// status is not patched correctly with the status id
-		if canary.GetCheckID(config.GetName()) != "" {
-			check.ID = canary.GetCheckID(config.GetName())
+		if checkID := canary.GetCheckID(check.Name); checkID != "" {
+			check.ID = checkID
 		}
 		id, err := PersistCheck(check, model.ID.String())
 		if err != nil {
