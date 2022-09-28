@@ -255,10 +255,8 @@ func (component Component) GetAsEnvironment() map[string]interface{} {
 }
 
 func NewComponent(c v1.ComponentSpec) *Component {
-	var configs Configs
-	for _, config := range c.Configs {
-		configs = append(configs, NewConfig(config))
-	}
+
+	configs := NewConfigs(c.Configs)
 	_c := Component{
 		Name:            c.Name,
 		Owner:           c.Owner,

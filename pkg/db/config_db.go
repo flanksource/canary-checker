@@ -79,12 +79,17 @@ func GetConfigRelationshipsForComponent(componentID uuid.UUID) ([]configComponen
 }
 
 func UpsertComponentConfigRelationship(componentID uuid.UUID, configs *pkg.Configs) error {
+	if configs == nil {
+		return nil
+	}
+
 	var selectorIDs []string
 	var configIDs []string
 	relationships, err := GetConfigRelationshipsForComponent(componentID)
 	if err != nil {
 		return err
 	}
+
 	for _, r := range relationships {
 		selectorIDs = append(selectorIDs, r.SelectorID)
 		configIDs = append(configIDs, r.ConfigID.String())

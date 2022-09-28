@@ -282,6 +282,14 @@ type Config struct {
 	ExternalType string         `json:"external_type,omitempty"`
 }
 
+func NewConfigs(configs []v1.Config) Configs {
+	var pkgConfigs Configs
+	for _, config := range configs {
+		pkgConfigs = append(pkgConfigs, NewConfig(config))
+	}
+	return pkgConfigs
+}
+
 func NewConfig(config v1.Config) *Config {
 	return &Config{
 		Name:         config.Name,

@@ -24,6 +24,7 @@ type SystemTemplateSpec struct {
 	Owner      Owner           `json:"owner,omitempty"`
 	Components []ComponentSpec `json:"components,omitempty"`
 	Properties Properties      `json:"properties,omitempty"`
+	Configs    []Config        `json:"configs,omitempty"`
 }
 
 func (s SystemTemplate) IsEmpty() bool {

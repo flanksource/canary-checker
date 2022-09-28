@@ -25196,6 +25196,21 @@ spec:
                         type: string
                     type: object
                   type: array
+                configs:
+                  items:
+                    properties:
+                      id:
+                        items:
+                          type: string
+                        type: array
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                      type:
+                        type: string
+                    type: object
+                  type: array
                 icon:
                   type: string
                 id:

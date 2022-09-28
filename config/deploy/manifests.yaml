@@ -7467,6 +7467,21 @@ spec:
                     format: byte
                     type: string
                   type: array
+                configs:
+                  items:
+                    properties:
+                      id:
+                        items:
+                          type: string
+                        type: array
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                      type:
+                        type: string
+                    type: object
+                  type: array
                 icon:
                   type: string
                 id:
@@ -11009,6 +11024,39 @@ spec:
                     properties:
                       color:
                         type: string
+                      configLookup:
+                        properties:
+                          config:
+                            properties:
+                              id:
+                                items:
+                                  type: string
+                                type: array
+                              name:
+                                type: string
+                              namespace:
+                                type: string
+                              type:
+                                type: string
+                            type: object
+                          display:
+                            properties:
+                              expr:
+                                type: string
+                              javascript:
+                                type: string
+                              jsonPath:
+                                type: string
+                              template:
+                                type: string
+                            type: object
+                          field:
+                            type: string
+                          id:
+                            type: string
+                        required:
+                          - id
+                        type: object
                       headline:
                         type: boolean
                       icon:
@@ -18210,6 +18258,21 @@ spec:
                           format: byte
                           type: string
                         type: array
+                      configs:
+                        items:
+                          properties:
+                            id:
+                              items:
+                                type: string
+                              type: array
+                            name:
+                              type: string
+                            namespace:
+                              type: string
+                            type:
+                              type: string
+                          type: object
+                        type: array
                       icon:
                         type: string
                       id:
@@ -21752,6 +21815,39 @@ spec:
                           properties:
                             color:
                               type: string
+                            configLookup:
+                              properties:
+                                config:
+                                  properties:
+                                    id:
+                                      items:
+                                        type: string
+                                      type: array
+                                    name:
+                                      type: string
+                                    namespace:
+                                      type: string
+                                    type:
+                                      type: string
+                                  type: object
+                                display:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    javascript:
+                                      type: string
+                                    jsonPath:
+                                      type: string
+                                    template:
+                                      type: string
+                                  type: object
+                                field:
+                                  type: string
+                                id:
+                                  type: string
+                              required:
+                                - id
+                              type: object
                             headline:
                               type: boolean
                             icon:
@@ -25369,6 +25465,21 @@ spec:
                         type: string
                     type: object
                   type: array
+                configs:
+                  items:
+                    properties:
+                      id:
+                        items:
+                          type: string
+                        type: array
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                      type:
+                        type: string
+                    type: object
+                  type: array
                 icon:
                   type: string
                 id:
@@ -25391,6 +25502,39 @@ spec:
                     properties:
                       color:
                         type: string
+                      configLookup:
+                        properties:
+                          config:
+                            properties:
+                              id:
+                                items:
+                                  type: string
+                                type: array
+                              name:
+                                type: string
+                              namespace:
+                                type: string
+                              type:
+                                type: string
+                            type: object
+                          display:
+                            properties:
+                              expr:
+                                type: string
+                              javascript:
+                                type: string
+                              jsonPath:
+                                type: string
+                              template:
+                                type: string
+                            type: object
+                          field:
+                            type: string
+                          id:
+                            type: string
+                        required:
+                          - id
+                        type: object
                       headline:
                         type: boolean
                       icon:
