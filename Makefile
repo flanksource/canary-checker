@@ -243,5 +243,5 @@ resources: fmt static manifests
 
 .PHONY: chart
 chart:
-	helm package build ./chart
+	helm dependency update ./chart
 	helm package ./chart
