@@ -26,6 +26,14 @@ var (
 		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
 	)
 
+	CanaryCheckInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "canary_check_info",
+			Help: "Information about the canary check",
+		},
+		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
+	)
+
 	OpsSuccessCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "canary_check_success_count",
@@ -56,7 +64,7 @@ var (
 			Name: "canary_check",
 			Help: "A gauge representing the canaries success (0) or failure (1)",
 		},
-		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
+		[]string{"key", "type", "canary_name", "canary_namespace", "name"},
 	)
 
 	GenericGauge = prometheus.NewGaugeVec(
@@ -90,7 +98,7 @@ var passed = cmap.New()
 var latencies = cmap.New()
 
 func init() {
-	prometheus.MustRegister(Gauge, OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency, GenericGauge, GenericCounter, GenericHistogram)
+	prometheus.MustRegister(Gauge, CanaryCheckInfo, OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency, GenericGauge, GenericCounter, GenericHistogram)
 }
 
 func RemoveCheck(checks v1.Canary) {
@@ -131,6 +139,10 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		logger.Warnf("%s/%s returned a nil result", canary.Namespace, canary.Name)
 		return
 	}
+	if canary.GetCheckID(result.Check.GetName()) == "" {
+		logger.Warnf("%s/%s/%s returned a result for a check that does not exist", canary.Namespace, canary.Name, result.Check.GetName())
+		return
+	}
 	canaryNamespace := canary.Namespace
 	canaryName := canary.Name
 	name := result.Check.GetName()
@@ -139,8 +151,7 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 	owner := canary.Spec.Owner
 	severity := canary.Spec.Severity
 	// We are recording aggreated metrics at the canary level, not the individual check level
-	key := canary.GetKey(result.Check)
-
+	key := canary.GetCheckID(result.Check.GetName())
 	var fail, pass, latency *rolling.TimePolicy
 
 	_fail, ok := failed.Get(key)
@@ -177,7 +188,8 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 	}
 	if result.Pass {
 		pass.Append(1)
-		Gauge.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Set(0)
+		Gauge.WithLabelValues(key, checkType, canaryName, canaryNamespace, name).Set(0)
+		CanaryCheckInfo.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Set(0)
 		OpsSuccessCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 		// always add a failed count to ensure the metric is present in prometheus
 		// for an uptime calculation
@@ -194,7 +206,8 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		}
 	} else {
 		fail.Append(1)
-		Gauge.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Set(1)
+		Gauge.WithLabelValues(key, checkType, canaryName, canaryNamespace, name).Set(1)
+		CanaryCheckInfo.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Set(1)
 		OpsFailedCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 	}
 
@@ -240,4 +253,11 @@ func FillUptime(checkKey, duration string, uptime *pkg.Uptime) error {
 	}
 	uptime.P100 = value
 	return nil
+}
+
+func UnregisterGauge(checkIDs []string) {
+	for _, checkID := range checkIDs {
+		logger.Debugf("Unregistering gauge for checkID %s", checkID)
+		Gauge.DeletePartialMatch(prometheus.Labels{"key": checkID})
+	}
 }

@@ -247,6 +247,8 @@ type CanaryStatus struct {
 	ErrorMessage *string `json:"errorMessage,omitempty"`
 	// +optional
 	Status *CanaryStatusCondition `json:"status,omitempty"`
+	// contains the name and id of the checks associated with the canary
+	Checks map[string]string `json:"checks,omitempty"`
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`
 	// +optional
@@ -257,6 +259,10 @@ type CanaryStatus struct {
 	Latency1H string `json:"latency1h,omitempty"`
 	// used for keeping history of the checks
 	runnerName string `json:"-"`
+}
+
+func (c Canary) GetCheckID(checkName string) string {
+	return c.Status.Checks[checkName]
 }
 
 type CheckStatus struct {
