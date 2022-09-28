@@ -238,6 +238,7 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 	}
 	ctx := NewComponentContext(opts.Client, s)
 	var results pkg.Components
+	systemTemplateConfigs := pkg.NewConfigs(ctx.SystemTemplate.Spec.Configs)
 	component := &pkg.Component{
 		Name:      ctx.SystemTemplate.GetName(),
 		Namespace: ctx.SystemTemplate.GetNamespace(),
@@ -247,6 +248,7 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 		Text:      ctx.SystemTemplate.Spec.Text,
 		Type:      ctx.SystemTemplate.Spec.Type,
 		Schedule:  ctx.SystemTemplate.Spec.Schedule,
+		Configs:   &systemTemplateConfigs,
 	}
 
 	if opts.Depth > 0 {

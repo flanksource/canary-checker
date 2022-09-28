@@ -137,17 +137,28 @@ func (p TopologyParams) GetComponentRelationWhereClause() string {
 }
 
 func Query(params TopologyParams) (pkg.Components, error) {
-	sql := fmt.Sprintf(`
-	SELECT json_agg(jsonb_set_lax(to_jsonb(components),'{checks}', %s)) :: jsonb as components from components %s
-	union
-	(SELECT json_agg(jsonb_set_lax(jsonb_set_lax(to_jsonb(components), '{parent_id}', to_jsonb(component_relationships.relationship_id), true),'{checks}', %s)) :: jsonb 
-	AS components from component_relationships INNER JOIN components 
+	query := fmt.Sprintf(`
+	SELECT json_agg(
+        jsonb_set_lax(
+            jsonb_set_lax(
+                to_jsonb(components),'{checks}', %s
+            ), '{configs}', %s
+        )
+    ) :: jsonb AS components FROM components %s
+	UNION (
+    SELECT json_agg(
+        jsonb_set_lax(
+            jsonb_set_lax(
+                jsonb_set_lax(
+                    to_jsonb(components), '{parent_id}', to_jsonb(component_relationships.relationship_id), true
+                ),'{checks}', %s
+            ), '{configs}', %s
+        )
+    ):: jsonb AS components FROM component_relationships INNER JOIN components
 	ON components.id = component_relationships.component_id INNER JOIN components AS parent 
-	ON component_relationships.relationship_id = parent.id %s)
-    UNION
-	SELECT json_agg(jsonb_set_lax(to_jsonb(components),'{configs}', %s)) :: jsonb as components from components %s
-`, getChecksForComponents(), params.GetComponentWhereClause(), getChecksForComponents(),
-		params.GetComponentRelationWhereClause(), getConfigForComponents(), params.GetComponentWhereClause())
+	ON component_relationships.relationship_id = parent.id %s)`,
+		getChecksForComponents(), getConfigForComponents(), params.GetComponentWhereClause(),
+		getChecksForComponents(), getConfigForComponents(), params.GetComponentRelationWhereClause())
 
 	args := make(map[string]interface{})
 	if params.getID() != "" {
@@ -157,14 +168,13 @@ func Query(params TopologyParams) (pkg.Components, error) {
 		args["owner"] = params.Owner
 	}
 	if params.Labels != "" {
-		fmt.Println(params.Labels)
 		args["labels"] = params.getLabels()
 	}
 
-	logger.Infof("Querying topology (%s) => %s", params, sql)
+	logger.Infof("Querying topology (%s) => %s", params, query)
 
 	var results pkg.Components
-	rows, err := db.QueryNamed(context.Background(), sql, args)
+	rows, err := db.QueryNamed(context.Background(), query, args)
 	if err != nil {
 		return nil, errors.Wrapf(err, "db query failed")
 	}

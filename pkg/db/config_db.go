@@ -85,6 +85,9 @@ func UpsertComponentConfigRelationship(componentID uuid.UUID, configs *pkg.Confi
 	if err != nil {
 		return err
 	}
+	if configs == nil {
+		return nil
+	}
 	for _, r := range relationships {
 		selectorIDs = append(selectorIDs, r.SelectorID)
 		configIDs = append(configIDs, r.ConfigID.String())

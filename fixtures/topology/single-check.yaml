@@ -7,7 +7,12 @@ spec:
   icon: Application
   schedule: "@every 5m"
   components:
-    - checks:
+    - name: single-check
+      type: Website-2
+      checks:
        - selector:
           labelSelector: "check=http-200"
-      name: single-check
+      configs:
+      - id: ["0182aa30-cd44-101f-21c3-3a0383a79254"]
+        type: MSPlanner
+        name: Try
