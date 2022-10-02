@@ -11022,6 +11022,8 @@ spec:
                   type: object
                 name:
                   type: string
+                order:
+                  type: integer
                 owner:
                   type: string
                 properties:
@@ -14613,6 +14615,8 @@ spec:
                         type: integer
                       name:
                         type: string
+                      order:
+                        type: integer
                       status:
                         type: string
                       summary:
@@ -21813,6 +21817,8 @@ spec:
                         type: object
                       name:
                         type: string
+                      order:
+                        type: integer
                       owner:
                         type: string
                       properties:
@@ -25404,6 +25410,8 @@ spec:
                               type: integer
                             name:
                               type: string
+                            order:
+                              type: integer
                             status:
                               type: string
                             summary:
@@ -29091,6 +29099,8 @@ spec:
                         type: integer
                       name:
                         type: string
+                      order:
+                        type: integer
                       status:
                         type: string
                       summary:
