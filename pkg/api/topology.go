@@ -17,8 +17,8 @@ import (
 // @Param        topologyId query  string false "Topology ID"
 // @Param        componentId query   string false "Component ID"
 // @Param        owner  query  string false "Owner"
-// @Param        status  query  string false "Comma seperated list of status"
-// @Param        types    query string false "Comma seperated list of types"
+// @Param        status  query  string false "Comma separated list of status"
+// @Param        types    query string false "Comma separated list of types"
 // @Param        flatten  query  string false "Flatten the topology"
 // @Success      200  {object}  pkg.Components
 // @Router /api/topology [get]

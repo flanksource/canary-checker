@@ -271,7 +271,6 @@ func (component Component) GetAsEnvironment() map[string]interface{} {
 }
 
 func NewComponent(c v1.ComponentSpec) *Component {
-
 	configs := NewConfigs(c.Configs)
 	_c := Component{
 		Name:            c.Name,

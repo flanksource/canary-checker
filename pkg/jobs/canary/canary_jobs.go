@@ -164,7 +164,6 @@ func SyncCanaryJobs() {
 			if err := SyncCanaryJob(*pkgCanary.ToV1()); err != nil {
 				logger.Errorf(err.Error())
 			}
-
 		} else if err := SyncCanaryJob(canary); err != nil {
 			logger.Errorf(err.Error())
 		}
