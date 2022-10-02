@@ -21,7 +21,7 @@ import (
 	"go/doc"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"regexp"
 	"sort"
@@ -122,7 +122,7 @@ TYPES:
 	}
 	_, lastPart := print(last, types)
 	s += lastPart
-	if err := ioutil.WriteFile(out, []byte(s), 0644); err != nil {
+	if err := os.WriteFile(out, []byte(s), 0644); err != nil {
 		logger.Errorf("error writing %s: %v", out, err)
 	}
 }
@@ -291,7 +291,7 @@ func fmtRawDoc(rawDoc string) string {
 
 	include := regexp.MustCompile(`\[include:(.*)\]`)
 	for _, fixture := range include.FindAllStringSubmatch(rawDoc, -1) {
-		content, err := ioutil.ReadFile("fixtures/" + fixture[1])
+		content, err := os.ReadFile("fixtures/" + fixture[1])
 		if err != nil {
 			logger.Warnf("cannot find fixture: %s: %v", fixture[1], err)
 		}

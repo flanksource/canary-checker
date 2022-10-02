@@ -1,4 +1,3 @@
-
 /*
  * Canary Checker API
  *
@@ -11,10 +10,11 @@ package swagger
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
+
 	"github.com/antihax/optional"
 )
 
@@ -24,6 +24,7 @@ var (
 )
 
 type TopologyApiService service
+
 /*
 TopologyApiService Topology query
 Query the topology graph
@@ -40,21 +41,21 @@ Query the topology graph
 */
 
 type TopologyApiTopologyQueryOpts struct {
-    Id optional.String
-    TopologyId optional.String
-    ComponentId optional.String
-    Owner optional.String
-    Status optional.String
-    Types optional.String
-    Flatten optional.String
+	Id          optional.String
+	TopologyId  optional.String
+	ComponentId optional.String
+	Owner       optional.String
+	Status      optional.String
+	Types       optional.String
+	Flatten     optional.String
 }
 
 func (a *TopologyApiService) TopologyQuery(ctx context.Context, localVarOptionals *TopologyApiTopologyQueryOpts) ([]Component, *http.Response, error) {
 	var (
-		localVarHttpMethod = strings.ToUpper("Get")
-		localVarPostBody   interface{}
-		localVarFileName   string
-		localVarFileBytes  []byte
+		localVarHttpMethod  = strings.ToUpper("Get")
+		localVarPostBody    interface{}
+		localVarFileName    string
+		localVarFileBytes   []byte
 		localVarReturnValue []Component
 	)
 
@@ -113,7 +114,7 @@ func (a *TopologyApiService) TopologyQuery(ctx context.Context, localVarOptional
 		return localVarReturnValue, localVarHttpResponse, err
 	}
 
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
+	localVarBody, err := io.ReadAll(localVarHttpResponse.Body)
 	localVarHttpResponse.Body.Close()
 	if err != nil {
 		return localVarReturnValue, localVarHttpResponse, err
@@ -121,26 +122,26 @@ func (a *TopologyApiService) TopologyQuery(ctx context.Context, localVarOptional
 
 	if localVarHttpResponse.StatusCode < 300 {
 		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
-		if err == nil { 
+		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+		if err == nil {
 			return localVarReturnValue, localVarHttpResponse, err
 		}
 	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
-			body: localVarBody,
+			body:  localVarBody,
 			error: localVarHttpResponse.Status,
 		}
 		if localVarHttpResponse.StatusCode == 200 {
 			var v []Component
-			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
-				if err != nil {
-					newErr.error = err.Error()
-					return localVarReturnValue, localVarHttpResponse, newErr
-				}
-				newErr.model = v
+			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
 				return localVarReturnValue, localVarHttpResponse, newErr
+			}
+			newErr.model = v
+			return localVarReturnValue, localVarHttpResponse, newErr
 		}
 		return localVarReturnValue, localVarHttpResponse, newErr
 	}

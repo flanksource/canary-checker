@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -385,7 +385,7 @@ func (h *HTTPResponse) AsString() (string, error) {
 	if h.body != "" {
 		return h.body, nil
 	}
-	res, err := ioutil.ReadAll(h.Response.Body)
+	res, err := io.ReadAll(h.Response.Body)
 	defer h.Response.Body.Close() //nolint
 	if err != nil {
 		return "", err

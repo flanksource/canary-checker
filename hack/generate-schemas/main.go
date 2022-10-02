@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -30,7 +29,7 @@ var generateSchema = &cobra.Command{
 
 			os.Mkdir(schemaPath, 0755)
 			p := path.Join(schemaPath, file+".schema.json")
-			if err := ioutil.WriteFile(p, data, 0644); err != nil {
+			if err := io.WriteFile(p, data, 0644); err != nil {
 				logger.Fatalf("unable to save schema: %v", err)
 			}
 			logger.Infof("Saved OpenAPI schema to %s", p)

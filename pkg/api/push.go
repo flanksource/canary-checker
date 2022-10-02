@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/flanksource/canary-checker/pkg"
@@ -32,7 +31,7 @@ func PushHandler(c echo.Context) error {
 		Check:  pkg.Check{},
 		Status: pkg.CheckStatus{},
 	}
-	reqBody, err := ioutil.ReadAll(c.Request().Body)
+	reqBody, err := io.ReadAll(c.Request().Body)
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
@@ -84,7 +83,7 @@ func PostDataToServer(server string, body io.Reader) (err error) {
 		return err
 	}
 	defer func() { err = resp.Body.Close() }()
-	responseBody, _ := ioutil.ReadAll(resp.Body)
+	responseBody, _ := io.ReadAll(resp.Body)
 	logger.Tracef("[%s] %d %s", server, resp.StatusCode, responseBody)
 	if resp.StatusCode != 201 {
 		return errors.New(string(responseBody))

@@ -3,8 +3,8 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/flanksource/commons/timer"
@@ -123,7 +123,7 @@ var RunTopology = &cobra.Command{
 			outputFile = "topology.json"
 		}
 		logger.Infof("Writing results to %s", outputFile)
-		if err := ioutil.WriteFile(outputFile, data, 0644); err != nil {
+		if err := os.WriteFile(outputFile, data, 0644); err != nil {
 			log.Fatalln(err)
 		}
 

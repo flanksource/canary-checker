@@ -1,8 +1,8 @@
 package v1
 
 import (
+	"io/fs"
 	"net/url"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -99,7 +99,7 @@ func (f FolderFilter) New() (*FolderFilterContext, error) {
 	return ctx, nil
 }
 
-func (f *FolderFilterContext) Filter(i os.FileInfo) bool {
+func (f *FolderFilterContext) Filter(i fs.FileInfo) bool {
 	if i.IsDir() {
 		return false
 	}

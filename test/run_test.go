@@ -3,7 +3,6 @@ package test
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -41,7 +40,7 @@ func init() {
 func TestRunChecks(t *testing.T) {
 	logger.StandardLogger().SetLogLevel(verbosity)
 	logger.Infof("Testing %s", testFolder)
-	files, _ := ioutil.ReadDir(fmt.Sprintf("../%s", testFolder))
+	files, _ := os.ReadDir(fmt.Sprintf("../%s", testFolder))
 	t.Logf("Folder: %s", testFolder)
 	wg := sync.WaitGroup{}
 	for _, fixture := range files {
