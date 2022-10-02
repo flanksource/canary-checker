@@ -133,7 +133,10 @@ func (c Canary) ToV1() *v1.Canary {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.Name,
 			Namespace: c.Namespace,
-			Labels:    c.Labels,
+			Annotations: map[string]string{
+				"source": c.Source,
+			},
+			Labels: c.Labels,
 		},
 	}
 	var deletionTimestamp metav1.Time
@@ -165,6 +168,7 @@ func CanaryFromV1(canary v1.Canary) (Canary, error) {
 		Labels:    types.JSONStringMap(canary.Labels),
 		Name:      canary.Name,
 		Namespace: canary.Namespace,
+		Source:    canary.Annotations["source"],
 		Schedule:  canary.Spec.GetSchedule(),
 		Checks:    types.JSONStringMap(checks),
 	}, nil

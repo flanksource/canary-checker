@@ -78,8 +78,8 @@ func GetConfigRelationshipsForComponent(componentID uuid.UUID) ([]configComponen
 	return relationships, nil
 }
 
-func UpsertComponentConfigRelationship(componentID uuid.UUID, configs *pkg.Configs) error {
-	if configs == nil {
+func UpsertComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs) error {
+	if len(configs) == 0 {
 		return nil
 	}
 
