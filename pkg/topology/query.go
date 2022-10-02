@@ -19,14 +19,25 @@ var json = jsontime.ConfigWithCustomTimeFormat
 
 const DefaultDepth = 1
 
+func parseItems(items string) []string {
+	if strings.TrimSpace(items) == "" {
+		return nil
+	}
+	return strings.Split(items, ",")
+}
+
 func NewTopologyParams(values url.Values) TopologyParams {
 	params := TopologyParams{
-		ID:          values.Get("id"),
-		TopologyID:  values.Get("topologyId"),
-		ComponentID: values.Get("componentId"),
-		Status:      values.Get("status"),
-		Owner:       values.Get("owner"),
-		Labels:      values.Get("labels"),
+		ID:            values.Get("id"),
+		TopologyID:    values.Get("topologyId"),
+		ComponentID:   values.Get("componentId"),
+		Status:        parseItems(values.Get("status")),
+		Types:         parseItems(values.Get("type")),
+		Owner:         values.Get("owner"),
+		Flatten:       values.Get("flatten") == "true",
+		Labels:        values.Get("labels"),
+		IncludeConfig: values.Get("includeConfig") != "false",
+		IncludeHealth: values.Get("includeHealth") != "false",
 	}
 
 	if params.ID != "" && strings.HasPrefix(params.ID, "c-") {
@@ -45,17 +56,24 @@ func NewTopologyParams(values url.Values) TopologyParams {
 }
 
 type TopologyParams struct {
-	ID          string
-	TopologyID  string
-	ComponentID string
-	Owner       string
-	Labels      string
-	Status      string
-	Depth       int
+	ID            string   `query:"id"`
+	TopologyID    string   `query:"topologyId"`
+	ComponentID   string   `query:"componentId"`
+	Owner         string   `query:"owner"`
+	Labels        string   `query:"labels"`
+	Status        []string `query:"status"`
+	Types         []string `query:"types"`
+	Depth         int      `query:"depth"`
+	Flatten       bool     `query:"flatten"`
+	IncludeConfig bool     `query:"includeConfig"`
+	IncludeHealth bool     `query:"includeHealth"`
 }
 
 func (p TopologyParams) String() string {
 	s := ""
+	if p.ID != "" {
+		s += fmt.Sprintf("id=%s ", p.ID)
+	}
 	if p.TopologyID != "" {
 		s += "topologyId=" + p.TopologyID
 	}
@@ -65,8 +83,26 @@ func (p TopologyParams) String() string {
 	if p.Depth > 0 {
 		s += fmt.Sprintf(" depth=%d", p.Depth)
 	}
-	if p.Status != "" {
-		s += " status=" + p.Status
+	if len(p.Status) > 0 {
+		s += " status=" + strings.Join(p.Status, ",")
+	}
+	if len(p.Types) > 0 {
+		s += " types=" + strings.Join(p.Types, ",")
+	}
+	if p.Flatten {
+		s += " flatten=true"
+	}
+	if p.Labels != "" {
+		s += " labels=" + p.Labels
+	}
+	if p.Owner != "" {
+		s += " owner=" + p.Owner
+	}
+	if p.IncludeConfig {
+		s += " includeConfig=true"
+	}
+	if p.IncludeHealth {
+		s += " includeHealth=true"
 	}
 	return strings.TrimSpace(s)
 }
@@ -101,8 +137,8 @@ func (p TopologyParams) getID() string {
 func (p TopologyParams) GetComponentWhereClause() string {
 	s := "where components.deleted_at is null "
 	if p.getID() != "" {
-		s += `and (starts_with(path, 
-			(SELECT 
+		s += `and (starts_with(path,
+			(SELECT
 				(CASE WHEN (path IS NULL OR path = '') THEN id :: text ELSE concat(path,'.', id) END)
 				FROM components where id = :id)
 			) or id = :id or path = :id :: text)`
@@ -125,11 +161,11 @@ func (p TopologyParams) GetComponentRelationWhereClause() string {
 		s += " AND (parent.labels @> :labels)"
 	}
 	if p.getID() != "" {
-		s += ` and (component_relationships.relationship_id = :id or starts_with(component_relationships.relationship_path, (SELECT 
+		s += ` and (component_relationships.relationship_id = :id or starts_with(component_relationships.relationship_path, (SELECT
 			(CASE WHEN (path IS NULL OR path = '') THEN id :: text ELSE concat(path,'.', id) END)
 			FROM components where id = :id)))`
 	} else {
-		s += ` and (parent.parent_id is null or starts_with(component_relationships.relationship_path, (SELECT 
+		s += ` and (parent.parent_id is null or starts_with(component_relationships.relationship_path, (SELECT
 			(CASE WHEN (path IS NULL OR path = '') THEN id :: text ELSE concat(path,'.', id) END)
 			FROM components where id = parent.id)))`
 	}
@@ -155,7 +191,7 @@ func Query(params TopologyParams) (pkg.Components, error) {
             ), '{configs}', %s
         )
     ):: jsonb AS components FROM component_relationships INNER JOIN components
-	ON components.id = component_relationships.component_id INNER JOIN components AS parent 
+	ON components.id = component_relationships.component_id INNER JOIN components AS parent
 	ON component_relationships.relationship_id = parent.id %s)`,
 		getChecksForComponents(), getConfigForComponents(), params.GetComponentWhereClause(),
 		getChecksForComponents(), getConfigForComponents(), params.GetComponentRelationWhereClause())
@@ -171,7 +207,7 @@ func Query(params TopologyParams) (pkg.Components, error) {
 		args["labels"] = params.getLabels()
 	}
 
-	logger.Infof("Querying topology (%s) => %s", params, query)
+	logger.Tracef("Querying topology (%s) => %s", params, query)
 
 	var results pkg.Components
 	rows, err := db.QueryNamed(context.Background(), query, args)
@@ -189,14 +225,79 @@ func Query(params TopologyParams) (pkg.Components, error) {
 		results = append(results, components...)
 	}
 
-	results = results.CreateTreeStructure(params.getID(), params.Status)
+	if !params.Flatten {
+		results = results.CreateTreeStructure()
+	}
+
+	if params.getID() == "" && len(params.Status) == 0 {
+		for _, component := range results.Walk() {
+			component.Status = component.GetStatus()
+		}
+	}
+
+	results = filterComponentsByType(results, params.Types...)
 	for _, result := range results {
 		result.Components = filterComponentsWithDepth(result.Components, params.Depth)
 	}
-	if params.Status != "" {
-		results = results.FilterChildByStatus(pkg.ComponentStatus(params.Status))
-	}
+
+	results = filterComponentsByStatus(results, params.Status...)
+
+	logger.Debugf("Querying topology (%s) => %d components", params, len(results))
 	return results, nil
+}
+
+func filterComponentsByStatus(components []*pkg.Component, statii ...string) []*pkg.Component {
+	if len(statii) == 0 {
+		return components
+	}
+	var filtered []*pkg.Component
+	for _, component := range components {
+		if matchItems(string(component.Status), statii...) {
+			filtered = append(filtered, component)
+		}
+	}
+	return filtered
+}
+
+func filterComponentsByType(components []*pkg.Component, types ...string) []*pkg.Component {
+	if len(types) == 0 {
+		return components
+	}
+
+	var filtered []*pkg.Component
+	for _, component := range components {
+		if matchItems(component.Type, types...) {
+			filtered = append(filtered, component)
+		}
+	}
+	return filtered
+}
+
+// matchItems returns true if any of the items in the list match the item
+// negative matches are supported by prefixing the item with a !
+// * matches everything
+func matchItems(item string, items ...string) bool {
+	if len(items) == 0 {
+		return true
+	}
+
+	for _, i := range items {
+		if strings.HasPrefix(i, "!") {
+			if item == strings.TrimPrefix(i, "!") {
+				return false
+			}
+		}
+	}
+
+	for _, i := range items {
+		if strings.HasPrefix(i, "!") {
+			continue
+		}
+		if i == "*" || item == i {
+			return true
+		}
+	}
+	return false
 }
 
 func filterComponentsWithDepth(components []*pkg.Component, depth int) []*pkg.Component {

@@ -1,8 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
 
-
-
 CREATE TABLE templates (
   id UUID DEFAULT generate_ulid() PRIMARY KEY,
   name text NOT NULL,
@@ -15,7 +13,6 @@ CREATE TABLE templates (
   deleted_at TIMESTAMP DEFAULT NULL,
   UNIQUE (name, namespace)
 );
-
 
 CREATE TABLE components (
   id UUID DEFAULT generate_ulid() PRIMARY KEY,
@@ -44,6 +41,10 @@ CREATE TABLE components (
   properties jsonb,
   path text,
   summary  jsonb,
+  cost_per_minute numeric(16,4) NULL,
+  cost_total_1d numeric(16,4) NULL,
+  cost_total_7d numeric(16,4) NULL,
+  cost_total_30d numeric(16,4) NULL,
   created_at timestamp NOT NULL DEFAULT now(),
   updated_at timestamp NOT NULL DEFAULT now(),
   deleted_at TIMESTAMP DEFAULT NULL,
@@ -61,7 +62,7 @@ CREATE TABLE component_relationships(
   deleted_at TIMESTAMP DEFAULT NULL,
   selector_id text, -- hash of the selector from the components
   relationship_path text,
-  FOREIGN KEY(component_id) REFERENCES components(id), 
+  FOREIGN KEY(component_id) REFERENCES components(id),
   FOREIGN KEY(relationship_id) REFERENCES components(id),
   UNIQUE(component_id,relationship_id,selector_id)
 );
@@ -75,31 +76,12 @@ CREATE TABLE check_component_relationships(
     deleted_at TIMESTAMP DEFAULT NULL,
     selector_id text, -- hash of the selector from the components
     FOREIGN KEY (canary_id) REFERENCES canaries(id),
-    FOREIGN KEY(component_id) REFERENCES components(id), 
+    FOREIGN KEY(component_id) REFERENCES components(id),
     FOREIGN KEY(check_id) REFERENCES checks(id),
     UNIQUE (component_id, check_id, canary_id, selector_id)
 );
 
--- Skip check_component_relationships migration for a new deployment
-
-INSERT into canary_checker_db_version(version_id, tstamp, is_applied) VALUES(7, NOW(), true);
-
-
-create OR REPLACE function lookup_component_by_property(text, text)
-returns setof components
-as
-$$
-begin
-  return query
-    select * from components where deleted_at is null AND properties != 'null' and name in (select name  from components,jsonb_array_elements(properties) property where properties != 'null' and  property is not null and  property->>'name' = $1 and property->>'text' = $2);
-end;
-$$
-language plpgsql;
-
-
 -- +goose StatementEnd
-
-
 
 -- For local developemnent; one can run: `goose -dir ./pkg/db/migrations  postgres "postgres://tarun@localhost:5432/canary?sslmode=disable" down-to 0` to remove all the migr
 -- +goose Down

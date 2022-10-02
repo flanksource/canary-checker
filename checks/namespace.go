@@ -2,7 +2,7 @@ package checks
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	gocontext "context"
@@ -402,7 +402,7 @@ func (c *NamespaceChecker) getHTTP(url string, timeout int64, deadline time.Time
 	}
 	defer resp.Body.Close()
 
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", 0, perrors.Wrapf(err, "failed to read body for url %s", url)
 	}

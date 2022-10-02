@@ -15,7 +15,6 @@ import (
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -37,8 +36,12 @@ func (t *JSONTime) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	x, err := time.Parse("2006-01-02 15:04:05", s)
+	if err != nil {
+		logger.Warnf("failed to parse time: %s", err)
+		return nil
+	}
 	*t = JSONTime(x)
-	return err
+	return nil
 }
 
 type CheckStatus struct {
@@ -118,7 +121,7 @@ type Canary struct {
 	Schedule  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt
+	DeletedAt *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
 }
 
 func (c Canary) GetCheckID(checkName string) string {
@@ -130,12 +133,15 @@ func (c Canary) ToV1() *v1.Canary {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.Name,
 			Namespace: c.Namespace,
-			Labels:    c.Labels,
+			Annotations: map[string]string{
+				"source": c.Source,
+			},
+			Labels: c.Labels,
 		},
 	}
 	var deletionTimestamp metav1.Time
-	if c.DeletedAt.Valid {
-		deletionTimestamp = metav1.NewTime(c.DeletedAt.Time)
+	if c.DeletedAt != nil && !c.DeletedAt.IsZero() {
+		deletionTimestamp = metav1.NewTime(*c.DeletedAt)
 		canary.ObjectMeta.DeletionTimestamp = &deletionTimestamp
 	}
 	if err := json.Unmarshal(c.Spec, &canary.Spec); err != nil {
@@ -162,6 +168,7 @@ func CanaryFromV1(canary v1.Canary) (Canary, error) {
 		Labels:    types.JSONStringMap(canary.Labels),
 		Name:      canary.Name,
 		Namespace: canary.Namespace,
+		Source:    canary.Annotations["source"],
 		Schedule:  canary.Spec.GetSchedule(),
 		Checks:    types.JSONStringMap(checks),
 	}, nil
@@ -189,7 +196,7 @@ type Check struct {
 	NextRuntime *time.Time          `json:"nextRuntime,omitempty"`
 	UpdatedAt   *time.Time          `json:"updatedAt,omitempty"`
 	CreatedAt   *time.Time          `json:"createdAt,omitempty"`
-	DeletedAt   *gorm.DeletedAt     `json:"deletedAt,omitempty"`
+	DeletedAt   *time.Time          `json:"deletedAt,omitempty"`
 	Canary      *v1.Canary          `json:"-" gorm:"-"`
 }
 

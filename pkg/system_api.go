@@ -30,7 +30,25 @@ var (
 	ComponentPropertyStatusWarning   ComponentStatus = "warning"
 	ComponentPropertyStatusError     ComponentStatus = "error"
 	ComponentPropertyStatusInfo      ComponentStatus = "info"
+
+	ComponentStatusOrder = map[ComponentStatus]int{
+		ComponentPropertyStatusInfo:      0,
+		ComponentPropertyStatusHealthy:   1,
+		ComponentPropertyStatusUnhealthy: 2,
+		ComponentPropertyStatusWarning:   3,
+		ComponentPropertyStatusError:     4,
+	}
 )
+
+func (status ComponentStatus) Compare(other ComponentStatus) int {
+	if status == other {
+		return 0
+	}
+	if ComponentStatusOrder[status] > ComponentStatusOrder[other] {
+		return 1
+	}
+	return -1
+}
 
 const ComponentType = "component"
 
@@ -109,7 +127,7 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (components Components) CreateTreeStructure(queryID, status string) Components {
+func (components Components) CreateTreeStructure() Components {
 	var toRemoveCompIDs []uuid.UUID
 	for _, _c := range components {
 		c := _c
@@ -132,11 +150,7 @@ func (components Components) CreateTreeStructure(queryID, status string) Compone
 	for _, component := range components {
 		component.Summary = component.Summarize()
 	}
-	if queryID == "" && status == "" {
-		for _, component := range components.Walk() {
-			component.Status = component.GetStatus()
-		}
-	}
+
 	return components
 }
 
@@ -166,6 +180,7 @@ type Component struct {
 	Status       ComponentStatus     `json:"status,omitempty"`
 	StatusReason string              `json:"statusReason,omitempty"`
 	Path         string              `json:"path,omitempty"`
+	Order        int                 `json:"order,omitempty"  gorm:"-"`
 	// The type of component, e.g. service, API, website, library, database, etc.
 	Type    string     `json:"type,omitempty"`
 	Summary v1.Summary `json:"summary,omitempty" gorm:"type:summary"`
@@ -174,14 +189,14 @@ type Component struct {
 	Properties       Properties           `json:"properties,omitempty" gorm:"type:properties"`
 	Components       Components           `json:"components,omitempty" gorm:"-"`
 	ParentId         *uuid.UUID           `json:"parent_id,omitempty"` //nolint
-	Selectors        v1.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors"`
-	ComponentChecks  v1.ComponentChecks   `json:"-" gorm:"componentChecks"`
+	Selectors        v1.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors" swaggerignore:"true"`
+	ComponentChecks  v1.ComponentChecks   `json:"-" gorm:"componentChecks" swaggerignore:"true"`
 	Checks           Checks               `json:"checks,omitempty" gorm:"-"`
-	Configs          *Configs             `json:"-" gorm:"type:configs"`
+	Configs          Configs              `json:"configs" gorm:"type:configs"`
 	SystemTemplateID *uuid.UUID           `json:"system_template_id,omitempty"` //nolint
 	CreatedAt        time.Time            `json:"created_at,omitempty" time_format:"postgres_timestamp"`
 	UpdatedAt        time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
-	DeletedAt        *time.Time           `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt        *time.Time           `json:"deleted_at,omitempty" time_format:"postgres_timestamp" swaggerignore:"true"`
 	ExternalId       string               `json:"external_id,omitempty"` //nolint
 }
 
@@ -209,6 +224,7 @@ func (component Component) Clone() Component {
 	return Component{
 		Name:            component.Name,
 		TopologyType:    component.TopologyType,
+		Order:           component.Order,
 		ID:              component.ID,
 		Text:            component.Text,
 		Namespace:       component.Namespace,
@@ -255,18 +271,18 @@ func (component Component) GetAsEnvironment() map[string]interface{} {
 }
 
 func NewComponent(c v1.ComponentSpec) *Component {
-
 	configs := NewConfigs(c.Configs)
 	_c := Component{
 		Name:            c.Name,
 		Owner:           c.Owner,
 		Type:            c.Type,
+		Order:           c.Order,
 		Lifecycle:       c.Lifecycle,
 		Tooltip:         c.Tooltip,
 		Icon:            c.Icon,
 		Selectors:       c.Selectors,
 		ComponentChecks: c.ComponentChecks,
-		Configs:         &configs,
+		Configs:         configs,
 	}
 	if c.Summary != nil {
 		_c.Summary = *c.Summary
@@ -338,11 +354,23 @@ func (components Components) FindIndexByID(id uuid.UUID) int {
 	return -1
 }
 
-func (components Components) FilterChildByStatus(status ComponentStatus) Components {
+func contains(list []string, item string) bool {
+	for _, i := range list {
+		if i == item {
+			return true
+		}
+	}
+	return false
+}
+
+func (components Components) FilterChildByStatus(status ...string) Components {
+	if len(status) == 0 {
+		return components
+	}
 	for _, component := range components {
 		filtered := Components{}
 		for _, child := range component.Components {
-			if child.Status == status {
+			if contains(status, string(child.Status)) {
 				filtered = append(filtered, child)
 			}
 		}
@@ -369,14 +397,14 @@ type Link struct {
 
 // Property is a realized v1.Property without the lookup definition
 type Property struct {
-	Label   string `json:"label,omitempty"`
-	Name    string `json:"name,omitempty"`
-	Tooltip string `json:"tooltip,omitempty"`
-	Icon    string `json:"icon,omitempty"`
-	Type    string `json:"type,omitempty"`
-	Color   string `json:"color,omitempty"`
-
-	Headline bool `json:"headline,omitempty"`
+	Label    string `json:"label,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Tooltip  string `json:"tooltip,omitempty"`
+	Icon     string `json:"icon,omitempty"`
+	Type     string `json:"type,omitempty"`
+	Color    string `json:"color,omitempty"`
+	Order    int    `json:"order,omitempty"`
+	Headline bool   `json:"headline,omitempty"`
 
 	// Either text or value is required, but not both.
 	Text  string `json:"text,omitempty"`
@@ -475,6 +503,9 @@ func (p *Property) Merge(other *Property) {
 	if other.Min != 0 {
 		p.Min = other.Min
 	}
+	if other.Order > 0 {
+		p.Order = other.Order
+	}
 	if other.Status != "" {
 		p.Status = other.Status
 	}
@@ -498,6 +529,7 @@ func NewProperty(property v1.Property) *Property {
 		Name:           property.Name,
 		Tooltip:        property.Tooltip,
 		Icon:           property.Icon,
+		Order:          property.Order,
 		Text:           property.Text,
 		Value:          property.Value,
 		Unit:           property.Unit,
@@ -518,6 +550,9 @@ func (component Component) IsHealthy() bool {
 }
 
 func (component Component) Summarize() v1.Summary {
+	if len(component.Components) == 0 {
+		return component.Summary
+	}
 	s := v1.Summary{}
 	if component.Checks != nil && component.Components == nil {
 		for _, check := range component.Checks {

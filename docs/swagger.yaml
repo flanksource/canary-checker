@@ -1,0 +1,296 @@
+basePath: /
+definitions:
+  Check:
+    properties:
+      canary_id:
+        type: string
+      canary_name:
+        type: string
+      checkStatuses:
+        items:
+          $ref: '#/definitions/CheckStatus'
+        type: array
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      description:
+        type: string
+      displayType:
+        type: string
+      icon:
+        type: string
+      id:
+        type: string
+      labels:
+        type: object
+      lastRuntime:
+        type: string
+      latency:
+        $ref: '#/definitions/Latency'
+      name:
+        type: string
+      namespace:
+        type: string
+      nextRuntime:
+        type: string
+      owner:
+        type: string
+      severity:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+      uptime:
+        $ref: '#/definitions/Uptime'
+    type: object
+  CheckStatus:
+    properties:
+      duration:
+        type: integer
+      error:
+        type: string
+      invalid:
+        type: boolean
+      message:
+        type: string
+      status:
+        type: boolean
+      time:
+        type: string
+    type: object
+  Component:
+    properties:
+      checks:
+        items:
+          $ref: '#/definitions/Check'
+        type: array
+      components:
+        $ref: '#/definitions/Components'
+      configs:
+        items:
+          $ref: '#/definitions/Config'
+        type: array
+      created_at:
+        type: string
+      external_id:
+        description: nolint
+        type: string
+      icon:
+        type: string
+      id:
+        description: nolint
+        type: string
+      labels:
+        type: object
+      lifecycle:
+        description: The lifecycle state of the component e.g. production, staging,
+          dev, etc.
+        type: string
+      name:
+        type: string
+      namespace:
+        type: string
+      order:
+        type: integer
+      owner:
+        type: string
+      parent_id:
+        description: nolint
+        type: string
+      path:
+        type: string
+      properties:
+        items:
+          $ref: '#/definitions/Property'
+        type: array
+      schedule:
+        type: string
+      status:
+        type: string
+      statusReason:
+        type: string
+      summary:
+        $ref: '#/definitions/Summary'
+      system_template_id:
+        description: nolint
+        type: string
+      text:
+        type: string
+      tooltip:
+        type: string
+      topology_type:
+        type: string
+      type:
+        description: The type of component, e.g. service, API, website, library, database,
+          etc.
+        type: string
+      updated_at:
+        type: string
+    type: object
+  Components:
+    items:
+      $ref: '#/definitions/Component'
+    type: array
+  Config:
+    properties:
+      config_type:
+        type: string
+      external_id:
+        items:
+          type: string
+        type: array
+      external_type:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      namespace:
+        type: string
+      spec:
+        type: object
+    type: object
+  Latency:
+    properties:
+      p95:
+        type: number
+      p97:
+        type: number
+      p99:
+        type: number
+      rolling1h:
+        type: number
+    type: object
+  Property:
+    properties:
+      color:
+        type: string
+      headline:
+        type: boolean
+      icon:
+        type: string
+      label:
+        type: string
+      lastTransition:
+        type: string
+      links:
+        items:
+          $ref: '#/definitions/Link'
+        type: array
+      max:
+        type: integer
+      min:
+        type: integer
+      name:
+        type: string
+      order:
+        type: integer
+      status:
+        type: string
+      text:
+        description: Either text or value is required, but not both.
+        type: string
+      tooltip:
+        type: string
+      type:
+        type: string
+      unit:
+        description: e.g. milliseconds, bytes, millicores, epoch etc.
+        type: string
+      value:
+        type: integer
+    type: object
+  Uptime:
+    properties:
+      failed:
+        type: integer
+      p100:
+        type: number
+      passed:
+        type: integer
+    type: object
+  Link:
+    properties:
+      icon:
+        type: string
+      label:
+        type: string
+      text:
+        type: string
+      tooltip:
+        type: string
+      type:
+        description: e.g. documentation, support, playbook
+        type: string
+      url:
+        type: string
+    type: object
+  Summary:
+    properties:
+      healthy:
+        type: integer
+      info:
+        type: integer
+      unhealthy:
+        type: integer
+      warning:
+        type: integer
+    type: object
+info:
+  contact: {}
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Canary Checker API
+  version: 1..1
+paths:
+  /api/topology:
+    get:
+      description: Query the topology graph
+      operationId: TopologyQuery
+      parameters:
+      - description: Topology ID
+        in: query
+        name: id
+        type: string
+      - description: Topology ID
+        in: query
+        name: topologyId
+        type: string
+      - description: Component ID
+        in: query
+        name: componentId
+        type: string
+      - description: Owner
+        in: query
+        name: owner
+        type: string
+      - description: Comma seperated list of status
+        in: query
+        name: status
+        type: string
+      - description: Comma seperated list of types
+        in: query
+        name: types
+        type: string
+      - description: Flatten the topology
+        in: query
+        name: flatten
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/Component'
+            type: array
+      summary: Topology query
+      tags:
+      - topology
+swagger: "2.0"

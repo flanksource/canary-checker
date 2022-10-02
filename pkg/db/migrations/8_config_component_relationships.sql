@@ -8,11 +8,17 @@ CREATE TABLE IF NOT EXISTS config_component_relationships(
     updated_at timestamp NOT NULL DEFAULT now(),
     deleted_at TIMESTAMP DEFAULT NULL,
     selector_id text, -- hash of the selector from the component config
-    FOREIGN KEY(component_id) REFERENCES components(id), 
+    FOREIGN KEY(component_id) REFERENCES components(id),
     UNIQUE (component_id, config_id)
 );
 
-ALTER TABLE components ADD COLUMN IF NOT EXISTS configs jsonb;
+
+
+--- This is a dummy view, that will be replaced by config-db if installed
+CREATE VIEW config_names AS
+  SELECT ;
+
+
 -- +goose StatementEnd
 
 

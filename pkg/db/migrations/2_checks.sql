@@ -25,6 +25,7 @@ CREATE TABLE checks(
 	labels jsonb NULL,
 	owner text,
 	severity TEXT,
+	category TEXT,
 	last_runtime TIMESTAMP,
 	next_runtime TIMESTAMP,
 	silenced_at TIMESTAMP NULL,
@@ -52,7 +53,10 @@ CREATE TABLE check_statuses(
 	PRIMARY KEY (check_id, time)
 
 );
+
+
 -- +goose Down
 DROP TABLE check_statuses;
 DROP TABLE checks;
 DROP TABLE canaries;
+DROP TABLE check_component_relationships;

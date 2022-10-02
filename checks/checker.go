@@ -24,14 +24,11 @@ type Checker interface {
 }
 
 var All = []Checker{
-	&HelmChecker{},
+
 	&DNSChecker{},
 	&HTTPChecker{},
 	&IcmpChecker{},
 	&S3Checker{},
-	&DockerPullChecker{},
-	&DockerPushChecker{},
-	&ContainerdPullChecker{},
 	&PostgresChecker{},
 	&MssqlChecker{},
 	&MysqlChecker{},

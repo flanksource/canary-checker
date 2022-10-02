@@ -4,9 +4,9 @@ package checks
 
 import (
 	"bytes"
+	"io"
 
 	"crypto/tls"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -117,7 +117,7 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 	if err != nil {
 		return results.Failf("Failed to get object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err)
 	}
-	returnedData, _ := ioutil.ReadAll(obj.Body)
+	returnedData, _ := io.ReadAll(obj.Body)
 	if string(returnedData) != data {
 		return results.Failf("Get object doesn't match %s != %s", data, string(returnedData))
 	}

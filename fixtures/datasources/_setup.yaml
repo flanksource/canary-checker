@@ -589,58 +589,7 @@ kind: ConfigMap
 metadata:
   name: jmeter-fail-test
   namespace: default
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: chartmuseum
-  name: chartmuseum
-  namespace: default
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: chartmuseum
-  template:
-    metadata:
-      labels:
-        app: chartmuseum
-    spec:
-      containers:
-        - image: ghcr.io/helm/chartmuseum:v0.13.1
-          name: chartmuseum
-          imagePullPolicy: "IfNotPresent"
-          ports:
-            - containerPort: 8080
-          env:
-            - name: STORAGE
-              value: local
-            - name: STORAGE_LOCAL_ROOTDIR
-              value: /tmp/charts
-            - name: BASIC_AUTH_USER
-              value: admin
-            - name: BASIC_AUTH_PASS
-              value: passwd
-            - name: ALLOW_OVERWRITE
-              value: "true"
-            - name: AUTH_ANONYMOUS_GET
-              value: "true"
 
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: chartmuseum
-  namespace: default
-spec:
-  ports:
-    - name: chartmuseum
-      port: 8080
-      targetPort: 8080
-      protocol: TCP
-  selector:
-    app: chartmuseum
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -664,7 +613,7 @@ spec:
           image: docker.elastic.co/elasticsearch/elasticsearch:8.1.3
           env:
             - name: ES_JAVA_OPTS
-              value: '-Xms256m -Xmx256m'
+              value: "-Xms256m -Xmx256m"
             - name: network.bind_host
               value: 0.0.0.0
             - name: network.host
@@ -672,7 +621,7 @@ spec:
             - name: discovery.type
               value: single-node
             - name: xpack.security.enabled
-              value: 'false'
+              value: "false"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9200
@@ -688,7 +637,7 @@ spec:
             initialDelaySeconds: 10
         - name: populate-db
           image: debian:bookworm
-          command: ['/bin/sh', '-c']
+          command: ["/bin/sh", "-c"]
           readinessProbe:
             exec:
               command:
@@ -719,4 +668,3 @@ spec:
       protocol: TCP
   selector:
     app: elasticsearch
-
