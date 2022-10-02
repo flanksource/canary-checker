@@ -39,7 +39,7 @@ require (
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
-	github.com/labstack/echo/v4 v4.7.2
+	github.com/labstack/echo/v4 v4.9.0
 	github.com/liamylian/jsontime/v2 v2.0.0
 	github.com/lib/pq v1.10.4
 	github.com/onsi/ginkgo v1.16.4
