@@ -248,7 +248,7 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 		Text:      ctx.SystemTemplate.Spec.Text,
 		Type:      ctx.SystemTemplate.Spec.Type,
 		Schedule:  ctx.SystemTemplate.Spec.Schedule,
-		Configs:   &systemTemplateConfigs,
+		Configs:   systemTemplateConfigs,
 	}
 
 	if component.Name == "" {
