@@ -207,7 +207,7 @@ func Query(params TopologyParams) (pkg.Components, error) {
 		args["labels"] = params.getLabels()
 	}
 
-	logger.Tracef("Querying topology (%s) => %s", params, sql)
+	logger.Tracef("Querying topology (%s) => %s", params, query)
 
 	var results pkg.Components
 	rows, err := db.QueryNamed(context.Background(), query, args)

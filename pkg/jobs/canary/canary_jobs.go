@@ -142,6 +142,7 @@ func SyncCanaryJob(canary v1.Canary) error {
 
 	return nil
 }
+
 func SyncCanaryJobs() {
 	logger.Debugf("Syncing canary jobs")
 
@@ -152,7 +153,19 @@ func SyncCanaryJobs() {
 	}
 
 	for _, canary := range canaries {
-		if err := SyncCanaryJob(canary); err != nil {
+		if len(canary.Status.Checks) == 0 && len(canary.Spec.GetAllChecks()) > 0 {
+			logger.Infof("Persisting %s as it has no checks", canary.Name)
+			pkgCanary, _, _, err := db.PersistCanary(canary, canary.Annotations["source"])
+			if err != nil {
+				logger.Errorf("Failed to persist canary %s: %v", canary.Name, err)
+				continue
+			}
+
+			if err := SyncCanaryJob(*pkgCanary.ToV1()); err != nil {
+				logger.Errorf(err.Error())
+			}
+
+		} else if err := SyncCanaryJob(canary); err != nil {
 			logger.Errorf(err.Error())
 		}
 	}

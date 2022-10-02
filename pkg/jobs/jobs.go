@@ -31,6 +31,8 @@ func Start() {
 	if _, err := ScheduleFunc(v1.ComponentCheckSchedule, checks.ComponentCheckRun); err != nil {
 		logger.Errorf("Failed to schedule component check: %v", err)
 	}
+
+	canaryJobs.SyncCanaryJobs()
 }
 
 func ScheduleFunc(schedule string, fn func()) (interface{}, error) {
