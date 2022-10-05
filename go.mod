@@ -51,6 +51,7 @@ require (
 	github.com/pressly/goose/v3 v3.5.0
 	github.com/prometheus/client_golang v1.13.0
 	github.com/prometheus/common v0.37.0
+	github.com/rabbitmq/amqp091-go v1.5.0
 	github.com/robertkrimen/otto v0.0.0-20211024170158-b87d35c0b86f
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sevennt/echo-pprof v0.1.1-0.20220616082843-66a461746b5f

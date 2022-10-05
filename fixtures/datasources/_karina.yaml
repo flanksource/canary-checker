@@ -33,3 +33,7 @@ monitoring:
   prometheus:
     persistence:
       capacity: 2Gi
+rabbitmqOperator:
+  disabled: false
+  # 0.40.0 is from Fall 2020. The latest as of Fall 2022 is 2.0.0.
+  version: "0.40.0"

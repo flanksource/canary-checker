@@ -1,0 +1,91 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: amqp-default-pass
+spec:
+  interval: 30
+  amqp:
+    - name: amqp-default-pass
+      # In version 2.0.0, the "-rabbitmq-client" part is omitted
+      addr: amqp-fixture-rabbitmq-client.default.svc
+      description: "AMQP 0.9.1 default pass"
+      auth:
+        username:
+          valueFrom:
+            secretKeyRef:
+              # In version 2.0.0, this is "amqp-fixture-default-user"
+              name: amqp-fixture-rabbitmq-admin
+              key: username
+        password:
+          valueFrom:
+            secretKeyRef:
+              # In version 2.0.0, this is "amqp-fixture-default-user"
+              name: amqp-fixture-rabbitmq-admin
+              key: password
+
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: amqp-peek-direct-pass
+spec:
+  interval: 30
+  amqp:
+    - name: amqp-peek-direct-pass
+      # In version 2.0.0, the "-rabbitmq-client" part is omitted
+      addr: amqp-fixture-rabbitmq-client.default.svc
+      description: "AMQP 0.9.1 peek direct pass"
+      auth:
+        username:
+          valueFrom:
+            secretKeyRef:
+              # In version 2.0.0, this is "amqp-fixture-default-user"
+              name: amqp-fixture-rabbitmq-admin
+              key: username
+        password:
+          valueFrom:
+            secretKeyRef:
+              # In version 2.0.0, this is "amqp-fixture-default-user"
+              name: amqp-fixture-rabbitmq-admin
+              key: password
+      exchange:
+        name: canary.test.peek.direct
+        type: direct
+      queue:
+        name: testPeekDirectPass
+      peek: true
+      key: direct.pass
+
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: amqp-peek-topic-pass
+spec:
+  interval: 30
+  amqp:
+    - name: amqp-peek-topic-pass
+      # In version 2.0.0, the "-rabbitmq-client" part is omitted
+      addr: amqp-fixture-rabbitmq-client.default.svc
+      description: "AMQP 0.9.1 peek topic pass"
+      auth:
+        username:
+          valueFrom:
+            secretKeyRef:
+              # In version 2.0.0, this is "amqp-fixture-default-user"
+              name: amqp-fixture-rabbitmq-admin
+              key: username
+        password:
+          valueFrom:
+            secretKeyRef:
+              # In version 2.0.0, this is "amqp-fixture-default-user"
+              name: amqp-fixture-rabbitmq-admin
+              key: password
+      exchange:
+        name: canary.test.peek.topic
+        type: topic
+      queue:
+        name: testPeekTopicPass
+      peek: true
+      key: "#.pass.#"

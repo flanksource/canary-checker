@@ -10,3 +10,5 @@ RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="mi
 RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="minio123" restic --cacert .certs/ingress-ca.crt -r s3:https://minio.${DOMAIN}/restic-canary-checker backup "$(pwd)"
 #Sleep for 5 seconds for restic to be ready
 sleep 5
+
+$KARINA deploy phases --crds --rabbitmq-operator -c "$(pwd)/$TEST_FOLDER/_karina.yaml" -vv

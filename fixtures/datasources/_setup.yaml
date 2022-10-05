@@ -668,3 +668,10 @@ spec:
       protocol: TCP
   selector:
     app: elasticsearch
+
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: amqp-fixture
+  namespace: default

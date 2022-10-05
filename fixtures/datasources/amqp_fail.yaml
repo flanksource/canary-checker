@@ -1,0 +1,65 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: amqp-peek-direct-fail
+spec:
+  interval: 30
+  amqp:
+    - name: amqp-peek-direct-fail
+      # In version 2.0.0, the "-rabbitmq-client" part is omitted
+      addr: amqp-fixture-rabbitmq-client.default.svc
+      description: "AMQP 0.9.1 peek direct fail"
+      auth:
+        username:
+          valueFrom:
+            secretKeyRef:
+              # In version 2.0.0, this is "amqp-fixture-default-user"
+              name: amqp-fixture-rabbitmq-admin
+              key: username
+        password:
+          valueFrom:
+            secretKeyRef:
+              # In version 2.0.0, this is "amqp-fixture-default-user"
+              name: amqp-fixture-rabbitmq-admin
+              key: password
+      exchange:
+        name: canary.test.peek.direct
+        type: direct
+      queue:
+        name: testPeekDirectFail
+      peek: true
+      key: direct.fail
+
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: amqp-peek-topic-fail
+spec:
+  interval: 30
+  amqp:
+    - name: amqp-peek-topic-fail
+      # In version 2.0.0, the "-rabbitmq-client" part is omitted
+      addr: amqp-fixture-rabbitmq-client.default.svc
+      description: "AMQP 0.9.1 peek topic fail"
+      auth:
+        username:
+          valueFrom:
+            secretKeyRef:
+              # In version 2.0.0, this is "amqp-fixture-default-user"
+              name: amqp-fixture-rabbitmq-admin
+              key: username
+        password:
+          valueFrom:
+            secretKeyRef:
+              # In version 2.0.0, this is "amqp-fixture-default-user"
+              name: amqp-fixture-rabbitmq-admin
+              key: password
+      exchange:
+        name: canary.test.peek.topic
+        type: topic
+      queue:
+        name: testPeekTopicFail
+      peek: true
+      key: "#.fail.#"

@@ -64,6 +64,7 @@ type CanarySpec struct {
 	Kubernetes     []KubernetesCheck     `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
 	Folder         []FolderCheck         `yaml:"folder,omitempty" json:"folder,omitempty"`
 	Exec           []ExecCheck           `yaml:"exec,omitempty" json:"exec,omitempty"`
+	AMQP           []AMQPCheck           `yaml:"amqp,omitempty" json:"amqp,omitempty"`
 	AwsConfig      []AwsConfigCheck      `yaml:"awsConfig,omitempty" json:"awsConfig,omitempty"`
 	AwsConfigRule  []AwsConfigRuleCheck  `yaml:"awsConfigRule,omitempty" json:"awsConfigRule,omitempty"`
 	DatabaseBackup []DatabaseBackupCheck `yaml:"databaseBackup,omitempty" json:"databaseBackup,omitempty"`
@@ -164,6 +165,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Exec {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.AMQP {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.AwsConfig {
