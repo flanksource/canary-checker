@@ -169,10 +169,10 @@ ifeq ($(OS), darwin)
 	brew install upx
 	UPX=upx
 else
-	wget -nv -O upx.tar.xz https://github.com/upx/upx/releases/download/v3.96/upx-3.96-$(OS)_$(ARCH).xz
+	wget -nv -O upx.tar.xz https://github.com/upx/upx/releases/download/v3.96/upx-3.96-$(ARCH)_$(OS).tar.xz
 	tar xf upx.tar.xz
-	mv upx-3.96-$(OS)_$(ARCH)/upx .bin
-	rm -rf upx-3.96-$(OS)_$(ARCH)
+	mv upx-3.96-$(ARCH)_$(OS)/upx .bin
+	rm -rf upx-3.96-$(ARCH)_$(OS)
 	UPX=.bin/upx
 endif
 else
