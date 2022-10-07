@@ -6,7 +6,6 @@ import (
 
 	"github.com/flanksource/commons/collections"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -24,7 +23,6 @@ type configComponentRelationship struct {
 
 func configQuery(config pkg.Config) *gorm.DB {
 	query := Gorm.Table("config_items")
-
 	if config.ConfigType != "" {
 		query = query.Where("config_type = ?", config.ConfigType)
 	}
@@ -41,7 +39,7 @@ func configQuery(config pkg.Config) *gorm.DB {
 		query = query.Where("external_type = @external_type OR config_type = @external_type", sql.Named("external_type", config.ExternalType))
 	}
 	if len(config.ExternalID) > 0 {
-		query = query.Where("external_id @> ?", pq.StringArray(config.ExternalID))
+		query = query.Where("external_id @> ?", config.ExternalID)
 	}
 	return query
 }

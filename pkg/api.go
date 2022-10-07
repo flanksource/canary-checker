@@ -15,6 +15,7 @@ import (
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -297,7 +298,7 @@ type Config struct {
 	Name         string         `json:"name,omitempty"`
 	Namespace    string         `json:"namespace,omitempty"`
 	Spec         *types.JSONMap `json:"spec,omitempty" gorm:"column:config"`
-	ExternalID   []string       `json:"external_id,omitempty"`
+	ExternalID   pq.StringArray `json:"external_id,omitempty" gorm:"type:text[]"`
 	ExternalType string         `json:"external_type,omitempty"`
 }
 
@@ -313,7 +314,7 @@ func NewConfig(config v1.Config) *Config {
 	return &Config{
 		Name:         config.Name,
 		Namespace:    config.Namespace,
-		ExternalID:   config.ID,
+		ExternalID:   pq.StringArray(config.ID),
 		ExternalType: config.Type,
 	}
 }

@@ -94,6 +94,13 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 	return
 }
 
+func GetAllComponentsWithConfigs() (components pkg.Components, err error) {
+	if err := Gorm.Table("components").Where("deleted_at is NULL and configs != 'null'").Find(&components).Error; err != nil {
+		return nil, err
+	}
+	return
+}
+
 func GetAllComponentWithCanaries() (components pkg.Components, err error) {
 	if err := Gorm.Table("components").Where("deleted_at is NULL and component_checks != 'null'").Find(&components).Error; err != nil {
 		return nil, err

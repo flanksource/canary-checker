@@ -7,4 +7,5 @@ const (
 	ComponentRunSchedule               = "@every 2m"
 	ComponentStatusSummarySyncSchedule = "@every 1m"
 	ComponentCheckSchedule             = "@every 2m"
+	ComponentConfigSchedule            = "@every 2m"
 )
