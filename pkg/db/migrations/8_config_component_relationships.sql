@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS config_component_relationships(
 
 
 --- This is a dummy view, that will be replaced by config-db if installed
-CREATE VIEW config_names AS
+CREATE VIEW  config_names AS
   SELECT ;
 
 

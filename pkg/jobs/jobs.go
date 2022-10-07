@@ -6,6 +6,7 @@ import (
 	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/system"
 	"github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/canary-checker/pkg/topology/checks"
+	"github.com/flanksource/canary-checker/pkg/topology/configs"
 	"github.com/flanksource/commons/logger"
 	"github.com/robfig/cron/v3"
 )
@@ -30,6 +31,9 @@ func Start() {
 	}
 	if _, err := ScheduleFunc(v1.ComponentCheckSchedule, checks.ComponentCheckRun); err != nil {
 		logger.Errorf("Failed to schedule component check: %v", err)
+	}
+	if _, err := ScheduleFunc(v1.ComponentConfigSchedule, configs.ComponentConfigRun); err != nil {
+		logger.Errorf("Failed to schedule component config: %v", err)
 	}
 
 	canaryJobs.SyncCanaryJobs()

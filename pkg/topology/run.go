@@ -357,11 +357,6 @@ func ComponentRun() {
 			logger.Errorf("error persisting relationships: %v", err)
 			continue
 		}
-
-		// Sync config relationships
-		if err := db.UpsertComponentConfigRelationship(component.ID, component.Configs); err != nil {
-			logger.Errorf("error upserting config relationships: %v", err)
-		}
 	}
 }
 

@@ -11,6 +11,9 @@ spec:
   schedule: "@every 10m"
   id:
     javascript: properties.id
+  configs:
+    - name: flanksource-canary-cluster
+      type: EKS
   components:
     - name: nodes
       icon: server

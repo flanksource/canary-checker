@@ -323,7 +323,7 @@ func getChecksForComponents() string {
 
 func getConfigForComponents() string {
 	return `
-       (SELECT json_agg(config_items.config) from config_items
+       (SELECT json_agg(config_items) from config_items
         LEFT JOIN config_component_relationships ON config_items.id = config_component_relationships.config_id
         WHERE config_component_relationships.component_id = components.id AND config_component_relationships.deleted_at IS NULL
         GROUP BY config_component_relationships.component_id) :: jsonb

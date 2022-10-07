@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/canary-checker/pkg/topology/checks"
+	"github.com/flanksource/canary-checker/pkg/topology/configs"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
 	"github.com/google/uuid"
@@ -69,6 +70,7 @@ func (job SystemJob) Run() {
 	topology.ComponentRun()
 	topology.ComponentStatusSummarySync()
 	checks.ComponentCheckRun()
+	configs.ComponentConfigRun()
 }
 
 func SyncSystemsJobs() {
