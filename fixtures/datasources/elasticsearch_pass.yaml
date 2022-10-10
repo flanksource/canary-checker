@@ -1,7 +1,7 @@
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
-  name: elasticsearch
+  name: elasticsearch-pass
 spec:
   interval: 30
   elasticsearch:
@@ -17,6 +17,7 @@ spec:
           }
         }
       results: 1
+      name: elasticsearch_pass
       auth:
         username:
           value: admin
