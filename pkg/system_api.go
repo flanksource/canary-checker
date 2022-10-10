@@ -550,9 +550,6 @@ func (component Component) IsHealthy() bool {
 }
 
 func (component Component) Summarize() v1.Summary {
-	if len(component.Components) == 0 {
-		return component.Summary
-	}
 	s := v1.Summary{}
 	if component.Checks != nil && component.Components == nil {
 		for _, check := range component.Checks {

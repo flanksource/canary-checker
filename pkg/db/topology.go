@@ -212,11 +212,28 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 			tx = Gorm.Find(existing, "system_template_id = ? AND name = ? AND type = ? and parent_id = ?", component.SystemTemplateID, component.Name, component.Type, component.ParentId)
 		}
 	}
+	if tx.Error != nil {
+		return persisted, tx.Error
+	}
 	if existing.ID != uuid.Nil {
 		component.ID = existing.ID
-		tx.UpdateColumns(component)
+		component.DeletedAt = nil
+		tx = Gorm.Table("components").Clauses(
+			clause.OnConflict{
+				Columns:   []clause.Column{{Name: "system_template_id"}, {Name: "name"}, {Name: "type"}, {Name: "parent_id"}},
+				UpdateAll: true,
+			},
+		).UpdateColumns(component)
 	} else {
-		tx = Gorm.Create(component)
+		tx = Gorm.Table("components").Clauses(
+			clause.OnConflict{
+				Columns:   []clause.Column{{Name: "system_template_id"}, {Name: "name"}, {Name: "type"}, {Name: "parent_id"}},
+				UpdateAll: true,
+			},
+		).Create(component)
+	}
+	if tx.Error != nil {
+		return persisted, tx.Error
 	}
 	persisted = append(persisted, component.ID)
 	for _, child := range component.Components {

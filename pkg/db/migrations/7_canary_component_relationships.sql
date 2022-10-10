@@ -7,7 +7,7 @@ CREATE TABLE check_component_relationships(
     created_at timestamp NOT NULL DEFAULT now(),
     updated_at timestamp NOT NULL DEFAULT now(),
     deleted_at TIMESTAMP DEFAULT NULL,
-    selector_id text, -- hash of the selector from the components
+    selector_id text, -- hash of the selector from the checks
     FOREIGN KEY (canary_id) REFERENCES canaries(id),
     FOREIGN KEY(component_id) REFERENCES components(id),
     FOREIGN KEY(check_id) REFERENCES checks(id),
