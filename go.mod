@@ -68,7 +68,8 @@ require (
 	google.golang.org/genproto v0.0.0-20210828152312-66f60bf46e71
 	gopkg.in/flanksource/yaml.v3 v3.1.1
 	gorm.io/driver/postgres v1.3.1
-	gorm.io/gorm v1.23.1
+	gorm.io/gorm v1.23.4
+	gorm.io/plugin/prometheus v0.0.0-20220517015831-ca6bfaf20bf4
 	k8s.io/api v0.20.6
 	k8s.io/apimachinery v0.20.6
 	k8s.io/client-go v11.0.0+incompatible
