@@ -20,6 +20,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	glogger "gorm.io/gorm/logger"
+	"gorm.io/plugin/prometheus"
 )
 
 //go:embed migrations/*.sql
@@ -118,6 +119,12 @@ func Init() error {
 		}
 		config.ConnConfig.Logger = logrusadapter.NewLogger(logrusLogger)
 	}
+
+	if config.MaxConns < 10 {
+		// prevent deadlocks from concurrent queries
+		config.MaxConns = 10
+	}
+
 	Pool, err = pgxpool.ConnectConfig(context.Background(), config)
 	if err != nil {
 		return err
@@ -129,7 +136,6 @@ func Init() error {
 		Pool = nil
 		return err
 	}
-	logger.Infof("Initialized DB: %s (%s)", config.ConnString(), size)
 	pgxConnectionString = stdlib.RegisterConnConfig(config.ConnConfig)
 
 	db, err := GetDB()
@@ -149,6 +155,14 @@ func Init() error {
 	if err != nil {
 		return err
 	}
+
+	Gorm.Use(prometheus.New(prometheus.Config{
+		DBName:      config.ConnConfig.Database,
+		StartServer: false,
+		MetricsCollector: []prometheus.MetricsCollector{
+			&prometheus.Postgres{},
+		},
+	}))
 
 	return Migrate()
 }
