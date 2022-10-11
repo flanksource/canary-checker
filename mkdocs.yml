@@ -5,12 +5,30 @@ theme:
   logo: ./images/cc-white.svg
   favicon: ./images/cc-blue.svg
   name: material
+  palette:
+  - media: '(prefers-color-scheme: light)'
+    scheme: default
+    primary: indigo
+    accent: light-blue
+    toggle:
+      icon: material/lightbulb
+      name: Switch to light mode
+  - media: '(prefers-color-scheme: dark)'
+    scheme: slate
+    primary: indigo
+    accent: light-blue
+    toggle:
+      icon: material/lightbulb-outline
+      name: Switch to dark mode
   features:
-    - navigation.instant
-    - navigation.sections
-    - navigation.tracking
+    - content.tabs.link
+    - search.suggest
+    - search.highlight
+    # - navigation.instant
+    # - navigation.sections
+    # - navigation.tracking
     # - navigation.expand
-    - navigation.top
+    # - navigation.top
 markdown_extensions:
   - admonition
   - fenced_code
@@ -25,32 +43,38 @@ markdown_extensions:
   - codehilite:
       linenums: true
 nav:
-  - CLI: ./run.md
-  - Standalone Server: ./server.md
-  - Kubernetes Operator: ./operator.md
-  - Canary Types:
-      - Cloudwatch: ./api/#cloudwatch
-      - Containerd Pull: ./api/#containerdpull
-      - Containerd Push: ./api/#containerdpush
-      - DNS: ./api/#dns
-      - Docker Pull: ./api/#dockerpull
-      - Docker Push: ./api/#dockerpush
-      - EC2: ./api/#ec2
-      - GCS: ./api/#gcsbucket
-      - Helm: ./api/#helm
-      - HTTP: ./api/#http
-      - ICMP: ./api/#icmp
-      - JMeter: ./api/#jmeter
-      - JUnit: ./api/#junit
-      - LDAP: ./api/#ldap
-      - Mongo: ./api/#mongo
-      - Namespace: ./api/#namespace
-      - Pod: ./api/#pod
-      - Postgres: ./api/#postgres
-      - Prometheus: ./api/#prometheus
-      - Redis: ./api/#redis
-      - Restic: ./api/#restic
-      - S3 Bucket: ./api/#s3bucket
-      - S3: ./api/#s3
-      - SMB / CIFS: ./api/#smb
-      - SQL Server: ./api/#mssql
+  - Introduction:
+    - Overview:  ./index.md
+  - Tutorials: 
+    - Getting Started With Canary Checker: ./getting-started.md
+    - Build and Run Canary Checker Locally: ./dev-guide.md
+  - Canary Checker:
+    - Install CLI: ./run.md
+    - Install on Standalone Server: ./server.md
+    - Install Kubernetes Operator: ./operator.md
+  - Check Types:
+      - Cloudwatch: ./check-types/cloudwatch.md
+      - Containerd Pull: ./check-types/containerd-pull.md
+      - Containerd Push: ./check-types/containerd-push.md
+      - DNS: ./check-types/dns.md
+      - Docker Pull: ./check-types/docker-pull.md
+      - Docker Push: ./check-types/docker-push.md
+      - EC2: ./check-types/ec2.md
+      - GCS: ./check-types/gcs.md
+      - Helm: ./check-types/helm.md
+      - HTTP: ./check-types/http.md
+      - ICMP: ./check-types/icmp.md
+      - JMeter: ./check-types/jmeter.md
+      - JUnit: ./check-types/junit.md
+      - LDAP: ./check-types/ldap.md
+      - Mongo: ./check-types/mongo.md
+      - Namespace: ./check-types/namespace.md
+      - Pod: ./check-types/pod.md
+      - Postgres: ./check-types/postgres.md
+      - Prometheus: ./check-types/prometheus.md
+      - Redis: ./check-types/redis.md
+      - Restic: ./check-types/restic.md
+      - S3 Bucket: ./check-types/s3-bucket.md
+      - S3: ./check-types/s3.md
+      - SMB / CIFS: ./check-types/smb.md
+      - SQL Server: ./check-types/sql-server.md
