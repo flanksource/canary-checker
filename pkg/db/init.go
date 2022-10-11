@@ -156,13 +156,15 @@ func Init() error {
 		return err
 	}
 
-	Gorm.Use(prometheus.New(prometheus.Config{
+	if err := Gorm.Use(prometheus.New(prometheus.Config{
 		DBName:      config.ConnConfig.Database,
 		StartServer: false,
 		MetricsCollector: []prometheus.MetricsCollector{
 			&prometheus.Postgres{},
 		},
-	}))
+	})); err != nil {
+		logger.Warnf("Failed to register prometheus metrics: %v", err)
+	}
 
 	return Migrate()
 }
