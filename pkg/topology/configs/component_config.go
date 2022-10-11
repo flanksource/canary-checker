@@ -1,10 +1,11 @@
 package configs
 
 import (
+	"time"
+
 	"github.com/flanksource/commons/collections"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"time"
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
