@@ -240,15 +240,16 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 	var results pkg.Components
 	systemTemplateConfigs := pkg.NewConfigs(ctx.SystemTemplate.Spec.Configs)
 	component := &pkg.Component{
-		Name:      ctx.SystemTemplate.Spec.Text,
-		Namespace: ctx.SystemTemplate.GetNamespace(),
-		Labels:    ctx.SystemTemplate.Labels,
-		Tooltip:   ctx.SystemTemplate.Spec.Tooltip,
-		Icon:      ctx.SystemTemplate.Spec.Icon,
-		Text:      ctx.SystemTemplate.Spec.Text,
-		Type:      ctx.SystemTemplate.Spec.Type,
-		Schedule:  ctx.SystemTemplate.Spec.Schedule,
-		Configs:   systemTemplateConfigs,
+		Name:            ctx.SystemTemplate.Spec.Text,
+		Namespace:       ctx.SystemTemplate.GetNamespace(),
+		Labels:          ctx.SystemTemplate.Labels,
+		Tooltip:         ctx.SystemTemplate.Spec.Tooltip,
+		Icon:            ctx.SystemTemplate.Spec.Icon,
+		Text:            ctx.SystemTemplate.Spec.Text,
+		Type:            ctx.SystemTemplate.Spec.Type,
+		Schedule:        ctx.SystemTemplate.Spec.Schedule,
+		Configs:         systemTemplateConfigs,
+		ComponentChecks: ctx.SystemTemplate.Spec.ComponentChecks,
 	}
 
 	if component.Name == "" {

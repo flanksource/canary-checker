@@ -14,17 +14,18 @@ type SystemTemplate struct {
 	Status            SystemTemplateStatus `json:"status,omitempty"`
 }
 type SystemTemplateSpec struct {
-	Type       string          `json:"type,omitempty"`
-	Id         *Template       `json:"id,omitempty"` //nolint
-	Schedule   string          `json:"schedule,omitempty"`
-	Tooltip    string          `json:"tooltip,omitempty"`
-	Icon       string          `json:"icon,omitempty"`
-	Text       string          `json:"text,omitempty"`
-	Label      string          `json:"label,omitempty"`
-	Owner      Owner           `json:"owner,omitempty"`
-	Components []ComponentSpec `json:"components,omitempty"`
-	Properties Properties      `json:"properties,omitempty"`
-	Configs    []Config        `json:"configs,omitempty"`
+	Type            string          `json:"type,omitempty"`
+	Id              *Template       `json:"id,omitempty"` //nolint
+	Schedule        string          `json:"schedule,omitempty"`
+	Tooltip         string          `json:"tooltip,omitempty"`
+	Icon            string          `json:"icon,omitempty"`
+	Text            string          `json:"text,omitempty"`
+	Label           string          `json:"label,omitempty"`
+	Owner           Owner           `json:"owner,omitempty"`
+	Components      []ComponentSpec `json:"components,omitempty"`
+	Properties      Properties      `json:"properties,omitempty"`
+	Configs         []Config        `json:"configs,omitempty"`
+	ComponentChecks ComponentChecks `json:"checks,omitempty"`
 }
 
 func (s SystemTemplate) IsEmpty() bool {
