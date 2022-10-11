@@ -62,21 +62,21 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           snapshot: true
           tags: "latest,v${{ needs.semantic-release.outputs.release-version }}"
-  docs:
-    runs-on: ubuntu-latest
-    needs: semantic-release
-    container:
-      image: flanksource/build-tools:v0.15.1
-    steps:
-      - uses: actions/checkout@v2
-      - name: setup node
-        uses: actions/setup-node@v2
-        with:
-          node-version: "16"
-      - run: make build-api-docs build-docs deploy-docs
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          MKDOCS_INSIDERS: ${{secrets.MKDOCS_INSIDERS}}
+  # docs:
+  #   runs-on: ubuntu-latest
+  #   needs: semantic-release
+  #   container:
+  #     image: flanksource/build-tools:v0.15.1
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: setup node
+  #       uses: actions/setup-node@v2
+  #       with:
+  #         node-version: "16"
+  #     - run: make build-api-docs build-docs deploy-docs
+  #       env:
+  #         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+  #         MKDOCS_INSIDERS: ${{secrets.MKDOCS_INSIDERS}}
   trigger:
     runs-on: ubuntu-latest
     needs: docker
