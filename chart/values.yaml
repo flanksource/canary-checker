@@ -56,7 +56,7 @@ ingress:
   #      - chart-example.local
 
 flanksource-ui:
-  enabled: false                # Disable canary-checker-ui by default.
+  enabled: true
   nameOverride: "canary-checker-ui"
   fullnameOverride: "canary-checker-ui"
   oryKratosURL: ""
