@@ -147,7 +147,11 @@ func (p TopologyParams) GetComponentWhereClause() string {
 		s += " AND (components.owner = :owner or id = :id)"
 	}
 	if p.Labels != "" {
-		s += " AND (components.labels @> :labels or id = :id)"
+		s += " AND (components.labels @> :labels"
+		if p.getID() != "" {
+			s += " or id = :id"
+		}
+		s += ")"
 	}
 	return s
 }
@@ -240,20 +244,31 @@ func Query(params TopologyParams) (pkg.Components, error) {
 		result.Components = filterComponentsWithDepth(result.Components, params.Depth)
 	}
 
-	results = filterComponentsByStatus(results, params.Status...)
-
+	results = filterComponentsByStatus(results, params.getID() == "", params.Status...)
 	logger.Debugf("Querying topology (%s) => %d components", params, len(results))
 	return results, nil
 }
 
-func filterComponentsByStatus(components []*pkg.Component, statii ...string) []*pkg.Component {
+func filterComponentsByStatus(components []*pkg.Component, filterRoot bool, statii ...string) []*pkg.Component {
 	if len(statii) == 0 {
 		return components
 	}
 	var filtered []*pkg.Component
 	for _, component := range components {
-		if matchItems(string(component.Status), statii...) {
+		// Filter the root components if requested else filter the 1st level children
+		if filterRoot {
+			if matchItems(string(component.Status), statii...) {
+				filtered = append(filtered, component)
+			}
+		} else {
 			filtered = append(filtered, component)
+			var filteredChildren []*pkg.Component
+			for _, child := range component.Components {
+				if matchItems(string(child.Status), statii...) {
+					filteredChildren = append(filteredChildren, child)
+				}
+			}
+			component.Components = filteredChildren
 		}
 	}
 	return filtered
