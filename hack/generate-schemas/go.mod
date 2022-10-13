@@ -139,7 +139,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	gorm.io/gorm v1.23.1 // indirect
+	gorm.io/gorm v1.23.4 // indirect
 	gotest.tools/v3 v3.0.3 // indirect
 	k8s.io/api v0.20.6 // indirect
 	k8s.io/apiextensions-apiserver v0.20.4 // indirect
