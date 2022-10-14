@@ -19,12 +19,20 @@ func init() {
 	status := pkg.CheckStatus{}
 	var details string
 	var checkID, checkCanaryID string
+	var err error
 	var Push = &cobra.Command{
 		Use:   "push <servers>",
 		Short: "Push a check to multiple canary-checker servers",
 		Run: func(cmd *cobra.Command, servers []string) {
-			check.ID = uuid.MustParse(checkID)
-			check.CanaryID = uuid.MustParse(checkCanaryID)
+			check.ID, err = uuid.Parse(checkID)
+			if err != nil {
+				check.ID = uuid.Nil
+			}
+			check.CanaryID, err = uuid.Parse(checkCanaryID)
+			if err != nil {
+				check.CanaryID = uuid.Nil
+			}
+
 			if details != "" && files.Exists(details) {
 				detailsContent, err := os.ReadFile(details)
 				if err != nil {
