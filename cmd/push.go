@@ -10,6 +10,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/commons/files"
 	"github.com/flanksource/commons/logger"
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 )
 
@@ -17,10 +18,13 @@ func init() {
 	check := pkg.Check{}
 	status := pkg.CheckStatus{}
 	var details string
+	var checkID, checkCanaryID string
 	var Push = &cobra.Command{
 		Use:   "push <servers>",
 		Short: "Push a check to multiple canary-checker servers",
 		Run: func(cmd *cobra.Command, servers []string) {
+			check.ID = uuid.MustParse(checkID)
+			check.CanaryID = uuid.MustParse(checkCanaryID)
 			if details != "" && files.Exists(details) {
 				detailsContent, err := os.ReadFile(details)
 				if err != nil {
@@ -46,8 +50,8 @@ func init() {
 		},
 	}
 
-	Push.Flags().StringVar(&check.ID, "id", "", "UUID of check")
-	Push.Flags().StringVar(&check.CanaryID, "parent-id", "", "UUID of parent canary")
+	Push.Flags().StringVar(&checkID, "id", "", "UUID of check")
+	Push.Flags().StringVar(&checkCanaryID, "parent-id", "", "UUID of parent canary")
 	Push.Flags().StringVarP(&check.Name, "name", "n", "", "Name of check")
 	Push.Flags().StringVarP(&check.Type, "type", "t", "", "Type of check")
 	Push.Flags().StringVarP(&check.Description, "description", "d", "", "Description of check")

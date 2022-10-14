@@ -74,7 +74,7 @@ func Changes(c echo.Context) error {
 						Icon:        "",
 						Data:        check.Statuses[i].Message,
 						Identifier: changes.Identifier{
-							Id: check.ID,
+							Id: check.ID.String(),
 						},
 					}
 					if changeResult.Count == 0 {

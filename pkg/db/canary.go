@@ -56,7 +56,7 @@ func GetAllChecks() ([]pkg.Check, error) {
 	return checks, nil
 }
 
-func PersistCheck(check pkg.Check, canaryID string) (string, error) {
+func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 	check.CanaryID = canaryID
 	if check.Spec == nil {
 		spec, _ := json.Marshal(check)
@@ -84,7 +84,7 @@ func PersistCheck(check pkg.Check, canaryID string) (string, error) {
 			}),
 	}).Create(&check)
 	if tx.Error != nil {
-		return "", tx.Error
+		return uuid.Nil, tx.Error
 	}
 
 	return check.ID, nil
@@ -214,13 +214,13 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 		// not creating the new check if already exists in the status
 		// status is not patched correctly with the status id
 		if checkID := canary.GetCheckID(check.Name); checkID != "" {
-			check.ID = checkID
+			check.ID = uuid.MustParse(checkID)
 		}
-		id, err := PersistCheck(check, model.ID.String())
+		id, err := PersistCheck(check, model.ID)
 		if err != nil {
 			logger.Errorf("error persisting check", err)
 		}
-		checks[config.GetName()] = id
+		checks[config.GetName()] = id.String()
 	}
 	if tx.Error != nil {
 		return nil, checks, changed, tx.Error

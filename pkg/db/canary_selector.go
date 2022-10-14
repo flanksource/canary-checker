@@ -31,7 +31,7 @@ func GetChecksWithLabelSelector(labelSelector string) (selectedChecks pkg.Checks
 		return nil, err
 	}
 	for _, c := range checks {
-		uninqueChecks[c.ID] = c
+		uninqueChecks[c.ID.String()] = c
 	}
 	for _, k := range onlyKeys {
 		var canaries pkg.Checks
@@ -39,7 +39,7 @@ func GetChecksWithLabelSelector(labelSelector string) (selectedChecks pkg.Checks
 			continue
 		}
 		for _, c := range canaries {
-			uninqueChecks[c.ID] = c
+			uninqueChecks[c.ID.String()] = c
 		}
 	}
 	for _, c := range uninqueChecks {

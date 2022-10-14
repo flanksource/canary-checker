@@ -4,12 +4,13 @@ import (
 	"time"
 
 	"github.com/flanksource/commons/collections"
+	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/canary-checker/pkg/utils"
 )
 
 func ComponentConfigRun() {
@@ -45,6 +46,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 		configIDs = append(configIDs, r.ConfigID.String())
 	}
 
+	var newConfigsIDs []string
 	for _, config := range configs {
 		dbConfig, err := db.FindConfig(*config)
 		if err != nil {
@@ -62,7 +64,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 			if err := db.PersistConfigComponentRelationship(dbConfig.ID, componentID, selectorID); err != nil {
 				return errors.Wrap(err, "error persisting config relationships")
 			}
-			continue
+			newConfigsIDs = append(newConfigsIDs, dbConfig.ID.String())
 		}
 
 		// If config_id exists mark old row as deleted and update selector_id
@@ -70,9 +72,18 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 			Update("deleted_at", time.Now()).Error; err != nil {
 			return errors.Wrap(err, "error updating config relationships")
 		}
-		if err := db.PersistConfigComponentRelationship(config.ID, componentID, selectorID); err != nil {
+		if err := db.PersistConfigComponentRelationship(dbConfig.ID, componentID, selectorID); err != nil {
 			return errors.Wrap(err, "error persisting config relationships")
 		}
+		newConfigsIDs = append(newConfigsIDs, dbConfig.ID.String())
 	}
+
+	// Take set difference of these child component Ids and delete them
+	configIDsToDelete := utils.SetDifference(configIDs, newConfigsIDs)
+	if err := db.Gorm.Model(&db.ConfigComponentRelationship{}).Where("component_id = ? AND config_id IN ?", componentID, configIDsToDelete).
+		Update("deleted_at", time.Now()).Error; err != nil {
+		return errors.Wrap(err, "error deleting stale config component relationships")
+	}
+
 	return nil
 }

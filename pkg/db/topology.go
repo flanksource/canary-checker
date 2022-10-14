@@ -1,16 +1,15 @@
 package db
 
 import (
-	"crypto/md5"
-	"encoding/hex"
-	"encoding/json"
-
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -107,65 +106,77 @@ func GetAllComponentWithCanaries() (components pkg.Components, err error) {
 	return
 }
 
-func GetComponentRelationships(relationshipID uuid.UUID, path string, components pkg.Components) (relationships []*pkg.ComponentRelationship, err error) {
+func NewComponentRelationships(relationshipID uuid.UUID, path string, components pkg.Components) (relationships []*pkg.ComponentRelationship, err error) {
 	for _, component := range components {
+		selectorID, err := utils.GenerateJSONMD5Hash(component.Selectors)
+		if err != nil {
+			logger.Errorf("Error generationg selector_id hash: %v", err)
+		}
+
 		relationships = append(relationships, &pkg.ComponentRelationship{
 			RelationshipID:   relationshipID,
 			ComponentID:      component.ID,
-			SelectorID:       GetSelectorIDFromResourceSelectors(component.Selectors),
+			SelectorID:       selectorID,
 			RelationshipPath: path + "." + relationshipID.String(),
 		})
 	}
 	return
 }
 
-func GetCheckRelationships(compID uuid.UUID, checks pkg.Checks, componentChecks v1.ComponentChecks) (relationships []*pkg.CheckComponentRelationship, err error) {
-	for _, check := range checks {
-		canaryID, _ := uuid.Parse(check.CanaryID)
-		relationships = append(relationships, &pkg.CheckComponentRelationship{
-			CanaryID:    canaryID,
-			CheckID:     check.ID,
-			ComponentID: compID,
-			SelectorID:  GetSelectorIDFromComponentChecks(componentChecks),
-		})
+func GetChildRelationshipsForParentComponent(componentID uuid.UUID) ([]pkg.ComponentRelationship, error) {
+	var relationships []pkg.ComponentRelationship
+	if err := Gorm.Where("relationship_id = ? AND deleted_at IS NOT NULL", componentID).Find(&relationships).Error; err != nil {
+		return relationships, err
 	}
-	return
+	return relationships, nil
 }
 
-func GetSelectorIDFromResourceSelectors(selectors v1.ResourceSelectors) string {
-	data, err := json.Marshal(selectors)
-	if err != nil {
-		logger.Errorf("Error marshalling selectors %v", err)
-		return ""
-	}
-	hash := md5.Sum(data)
-	if err != nil {
-		logger.Errorf("Error hashing selector %v", err)
-		return ""
-	}
-	return hex.EncodeToString(hash[:])
-}
+func PersistComponentRelationships(parentComponentID uuid.UUID, relationships []*pkg.ComponentRelationship) error {
+	var selectorIDs, childComponentIDs []string
 
-func GetSelectorIDFromComponentChecks(componentChecks v1.ComponentChecks) string {
-	data, err := json.Marshal(componentChecks)
+	existingRelationShips, err := GetChildRelationshipsForParentComponent(parentComponentID)
 	if err != nil {
-		logger.Errorf("Error marshalling component canaries %v", err)
-		return ""
+		return err
 	}
-	hash := md5.Sum(data)
-	if err != nil {
-		logger.Errorf("Error hashing component canaries %v", err)
-		return ""
+	for _, r := range existingRelationShips {
+		selectorIDs = append(selectorIDs, r.SelectorID)
+		childComponentIDs = append(childComponentIDs, r.ComponentID.String())
 	}
-	return hex.EncodeToString(hash[:])
-}
 
-func PersistComponentRelationships(relationships []*pkg.ComponentRelationship) error {
-	for _, relationship := range relationships {
-		if err := PersistComponentRelationship(relationship); err != nil {
+	var newChildComponentIDs []string
+	for _, r := range relationships {
+		// If selectorID already exists, no action is required
+		if collections.Contains(selectorIDs, r.SelectorID) {
+			continue
+		}
+
+		// If childComponentID does not exist, create a new relationship
+		if !collections.Contains(childComponentIDs, r.ComponentID.String()) {
+			if err := PersistComponentRelationship(r); err != nil {
+				return errors.Wrap(err, "error persisting component relationships")
+			}
+			newChildComponentIDs = append(newChildComponentIDs, r.ComponentID.String())
+		}
+
+		// If childComponentID exists mark old row as deleted and update selector_id
+		if err := Gorm.Model(&pkg.ComponentRelationship{}).Where("relationship_id = ? AND component_id = ?", parentComponentID, r.ComponentID).
+			Update("deleted_at", time.Now()).Error; err != nil {
+			return errors.Wrap(err, "error updating component relationships")
+		}
+
+		if err := PersistComponentRelationship(r); err != nil {
 			return err
 		}
+		newChildComponentIDs = append(newChildComponentIDs, r.ComponentID.String())
 	}
+
+	// Take set difference of these child component Ids and delete them
+	childComponentIDsToDelete := utils.SetDifference(childComponentIDs, newChildComponentIDs)
+	if err := Gorm.Model(&pkg.ComponentRelationship{}).Where("relationship_id = ? AND component_id IN ?", parentComponentID, childComponentIDsToDelete).
+		Update("deleted_at", time.Now()).Error; err != nil {
+		return errors.Wrap(err, "error deleting stale component relationships")
+	}
+
 	return nil
 }
 
@@ -177,12 +188,59 @@ func PersistComponentRelationship(relationship *pkg.ComponentRelationship) error
 	return tx.Error
 }
 
-func PersistCheckComponentRelationships(relationships []*pkg.CheckComponentRelationship) error {
-	for _, relationship := range relationships {
-		if err := PersistCheckComponentRelationship(relationship); err != nil {
-			return err
-		}
+func GetCheckRelationshipsForComponent(componentID uuid.UUID) ([]pkg.CheckComponentRelationship, error) {
+	var relationships []pkg.CheckComponentRelationship
+	if err := Gorm.Where("component_id = ? AND deleted_at IS NOT NULL", componentID).Find(&relationships).Error; err != nil {
+		return relationships, err
 	}
+	return relationships, nil
+}
+
+func PersistCheckComponentRelationshipsForComponent(componentID uuid.UUID, relationships []*pkg.CheckComponentRelationship) error {
+	var selectorIDs, checkIDs []string
+	existingRelationShips, err := GetCheckRelationshipsForComponent(componentID)
+	if err != nil {
+		return err
+	}
+	for _, r := range existingRelationShips {
+		selectorIDs = append(selectorIDs, r.SelectorID)
+		checkIDs = append(checkIDs, r.CheckID.String())
+	}
+
+	var newCheckIDs []string
+	for _, r := range relationships {
+		// If selectorID already exists, no action is required
+		if collections.Contains(selectorIDs, r.SelectorID) {
+			continue
+		}
+
+		// If checkID does not exist, create a new relationship
+		if !collections.Contains(checkIDs, r.CheckID.String()) {
+			if err := PersistCheckComponentRelationship(r); err != nil {
+				return errors.Wrap(err, "error persisting check component relationships")
+			}
+			newCheckIDs = append(newCheckIDs, r.CheckID.String())
+		}
+
+		// If check_id exists mark old row as deleted and update selector_id
+		if err := Gorm.Model(&pkg.CheckComponentRelationship{}).Where("component_id = ? AND check_id = ?", componentID, r.CheckID).
+			Update("deleted_at", time.Now()).Error; err != nil {
+			return errors.Wrap(err, "error updating check relationships")
+		}
+
+		if err := PersistCheckComponentRelationship(r); err != nil {
+			return errors.Wrap(err, "error persisting check component relationships")
+		}
+		newCheckIDs = append(newCheckIDs, r.CheckID.String())
+	}
+
+	// Take set difference of these child component Ids and delete them
+	checkIDsToDelete := utils.SetDifference(checkIDs, newCheckIDs)
+	if err := Gorm.Model(&pkg.CheckComponentRelationship{}).Where("component_id = ? AND check_id IN ?", componentID, checkIDsToDelete).
+		Update("deleted_at", time.Now()).Error; err != nil {
+		return errors.Wrap(err, "error deleting stale check component relationships")
+	}
+
 	return nil
 }
 

@@ -257,7 +257,7 @@ func getCheckIDsForCanary(canaryID uuid.UUID) []string {
 	checks, _ := db.GetAllActiveChecksForCanary(canaryID)
 	var checkIDs []string
 	for _, check := range checks {
-		checkIDs = append(checkIDs, check.ID)
+		checkIDs = append(checkIDs, check.ID.String())
 	}
 	return checkIDs
 }

@@ -348,12 +348,12 @@ func ComponentRun() {
 			logger.Errorf("error getting components with selectors: %s. err: %v", component.Selectors, err)
 			continue
 		}
-		relationships, err := db.GetComponentRelationships(component.ID, component.Path, comps)
+		relationships, err := db.NewComponentRelationships(component.ID, component.Path, comps)
 		if err != nil {
 			logger.Errorf("error getting relationships: %v", err)
 			continue
 		}
-		err = db.PersistComponentRelationships(relationships)
+		err = db.PersistComponentRelationships(component.ID, relationships)
 		if err != nil {
 			logger.Errorf("error persisting relationships: %v", err)
 			continue
