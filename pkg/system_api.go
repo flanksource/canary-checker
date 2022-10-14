@@ -198,6 +198,7 @@ type Component struct {
 	UpdatedAt        time.Time            `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
 	DeletedAt        *time.Time           `json:"deleted_at,omitempty" time_format:"postgres_timestamp" swaggerignore:"true"`
 	ExternalId       string               `json:"external_id,omitempty"` //nolint
+	IsLeaf           bool                 `json:"is_leaf"`
 }
 
 type ComponentRelationship struct {
