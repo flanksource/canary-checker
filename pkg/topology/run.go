@@ -328,6 +328,7 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 		c.Namespace = ctx.SystemTemplate.GetNamespace()
 		c.Schedule = ctx.SystemTemplate.Spec.Schedule
 	}
+	results = updateLeafComponents(results)
 	return results
 }
 
@@ -376,4 +377,15 @@ func ComponentStatusSummarySync() {
 			continue
 		}
 	}
+}
+
+func updateLeafComponents(components pkg.Components) pkg.Components {
+	for _, component := range components {
+		if component.Components == nil {
+			component.IsLeaf = true
+		} else {
+			updateLeafComponents(component.Components)
+		}
+	}
+	return components
 }

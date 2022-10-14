@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 
 	"time"
 
@@ -217,13 +216,12 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 	}
 	if existing.ID != uuid.Nil {
 		component.ID = existing.ID
-		component.DeletedAt = nil
 		tx = Gorm.Table("components").Clauses(
 			clause.OnConflict{
 				Columns:   []clause.Column{{Name: "system_template_id"}, {Name: "name"}, {Name: "type"}, {Name: "parent_id"}},
 				UpdateAll: true,
 			},
-		).UpdateColumns(component)
+		).UpdateColumns(component).Update("deleted_at", nil) // explicitly set deleted_at to null; UpdateColumns doesn't set deleted_at to null. Needed in case a component is deleted but found again in the next sync
 	} else {
 		tx = Gorm.Table("components").Clauses(
 			clause.OnConflict{
@@ -318,7 +316,6 @@ func DeleteComponentsWithIDs(compIDs []string, deleteTime time.Time) error {
 	}
 	tx = Gorm.Table("component_relationships").Where("component_id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime)
 	if tx.Error != nil {
-		fmt.Println("done from here")
 		return tx.Error
 	}
 	if err := Gorm.Table("check_component_relationships").Where("component_id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
