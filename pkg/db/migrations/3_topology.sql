@@ -42,6 +42,7 @@ CREATE TABLE components (
   properties jsonb,
   path text,
   summary  jsonb,
+  is_leaf BOOL DEFAULT false,
   cost_per_minute numeric(16,4) NULL,
   cost_total_1d numeric(16,4) NULL,
   cost_total_7d numeric(16,4) NULL,
