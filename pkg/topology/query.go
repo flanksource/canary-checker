@@ -357,7 +357,7 @@ func getIncidentsForComponents() string {
         SELECT json_agg(incidents) FROM incidents
         INNER JOIN hypotheses ON hypotheses.incident_id = incidents.id
         INNER JOIN evidences ON evidences.hypothesis_id = hypotheses.id
-        WHERE evidences.component_id = components.id AND (incidents.resolved IS NULL OR incidents.closed IS NULL)
+        WHERE evidences.component_id = components.id AND (incidents.resolved IS NULL AND incidents.closed IS NULL)
         GROUP BY evidences.component_id
     ) :: jsonb`
 }
