@@ -17,7 +17,7 @@ import (
 func PersistSystemTemplate(system *v1.SystemTemplate) (string, bool, error) {
 	model := pkg.SystemTemplateFromV1(system)
 	if system.GetPersistedID() != "" {
-		model.ID = uuid.MustParse(system.GetPersistedID())
+		model.ID, _ = uuid.Parse(system.GetPersistedID())
 	}
 	var changed bool
 	tx := Gorm.Table("templates").Clauses(clause.OnConflict{

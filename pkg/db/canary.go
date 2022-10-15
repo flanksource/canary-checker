@@ -196,7 +196,7 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 		return nil, nil, changed, err
 	}
 	if canary.GetPersistedID() != "" {
-		model.ID = uuid.MustParse(canary.GetPersistedID())
+		model.ID, _ = uuid.Parse(canary.GetPersistedID())
 	}
 	model.Source = source
 	tx := Gorm.Clauses(clause.OnConflict{
@@ -214,7 +214,7 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 		// not creating the new check if already exists in the status
 		// status is not patched correctly with the status id
 		if checkID := canary.GetCheckID(check.Name); checkID != "" {
-			check.ID = uuid.MustParse(checkID)
+			check.ID, _ = uuid.Parse(checkID)
 		}
 		id, err := PersistCheck(check, model.ID)
 		if err != nil {

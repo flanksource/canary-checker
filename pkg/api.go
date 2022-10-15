@@ -226,7 +226,7 @@ func FromResult(result CheckResult) CheckStatus {
 	}
 }
 func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Check {
-	canaryID := uuid.MustParse(canary.GetPersistedID())
+	canaryID, _ := uuid.Parse(canary.GetPersistedID())
 	c := Check{
 		Owner:    canary.Spec.Owner,
 		Severity: canary.Spec.Severity,
