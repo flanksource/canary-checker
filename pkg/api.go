@@ -1,8 +1,6 @@
 package pkg
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -326,21 +324,11 @@ func ToV1Config(config Config) v1.Config {
 }
 
 func (c Config) GetSelectorID() string {
-	return GetSelectorIDFromV1Config(ToV1Config(c))
-}
-
-func GetSelectorIDFromV1Config(config v1.Config) string {
-	data, err := json.Marshal(config)
+	selectorID, err := utils.GenerateJSONMD5Hash(ToV1Config(c))
 	if err != nil {
-		logger.Errorf("error marshalling component config %v", err)
 		return ""
 	}
-	hash := md5.Sum(data)
-	if err != nil {
-		logger.Errorf("error hashing component config %v", err)
-		return ""
-	}
-	return hex.EncodeToString(hash[:])
+	return selectorID
 }
 
 type Configs []*Config
