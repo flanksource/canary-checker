@@ -69,7 +69,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 		}
 
 		// If config_id exists mark old row as deleted and update selector_id
-		if err := db.Gorm.Model(&db.ConfigComponentRelationship{}).Where("component_id = ? AND config_id = ?", componentID, dbConfig.ID).
+		if err := db.Gorm.Table("config_component_relationships").Where("component_id = ? AND config_id = ?", componentID, dbConfig.ID).
 			Update("deleted_at", time.Now()).Error; err != nil {
 			return errors.Wrap(err, "error updating config relationships")
 		}
@@ -80,7 +80,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 
 	// Take set difference of these child component Ids and delete them
 	configIDsToDelete := utils.SetDifference(existingConfigIDs, newConfigsIDs)
-	if err := db.Gorm.Model(&db.ConfigComponentRelationship{}).Where("component_id = ? AND config_id IN ?", componentID, configIDsToDelete).
+	if err := db.Gorm.Table("config_component_relationships").Where("component_id = ? AND config_id IN ?", componentID, configIDsToDelete).
 		Update("deleted_at", time.Now()).Error; err != nil {
 		return errors.Wrap(err, "error deleting stale config component relationships")
 	}

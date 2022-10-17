@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -67,15 +68,20 @@ func GetAllComponentWithSelectors() (components pkg.Components, err error) {
 func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (components pkg.Components, err error) {
 	var uninqueComponents = make(map[string]*pkg.Component)
 	for _, resourceSelector := range resourceSelectors {
+		var selectorID string
+		selectorID, err = utils.GenerateJSONMD5Hash(resourceSelector)
+		if err != nil {
+			return components, errors.Wrap(err, fmt.Sprintf("error generating selector_id for resourceSelector: %v", resourceSelector))
+		}
+
 		if resourceSelector.LabelSelector != "" {
 			labelComponents, err := GetComponensWithLabelSelector(resourceSelector.LabelSelector)
 			if err != nil {
 				continue
 			}
+
 			for _, c := range labelComponents {
-				if c.SelectorID, err = utils.GenerateJSONMD5Hash(resourceSelector.LabelSelector); err != nil {
-					continue
-				}
+				c.SelectorID = selectorID
 				uninqueComponents[c.ID.String()] = c
 			}
 		}
@@ -85,9 +91,7 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 				continue
 			}
 			for _, c := range fieldComponents {
-				if c.SelectorID, err = utils.GenerateJSONMD5Hash(resourceSelector.FieldSelector); err != nil {
-					continue
-				}
+				c.SelectorID = selectorID
 				uninqueComponents[c.ID.String()] = c
 			}
 		}
@@ -126,7 +130,7 @@ func NewComponentRelationships(relationshipID uuid.UUID, path string, components
 
 func GetChildRelationshipsForParentComponent(componentID uuid.UUID) ([]pkg.ComponentRelationship, error) {
 	var relationships []pkg.ComponentRelationship
-	if err := Gorm.Model(&pkg.ComponentRelationship{}).Where("relationship_id = ? AND deleted_at IS NULL", componentID).Find(&relationships).Error; err != nil {
+	if err := Gorm.Table("component_relationships").Where("relationship_id = ? AND deleted_at IS NULL", componentID).Find(&relationships).Error; err != nil {
 		return relationships, err
 	}
 	return relationships, nil
@@ -162,7 +166,7 @@ func PersistComponentRelationships(parentComponentID uuid.UUID, relationships []
 		}
 
 		// If childComponentID exists mark old row as deleted and update selector_id
-		if err := Gorm.Model(&pkg.ComponentRelationship{}).Where("relationship_id = ? AND component_id = ?", parentComponentID, r.ComponentID).
+		if err := Gorm.Table("component_relationships").Where("relationship_id = ? AND component_id = ?", parentComponentID, r.ComponentID).
 			Update("deleted_at", time.Now()).Error; err != nil {
 			return errors.Wrap(err, "error updating component relationships")
 		}
@@ -174,7 +178,7 @@ func PersistComponentRelationships(parentComponentID uuid.UUID, relationships []
 
 	// Take set difference of these child component Ids and delete them
 	childComponentIDsToDelete := utils.SetDifference(childComponentIDs, newChildComponentIDs)
-	if err := Gorm.Model(&pkg.ComponentRelationship{}).Where("relationship_id = ? AND component_id IN ?", parentComponentID, childComponentIDsToDelete).
+	if err := Gorm.Table("component_relationships").Where("relationship_id = ? AND component_id IN ?", parentComponentID, childComponentIDsToDelete).
 		Update("deleted_at", time.Now()).Error; err != nil {
 		return errors.Wrap(err, "error deleting stale component relationships")
 	}
@@ -227,7 +231,7 @@ func PersistCheckComponentRelationshipsForComponent(componentID uuid.UUID, relat
 		}
 
 		// If check_id exists mark old row as deleted and update selector_id
-		if err := Gorm.Model(&pkg.CheckComponentRelationship{}).Where("component_id = ? AND check_id = ?", componentID, r.CheckID).
+		if err := Gorm.Table("check_component_relationships").Where("component_id = ? AND check_id = ?", componentID, r.CheckID).
 			Update("deleted_at", time.Now()).Error; err != nil {
 			return errors.Wrap(err, "error updating check relationships")
 		}
@@ -239,7 +243,7 @@ func PersistCheckComponentRelationshipsForComponent(componentID uuid.UUID, relat
 
 	// Take set difference of these child component Ids and delete them
 	checkIDsToDelete := utils.SetDifference(checkIDs, newCheckIDs)
-	if err := Gorm.Model(&pkg.CheckComponentRelationship{}).Where("component_id = ? AND check_id IN ?", componentID, checkIDsToDelete).
+	if err := Gorm.Table("check_component_relationships").Where("component_id = ? AND check_id IN ?", componentID, checkIDsToDelete).
 		Update("deleted_at", time.Now()).Error; err != nil {
 		return errors.Wrap(err, "error deleting stale check component relationships")
 	}
