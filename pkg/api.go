@@ -185,7 +185,7 @@ type Check struct {
 	Namespace   string              `json:"namespace"  gorm:"-"`
 	Labels      types.JSONStringMap `json:"labels" gorm:"type:jsonstringmap"`
 	Description string              `json:"description,omitempty"`
-	Status      ComponentStatus     `josn:"status,omitempty"`
+	Status      string              `json:"status,omitempty"`
 	Uptime      Uptime              `json:"uptime"  gorm:"-"`
 	Latency     Latency             `json:"latency"  gorm:"-"`
 	Statuses    []CheckStatus       `json:"checkStatuses"  gorm:"-"`
