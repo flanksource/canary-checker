@@ -13,19 +13,25 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-            .bin
-          key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
-          restore-keys: |
-            cache-
       - uses: azure/setup-helm@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }} # only needed if version is 'latest'
         id: install
-      - name: Setup Operator
+      - name: Install Karina
+        run: make .bin/karina
+      - name: Build and Cache Image
+        run: |
+          # pull image if exists
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+          docker pull ghcr.io/$GITHUB_REPOSITORY/canary-checker:ci || true
+          #build image from cache
+          docker build -f Dockerfile -t docker.io/flanksource/canary-checker:test --cache-from ghcr.io/$GITHUB_REPOSITORY/canary-checker:ci .
+          # update cache
+          docker tag docker.io/flanksource/canary-checker:test ghcr.io/$GITHUB_REPOSITORY/canary-checker:ci
+          docker push ghcr.io/$GITHUB_REPOSITORY/canary-checker:ci
+      - name: Test
         run: |
           ./test/setup-operator.sh
+      - name: Setup upterm session
+        if: ${{ failure() }}
+        uses: lhotari/action-upterm@v1

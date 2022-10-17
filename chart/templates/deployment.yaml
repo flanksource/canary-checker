@@ -28,7 +28,7 @@ spec:
         accessModes: ["ReadWriteOnce"]
         resources:
           requests:
-            storage: {{ .Values.db.embedded.storage }}
+            storage: {{ .Values.db.embedded.storage | default "10Gi"}}
   {{- end }}
   {{- end }}
   template:

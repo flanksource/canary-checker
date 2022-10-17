@@ -204,8 +204,9 @@ CONTROLLER_GEN=$(GOBIN)/controller-gen
 	wget -nv https://github.com/atkrad/wait4x/releases/download/v0.3.0/wait4x-$(OS)-$(ARCH) -O .bin/wait4x && \
   chmod +x .bin/wait4x
 
-.bin/karina:
-	wget -q https://github.com/flanksource/karina/releases/download/v0.50.0/karina_$(OS)-$(ARCH) -O .bin/karina && \
+.PHONY: .bin/karina
+.bin/karina: .bin
+	wget -q https://github.com/flanksource/karina/releases/download/v0.67.0/karina_$(OS)-$(ARCH) -O .bin/karina && \
 	chmod +x .bin/karina
 
 .bin/yq: .bin

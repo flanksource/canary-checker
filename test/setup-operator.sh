@@ -5,11 +5,12 @@
 set -e
 
 export KUBECONFIG=~/.kube/config
-export KARINA="karina -c $(pwd)/test/karina.yaml"
 export DOCKER_API_VERSION=1.39
 export CLUSTER_NAME=kind-test
+export KARINA="karina -c $(pwd)/test/karina.yaml"
 export PATH=$(pwd)/.bin:$PATH
 export ROOT=$(pwd)
+export IMG=docker.io/flanksource/canary-checker:test
 
 echo "::group::Provisioning"
 if [[ ! -e .certs/root-ca.key ]]; then
@@ -18,6 +19,8 @@ $KARINA ca generate --name ingress-ca --cert-path .certs/ingress-ca.crt --privat
 $KARINA ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.pem --private-key-path .certs/sealed-secrets-key.pem --password foobar  --expiry 1
 fi
 
+## starting the postgres as docker container
+docker run --rm -p 5432:5432  --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d  postgres
 if $KARINA provision kind-cluster -e name=$CLUSTER_NAME -v ; then
 echo "::endgroup::"
 else
@@ -26,19 +29,21 @@ exit 1
 fi
 
 kubectl config use-context kind-$CLUSTER_NAME
+$KARINA deploy bootstrap -vv || :
 
 echo "::group::Operator Setup"
 
-export IMG=docker.io/flanksource/canary-checker:test 
-make docker
-kind load docker-image $IMG --name kind-$CLUSTER_NAME
+kubectl get nodes -o wide
+kubectl wait  node/$CLUSTER_NAME-control-plane --for condition=ready --timeout 5m
+
+kind load docker-image $IMG --name $CLUSTER_NAME
 
 
 helm dependency build $ROOT/chart
 helm install -f $ROOT/test/values.yaml canary-checker $ROOT/chart -n default
 
 
-sleep 90
+sleep 180
 
 
 kubectl get po -n default

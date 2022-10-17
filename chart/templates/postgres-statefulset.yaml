@@ -37,5 +37,5 @@ spec:
         {{- end }}
         resources:
           requests:
-            storage: {{ .Values.db.external.storage }}
+            storage: {{ .Values.db.external.storage | default "10Gi" }}
 {{- end }}
