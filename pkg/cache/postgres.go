@@ -3,13 +3,13 @@ package cache
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"time"
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
-	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"gorm.io/gorm/clause"
 )
 
 var PostgresCache = &postgresCache{}
@@ -40,22 +40,14 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 	if err != nil {
 		logger.Errorf("error marshalling details: %v", err)
 	}
-	row := c.QueryRow(context.TODO(), `UPDATE checks SET 
-										last_runtime = NOW(), 
-										status = $1 , labels = $2
-										WHERE canary_id = $3 AND type = $4 AND name = $5 
-										RETURNING id`,
-		check.Status, check.Labels, check.CanaryID, check.Type, check.GetName())
-	var id string
-
-	if err := row.Scan(&id); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			logger.Debugf("check %s not found", check.GetName())
-			return
-		} else {
-			logger.Errorf("error fetching check id: %v", err)
-			return
-		}
+	checks := pkg.Checks{}
+	if db.Gorm.Model(&checks).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Where("canary_id = ? AND type = ? AND name = ?", check.CanaryID, check.Type, check.GetName()).Updates(map[string]interface{}{"status": check.Status, "labels": check.Labels, "last_runtime": time.Now()}).Error != nil {
+		logger.Errorf("error updating check: %v", err)
+		return
+	}
+	if checks == nil || checks[0].ID == "" {
+		logger.Debugf("check not found")
+		return
 	}
 	_, err = c.Exec(context.TODO(), `INSERT INTO check_statuses(
 		check_id,
@@ -71,7 +63,7 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 		VALUES($1,$2,$3,$4,$5,$6,$7,$8,NOW())
 		ON CONFLICT (check_id,time) DO NOTHING;
 		`,
-		id,
+		checks[0].ID,
 		string(jsonDetails),
 		status.Duration,
 		status.Error,

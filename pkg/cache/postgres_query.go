@@ -183,7 +183,8 @@ owner,
 last_runtime,
 checks.created_at,
 checks.updated_at,
-checks.deleted_at
+checks.deleted_at,
+status
 	FROM checks checks
   FULL JOIN (
   	SELECT check_id,
@@ -268,6 +269,7 @@ checks.deleted_at
 		if vals[20] != nil {
 			check.DeletedAt, _ = timeV(vals[20])
 		}
+		check.Status = vals[21].(string)
 		if vals[7] != nil {
 			for _, status := range vals[7].([]interface{}) {
 				s := status.(map[string]interface{})

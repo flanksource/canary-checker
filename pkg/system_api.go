@@ -554,7 +554,7 @@ func (component Component) Summarize() v1.Summary {
 	s := v1.Summary{}
 	if component.Checks != nil && component.Components == nil {
 		for _, check := range component.Checks {
-			if check.Status == ComponentPropertyStatusHealthy {
+			if ComponentStatus(check.Status) == ComponentPropertyStatusHealthy {
 				s.Healthy++
 			} else {
 				s.Unhealthy++

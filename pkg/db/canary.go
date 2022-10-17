@@ -71,8 +71,17 @@ func PersistCheck(check pkg.Check, canaryID string) (string, error) {
 	check.Name = name
 	check.Description = description
 	tx := Gorm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}},
-		UpdateAll: true,
+		Columns: []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}},
+		DoUpdates: clause.Assignments(
+			map[string]interface{}{
+				"spec":        check.Spec,
+				"type":        check.Type,
+				"description": check.Description,
+				"owner":       check.Owner,
+				"severity":    check.Severity,
+				"icon":        check.Icon,
+				"deleted_at":  nil,
+			}),
 	}).Create(&check)
 	if tx.Error != nil {
 		return "", tx.Error
