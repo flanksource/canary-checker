@@ -66,7 +66,7 @@ func GetAllComponentWithSelectors() (components pkg.Components, err error) {
 }
 
 func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (components pkg.Components, err error) {
-	var uninqueComponents = make(map[string]*pkg.Component)
+	var uniqueComponents = make(map[string]*pkg.Component)
 	for _, resourceSelector := range resourceSelectors {
 		var selectorID string
 		selectorID, err = utils.GenerateJSONMD5Hash(resourceSelector)
@@ -82,7 +82,7 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 
 			for _, c := range labelComponents {
 				c.SelectorID = selectorID
-				uninqueComponents[c.ID.String()] = c
+				uniqueComponents[c.ID.String()] = c
 			}
 		}
 		if resourceSelector.FieldSelector != "" {
@@ -92,14 +92,14 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 			}
 			for _, c := range fieldComponents {
 				c.SelectorID = selectorID
-				uninqueComponents[c.ID.String()] = c
+				uniqueComponents[c.ID.String()] = c
 			}
 		}
 	}
-	for _, comp := range uninqueComponents {
+	for _, comp := range uniqueComponents {
 		components = append(components, comp)
 	}
-	return
+	return components, nil
 }
 
 func GetAllComponentsWithConfigs() (components pkg.Components, err error) {
