@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"gorm.io/gorm/clause"
 )
@@ -45,7 +46,7 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 		logger.Errorf("error updating check: %v", err)
 		return
 	}
-	if checks == nil || len(checks) < 1 || checks[0].ID == "" {
+	if checks == nil || len(checks) == 0 || checks[0].ID == uuid.Nil {
 		logger.Debugf("check not found")
 		return
 	}
