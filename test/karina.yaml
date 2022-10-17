@@ -14,6 +14,8 @@ kubernetes:
   kubeletExtraArgs:
     node-labels: "ingress-ready=true"
     authorization-mode: "AlwaysAllow"
+canary-checker:
+  disabled: true
 podSubnet: 100.200.0.0/16
 serviceSubnet: 100.100.0.0/16
 calico:

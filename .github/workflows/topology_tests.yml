@@ -1,0 +1,31 @@
+on:
+  pull_request:
+    paths:
+      - 'chart/**'
+      - 'test/**'
+      - '**.go'
+      - '.github/workflows/topology_tests.yml'
+name: Test Topology
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            .bin
+          key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
+          restore-keys: |
+            cache-
+      - uses: azure/setup-helm@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }} # only needed if version is 'latest'
+        id: install
+      - name: Setup Operator
+        run: |
+          ./test/setup-operator.sh
