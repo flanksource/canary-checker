@@ -1,10 +1,3 @@
-FROM node:16 as node
-WORKDIR /app
-COPY "./ui/package.json" .
-COPY "./ui/package-lock.json" .
-RUN npm i
-ADD ui/ .
-RUN  ls && npm run build
 
 FROM golang:1.17 as builder
 WORKDIR /app
@@ -14,7 +7,6 @@ ARG VERSION
 COPY go.mod /app/go.mod
 COPY go.sum /app/go.sum
 RUN go mod download
-COPY --from=node /app/build /app/ui/build
 COPY ./ ./
 RUN go version
 RUN make build
