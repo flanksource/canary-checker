@@ -46,7 +46,7 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 		logger.Errorf("error updating check: %v", err)
 		return
 	}
-	if checks == nil || len(checks) == 0 || checks[0].ID == uuid.Nil {
+	if len(checks) == 0 || checks[0].ID == uuid.Nil {
 		logger.Debugf("check not found")
 		return
 	}
