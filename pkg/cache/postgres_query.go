@@ -9,6 +9,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/commons/logger"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -247,8 +248,8 @@ status
 		if err != nil {
 			return nil, err
 		}
-		check.ID = vals[0].(string)
-		check.CanaryID = vals[1].(string)
+		check.ID, _ = uuid.Parse(vals[0].(string))
+		check.CanaryID, _ = uuid.Parse(vals[1].(string))
 		check.Uptime.Passed = intV(vals[2])
 		check.Uptime.Failed = intV(vals[3])
 		check.Latency.Percentile99 = float64V(vals[4])

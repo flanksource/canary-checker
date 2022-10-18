@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
 	"github.com/flanksource/commons/logger"
@@ -38,21 +39,21 @@ func PushHandler(c echo.Context) error {
 	if err := json.Unmarshal(reqBody, &data); err != nil {
 		return errorResonse(c, err, http.StatusBadRequest)
 	}
-	if data.Check.ID != "" && data.Check.CanaryID == "" {
-		check, err := db.GetCheck(data.Check.ID)
+	if data.Check.ID != uuid.Nil && data.Check.CanaryID == uuid.Nil {
+		check, err := db.GetCheck(data.Check.ID.String())
 		if check == nil && err == nil {
 			return errorResonse(c, errors.New("check not found"), http.StatusNotFound)
 		} else if err != nil {
 			return errorResonse(c, err, http.StatusInternalServerError)
 		}
 		data.Check.CanaryID = check.CanaryID
-	} else if data.Check.ID == "" {
+	} else if data.Check.ID == uuid.Nil {
 		canary, err := db.FindCanary(data.Check.Namespace, data.Check.Name)
 		if err != nil {
 			return errorResonse(c, err, http.StatusInternalServerError)
 		}
 		if canary != nil {
-			data.Check.CanaryID = canary.ID.String()
+			data.Check.CanaryID = canary.ID
 		} else {
 			canary = &pkg.Canary{
 				Name:      data.Check.Name,
@@ -61,7 +62,7 @@ func PushHandler(c echo.Context) error {
 			if err := db.CreateCanary(canary); err != nil {
 				return errorResonse(c, err, http.StatusInternalServerError)
 			}
-			data.Check.CanaryID = canary.ID.String()
+			data.Check.CanaryID = canary.ID
 			if err := db.CreateCheck(*canary, &data.Check); err != nil {
 				return errorResonse(c, err, http.StatusInternalServerError)
 			}

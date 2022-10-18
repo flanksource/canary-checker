@@ -1,8 +1,6 @@
 package pkg
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -176,8 +174,8 @@ func CanaryFromV1(canary v1.Canary) (Canary, error) {
 }
 
 type Check struct {
-	ID          string              `json:"id" gorm:"default:generate_ulid()"`
-	CanaryID    string              `json:"canary_id"`
+	ID          uuid.UUID           `json:"id" gorm:"default:generate_ulid()"`
+	CanaryID    uuid.UUID           `json:"canary_id"`
 	Spec        types.JSON          `json:"-"`
 	Type        string              `json:"type"`
 	Name        string              `json:"name"`
@@ -203,7 +201,7 @@ type Check struct {
 
 func FromExternalCheck(canary Canary, check external.Check) Check {
 	return Check{
-		CanaryID:    canary.ID.String(),
+		CanaryID:    canary.ID,
 		Type:        check.GetType(),
 		Icon:        check.GetIcon(),
 		Description: check.GetDescription(),
@@ -226,6 +224,7 @@ func FromResult(result CheckResult) CheckStatus {
 	}
 }
 func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Check {
+	canaryID, _ := uuid.Parse(canary.GetPersistedID())
 	c := Check{
 		Owner:    canary.Spec.Owner,
 		Severity: canary.Spec.Severity,
@@ -235,20 +234,16 @@ func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Che
 		Icon:        check.GetIcon(),
 		Namespace:   canary.Namespace,
 		CanaryName:  canary.Name,
-		CanaryID:    canary.GetPersistedID(),
+		CanaryID:    canaryID,
 		Labels:      labels.FilterLabels(canary.GetAllLabels(check.GetLabels())),
 		Statuses:    statuses,
 		Type:        check.GetType(),
 	}
-	if canary.Status.PersistedID != nil {
-		c.CanaryID = *canary.Status.PersistedID
-	}
-
 	return c
 }
 
 func (c Check) GetID() string {
-	return c.ID
+	return c.ID.String()
 }
 
 func (c Check) GetName() string {
@@ -329,21 +324,11 @@ func ToV1Config(config Config) v1.Config {
 }
 
 func (c Config) GetSelectorID() string {
-	return GetSelectorIDFromV1Config(ToV1Config(c))
-}
-
-func GetSelectorIDFromV1Config(config v1.Config) string {
-	data, err := json.Marshal(config)
+	selectorID, err := utils.GenerateJSONMD5Hash(ToV1Config(c))
 	if err != nil {
-		logger.Errorf("error marshalling component config %v", err)
 		return ""
 	}
-	hash := md5.Sum(data)
-	if err != nil {
-		logger.Errorf("error hashing component config %v", err)
-		return ""
-	}
-	return hex.EncodeToString(hash[:])
+	return selectorID
 }
 
 type Configs []*Config

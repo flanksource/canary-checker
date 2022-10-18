@@ -4,12 +4,13 @@ import (
 	"time"
 
 	"github.com/flanksource/commons/collections"
+	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/canary-checker/pkg/utils"
 )
 
 func ComponentConfigRun() {
@@ -34,7 +35,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 	}
 
 	var selectorIDs []string
-	var configIDs []string
+	var existingConfigIDs []string
 	relationships, err := db.GetConfigRelationshipsForComponent(componentID)
 	if err != nil {
 		return err
@@ -42,23 +43,25 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 
 	for _, r := range relationships {
 		selectorIDs = append(selectorIDs, r.SelectorID)
-		configIDs = append(configIDs, r.ConfigID.String())
+		existingConfigIDs = append(existingConfigIDs, r.ConfigID.String())
 	}
 
+	var newConfigsIDs []string
 	for _, config := range configs {
 		dbConfig, err := db.FindConfig(*config)
 		if err != nil {
 			return errors.Wrap(err, "error fetching config from database")
 		}
-		selectorID := dbConfig.GetSelectorID()
+		newConfigsIDs = append(newConfigsIDs, dbConfig.ID.String())
 
+		selectorID := dbConfig.GetSelectorID()
 		// If selectorID already exists, no action is required
 		if collections.Contains(selectorIDs, selectorID) {
 			continue
 		}
 
 		// If configID does not exist, create a new relationship
-		if !collections.Contains(configIDs, dbConfig.ID.String()) {
+		if !collections.Contains(existingConfigIDs, dbConfig.ID.String()) {
 			if err := db.PersistConfigComponentRelationship(dbConfig.ID, componentID, selectorID); err != nil {
 				return errors.Wrap(err, "error persisting config relationships")
 			}
@@ -66,13 +69,21 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 		}
 
 		// If config_id exists mark old row as deleted and update selector_id
-		if err := db.Gorm.Model(&db.ConfigComponentRelationship{}).Where("component_id = ? AND config_id = ?", componentID, dbConfig.ID).
+		if err := db.Gorm.Table("config_component_relationships").Where("component_id = ? AND config_id = ?", componentID, dbConfig.ID).
 			Update("deleted_at", time.Now()).Error; err != nil {
 			return errors.Wrap(err, "error updating config relationships")
 		}
-		if err := db.PersistConfigComponentRelationship(config.ID, componentID, selectorID); err != nil {
+		if err := db.PersistConfigComponentRelationship(dbConfig.ID, componentID, selectorID); err != nil {
 			return errors.Wrap(err, "error persisting config relationships")
 		}
 	}
+
+	// Take set difference of these child component Ids and delete them
+	configIDsToDelete := utils.SetDifference(existingConfigIDs, newConfigsIDs)
+	if err := db.Gorm.Table("config_component_relationships").Where("component_id = ? AND config_id IN ?", componentID, configIDsToDelete).
+		Update("deleted_at", time.Now()).Error; err != nil {
+		return errors.Wrap(err, "error deleting stale config component relationships")
+	}
+
 	return nil
 }

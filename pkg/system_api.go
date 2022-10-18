@@ -199,6 +199,7 @@ type Component struct {
 	DeletedAt        *time.Time           `json:"deleted_at,omitempty" time_format:"postgres_timestamp" swaggerignore:"true"`
 	ExternalId       string               `json:"external_id,omitempty"` //nolint
 	IsLeaf           bool                 `json:"is_leaf"`
+	SelectorID       string               `json:"-" gorm:"-"`
 }
 
 type ComponentRelationship struct {
@@ -213,7 +214,7 @@ type ComponentRelationship struct {
 
 type CheckComponentRelationship struct {
 	ComponentID uuid.UUID  `json:"component_id,omitempty"`
-	CheckID     string     `json:"check_id,omitempty"`
+	CheckID     uuid.UUID  `json:"check_id,omitempty"`
 	CanaryID    uuid.UUID  `json:"canary_id,omitempty"`
 	SelectorID  string     `json:"selector_id,omitempty"`
 	CreatedAt   time.Time  `json:"created_at,omitempty"`

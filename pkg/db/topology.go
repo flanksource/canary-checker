@@ -1,16 +1,15 @@
 package db
 
 import (
-	"crypto/md5"
-	"encoding/hex"
-	"encoding/json"
-
+	"fmt"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -18,7 +17,7 @@ import (
 func PersistSystemTemplate(system *v1.SystemTemplate) (string, bool, error) {
 	model := pkg.SystemTemplateFromV1(system)
 	if system.GetPersistedID() != "" {
-		model.ID = uuid.MustParse(system.GetPersistedID())
+		model.ID, _ = uuid.Parse(system.GetPersistedID())
 	}
 	var changed bool
 	tx := Gorm.Table("templates").Clauses(clause.OnConflict{
@@ -66,15 +65,23 @@ func GetAllComponentWithSelectors() (components pkg.Components, err error) {
 }
 
 func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (components pkg.Components, err error) {
-	var uninqueComponents = make(map[string]*pkg.Component)
+	var uniqueComponents = make(map[string]*pkg.Component)
 	for _, resourceSelector := range resourceSelectors {
+		var selectorID string
+		selectorID, err = utils.GenerateJSONMD5Hash(resourceSelector)
+		if err != nil {
+			return components, errors.Wrap(err, fmt.Sprintf("error generating selector_id for resourceSelector: %v", resourceSelector))
+		}
+
 		if resourceSelector.LabelSelector != "" {
 			labelComponents, err := GetComponensWithLabelSelector(resourceSelector.LabelSelector)
 			if err != nil {
 				continue
 			}
+
 			for _, c := range labelComponents {
-				uninqueComponents[c.ID.String()] = c
+				c.SelectorID = selectorID
+				uniqueComponents[c.ID.String()] = c
 			}
 		}
 		if resourceSelector.FieldSelector != "" {
@@ -83,14 +90,15 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 				continue
 			}
 			for _, c := range fieldComponents {
-				uninqueComponents[c.ID.String()] = c
+				c.SelectorID = selectorID
+				uniqueComponents[c.ID.String()] = c
 			}
 		}
 	}
-	for _, comp := range uninqueComponents {
+	for _, comp := range uniqueComponents {
 		components = append(components, comp)
 	}
-	return
+	return components, nil
 }
 
 func GetAllComponentsWithConfigs() (components pkg.Components, err error) {
@@ -107,66 +115,24 @@ func GetAllComponentWithCanaries() (components pkg.Components, err error) {
 	return
 }
 
-func GetComponentRelationships(relationshipID uuid.UUID, path string, components pkg.Components) (relationships []*pkg.ComponentRelationship, err error) {
+func NewComponentRelationships(relationshipID uuid.UUID, path string, components pkg.Components) (relationships []*pkg.ComponentRelationship, err error) {
 	for _, component := range components {
 		relationships = append(relationships, &pkg.ComponentRelationship{
 			RelationshipID:   relationshipID,
 			ComponentID:      component.ID,
-			SelectorID:       GetSelectorIDFromResourceSelectors(component.Selectors),
+			SelectorID:       component.SelectorID,
 			RelationshipPath: path + "." + relationshipID.String(),
 		})
 	}
 	return
 }
 
-func GetCheckRelationships(compID uuid.UUID, checks pkg.Checks, componentChecks v1.ComponentChecks) (relationships []*pkg.CheckComponentRelationship, err error) {
-	for _, check := range checks {
-		canaryID, _ := uuid.Parse(check.CanaryID)
-		relationships = append(relationships, &pkg.CheckComponentRelationship{
-			CanaryID:    canaryID,
-			CheckID:     check.ID,
-			ComponentID: compID,
-			SelectorID:  GetSelectorIDFromComponentChecks(componentChecks),
-		})
+func GetChildRelationshipsForParentComponent(componentID uuid.UUID) ([]pkg.ComponentRelationship, error) {
+	var relationships []pkg.ComponentRelationship
+	if err := Gorm.Table("component_relationships").Where("relationship_id = ? AND deleted_at IS NULL", componentID).Find(&relationships).Error; err != nil {
+		return relationships, err
 	}
-	return
-}
-
-func GetSelectorIDFromResourceSelectors(selectors v1.ResourceSelectors) string {
-	data, err := json.Marshal(selectors)
-	if err != nil {
-		logger.Errorf("Error marshalling selectors %v", err)
-		return ""
-	}
-	hash := md5.Sum(data)
-	if err != nil {
-		logger.Errorf("Error hashing selector %v", err)
-		return ""
-	}
-	return hex.EncodeToString(hash[:])
-}
-
-func GetSelectorIDFromComponentChecks(componentChecks v1.ComponentChecks) string {
-	data, err := json.Marshal(componentChecks)
-	if err != nil {
-		logger.Errorf("Error marshalling component canaries %v", err)
-		return ""
-	}
-	hash := md5.Sum(data)
-	if err != nil {
-		logger.Errorf("Error hashing component canaries %v", err)
-		return ""
-	}
-	return hex.EncodeToString(hash[:])
-}
-
-func PersistComponentRelationships(relationships []*pkg.ComponentRelationship) error {
-	for _, relationship := range relationships {
-		if err := PersistComponentRelationship(relationship); err != nil {
-			return err
-		}
-	}
-	return nil
+	return relationships, nil
 }
 
 func PersistComponentRelationship(relationship *pkg.ComponentRelationship) error {
@@ -177,13 +143,12 @@ func PersistComponentRelationship(relationship *pkg.ComponentRelationship) error
 	return tx.Error
 }
 
-func PersistCheckComponentRelationships(relationships []*pkg.CheckComponentRelationship) error {
-	for _, relationship := range relationships {
-		if err := PersistCheckComponentRelationship(relationship); err != nil {
-			return err
-		}
+func GetCheckRelationshipsForComponent(componentID uuid.UUID) ([]pkg.CheckComponentRelationship, error) {
+	var relationships []pkg.CheckComponentRelationship
+	if err := Gorm.Where("component_id = ? AND deleted_at IS NULL", componentID).Find(&relationships).Error; err != nil {
+		return relationships, err
 	}
-	return nil
+	return relationships, nil
 }
 
 func PersistCheckComponentRelationship(relationship *pkg.CheckComponentRelationship) error {

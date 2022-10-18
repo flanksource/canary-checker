@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -30,4 +33,17 @@ func SetDifference(a, b []string) []string {
 		}
 	}
 	return diff
+}
+
+// GenerateJSONMD5Hash marshals the object into JSON and generates its md5 hash
+func GenerateJSONMD5Hash(obj interface{}) (string, error) {
+	data, err := json.Marshal(obj)
+	if err != nil {
+		return "", err
+	}
+	hash := md5.Sum(data)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hash[:]), nil
 }
