@@ -350,7 +350,6 @@ func getConfigForComponents() string {
             'name', config_items.name,
             'external_type', config_items.external_type,
             'config_type', config_items.config_type,
-            'config', config_items.config,
             'cost_per_minute', config_items.cost_per_minute,
             'cost_total_1d', config_items.cost_total_1d,
             'cost_total_7d', config_items.cost_total_7d,
