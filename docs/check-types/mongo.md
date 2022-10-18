@@ -5,7 +5,7 @@
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: mongo
+       name: mongo-check
      spec:
        interval: 30
        mongodb:
@@ -13,9 +13,15 @@
            description: mongo ping
            auth:
              username:
-               value: mongoadmin
+               valueFrom: 
+                 secretKeyRef:
+                   name: mongo-credentials
+                   key: USERNAME
              password:
-               value: secret
+               valueFrom: 
+                 secretKeyRef:
+                   name: mongo-credentials
+                   key: PASSWORD
        dns:
          - query: mongo.default.svc
      

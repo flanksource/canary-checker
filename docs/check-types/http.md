@@ -5,7 +5,7 @@
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: http-pass
+       name: http-check
      spec:
        interval: 30
        http:

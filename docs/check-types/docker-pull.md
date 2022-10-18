@@ -5,7 +5,7 @@
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: docker-pass
+       name: docker-check
      spec:
        interval: 30
        docker:

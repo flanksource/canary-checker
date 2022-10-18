@@ -60,7 +60,7 @@ nav:
       - Docker Pull: ./check-types/docker-pull.md
       - Docker Push: ./check-types/docker-push.md
       - EC2: ./check-types/ec2.md
-      - GCS: ./check-types/gcs.md
+      - GCSBucket: ./check-types/gcs-bucket.md
       - Helm: ./check-types/helm.md
       - HTTP: ./check-types/http.md
       - ICMP: ./check-types/icmp.md

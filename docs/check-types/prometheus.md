@@ -5,7 +5,7 @@
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: prometheus
+       name: prometheus-check
      spec:
        interval: 30
        prometheus:

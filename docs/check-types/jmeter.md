@@ -3,7 +3,21 @@
 Jmeter check will run jmeter cli against the supplied host
 ??? example
      ```yaml
-     
+     apiVersion: canaries.flanksource.com/v1
+     kind: Canary
+     metadata:
+       name: jmeter-check
+     spec:
+       interval: 30
+       jmeter:
+         - name: jmeter-check
+           host: 192.168.1.5
+           jmx:
+             valueFrom: 
+               configMapKeyRef:
+                 name: jmeter-config
+                 key: sample-test.jmx
+           port: <insert-port>
      ```
 
 | Field | Description | Scheme | Required |
@@ -11,7 +25,7 @@ Jmeter check will run jmeter cli against the supplied host
 | description | Description for the check | string |  |
 | host | Host is the server against which test plan needs to be executed | string |  |
 | icon | Icon for overwriting default icon on the dashboard | string |  |
-| **jmx** | Jmx defines tge ConfigMap or Secret reference to get the JMX test plan | [kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | Yes |
+| **jmx** | Jmx defines the ConfigMap or Secret reference to get the JMX test plan | [kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | Yes |
 | name | Name of the check | string |  |
 | port | Port on which the server is running | int32 |  |
 | properties | Properties defines the local Jmeter properties | \[\]string |  |

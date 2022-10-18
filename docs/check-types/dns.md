@@ -5,7 +5,7 @@
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: dns-pass
+       name: dns-check
      spec:
        interval: 30
        dns:

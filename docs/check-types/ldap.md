@@ -10,24 +10,38 @@ The LDAP check will:
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: ldap-pass
+       name: ldap-check
      spec:
        interval: 30
        ldap:
          - host: ldap://apacheds.ldap.svc:10389
            auth:
              username:
-               value: uid=admin,ou=system
-             password:
-               value: secret
+               # value: uid=admin,ou=system 
+               valueFrom: 
+                 secretKeyRef:
+                   name: ldap-credentials
+                   key: USERNAME
+             password: 
+               valueFrom: 
+                 secretKeyRef:
+                   name: ldap-credentials
+                   key: PASSWORD
            bindDN: ou=users,dc=example,dc=com
            userSearch: "(&(objectClass=organizationalPerson))"
          - host: ldap://apacheds.ldap.svc:10389
            auth:
              username:
-               value: uid=admin,ou=system
+               # value: uid=admin,ou=system 
+               valueFrom: 
+                 secretKeyRef:
+                   name: ldap-credentials
+                   key: USERNAME
              password:
-               value: secret
+               valueFrom: 
+                 secretKeyRef:
+                   name: ldap-credentials
+                   key: PASSWORD
            bindDN: ou=groups,dc=example,dc=com
            userSearch: "(&(objectClass=groupOfNames))"
      

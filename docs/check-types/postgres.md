@@ -7,16 +7,22 @@ This check will try to connect to a specified Postgresql database, run a query a
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: postgres-succeed
+       name: postgres-check
      spec:
        interval: 30
        postgres:
          - connection: "postgres://$(username):$(password)@postgres.default.svc:5432/postgres?sslmode=disable"
            auth:
              username:
-               value: postgresadmin
+               valueFrom: 
+                 secretKeyRef:
+                   name: postgres-credentials
+                   key: USERNAME
              password:
-               value: admin123
+               valueFrom: 
+                 secretKeyRef:
+                   name: postgres-credentials
+                   key: PASSWORD
            query: SELECT current_schemas(true)
            display:
              template: |

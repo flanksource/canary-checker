@@ -1,11 +1,13 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/containerdPull.svg' style='height: 32px'/> ContainerdPull
 
+ContainerdPull will try to pull an image from the specified registry.
+
 ??? example
      ```yaml
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: containerd-pull-pass
+       name: containerd-pull-check
      spec:
        interval: 30
        containerd:

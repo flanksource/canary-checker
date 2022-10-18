@@ -2266,7 +2266,7 @@ spec:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
                       jmx:
-                        description: Jmx defines tge ConfigMap or Secret reference to get the JMX test plan
+                        description: Jmx defines the ConfigMap or Secret reference to get the JMX test plan
                         properties:
                           name:
                             type: string

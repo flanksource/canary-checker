@@ -5,17 +5,23 @@
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: helm-pass
+       name: helm-check
      spec:
        interval: 30
        helm:
          - chartmuseum: http://chartmuseum.default:8080
            project: library
            auth:
-             username:
-               value: admin
-             password:
-               value: passwd
+             username: 
+               valueFrom: 
+                 secretKeyRef:
+                   name: helm-credentials
+                   key: USERNAME
+             password: 
+               valueFrom: 
+                 secretKeyRef:
+                   name: helm-credentials
+                   key: PASSWORD
      
      ```
 

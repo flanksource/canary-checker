@@ -1,6 +1,33 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/restic.svg' style='height: 32px'/> Restic
 
-
+??? example
+    ```yaml
+    apiVersion: canaries.flanksource.com/v1
+    kind: Canary
+    metadata:
+      name: restic-pass-withoutinegrity
+    spec:
+      interval: 30
+      restic:
+        - repository: s3:http://minio.minio:9000/restic-canary-checker
+          name: restic check
+          password:
+            valueFrom:
+              secretKeyRef:
+                name: restic-credentials
+                key: PASSWORD
+          maxAge: 1h
+          accessKey:
+            valueFrom:
+              secretKeyRef:
+                name: restic-credentials
+                key: ACCESS_KEY_ID
+          secretKey:
+            valueFrom:
+              secretKeyRef:
+                name: restic-credentials
+                key: SECRET_ACCESS_KEY
+    ```
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |

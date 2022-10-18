@@ -11,7 +11,7 @@ This check will
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: s3-bucket-pass
+       name: s3-bucket-check
      spec:
        interval: 30
        s3Bucket:

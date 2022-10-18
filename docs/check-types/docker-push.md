@@ -7,16 +7,22 @@ DockerPush check will try to push a Docker image to specified registry.
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: docker-push0-pass
+       name: docker-push-check
      spec:
        interval: 30
        dockerPush:
          - image: ttl.sh/flanksource-busybox:1.30
            auth:
-             username:
-               value: test
-             password:
-               value: pass
+             username: 
+               valueFrom: 
+                 secretKeyRef:
+                   name: docker-credentials
+                   key: USERNAME
+             password: 
+               valueFrom: 
+                 secretKeyRef:
+                   name: docker-credentials
+                   key: PASSWORD
      
      ```
 

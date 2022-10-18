@@ -5,7 +5,7 @@
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: ec2-pass
+       name: ec2-check
      spec:
        interval: 30
        spec:

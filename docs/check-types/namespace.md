@@ -9,7 +9,7 @@ The Namespace check will:
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: namespace-pass
+       name: namespace-check
      spec:
        interval: 30
        namespace:

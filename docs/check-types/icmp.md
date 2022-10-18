@@ -7,7 +7,7 @@ This test will check ICMP packet loss and duration.
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: icmp
+       name: icmp-check
      spec:
        interval: 30
        icmp:

@@ -5,7 +5,7 @@
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: pod-pass
+       name: pod-check
      spec:
        interval: 30
        pod:

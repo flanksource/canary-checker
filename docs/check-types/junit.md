@@ -7,7 +7,7 @@ Junit check will wait for the given pod to be completed than parses all the xml 
      apiVersion: canaries.flanksource.com/v1
      kind: Canary
      metadata:
-       name: junit-pass
+       name: junit-check
        annotations:
          trace: "true"
      spec:
