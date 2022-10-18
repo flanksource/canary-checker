@@ -57,6 +57,126 @@ spec:
             spec:
               description: CanarySpec defines the desired state of Canary
               properties:
+                amqp:
+                  items:
+                    properties:
+                      ack:
+                        type: boolean
+                      addr:
+                        type: string
+                      auth:
+                        properties:
+                          password:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          username:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                      optional:
+                                        type: boolean
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                        required:
+                          - password
+                          - username
+                        type: object
+                      description:
+                        description: Description for the check
+                        type: string
+                      exchange:
+                        properties:
+                          autodelete:
+                            type: boolean
+                          durable:
+                            type: boolean
+                          name:
+                            type: string
+                          type:
+                            type: string
+                        type: object
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      key:
+                        type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
+                      name:
+                        description: Name of the check
+                        type: string
+                      peek:
+                        type: boolean
+                      queue:
+                        properties:
+                          autodelete:
+                            type: boolean
+                          durable:
+                            type: boolean
+                          name:
+                            type: string
+                        type: object
+                    required:
+                      - addr
+                      - name
+                    type: object
+                  type: array
                 awsConfig:
                   items:
                     properties:
@@ -3941,6 +4061,126 @@ spec:
                       inline:
                         description: CanarySpec defines the desired state of Canary
                         properties:
+                          amqp:
+                            items:
+                              properties:
+                                ack:
+                                  type: boolean
+                                addr:
+                                  type: string
+                                auth:
+                                  properties:
+                                    password:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                    username:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                  required:
+                                    - password
+                                    - username
+                                  type: object
+                                description:
+                                  description: Description for the check
+                                  type: string
+                                exchange:
+                                  properties:
+                                    autodelete:
+                                      type: boolean
+                                    durable:
+                                      type: boolean
+                                    name:
+                                      type: string
+                                    type:
+                                      type: string
+                                  type: object
+                                icon:
+                                  description: Icon for overwriting default icon on the dashboard
+                                  type: string
+                                key:
+                                  type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
+                                name:
+                                  description: Name of the check
+                                  type: string
+                                peek:
+                                  type: boolean
+                                queue:
+                                  properties:
+                                    autodelete:
+                                      type: boolean
+                                    durable:
+                                      type: boolean
+                                    name:
+                                      type: string
+                                  type: object
+                              required:
+                                - addr
+                                - name
+                              type: object
+                            type: array
                           awsConfig:
                             items:
                               properties:
@@ -7506,6 +7746,126 @@ spec:
                 lookup:
                   description: CanarySpec defines the desired state of Canary
                   properties:
+                    amqp:
+                      items:
+                        properties:
+                          ack:
+                            type: boolean
+                          addr:
+                            type: string
+                          auth:
+                            properties:
+                              password:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              username:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                          optional:
+                                            type: boolean
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                            required:
+                              - password
+                              - username
+                            type: object
+                          description:
+                            description: Description for the check
+                            type: string
+                          exchange:
+                            properties:
+                              autodelete:
+                                type: boolean
+                              durable:
+                                type: boolean
+                              name:
+                                type: string
+                              type:
+                                type: string
+                            type: object
+                          icon:
+                            description: Icon for overwriting default icon on the dashboard
+                            type: string
+                          key:
+                            type: string
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: Labels for the check
+                            type: object
+                          name:
+                            description: Name of the check
+                            type: string
+                          peek:
+                            type: boolean
+                          queue:
+                            properties:
+                              autodelete:
+                                type: boolean
+                              durable:
+                                type: boolean
+                              name:
+                                type: string
+                            type: object
+                        required:
+                          - addr
+                          - name
+                        type: object
+                      type: array
                     awsConfig:
                       items:
                         properties:
@@ -11093,6 +11453,126 @@ spec:
                       lookup:
                         description: CanarySpec defines the desired state of Canary
                         properties:
+                          amqp:
+                            items:
+                              properties:
+                                ack:
+                                  type: boolean
+                                addr:
+                                  type: string
+                                auth:
+                                  properties:
+                                    password:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                    username:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                  required:
+                                    - password
+                                    - username
+                                  type: object
+                                description:
+                                  description: Description for the check
+                                  type: string
+                                exchange:
+                                  properties:
+                                    autodelete:
+                                      type: boolean
+                                    durable:
+                                      type: boolean
+                                    name:
+                                      type: string
+                                    type:
+                                      type: string
+                                  type: object
+                                icon:
+                                  description: Icon for overwriting default icon on the dashboard
+                                  type: string
+                                key:
+                                  type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
+                                name:
+                                  description: Name of the check
+                                  type: string
+                                peek:
+                                  type: boolean
+                                queue:
+                                  properties:
+                                    autodelete:
+                                      type: boolean
+                                    durable:
+                                      type: boolean
+                                    name:
+                                      type: string
+                                  type: object
+                              required:
+                                - addr
+                                - name
+                              type: object
+                            type: array
                           awsConfig:
                             items:
                               properties:
@@ -14736,6 +15216,126 @@ spec:
                             inline:
                               description: CanarySpec defines the desired state of Canary
                               properties:
+                                amqp:
+                                  items:
+                                    properties:
+                                      ack:
+                                        type: boolean
+                                      addr:
+                                        type: string
+                                      auth:
+                                        properties:
+                                          password:
+                                            properties:
+                                              name:
+                                                type: string
+                                              value:
+                                                type: string
+                                              valueFrom:
+                                                properties:
+                                                  configMapKeyRef:
+                                                    properties:
+                                                      key:
+                                                        type: string
+                                                      name:
+                                                        type: string
+                                                      optional:
+                                                        type: boolean
+                                                    required:
+                                                      - key
+                                                    type: object
+                                                  secretKeyRef:
+                                                    properties:
+                                                      key:
+                                                        type: string
+                                                      name:
+                                                        type: string
+                                                      optional:
+                                                        type: boolean
+                                                    required:
+                                                      - key
+                                                    type: object
+                                                type: object
+                                            type: object
+                                          username:
+                                            properties:
+                                              name:
+                                                type: string
+                                              value:
+                                                type: string
+                                              valueFrom:
+                                                properties:
+                                                  configMapKeyRef:
+                                                    properties:
+                                                      key:
+                                                        type: string
+                                                      name:
+                                                        type: string
+                                                      optional:
+                                                        type: boolean
+                                                    required:
+                                                      - key
+                                                    type: object
+                                                  secretKeyRef:
+                                                    properties:
+                                                      key:
+                                                        type: string
+                                                      name:
+                                                        type: string
+                                                      optional:
+                                                        type: boolean
+                                                    required:
+                                                      - key
+                                                    type: object
+                                                type: object
+                                            type: object
+                                        required:
+                                          - password
+                                          - username
+                                        type: object
+                                      description:
+                                        description: Description for the check
+                                        type: string
+                                      exchange:
+                                        properties:
+                                          autodelete:
+                                            type: boolean
+                                          durable:
+                                            type: boolean
+                                          name:
+                                            type: string
+                                          type:
+                                            type: string
+                                        type: object
+                                      icon:
+                                        description: Icon for overwriting default icon on the dashboard
+                                        type: string
+                                      key:
+                                        type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
+                                      name:
+                                        description: Name of the check
+                                        type: string
+                                      peek:
+                                        type: boolean
+                                      queue:
+                                        properties:
+                                          autodelete:
+                                            type: boolean
+                                          durable:
+                                            type: boolean
+                                          name:
+                                            type: string
+                                        type: object
+                                    required:
+                                      - addr
+                                      - name
+                                    type: object
+                                  type: array
                                 awsConfig:
                                   items:
                                     properties:
@@ -18301,6 +18901,126 @@ spec:
                       lookup:
                         description: CanarySpec defines the desired state of Canary
                         properties:
+                          amqp:
+                            items:
+                              properties:
+                                ack:
+                                  type: boolean
+                                addr:
+                                  type: string
+                                auth:
+                                  properties:
+                                    password:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                    username:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                  required:
+                                    - password
+                                    - username
+                                  type: object
+                                description:
+                                  description: Description for the check
+                                  type: string
+                                exchange:
+                                  properties:
+                                    autodelete:
+                                      type: boolean
+                                    durable:
+                                      type: boolean
+                                    name:
+                                      type: string
+                                    type:
+                                      type: string
+                                  type: object
+                                icon:
+                                  description: Icon for overwriting default icon on the dashboard
+                                  type: string
+                                key:
+                                  type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
+                                name:
+                                  description: Name of the check
+                                  type: string
+                                peek:
+                                  type: boolean
+                                queue:
+                                  properties:
+                                    autodelete:
+                                      type: boolean
+                                    durable:
+                                      type: boolean
+                                    name:
+                                      type: string
+                                  type: object
+                              required:
+                                - addr
+                                - name
+                              type: object
+                            type: array
                           awsConfig:
                             items:
                               properties:
@@ -21888,6 +22608,126 @@ spec:
                             lookup:
                               description: CanarySpec defines the desired state of Canary
                               properties:
+                                amqp:
+                                  items:
+                                    properties:
+                                      ack:
+                                        type: boolean
+                                      addr:
+                                        type: string
+                                      auth:
+                                        properties:
+                                          password:
+                                            properties:
+                                              name:
+                                                type: string
+                                              value:
+                                                type: string
+                                              valueFrom:
+                                                properties:
+                                                  configMapKeyRef:
+                                                    properties:
+                                                      key:
+                                                        type: string
+                                                      name:
+                                                        type: string
+                                                      optional:
+                                                        type: boolean
+                                                    required:
+                                                      - key
+                                                    type: object
+                                                  secretKeyRef:
+                                                    properties:
+                                                      key:
+                                                        type: string
+                                                      name:
+                                                        type: string
+                                                      optional:
+                                                        type: boolean
+                                                    required:
+                                                      - key
+                                                    type: object
+                                                type: object
+                                            type: object
+                                          username:
+                                            properties:
+                                              name:
+                                                type: string
+                                              value:
+                                                type: string
+                                              valueFrom:
+                                                properties:
+                                                  configMapKeyRef:
+                                                    properties:
+                                                      key:
+                                                        type: string
+                                                      name:
+                                                        type: string
+                                                      optional:
+                                                        type: boolean
+                                                    required:
+                                                      - key
+                                                    type: object
+                                                  secretKeyRef:
+                                                    properties:
+                                                      key:
+                                                        type: string
+                                                      name:
+                                                        type: string
+                                                      optional:
+                                                        type: boolean
+                                                    required:
+                                                      - key
+                                                    type: object
+                                                type: object
+                                            type: object
+                                        required:
+                                          - password
+                                          - username
+                                        type: object
+                                      description:
+                                        description: Description for the check
+                                        type: string
+                                      exchange:
+                                        properties:
+                                          autodelete:
+                                            type: boolean
+                                          durable:
+                                            type: boolean
+                                          name:
+                                            type: string
+                                          type:
+                                            type: string
+                                        type: object
+                                      icon:
+                                        description: Icon for overwriting default icon on the dashboard
+                                        type: string
+                                      key:
+                                        type: string
+                                      labels:
+                                        additionalProperties:
+                                          type: string
+                                        description: Labels for the check
+                                        type: object
+                                      name:
+                                        description: Name of the check
+                                        type: string
+                                      peek:
+                                        type: boolean
+                                      queue:
+                                        properties:
+                                          autodelete:
+                                            type: boolean
+                                          durable:
+                                            type: boolean
+                                          name:
+                                            type: string
+                                        type: object
+                                    required:
+                                      - addr
+                                      - name
+                                    type: object
+                                  type: array
                                 awsConfig:
                                   items:
                                     properties:
@@ -25577,6 +26417,126 @@ spec:
                       lookup:
                         description: CanarySpec defines the desired state of Canary
                         properties:
+                          amqp:
+                            items:
+                              properties:
+                                ack:
+                                  type: boolean
+                                addr:
+                                  type: string
+                                auth:
+                                  properties:
+                                    password:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                    username:
+                                      properties:
+                                        name:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueFrom:
+                                          properties:
+                                            configMapKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                            secretKeyRef:
+                                              properties:
+                                                key:
+                                                  type: string
+                                                name:
+                                                  type: string
+                                                optional:
+                                                  type: boolean
+                                              required:
+                                                - key
+                                              type: object
+                                          type: object
+                                      type: object
+                                  required:
+                                    - password
+                                    - username
+                                  type: object
+                                description:
+                                  description: Description for the check
+                                  type: string
+                                exchange:
+                                  properties:
+                                    autodelete:
+                                      type: boolean
+                                    durable:
+                                      type: boolean
+                                    name:
+                                      type: string
+                                    type:
+                                      type: string
+                                  type: object
+                                icon:
+                                  description: Icon for overwriting default icon on the dashboard
+                                  type: string
+                                key:
+                                  type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels for the check
+                                  type: object
+                                name:
+                                  description: Name of the check
+                                  type: string
+                                peek:
+                                  type: boolean
+                                queue:
+                                  properties:
+                                    autodelete:
+                                      type: boolean
+                                    durable:
+                                      type: boolean
+                                    name:
+                                      type: string
+                                  type: object
+                              required:
+                                - addr
+                                - name
+                              type: object
+                            type: array
                           awsConfig:
                             items:
                               properties:
