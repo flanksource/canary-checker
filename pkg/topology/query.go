@@ -345,7 +345,17 @@ func getChecksForComponents() string {
 
 func getConfigForComponents() string {
 	return `(
-        SELECT json_agg(config_items) from config_items
+        SELECT json_agg(json_build_object(
+            'id', config_items.id,
+            'name', config_items.name,
+            'external_type', config_items.external_type,
+            'config_type', config_items.config_type,
+            'config', config_items.config,
+            'cost_per_minute', config_items.cost_per_minute,
+            'cost_total_1d', config_items.cost_total_1d,
+            'cost_total_7d', config_items.cost_total_7d,
+            'cost_total_30d', config_items.cost_total_30d
+        )) FROM config_items
         LEFT JOIN config_component_relationships ON config_items.id = config_component_relationships.config_id
         WHERE config_component_relationships.component_id = components.id AND config_component_relationships.deleted_at IS NULL
         GROUP BY config_component_relationships.component_id
@@ -354,7 +364,13 @@ func getConfigForComponents() string {
 
 func getIncidentsForComponents() string {
 	return `(
-        SELECT json_agg(incidents) FROM incidents
+        SELECT json_agg(json_build_object(
+            'id', incidents.id,
+            'title', incidents.title,
+            'severity', incidents.severity,
+            'description', incidents.description,
+            'type', incidents.type
+        )) FROM incidents
         INNER JOIN hypotheses ON hypotheses.incident_id = incidents.id
         INNER JOIN evidences ON evidences.hypothesis_id = hypotheses.id
         WHERE evidences.component_id = components.id AND (incidents.resolved IS NULL AND incidents.closed IS NULL)
