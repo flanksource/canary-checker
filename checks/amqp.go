@@ -19,7 +19,35 @@ import (
 var amqpLatency = prometheus.NewSummaryVec(
 	prometheus.SummaryOpts{
 		Name: "canary_check_amqp_latency_seconds",
-		Help: "Duration of an AMQP operation in seconds",
+		Help: "Duration of an entire AMQP check operation in seconds",
+	},
+	[]string{"amqp_url", "canary_name"},
+)
+var amqpSetupLatency = prometheus.NewSummaryVec(
+	prometheus.SummaryOpts{
+		Name: "canary_check_amqp_setup_latency_seconds",
+		Help: "Duration of the consume portion of an AMQP operation",
+	},
+	[]string{"amqp_url", "canary_name", "amqp_role"},
+)
+var amqpTimedOutCount = prometheus.NewCounterVec(
+	prometheus.CounterOpts{
+		Name: "canary_check_amqp_timed_out_total",
+		Help: "Total number of AMQP requests that have timed out",
+	},
+	[]string{"amqp_url", "canary_name"},
+)
+var amqpEnqueued = prometheus.NewGaugeVec(
+	prometheus.GaugeOpts{
+		Name: "canary_check_amqp_enqueued_messages",
+		Help: "Saturation of a given AMQP queue",
+	},
+	[]string{"amqp_url", "canary_name"},
+)
+var amqpConsumers = prometheus.NewGaugeVec(
+	prometheus.GaugeOpts{
+		Name: "canary_check_amqp_consumers",
+		Help: "Utilization of a given AMQP queue",
 	},
 	[]string{"amqp_url", "canary_name"},
 )
@@ -30,7 +58,13 @@ var amqpLatency = prometheus.NewSummaryVec(
 const amqpTimeout = 10 * time.Second
 
 func init() {
-	prometheus.MustRegister(amqpLatency)
+	prometheus.MustRegister(
+		amqpLatency,
+		amqpSetupLatency,
+		amqpTimedOutCount,
+		amqpEnqueued,
+		amqpConsumers,
+	)
 }
 
 type AMQPChecker struct{}
@@ -80,9 +114,10 @@ func amqpPrepURL(addr, user, pass string) (string, error) {
 // amqpCheck is a convenience object for conducting an AMQP check.
 type amqpCheck struct {
 	v1.AMQPCheck
-	addr  string
-	sAddr string // addr without authority.userinfo component
-	body  string
+	addr    string
+	sAddr   string // addr without authority.userinfo component
+	body    string
+	qStatus *amqp.Queue // stash these in case we add native metrics
 }
 
 // newAmqpCheck initializes an amqpCheck object.
@@ -158,6 +193,13 @@ func (ac *amqpCheck) ensureQueue(ch *amqp.Channel) (*amqp.Queue, error) {
 	if err != nil {
 		return nil, err
 	}
+	qStatus, err := ch.QueueInspect(queue.Name)
+	if err != nil {
+		return nil, err
+	}
+	ac.qStatus = &qStatus
+	amqpEnqueued.WithLabelValues(ac.sAddr, ac.Name).Set(float64(qStatus.Messages))
+	amqpConsumers.WithLabelValues(ac.sAddr, ac.Name).Set(float64(qStatus.Consumers))
 	if ac.isAnonPubSub() || ac.Peek {
 		x := ac.getExchangeName()
 		k := ac.getKey(false) // always false, even for topics
@@ -187,8 +229,9 @@ func (ac *amqpCheck) getKey(isProducer bool) string {
 	}
 }
 
-// isAnonPubSub says whether an ephemeral, non-default exchange was specified.
-// This implies automatically named (exclusive) queues will be used.
+// isAnonPubSub indicates whether we're simulating a pub-sub sequence.
+// This implies automatically named ("exclusive") queues will be used.
+// If an explicit queue name has been configured, it will be ignored.
 func (ac *amqpCheck) isAnonPubSub() bool {
 	return !ac.Peek && ac.Exchange.Type != ""
 }
@@ -217,6 +260,9 @@ func (ac *amqpCheck) getQueueName() string {
 
 // push publishes to a queue.
 func (ac *amqpCheck) push(ctx *context.Context) error {
+	timer := prometheus.NewTimer(
+		amqpSetupLatency.WithLabelValues(ac.sAddr, ac.Name, "producer"),
+	)
 	conn, ch, err := ac.open()
 	if err != nil {
 		return err
@@ -236,6 +282,7 @@ func (ac *amqpCheck) push(ctx *context.Context) error {
 			k = queue.Name
 		}
 	}
+	timer.ObserveDuration()
 	// XXX as of 15e7cea06125f5df9ad0c07e2e73f1b8f498ce39 v0.38.171, using
 	// ctx.WithTimeout here appears to create duplicate checks that interfere
 	// with one another. If this isn't intentional, perhaps it has to do with
@@ -278,6 +325,7 @@ func (ac *amqpCheck) receive(ds <-chan amqp.Delivery) error {
 		}
 		return nil
 	case <-time.After(amqpTimeout):
+		amqpTimedOutCount.WithLabelValues(ac.sAddr, ac.Name).Inc()
 		return fmt.Errorf("timed out waiting message")
 	}
 }
@@ -286,6 +334,9 @@ func (ac *amqpCheck) receive(ds <-chan amqp.Delivery) error {
 // This also verifies whether creation properties match. Keys aren't
 // considered, however, so additional bindings may be created.
 func (ac *amqpCheck) pull(r func(<-chan amqp.Delivery) error) error {
+	timer := prometheus.NewTimer(
+		amqpSetupLatency.WithLabelValues(ac.sAddr, ac.Name, "consumer"),
+	)
 	conn, ch, err := ac.open()
 	if err != nil {
 		return err
@@ -299,12 +350,14 @@ func (ac *amqpCheck) pull(r func(<-chan amqp.Delivery) error) error {
 	if err != nil {
 		return err
 	}
+	timer.ObserveDuration()
 	autoAck := ac.isAnonPubSub() || (!ac.Ack && !ac.Peek)
 	ds, err := ch.Consume(queue.Name, "", autoAck, false, false, false, nil)
 	if err != nil {
 		return err
 	}
-	if err := r(ds); err != nil {
+	err = r(ds)
+	if err != nil {
 		return err
 	}
 	return nil

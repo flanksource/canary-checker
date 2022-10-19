@@ -104,13 +104,13 @@ func TestAmqpPushPull(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Default
-	ac := &amqpCheck{v1.AMQPCheck{}, addr, "", t.Name()}
+	ac := &amqpCheck{v1.AMQPCheck{}, addr, "", t.Name(), nil}
 	err = ac.pushPull(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// ACK'd
-	ac = &amqpCheck{v1.AMQPCheck{Ack: true}, addr, "", t.Name()}
+	ac = &amqpCheck{v1.AMQPCheck{Ack: true}, addr, "", t.Name(), nil}
 	err = ac.pushPull(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -136,21 +136,21 @@ func TestAmqpPubSub(t *testing.T) {
 	}
 	// Blind multicast
 	ex := v1.AMQPExchange{Type: "fanout"}
-	ac := &amqpCheck{v1.AMQPCheck{Exchange: ex}, addr, "", t.Name()}
+	ac := &amqpCheck{v1.AMQPCheck{Exchange: ex}, addr, "", t.Name(), nil}
 	err = ac.pubSub(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// Explicit targeting/routing
 	ex = v1.AMQPExchange{Type: "direct"}
-	ac = &amqpCheck{v1.AMQPCheck{Exchange: ex}, addr, "", t.Name()}
+	ac = &amqpCheck{v1.AMQPCheck{Exchange: ex}, addr, "", t.Name(), nil}
 	err = ac.pubSub(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// Pattern matching
 	ex = v1.AMQPExchange{Type: "topic"}
-	ac = &amqpCheck{v1.AMQPCheck{Exchange: ex}, addr, "", t.Name()}
+	ac = &amqpCheck{v1.AMQPCheck{Exchange: ex}, addr, "", t.Name(), nil}
 	err = ac.pubSub(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -171,7 +171,7 @@ func runAMQPPeek(kind, exchangeName, queueName, bindKey, sendKey string) error {
 	ex := v1.AMQPExchange{Name: exchangeName, Type: kind}
 	qu := v1.AMQPQueue{Name: queueName}
 	aC := v1.AMQPCheck{Exchange: ex, Queue: qu, Key: bindKey, Peek: true}
-	ac := &amqpCheck{aC, addr, "", queueName}
+	ac := &amqpCheck{aC, addr, "", queueName, nil}
 	// Prepare
 	err = ac.push(ctx)
 	if err != nil {
