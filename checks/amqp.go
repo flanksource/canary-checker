@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -127,6 +128,8 @@ type amqpCheck struct {
 	sAddr   string // addr without authority.userinfo component
 	body    string
 	qStatus *amqp.Queue // stash these in case we add native metrics
+	headers amqp.Table
+	args    amqp.Table
 }
 
 // newAmqpCheck initializes an amqpCheck object.
@@ -150,13 +153,39 @@ func newAMQPCheck(check v1.AMQPCheck, ctx *context.Context) (*amqpCheck, error) 
 	ac.body = ac.Simulation.Body
 	if ac.body == "" {
 		ts := time.Now().Format(time.RFC3339)
-		b := ac.Binding
+		var b string
 		if ac.Exchange.Type == "" {
-			b = "auto"
+			b = `"auto"`
+		} else {
+			s, err := json.Marshal(ac.Binding)
+			if err != nil {
+				return nil, err
+			}
+			b = string(s)
 		}
-		ac.body = fmt.Sprintf(`{"binding":"%s","ts":"%s"}`, b, ts)
+		ac.body = fmt.Sprintf(`{"binding":%s,"ts":"%q"}`, b, ts)
+	}
+	// Populate args
+	if err := ac.desRawTables(); err != nil {
+		return nil, err
 	}
 	return ac, nil
+}
+
+func (ac *amqpCheck) desRawTables() error {
+	if ac.Binding.Args != nil {
+		err := json.Unmarshal(ac.Binding.Args, &ac.args)
+		if err != nil {
+			return err
+		}
+	}
+	if ac.Simulation.Headers != nil {
+		err := json.Unmarshal(ac.Simulation.Headers, &ac.headers)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // validate returns an error if the v1.AMQPCheck instance is problematic.
@@ -253,8 +282,12 @@ func (ac *amqpCheck) ensureQueue(ch *amqp.Channel) (*amqp.Queue, error) {
 	ac.qStatus.Consumers++ // Include ourselves
 	amqpEnqueued.WithLabelValues(ac.sAddr, ac.Name).Set(float64(qStatus.Messages))
 	amqpConsumers.WithLabelValues(ac.sAddr, ac.Name).Set(float64(qStatus.Consumers))
-	if ac.isAnonPubSub() || ac.Peek || ac.Binding != "" {
-		err := ch.QueueBind(q.Name, ac.Binding, ac.Exchange.Name, false, nil)
+	if ac.isAnonPubSub() || ac.Peek || ac.Binding.Key != "" || ac.args != nil {
+		name := ac.Binding.Name
+		if name == "" {
+			name = q.Name
+		}
+		err := ch.QueueBind(name, ac.Binding.Key, ac.Exchange.Name, false, ac.args)
 		if err != nil {
 			return nil, err
 		}
@@ -303,7 +336,11 @@ func (ac *amqpCheck) push(ctx *context.Context) error {
 	// involving duplicate checks.
 	goctx, cancel := gocontext.WithTimeout(ctx.Context, 10*time.Second)
 	defer cancel()
-	payload := amqp.Publishing{ContentType: "text/plain", Body: []byte(ac.body)}
+	payload := amqp.Publishing{
+		Headers:     ac.headers, // service will type check
+		ContentType: "text/plain",
+		Body:        []byte(ac.body),
+	}
 	return ch.PublishWithContext(
 		goctx,
 		ac.Exchange.Name,
@@ -425,15 +462,15 @@ func (c *AMQPChecker) Check(ctx *context.Context, ec external.Check) pkg.Results
 	timer.ObserveDuration()
 	// Add queue stats
 	results[0].AddMetric(pkg.Metric{
-		Name: "enqueued",
-		Type: metrics.GaugeType,
+		Name:   "enqueued",
+		Type:   metrics.GaugeType,
 		Labels: map[string]string{"endpoint": ac.sAddr},
-		Value: float64(ac.qStatus.Messages),
+		Value:  float64(ac.qStatus.Messages),
 	}).AddMetric(pkg.Metric{
-		Name: "consumers",
-		Type: metrics.GaugeType,
+		Name:   "consumers",
+		Type:   metrics.GaugeType,
 		Labels: map[string]string{"endpoint": ac.sAddr},
-		Value: float64(ac.qStatus.Consumers),
+		Value:  float64(ac.qStatus.Consumers),
 	})
 	return results
 }

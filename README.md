@@ -538,19 +538,20 @@ amqp:
       name: testPeek
       durable: true
     peek: true
-    binding: foo
+    binding:
+      key: foo
 ```
 
-| Field | Description | Scheme | Required |
-| ----- | ----------- | ------ | -------- |
-| addr | AMQP broker host and optional `:<port>`, which defaults to `5672` (non-TLS). | string | Yes |
-| exchange | An AMQP exchange configuration. Fields are `{name: string, type: string, durable: bool, autodelete: bool}`. All are optional. The `type`s currently accepted are `"fanout"`, `"direct"`, `"topic"`, and `""`. Specifying the latter (or omitting `exchange` entirely) indicates a desire to use the [default exchange](https://www.rabbitmq.com/tutorials/amqp-concepts.html#exchange-default). Otherwise, an exchange is created if one doesn't already exist. Existing exchanges must have matching properties. | Object | No |
-| queue | An [AMQP Queue](https://www.rabbitmq.com/queues.html) configuration. Fields are `{name: string, durable: bool, autodelete: bool}` where `name` (and thus `queue` itself) is mandatory in some cases. Existing queues must have matching properties. Ignored when `peek` is `false` with a non-default exchange. | Object | Yes |
-| ack | Whether to send [explicit ACKs](https://www.rabbitmq.com/confirms.html) (currently only respected when using the default exchange). When `false`, "auto-acking" is in effect. | bool | No |
-| binding | Binding key. Requirements vary per `exchange.type`. For `"topic"`, the value should be a special glob-like pattern. For `"direct"`, it can be any nonempty string. Not applicable to `"fanout"`.| string | No |
-| peek | An indication of whether to forgo producing and just consume and restore. Implies `ack`. An exchange and a bound queue (presumably populated) matching those expressed in the spec *must* already exist. If a message can't be retrieved after some period (currently hard coded to 10s), it's recorded as a failure. | bool | No |
-| simulation | Mainly for internal use and special cases. Fields are `{key: string, body: string, witness: bool, bootstrap: bool}`. With `bootstrap`, a message will be emitted using `key` when the target queue is empty. `body` can be used to override the message payload. `witness` ensures the subscriber is connected before emitting a message. The two booleans are mutually exclusive. | Object | No |
-| auth | A username and a password, possibly in the form of a `SecretKeyRef`. | Object | No |
+| Field      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Scheme | Required |
+|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|----------|
+| addr       | AMQP broker host and optional `:<port>`, which defaults to `5672` (non-TLS). | string | Yes |
+| exchange   | An AMQP exchange configuration. Fields are `{name: string, type: string, durable: bool, autodelete: bool}`. All are optional. The `type`s currently accepted are `"fanout"`, `"direct"`, `"topic"`, `"headers"` and `""`. Specifying the latter (or omitting `exchange` entirely) indicates a desire to use the [default exchange](https://www.rabbitmq.com/tutorials/amqp-concepts.html#exchange-default). Otherwise, an exchange is created if one doesn't already exist. If one *does* exist and its properties don't align with those given, an error is thrown. | Object | No |
+| queue      | An [AMQP Queue](https://www.rabbitmq.com/queues.html) configuration. Fields are `{name: string, durable: bool, autodelete: bool}`, where `name` (and thus `queue` itself) is effectively mandatory in most cases. Existing queues must have matching properties. Ignored with non-default exchanges when `peek` is `false`. | Object | Yes |
+| ack        | Whether to send [explicit ACKs](https://www.rabbitmq.com/confirms.html) When `false`, "auto-acking" is in effect. | bool   | No |
+| binding    | Parameters for binding an exchange to a queue. Fields are `{name: string, key: string, args: object}`. `name` and `args` should normally be omitted. For `key`, requirements vary per `exchange.type`. With type `"topic"`, the value should be a special glob-like pattern. For `"direct"`, it can be any nonempty string (not applicable to `"fanout"`). For the `args` field, see [here](https://www.rabbitmq.com/tutorials/amqp-concepts.html#exchange-headers). Basically, keys must be strings, but allowed value types depend on the server. | object | No |
+| peek       | An indication of whether to forgo producing and just consume and restore. Implies `ack`. An exchange and a bound queue (presumably populated) matching those expressed in the spec *must* already exist. If a message can't be retrieved after some period (currently hard coded to 10 seconds), it's recorded as a failure. | bool   | No |
+| simulation | Mainly for internal use and special cases. Fields are `{key: string, body: string, headers: object, witness: bool, bootstrap: bool}`. With `bootstrap`, a message will be emitted using `key` when the target queue is empty. `body` can be used to override the message payload. `witness` ensures the subscriber is connected before emitting a message. The two booleans are mutually exclusive. See `binding.args` for `headers`. | Object | No |
+| auth       | A username and a password, possibly in the form of a `SecretKeyRef`. | Object | No |
 
 
 ### Elasticsearch - Query an Elasticsearch DB

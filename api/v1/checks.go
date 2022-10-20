@@ -310,10 +310,23 @@ type AMQPQueue struct {
 }
 
 type AMQPSimulation struct {
-	Key       string `yaml:"key,omitempty" json:"key,omitempty"`
-	Body      string `yaml:"body,omitempty" json:"body,omitempty"`
-	Witness   bool   `yaml:"witness,omitempty" json:"witness,omitempty"`
-	Bootstrap bool   `yaml:"bootstrap,omitempty" json:"bootstrap,omitempty"`
+	Key string `yaml:"key,omitempty" json:"key,omitempty"`
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Type=object
+	Headers   json.RawMessage `yaml:"headers,omitempty" json:"headers,omitempty"`
+	Body      string          `yaml:"body,omitempty" json:"body,omitempty"`
+	Witness   bool            `yaml:"witness,omitempty" json:"witness,omitempty"`
+	Bootstrap bool            `yaml:"bootstrap,omitempty" json:"bootstrap,omitempty"`
+}
+
+type AMQPBinding struct {
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+	Key  string `yaml:"key,omitempty" json:"key,omitempty"`
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Type=object
+	Args json.RawMessage `yaml:"args,omitempty" json:"args,omitempty"`
 }
 
 type AMQPCheck struct {
@@ -323,7 +336,7 @@ type AMQPCheck struct {
 	Exchange    AMQPExchange    `yaml:"exchange,omitempty" json:"exchange,omitempty"`
 	Queue       AMQPQueue       `yaml:"queue,omitempty" json:"queue,omitempty"`
 	Simulation  AMQPSimulation  `yaml:"simulation,omitempty" json:"simulation,omitempty"`
-	Binding     string          `yaml:"binding,omitempty" json:"binding,omitempty"`
+	Binding     AMQPBinding     `yaml:"binding,omitempty" json:"binding,omitempty"`
 	Ack         bool            `yaml:"ack,omitempty" json:"ack,omitempty"`
 	Peek        bool            `yaml:"peek,omitempty" json:"peek,omitempty"`
 }
