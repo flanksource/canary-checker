@@ -107,11 +107,11 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
             httpGet:
-              path: /index.html
+              path: /health
               port: 8080
           readinessProbe:
             httpGet:
-              path: /index.html
+              path: /health
               port: 8080
       {{- with .Values.extra }}
       {{- toYaml . | nindent 6 }}
