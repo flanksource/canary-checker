@@ -27,7 +27,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
-	"github.com/flanksource/canary-checker/ui"
 	"github.com/flanksource/commons/logger"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -64,15 +63,6 @@ func serve() {
 	jsontime.AddTimeFormatAlias("postgres_timestamp", v1.PostgresTimestampFormat)
 	var allowedCors string
 	e := echo.New()
-	if dev {
-		e.Static("/", "./ui/build")
-		allowedCors = fmt.Sprintf("http://localhost:%d", devGuiPort)
-	} else {
-		contentHandler := echo.WrapHandler(http.FileServer(http.FS(ui.StaticContent)))
-		var contentRewrite = middleware.Rewrite(map[string]string{"/*": "/build/$1"})
-		e.GET("/*", contentHandler, contentRewrite, stripQuery)
-		allowedCors = ""
-	}
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{allowedCors},
 	}))
@@ -141,14 +131,6 @@ func forward(e *echo.Echo, prefix string, target string) {
 			},
 		}),
 	}))
-}
-
-// stripQuery removes query parameters for static sites
-func stripQuery(f echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		c.Request().URL.RawQuery = ""
-		return f(c)
-	}
 }
 
 func init() {
