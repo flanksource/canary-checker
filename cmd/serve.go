@@ -94,6 +94,9 @@ func serve() {
 	e.GET("/api/topology", api.Topology)
 	e.GET("/metrics", echo.WrapHandler(promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{})))
 	e.GET("/api/changes", api.Changes)
+	e.GET("/health", func(c echo.Context) error {
+		return c.String(http.StatusOK, "OK")
+	})
 
 	// Start server
 	go func() {
