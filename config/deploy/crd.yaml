@@ -134,6 +134,16 @@ spec:
                           - password
                           - username
                         type: object
+                      binding:
+                        properties:
+                          args:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          key:
+                            type: string
+                          name:
+                            type: string
+                        type: object
                       description:
                         description: Description for the check
                         type: string
@@ -150,8 +160,6 @@ spec:
                         type: object
                       icon:
                         description: Icon for overwriting default icon on the dashboard
-                        type: string
-                      key:
                         type: string
                       labels:
                         additionalProperties:
@@ -171,6 +179,20 @@ spec:
                             type: boolean
                           name:
                             type: string
+                        type: object
+                      simulation:
+                        properties:
+                          body:
+                            type: string
+                          bootstrap:
+                            type: boolean
+                          headers:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          key:
+                            type: string
+                          witness:
+                            type: boolean
                         type: object
                     required:
                       - addr
@@ -3869,6 +3891,16 @@ spec:
                                     - password
                                     - username
                                   type: object
+                                binding:
+                                  properties:
+                                    args:
+                                      type: object
+                                      x-kubernetes-preserve-unknown-fields: true
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  type: object
                                 description:
                                   description: Description for the check
                                   type: string
@@ -3885,8 +3917,6 @@ spec:
                                   type: object
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
-                                  type: string
-                                key:
                                   type: string
                                 labels:
                                   additionalProperties:
@@ -3906,6 +3936,20 @@ spec:
                                       type: boolean
                                     name:
                                       type: string
+                                  type: object
+                                simulation:
+                                  properties:
+                                    body:
+                                      type: string
+                                    bootstrap:
+                                      type: boolean
+                                    headers:
+                                      type: object
+                                      x-kubernetes-preserve-unknown-fields: true
+                                    key:
+                                      type: string
+                                    witness:
+                                      type: boolean
                                   type: object
                               required:
                                 - addr
@@ -7554,6 +7598,16 @@ spec:
                               - password
                               - username
                             type: object
+                          binding:
+                            properties:
+                              args:
+                                type: object
+                                x-kubernetes-preserve-unknown-fields: true
+                              key:
+                                type: string
+                              name:
+                                type: string
+                            type: object
                           description:
                             description: Description for the check
                             type: string
@@ -7570,8 +7624,6 @@ spec:
                             type: object
                           icon:
                             description: Icon for overwriting default icon on the dashboard
-                            type: string
-                          key:
                             type: string
                           labels:
                             additionalProperties:
@@ -7591,6 +7643,20 @@ spec:
                                 type: boolean
                               name:
                                 type: string
+                            type: object
+                          simulation:
+                            properties:
+                              body:
+                                type: string
+                              bootstrap:
+                                type: boolean
+                              headers:
+                                type: object
+                                x-kubernetes-preserve-unknown-fields: true
+                              key:
+                                type: string
+                              witness:
+                                type: boolean
                             type: object
                         required:
                           - addr
@@ -11261,6 +11327,16 @@ spec:
                                     - password
                                     - username
                                   type: object
+                                binding:
+                                  properties:
+                                    args:
+                                      type: object
+                                      x-kubernetes-preserve-unknown-fields: true
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  type: object
                                 description:
                                   description: Description for the check
                                   type: string
@@ -11277,8 +11353,6 @@ spec:
                                   type: object
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
-                                  type: string
-                                key:
                                   type: string
                                 labels:
                                   additionalProperties:
@@ -11298,6 +11372,20 @@ spec:
                                       type: boolean
                                     name:
                                       type: string
+                                  type: object
+                                simulation:
+                                  properties:
+                                    body:
+                                      type: string
+                                    bootstrap:
+                                      type: boolean
+                                    headers:
+                                      type: object
+                                      x-kubernetes-preserve-unknown-fields: true
+                                    key:
+                                      type: string
+                                    witness:
+                                      type: boolean
                                   type: object
                               required:
                                 - addr
@@ -15024,6 +15112,16 @@ spec:
                                           - password
                                           - username
                                         type: object
+                                      binding:
+                                        properties:
+                                          args:
+                                            type: object
+                                            x-kubernetes-preserve-unknown-fields: true
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        type: object
                                       description:
                                         description: Description for the check
                                         type: string
@@ -15040,8 +15138,6 @@ spec:
                                         type: object
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
-                                        type: string
-                                      key:
                                         type: string
                                       labels:
                                         additionalProperties:
@@ -15061,6 +15157,20 @@ spec:
                                             type: boolean
                                           name:
                                             type: string
+                                        type: object
+                                      simulation:
+                                        properties:
+                                          body:
+                                            type: string
+                                          bootstrap:
+                                            type: boolean
+                                          headers:
+                                            type: object
+                                            x-kubernetes-preserve-unknown-fields: true
+                                          key:
+                                            type: string
+                                          witness:
+                                            type: boolean
                                         type: object
                                     required:
                                       - addr
@@ -18709,6 +18819,16 @@ spec:
                                     - password
                                     - username
                                   type: object
+                                binding:
+                                  properties:
+                                    args:
+                                      type: object
+                                      x-kubernetes-preserve-unknown-fields: true
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  type: object
                                 description:
                                   description: Description for the check
                                   type: string
@@ -18725,8 +18845,6 @@ spec:
                                   type: object
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
-                                  type: string
-                                key:
                                   type: string
                                 labels:
                                   additionalProperties:
@@ -18746,6 +18864,20 @@ spec:
                                       type: boolean
                                     name:
                                       type: string
+                                  type: object
+                                simulation:
+                                  properties:
+                                    body:
+                                      type: string
+                                    bootstrap:
+                                      type: boolean
+                                    headers:
+                                      type: object
+                                      x-kubernetes-preserve-unknown-fields: true
+                                    key:
+                                      type: string
+                                    witness:
+                                      type: boolean
                                   type: object
                               required:
                                 - addr
@@ -22416,6 +22548,16 @@ spec:
                                           - password
                                           - username
                                         type: object
+                                      binding:
+                                        properties:
+                                          args:
+                                            type: object
+                                            x-kubernetes-preserve-unknown-fields: true
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        type: object
                                       description:
                                         description: Description for the check
                                         type: string
@@ -22432,8 +22574,6 @@ spec:
                                         type: object
                                       icon:
                                         description: Icon for overwriting default icon on the dashboard
-                                        type: string
-                                      key:
                                         type: string
                                       labels:
                                         additionalProperties:
@@ -22453,6 +22593,20 @@ spec:
                                             type: boolean
                                           name:
                                             type: string
+                                        type: object
+                                      simulation:
+                                        properties:
+                                          body:
+                                            type: string
+                                          bootstrap:
+                                            type: boolean
+                                          headers:
+                                            type: object
+                                            x-kubernetes-preserve-unknown-fields: true
+                                          key:
+                                            type: string
+                                          witness:
+                                            type: boolean
                                         type: object
                                     required:
                                       - addr
@@ -26225,6 +26379,16 @@ spec:
                                     - password
                                     - username
                                   type: object
+                                binding:
+                                  properties:
+                                    args:
+                                      type: object
+                                      x-kubernetes-preserve-unknown-fields: true
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  type: object
                                 description:
                                   description: Description for the check
                                   type: string
@@ -26241,8 +26405,6 @@ spec:
                                   type: object
                                 icon:
                                   description: Icon for overwriting default icon on the dashboard
-                                  type: string
-                                key:
                                   type: string
                                 labels:
                                   additionalProperties:
@@ -26262,6 +26424,20 @@ spec:
                                       type: boolean
                                     name:
                                       type: string
+                                  type: object
+                                simulation:
+                                  properties:
+                                    body:
+                                      type: string
+                                    bootstrap:
+                                      type: boolean
+                                    headers:
+                                      type: object
+                                      x-kubernetes-preserve-unknown-fields: true
+                                    key:
+                                      type: string
+                                    witness:
+                                      type: boolean
                                   type: object
                               required:
                                 - addr
