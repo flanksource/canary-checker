@@ -28,8 +28,10 @@ spec:
         type: direct
       queue:
         name: testPeekDirectFail
+      # Fails because queue doesn't exist (kind of dumb, right?)
+      binding:
+        key: direct.fail
       peek: true
-      key: direct.fail
 
 ---
 apiVersion: canaries.flanksource.com/v1
@@ -61,5 +63,9 @@ spec:
         type: topic
       queue:
         name: testPeekTopicFail
+      simulation:
+        key: topic.pass.foo
+        bootstrap: true
+      binding:
+        key: "#.fail.#"
       peek: true
-      key: "#.fail.#"

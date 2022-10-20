@@ -12,3 +12,5 @@ RESTIC_PASSWORD="S0m3p@sswd" AWS_ACCESS_KEY_ID="minio" AWS_SECRET_ACCESS_KEY="mi
 sleep 5
 
 $KARINA deploy phases --crds --rabbitmq-operator -c "$(pwd)/$TEST_FOLDER/_karina.yaml" -vv
+
+kubectl -n rabbitmq-system wait --for=condition=ready pod -l app.kubernetes.io/name=rabbitmq-cluster-operator --timeout=5m

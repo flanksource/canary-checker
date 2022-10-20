@@ -309,15 +309,23 @@ type AMQPQueue struct {
 	AutoDelete bool   `yaml:"autodelete,omitempty" json:"autodelete,omitempty"`
 }
 
+type AMQPSimulation struct {
+	Key       string `yaml:"key,omitempty" json:"key,omitempty"`
+	Body      string `yaml:"body,omitempty" json:"body,omitempty"`
+	Witness   bool   `yaml:"witness,omitempty" json:"witness,omitempty"`
+	Bootstrap bool   `yaml:"bootstrap,omitempty" json:"bootstrap,omitempty"`
+}
+
 type AMQPCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Addr        string          `yaml:"addr" json:"addr" template:"true"`
 	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 	Exchange    AMQPExchange    `yaml:"exchange,omitempty" json:"exchange,omitempty"`
 	Queue       AMQPQueue       `yaml:"queue,omitempty" json:"queue,omitempty"`
+	Simulation  AMQPSimulation  `yaml:"simulation,omitempty" json:"simulation,omitempty"`
+	Binding     string          `yaml:"binding,omitempty" json:"binding,omitempty"`
 	Ack         bool            `yaml:"ack,omitempty" json:"ack,omitempty"`
 	Peek        bool            `yaml:"peek,omitempty" json:"peek,omitempty"`
-	Key         string          `yaml:"key,omitempty" json:"key,omitempty"`
 }
 
 func (c AMQPCheck) GetType() string {

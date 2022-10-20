@@ -104,13 +104,20 @@ func TestAmqpPushPull(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Default
-	ac := &amqpCheck{v1.AMQPCheck{}, addr, "", t.Name(), nil}
+	qu := v1.AMQPQueue{Name: "check"}
+	ac := &amqpCheck{v1.AMQPCheck{Queue: qu}, addr, "", t.Name(), nil}
+	if err := ac.validate(); err != nil {
+		t.Fatal(err)
+	}
 	err = ac.pushPull(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// ACK'd
-	ac = &amqpCheck{v1.AMQPCheck{Ack: true}, addr, "", t.Name(), nil}
+	ac = &amqpCheck{v1.AMQPCheck{Queue: qu, Ack: true}, addr, "", t.Name(), nil}
+	if err := ac.validate(); err != nil {
+		t.Fatal(err)
+	}
 	err = ac.pushPull(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -125,7 +132,7 @@ func TestAmqpPushPull(t *testing.T) {
 	}
 }
 
-func TestAmqpPubSub(t *testing.T) {
+func TestAmqpWitness(t *testing.T) {
 	if username == "" || password == "" {
 		t.Skip("Missing env var(s) RABBITMQ_{USERNAME,PASSWORD}")
 	}
@@ -135,23 +142,39 @@ func TestAmqpPubSub(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Blind multicast
-	ex := v1.AMQPExchange{Type: "fanout"}
-	ac := &amqpCheck{v1.AMQPCheck{Exchange: ex}, addr, "", t.Name(), nil}
-	err = ac.pubSub(ctx)
+	aC := v1.AMQPCheck{
+		Exchange:   v1.AMQPExchange{Name: "canary.fanout", Type: "fanout"},
+		Simulation: v1.AMQPSimulation{Witness: true},
+	}
+	ac := &amqpCheck{aC, addr, "", t.Name(), nil}
+	if err := ac.validate(); err != nil {
+		t.Fatal(err)
+	}
+	err = ac.witness(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// Explicit targeting/routing
-	ex = v1.AMQPExchange{Type: "direct"}
-	ac = &amqpCheck{v1.AMQPCheck{Exchange: ex}, addr, "", t.Name(), nil}
-	err = ac.pubSub(ctx)
+	ac.Exchange.Name, ac.Exchange.Type = "canary.direct", "direct"
+	ac.Simulation.Key = "direct." + t.Name()
+	ac.Binding = ac.Simulation.Key
+	ac = &amqpCheck{aC, addr, "", t.Name(), nil}
+	if err := ac.validate(); err != nil {
+		t.Fatal(err)
+	}
+	err = ac.witness(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// Pattern matching
-	ex = v1.AMQPExchange{Type: "topic"}
-	ac = &amqpCheck{v1.AMQPCheck{Exchange: ex}, addr, "", t.Name(), nil}
-	err = ac.pubSub(ctx)
+	ac.Exchange.Name, ac.Exchange.Type = "canary.topic", "topic"
+	ac.Simulation.Key = "topic." + t.Name()
+	ac.Binding = "topic.*"
+	ac = &amqpCheck{aC, addr, "", t.Name(), nil}
+	if err := ac.validate(); err != nil {
+		t.Fatal(err)
+	}
+	err = ac.witness(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -162,41 +185,48 @@ func TestAmqpPubSub(t *testing.T) {
 	}
 }
 
-func runAMQPPeek(kind, exchangeName, queueName, bindKey, sendKey string) error {
+func runAMQPPeek(kind, xName, qName, bindKey, sendKey string, bs bool) error {
 	ctx := &context.Context{Context: gocontext.TODO()}
 	addr, err := amqpPrepURL(host, username, password)
 	if err != nil {
 		return err
 	}
-	ex := v1.AMQPExchange{Name: exchangeName, Type: kind}
-	qu := v1.AMQPQueue{Name: queueName}
-	aC := v1.AMQPCheck{Exchange: ex, Queue: qu, Key: bindKey, Peek: true}
-	ac := &amqpCheck{aC, addr, "", queueName, nil}
+	aC := v1.AMQPCheck{
+		Exchange:   v1.AMQPExchange{Name: xName, Type: kind},
+		Queue:      v1.AMQPQueue{Name: qName},
+		Simulation: v1.AMQPSimulation{Key: sendKey},
+		Binding:    bindKey,
+		Peek:       true,
+	}
+	ac := &amqpCheck{aC, addr, "", "body=" + qName, nil}
+	if err := ac.validate(); err != nil {
+		return err
+	}
 	// Prepare
-	err = ac.push(ctx)
-	if err != nil {
-		return err
+	if bs {
+		ac.Simulation.Bootstrap = true
+	} else {
+		if err := ac.push(ctx); err != nil {
+			return err
+		}
+		ac.Simulation.Key = ""
 	}
-	aC.Key = sendKey
 	// Default
-	err = ac.pushPull(ctx)
-	if err != nil {
+	if err := ac.pushPull(ctx); err != nil {
 		return err
 	}
-	// Again
-	err = ac.pushPull(ctx)
-	if err != nil {
-		return err
+	if ac.qStatus.Messages != 1 {
+		return fmt.Errorf("Expected 1 message")
 	}
 	// Delete
-	n, err := deleteQueue(ac, queueName)
+	n, err := deleteQueue(ac, qName)
 	if err != nil {
 		return err
 	}
 	if n != 1 {
 		return fmt.Errorf("Wrong number of messages remaining: %d", n)
 	}
-	err = deleteExchanges(ac, exchangeName)
+	err = deleteExchanges(ac, xName)
 	if err != nil {
 		return err
 	}
@@ -207,8 +237,14 @@ func TestAmqpPeekDirect(t *testing.T) {
 	if username == "" || password == "" {
 		t.Skip("Missing env var(s) RABBITMQ_{USERNAME,PASSWORD}")
 	}
-	err := runAMQPPeek("direct", t.Name()+".direct", t.Name(), "foo", "foo")
-	if err != nil {
+	if err := runAMQPPeek(
+		"direct", t.Name()+".normal", t.Name(), "foo", "foo", false,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := runAMQPPeek(
+		"direct", t.Name()+".bootstrap", t.Name(), "foo", "foo", true,
+	); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -217,8 +253,14 @@ func TestAmqpPeekTopic(t *testing.T) {
 	if username == "" || password == "" {
 		t.Skip("Missing env var(s) RABBITMQ_{USERNAME,PASSWORD}")
 	}
-	err := runAMQPPeek("topic", t.Name()+".topic", t.Name(), "foo.*", "foo.bar")
-	if err != nil {
+	if err := runAMQPPeek(
+		"topic", t.Name()+".normal", t.Name(), "foo.*", "foo.bar", false,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if err := runAMQPPeek(
+		"topic", t.Name()+".bootstrap", t.Name(), "foo.*", "foo.bar", true,
+	); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -227,7 +269,11 @@ func TestAmqpPeekFanout(t *testing.T) {
 	if username == "" || password == "" {
 		t.Skip("Missing env var(s) RABBITMQ_{USERNAME,PASSWORD}")
 	}
-	err := runAMQPPeek("fanout", t.Name()+".fanout", t.Name(), "", "")
+	err := runAMQPPeek("fanout", t.Name()+".normal", t.Name(), "", "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = runAMQPPeek("fanout", t.Name()+".bootstrap", t.Name(), "", "", true)
 	if err != nil {
 		t.Fatal(err)
 	}
