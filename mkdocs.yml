@@ -53,7 +53,7 @@ nav:
     - Install on Standalone Server: ./server.md
     - Install Kubernetes Operator: ./operator.md
   - Reference:
-    - Check Types:
+    - Checks:
       - Cloudwatch: ./check-types/cloudwatch.md
       - Containerd Pull: ./check-types/containerd-pull.md
       - Containerd Push: ./check-types/containerd-push.md
