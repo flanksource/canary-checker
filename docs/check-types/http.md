@@ -1,5 +1,7 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/http.svg' style='height: 32px'/> HTTP
 
+This check performs queries on HTTP endpoints, and Kubernetes Namespaces to monitor their activity.
+
 ??? example
      ```yaml
      apiVersion: canaries.flanksource.com/v1
@@ -23,8 +25,7 @@
            thresholdMillis: 3000
            responseCodes: [500]
            responseContent: ""
-           maxSSLExpiry: 7
-     
+           maxSSLExpiry: 7     
      ```
 
 | Field | Description | Scheme | Required |

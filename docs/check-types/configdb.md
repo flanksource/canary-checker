@@ -1,6 +1,6 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/configdb.svg' style='height: 32px'/> ConfigDB
 
-ConfigDB check will connect to the specified host; run the specified query and return the result:
+ConfigDB check will connect to the specified host; run the specified query and return the result.
 
 ??? example
      ```yaml

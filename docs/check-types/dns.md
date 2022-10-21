@@ -1,5 +1,7 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/dns.svg' style='height: 32px'/> DNS
 
+This check performs queries to a DNS server to obtain the required information.
+
 ??? example
      ```yaml
      apiVersion: canaries.flanksource.com/v1

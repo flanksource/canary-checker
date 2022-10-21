@@ -1,23 +1,25 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/jmeter.svg' style='height: 32px'/> Jmeter
 
-Jmeter check will run jmeter cli against the supplied host
+This check will execute the jmeter cli to execute the JMX test plan on the specified host.
+
 ??? example
      ```yaml
-     apiVersion: canaries.flanksource.com/v1
-     kind: Canary
-     metadata:
-       name: jmeter-check
-     spec:
-       interval: 30
-       jmeter:
-         - name: jmeter-check
-           host: 192.168.1.5
-           jmx:
-             valueFrom: 
-               configMapKeyRef:
-                 name: jmeter-config
-                 key: sample-test.jmx
-           port: <insert-port>
+      apiVersion: canaries.flanksource.com/v1
+      kind: Canary
+      metadata:
+        name: jmeter-check
+      spec:
+        interval: 30
+        spec:
+          jmeter:
+            - name: jmeter check
+              host: 192.168.1.5
+              jmx:
+                valueFrom: 
+                  configMapKeyRef:
+                    name: jmeter-config
+                    key: sample-test.jmx
+              port: 1099
      ```
 
 | Field | Description | Scheme | Required |

@@ -4,33 +4,33 @@ This check will try to connect to a specified Postgresql database, run a query a
 
 ??? example
      ```yaml
-     apiVersion: canaries.flanksource.com/v1
-     kind: Canary
-     metadata:
-       name: postgres-check
-     spec:
-       interval: 30
-       postgres:
-         - connection: "postgres://$(username):$(password)@postgres.default.svc:5432/postgres?sslmode=disable"
-           auth:
-             username:
-               valueFrom: 
-                 secretKeyRef:
-                   name: postgres-credentials
-                   key: USERNAME
-             password:
-               valueFrom: 
-                 secretKeyRef:
-                   name: postgres-credentials
-                   key: PASSWORD
-           query: SELECT current_schemas(true)
-           display:
-             template: |
-               {{- range $r := .results.rows }}
-               {{- $r.current_schemas}}
-               {{- end}}
-           results: 1
-     
+      apiVersion: canaries.flanksource.com/v1
+      kind: Canary
+      metadata:
+        name: postgres-check
+      spec:
+        interval: 30
+        spec:
+          postgres:
+            - connection: "postgres://$(username):$(password)@postgres.default.svc:5432/postgres?sslmode=disable"
+              auth:
+                username:
+                  valueFrom: 
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: USERNAME
+                password:
+                  valueFrom: 
+                    secretKeyRef:
+                      name: postgres-credentials
+                      key: PASSWORD
+              query: SELECT current_schemas(true)
+              display:
+                template: |
+                  {{- range $r := .results.rows }}
+                  {{- $r.current_schemas}}
+                  {{- end}}
+              results: 1
      ```
 
 | Field | Description | Scheme | Required |
@@ -44,3 +44,4 @@ This check will try to connect to a specified Postgresql database, run a query a
 | **query** |  | string | Yes |
 | **results** | Number rows to check for | int | Yes |
 | test |  | [Template](#template) |  |
+

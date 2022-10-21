@@ -1,10 +1,10 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/s3Bucket.svg' style='height: 32px'/> S3Bucket
 
-This check will
+The S3Bucket Check:
 
-- search objects matching the provided object path pattern
-- check that latest object is no older than provided MaxAge value in seconds
-- check that latest object size is not smaller than provided MinSize value in bytes.
+* Searches objects matching the provided object path pattern.
+* Checks that the latest object is no older than provided `MaxAge` value in seconds
+* Checks that the latest object size is not smaller than provided `MinSize` value in bytes.
 
 ??? example
      ```yaml

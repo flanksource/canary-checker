@@ -1,13 +1,22 @@
-cloudwatch:
-  - accessKey:
-      valueFrom:
-    secretKeyRef:
-    key: aws
-    name: access-key
-    secretKey:
-      valueFrom:
-    secretKeyRef:
-    key: aws
-    name: secrey-key
-    region: "us-east-1"
-    #skipTLSVerify: true
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: cloudwatch-check
+spec:
+  interval: 30
+  spec:
+    cloudwatch:
+      - name: Cloudwatch check
+        accessKey:
+          valueFrom:
+            secretKeyRef:
+              key: aws
+              name: access-key
+        secretKey:
+          valueFrom:
+            secretKeyRef:
+              key: aws
+              name: secrey-key
+        endpoint: monitoring.us-east-1.amazonaws.com
+        region: "us-east-1"
+        # skipTLSVerify: true

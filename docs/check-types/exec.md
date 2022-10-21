@@ -1,7 +1,8 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/exec.svg' style='height: 32px'/> Exec
 
-Exec Check executes a command or scrtipt file on the target host.
-On Linux/MacOS uses bash and on Windows uses powershell.
+Exec Check executes a command or script file on the target host.
+Bash scripts are used for Linux/MacOS host. Powershell scripts are used for Windows host.
+
 ??? example
      ```yaml
      apiVersion: canaries.flanksource.com/v1

@@ -1,5 +1,7 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/redis.svg' style='height: 32px'/> Redis
 
+The Redis check connects to a specified Redis database instance to check its availability.
+
 ??? example
     ```yaml
     apiVersion: canaries.flanksource.com/v1
@@ -8,22 +10,23 @@
       name: redis-check
     spec:
       interval: 30
-      redis:
-        - addr: "redis.default.svc:6379"
-          name: redis-check
-          auth:
-            username:
-              valueFrom:
-                secretKeyRef:
-                  name: redis-credentials
-                  key: USERNAME
-            password:
-              valueFrom:
-                secretKeyRef:
-                  name: redis-credentials
-                  key: PASSWORD
-          db: 0
-          description: "The redis check"
+      spec:
+        redis:
+          - addr: "redis.default.svc:6379"
+            name: redis-check
+            auth:
+              username:
+                valueFrom:
+                  secretKeyRef:
+                    name: redis-credentials
+                    key: USERNAME
+              password:
+                valueFrom:
+                  secretKeyRef:
+                    name: redis-credentials
+                    key: PASSWORD
+            db: 0
+            description: "The redis check"
     ```
 
 | Field | Description | Scheme | Required |

@@ -1,9 +1,9 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/ldap.svg' style='height: 32px'/> LDAP
 
-The LDAP check will:
+The LDAP check:
 
-* bind using provided user/password to the ldap host. Supports ldap/ldaps protocols.
-* search an object type in the provided bind DN.s
+* Binds using the provided username and password to the LDAP host. It supports LDAP/LDAPS protocols.
+* Searches an object type in the provided `bindDN`.
 
 ??? example
      ```yaml

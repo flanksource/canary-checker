@@ -1,5 +1,7 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/prometheus.svg' style='height: 32px'/> Prometheus
 
+The Prometheus Check connects to the Prometheus host, performs the desired query, and displays the results.
+
 ??? example
      ```yaml
      apiVersion: canaries.flanksource.com/v1

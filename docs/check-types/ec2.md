@@ -1,5 +1,7 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/ec2.svg' style='height: 32px'/> EC2
 
+This check connects to an AWS account with the specified credentials, launch and EC2 instance with an option for `userData`.
+
 ??? example
      ```yaml
      apiVersion: canaries.flanksource.com/v1

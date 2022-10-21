@@ -1,6 +1,6 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/containerdPull.svg' style='height: 32px'/> ContainerdPull
 
-ContainerdPull will try to pull an image from the specified registry.
+This check will try to pull a Docker image from specified registry using containerd and then verify its checksum and size.
 
 ??? example
      ```yaml

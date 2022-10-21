@@ -1,5 +1,7 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/pod.svg' style='height: 32px'/> Pod
 
+The Pod check creates a new pod and verifies its reachability.
+
 ??? example
      ```yaml
      apiVersion: canaries.flanksource.com/v1
@@ -65,7 +67,6 @@
            httpRetryInterval: 200
            expectedContent: hello, you've hit /foo/bar
            expectedHttpStatuses: [200, 201, 202]
-     
      ```
 
 | Field | Description | Scheme | Required |

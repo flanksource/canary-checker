@@ -1,5 +1,7 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/databasebackupcheck.svg' style='height: 32px'/> DatabaseBackup
 
+This check performs regular backups for you CloudSQL instance at specified intervals. 
+
 ??? example
      ```yaml
      apiVersion: canaries.flanksource.com/v1
@@ -10,7 +12,7 @@
        interval: 60
        databaseBackup:
          - maxAge: 6h
-           GCP:
+           gcp:
              project: google-project-name
              instance: cloudsql-instance-name
      ```        

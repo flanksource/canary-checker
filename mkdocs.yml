@@ -52,7 +52,8 @@ nav:
     - Install CLI: ./run.md
     - Install on Standalone Server: ./server.md
     - Install Kubernetes Operator: ./operator.md
-  - Check Types:
+  - Reference:
+    - Check Types:
       - Cloudwatch: ./check-types/cloudwatch.md
       - Containerd Pull: ./check-types/containerd-pull.md
       - Containerd Push: ./check-types/containerd-push.md
@@ -60,14 +61,20 @@ nav:
       - Docker Pull: ./check-types/docker-pull.md
       - Docker Push: ./check-types/docker-push.md
       - EC2: ./check-types/ec2.md
-      - GCSBucket: ./check-types/gcs-bucket.md
+      - Elasticsearch: ./check-types/elasticsearch.md
+      - Exec: ./check-types/exec.md
+      # - GCSBucket: ./check-types/gcs-bucket.md
+      - GCS Database Backup: ./check-types/gcs-database-backup.md
       - Helm: ./check-types/helm.md
       - HTTP: ./check-types/http.md
       - ICMP: ./check-types/icmp.md
       - JMeter: ./check-types/jmeter.md
       - JUnit: ./check-types/junit.md
+      - Kubernetes: ./check-types/kubernetes.md
       - LDAP: ./check-types/ldap.md
       - Mongo: ./check-types/mongo.md
+      - MsSql: ./check-types/mssql.md
+      - MySQL: ./check-types/mysql.md
       - Namespace: ./check-types/namespace.md
       - Pod: ./check-types/pod.md
       - Postgres: ./check-types/postgres.md
@@ -77,4 +84,4 @@ nav:
       - S3 Bucket: ./check-types/s3-bucket.md
       - S3: ./check-types/s3.md
       - SMB / CIFS: ./check-types/smb.md
-      - SQL Server: ./check-types/sql-server.md
+      

@@ -1,5 +1,7 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/elasticsearch.svg' style='height: 32px'/> Elasticsearch
 
+This check will try to connect to a specified Elasticsearch database, run a query against it and verify the results.
+
 ??? example
     ```yaml
     apiVersion: canaries.flanksource.com/v1

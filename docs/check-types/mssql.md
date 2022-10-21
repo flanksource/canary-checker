@@ -4,28 +4,28 @@ This check will try to connect to a specified MsSQL database, run a query agains
 
 ??? example
      ```yaml
-     apiVersion: canaries.flanksource.com/v1
-     kind: Canary
-     metadata:
-       name: mssql-check
-     spec:
-       interval: 30
-       mssql:
-         - connection: "server=mssql.default.svc;user id=$(username);password=$(password);port=1433;database=master"
-           auth:
-             username:
-               valueFrom: 
-                 secretKeyRef:
-                   name: mssql-credentials
-                   key: USERNAME
-             password:
-               valueFrom: 
-                 secretKeyRef:
-                   name: mssql-credentials
-                   key: PASSWORD
-           query: "SELECT 1"
-           results: 1
-     
+      apiVersion: canaries.flanksource.com/v1
+      kind: Canary
+      metadata:
+        name: mssql-check
+      spec:
+        interval: 30
+        spec:
+          mssql:
+            - connection: "server=mssql.default.svc;user id=$(username);password=$(password);port=1433;database=master"
+              auth:
+                username:
+                  valueFrom: 
+                    secretKeyRef:
+                      name: mssql-credentials
+                      key: USERNAME
+                password:
+                  valueFrom: 
+                    secretKeyRef:
+                      name: mssql-credentials
+                      key: PASSWORD
+              query: "SELECT 1"
+              results: 1
      ```
 
 | Field | Description | Scheme | Required |

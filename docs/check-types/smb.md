@@ -1,33 +1,59 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/smb.svg' style='height: 32px'/> Smb
 
-Smb check will connect to the given samba server with given credentials
-find the age of the latest updated file and compare it with minAge
-count the number of file present and compare with minCount if defined
+The Smb check connects to the given Samba server to check folder freshness. 
+The check also:
+* Verifies the most recently modified file that fulfills the `minAge` and `maxAge` constraints. (each an optional bound)
+* Verifies files present in the mount is more than `minCount`.
 
 ??? example
      ```yaml
-     apiVersion: canaries.flanksource.com/v1
-     kind: Canary
-     metadata:
-       name: sftp-check
-     spec:
-       interval: 30
-       folder:
-         - path: /tmp
-           name: sample smb check
-           smbConnection:
-             server: \\server\e$
-             auth:
-               username:
-                 valueFrom: 
-                   secretKeyRef:
-                     name: smb-credentials
-                     key: USERNAME
-               password:
-                 valueFrom: 
-                   secretKeyRef:
-                     name: smb-credentials
-                     key: PASSWORD
+      apiVersion: canaries.flanksource.com/v1
+      kind: Canary
+      metadata:
+        name: sftp-check
+      spec:
+        interval: 30
+        folder:
+          - path: /tmp
+            name: sample smb check
+            - server: smb://192.168.1.9
+              smbConnection:
+                auth:
+                  username:
+                    valueFrom: 
+                      secretKeyRef:
+                        name: smb-credentials
+                        key: USERNAME
+                  password:
+                    valueFrom: 
+                      secretKeyRef:
+                        name: smb-credentials
+                        key: PASSWORD
+                sharename: "Some Public Folder"
+                searchPath: a/b/c
+              minAge: 10h
+              maxAge: 20h
+              description: "Success SMB server"
+            
+            # For server access using path format 
+            - server: '\\192.168.1.5\Some Public Folder\somedir'
+              smbConnection:
+                auth:
+                  username:
+                    valueFrom: 
+                      secretKeyRef:
+                        name: smb-credentials
+                        key: USERNAME
+                  password:
+                    valueFrom: 
+                      secretKeyRef:
+                        name: smb-credentials
+                        key: PASSWORD
+                sharename: "sharename" #will be overwritten by 'Some Public Folder'
+                searchPath: a/b/c #will be overwritten by 'somedir'
+              minAge: 10h
+              maxAge: 100h
+              description: "Success SMB server"                
      ```
 
 | Field | Description | Scheme | Required |

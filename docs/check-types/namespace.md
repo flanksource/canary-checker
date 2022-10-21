@@ -1,45 +1,48 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/namespace.svg' style='height: 32px'/> Namespace
 
-The Namespace check will:
+The Namespace check:
 
-* create a new namespace using the labels/annotations provided
+* Creates a new namespace using the labels/annotations provided
+* Create a new pod in the namespace using the provided PodSpec
+* Expose the pod using the provided ingress URL
+* Test an HTTP connection to the pod.
 
 ??? example
      ```yaml
-     apiVersion: canaries.flanksource.com/v1
-     kind: Canary
-     metadata:
-       name: namespace-check
-     spec:
-       interval: 30
-       namespace:
-         - checkName: check
-           namespaceNamePrefix: "test-foo-"
-           podSpec: |
-             apiVersion: v1
-             kind: Pod
-             metadata:
-               name: test-namespace
-               namespace: default
-               labels:
-                 app: hello-world-golang
-             spec:
-               containers:
-                 - name: hello
-                   image: quay.io/toni0/hello-webserver-golang:latest
-           port: 8080
-           path: /foo/bar
-           ingressName: test-namespace-pod
-           ingressHost: "test-namespace-pod.127.0.0.1.nip.io"
-           readyTimeout: 5000
-           httpTimeout: 15000
-           deleteTimeout: 12000
-           ingressTimeout: 20000
-           deadline: 29000
-           httpRetryInterval: 200
-           expectedContent: bar
-           expectedHttpStatuses: [200, 201, 202]
-     
+      apiVersion: canaries.flanksource.com/v1
+      kind: Canary
+      metadata:
+        name: namespace-check
+      spec:
+        interval: 30
+        spec:
+          namespace:
+            - checkName: check
+              namespaceNamePrefix: "test-foo-"
+              podSpec: |
+                apiVersion: v1
+                kind: Pod
+                metadata:
+                  name: test-namespace
+                  namespace: default
+                  labels:
+                    app: hello-world-golang
+                spec:
+                  containers:
+                    - name: hello
+                      image: quay.io/toni0/hello-webserver-golang:latest
+              port: 8080
+              path: /foo/bar
+              ingressName: test-namespace-pod
+              ingressHost: "test-namespace-pod.127.0.0.1.nip.io"
+              readyTimeout: 5000
+              httpTimeout: 15000
+              deleteTimeout: 12000
+              ingressTimeout: 20000
+              deadline: 29000
+              httpRetryInterval: 200
+              expectedContent: bar
+              expectedHttpStatuses: [200, 201, 202]
      ```
 
 | Field | Description | Scheme | Required |

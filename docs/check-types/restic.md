@@ -1,32 +1,39 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/restic.svg' style='height: 32px'/> Restic
 
+The Restic check:
+
+* Queries a Restic Repository for content
+* Checks the integrity and consistency of the repository and data-blobs
+* Checks for backup freshness.
+
 ??? example
     ```yaml
     apiVersion: canaries.flanksource.com/v1
     kind: Canary
     metadata:
-      name: restic-pass-withoutinegrity
+      name: restic-check
     spec:
       interval: 30
-      restic:
-        - repository: s3:http://minio.minio:9000/restic-canary-checker
-          name: restic check
-          password:
-            valueFrom:
-              secretKeyRef:
-                name: restic-credentials
-                key: PASSWORD
-          maxAge: 1h
-          accessKey:
-            valueFrom:
-              secretKeyRef:
-                name: restic-credentials
-                key: ACCESS_KEY_ID
-          secretKey:
-            valueFrom:
-              secretKeyRef:
-                name: restic-credentials
-                key: SECRET_ACCESS_KEY
+      spec:
+        restic:
+          - repository: s3:http://minio.minio:9000/restic-canary-checker
+            name: restic check
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: restic-credentials
+                  key: PASSWORD
+            maxAge: 1h
+            accessKey:
+              valueFrom:
+                secretKeyRef:
+                  name: restic-credentials
+                  key: ACCESS_KEY_ID
+            secretKey:
+              valueFrom:
+                secretKeyRef:
+                  name: restic-credentials
+                  key: SECRET_ACCESS_KEY
     ```
 
 | Field | Description | Scheme | Required |

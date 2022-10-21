@@ -1,6 +1,6 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/icmp.svg' style='height: 32px'/> ICMP
 
-This test will check ICMP packet loss and duration.
+This check performs ICMP requests for information on ICMP packet loss and duration.
 
 ??? example
      ```yaml

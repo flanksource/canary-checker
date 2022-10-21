@@ -1,6 +1,6 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/dockerPush.svg' style='height: 32px'/> DockerPush
 
-DockerPush check will try to push a Docker image to specified registry.
+DockerPush check will try to create and push a Docker image to a specified registry.
 /*
 ??? example
      ```yaml

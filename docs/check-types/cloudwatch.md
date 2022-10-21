@@ -1,22 +1,28 @@
 ## <img src='https://raw.githubusercontent.com/flanksource/flanksource-ui/main/src/icons/cloudwatch.svg' style='height: 32px'/> CloudWatch
 
-This checks the cloudwatch for all the Active alarm and response with the reason
+This checks Cloudwatch for all the Active alarms and responses with the coresponding reasons for each. 
+
 ??? example
      ```yaml
-     cloudwatch:
-       - accessKey:
-           valueFrom:
-         secretKeyRef:
-         key: aws
-         name: access-key
-         secretKey:
-           valueFrom:
-         secretKeyRef:
-         key: aws
-         name: secrey-key
-         region: "us-east-1"
-         #skipTLSVerify: true
-     
+     apiVersion: canaries.flanksource.com/v1
+     kind: Canary
+     metadata:
+       name: dns-pass
+     spec:
+       interval: 30
+       cloudwatch:
+         - accessKey:
+             valueFrom:
+               secretKeyRef:
+                 key: aws
+                 name: access-key
+           secretKey:
+             valueFrom:
+               secretKeyRef:
+                 key: aws
+                 name: secrey-key
+           region: "us-east-1"
+           #skipTLSVerify: true
      ```
 
 | Field | Description | Scheme | Required |
