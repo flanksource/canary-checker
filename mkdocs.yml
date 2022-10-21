@@ -46,9 +46,9 @@ nav:
   - Introduction:
     - Overview:  ./index.md
   - Tutorials: 
-    - Getting Started With Canary Checker: ./getting-started.md
-    - Build and Run Canary Checker Locally: ./dev-guide.md
-  - Canary Checker:
+    - Getting Started: ./getting-started.md
+    - Contributing: ./dev-guide.md
+  - Installation:
     - Install CLI: ./run.md
     - Install on Standalone Server: ./server.md
     - Install Kubernetes Operator: ./operator.md
