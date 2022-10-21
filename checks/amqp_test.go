@@ -1,7 +1,6 @@
 package checks
 
 // FIXME: delete this file after covering everything via e2e.
-// FIXME: use flanksource kommons for all this client-go stuff.
 
 import (
 	"bytes"
@@ -10,10 +9,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
-	restclient "k8s.io/client-go/rest"
+	rest "k8s.io/client-go/rest"
 	"k8s.io/client-go/util/homedir"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -30,18 +30,36 @@ import (
 	"k8s.io/client-go/transport/spdy"
 )
 
+// These should probably be set via env var or flags
 var (
-	username, password string
-	// These are for rabbitmq-operator 2.0.0
-	rabbitUser  = "hello-world-default-user"
-	rabbitLabel = "app.kubernetes.io/name=hello-world"
-
-	kubeconfig string
-	host       = "localhost"
+	instanceSecretUser string
+	instanceLabel      string
+	serviceHost        string
+	localhost          = "localhost"
+	namespace          = "default"
+	kubeconfig         string
+	overrideURL        string
 )
 
+// For now, the env vars
+//
+// - RABBITMQ_CLUSTER_NAME=amqp-fixture
+// - RABBITMQ_OPERATOR_LEGACY=1
+//
+// determine these params (whose defaults are "hello-world" and false)
+func populateRabbitMQVars(name string, wantOld bool) {
+	instanceLabel = fmt.Sprintf("app.kubernetes.io/name=%s", name)
+	if wantOld {
+		instanceSecretUser = fmt.Sprintf("%s-rabbitmq-admin", name)
+		serviceHost = fmt.Sprintf("%s-rabbitmq-client.%s.svc", name, namespace)
+		return
+	}
+	instanceSecretUser = fmt.Sprintf("%s-%s-user", name, namespace)
+	serviceHost = fmt.Sprintf("%s.%s.svc", name, namespace)
+}
+
 func forward(
-	config *restclient.Config, name, publish string,
+	config *rest.Config, name, publish string,
 ) (uint16, func() error, error) {
 	config.GroupVersion = &schema.GroupVersion{Group: "api", Version: "v1"}
 	codecs := serializer.NewCodecFactory(runtime.NewScheme())
@@ -51,37 +69,38 @@ func forward(
 	if err != nil {
 		return 0, nil, err
 	}
-	client, err := restclient.RESTClientFor(config)
+	client, err := rest.RESTClientFor(config)
 	if err != nil {
 		return 0, nil, err
 	}
 	req := client.Post().
 		Resource("pods").
-		Namespace("default").
+		Namespace(namespace).
 		Name(name).
 		SubResource("portforward")
-	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, "POST", req.URL())
+	errorChan := make(chan error, 1)
 	stopChan := make(chan struct{})
-	readyChan := make(chan struct{})
-	errChan := make(chan error)
 	doneFunc := func() error {
 		close(stopChan)
-		return <-errChan
+		return <-errorChan
 	}
 	stdout := &bytes.Buffer{}
+	dialer := spdy.NewDialer(
+		upgrader, &http.Client{Transport: transport}, "POST", req.URL(),
+	)
 	pf, err := portforward.New(
-		dialer, []string{publish}, stopChan, readyChan, stdout, os.Stderr,
+		dialer, []string{publish}, stopChan, make(chan struct{}), stdout, os.Stderr,
 	)
 	if err != nil {
 		err = fmt.Errorf("%s: %w", stdout.String(), err)
 		return 0, nil, err
 	}
 	go func() {
-		errChan <- pf.ForwardPorts()
-		close(errChan)
+		errorChan <- pf.ForwardPorts()
+		close(errorChan)
 	}()
 	select {
-	case err := <-errChan:
+	case err := <-errorChan:
 		close(stopChan)
 		return 0, nil, err
 	case <-pf.Ready:
@@ -91,18 +110,18 @@ func forward(
 		}
 		return ports[0].Local, doneFunc, nil
 	case <-time.After(10 * time.Second):
-		return 0, nil, fmt.Errorf("Timed out trying to forward %s on %s", name, publish)
+		return 0, nil, fmt.Errorf("Timed out forwarding %s on %s", name, publish)
 	}
 }
 
 func getPodName(
-	ctx gocontext.Context, config *restclient.Config, selector string,
+	ctx gocontext.Context, config *rest.Config, selector string,
 ) (string, error) {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return "", err
 	}
-	pods, err := clientset.CoreV1().Pods("default").
+	pods, err := clientset.CoreV1().Pods(namespace).
 		List(ctx, metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
 		return "", err
@@ -113,48 +132,66 @@ func getPodName(
 	return pods.Items[0].Name, nil
 }
 
-func devineConnection(host string) (string, func() error, error) {
+// FIXME: use flanksource kommons for client-go stuff.
+func devineConnection(
+	host string, config *rest.Config, inCluster bool,
+) (string, func() error, error) {
 	// Get secrets
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	if err != nil {
-		return "", nil, err
-	}
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return "", nil, err
 	}
 	ctx := gocontext.TODO()
-	sec, err := clientset.CoreV1().Secrets("default").
-		Get(ctx, rabbitUser, metav1.GetOptions{})
+	sec, err := clientset.CoreV1().Secrets(namespace).
+		Get(ctx, instanceSecretUser, metav1.GetOptions{})
 	if err != nil {
 		return "", nil, err
 	}
-	// Forward
-	podName, err := getPodName(ctx, config, rabbitLabel)
+	// Maybe forward
+	podName, err := getPodName(ctx, config, instanceLabel)
 	if err != nil {
 		return "", nil, err
 	}
-	port, doneFunc, err := forward(config, podName, ":5672")
-	if err != nil {
-		return "", nil, err
+	var port uint16 = 5672
+	var doneFunc func() error
+	// For inCluster, we could look up the port for appProtocol == amqp, but
+	// it's always 5672 anyway
+	if !inCluster {
+		port, doneFunc, err = forward(config, podName, ":5672")
+		if err != nil {
+			return "", nil, err
+		}
 	}
 	addr := fmt.Sprintf(
 		"amqp://%s:%s@%s:%d",
-		sec.Data["username"], sec.Data["password"],
-		host, port,
+		sec.Data["username"],
+		sec.Data["password"],
+		host,
+		port,
 	)
 	return addr, doneFunc, nil
 }
 
 func getEndpoint() (string, func() error, error) {
-	if username != "" {
-		addr, err := amqpPrepURL(host, username, password)
+	if overrideURL != "" {
+		return overrideURL, nil, nil
+	}
+	var config *rest.Config
+	var host string
+	if kubeconfig != "" {
+		c, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
 			return "", nil, err
 		}
-		return addr, func() error { return nil }, nil
+		config, host = c, localhost
+	} else {
+		c, err := rest.InClusterConfig()
+		if err != nil {
+			return "", nil, err
+		}
+		config, host = c, serviceHost
 	}
-	return devineConnection(host)
+	return devineConnection(host, config, kubeconfig == "")
 }
 
 func deleteQueue(ac *amqpCheck, queue string) (int, error) {
@@ -188,20 +225,32 @@ func deleteExchanges(ac *amqpCheck, exchanges ...string) error {
 }
 
 func init() {
-	if k := os.Getenv("KUBECONFIG"); k != "" {
-		kubeconfig = k
-	} else if h := homedir.HomeDir(); h != "" {
-		kubeconfig = filepath.Join(h, ".kube", "config")
+	if o := os.Getenv("RABBITMQ_OVERRIDE_URL"); o != "" {
+		overrideURL = o
+	} else {
+		if k := os.Getenv("KUBECONFIG"); k != "" {
+			kubeconfig = k
+			return
+		}
+		if h := homedir.HomeDir(); h != "" {
+			k := filepath.Join(h, ".kube", "config")
+			if _, err := os.Stat(k); err == nil {
+				kubeconfig = k
+			}
+		}
 	}
-	if p := os.Getenv("RABBITMQ_PASSWORD"); p != "" {
-		password = p
+	name := "hello-world"
+	if n := os.Getenv("RABBITMQ_CLUSTER_NAME"); n != "" {
+		name = n
 	}
-	if u := os.Getenv("RABBITMQ_USERNAME"); u != "" {
-		username = u
+	// FIXME maybe find actual version where syntax diverged
+	var wantOld bool
+	if o := os.Getenv("RABBITMQ_OPERATOR_LEGACY"); o != "" {
+		if w, err := strconv.ParseBool(o); err != nil {
+			wantOld = w
+		}
 	}
-	if h := os.Getenv("RABBITMQ_HOSTNAME"); h != "" {
-		host = h
-	}
+	populateRabbitMQVars(name, wantOld)
 }
 
 func TestAmqpPrepURL(t *testing.T) {
@@ -293,9 +342,12 @@ func TestDesRawTables(t *testing.T) {
 	}
 }
 
-func wrapDone(t interface{ Log(...interface{}) }, f func() error) {
+func wrapDone(spit func(...interface{}), f func() error) {
+	if f == nil {
+		return
+	}
 	if err := f(); err != nil {
-		t.Log(err)
+		spit(err)
 	}
 }
 
@@ -304,7 +356,7 @@ func TestAmqpPushPull(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer wrapDone(t, done)
+	defer wrapDone(t.Fatal, done)
 	ctx := &context.Context{Context: gocontext.TODO()}
 	// Default
 	qu := v1.AMQPQueue{Name: "check"}
@@ -342,7 +394,7 @@ func TestAmqpWitness(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer wrapDone(t, done)
+	defer wrapDone(t.Fatal, done)
 	ctx := &context.Context{Context: gocontext.TODO()}
 	// Blind multicast
 	aC := v1.AMQPCheck{
@@ -397,7 +449,9 @@ func runAMQPPeek(
 	if err != nil {
 		return err
 	}
-	defer func() { _ = done() }()
+	if done != nil {
+		defer func() { _ = done() }()
+	}
 	ctx := &context.Context{Context: gocontext.TODO()}
 	aC := v1.AMQPCheck{
 		Exchange:   v1.AMQPExchange{Name: xName, Type: kind},

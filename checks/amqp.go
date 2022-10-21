@@ -163,7 +163,7 @@ func newAMQPCheck(check v1.AMQPCheck, ctx *context.Context) (*amqpCheck, error) 
 			}
 			b = string(s)
 		}
-		ac.body = fmt.Sprintf(`{"binding":%s,"ts":"%q"}`, b, ts)
+		ac.body = fmt.Sprintf(`{"binding":%s,"ts":%q}`, b, ts)
 	}
 	// Populate args
 	if err := ac.desRawTables(); err != nil {
@@ -461,16 +461,18 @@ func (c *AMQPChecker) Check(ctx *context.Context, ec external.Check) pkg.Results
 	}
 	timer.ObserveDuration()
 	// Add queue stats
-	results[0].AddMetric(pkg.Metric{
-		Name:   "enqueued",
-		Type:   metrics.GaugeType,
-		Labels: map[string]string{"endpoint": ac.sAddr},
-		Value:  float64(ac.qStatus.Messages),
-	}).AddMetric(pkg.Metric{
-		Name:   "consumers",
-		Type:   metrics.GaugeType,
-		Labels: map[string]string{"endpoint": ac.sAddr},
-		Value:  float64(ac.qStatus.Consumers),
-	})
+	if ac.qStatus != nil {
+		results[0].AddMetric(pkg.Metric{
+			Name:   "enqueued",
+			Type:   metrics.GaugeType,
+			Labels: map[string]string{"endpoint": ac.sAddr},
+			Value:  float64(ac.qStatus.Messages),
+		}).AddMetric(pkg.Metric{
+			Name:   "consumers",
+			Type:   metrics.GaugeType,
+			Labels: map[string]string{"endpoint": ac.sAddr},
+			Value:  float64(ac.qStatus.Consumers),
+		})
+	}
 	return results
 }
