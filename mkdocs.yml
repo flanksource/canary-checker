@@ -84,4 +84,6 @@ nav:
       - S3 Bucket: ./check-types/s3-bucket.md
       - S3: ./check-types/s3.md
       - SMB / CIFS: ./check-types/smb.md
+    - Topology:
+      - Kubernetes Cluster: ./topology/kubernetes-cluster.md
       
