@@ -70,21 +70,21 @@ The Kubernetes topology fetches and displays a Kubernetes cluster's resources de
 | ----- | ----------- | ------ | -------- |
 | type | This specifies type of component |  | 
 | id |  |
-| schedule |  |
+| schedule | Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
+ Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds. |
 | icon | Icon for overwriting default icon on the dashboard | string |  |
-| label |  |
-| owner |  |
-| **components** |  |
-| properties |  |
-| **configs** |  |
+| owner | Owner of resource |
+| **components** | Specifies structure for component to created |
+| properties | Specifies properties of the component |
+| **configs** | Configuration for the component |
 | **lookup** |  |
-| **kind** |  | string | Yes |
+| **kind** | Specifies the kind of Kubernetes object for interaction | string | Yes |
 | labels | Labels for the check | Labels |  |
 | **name** | Name of the check | string | Yes |
-| namespace |  | [ResourceSelector](#resourceselector) |  |
-| ready |  | *bool |  |
-| resource |  | [ResourceSelector](#resourceselector) |  |
-| test |  | [Template](#template) |  |
-| transform |  | [Template](#template) |  |
+| namespace | Specifies namespce for Kubernetes object | [ResourceSelector](#resourceselector) |  |
+| ready | Boolean value of true or false to query and display resources based on availability  | *bool |  |
+| resource | Queries resources related to specified Kubernetes object | [ResourceSelector](#resourceselector) |  |
+| test | Template to test the result against | [Template](#template) |  |
+| transform | Template to transform results to | [Template](#template) |  |
 | ignore | Ignore the specified resources from the fetched resources. Can be a glob pattern. | \[\]string |  |
 
