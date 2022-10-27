@@ -1156,7 +1156,8 @@ Where server is the `hostname` `e$`` is the sharename and `a/b/c` is the searchP
 | test |  | [Template](#template) |  |
 | workstation | Workstation... | string |  |
 
-
+---
+# Scheme Reference
 ## Template
 
 

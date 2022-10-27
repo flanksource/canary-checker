@@ -46,44 +46,48 @@ nav:
   - Introduction:
     - Overview:  ./index.md
   - Tutorials: 
-    - Getting Started: ./getting-started.md
-    - Contributing: ./dev-guide.md
+    - Getting Started: ./tutorials/getting-started.md
+    - Contributing: ./tutorials/dev-guide.md
+    - Getting Started with Config-db: ./tutorials/getting-started-configdb.md
   - Installation:
     - Install CLI: ./run.md
     - Install on Standalone Server: ./server.md
     - Install Kubernetes Operator: ./operator.md
   - Reference:
     - Checks:
-      - Cloudwatch: ./check-types/cloudwatch.md
-      - Containerd Pull: ./check-types/containerd-pull.md
-      - Containerd Push: ./check-types/containerd-push.md
-      - DNS: ./check-types/dns.md
-      - Docker Pull: ./check-types/docker-pull.md
-      - Docker Push: ./check-types/docker-push.md
-      - EC2: ./check-types/ec2.md
-      - Elasticsearch: ./check-types/elasticsearch.md
-      - Exec: ./check-types/exec.md
-      # - GCSBucket: ./check-types/gcs-bucket.md
-      - GCS Database Backup: ./check-types/gcs-database-backup.md
-      - Helm: ./check-types/helm.md
-      - HTTP: ./check-types/http.md
-      - ICMP: ./check-types/icmp.md
-      - JMeter: ./check-types/jmeter.md
-      - JUnit: ./check-types/junit.md
-      - Kubernetes: ./check-types/kubernetes.md
-      - LDAP: ./check-types/ldap.md
-      - Mongo: ./check-types/mongo.md
-      - MsSql: ./check-types/mssql.md
-      - MySQL: ./check-types/mysql.md
-      - Namespace: ./check-types/namespace.md
-      - Pod: ./check-types/pod.md
-      - Postgres: ./check-types/postgres.md
-      - Prometheus: ./check-types/prometheus.md
-      - Redis: ./check-types/redis.md
-      - Restic: ./check-types/restic.md
-      - S3 Bucket: ./check-types/s3-bucket.md
-      - S3: ./check-types/s3.md
-      - SMB / CIFS: ./check-types/smb.md
+      - Cloudwatch: ./reference/checks/cloudwatch.md
+      - ConfigDB: ./reference/checks/configdb.md
+      - Containerd Pull: ./reference/checks/containerd-pull.md
+      - Containerd Push: ./reference/checks/containerd-push.md
+      - DNS: ./reference/checks/dns.md
+      - Docker Pull: ./reference/checks/docker-pull.md
+      - Docker Push: ./reference/checks/docker-push.md
+      - EC2: ./reference/checks/ec2.md
+      - Elasticsearch: ./reference/checks/elasticsearch.md
+      - Exec: ./reference/checks/exec.md
+      - GCSBucket: ./reference/checks/gcs-bucket.md
+      - GCS Database Backup: ./reference/checks/gcs-database-backup.md
+      - Helm: ./reference/checks/helm.md
+      - HTTP: ./reference/checks/http.md
+      - ICMP: ./reference/checks/icmp.md
+      - JMeter: ./reference/checks/jmeter.md
+      - JUnit: ./reference/checks/junit.md
+      - Kubernetes: ./reference/checks/kubernetes.md
+      - LDAP: ./reference/checks/ldap.md
+      - Mongo: ./reference/checks/mongo.md
+      - MsSql: ./reference/checks/mssql.md
+      - MySQL: ./reference/checks/mysql.md
+      - Namespace: ./reference/checks/namespace.md
+      - Pod: ./reference/checks/pod.md
+      - Postgres: ./reference/checks/postgres.md
+      - Prometheus: ./reference/checks/prometheus.md
+      - Redis: ./reference/checks/redis.md
+      - Restic: ./reference/checks/restic.md
+      - S3 Bucket: ./reference/checks/s3-bucket.md
+      - S3: ./reference/checks/s3.md
+      - SFTP: ./reference/checks/sftp.md
+      - SMB / CIFS: ./reference/checks/smb.md
     - Topology:
-      - Kubernetes Cluster: ./topology/kubernetes-cluster.md
+      - Common:
+        - Kubernetes Cluster: ./topology/common/kubernetes-cluster.md
       

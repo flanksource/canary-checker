@@ -419,8 +419,8 @@ pod:
 | ----- |-------------------------------------------------------------------------------------------------------------------| ------ | -------- |
 | description | Description of the check                                                                                          | string | Yes |
 | name | Name of the pod to be created                                                                                     | string | Yes |
-| namespace | Namespace to create the pod in                                                                                    | string | Yes |
-| spec | [Spec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podspec-v1-core) of pod to be created | string | Yes |
+| **namespace** | Namespace to create the pod in                                                                                    | string | Yes |
+| **spec** | [Spec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podspec-v1-core) of pod to be created | string | Yes |
 | scheduleTimeout | Maximum time between pod created and pod running                                                                  | int64 | Yes |
 | readyTimeout |                                                                                                                   | int64 | Yes |
 | httpTimeout | Maximum time to wait for an HTTP connection to the created pod                                                    | int64 | Yes |
@@ -430,8 +430,8 @@ pod:
 | deadline | Overall time before which an HTTP connection to the pod must be established                                                          | int64 | Yes |
 | port | Port on which the created pod will serve traffic                                                                                     | int64 | Yes |
 | path | Path on whcih the created pod will respond to requests                                                                               | string | Yes |
-| ingressName | Name to use for the ingress object that will expose the created pod                                                                  | string | Yes |
-| ingressHost | URL to be used by the ingress to expose the created pod                                                                              | string | Yes |
+| **ingressName** | Name to use for the ingress object that will expose the created pod                                                                  | string | Yes |
+| **ingressHost** | URL to be used by the ingress to expose the created pod                                                                              | string | Yes |
 | expectedContent | Expected content of an HTTP response from the created pod                                                                            | string | Yes |
 | expectedHttpStatuses | Expected HTTP status code of the response from the created pod                                                                       | []int64 | Yes |
 | priorityClass | Pod priority class                                                                                                                   | string | Yes |
@@ -451,8 +451,8 @@ postgres:
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | description | description for the test | string | No |
-| connection | connection string to connect to the server | string | Yes |
-| query | query that needs to be executed on the server  | string | Yes |
+| **connection** | connection string to connect to the server | string | Yes |
+| **query** | query that needs to be executed on the server  | string | Yes |
 | resultsFunction | function that tests query output for pass/fail (must return boolean) | string | No |
 | displayTemplate | template to display query results in text (overrides default bar format for UI) | string | No |
 
@@ -561,10 +561,10 @@ s3:
 | Field | Description                                      | Scheme | Required |
 | ----- |--------------------------------------------------| ------ | -------- |
 | description | Description for the check                        | string | Yes |
-| bucket | Array of [Bucket](#bucket) objects to be checked | [Bucket](#bucket) | Yes |
-| accessKey | AWS access Key to access Bucket                  | string | Yes |
-| secretKey | AWS secret Key to access Bucket                  | string | Yes |
-| objectPath | Path of object in bucket to                      | string | Yes |
+| **bucket** | Array of [Bucket](#bucket) objects to be checked | [Bucket](#bucket) | Yes |
+| **accessKey** | AWS access Key to access Bucket                  | string | Yes |
+| **secretKey** | AWS secret Key to access Bucket                  | string | Yes |
+| **objectPath** | Path of object in bucket to                      | string | Yes |
 | skipTLSVerify | skip TLS verify when connecting to s3            | bool | Yes |
 
 
