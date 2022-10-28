@@ -47,12 +47,14 @@ ConfigDB check will connect to the specified database host, run a specified quer
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| jsonPath |  | string |  |
-| template |  | string |  |
+| jsonPath | Specify JSON path for use in template| string |  |
+| template | Specify jinja template for use | string |  |
+| expr | Specify expression for use in template  | string |  |
+| javascript | Specify javascript syntax for template | string |  |
 
 ## Authentication
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| **password** |  | [kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | Yes |
-| **username** |  | [kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | Yes |
+| **password** | Set password for authentication using string, configMapKeyRef, or SecretKeyRef. | [kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | Yes |
+| **username** | Set username for authentication using string, configMapKeyRef, or SecretKeyRef. | [kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | Yes | 

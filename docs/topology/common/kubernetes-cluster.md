@@ -88,3 +88,22 @@ The Kubernetes topology fetches and displays a Kubernetes cluster's resources de
 | transform | Template to transform results to | [Template](#template) |  |
 | ignore | Ignore the specified resources from the fetched resources. Can be a glob pattern. | \[\]string |  |
 
+---
+# Scheme Reference
+
+## ResourceSelector
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| name | Name of Kubernetes resource | string |  |
+| labelSelector | Select Kubernetes resource based on label. e.g. app, canary. | string |
+| fieldSelector | Select Kubernetes resource based on the value of specified resource field | string |
+
+## Template
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| jsonPath | Specify JSON path for use in template| string |  |
+| template | Specify jinja template for use | string |  |
+| expr | Specify expression for use in template  | string |  |
+| javascript | Specify javascript syntax for template | sttring |  |

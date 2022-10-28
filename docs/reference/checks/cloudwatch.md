@@ -45,15 +45,18 @@ This checks Cloudwatch for all the Active alarms and responses with the corespon
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| jsonPath |  | string |  |
-| template |  | string |  |
+| jsonPath | Specify JSON path for use in template| string |  |
+| template | Specify jinja template for use | string |  |
+| expr | Specify expression for use in template  | string |  |
+| javascript | Specify javascript syntax for template | string |  |
+
 
 ## CloudWatchFilter
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| actionPrefix |  | *string |  |
-| alarmPrefix |  | *string |  |
-| alarms |  | \[\]string |  |
-| state |  | string |  |
+| actionPrefix | Use to filter the results of the operation to only those alarms that use a certain alarm action. For example, you could specify the ARN of an SNS topic to find all alarms that send notifications to that topic. | *string |  |
+| alarmPrefix | Specify to receive information about all alarms that have names that start with this prefix. | *string |  |
+| alarms | Set field to retrieve information about alarm | \[\]string |  |
+| state | Specify to retrieve state value of alarm | string |  |
 

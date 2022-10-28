@@ -46,17 +46,18 @@ The Kubernetes check performs requests on Kubernetes resources such as Pods to g
 # Scheme Reference
 
 ## ResourceSelector
+
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| name | Name of Kubernetes object | string |  |
-| labelSelector |  | string |
-| fieldSelector |  | string |
+| name | Name of Kubernetes resource | string |  |
+| labelSelector | Select Kubernetes resource based on label. e.g. app, canary. | string |
+| fieldSelector | Select Kubernetes resource based on the value of specified resource field | string |
 
 ## Template
 
-
-
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| jsonPath |  | string |  |
-| template |  | string |  |
+| jsonPath | Specify JSON path for use in template| string |  |
+| template | Specify jinja template for use | string |  |
+| expr | Specify expression for use in template  | string |  |
+| javascript | Specify javascript syntax for template | string |  |

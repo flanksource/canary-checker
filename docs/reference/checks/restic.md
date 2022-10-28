@@ -49,5 +49,3 @@ The Restic check:
 | **repository** | Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name | string | Yes |
 | secretKey | SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss | *[kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) |  |
 
----
-# Scheme Reference

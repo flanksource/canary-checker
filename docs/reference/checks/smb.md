@@ -93,20 +93,19 @@ Where server is the `hostname` `e$`` is the sharename and `a/b/c` is the searchP
 ## FolderFilter
 
 
-
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| maxAge |  | Duration |  |
-| maxSize |  | Size |  |
-| minAge |  | Duration |  |
-| minSize |  | Size |  |
-| regex |  | string |  |
+| maxAge | MaxAge the latest object should be younger than defined age | Duration |  |
+| maxSize | MaxSize of the files inside the searchPath | Size |  |
+| minAge | MinAge the latest object should be older than defined age | Duration |  |
+| minSize | MinSize of the files inside the searchPath | Size |  |
+| regex | Filter files based on regular expression  | string |  |
 
 ## Template
 
-
-
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| jsonPath |  | string |  |
-| template |  | string |  |
+| jsonPath | Specify JSON path for use in template| string |  |
+| template | Specify jinja template for use | string |  |
+| expr | Specify expression for use in template  | string |  |
+| javascript | Specify javascript syntax for template | string |  |

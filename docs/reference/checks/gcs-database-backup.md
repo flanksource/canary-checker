@@ -36,16 +36,16 @@ This check performs regular backups for you CloudSQL instance at specified inter
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| project |  | string | Yes |
-| instance |  | string | Yes |
-| gcpConnection |  |  |
+| project | Specify GCP project | string | Yes |
+| instance | Specify GCP instance | string | Yes |
+| gcpConnection | Set up gcpConnection with GCP `endpoint` and `credentials` |  |
 
 
 ## Template
 
-
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| jsonPath |  | string |  |
-| template |  | string |  |
-
+| jsonPath | Specify JSON path for use in template| string |  |
+| template | Specify jinja template for use | string |  |
+| expr | Specify expression for use in template  | string |  |
+| javascript | Specify javascript syntax for template | string |  |

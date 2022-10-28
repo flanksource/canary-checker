@@ -53,12 +53,10 @@ This check performs queries on HTTP endpoints, and Kubernetes Namespaces to moni
 # Scheme Reference
 ## Authentication
 
-
-
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| **password** |  | [kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | Yes |
-| **username** |  | [kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | Yes |
+| **password** | Set password for authentication using string, configMapKeyRef, or SecretKeyRef. | [kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | Yes |
+| **username** | Set username for authentication using string, configMapKeyRef, or SecretKeyRef. | [kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | Yes | 
 
 ## JSONCheck
 
@@ -73,7 +71,5 @@ This check performs queries on HTTP endpoints, and Kubernetes Namespaces to moni
 | ----- | ----------- | ------ | -------- |
 | jsonPath | Specify JSON path for use in template| string |  |
 | template | Specify jinja template for use | string |  |
-| expr | Specify  | string |  |
-| javascript |  | sttring |  |
-
-
+| expr | Specify expression for use in template  | string |  |
+| javascript | Specify javascript syntax for template | string |  |
