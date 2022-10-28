@@ -69,7 +69,7 @@ The Kubernetes topology fetches and displays a Kubernetes cluster's resources de
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | type | This specifies type of component |  | 
-| id |  |
+| id | Specify unique ID for component |
 | schedule | Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
  Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds. |
 | icon | Icon for overwriting default icon on the dashboard | string |  |
@@ -77,7 +77,7 @@ The Kubernetes topology fetches and displays a Kubernetes cluster's resources de
 | **components** | Specifies structure for component to created |
 | properties | Specifies properties of the component |
 | **configs** | Configuration for the component |
-| **lookup** |  |
+| **lookup** | Set protocol to retrieve data. e.g. Kubernetes object, SQL query, HTTP API. |
 | **kind** | Specifies the kind of Kubernetes object for interaction | string | Yes |
 | labels | Labels for the check | Labels |  |
 | **name** | Name of the check | string | Yes |

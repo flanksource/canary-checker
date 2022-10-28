@@ -43,16 +43,12 @@ This checks Cloudwatch for all the Active alarms and responses with the corespon
 # Scheme Reference
 ## Template
 
-
-
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | jsonPath |  | string |  |
 | template |  | string |  |
 
 ## CloudWatchFilter
-
-
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |

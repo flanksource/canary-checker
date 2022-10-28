@@ -60,13 +60,20 @@ This check performs queries on HTTP endpoints, and Kubernetes Namespaces to moni
 | **password** |  | [kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | Yes |
 | **username** |  | [kommons.EnvVar](https://pkg.go.dev/github.com/flanksource/kommons#EnvVar) | Yes |
 
-## Template
-
-
+## JSONCheck
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| jsonPath |  | string |  |
-| template |  | string |  |
+| path | Path to JSON response | string |
+| value | Value for JSON response | string |
+
+## Template
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| jsonPath | Specify JSON path for use in template| string |  |
+| template | Specify jinja template for use | string |  |
+| expr | Specify  | string |  |
+| javascript |  | sttring |  |
 
 

@@ -44,6 +44,14 @@ The Kubernetes check performs requests on Kubernetes resources such as Pods to g
 
 ---
 # Scheme Reference
+
+## ResourceSelector
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| name | Name of Kubernetes object | string |  |
+| labelSelector |  | string |
+| fieldSelector |  | string |
+
 ## Template
 
 

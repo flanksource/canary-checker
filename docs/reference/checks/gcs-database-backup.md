@@ -31,6 +31,16 @@ This check performs regular backups for you CloudSQL instance at specified inter
 
 ---
 # Scheme Reference
+
+## GCPDatabase
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| project |  | string | Yes |
+| instance |  | string | Yes |
+| gcpConnection |  |  |
+
+
 ## Template
 
 
