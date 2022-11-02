@@ -48,7 +48,6 @@ nav:
   - Tutorials: 
     - Getting Started: ./tutorials/getting-started.md
     - Contributing: ./tutorials/dev-guide.md
-    - Getting Started with Config-db: ./tutorials/getting-started-configdb.md
   - Installation:
     - Install CLI: ./run.md
     - Install on Standalone Server: ./server.md

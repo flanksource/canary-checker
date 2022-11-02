@@ -1,5 +1,5 @@
 # Overview
-<div align="center"> <img src="docs/canary-checker.png" height="64px"></img></div>
+<div align="center"> <img src="images/canary-checker.png" height="64px"></img></div>
   <p align="center">Kubernetes operator for executing synthetic tests</p>
 <p align="center">
 <a href="https://github.com/flanksource/canary-checker/actions"><img src="https://github.com/flanksource/canary-checker/workflows/Test/badge.svg"></a>
