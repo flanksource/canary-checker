@@ -73,7 +73,7 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: "16"
-      - run: make build-api-docs build-docs deploy-docs
+      - run: make build-docs deploy-docs
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           MKDOCS_INSIDERS: ${{secrets.MKDOCS_INSIDERS}}
