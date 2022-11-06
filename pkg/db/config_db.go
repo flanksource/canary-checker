@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/commons/logger"
 )
 
 // Store entry in config_component_relationship table
@@ -31,6 +32,10 @@ func configQuery(config pkg.Config) *gorm.DB {
 		query = query.Where("namespace = ?", config.Namespace)
 	}
 
+	if config.Labels != nil && len(config.Labels) > 0 {
+		query = query.Where("tags @> ?", config.Labels)
+	}
+
 	// ExternalType is derived from v1.Config.Type which is a user input field
 	// It can refer to both external_type or config_type for now
 	if config.ExternalType != "" {
@@ -43,6 +48,10 @@ func configQuery(config pkg.Config) *gorm.DB {
 }
 
 func FindConfig(config pkg.Config) (pkg.Config, error) {
+	if Gorm == nil {
+		logger.Debugf("Config lookup on %v will be ignored, db not initialized", config)
+		return pkg.Config{}, gorm.ErrRecordNotFound
+	}
 	var dbConfigObject pkg.Config
 	query := configQuery(config)
 	err := query.First(&dbConfigObject).Error
