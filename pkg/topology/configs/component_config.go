@@ -7,6 +7,7 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -23,7 +24,7 @@ func ComponentConfigRun() {
 
 	for _, component := range components {
 		if err := SyncComponentConfigRelationship(component.ID, component.Configs); err != nil {
-			logger.Errorf("error persisting relationships: %v", err)
+			logger.Errorf("error persisting config relationships: %v", err)
 			continue
 		}
 	}
@@ -49,7 +50,10 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 	var newConfigsIDs []string
 	for _, config := range configs {
 		dbConfig, err := db.FindConfig(*config)
-		if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			logger.Tracef("no config found for %s", *config)
+			continue
+		} else if err != nil {
 			return errors.Wrap(err, "error fetching config from database")
 		}
 		newConfigsIDs = append(newConfigsIDs, dbConfig.ID.String())
