@@ -62,21 +62,21 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           snapshot: true
           tags: "latest,v${{ needs.semantic-release.outputs.release-version }}"
-  docs:
-    runs-on: ubuntu-latest
-    needs: semantic-release
-    container:
-      image: flanksource/build-tools:v0.15.1
-    steps:
-      - uses: actions/checkout@v2
-      - name: setup node
-        uses: actions/setup-node@v2
-        with:
-          node-version: "16"
-      - run: make build-api-docs build-docs deploy-docs
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          MKDOCS_INSIDERS: ${{secrets.MKDOCS_INSIDERS}}
+  # docs:
+  #   runs-on: ubuntu-latest
+  #   needs: semantic-release
+  #   container:
+  #     image: flanksource/build-tools:v0.15.1
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: setup node
+  #       uses: actions/setup-node@v2
+  #       with:
+  #         node-version: "16"
+  #     - run: make build-api-docs build-docs deploy-docs
+  #       env:
+  #         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+  #         MKDOCS_INSIDERS: ${{secrets.MKDOCS_INSIDERS}}
   trigger:
     runs-on: ubuntu-latest
     needs: docker
@@ -126,15 +126,16 @@ jobs:
           commit_message: "Release ${{ needs.semantic-release.outputs.release-version }} of ${{ github.repository }}"
           branch: gh-pages
           repository: ./charts
-  update-incident-commander:
+  
+  update-incident-commander-chart:
     runs-on: ubuntu-latest
     needs: [helm, semantic-release]
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: "${{ github.repository_owner }}/incident-commander"
+          repository: "${{ github.repository_owner }}/incident-commander-chart"
           token: ${{ secrets.FLANKBOT }}
-          path: ./incident-commander
+          path: ./incident-commander-chart
       - name: Install yq
         run: |
           wget https://github.com/mikefarah/yq/releases/download/${VERSION}/${BINARY}.tar.gz -O - |\
@@ -142,12 +143,12 @@ jobs:
         env:
           VERSION: v4.25.1
           BINARY: yq_linux_amd64
-      - name: Update canary-checker version in Incident-commander
+      - name: Update canary-checker version in Incident-commander-chart
         run: |
-          cd incident-commander
+          cd incident-commander-chart
           yq eval-all -i  '(.dependencies[] | select(.name == "canary-checker")) ref $d | $d.version = "${{ needs.semantic-release.outputs.release-version }}"' chart/Chart.yaml
       - name: Push changes to chart repo
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "chore: update canary-checker chart dependency to ${{ needs.semantic-release.outputs.release-version }}"
-          repository: ./incident-commander
+          repository: ./incident-commander-chart
