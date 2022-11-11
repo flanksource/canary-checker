@@ -13,6 +13,9 @@ image:
 dockerSocket: true
 containerdSocket: false
 
+# Set to true if you want to disable the postgrest service
+disablePostgrest: false
+
 # Turn on pprof /debug endpoint
 debug: false
 logLevel: "-v"

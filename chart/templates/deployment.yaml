@@ -103,6 +103,7 @@ spec:
             - {{ .Values.logLevel}}
             - --httpPort
             - "8080"
+            - --disable-postgrest={{ .Values.disablePostgrest }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
