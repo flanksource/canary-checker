@@ -200,6 +200,7 @@ type Component struct {
 	ExternalId       string               `json:"external_id,omitempty"` //nolint
 	IsLeaf           bool                 `json:"is_leaf"`
 	SelectorID       string               `json:"-" gorm:"-"`
+	Incidents        []Incident           `json:"incidents,omitempty"`
 }
 
 type ComponentRelationship struct {
@@ -395,6 +396,14 @@ type Link struct {
 	Type string `json:"type,omitempty"`
 	URL  string `json:"url,omitempty"`
 	Text `json:",inline"`
+}
+
+type Incident struct {
+	ID          uuid.UUID `json:"id"`
+	Type        string    `json:"type"`
+	Title       string    `json:"title"`
+	Severity    int       `json:"severity"`
+	Description string    `json:"description"`
 }
 
 // Property is a realized v1.Property without the lookup definition
