@@ -72,7 +72,6 @@ func serve() {
 
 	// PostgREST needs to know how it is exposed to create the correct links
 	db.HTTPEndpoint = publicEndpoint + "/db"
-	go db.StartPostgrest()
 
 	push.AddServers(pushServers)
 	go push.Start()
@@ -84,8 +83,13 @@ func serve() {
 		echopprof.Wrap(e)
 	}
 
+	if !disablePostgrest {
+		go db.StartPostgrest()
+		forward(e, "/db", db.PostgRESTEndpoint())
+	}
+
 	e.Use(middleware.Logger())
-	forward(e, "/db", db.PostgRESTEndpoint())
+
 	e.GET("/api", api.CheckSummary)
 	e.GET("/about", api.About)
 	e.GET("/api/graph", api.CheckDetails)
@@ -143,4 +147,5 @@ func init() {
 	Serve.Flags().BoolVar(&debug, "debug", debugDefault, "If true, start pprof at /debug")
 	Serve.Flags().StringVarP(&configFile, "configfile", "c", "", "Specify configfile")
 	Serve.Flags().StringVarP(&schedule, "schedule", "s", "", "schedule to run checks on. Supports all cron expression and golang duration support in format: '@every duration'")
+	Serve.Flags().BoolVar(&disablePostgrest, "disable-postgrest", false, "Disable the postgrest server")
 }
