@@ -38,7 +38,7 @@ func NewTopologyParams(values url.Values) TopologyParams {
 		Labels:           values.Get("labels"),
 		IncludeConfig:    values.Get("includeConfig") != "false",
 		IncludeHealth:    values.Get("includeHealth") != "false",
-		IncludeIncidents: values.Get("includeIncidents") != "true",
+		IncludeIncidents: values.Get("includeIncidents") != "",
 	}
 
 	if params.ID != "" && strings.HasPrefix(params.ID, "c-") {
@@ -105,6 +105,9 @@ func (p TopologyParams) String() string {
 	}
 	if p.IncludeHealth {
 		s += " includeHealth=true"
+	}
+	if p.IncludeIncidents {
+		s += " includeIncidents=true"
 	}
 	return strings.TrimSpace(s)
 }
@@ -221,7 +224,7 @@ func Query(params TopologyParams) (pkg.Components, error) {
 		args["labels"] = params.getLabels()
 	}
 
-	logger.Infof("Querying topology (%s) => %s", params, query)
+	logger.Tracef("Querying topology (%s) => %s", params, query)
 
 	var results pkg.Components
 	rows, err := db.QueryNamed(context.Background(), query, args)
@@ -369,7 +372,7 @@ func getConfigForComponents() string {
 
 func (p TopologyParams) getIncidentsForComponents() string {
 	if !p.IncludeIncidents {
-		return `(SELECT json_build_object())::jsonb`
+		return `(SELECT json_build_array())::jsonb`
 	}
 	return `(
         SELECT json_agg(json_build_object(
@@ -387,33 +390,16 @@ func (p TopologyParams) getIncidentsForComponents() string {
 }
 
 func getIncidentSummaryForComponents() string {
-	newQuery := `
-        SELECT summary.component_id, json_object_agg(summary.type, summary.v) 
-        FROM (SELECT evidences.component_id AS component_id, incidents.type, json_build_object(severity, count(*)) AS v FROM incidents
-        INNER JOIN hypotheses ON hypotheses.incident_id = incidents.id
-        INNER JOIN evidences ON evidences.hypothesis_id = hypotheses.id INNER JOIN components ON components.id = evidences.component_id
-        WHERE evidences.component_id = components.id AND (incidents.resolved IS NULL AND incidents.closed IS NULL) GROUP BY severity, incidents.type, evidences.component_id) AS summary, json_each(summary.v) GROUP BY summary.type, summary.component_id;
-    `
-
-	// TODO: Remove inner join components
-	workingQuery := `
+	return `(
         SELECT json_agg(f.summary_json)
         FROM (
             SELECT summary.component_id, json_object_agg(summary.type, summary.v) as summary_json
             FROM (SELECT evidences.component_id AS component_id, incidents.type, json_build_object(severity, count(*)) AS v FROM incidents
                 INNER JOIN hypotheses ON hypotheses.incident_id = incidents.id
-                INNER JOIN evidences ON evidences.hypothesis_id = hypotheses.id INNER JOIN components ON components.id = evidences.component_id
+                INNER JOIN evidences ON evidences.hypothesis_id = hypotheses.id
                 WHERE evidences.component_id = components.id AND (incidents.resolved IS NULL AND incidents.closed IS NULL) GROUP BY incidents.severity, incidents.type, evidences.component_id 
             ) AS summary, json_each(summary.v)
             GROUP BY summary.type, summary.component_id
-        ) AS f GROUP BY f.component_id;
-    `
-	return `(
-        SELECT json_build_object(summary.type, json_agg(summary.v))
-        FROM (SELECT components.id AS component_id, type, json_build_object(severity, count(*)) AS v FROM incidents GROUP BY type, severity) AS summary GROUP BY summary.type
-        INNER JOIN hypotheses ON hypotheses.incident_id = incidents.id
-        INNER JOIN evidences ON evidences.hypothesis_id = hypotheses.id
-        WHERE evidences.component_id = components.id AND (incidents.resolved IS NULL AND incidents.closed IS NULL)
-        GROUP BY evidences.component_id
+        ) AS f GROUP BY f.component_id
     ) :: jsonb`
 }
