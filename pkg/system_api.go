@@ -185,23 +185,23 @@ type Component struct {
 	Type    string     `json:"type,omitempty"`
 	Summary v1.Summary `json:"summary,omitempty" gorm:"type:summary"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
-	Lifecycle        string                   `json:"lifecycle,omitempty"`
-	Properties       Properties               `json:"properties,omitempty" gorm:"type:properties"`
-	Components       Components               `json:"components,omitempty" gorm:"-"`
-	ParentId         *uuid.UUID               `json:"parent_id,omitempty"` //nolint
-	Selectors        v1.ResourceSelectors     `json:"selectors,omitempty" gorm:"resourceSelectors" swaggerignore:"true"`
-	ComponentChecks  v1.ComponentChecks       `json:"-" gorm:"componentChecks" swaggerignore:"true"`
-	Checks           Checks                   `json:"checks,omitempty" gorm:"-"`
-	Configs          Configs                  `json:"configs" gorm:"type:configs"`
-	SystemTemplateID *uuid.UUID               `json:"system_template_id,omitempty"` //nolint
-	CreatedAt        time.Time                `json:"created_at,omitempty" time_format:"postgres_timestamp"`
-	UpdatedAt        time.Time                `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
-	DeletedAt        *time.Time               `json:"deleted_at,omitempty" time_format:"postgres_timestamp" swaggerignore:"true"`
-	ExternalId       string                   `json:"external_id,omitempty"` //nolint
-	IsLeaf           bool                     `json:"is_leaf"`
-	SelectorID       string                   `json:"-" gorm:"-"`
-	Incidents        []Incident               `json:"incidents,omitempty" gorm:"-"`
-	IncidentSummary  []map[string]interface{} `json:"incidentsSummary,omitempty" gorm:"-"`
+	Lifecycle        string                 `json:"lifecycle,omitempty"`
+	Properties       Properties             `json:"properties,omitempty" gorm:"type:properties"`
+	Components       Components             `json:"components,omitempty" gorm:"-"`
+	ParentId         *uuid.UUID             `json:"parent_id,omitempty"` //nolint
+	Selectors        v1.ResourceSelectors   `json:"selectors,omitempty" gorm:"resourceSelectors" swaggerignore:"true"`
+	ComponentChecks  v1.ComponentChecks     `json:"-" gorm:"componentChecks" swaggerignore:"true"`
+	Checks           Checks                 `json:"checks,omitempty" gorm:"-"`
+	Configs          Configs                `json:"configs" gorm:"type:configs"`
+	SystemTemplateID *uuid.UUID             `json:"system_template_id,omitempty"` //nolint
+	CreatedAt        time.Time              `json:"created_at,omitempty" time_format:"postgres_timestamp"`
+	UpdatedAt        time.Time              `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt        *time.Time             `json:"deleted_at,omitempty" time_format:"postgres_timestamp" swaggerignore:"true"`
+	ExternalId       string                 `json:"external_id,omitempty"` //nolint
+	IsLeaf           bool                   `json:"is_leaf"`
+	SelectorID       string                 `json:"-" gorm:"-"`
+	Incidents        []Incident             `json:"incidents,omitempty" gorm:"-"`
+	IncidentSummary  map[string]interface{} `json:"incidentsSummary,omitempty" gorm:"-"`
 }
 
 type ComponentRelationship struct {

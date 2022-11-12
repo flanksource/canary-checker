@@ -391,15 +391,17 @@ func (p TopologyParams) getIncidentsForComponents() string {
 
 func getIncidentSummaryForComponents() string {
 	return `(
-        SELECT json_agg(f.summary_json)
+        SELECT json_object_agg(flatten.type, flatten.summary_json)
         FROM (
-            SELECT summary.component_id, json_object_agg(summary.type, summary.v) as summary_json
-            FROM (SELECT evidences.component_id AS component_id, incidents.type, json_build_object(severity, count(*)) AS v FROM incidents
+            SELECT summary.component_id, summary.type, json_object_agg(f.k, f.v) as summary_json
+            FROM (
+                SELECT evidences.component_id AS component_id, incidents.type, json_build_object(severity, count(*)) AS severity_agg
+                FROM incidents
                 INNER JOIN hypotheses ON hypotheses.incident_id = incidents.id
                 INNER JOIN evidences ON evidences.hypothesis_id = hypotheses.id
-                WHERE evidences.component_id = components.id AND (incidents.resolved IS NULL AND incidents.closed IS NULL) GROUP BY incidents.severity, incidents.type, evidences.component_id 
-            ) AS summary, json_each(summary.v)
-            GROUP BY summary.type, summary.component_id
-        ) AS f GROUP BY f.component_id
+                WHERE evidences.component_id = components.id AND (incidents.resolved IS NULL AND incidents.closed IS NULL)
+                GROUP BY incidents.severity, incidents.type, evidences.component_id
+            ) AS summary, json_each(summary.severity_agg) AS f(k,v) GROUP BY summary.type, summary.component_id
+        ) AS flatten GROUP BY flatten.component_id
     ) :: jsonb`
 }
