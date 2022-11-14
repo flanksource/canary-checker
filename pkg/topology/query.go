@@ -28,16 +28,17 @@ func parseItems(items string) []string {
 
 func NewTopologyParams(values url.Values) TopologyParams {
 	params := TopologyParams{
-		ID:            values.Get("id"),
-		TopologyID:    values.Get("topologyId"),
-		ComponentID:   values.Get("componentId"),
-		Status:        parseItems(values.Get("status")),
-		Types:         parseItems(values.Get("type")),
-		Owner:         values.Get("owner"),
-		Flatten:       values.Get("flatten") == "true",
-		Labels:        values.Get("labels"),
-		IncludeConfig: values.Get("includeConfig") != "false",
-		IncludeHealth: values.Get("includeHealth") != "false",
+		ID:               values.Get("id"),
+		TopologyID:       values.Get("topologyId"),
+		ComponentID:      values.Get("componentId"),
+		Status:           parseItems(values.Get("status")),
+		Types:            parseItems(values.Get("type")),
+		Owner:            values.Get("owner"),
+		Flatten:          values.Get("flatten") == "true",
+		Labels:           values.Get("labels"),
+		IncludeConfig:    values.Get("includeConfig") != "false",
+		IncludeHealth:    values.Get("includeHealth") != "false",
+		IncludeIncidents: values.Get("includeIncidents") != "",
 	}
 
 	if params.ID != "" && strings.HasPrefix(params.ID, "c-") {
@@ -56,17 +57,18 @@ func NewTopologyParams(values url.Values) TopologyParams {
 }
 
 type TopologyParams struct {
-	ID            string   `query:"id"`
-	TopologyID    string   `query:"topologyId"`
-	ComponentID   string   `query:"componentId"`
-	Owner         string   `query:"owner"`
-	Labels        string   `query:"labels"`
-	Status        []string `query:"status"`
-	Types         []string `query:"types"`
-	Depth         int      `query:"depth"`
-	Flatten       bool     `query:"flatten"`
-	IncludeConfig bool     `query:"includeConfig"`
-	IncludeHealth bool     `query:"includeHealth"`
+	ID               string   `query:"id"`
+	TopologyID       string   `query:"topologyId"`
+	ComponentID      string   `query:"componentId"`
+	Owner            string   `query:"owner"`
+	Labels           string   `query:"labels"`
+	Status           []string `query:"status"`
+	Types            []string `query:"types"`
+	Depth            int      `query:"depth"`
+	Flatten          bool     `query:"flatten"`
+	IncludeConfig    bool     `query:"includeConfig"`
+	IncludeHealth    bool     `query:"includeHealth"`
+	IncludeIncidents bool     `query:"includeIncidents"`
 }
 
 func (p TopologyParams) String() string {
@@ -103,6 +105,9 @@ func (p TopologyParams) String() string {
 	}
 	if p.IncludeHealth {
 		s += " includeHealth=true"
+	}
+	if p.IncludeIncidents {
+		s += " includeIncidents=true"
 	}
 	return strings.TrimSpace(s)
 }
@@ -182,9 +187,11 @@ func Query(params TopologyParams) (pkg.Components, error) {
         jsonb_set_lax(
             jsonb_set_lax(
                 jsonb_set_lax(
-                    to_jsonb(components),'{checks}', %s
-                ), '{configs}', %s
-            ), '{incidents}', %s
+                    jsonb_set_lax(
+                        to_jsonb(components),'{checks}', %s
+                    ), '{configs}', %s
+                ), '{incidents}', %s
+            ), '{incidentsSummary}', %s
         )
     ) :: jsonb AS components FROM components %s
 	UNION (
@@ -193,16 +200,18 @@ func Query(params TopologyParams) (pkg.Components, error) {
             jsonb_set_lax(
                 jsonb_set_lax(
                     jsonb_set_lax(
-                        to_jsonb(components), '{parent_id}', to_jsonb(component_relationships.relationship_id), true
-                    ),'{checks}', %s
-                ), '{configs}', %s
-            ), '{incidents}', %s
+                        jsonb_set_lax(
+                            to_jsonb(components), '{parent_id}', to_jsonb(component_relationships.relationship_id), true
+                        ),'{checks}', %s
+                    ), '{configs}', %s
+                ), '{incidents}', %s
+            ), '{incidentsSummary}', %s
         )
-    ):: jsonb AS components FROM component_relationships INNER JOIN components
-	ON components.id = component_relationships.component_id INNER JOIN components AS parent
-	ON component_relationships.relationship_id = parent.id %s)`,
-		getChecksForComponents(), getConfigForComponents(), getIncidentsForComponents(), params.GetComponentWhereClause(),
-		getChecksForComponents(), getConfigForComponents(), getIncidentsForComponents(), params.GetComponentRelationWhereClause())
+    ):: jsonb AS components FROM component_relationships
+    INNER JOIN components ON components.id = component_relationships.component_id
+    INNER JOIN components AS parent ON component_relationships.relationship_id = parent.id %s)`,
+		getChecksForComponents(), getConfigForComponents(), params.getIncidentsForComponents(), getIncidentSummaryForComponents(), params.GetComponentWhereClause(),
+		getChecksForComponents(), getConfigForComponents(), params.getIncidentsForComponents(), getIncidentSummaryForComponents(), params.GetComponentRelationWhereClause())
 
 	args := make(map[string]interface{})
 	if params.getID() != "" {
@@ -361,7 +370,10 @@ func getConfigForComponents() string {
     ) :: jsonb`
 }
 
-func getIncidentsForComponents() string {
+func (p TopologyParams) getIncidentsForComponents() string {
+	if !p.IncludeIncidents {
+		return `(SELECT json_build_array())::jsonb`
+	}
 	return `(
         SELECT json_agg(json_build_object(
             'id', incidents.id,
@@ -374,5 +386,22 @@ func getIncidentsForComponents() string {
         INNER JOIN evidences ON evidences.hypothesis_id = hypotheses.id
         WHERE evidences.component_id = components.id AND (incidents.resolved IS NULL AND incidents.closed IS NULL)
         GROUP BY evidences.component_id
+    ) :: jsonb`
+}
+
+func getIncidentSummaryForComponents() string {
+	return `(
+        SELECT json_object_agg(flatten.type, flatten.summary_json)
+        FROM (
+            SELECT summary.component_id, summary.type, json_object_agg(f.k, f.v) as summary_json
+            FROM (
+                SELECT evidences.component_id AS component_id, incidents.type, json_build_object(severity, count(*)) AS severity_agg
+                FROM incidents
+                INNER JOIN hypotheses ON hypotheses.incident_id = incidents.id
+                INNER JOIN evidences ON evidences.hypothesis_id = hypotheses.id
+                WHERE evidences.component_id = components.id AND (incidents.resolved IS NULL AND incidents.closed IS NULL)
+                GROUP BY incidents.severity, incidents.type, evidences.component_id
+            ) AS summary, json_each(summary.severity_agg) AS f(k,v) GROUP BY summary.type, summary.component_id
+        ) AS flatten GROUP BY flatten.component_id
     ) :: jsonb`
 }
