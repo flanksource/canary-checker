@@ -28,17 +28,19 @@ func parseItems(items string) []string {
 
 func NewTopologyParams(values url.Values) TopologyParams {
 	params := TopologyParams{
-		ID:               values.Get("id"),
-		TopologyID:       values.Get("topologyId"),
-		ComponentID:      values.Get("componentId"),
-		Status:           parseItems(values.Get("status")),
-		Types:            parseItems(values.Get("type")),
-		Owner:            values.Get("owner"),
-		Flatten:          values.Get("flatten") == "true",
-		Labels:           values.Get("labels"),
-		IncludeConfig:    values.Get("includeConfig") != "false",
-		IncludeHealth:    values.Get("includeHealth") != "false",
-		IncludeIncidents: values.Get("includeIncidents") != "",
+		ID:                     values.Get("id"),
+		TopologyID:             values.Get("topologyId"),
+		ComponentID:            values.Get("componentId"),
+		Status:                 parseItems(values.Get("status")),
+		Types:                  parseItems(values.Get("type")),
+		Owner:                  values.Get("owner"),
+		Flatten:                values.Get("flatten") == "true",
+		Labels:                 values.Get("labels"),
+		IncludeConfig:          values.Get("includeConfig") != "false",
+		IncludeHealth:          values.Get("includeHealth") != "false",
+		IncludeIncidents:       values.Get("includeIncidents") != "",
+		IncludeInsights:        values.Get("includeInsights") != "",
+		IncludeInsightsSummary: values.Get("includeInsightsSummary") != "",
 	}
 
 	if params.ID != "" && strings.HasPrefix(params.ID, "c-") {
@@ -48,8 +50,12 @@ func NewTopologyParams(values url.Values) TopologyParams {
 	}
 	params.ComponentID = strings.TrimPrefix(params.ComponentID, "c-")
 
+	var err error
 	if depth := values.Get("depth"); depth != "" {
-		params.Depth, _ = strconv.Atoi(depth)
+		params.Depth, err = strconv.Atoi(depth)
+		if err != nil {
+			params.Depth = DefaultDepth
+		}
 	} else {
 		params.Depth = DefaultDepth
 	}
@@ -57,18 +63,20 @@ func NewTopologyParams(values url.Values) TopologyParams {
 }
 
 type TopologyParams struct {
-	ID               string   `query:"id"`
-	TopologyID       string   `query:"topologyId"`
-	ComponentID      string   `query:"componentId"`
-	Owner            string   `query:"owner"`
-	Labels           string   `query:"labels"`
-	Status           []string `query:"status"`
-	Types            []string `query:"types"`
-	Depth            int      `query:"depth"`
-	Flatten          bool     `query:"flatten"`
-	IncludeConfig    bool     `query:"includeConfig"`
-	IncludeHealth    bool     `query:"includeHealth"`
-	IncludeIncidents bool     `query:"includeIncidents"`
+	ID                     string   `query:"id"`
+	TopologyID             string   `query:"topologyId"`
+	ComponentID            string   `query:"componentId"`
+	Owner                  string   `query:"owner"`
+	Labels                 string   `query:"labels"`
+	Status                 []string `query:"status"`
+	Types                  []string `query:"types"`
+	Depth                  int      `query:"depth"`
+	Flatten                bool     `query:"flatten"`
+	IncludeConfig          bool     `query:"includeConfig"`
+	IncludeHealth          bool     `query:"includeHealth"`
+	IncludeIncidents       bool     `query:"includeIncidents"`
+	IncludeInsights        bool     `query:"includeInsights"`
+	IncludeInsightsSummary bool     `query:"includeInsightsSummary"`
 }
 
 func (p TopologyParams) String() string {
@@ -108,6 +116,12 @@ func (p TopologyParams) String() string {
 	}
 	if p.IncludeIncidents {
 		s += " includeIncidents=true"
+	}
+	if p.IncludeInsights {
+		s += " includeInsights=true"
+	}
+	if p.IncludeInsightsSummary {
+		s += " includeInsightsSummary=true"
 	}
 	return strings.TrimSpace(s)
 }
@@ -188,9 +202,13 @@ func Query(params TopologyParams) (pkg.Components, error) {
             jsonb_set_lax(
                 jsonb_set_lax(
                     jsonb_set_lax(
-                        to_jsonb(components),'{checks}', %s
-                    ), '{configs}', %s
-                ), '{incidents}', %s
+                        jsonb_set_lax(
+                            jsonb_set_lax(
+                                to_jsonb(components),'{checks}', %s
+                            ), '{configs}', %s
+                        ), '{incidents}', %s
+                    ), '{configInsights}', %s
+                ), '{configInsightsSummary}', %s
             ), '{incidentsSummary}', %s
         )
     ) :: jsonb AS components FROM components %s
@@ -201,17 +219,21 @@ func Query(params TopologyParams) (pkg.Components, error) {
                 jsonb_set_lax(
                     jsonb_set_lax(
                         jsonb_set_lax(
-                            to_jsonb(components), '{parent_id}', to_jsonb(component_relationships.relationship_id), true
-                        ),'{checks}', %s
-                    ), '{configs}', %s
-                ), '{incidents}', %s
+                            jsonb_set_lax(
+                                jsonb_set_lax(
+                                    to_jsonb(components), '{parent_id}', to_jsonb(component_relationships.relationship_id), true
+                                ),'{checks}', %s
+                            ), '{configs}', %s
+                        ), '{incidents}', %s
+                    ), '{configInsights}', %s
+                ), '{configInsightsSummary}', %s
             ), '{incidentsSummary}', %s
         )
     ):: jsonb AS components FROM component_relationships
     INNER JOIN components ON components.id = component_relationships.component_id
     INNER JOIN components AS parent ON component_relationships.relationship_id = parent.id %s)`,
-		getChecksForComponents(), getConfigForComponents(), params.getIncidentsForComponents(), getIncidentSummaryForComponents(), params.GetComponentWhereClause(),
-		getChecksForComponents(), getConfigForComponents(), params.getIncidentsForComponents(), getIncidentSummaryForComponents(), params.GetComponentRelationWhereClause())
+		getChecksForComponents(), getConfigForComponents(), params.getIncidentsForComponents(), params.getConfigAnalysisForComponents(), params.getConfigAnalysisSummaryForComponents(), getIncidentSummaryForComponents(), params.GetComponentWhereClause(),
+		getChecksForComponents(), getConfigForComponents(), params.getIncidentsForComponents(), params.getConfigAnalysisForComponents(), params.getConfigAnalysisSummaryForComponents(), getIncidentSummaryForComponents(), params.GetComponentRelationWhereClause())
 
 	args := make(map[string]interface{})
 	if params.getID() != "" {
@@ -402,6 +424,42 @@ func getIncidentSummaryForComponents() string {
                 WHERE evidences.component_id = components.id AND (incidents.resolved IS NULL AND incidents.closed IS NULL)
                 GROUP BY incidents.severity, incidents.type, evidences.component_id
             ) AS summary, json_each(summary.severity_agg) AS f(k,v) GROUP BY summary.type, summary.component_id
+        ) AS flatten GROUP BY flatten.component_id
+    ) :: jsonb`
+}
+
+func (p TopologyParams) getConfigAnalysisForComponents() string {
+	if !p.IncludeInsights {
+		return `(SELECT json_build_array())::jsonb`
+	}
+	return `(
+        SELECT json_agg(json_build_object(
+            'config_id', config_analysis.config_id,
+            'analyzer', config_analysis.analyzer,
+            'analysis_type', config_analysis.analysis_type,
+            'severity', config_analysis.severity
+        )) FROM config_analysis
+        LEFT JOIN config_component_relationships ON config_analysis.config_id = config_component_relationships.config_id
+        WHERE config_component_relationships.component_id = components.id AND config_component_relationships.deleted_at IS NULL
+        GROUP BY config_component_relationships.component_id
+    ) :: jsonb`
+}
+
+func (p TopologyParams) getConfigAnalysisSummaryForComponents() string {
+	if !p.IncludeInsightsSummary {
+		return `(SELECT json_build_object())::jsonb`
+	}
+	return `(
+        SELECT json_object_agg(flatten.analysis_type, flatten.summary_json)
+        FROM (
+            SELECT summary.component_id, summary.analysis_type, json_object_agg(f.k, f.v) as summary_json
+            FROM (
+                SELECT config_component_relationships.component_id AS component_id, config_analysis.analysis_type, json_build_object(severity, count(*)) AS severity_agg
+                FROM config_analysis
+                LEFT JOIN config_component_relationships ON config_analysis.config_id = config_component_relationships.config_id
+                WHERE config_component_relationships.component_id = components.id AND config_component_relationships.deleted_at IS NULL
+                GROUP BY config_analysis.severity, config_analysis.analysis_type, config_component_relationships.component_id
+            ) AS summary, json_each(summary.severity_agg) AS f(k,v) GROUP BY summary.analysis_type, summary.component_id
         ) AS flatten GROUP BY flatten.component_id
     ) :: jsonb`
 }
