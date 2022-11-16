@@ -47,7 +47,8 @@ metadata:
 spec:
   interval: 30
   http:
-    - endpoint: https://httpstat.us/200
+    - name: http-pass
+      endpoint: https://httpstat.us/200
       thresholdMillis: 3000
       responseCodes: [201, 200, 301]
       responseContent: ""

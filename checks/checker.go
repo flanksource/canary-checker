@@ -45,6 +45,7 @@ var All = []Checker{
 	&KubernetesChecker{},
 	&FolderChecker{},
 	&ExecChecker{},
+	&AMQPChecker{},
 	&AwsConfigChecker{},
 	&AwsConfigRuleChecker{},
 	&DatabaseBackupChecker{},

@@ -296,6 +296,66 @@ func (c RedisCheck) GetEndpoint() string {
 	return c.Addr
 }
 
+type AMQPExchange struct {
+	Name       string `yaml:"name,omitempty" json:"name,omitempty"`
+	Type       string `yaml:"type,omitempty" json:"type,omitempty"`
+	Durable    bool   `yaml:"durable,omitempty" json:"durable,omitempty"`
+	AutoDelete bool   `yaml:"autodelete,omitempty" json:"autodelete,omitempty"`
+}
+
+type AMQPQueue struct {
+	Name       string `yaml:"name,omitempty" json:"name,omitempty"`
+	Durable    bool   `yaml:"durable,omitempty" json:"durable,omitempty"`
+	AutoDelete bool   `yaml:"autodelete,omitempty" json:"autodelete,omitempty"`
+}
+
+type AMQPSimulation struct {
+	Key string `yaml:"key,omitempty" json:"key,omitempty"`
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Type=object
+	Headers   json.RawMessage `yaml:"headers,omitempty" json:"headers,omitempty"`
+	Body      string          `yaml:"body,omitempty" json:"body,omitempty"`
+	Witness   bool            `yaml:"witness,omitempty" json:"witness,omitempty"`
+	Bootstrap bool            `yaml:"bootstrap,omitempty" json:"bootstrap,omitempty"`
+}
+
+type AMQPBinding struct {
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+	Key  string `yaml:"key,omitempty" json:"key,omitempty"`
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Type=object
+	Args json.RawMessage `yaml:"args,omitempty" json:"args,omitempty"`
+}
+
+type AMQPCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Addr        string          `yaml:"addr" json:"addr" template:"true"`
+	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	Exchange    AMQPExchange    `yaml:"exchange,omitempty" json:"exchange,omitempty"`
+	Queue       AMQPQueue       `yaml:"queue,omitempty" json:"queue,omitempty"`
+	Simulation  AMQPSimulation  `yaml:"simulation,omitempty" json:"simulation,omitempty"`
+	Binding     AMQPBinding     `yaml:"binding,omitempty" json:"binding,omitempty"`
+	Ack         bool            `yaml:"ack,omitempty" json:"ack,omitempty"`
+	Peek        bool            `yaml:"peek,omitempty" json:"peek,omitempty"`
+}
+
+func (c AMQPCheck) GetType() string {
+	return "amqp"
+}
+
+func (c AMQPCheck) GetEndpoint() string {
+	return c.Addr
+}
+
+func (c AMQPCheck) GetIcon() string {
+	if c.Icon != "" {
+		return c.Icon
+	}
+	return "rabbitmq"
+}
+
 type SQLCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
@@ -1065,6 +1125,14 @@ type Exec struct {
 }
 
 /*
+AMQP connects to an AMQP 0.9.1 exchange and publishes a message.
+[include:datasources/redis_pass.yaml]
+*/
+type AMQP struct {
+	AMQPCheck `yaml:",inline" json:"inline"`
+}
+
+/*
 AwsConfig check runs the given query against the AWS resources.
 [include:aws/aws_config_pass.yaml]
 */
@@ -1141,6 +1209,7 @@ var AllChecks = []external.Check{
 	Kubernetes{},
 	FolderCheck{},
 	ExecCheck{},
+	AMQPCheck{},
 	AwsConfigCheck{},
 	AwsConfigRuleCheck{},
 	DatabaseBackupCheck{},

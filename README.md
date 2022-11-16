@@ -35,6 +35,7 @@
     - [displayTemplate](#displaytemplate-2)
   - [Elasticsearch - Query an Elasticsearch DB](#elasticsearch---query-an-elasticsearch-db)
   - [Redis - Execute ping against redis instance](#redis---execute-ping-against-redis-instance)
+  - [AMQP - Talk to an AMQP 0.9.1 broker](#amqp---talk-to-an-amqp-091-broker-rabbitmq)
   - [S3 - Verify reachability and correctness of an S3 compatible store](#s3---verify-reachability-and-correctness-of-an-s3-compatible-store)
   - [Folder Check](#folder-check)
     - [S3 Bucket - Query the contents of an S3 bucket for freshness](#s3-bucket---query-the-contents-of-an-s3-bucket-for-freshness)
@@ -507,6 +508,51 @@ redis:
 | db | database to be selected after connecting to the server. | int | Yes |
 | description | description for canary | string | No |
 | auth | username and password value, configMapKeyRef or SecretKeyRef for redis server | Object | No |
+
+
+### AMQP - Talk to an AMQP 0.9.1 broker (RabbitMQ)
+
+Simulate a single round of producing and consuming (or just peeking).
+
+```yaml
+amqp:
+  - name: amqp-pass
+    addr: hello-world.default.svc
+    description: "A basic AMQP 0.9.1 pass test"
+    ack: true
+    queue:
+      name: myQueue
+    auth: {...}
+
+# "peek mode"
+amqp:
+  - name: amqp-peek-pass
+    addr: hello-world.default.svc
+    description: "A peek-style AMQP 0.9.1 pass test"
+    auth: {...}
+    exchange:
+      name: testPeek.direct
+      type: direct
+      durable: true
+    queue:
+      name: testPeek
+      durable: true
+    peek: true
+    binding:
+      key: foo
+```
+
+| Field      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Scheme | Required |
+|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|----------|
+| addr       | AMQP broker host and optional `:<port>`, which defaults to `5672` (non-TLS). | string | Yes |
+| exchange   | An AMQP exchange configuration. Fields are `{name: string, type: string, durable: bool, autodelete: bool}`. All are optional. The `type`s currently accepted are `"fanout"`, `"direct"`, `"topic"`, `"headers"` and `""`. Specifying the latter (or omitting `exchange` entirely) indicates a desire to use the [default exchange](https://www.rabbitmq.com/tutorials/amqp-concepts.html#exchange-default). Otherwise, an exchange is created if one doesn't already exist. If one *does* exist and its properties don't align with those given, an error is thrown. | Object | No |
+| queue      | An [AMQP Queue](https://www.rabbitmq.com/queues.html) configuration. Fields are `{name: string, durable: bool, autodelete: bool}`, where `name` (and thus `queue` itself) is effectively mandatory in most cases. Existing queues must have matching properties. Ignored with non-default exchanges when `peek` is `false`. | Object | Yes |
+| ack        | Whether to send [explicit ACKs](https://www.rabbitmq.com/confirms.html) When `false`, "auto-acking" is in effect. | bool   | No |
+| binding    | Parameters for binding an exchange to a queue. Fields are `{name: string, key: string, args: object}`. `name` and `args` should normally be omitted. For `key`, requirements vary per `exchange.type`. With type `"topic"`, the value should be a special glob-like pattern. For `"direct"`, it can be any nonempty string (not applicable to `"fanout"`). For the `args` field, see [here](https://www.rabbitmq.com/tutorials/amqp-concepts.html#exchange-headers). Basically, keys must be strings, but allowed value types depend on the server. | object | No |
+| peek       | An indication of whether to forgo producing and just consume and restore. Implies `ack`. An exchange and a bound queue (presumably populated) matching those expressed in the spec *must* already exist. If a message can't be retrieved after some period (currently hard coded to 10 seconds), it's recorded as a failure. | bool   | No |
+| simulation | Mainly for internal use and special cases. Fields are `{key: string, body: string, headers: object, witness: bool, bootstrap: bool}`. With `bootstrap`, a message will be emitted using `key` when the target queue is empty. `body` can be used to override the message payload. `witness` ensures the subscriber is connected before emitting a message. The two booleans are mutually exclusive. See `binding.args` for `headers`. | Object | No |
+| auth       | A username and a password, possibly in the form of a `SecretKeyRef`. | Object | No |
+
 
 ### Elasticsearch - Query an Elasticsearch DB
 
