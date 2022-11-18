@@ -17,7 +17,10 @@ import (
 
 var json = jsontime.ConfigWithCustomTimeFormat
 
-const DefaultDepth = 1
+const (
+	DefaultDepth       = 1
+	EmptyJSONBArraySQL = "(SELECT json_build_array())::jsonb"
+)
 
 func parseItems(items string) []string {
 	if strings.TrimSpace(items) == "" {
@@ -36,11 +39,11 @@ func NewTopologyParams(values url.Values) TopologyParams {
 		Owner:                  values.Get("owner"),
 		Flatten:                values.Get("flatten") == "true",
 		Labels:                 values.Get("labels"),
-		IncludeConfig:          values.Get("includeConfig") != "false",
+		IncludeConfig:          values.Get("includeConfig") != "",
 		IncludeHealth:          values.Get("includeHealth") != "false",
 		IncludeIncidents:       values.Get("includeIncidents") != "",
 		IncludeInsights:        values.Get("includeInsights") != "",
-		IncludeInsightsSummary: values.Get("includeInsightsSummary") != "",
+		IncludeInsightsSummary: values.Get("includeInsightsSummary") != "false",
 	}
 
 	if params.ID != "" && strings.HasPrefix(params.ID, "c-") {
@@ -207,9 +210,9 @@ func Query(params TopologyParams) (pkg.Components, error) {
                                 to_jsonb(components),'{checks}', %s
                             ), '{configs}', %s
                         ), '{incidents}', %s
-                    ), '{configInsights}', %s
-                ), '{configInsightsSummary}', %s
-            ), '{incidentsSummary}', %s
+                    ), '{insights}', %s
+                ), '{summary,insights}', %s
+            ), '{summary,incidents}', %s
         )
     ) :: jsonb AS components FROM components %s
 	UNION (
@@ -225,15 +228,15 @@ func Query(params TopologyParams) (pkg.Components, error) {
                                 ),'{checks}', %s
                             ), '{configs}', %s
                         ), '{incidents}', %s
-                    ), '{configInsights}', %s
-                ), '{configInsightsSummary}', %s
-            ), '{incidentsSummary}', %s
+                    ), '{insights}', %s
+                ), '{summary,insights}', %s
+            ), '{summary,incidents}', %s
         )
     ):: jsonb AS components FROM component_relationships
     INNER JOIN components ON components.id = component_relationships.component_id
     INNER JOIN components AS parent ON component_relationships.relationship_id = parent.id %s)`,
-		getChecksForComponents(), getConfigForComponents(), params.getIncidentsForComponents(), params.getConfigAnalysisForComponents(), params.getConfigAnalysisSummaryForComponents(), getIncidentSummaryForComponents(), params.GetComponentWhereClause(),
-		getChecksForComponents(), getConfigForComponents(), params.getIncidentsForComponents(), params.getConfigAnalysisForComponents(), params.getConfigAnalysisSummaryForComponents(), getIncidentSummaryForComponents(), params.GetComponentRelationWhereClause())
+		getChecksForComponents(), params.getConfigForComponents(), params.getIncidentsForComponents(), params.getConfigAnalysisForComponents(), params.getConfigAnalysisSummaryForComponents(), getIncidentSummaryForComponents(), params.GetComponentWhereClause(),
+		getChecksForComponents(), params.getConfigForComponents(), params.getIncidentsForComponents(), params.getConfigAnalysisForComponents(), params.getConfigAnalysisSummaryForComponents(), getIncidentSummaryForComponents(), params.GetComponentRelationWhereClause())
 
 	args := make(map[string]interface{})
 	if params.getID() != "" {
@@ -374,7 +377,10 @@ func getChecksForComponents() string {
     ) :: jsonb`
 }
 
-func getConfigForComponents() string {
+func (p TopologyParams) getConfigForComponents() string {
+	if !p.IncludeConfig {
+		return EmptyJSONBArraySQL
+	}
 	return `(
         SELECT json_agg(json_build_object(
             'id', config_items.id,
@@ -394,7 +400,7 @@ func getConfigForComponents() string {
 
 func (p TopologyParams) getIncidentsForComponents() string {
 	if !p.IncludeIncidents {
-		return `(SELECT json_build_array())::jsonb`
+		return EmptyJSONBArraySQL
 	}
 	return `(
         SELECT json_agg(json_build_object(
@@ -430,7 +436,7 @@ func getIncidentSummaryForComponents() string {
 
 func (p TopologyParams) getConfigAnalysisForComponents() string {
 	if !p.IncludeInsights {
-		return `(SELECT json_build_array())::jsonb`
+		return EmptyJSONBArraySQL
 	}
 	return `(
         SELECT json_agg(json_build_object(
