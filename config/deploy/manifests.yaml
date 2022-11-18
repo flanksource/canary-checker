@@ -14669,8 +14669,20 @@ spec:
                   properties:
                     healthy:
                       type: integer
+                    incidents:
+                      additionalProperties:
+                        additionalProperties:
+                          type: integer
+                        type: object
+                      type: object
                     info:
                       type: integer
+                    insights:
+                      additionalProperties:
+                        additionalProperties:
+                          type: integer
+                        type: object
+                      type: object
                     unhealthy:
                       type: integer
                     warning:
@@ -25464,8 +25476,20 @@ spec:
                         properties:
                           healthy:
                             type: integer
+                          incidents:
+                            additionalProperties:
+                              additionalProperties:
+                                type: integer
+                              type: object
+                            type: object
                           info:
                             type: integer
+                          insights:
+                            additionalProperties:
+                              additionalProperties:
+                                type: integer
+                              type: object
+                            type: object
                           unhealthy:
                             type: integer
                           warning:
