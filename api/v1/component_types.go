@@ -39,10 +39,12 @@ type ComponentSpec struct {
 }
 
 type Summary struct {
-	Healthy   int `json:"healthy,omitempty"`
-	Unhealthy int `json:"unhealthy,omitempty"`
-	Warning   int `json:"warning,omitempty"`
-	Info      int `json:"info,omitempty"`
+	Healthy   int                       `json:"healthy,omitempty"`
+	Unhealthy int                       `json:"unhealthy,omitempty"`
+	Warning   int                       `json:"warning,omitempty"`
+	Info      int                       `json:"info,omitempty"`
+	Incidents map[string]map[string]int `json:"incidents,omitempty"`
+	Insights  map[string]map[string]int `json:"insights,omitempty"`
 }
 
 func (s Summary) String() string {
