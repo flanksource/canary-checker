@@ -17,7 +17,10 @@ import (
 
 var json = jsontime.ConfigWithCustomTimeFormat
 
-const DefaultDepth = 1
+const (
+	DefaultDepth       = 1
+	EmptyJSONBArraySQL = "(SELECT json_build_array())::jsonb"
+)
 
 func parseItems(items string) []string {
 	if strings.TrimSpace(items) == "" {
@@ -376,7 +379,7 @@ func getChecksForComponents() string {
 
 func (p TopologyParams) getConfigForComponents() string {
 	if !p.IncludeConfig {
-		return `(SELECT json_build_array())::jsonb`
+		return EmptyJSONBArraySQL
 	}
 	return `(
         SELECT json_agg(json_build_object(
@@ -397,7 +400,7 @@ func (p TopologyParams) getConfigForComponents() string {
 
 func (p TopologyParams) getIncidentsForComponents() string {
 	if !p.IncludeIncidents {
-		return `(SELECT json_build_array())::jsonb`
+		return EmptyJSONBArraySQL
 	}
 	return `(
         SELECT json_agg(json_build_object(
@@ -433,7 +436,7 @@ func getIncidentSummaryForComponents() string {
 
 func (p TopologyParams) getConfigAnalysisForComponents() string {
 	if !p.IncludeInsights {
-		return `(SELECT json_build_array())::jsonb`
+		return EmptyJSONBArraySQL
 	}
 	return `(
         SELECT json_agg(json_build_object(
