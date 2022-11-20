@@ -2,7 +2,6 @@ package topology
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/flanksource/canary-checker/api/context"
@@ -11,24 +10,23 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/db/types"
-	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/canary-checker/templating"
-	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
-func mergeComponentLookup(ctx *ComponentContext, name string, spec *v1.CanarySpec) (pkg.Components, error) {
+func mergeComponentLookup(ctx *ComponentContext, component *v1.ComponentSpec, spec *v1.CanarySpec) (pkg.Components, error) {
+	name := component.Name
 	components := pkg.Components{}
 	results, err := lookup(ctx.Kommons, name, *spec)
 	if err != nil {
-		return nil, errors.Wrapf(err, "component lookup failed: %s", name)
+		return nil, errors.Wrapf(err, "component lookup failed: %s", component)
 	}
 	if len(results) == 1 {
 		if err := json.Unmarshal([]byte(results[0].(string)), &components); err != nil {
-			return nil, errors.Wrapf(err, "component lookup returned invalid json: %s", name)
+			return nil, errors.Wrapf(err, "component lookup returned invalid json: %s", component)
 		}
 	} else {
 		// the property returned a list of new properties
@@ -41,10 +39,71 @@ func mergeComponentLookup(ctx *ComponentContext, name string, spec *v1.CanarySpe
 			if err := json.Unmarshal(data, &p); err != nil {
 				return nil, err
 			}
+
 			components = append(components, &p)
 		}
 	}
+	for _, _c := range components {
+		if err = forEachComponent(ctx, component, _c); err != nil {
+			return nil, err
+		}
+	}
 	return components, nil
+}
+
+func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *pkg.Component) error {
+	logger.Debugf("[%s] %s", component.Name, spec.ForEach)
+	if spec.ForEach == nil {
+		return nil
+	}
+	ctx.SetCurrentComponent(component)
+
+	for _, property := range spec.ForEach.Properties {
+		prop := property
+		if err := ctx.TemplateProperty(&prop); err != nil {
+			return err
+		}
+		props, err := lookupProperty(ctx, &prop)
+		if err != nil {
+			logger.Errorf("Failed to lookup property %s: %v", property.Name, err)
+		} else {
+			component.Properties = append(component.Properties, props...)
+		}
+	}
+	ctx.SetCurrentComponent(component) // component properties may have changed
+
+	for _, childComponent := range spec.ForEach.Components {
+		child := childComponent
+		if err := ctx.TemplateComponent(&child); err != nil {
+			return err
+		}
+		children, err := lookupComponents(ctx, child)
+		if err != nil {
+			logger.Errorf("Failed to lookup components %s: %v", child, err)
+		} else {
+			component.Components = append(component.Components, children...)
+		}
+	}
+
+	for _, childConfig := range spec.ForEach.Configs {
+		child := childConfig
+		if err := ctx.TemplateConfig(&child); err != nil {
+			logger.Errorf("Failed to lookup configs %s: %v", child, err)
+		} else {
+			component.Configs = append(component.Configs, pkg.NewConfig(child))
+		}
+	}
+
+	for _, _selector := range spec.ForEach.Selectors {
+		selector := _selector
+		if err := ctx.TemplateStruct(&selector); err != nil {
+			logger.Errorf("Failed to lookup selectors %s: %v", selector, err)
+		} else {
+			component.Selectors = append(component.Selectors, selector)
+		}
+	}
+
+	return nil
 }
 
 func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg.Component, error) {
@@ -64,8 +123,8 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg
 	if component.Lookup == nil {
 		components = append(components, pkg.NewComponent(component))
 	} else {
-		logger.Debugf("Looking up components for %s", component.Name)
-		if children, err := mergeComponentLookup(ctx, component.Name, component.Lookup); err != nil {
+		logger.Debugf("Looking up components for %s => %s", component, component.ForEach)
+		if children, err := mergeComponentLookup(ctx, &component, component.Lookup); err != nil {
 			return nil, err
 		} else {
 			components = append(components, children...)
@@ -76,7 +135,7 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg
 		for _, property := range component.Properties {
 			props, err := lookupProperty(ctx.WithComponents(&components, comp), property)
 			if err != nil {
-				return nil, errors.Wrapf(err, "property lookup failed: %s", property.Name)
+				return nil, errors.Wrapf(err, "property lookup failed: %s", property)
 			}
 			comp.Properties = append(comp.Properties, props...)
 		}
@@ -86,9 +145,9 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg
 			if property.ConfigLookup == nil {
 				continue
 			}
-			prop, err := lookupConfig(property, comp.Properties)
+			prop, err := lookupConfig(ctx, property, comp.Properties)
 			if err != nil {
-				return nil, errors.Wrapf(err, "property config lookup failed: %s", property.Name)
+				return nil, errors.Wrapf(err, "property config lookup failed: %s", property)
 			}
 			comp.Properties = append(comp.Properties, prop)
 		}
@@ -139,9 +198,10 @@ func lookup(client *kommons.Client, name string, spec v1.CanarySpec) ([]interfac
 	return results, nil
 }
 
-func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.Property, error) {
+func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties pkg.Properties) (*pkg.Property, error) {
 	prop := pkg.NewProperty(*property)
 
+	logger.Infof("Looking up config for %s => %s", property.Name, property.ConfigLookup.Config)
 	configName := property.ConfigLookup.Config.Name
 	if property.ConfigLookup.ID != "" {
 		// Lookup in the same properties
@@ -153,15 +213,20 @@ func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.
 		}
 	}
 
-	pkgConfig := pkg.NewConfig(property.ConfigLookup.Config)
+	config := property.ConfigLookup.Config
+	if err := ctx.TemplateConfig(&config); err != nil {
+		return nil, err
+	}
+
+	pkgConfig := pkg.NewConfig(config)
 	pkgConfig.Name = configName
-	config, err := db.FindConfig(*pkgConfig)
+	_config, err := db.FindConfig(*pkgConfig)
 	if err != nil {
 		return prop, err
 	}
 
 	var v interface{}
-	rawJSON, err := config.Spec.MarshalJSON()
+	rawJSON, err := _config.Spec.MarshalJSON()
 	if err != nil {
 		return prop, err
 	}
@@ -180,6 +245,14 @@ func lookupConfig(property *v1.Property, sisterProperties pkg.Properties) (*pkg.
 
 func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Properties, error) {
 	prop := pkg.NewProperty(*property)
+
+	if property.ConfigLookup != nil {
+		prop, err := lookupConfig(ctx, property, ctx.CurrentComponent.Properties)
+		if err != nil {
+			return nil, errors.Wrapf(err, "property config lookup failed: %s", property)
+		}
+		return pkg.Properties{prop}, nil
+	}
 	if property.Lookup == nil {
 		return pkg.Properties{prop}, nil
 	}
@@ -195,6 +268,8 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Propertie
 	if len(results) == 1 {
 		data := []byte(results[0].(string))
 		if isComponentList(data) {
+			// the result is map of components to properties, find the existing component
+			// and then merge the property into it
 			components := pkg.Components{}
 			err = json.Unmarshal([]byte(results[0].(string)), &components)
 			if err != nil {
@@ -219,12 +294,13 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Propertie
 			err = json.Unmarshal([]byte(results[0].(string)), &properties)
 			return properties, err
 		} else {
-			logger.Errorf("unknown type %T: %v", data, string(data))
-			return nil, nil
+			prop.Text = string(data)
+			return pkg.Properties{prop}, nil
+			// logger.Errorf("unknown list item type %T: %v", data, string(data))
+			// return nil, nil
 		}
 	}
-	logger.Errorf("unknown type %T", results)
-
+	logger.Errorf("unknown property type %T", results)
 	return nil, nil
 }
 
@@ -241,7 +317,6 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 	}
 	ctx := NewComponentContext(opts.Client, s)
 	var results pkg.Components
-	systemTemplateConfigs := pkg.NewConfigs(ctx.SystemTemplate.Spec.Configs)
 	component := &pkg.Component{
 		Name:      ctx.SystemTemplate.Spec.Text,
 		Namespace: ctx.SystemTemplate.GetNamespace(),
@@ -251,7 +326,6 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 		Text:      ctx.SystemTemplate.Spec.Text,
 		Type:      ctx.SystemTemplate.Spec.Type,
 		Schedule:  ctx.SystemTemplate.Spec.Schedule,
-		Configs:   systemTemplateConfigs,
 	}
 
 	if component.Name == "" {
@@ -291,6 +365,13 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 			component.Components = append(component.Components, group)
 		}
 	}
+
+	if len(component.Components) == 1 && component.Components[0].Type == "virtual" {
+		// if there is only one component and it is virtual, then we don't need to show it
+		ctx.Components = &component.Components[0].Components
+		return *ctx.Components
+	}
+
 	ctx.Components = &component.Components
 
 	for _, property := range ctx.SystemTemplate.Spec.Properties {
@@ -331,114 +412,5 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 		c.Namespace = ctx.SystemTemplate.GetNamespace()
 		c.Schedule = ctx.SystemTemplate.Spec.Schedule
 	}
-	results = updateLeafComponents(results)
 	return results
-}
-
-// Fetches and updates the selected component for components
-func ComponentRun() {
-	logger.Debugf("Syncing Component Relationships")
-
-	components, err := db.GetAllComponentWithSelectors()
-	if err != nil {
-		logger.Errorf("error getting components: %v", err)
-		return
-	}
-
-	for _, component := range components {
-		comps, err := db.GetComponentsWithSelectors(component.Selectors)
-		if err != nil {
-			logger.Errorf("error getting components with selectors: %s. err: %v", component.Selectors, err)
-			continue
-		}
-		relationships, err := db.NewComponentRelationships(component.ID, component.Path, comps)
-		if err != nil {
-			logger.Errorf("error getting relationships: %v", err)
-			continue
-		}
-		err = SyncComponentRelationships(component.ID, relationships)
-		if err != nil {
-			logger.Errorf("error syncing relationships: %v", err)
-			continue
-		}
-	}
-}
-
-func ComponentStatusSummarySync() {
-	logger.Debugf("Syncing Status and Summary for components")
-	components, err := Query(TopologyParams{
-		Depth: 0,
-	})
-	if err != nil {
-		logger.Errorf("error getting components: %v", err)
-		return
-	}
-	for _, component := range components.Walk() {
-		_, err = db.UpdateStatusAndSummaryForComponent(component.ID, component.Status, component.Summary)
-		if err != nil {
-			logger.Errorf("error persisting component: %v", err)
-			continue
-		}
-	}
-}
-
-func updateLeafComponents(components pkg.Components) pkg.Components {
-	for _, component := range components {
-		if component.Components == nil {
-			component.IsLeaf = true
-		} else {
-			updateLeafComponents(component.Components)
-		}
-	}
-	return components
-}
-
-func SyncComponentRelationships(parentComponentID uuid.UUID, relationships []*pkg.ComponentRelationship) error {
-	var selectorIDs, childComponentIDs []string
-
-	existingRelationShips, err := db.GetChildRelationshipsForParentComponent(parentComponentID)
-	if err != nil {
-		return err
-	}
-	for _, r := range existingRelationShips {
-		selectorIDs = append(selectorIDs, r.SelectorID)
-		childComponentIDs = append(childComponentIDs, r.ComponentID.String())
-	}
-
-	var newChildComponentIDs []string
-	for _, r := range relationships {
-		newChildComponentIDs = append(newChildComponentIDs, r.ComponentID.String())
-
-		// If selectorID already exists, no action is required
-		if collections.Contains(selectorIDs, r.SelectorID) {
-			continue
-		}
-
-		// If childComponentID does not exist, create a new relationship
-		if !collections.Contains(childComponentIDs, r.ComponentID.String()) {
-			if err := db.PersistComponentRelationship(r); err != nil {
-				return errors.Wrap(err, "error persisting component relationships")
-			}
-			continue
-		}
-
-		// If childComponentID exists mark old row as deleted and update selector_id
-		if err := db.Gorm.Table("component_relationships").Where("relationship_id = ? AND component_id = ?", parentComponentID, r.ComponentID).
-			Update("deleted_at", time.Now()).Error; err != nil {
-			return errors.Wrap(err, "error updating component relationships")
-		}
-
-		if err := db.PersistComponentRelationship(r); err != nil {
-			return err
-		}
-	}
-
-	// Take set difference of these child component Ids and delete them
-	childComponentIDsToDelete := utils.SetDifference(childComponentIDs, newChildComponentIDs)
-	if err := db.Gorm.Table("component_relationships").Where("relationship_id = ? AND component_id IN ?", parentComponentID, childComponentIDsToDelete).
-		Update("deleted_at", time.Now()).Error; err != nil {
-		return errors.Wrap(err, "error deleting stale component relationships")
-	}
-
-	return nil
 }

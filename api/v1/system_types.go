@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -23,8 +25,10 @@ type SystemTemplateSpec struct {
 	Label      string          `json:"label,omitempty"`
 	Owner      Owner           `json:"owner,omitempty"`
 	Components []ComponentSpec `json:"components,omitempty"`
-	Properties Properties      `json:"properties,omitempty"`
-	Configs    []Config        `json:"configs,omitempty"`
+	// Properties are created once the full component tree is created, property lookup functions
+	// can return a map of coomponent name => properties to allow for bulk property lookups
+	// being applied to multiple components in the tree
+	Properties Properties `json:"properties,omitempty"`
 }
 
 func (s SystemTemplate) IsEmpty() bool {
@@ -64,10 +68,26 @@ type ComponentCheck struct {
 }
 
 type Config struct {
-	ID        []string `json:"id,omitempty"`
-	Type      string   `json:"type,omitempty"`
-	Name      string   `json:"name,omitempty"`
-	Namespace string   `json:"namespace,omitempty"`
+	ID        []string          `json:"id,omitempty"`
+	Type      string            `json:"type,omitempty"`
+	Name      string            `json:"name,omitempty"`
+	Namespace string            `json:"namespace,omitempty"`
+	Labels    map[string]string `json:"labels,omitempty"`
+}
+
+func (c Config) String() string {
+	s := c.Type
+	if c.Namespace != "" {
+		s += "/" + c.Namespace
+	}
+
+	if c.Name != "" {
+		s += "/" + c.Name
+	}
+	if len(c.Labels) > 0 {
+		s += " " + fmt.Sprintf("%v", c.Labels)
+	}
+	return s
 }
 
 // +kubebuilder:object:root=true
