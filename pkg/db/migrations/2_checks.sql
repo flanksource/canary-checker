@@ -9,6 +9,7 @@ CREATE TABLE canaries (
 	schedule text,
 	source text,
 	created_at TIMESTAMP,
+	created_by UUID NULL,
 	updated_at TIMESTAMP,
 	deleted_at TIMESTAMP DEFAULT NULL,
 	UNIQUE (name, namespace, source)

@@ -288,13 +288,29 @@ type Checker interface {
 }
 
 type Config struct {
-	ID           uuid.UUID      `json:"id,omitempty"`
-	ConfigType   string         `json:"config_type,omitempty"`
-	Name         string         `json:"name,omitempty"`
-	Namespace    string         `json:"namespace,omitempty"`
-	Spec         *types.JSONMap `json:"spec,omitempty" gorm:"column:config"`
-	ExternalID   pq.StringArray `json:"external_id,omitempty" gorm:"type:text[]"`
-	ExternalType string         `json:"external_type,omitempty"`
+	ID           uuid.UUID         `json:"id,omitempty"`
+	ConfigType   string            `json:"config_type,omitempty"`
+	Name         string            `json:"name,omitempty"`
+	Namespace    string            `json:"namespace,omitempty"`
+	Spec         *types.JSONMap    `json:"spec,omitempty" gorm:"column:config"`
+	Labels       map[string]string `json:"labels,omitempty"  gorm:"type:jsonstringmap"`
+	ExternalID   pq.StringArray    `json:"external_id,omitempty" gorm:"type:text[]"`
+	ExternalType string            `json:"external_type,omitempty"`
+}
+
+func (c Config) String() string {
+	s := c.ConfigType
+	if c.Namespace != "" {
+		s += "/" + c.Namespace
+	}
+
+	if c.Name != "" {
+		s += "/" + c.Name
+	}
+	if len(c.Labels) > 0 {
+		s += " " + fmt.Sprintf("%v", c.Labels)
+	}
+	return s
 }
 
 func NewConfigs(configs []v1.Config) Configs {
@@ -309,6 +325,7 @@ func NewConfig(config v1.Config) *Config {
 	return &Config{
 		Name:         config.Name,
 		Namespace:    config.Namespace,
+		Labels:       types.JSONStringMap(config.Labels),
 		ExternalID:   pq.StringArray(config.ID),
 		ExternalType: config.Type,
 	}

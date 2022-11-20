@@ -53,7 +53,6 @@ func template(content string, data interface{}) (string, error) {
 	if err := tpl.Execute(&buf, data); err != nil {
 		return "", fmt.Errorf("error executing template %s: %v", strings.Split(content, "\n")[0], err)
 	}
-	fmt.Println(buf.String())
 	return strings.TrimSpace(buf.String()), nil
 }
 

@@ -30,6 +30,8 @@ var Topology = &cobra.Command{
 }
 
 var queryParams topology.TopologyParams
+var topologyOutput string
+
 var QueryTopology = &cobra.Command{
 	Use:   "query",
 	Short: "Query the topology",
@@ -115,16 +117,14 @@ var RunTopology = &cobra.Command{
 			if err := db.PersistComponents(results); err != nil {
 				logger.Errorf("error persisting results: %v", err)
 			}
-			return
 		}
 
-		data, _ := json.Marshal(results)
-		if outputFile == "" {
-			outputFile = "topology.json"
-		}
-		logger.Infof("Writing results to %s", outputFile)
-		if err := os.WriteFile(outputFile, data, 0644); err != nil {
-			log.Fatalln(err)
+		if topologyOutput != "" {
+			data, _ := json.Marshal(results)
+			logger.Infof("Writing results to %s", topologyOutput)
+			if err := os.WriteFile(topologyOutput, data, 0644); err != nil {
+				log.Fatalln(err)
+			}
 		}
 
 	},
@@ -135,7 +135,7 @@ func init() {
 	QueryTopology.Flags().StringVar(&queryParams.TopologyID, "topology", "", "The topology id to query")
 	QueryTopology.Flags().StringVar(&queryParams.ComponentID, "component", "", "The component id to query")
 	QueryTopology.Flags().IntVar(&queryParams.Depth, "depth", 1, "The depth of the components to return")
-
+	RunTopology.Flags().StringVarP(&topologyOutput, "output", "o", "", "Output file to write results to")
 	Topology.AddCommand(RunTopology, QueryTopology, AddTopology)
 	Root.AddCommand(Topology)
 }
