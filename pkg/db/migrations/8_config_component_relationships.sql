@@ -14,10 +14,16 @@ CREATE TABLE IF NOT EXISTS config_component_relationships(
 
 
 
---- This is a dummy view, that will be replaced by config-db if installed
-CREATE VIEW  config_names AS
-  SELECT ;
+DO $$
+BEGIN
+IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'config_names')
+    THEN
+    --- This is a dummy view, that will be replaced by config-db if installed
+    CREATE VIEW config_names AS
+      SELECT ;
 
+END IF;
+END $$;
 
 -- +goose StatementEnd
 
