@@ -60,6 +60,7 @@ static: .bin/kustomize generate manifests .bin/yq
 manifests: .bin/controller-gen .bin/yq
 	.bin/controller-gen crd paths="./..." output:stdout | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/crd.yaml
 	cd hack/generate-schemas && go run ./main.go
+	cd  config/deploy && $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.checks.items.properties)' crd.yaml | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.forEach.properties)' /dev/stdin  | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.lookup.properties)'  /dev/stdin | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.properties.items.properties.lookup.properties)' /dev/stdin | sponge crd.yaml
 
 # Run go fmt against code
 fmt:
