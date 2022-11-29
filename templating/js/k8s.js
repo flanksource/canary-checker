@@ -1,4 +1,3 @@
-
 k8s = {
   conditions: {
     getMessage: function (v) {

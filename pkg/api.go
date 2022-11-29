@@ -313,6 +313,18 @@ func (c Config) String() string {
 	return s
 }
 
+func (c Config) Properties() map[string]interface{} {
+	return map[string]interface{}{
+		"id":            c.ID.String(),
+		"config_type":   c.ConfigType,
+		"name":          c.Name,
+		"namespace":     c.Namespace,
+		"labels":        c.Labels,
+		"external_id":   c.ExternalID,
+		"external_type": c.ExternalType,
+	}
+}
+
 func NewConfigs(configs []v1.Config) Configs {
 	var pkgConfigs Configs
 	for _, config := range configs {
