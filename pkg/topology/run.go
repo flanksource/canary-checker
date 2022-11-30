@@ -209,7 +209,6 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties
 			return prop, err
 		}
 		prop.Text = val
-		logger.Infof("YASH FINAL: %s", prop.Text)
 		return prop, nil
 	}
 
