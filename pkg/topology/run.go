@@ -202,6 +202,17 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties
 	prop := pkg.NewProperty(*property)
 
 	logger.Infof("Looking up config for %s => %s", property.Name, property.ConfigLookup.Config)
+
+	if property.ConfigLookup.Config == nil {
+		val, err := templating.Template(map[string]interface{}{}, property.ConfigLookup.Display.Template)
+		if err != nil {
+			return prop, err
+		}
+		prop.Text = val
+		logger.Infof("YASH FINAL: %s", prop.Text)
+		return prop, nil
+	}
+
 	configName := property.ConfigLookup.Config.Name
 	if property.ConfigLookup.ID != "" {
 		// Lookup in the same properties
@@ -214,11 +225,11 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties
 	}
 
 	config := property.ConfigLookup.Config
-	if err := ctx.TemplateConfig(&config); err != nil {
+	if err := ctx.TemplateConfig(config); err != nil {
 		return nil, err
 	}
 
-	pkgConfig := pkg.NewConfig(config)
+	pkgConfig := pkg.NewConfig(*config)
 	pkgConfig.Name = configName
 	_config, err := db.FindConfig(*pkgConfig)
 	if err != nil {

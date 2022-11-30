@@ -207,7 +207,7 @@ func (p *Property) String() string {
 type ConfigLookup struct {
 	ID string `json:"id,omitempty"`
 	// Lookup a config by it
-	Config Config `json:"config,omitempty"`
+	Config *Config `json:"config,omitempty"`
 	// A JSONPath expression to lookup the value in the config
 	Field string `json:"field,omitempty"`
 	// Apply transformations to the value
