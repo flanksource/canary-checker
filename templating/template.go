@@ -44,7 +44,7 @@ func Template(environment map[string]interface{}, template v1.Template) (string,
 				return "", errors.Wrapf(err, "error setting %s", k)
 			}
 		}
-		vm.Set("findConfigItem", func(call otto.FunctionCall) otto.Value {
+		err := vm.Set("findConfigItem", func(call otto.FunctionCall) otto.Value {
 			configType, _ := call.Argument(0).ToString()
 			configName, _ := call.Argument(1).ToString()
 			configItemParams := pkg.Config{
@@ -65,6 +65,10 @@ func Template(environment map[string]interface{}, template v1.Template) (string,
 			result, _ := vm.ToValue(configObject)
 			return result
 		})
+		if err != nil {
+			return "", errors.Wrapf(err, "error setting findConfigItem function")
+		}
+
 		out, err := vm.Run(template.Javascript)
 		if err != nil {
 			return "", errors.Wrapf(err, "failed to run javascript")
