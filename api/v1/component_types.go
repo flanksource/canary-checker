@@ -30,6 +30,7 @@ type ComponentSpec struct {
 	Lifecycle     string             `json:"lifecycle,omitempty"`
 	Relationships []RelationshipSpec `json:"relationships,omitempty"`
 	Properties    []*Property        `json:"properties,omitempty"`
+	// +kubebuilder:validation:XPreserveUnknownFields
 	// Lookup component definitions from an external source, use the
 	// forEach property to iterate over the results to further enrich each component.
 	Lookup *CanarySpec `json:"lookup,omitempty"`
@@ -177,16 +178,17 @@ type Property struct {
 	Type     string `json:"type,omitempty"`
 	Color    string `json:"color,omitempty"`
 	// e.g. milliseconds, bytes, millicores, epoch etc.
-	Unit           string        `json:"unit,omitempty"`
-	Value          int64         `json:"value,omitempty"`
-	Max            *int64        `json:"max,omitempty"`
-	Min            int64         `json:"min,omitempty"`
-	Status         string        `json:"status,omitempty"`
-	LastTransition string        `json:"lastTransition,omitempty"`
-	Links          []Link        `json:"links,omitempty"`
-	Lookup         *CanarySpec   `json:"lookup,omitempty"`
-	ConfigLookup   *ConfigLookup `json:"configLookup,omitempty"`
-	Summary        *Template     `json:"summary,omitempty"`
+	Unit           string `json:"unit,omitempty"`
+	Value          int64  `json:"value,omitempty"`
+	Max            *int64 `json:"max,omitempty"`
+	Min            int64  `json:"min,omitempty"`
+	Status         string `json:"status,omitempty"`
+	LastTransition string `json:"lastTransition,omitempty"`
+	Links          []Link `json:"links,omitempty"`
+	// +kubebuilder:validation:XPreserveUnknownFields
+	Lookup       *CanarySpec   `json:"lookup,omitempty"`
+	ConfigLookup *ConfigLookup `json:"configLookup,omitempty"`
+	Summary      *Template     `json:"summary,omitempty"`
 }
 
 func (p *Property) String() string {

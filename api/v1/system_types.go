@@ -29,6 +29,8 @@ type SystemTemplateSpec struct {
 	// can return a map of coomponent name => properties to allow for bulk property lookups
 	// being applied to multiple components in the tree
 	Properties Properties `json:"properties,omitempty"`
+	// Lookup and associate config items with this component
+	Configs []Config `json:"configs,omitempty"`
 }
 
 func (s SystemTemplate) IsEmpty() bool {
