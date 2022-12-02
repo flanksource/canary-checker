@@ -3719,6 +3719,7 @@ spec:
                 lookup:
                   description: Lookup component definitions from an external source, use the forEach property to iterate over the results to further enrich each component.
                   type: object
+                  x-kubernetes-preserve-unknown-fields: true
                 name:
                   type: string
                 order:
@@ -3797,6 +3798,7 @@ spec:
                       lookup:
                         description: CanarySpec defines the desired state of Canary
                         type: object
+                        x-kubernetes-preserve-unknown-fields: true
                       max:
                         format: int64
                         type: integer
@@ -3999,6 +4001,7 @@ spec:
                       lookup:
                         description: Lookup component definitions from an external source, use the forEach property to iterate over the results to further enrich each component.
                         type: object
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         type: string
                       order:
@@ -4077,6 +4080,7 @@ spec:
                             lookup:
                               description: CanarySpec defines the desired state of Canary
                               type: object
+                              x-kubernetes-preserve-unknown-fields: true
                             max:
                               format: int64
                               type: integer
@@ -4163,6 +4167,26 @@ spec:
                         type: string
                       type:
                         description: The type of component, e.g. service, API, website, library, database, etc.
+                        type: string
+                    type: object
+                  type: array
+                configs:
+                  description: Lookup and associate config items with this component
+                  items:
+                    properties:
+                      id:
+                        items:
+                          type: string
+                        type: array
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                      type:
                         type: string
                     type: object
                   type: array
@@ -4256,6 +4280,7 @@ spec:
                       lookup:
                         description: CanarySpec defines the desired state of Canary
                         type: object
+                        x-kubernetes-preserve-unknown-fields: true
                       max:
                         format: int64
                         type: integer
