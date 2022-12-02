@@ -222,8 +222,8 @@ ifeq ($(OS), darwin)
 	brew install --cask macfuse
 	brew install datawire/blackbird/telepresence-legacy
 else
-	curl -s https://packagecloud.io/install/repositories/datawireio/telepresence/script.deb.sh | sudo bash
-	sudo apt install --no-install-recommends -y telepresence
+	sudo curl -fL https://app.getambassador.io/download/tel2/linux/amd64/latest/telepresence -o /usr/local/bin/telepresence
+	sudo chmod a+x /usr/local/bin/telepresence
 endif
 endif
 
