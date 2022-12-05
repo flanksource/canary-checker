@@ -36,10 +36,15 @@ spec:
                 name: nodemetrics
                 display:
                   javascript: JSON.stringify(k8s.getNodeMetrics(results))
-        - name: cluster-name
+        - name: cluster-name-1
           configLookup:
             display:
-              javascript: config.getConfigItem("EKS/flanksource-canary-cluster").properties["name"]
+              javascript: configGetItem("EKS", "flanksource-canary-cluster").properties["name"]
+        - name: cluster-name-2
+          configLookup:
+            display:
+              javascript: configGetItemsByTypeForComponent(componentID, "EKS")[0]["name"]
+
     - name: pods
       icon: pods
       type: KubernetesPods
