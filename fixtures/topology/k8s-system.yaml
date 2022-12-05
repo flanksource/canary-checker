@@ -39,12 +39,11 @@ spec:
         - name: cluster-name-1
           configLookup:
             display:
-              javascript: configGetItem("EKS", "flanksource-canary-cluster").properties["name"]
-        - name: cluster-name-2
-          configLookup:
-            display:
-              javascript: configGetItemsByTypeForComponent(componentID, "EKS")[0]["name"]
-
+              javascript: findConfigItem("EKS", "flanksource-canary-cluster").properties["name"]
+        #- name: cluster-name-2
+          #configLookup:
+            #display:
+              #javascript: getConfigItems("EKS")[0]["name"]
     - name: pods
       icon: pods
       type: KubernetesPods
