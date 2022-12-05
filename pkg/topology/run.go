@@ -204,7 +204,11 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties
 	logger.Infof("Looking up config for %s => %s", property.Name, property.ConfigLookup.Config)
 
 	if property.ConfigLookup.Config == nil {
-		val, err := templating.Template(map[string]interface{}{}, property.ConfigLookup.Display.Template)
+		templateEnv := make(map[string]interface{})
+		if ctx.CurrentComponent != nil {
+			templateEnv["componentID"] = ctx.CurrentComponent.ID.String()
+		}
+		val, err := templating.Template(templateEnv, property.ConfigLookup.Display.Template)
 		if err != nil {
 			return prop, err
 		}

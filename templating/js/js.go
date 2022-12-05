@@ -12,11 +12,7 @@ var k8s string
 //go:embed shared.js
 var shared string
 
-//go:embed config.js
-var config string
-
 func init() {
 	_ = registry.Register(func() string { return k8s })
 	_ = registry.Register(func() string { return shared })
-	_ = registry.Register(func() string { return config })
 }
