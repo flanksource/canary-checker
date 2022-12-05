@@ -44,7 +44,8 @@ func Template(environment map[string]interface{}, template v1.Template) (string,
 				return "", errors.Wrapf(err, "error setting %s", k)
 			}
 		}
-		err := vm.Set("findConfigItem", func(call otto.FunctionCall) otto.Value {
+
+		err := vm.Set("getConfigItem", func(call otto.FunctionCall) otto.Value {
 			configType, _ := call.Argument(0).ToString()
 			configName, _ := call.Argument(1).ToString()
 			configItemParams := pkg.Config{
@@ -63,6 +64,22 @@ func Template(environment map[string]interface{}, template v1.Template) (string,
 				"properties": configItem.Properties(),
 			}
 			result, _ := vm.ToValue(configObject)
+			return result
+		})
+		if err != nil {
+			return "", errors.Wrapf(err, "error setting findConfigItem function")
+		}
+
+		err = vm.Set("configItemByType", func(call otto.FunctionCall) otto.Value {
+			componentID, _ := call.Argument(0).ToString()
+			configType, _ := call.Argument(1).ToString()
+			configItems, err := db.FindConfigForComponent(componentID, configType)
+			if err != nil {
+				logger.Errorf("Error fetching config item for js: %v", err)
+				emptyObj, _ := vm.ToValue([]map[string]string{})
+				return emptyObj
+			}
+			result, _ := vm.ToValue(configItems)
 			return result
 		})
 		if err != nil {
