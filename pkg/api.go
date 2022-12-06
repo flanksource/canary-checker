@@ -353,7 +353,7 @@ func (c Config) GetSelectorID() string {
 func (c Config) ToJSONMap() map[string]interface{} {
 	m := make(map[string]interface{})
 	b, _ := json.Marshal(&c)
-	json.Unmarshal(b, &m)
+	_ = json.Unmarshal(b, &m)
 	return m
 }
 
