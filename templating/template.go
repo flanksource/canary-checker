@@ -14,6 +14,8 @@ import (
 	"github.com/robertkrimen/otto"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/db"
 	_ "github.com/flanksource/canary-checker/templating/js"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/text"
@@ -42,6 +44,47 @@ func Template(environment map[string]interface{}, template v1.Template) (string,
 				return "", errors.Wrapf(err, "error setting %s", k)
 			}
 		}
+
+		err := vm.Set("findConfigItem", func(call otto.FunctionCall) otto.Value {
+			configType, _ := call.Argument(0).ToString()
+			configName, _ := call.Argument(1).ToString()
+			configItemParams := pkg.Config{
+				ExternalType: configType,
+				Name:         configName,
+			}
+			configItem, err := db.FindConfig(configItemParams)
+			if err != nil {
+				logger.Errorf("Error fetching config item for js: %v", err)
+				emptyObj, _ := vm.ToValue(map[string]string{})
+				return emptyObj
+			}
+			result, _ := vm.ToValue(configItem.ToJSONMap())
+			return result
+		})
+		if err != nil {
+			return "", errors.Wrapf(err, "error setting findConfigItem function")
+		}
+
+		err = vm.Set("getConfigItems", func(call otto.FunctionCall) otto.Value {
+			configType, _ := call.Argument(0).ToString()
+			componentID := environment["componentID"].(string)
+			configItems, err := db.FindConfigForComponent(componentID, configType)
+			if err != nil {
+				logger.Errorf("Error fetching config item for js: %v", err)
+				emptyObj, _ := vm.ToValue([]map[string]string{})
+				return emptyObj
+			}
+			var ciJSON []map[string]interface{}
+			for _, i := range configItems {
+				ciJSON = append(ciJSON, i.ToJSONMap())
+			}
+			result, _ := vm.ToValue(ciJSON)
+			return result
+		})
+		if err != nil {
+			return "", errors.Wrapf(err, "error setting findConfigItem function")
+		}
+
 		out, err := vm.Run(template.Javascript)
 		if err != nil {
 			return "", errors.Wrapf(err, "failed to run javascript")

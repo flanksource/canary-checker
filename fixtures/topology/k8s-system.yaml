@@ -21,6 +21,9 @@ spec:
       id:
         javascript: properties.zone + "/" + self.name
       type: KubernetesNode
+      configs:
+        - name: flanksource-canary-cluster
+          type: EKS
       lookup:
         kubernetes:
           - kind: Node
@@ -36,6 +39,14 @@ spec:
                 name: nodemetrics
                 display:
                   javascript: JSON.stringify(k8s.getNodeMetrics(results))
+        - name: cluster-name
+          configLookup:
+            display:
+              javascript: findConfigItem("EKS", "flanksource-canary-cluster")["name"]
+        - name: cluster-status
+          configLookup:
+            display:
+              javascript: getConfigItems("EKS")[0]["spec"]["status"]
     - name: pods
       icon: pods
       type: KubernetesPods

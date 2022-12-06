@@ -21,6 +21,7 @@ import (
 var Topology = &cobra.Command{
 	Use: "topology",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		db.ConnectionString = readFromEnv(db.ConnectionString)
 		if db.IsConfigured() {
 			if err := db.Init(); err != nil {
 				logger.Debugf("error connecting with postgres %v", err)

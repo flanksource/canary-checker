@@ -58,6 +58,17 @@ func FindConfig(config pkg.Config) (pkg.Config, error) {
 	return dbConfigObject, err
 }
 
+func FindConfigForComponent(componentID, configType string) ([]pkg.Config, error) {
+	var dbConfigObjects []pkg.Config
+	relationshipQuery := Gorm.Table("config_component_relationships").Select("config_id").Where("component_id = ? AND deleted_at IS NULL", componentID)
+	query := Gorm.Table("config_items").Where("id IN (?)", relationshipQuery)
+	if configType != "" {
+		query = query.Where("external_type = @config_type OR config_type = @config_type", sql.Named("config_type", configType))
+	}
+	err := query.Find(&dbConfigObjects).Error
+	return dbConfigObjects, err
+}
+
 func PersistConfigComponentRelationship(configID, componentID uuid.UUID, selectorID string) error {
 	relationship := ConfigComponentRelationship{
 		ComponentID: componentID,
@@ -77,7 +88,7 @@ func DeleteConfigRelationshipForComponent(componentID uuid.UUID, deleteTime time
 
 func GetConfigRelationshipsForComponent(componentID uuid.UUID) ([]ConfigComponentRelationship, error) {
 	var relationships []ConfigComponentRelationship
-	if err := Gorm.Where("component_id = ? AND deleted_at IS NOT NULL", componentID).Find(&relationships).Error; err != nil {
+	if err := Gorm.Where("component_id = ? AND deleted_at IS NULL", componentID).Find(&relationships).Error; err != nil {
 		return relationships, err
 	}
 	return relationships, nil
