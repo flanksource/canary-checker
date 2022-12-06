@@ -348,6 +348,15 @@ func (c Config) GetSelectorID() string {
 	return selectorID
 }
 
+// ToJSONMap converts the struct to map[string]interface{} to
+// be compatible with otto vm
+func (c Config) ToJSONMap() map[string]interface{} {
+	m := make(map[string]interface{})
+	b, _ := json.Marshal(&c)
+	json.Unmarshal(b, &m)
+	return m
+}
+
 type Configs []*Config
 
 // URL information

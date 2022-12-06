@@ -58,7 +58,7 @@ func Template(environment map[string]interface{}, template v1.Template) (string,
 				emptyObj, _ := vm.ToValue(map[string]string{})
 				return emptyObj
 			}
-			result, _ := vm.ToValue(configItem)
+			result, _ := vm.ToValue(configItem.ToJSONMap())
 			return result
 		})
 		if err != nil {
@@ -74,7 +74,11 @@ func Template(environment map[string]interface{}, template v1.Template) (string,
 				emptyObj, _ := vm.ToValue([]map[string]string{})
 				return emptyObj
 			}
-			result, _ := vm.ToValue(configItems)
+			var ciJSON []map[string]interface{}
+			for _, i := range configItems {
+				ciJSON = append(ciJSON, i.ToJSONMap())
+			}
+			result, _ := vm.ToValue(ciJSON)
 			return result
 		})
 		if err != nil {
