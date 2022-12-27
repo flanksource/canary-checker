@@ -1599,7 +1599,11 @@ func (in *HTTPCheck) DeepCopyInto(out *HTTPCheck) {
 		*out = make([]int, len(*in))
 		copy(*out, *in)
 	}
-	out.ResponseJSONContent = in.ResponseJSONContent
+	if in.ResponseJSONContent != nil {
+		in, out := &in.ResponseJSONContent, &out.ResponseJSONContent
+		*out = new(JSONCheck)
+		**out = **in
+	}
 	if in.Headers != nil {
 		in, out := &in.Headers, &out.Headers
 		*out = make([]kommons.EnvVar, len(*in))

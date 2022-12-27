@@ -394,7 +394,11 @@ func (h *HTTPResponse) AsString() (string, error) {
 	return h.body, nil
 }
 
-func (h *HTTPResponse) CheckJSONContent(jsonContent interface{}, jsonCheck v1.JSONCheck) error {
+func (h *HTTPResponse) CheckJSONContent(jsonContent interface{}, jsonCheck *v1.JSONCheck) error {
+	if jsonCheck == nil {
+		return nil
+	}
+
 	jsonResult, err := jsonpath.Get(jsonCheck.Path, jsonContent)
 	if err != nil {
 		logger.Errorf("Error checking JSON content: %s", err)
