@@ -16,7 +16,7 @@ import (
 func ComponentRun() {
 	logger.Debugf("Syncing Component Relationships")
 
-	components, err := db.GetAllComponentWithSelectors()
+	components, err := db.GetAllComponentsWithSelectors()
 	if err != nil {
 		logger.Errorf("error getting components: %v", err)
 		return
