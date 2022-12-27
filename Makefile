@@ -59,7 +59,7 @@ static: .bin/kustomize generate manifests .bin/yq
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: .bin/controller-gen .bin/yq
 	schemaPath=.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties
-	.bin/controller-gen crd paths="./..." output:stdout | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/crd.yaml
+	.bin/controller-gen crd paths="./api/..." output:stdout | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/crd.yaml
 	cd hack/generate-schemas && go run ./main.go
 	cd config/deploy && $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.checks.items.properties)' crd.yaml | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.forEach.properties)' /dev/stdin  | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.lookup.properties)'  /dev/stdin | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.properties.items.properties.lookup.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.forEach.properties)' /dev/stdin |  $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.lookup.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.checks.items.properties.inline.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.properties.items.properties.lookup.properties)' /dev/stdin > crd.slim.yaml
 	cd config/deploy && mv crd.slim.yaml crd.yaml
@@ -74,7 +74,7 @@ vet:
 
 # Generate code
 generate: .bin/controller-gen
-	.bin/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	.bin/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./api/..."
 
 # Build the docker image
 docker:
@@ -179,15 +179,14 @@ else
 	UPX=$(shell which upx)
 endif
 
-
-.bin/controller-gen:
-	GOBIN=$(PWD)/.bin go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.7.0
-CONTROLLER_GEN=$(GOBIN)/controller-gen
+.bin/controller-gen: .bin
+		GOBIN=$(PWD)/.bin go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.11.1
+		CONTROLLER_GEN=$(GOBIN)/controller-gen
 
 .bin/kustomize: .bin
-		curl -L https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv4.3.0/kustomize_v4.3.0_$(OS)_$(ARCH).tar.gz -o kustomize.tar.gz && \
-    tar xf kustomize.tar.gz -C .bin/ && \
-		rm kustomize.tar.gz
+	curl -L https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv4.3.0/kustomize_v4.3.0_$(OS)_$(ARCH).tar.gz -o kustomize.tar.gz && \
+	tar xf kustomize.tar.gz -C .bin/ && \
+	rm kustomize.tar.gz
 
 .bin/go-junit-report: .bin
 	GOBIN=$(PWD)/.bin GOFLAGS="-mod=mod"  go install github.com/jstemmer/go-junit-report
