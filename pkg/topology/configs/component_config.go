@@ -50,7 +50,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 	var newConfigsIDs []string
 	for _, config := range configs {
 		dbConfig, err := db.FindConfig(*config)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if dbConfig == nil || errors.Is(err, gorm.ErrRecordNotFound) {
 			logger.Tracef("no config found for %s", *config)
 			continue
 		} else if err != nil {

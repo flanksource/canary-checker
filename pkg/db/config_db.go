@@ -47,15 +47,21 @@ func configQuery(config pkg.Config) *gorm.DB {
 	return query
 }
 
-func FindConfig(config pkg.Config) (pkg.Config, error) {
+func FindConfig(config pkg.Config) (*pkg.Config, error) {
 	if Gorm == nil {
 		logger.Debugf("Config lookup on %v will be ignored, db not initialized", config)
-		return pkg.Config{}, gorm.ErrRecordNotFound
+		return nil, gorm.ErrRecordNotFound
 	}
 	var dbConfigObject pkg.Config
 	query := configQuery(config)
-	err := query.First(&dbConfigObject).Error
-	return dbConfigObject, err
+	tx := query.Limit(1).Find(&dbConfigObject)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	if tx.RowsAffected == 0 {
+		return nil, nil
+	}
+	return &dbConfigObject, nil
 }
 
 func FindConfigForComponent(componentID, configType string) ([]pkg.Config, error) {

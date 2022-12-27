@@ -58,6 +58,10 @@ func Template(environment map[string]interface{}, template v1.Template) (string,
 				emptyObj, _ := vm.ToValue(map[string]string{})
 				return emptyObj
 			}
+			if configItem == nil {
+				emptyObj, _ := vm.ToValue(map[string]string{})
+				return emptyObj
+			}
 			result, _ := vm.ToValue(configItem.ToJSONMap())
 			return result
 		})
