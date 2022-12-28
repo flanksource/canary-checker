@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS config_component_relationships(
     deleted_at TIMESTAMP DEFAULT NULL,
     selector_id text, -- hash of the selector from the component config
     FOREIGN KEY(component_id) REFERENCES components(id),
-    FOREIGN KEY(config_id) REFERENCES configs(id),
+    -- FOREIGN KEY(config_id) REFERENCES configs(id), added via always script as config table may be created later on
     UNIQUE (component_id, config_id)
 );
 

@@ -9,11 +9,13 @@ import (
 	"strings"
 
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/logger"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/jackc/pgx/v4/stdlib"
+	jsontime "github.com/liamylian/jsontime/v2/v2"
 	"github.com/pressly/goose/v3"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
@@ -149,11 +151,12 @@ func Init() error {
 		FullSaveAssociations: true,
 	})
 
-	if logger.IsTraceEnabled() {
-		Gorm.Logger.LogMode(glogger.Info)
-	}
 	if err != nil {
 		return err
+	}
+
+	if logger.IsTraceEnabled() {
+		Gorm.Logger.LogMode(glogger.Info)
 	}
 
 	if err := Gorm.Use(prometheus.New(prometheus.Config{
@@ -166,6 +169,7 @@ func Init() error {
 		logger.Warnf("Failed to register prometheus metrics: %v", err)
 	}
 
+	jsontime.AddTimeFormatAlias("postgres_timestamp", v1.PostgresTimestampFormat)
 	return Migrate()
 }
 

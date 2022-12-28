@@ -23,7 +23,7 @@ func GetLabelsFromSelector(selector string) (matchLabels map[string]string) {
 	return
 }
 
-func GetComponensWithLabelSelector(labelSelector string) (components pkg.Components, err error) {
+func GetComponentsWithLabelSelector(labelSelector string) (components pkg.Components, err error) {
 	if labelSelector == "" {
 		return nil, nil
 	}
@@ -60,7 +60,7 @@ func GetComponensWithLabelSelector(labelSelector string) (components pkg.Compone
 	return components, nil
 }
 
-func GetComponensWithFieldSelector(fieldSelector string) (components pkg.Components, err error) {
+func GetComponentsWithFieldSelector(fieldSelector string) (components pkg.Components, err error) {
 	if fieldSelector == "" {
 		return nil, nil
 	}

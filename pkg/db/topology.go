@@ -57,7 +57,7 @@ func GetAllSystemTemplates() ([]v1.SystemTemplate, error) {
 }
 
 // Get all the components from table which has not null selectors
-func GetAllComponentWithSelectors() (components pkg.Components, err error) {
+func GetAllComponentsWithSelectors() (components pkg.Components, err error) {
 	if err := Gorm.Table("components").Where("deleted_at is NULL and selectors != 'null'").Find(&components).Error; err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 		}
 
 		if resourceSelector.LabelSelector != "" {
-			labelComponents, err := GetComponensWithLabelSelector(resourceSelector.LabelSelector)
+			labelComponents, err := GetComponentsWithLabelSelector(resourceSelector.LabelSelector)
 			if err != nil {
 				continue
 			}
@@ -85,7 +85,7 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 			}
 		}
 		if resourceSelector.FieldSelector != "" {
-			fieldComponents, err := GetComponensWithFieldSelector(resourceSelector.FieldSelector)
+			fieldComponents, err := GetComponentsWithFieldSelector(resourceSelector.FieldSelector)
 			if err != nil {
 				continue
 			}

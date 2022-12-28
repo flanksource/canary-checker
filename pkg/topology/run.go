@@ -238,6 +238,9 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties
 	if err != nil {
 		return prop, err
 	}
+	if _config == nil {
+		return prop, nil
+	}
 
 	var v interface{}
 	rawJSON, err := _config.Spec.MarshalJSON()

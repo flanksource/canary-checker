@@ -163,7 +163,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 			return results.ErrorMessage(err)
 		} else {
 			data["json"] = json.Value
-			if check.ResponseJSONContent.Path != "" {
+			if check.ResponseJSONContent != nil && check.ResponseJSONContent.Path != "" {
 				err := resp.CheckJSONContent(json.Value, check.ResponseJSONContent)
 				if err != nil {
 					return results.ErrorMessage(err)
