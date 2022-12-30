@@ -29,6 +29,9 @@ func Start() {
 	if _, err := ScheduleFunc(v1.ComponentStatusSummarySyncSchedule, topology.ComponentStatusSummarySync); err != nil {
 		logger.Errorf("Failed to schedule component status summary sync: %v", err)
 	}
+	if _, err := ScheduleFunc(v1.ComponentCostSchedule, topology.ComponentCostRun); err != nil {
+		logger.Errorf("Failed to schedule component cost sync: %v", err)
+	}
 	if _, err := ScheduleFunc(v1.ComponentCheckSchedule, checks.ComponentCheckRun); err != nil {
 		logger.Errorf("Failed to schedule component check: %v", err)
 	}

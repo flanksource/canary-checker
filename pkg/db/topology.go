@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -62,6 +63,53 @@ func GetAllComponentWithSelectors() (components pkg.Components, err error) {
 		return nil, err
 	}
 	return
+}
+
+// Get all the components with config relationships as {component_id: [<config_ids>]}
+func GetAllComponentsWithConfigRelationships() (map[string][]string, error) {
+	componentConfigIDs := make(map[string][]string)
+
+	type result struct {
+		ComponentID string
+		ConfigIDs   []string
+	}
+
+	var rows []result
+	err := Gorm.Raw(`
+        SELECT components.id as component_id, ARRAY_AGG(ccr.config_id) as config_ids
+        FROM components
+        INNER JOIN config_component_relationships ccr ON components.id = ccr.component_id
+        WHERE components.deleted_at IS NULL
+        GROUP BY components.id`, &rows).Error
+	if err != nil {
+		return componentConfigIDs, err
+	}
+
+	for _, row := range rows {
+		componentConfigIDs[row.ComponentID] = row.ConfigIDs
+	}
+	return componentConfigIDs, nil
+}
+
+func UpdateComponentCosts(componentID string, configIDs []string) error {
+	return Gorm.Exec(`
+        UPDATE components
+        SET
+            cost_per_minute = config_agg.cost_per_minute,
+            cost_total_1d = config_agg.cost_total_1d,
+            cost_total_7d = config_agg.cost_total_7d,
+            cost_total_30d = config_agg.cost_total_30d
+        FROM (
+            SELECT
+                SUM(cost_per_minute) AS cost_per_minute,
+                SUM(cost_total_1d) AS cost_total_1d,
+                SUM(cost_total_7d) AS cost_total_7d,
+                SUM(cost_total_30d) AS cost_total_30d
+            FROM config_items
+            WHERE id IN @configIDs
+        ) config_agg
+        WHERE id = @componentID
+    `, sql.Named("componentID", componentID), sql.Named("configIDs", configIDs)).Error
 }
 
 func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (components pkg.Components, err error) {
