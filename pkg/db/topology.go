@@ -10,6 +10,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -66,29 +67,44 @@ func GetAllComponentWithSelectors() (components pkg.Components, err error) {
 }
 
 // Get all the components with config relationships as {component_id: [<config_ids>]}
-func GetAllComponentsWithConfigRelationships() (map[string][]string, error) {
+func GetConfigRelationshipsForAllComponents() (map[string][]string, error) {
 	componentConfigIDs := make(map[string][]string)
-
-	type result struct {
-		ComponentID string
-		ConfigIDs   []string
-	}
-
-	var rows []result
-	err := Gorm.Raw(`
-        SELECT components.id as component_id, ARRAY_AGG(ccr.config_id) as config_ids
-        FROM components
-        INNER JOIN config_component_relationships ccr ON components.id = ccr.component_id
-        WHERE components.deleted_at IS NULL
-        GROUP BY components.id`, &rows).Error
-	if err != nil {
+	var componentIDs []string
+	if err := Gorm.Table("components").Select("id").Scan(&componentIDs).Error; err != nil {
+		logger.Errorf("Error querying components table: %v")
 		return componentConfigIDs, err
 	}
 
-	for _, row := range rows {
-		componentConfigIDs[row.ComponentID] = row.ConfigIDs
+	for _, componentID := range componentIDs {
+		configIDs, err := GetAllRelatedConfigIDsForComponent(componentID)
+		if err != nil {
+			logger.Errorf("Error querying components table: %v")
+			return componentConfigIDs, err
+		}
+		componentConfigIDs[componentID] = configIDs
 	}
 	return componentConfigIDs, nil
+}
+
+// Get all the config_id relationships for a component and it's children
+func GetAllRelatedConfigIDsForComponent(componentID string) ([]string, error) {
+	var configIDs []string
+	err := Gorm.Raw(`
+        SELECT ARRAY_AGG(ccr.config_id) as config_ids
+        FROM components
+        INNER JOIN config_component_relationships ccr ON components.id = ccr.component_id
+        WHERE components.id IN (
+            SELECT child_id FROM lookup_component_children(@componentID, -1)
+            UNION
+            SELECT relationship_id FROM component_relationships WHERE component_id IN (
+                SELECT child_id FROM lookup_component_children(@componentID, -1)
+            )
+        )
+        `, sql.Named("componentID", componentID)).Scan(pq.Array(&configIDs)).Error
+	if err != nil {
+		return configIDs, err
+	}
+	return configIDs, nil
 }
 
 func UpdateComponentCosts(componentID string, configIDs []string) error {
