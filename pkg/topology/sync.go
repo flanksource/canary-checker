@@ -124,6 +124,10 @@ func ComponentCostRun() {
 	}
 
 	for componentID, configIDs := range componentConfigIDs {
+		// Skip if component has no related config_ids
+		if len(configIDs) == 0 {
+			continue
+		}
 		err = db.UpdateComponentCosts(componentID, configIDs)
 		if err != nil {
 			logger.Errorf("Error updating component costs: %v", err)

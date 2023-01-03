@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -10,7 +11,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -71,14 +71,14 @@ func GetConfigRelationshipsForAllComponents() (map[string][]string, error) {
 	componentConfigIDs := make(map[string][]string)
 	var componentIDs []string
 	if err := Gorm.Table("components").Select("id").Scan(&componentIDs).Error; err != nil {
-		logger.Errorf("Error querying components table: %v")
+		logger.Errorf("Error querying components table: %v", err)
 		return componentConfigIDs, err
 	}
 
 	for _, componentID := range componentIDs {
 		configIDs, err := GetAllRelatedConfigIDsForComponent(componentID)
 		if err != nil {
-			logger.Errorf("Error querying components table: %v")
+			logger.Errorf("Error querying component configs: %v", err)
 			return componentConfigIDs, err
 		}
 		componentConfigIDs[componentID] = configIDs
@@ -88,9 +88,9 @@ func GetConfigRelationshipsForAllComponents() (map[string][]string, error) {
 
 // Get all the config_id relationships for a component and it's children
 func GetAllRelatedConfigIDsForComponent(componentID string) ([]string, error) {
-	var configIDs []string
+	var row sql.NullString
 	err := Gorm.Raw(`
-        SELECT ARRAY_AGG(ccr.config_id) as config_ids
+        SELECT STRING_AGG(ccr.config_id::text, ',') as config_ids
         FROM components
         INNER JOIN config_component_relationships ccr ON components.id = ccr.component_id
         WHERE components.id IN (
@@ -100,11 +100,15 @@ func GetAllRelatedConfigIDsForComponent(componentID string) ([]string, error) {
                 SELECT child_id FROM lookup_component_children(@componentID, -1)
             )
         )
-        `, sql.Named("componentID", componentID)).Scan(pq.Array(&configIDs)).Error
+        `, sql.Named("componentID", componentID)).Scan(&row).Error
 	if err != nil {
-		return configIDs, err
+		return []string{}, err
 	}
-	return configIDs, nil
+
+	if !row.Valid {
+		return []string{}, nil
+	}
+	return strings.Split(row.String, ","), nil
 }
 
 func UpdateComponentCosts(componentID string, configIDs []string) error {
