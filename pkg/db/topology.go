@@ -1,9 +1,7 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
-	"strings"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -66,70 +64,47 @@ func GetAllComponentWithSelectors() (components pkg.Components, err error) {
 	return
 }
 
-// Get all the components with config relationships as {component_id: [<config_ids>]}
-func GetConfigRelationshipsForAllComponents() (map[string][]string, error) {
-	componentConfigIDs := make(map[string][]string)
-	var componentIDs []string
-	if err := Gorm.Table("components").Select("id").Scan(&componentIDs).Error; err != nil {
-		logger.Errorf("Error querying components table: %v", err)
-		return componentConfigIDs, err
-	}
-
-	for _, componentID := range componentIDs {
-		configIDs, err := GetAllRelatedConfigIDsForComponent(componentID)
-		if err != nil {
-			logger.Errorf("Error querying component configs: %v", err)
-			return componentConfigIDs, err
-		}
-		componentConfigIDs[componentID] = configIDs
-	}
-	return componentConfigIDs, nil
-}
-
-// Get all the config_id relationships for a component and it's children
-func GetAllRelatedConfigIDsForComponent(componentID string) ([]string, error) {
-	var row sql.NullString
-	err := Gorm.Raw(`
-        SELECT STRING_AGG(ccr.config_id::text, ',') as config_ids
-        FROM components
-        INNER JOIN config_component_relationships ccr ON components.id = ccr.component_id
-        WHERE components.id IN (
-            SELECT child_id FROM lookup_component_children(@componentID, -1)
-            UNION
-            SELECT relationship_id FROM component_relationships WHERE component_id IN (
-                SELECT child_id FROM lookup_component_children(@componentID, -1)
-            )
-        )
-        `, sql.Named("componentID", componentID)).Scan(&row).Error
-	if err != nil {
-		return []string{}, err
-	}
-
-	if !row.Valid {
-		return []string{}, nil
-	}
-	return strings.Split(row.String, ","), nil
-}
-
-func UpdateComponentCosts(componentID string, configIDs []string) error {
+func UpdateComponentCosts() error {
 	return Gorm.Exec(`
-        UPDATE components
-        SET
-            cost_per_minute = config_agg.cost_per_minute,
-            cost_total_1d = config_agg.cost_total_1d,
-            cost_total_7d = config_agg.cost_total_7d,
-            cost_total_30d = config_agg.cost_total_30d
-        FROM (
-            SELECT
-                SUM(cost_per_minute) AS cost_per_minute,
-                SUM(cost_total_1d) AS cost_total_1d,
-                SUM(cost_total_7d) AS cost_total_7d,
-                SUM(cost_total_30d) AS cost_total_30d
-            FROM config_items
-            WHERE id IN @configIDs
-        ) config_agg
-        WHERE id = @componentID
-    `, sql.Named("componentID", componentID), sql.Named("configIDs", configIDs)).Error
+    WITH 
+    component_children AS (
+        SELECT components.id, ARRAY(
+            SELECT child_id FROM lookup_component_children(components.id::text, -1)
+            UNION
+            SELECT relationship_id as child_id FROM component_relationships WHERE component_id IN (
+                SELECT child_id FROM lookup_component_children(components.id::text, -1)
+            )
+        ) AS child_ids
+        FROM components
+        GROUP BY components.id
+    ),
+    component_configs AS (
+        SELECT component_children.id, ARRAY_AGG(ccr.config_id) as config_ids
+        FROM component_children
+        INNER JOIN config_component_relationships ccr ON ccr.component_id = ANY(component_children.child_ids)
+        GROUP BY component_children.id
+    ),
+    component_config_costs AS (
+        SELECT 
+            component_configs.id,
+            SUM(cost_per_minute) AS cost_per_minute,
+            SUM(cost_total_1d) AS cost_total_1d,
+            SUM(cost_total_7d) AS cost_total_7d,
+            SUM(cost_total_30d) AS cost_total_30d
+        FROM config_items
+        INNER JOIN component_configs ON config_items.id = ANY(component_configs.config_ids)
+        GROUP BY component_configs.id
+    )
+
+    UPDATE components
+    SET
+        cost_per_minute = component_config_costs.cost_per_minute,
+        cost_total_1d = component_config_costs.cost_total_1d,
+        cost_total_7d = component_config_costs.cost_total_7d,
+        cost_total_30d = component_config_costs.cost_total_30d
+    FROM component_config_costs
+    WHERE components.id = component_config_costs.id
+    `).Error
 }
 
 func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (components pkg.Components, err error) {
