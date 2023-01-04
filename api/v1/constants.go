@@ -8,4 +8,5 @@ const (
 	ComponentStatusSummarySyncSchedule = "@every 1m"
 	ComponentCheckSchedule             = "@every 2m"
 	ComponentConfigSchedule            = "@every 2m"
+	ComponentCostSchedule              = "@every 1h"
 )

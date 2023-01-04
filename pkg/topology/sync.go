@@ -113,3 +113,12 @@ func SyncComponentRelationships(parentComponentID uuid.UUID, relationships []*pk
 
 	return nil
 }
+
+func ComponentCostRun() {
+	logger.Debugf("Syncing component costs")
+
+	err := db.UpdateComponentCosts()
+	if err != nil {
+		logger.Errorf("Error updating component costs: %v", err)
+	}
+}

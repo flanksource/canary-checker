@@ -64,6 +64,49 @@ func GetAllComponentsWithSelectors() (components pkg.Components, err error) {
 	return
 }
 
+func UpdateComponentCosts() error {
+	return Gorm.Exec(`
+    WITH 
+    component_children AS (
+        SELECT components.id, ARRAY(
+            SELECT child_id FROM lookup_component_children(components.id::text, -1)
+            UNION
+            SELECT relationship_id as child_id FROM component_relationships WHERE component_id IN (
+                SELECT child_id FROM lookup_component_children(components.id::text, -1)
+            )
+        ) AS child_ids
+        FROM components
+        GROUP BY components.id
+    ),
+    component_configs AS (
+        SELECT component_children.id, ARRAY_AGG(ccr.config_id) as config_ids
+        FROM component_children
+        INNER JOIN config_component_relationships ccr ON ccr.component_id = ANY(component_children.child_ids)
+        GROUP BY component_children.id
+    ),
+    component_config_costs AS (
+        SELECT 
+            component_configs.id,
+            SUM(cost_per_minute) AS cost_per_minute,
+            SUM(cost_total_1d) AS cost_total_1d,
+            SUM(cost_total_7d) AS cost_total_7d,
+            SUM(cost_total_30d) AS cost_total_30d
+        FROM config_items
+        INNER JOIN component_configs ON config_items.id = ANY(component_configs.config_ids)
+        GROUP BY component_configs.id
+    )
+
+    UPDATE components
+    SET
+        cost_per_minute = component_config_costs.cost_per_minute,
+        cost_total_1d = component_config_costs.cost_total_1d,
+        cost_total_7d = component_config_costs.cost_total_7d,
+        cost_total_30d = component_config_costs.cost_total_30d
+    FROM component_config_costs
+    WHERE components.id = component_config_costs.id
+    `).Error
+}
+
 func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (components pkg.Components, err error) {
 	var uniqueComponents = make(map[string]*pkg.Component)
 	for _, resourceSelector := range resourceSelectors {
