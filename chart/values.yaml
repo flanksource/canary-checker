@@ -33,8 +33,6 @@ db:
     # Setting this to true will provision a new postgress DB for you
     create: false
     secretKeyRef:
-      # Setting this to true will create the secret automatically.
-      create: false
       name: postgres-connection
       # This is the key that either the secret will create(if create is true) or
       # this is the key it will look for in the secret(if secretRefKey is
