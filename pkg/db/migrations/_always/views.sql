@@ -25,7 +25,8 @@ end;
 $$
 language plpgsql;
 
-
+CREATE OR REPLACE VIEW component_names_all AS
+      SELECT id, external_id, type, name, created_at, updated_at, icon, parent_id FROM components WHERE hidden != true ORDER BY name, external_id  ;
 
 CREATE OR REPLACE VIEW component_names AS
       SELECT id, external_id, type, name, created_at, updated_at, icon, parent_id FROM components WHERE deleted_at is null AND hidden != true ORDER BY name, external_id  ;
