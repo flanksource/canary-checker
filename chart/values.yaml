@@ -66,6 +66,7 @@ flanksource-ui:
   nameOverride: "canary-checker-ui"
   fullnameOverride: "canary-checker-ui"
   oryKratosURL: ""
+  # Mandatory.  Set to the name of the service installed by the chart (RFC1035 formatted $RELEASE_NAME) 
   backendURL: ""
   ingress:
     enabled: true

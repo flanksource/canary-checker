@@ -147,6 +147,10 @@ By default, the canary checker only presents an API.  To view the data graphical
 
 More details regarding ingress configuration can be found in the [kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/)
 
+| flanksource-ui.backendURL | Required to be set to the name of the canary-checker service.  This will be the (RFC 1035 formatted) release name specified in the `helm install` command. |
+
+Due to a limitation in Helm, there is no way to automatically propogate the generated service name to a child chart, and it must be aligned by the user.
+
 ### Deploy using Helm
 
 To install into a new `canary-checker` namespace, run
