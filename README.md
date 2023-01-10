@@ -133,7 +133,7 @@ In order to connect to an existing Postgres server, a database must be created o
 | db.external.enabled | `true` |
 | db.external.create  | `false` |
 | db.external.secretKeyRef.name | Set to name of name of secret that contains a key containging the postgres connection URI
-| db.external.secretKeyREf.key | Set to the name of the key in the secret that contains the postgres connection URI |
+| db.external.secretKeyRef.key | Set to the name of the key in the secret that contains the postgres connection URI |
 
 The connection URI must be specified in the format `postgresql://"$user":"$password"@"$host"/"$database"`
 
