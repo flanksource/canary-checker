@@ -5,6 +5,7 @@ import (
 
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -23,10 +24,14 @@ func ComponentConfigRun() {
 	}
 
 	for _, component := range components {
+		jobHistory := models.NewJobHistory("ComponentConfigRelationshipSync", "component", component.ID.String()).Start()
+		db.PersistJobHistory(jobHistory)
 		if err := SyncComponentConfigRelationship(component.ID, component.Configs); err != nil {
 			logger.Errorf("error persisting config relationships: %v", err)
+			db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
 			continue
 		}
+		db.PersistJobHistory(jobHistory.IncrSuccess().End())
 	}
 }
 

@@ -68,7 +68,7 @@ require (
 	google.golang.org/genproto v0.0.0-20210828152312-66f60bf46e71
 	gopkg.in/flanksource/yaml.v3 v3.1.1
 	gorm.io/driver/postgres v1.3.1
-	gorm.io/gorm v1.23.4
+	gorm.io/gorm v1.24.3
 	gorm.io/plugin/prometheus v0.0.0-20220517015831-ca6bfaf20bf4
 	k8s.io/api v0.20.6
 	k8s.io/apimachinery v0.20.6
@@ -121,6 +121,7 @@ require (
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
 	github.com/fatih/color v1.9.0 // indirect
+	github.com/flanksource/duty v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/geoffgarside/ber v1.1.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
