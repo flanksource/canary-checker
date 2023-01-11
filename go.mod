@@ -1,6 +1,6 @@
 module github.com/flanksource/canary-checker
 
-go 1.17
+go 1.18
 
 require (
 	cloud.google.com/go/storage v1.16.0
@@ -24,6 +24,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.15.0
 	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
 	github.com/flanksource/commons v1.5.14
+	github.com/flanksource/duty v1.0.4
 	github.com/flanksource/kommons v0.30.2
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ldap/ldap/v3 v3.4.1
@@ -121,7 +122,6 @@ require (
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
 	github.com/fatih/color v1.9.0 // indirect
-	github.com/flanksource/duty v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/geoffgarside/ber v1.1.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect

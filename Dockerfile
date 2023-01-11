@@ -1,5 +1,4 @@
-
-FROM golang:1.17 as builder
+FROM golang:1.18 AS builder
 WORKDIR /app
 
 ARG NAME

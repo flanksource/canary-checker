@@ -348,8 +348,6 @@ github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25 h1:PJ53z
 github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25/go.mod h1:2cPofGTy3+NA5KvDoroEFyf8e/QPI+lRz/ncY0f3l9M=
 github.com/flanksource/commons v1.5.14 h1:XXyLQWmGTJ9re8lBEuETI5txbLItWZWepIEGJn9U/0k=
 github.com/flanksource/commons v1.5.14/go.mod h1:TEIeK5ak2VNYgmrYHNSFoX4UjHqQuSXOYvH4waLL5os=
-github.com/flanksource/duty v1.0.3 h1:EVzGki4jvFYi7WDD3fNy/oTQkI4YNlJFZ1nVsvxCzqM=
-github.com/flanksource/duty v1.0.3/go.mod h1:w3DIFeKHDHwZzuw3oqoIUQVnMyqyC76oFG4ToD9YOhk=
 github.com/flanksource/duty v1.0.4 h1:fJOwQ9EGrB8V8jhvKilJKGKwSMd63UNtC7OedOZ5+Nw=
 github.com/flanksource/duty v1.0.4/go.mod h1:w3DIFeKHDHwZzuw3oqoIUQVnMyqyC76oFG4ToD9YOhk=
 github.com/flanksource/kommons v0.30.2 h1:kW47reDl0ZBSteKBOWNsfrp94djr5TjoktQS7+f2qRQ=
@@ -1898,7 +1896,6 @@ gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gorm.io/driver/postgres v1.3.1 h1:Pyv+gg1Gq1IgsLYytj/S2k7ebII3CzEdpqQkPOdH24g=
 gorm.io/driver/postgres v1.3.1/go.mod h1:WwvWOuR9unCLpGWCL6Y3JOeBWvbKi6JLhayiVclSZZU=
 gorm.io/gorm v1.23.1/go.mod h1:l2lP/RyAtc1ynaTjFksBde/O8v9oOGIApu2/xRitmZk=
-gorm.io/gorm v1.23.4 h1:1BKWM67O6CflSLcwGQR7ccfmC4ebOxQrTfOQGRE9wjg=
 gorm.io/gorm v1.23.4/go.mod h1:l2lP/RyAtc1ynaTjFksBde/O8v9oOGIApu2/xRitmZk=
 gorm.io/gorm v1.24.3 h1:WL2ifUmzR/SLp85CSURAfybcHnGZ+yLSGSxgYXlFBHg=
 gorm.io/gorm v1.24.3/go.mod h1:DVrVomtaYTbqs7gB/x2uVvqnXzv0nqjB396B8cG4dBA=
