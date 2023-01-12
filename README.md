@@ -126,13 +126,13 @@ The helm chart will create a postgres server statefulset, with a random password
 
 To specify a username and password for the chart-managed Postgres server, create a secret in the namespace that the chart will install to, named `postgres-connection`, which contains `POSTGRES_USER` and `POSTGRES_PASSWORD` keys.
 
-#### Prexisting Server
+#### External Postgres Server
 
 In order to connect to an existing Postgres server, a database must be created on the server, along with a user that has <Not sure exactly what needs to be here> permissions
 
 | db.external.enabled | `true` |
 | db.external.create  | `false` |
-| db.external.secretKeyRef.name | Set to name of name of secret that contains a key containging the postgres connection URI
+| db.external.secretKeyRef.name | Set to name of name of secret that contains a key containging the postgres connection URI |
 | db.external.secretKeyRef.key | Set to the name of the key in the secret that contains the postgres connection URI |
 
 The connection URI must be specified in the format `postgresql://"$user":"$password"@"$host"/"$database"`
@@ -147,7 +147,7 @@ By default, the canary checker only presents an API.  To view the data graphical
 
 More details regarding ingress configuration can be found in the [kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/)
 
-| flanksource-ui.backendURL | Required to be set to the name of the canary-checker service.  This will be the (RFC 1035 formatted) release name specified in the `helm install` command. |
+| flanksource-ui.backendURL | Required to be set to the name of the canary-checker service.  The name will default to 'canary-checker' unless `nameOverride` is specified.  If `nameOverride is set, `backendURL` must be set to the same value |
 
 Due to a limitation in Helm, there is no way to automatically propogate the generated service name to a child chart, and it must be aligned by the user.
 
