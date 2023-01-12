@@ -109,6 +109,8 @@ Canary Checker should optimally be run connected to a dedicated Postgres Server,
 
 ##### Embedded database (default):
 
+|                     |                   |
+|---------------------|-------------------|
 | db.external.enabled | `false` (default) |
 | db.embedded.storageClass | Set to name of a storageclass available in the cluster |
 | db.embedded.storage | Set to volume of storage to request |
@@ -117,6 +119,8 @@ The Canary Checker statefulset will be configured to start an embedded postgres 
 
 ##### Fully automatic Postgres Server creation
 
+|                     |                   |
+|---------------------|-------------------|
 | db.external.enabled | `true` |
 | db.external.create  | `true` |
 | db.external.storageClass | Set to name of a storageclass available in the cluster |
@@ -130,6 +134,8 @@ To specify a username and password for the chart-managed Postgres server, create
 
 In order to connect to an existing Postgres server, a database must be created on the server, along with a user that has <Not sure exactly what needs to be here> permissions
 
+|                     |                   |
+|---------------------|-------------------|
 | db.external.enabled | `true` |
 | db.external.create  | `false` |
 | db.external.secretKeyRef.name | Set to name of name of secret that contains a key containging the postgres connection URI |
@@ -141,12 +147,16 @@ The connection URI must be specified in the format `postgresql://"$user":"$passw
 
 By default, the canary checker only presents an API.  To view the data graphically, the Flankdource UI is required, and is installed by default. The UI should be configured to allow external access to via ingress
 
+|                     |                   |
+|---------------------|-------------------|
 | flanksource-ui.ingress.host | URL at which the UI will be accessed |
 | flanksource-ui.ingress.annotations | Map of annotations required by the ingress controller or certificate issuer |
 | flanksource-ui.ingress.tls | Map of configuration options for TLS |
 
 More details regarding ingress configuration can be found in the [kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/)
 
+|                     |                   |
+|---------------------|-------------------|
 | flanksource-ui.backendURL | Required to be set to the name of the canary-checker service.  The name will default to 'canary-checker' unless `nameOverride` is specified.  If `nameOverride is set, `backendURL` must be set to the same value |
 
 Due to a limitation in Helm, there is no way to automatically propogate the generated service name to a child chart, and it must be aligned by the user.
