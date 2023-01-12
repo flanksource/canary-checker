@@ -23,15 +23,15 @@ func ComponentCheckRun() {
 	}
 	for _, component := range components {
 		jobHistory := models.NewJobHistory("ComponentCheckRelationshipSync", "component", component.ID.String()).Start()
-		db.PersistJobHistory(jobHistory)
+		_ = db.PersistJobHistory(jobHistory)
 		relationships := GetCheckComponentRelationshipsForComponent(component)
 		err = SyncCheckComponentRelationshipsForComponent(component.ID, relationships)
 		if err != nil {
 			logger.Errorf("error persisting relationships: %v", err)
-			db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
 			continue
 		}
-		db.PersistJobHistory(jobHistory.IncrSuccess().End())
+		_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
 	}
 }
 

@@ -93,13 +93,13 @@ func SyncSystemsJobs() {
 
 	for _, systemTemplate := range systemTemplates {
 		jobHistory := models.NewJobHistory("SystemTemplateSync", "system_template", fmt.Sprintf("%s/%s", systemTemplate.Namespace, systemTemplate.Name)).Start()
-		db.PersistJobHistory(jobHistory)
+		_ = db.PersistJobHistory(jobHistory)
 		if err := SyncSystemJob(systemTemplate); err != nil {
 			logger.Errorf("Error syncing system job: %v", err)
-			db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
 			continue
 		}
-		db.PersistJobHistory(jobHistory.IncrSuccess().End())
+		_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
 	}
 	logger.Infof("Synced system template jobs %d", len(SystemScheduler.Entries()))
 }

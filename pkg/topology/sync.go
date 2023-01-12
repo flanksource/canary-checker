@@ -25,27 +25,27 @@ func ComponentRun() {
 
 	for _, component := range components {
 		jobHistory := models.NewJobHistory("ComponentRelationshipSync", "component", component.ID.String()).Start()
-		db.PersistJobHistory(jobHistory)
+		_ = db.PersistJobHistory(jobHistory)
 
 		comps, err := db.GetComponentsWithSelectors(component.Selectors)
 		if err != nil {
 			logger.Errorf("error getting components with selectors: %s. err: %v", component.Selectors, err)
-			db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
 			continue
 		}
 		relationships, err := db.NewComponentRelationships(component.ID, component.Path, comps)
 		if err != nil {
 			logger.Errorf("error getting relationships: %v", err)
-			db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
 			continue
 		}
 		err = SyncComponentRelationships(component.ID, relationships)
 		if err != nil {
 			logger.Errorf("error syncing relationships: %v", err)
-			db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
 			continue
 		}
-		db.PersistJobHistory(jobHistory.IncrSuccess().End())
+		_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
 	}
 }
 
@@ -60,14 +60,14 @@ func ComponentStatusSummarySync() {
 	}
 	for _, component := range components.Walk() {
 		jobHistory := models.NewJobHistory("ComponentStatusSummarySync", "component", component.ID.String()).Start()
-		db.PersistJobHistory(jobHistory)
+		_ = db.PersistJobHistory(jobHistory)
 		_, err = db.UpdateStatusAndSummaryForComponent(component.ID, component.Status, component.Summary)
 		if err != nil {
 			logger.Errorf("error persisting component: %v", err)
-			db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
 			continue
 		}
-		db.PersistJobHistory(jobHistory.IncrSuccess().End())
+		_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
 	}
 }
 
@@ -128,8 +128,8 @@ func ComponentCostRun() {
 	err := db.UpdateComponentCosts()
 	if err != nil {
 		logger.Errorf("Error updating component costs: %v", err)
-		db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+		_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
 		return
 	}
-	db.PersistJobHistory(jobHistory.IncrSuccess().End())
+	_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
 }
