@@ -23,16 +23,17 @@ func ComponentConfigRun() {
 		return
 	}
 
+	jobHistory := models.NewJobHistory("ComponentConfigRelationshipSync", "", "").Start()
+	_ = db.PersistJobHistory(jobHistory)
 	for _, component := range components {
-		jobHistory := models.NewJobHistory("ComponentConfigRelationshipSync", "component", component.ID.String()).Start()
-		_ = db.PersistJobHistory(jobHistory)
 		if err := SyncComponentConfigRelationship(component.ID, component.Configs); err != nil {
 			logger.Errorf("error persisting config relationships: %v", err)
-			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+			jobHistory.AddError(err.Error())
 			continue
 		}
-		_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
+		jobHistory.IncrSuccess()
 	}
+	_ = db.PersistJobHistory(jobHistory.End())
 }
 
 func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs) error {

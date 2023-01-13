@@ -21,18 +21,19 @@ func ComponentCheckRun() {
 		logger.Errorf("error getting components: %v", err)
 		return
 	}
+	jobHistory := models.NewJobHistory("ComponentCheckRelationshipSync", "", "").Start()
+	_ = db.PersistJobHistory(jobHistory)
 	for _, component := range components {
-		jobHistory := models.NewJobHistory("ComponentCheckRelationshipSync", "component", component.ID.String()).Start()
-		_ = db.PersistJobHistory(jobHistory)
 		relationships := GetCheckComponentRelationshipsForComponent(component)
 		err = SyncCheckComponentRelationshipsForComponent(component.ID, relationships)
 		if err != nil {
 			logger.Errorf("error persisting relationships: %v", err)
-			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+			jobHistory.AddError(err.Error())
 			continue
 		}
-		_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
+		jobHistory.IncrSuccess()
 	}
+	_ = db.PersistJobHistory(jobHistory.End())
 }
 
 func GetCheckComponentRelationshipsForComponent(component *pkg.Component) (relationships []*pkg.CheckComponentRelationship) {
