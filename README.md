@@ -82,10 +82,12 @@ Before installing the Canary Checker, please ensure you have the [prerequisites 
 
 
 ```bash
+# install the Prometheus CRDs
+kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml --server-side
 # install the operator
 kubectl apply -f https://github.com/flanksource/canary-checker/releases/download/v0.38.154/release.yaml
 # deploy a sample canary
-kubectl apply -f https://raw.githubusercontent.com/flanksource/canary-checker/master/fixtures-crd/http_pass.yaml
+kubectl apply -f https://raw.githubusercontent.com/flanksource/canary-checker/master/fixtures-crd/http/http_pass.yaml
 # check the results of the canary
 kubectl get canary
 ```
