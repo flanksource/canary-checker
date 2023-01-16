@@ -23,30 +23,30 @@ func ComponentRun() {
 		return
 	}
 
+	jobHistory := models.NewJobHistory("ComponentRelationshipSync", "", "").Start()
+	_ = db.PersistJobHistory(jobHistory)
 	for _, component := range components {
-		jobHistory := models.NewJobHistory("ComponentRelationshipSync", "component", component.ID.String()).Start()
-		_ = db.PersistJobHistory(jobHistory)
-
 		comps, err := db.GetComponentsWithSelectors(component.Selectors)
 		if err != nil {
 			logger.Errorf("error getting components with selectors: %s. err: %v", component.Selectors, err)
-			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+			jobHistory.AddError(err.Error())
 			continue
 		}
 		relationships, err := db.NewComponentRelationships(component.ID, component.Path, comps)
 		if err != nil {
 			logger.Errorf("error getting relationships: %v", err)
-			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+			jobHistory.AddError(err.Error())
 			continue
 		}
 		err = SyncComponentRelationships(component.ID, relationships)
 		if err != nil {
 			logger.Errorf("error syncing relationships: %v", err)
-			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+			jobHistory.AddError(err.Error())
 			continue
 		}
-		_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
+		jobHistory.IncrSuccess()
 	}
+	_ = db.PersistJobHistory(jobHistory.End())
 }
 
 func ComponentStatusSummarySync() {
@@ -58,17 +58,18 @@ func ComponentStatusSummarySync() {
 		logger.Errorf("error getting components: %v", err)
 		return
 	}
+	jobHistory := models.NewJobHistory("ComponentStatusSummarySync", "", "").Start()
+	_ = db.PersistJobHistory(jobHistory)
 	for _, component := range components.Walk() {
-		jobHistory := models.NewJobHistory("ComponentStatusSummarySync", "component", component.ID.String()).Start()
-		_ = db.PersistJobHistory(jobHistory)
 		_, err = db.UpdateStatusAndSummaryForComponent(component.ID, component.Status, component.Summary)
 		if err != nil {
 			logger.Errorf("error persisting component: %v", err)
-			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+			jobHistory.AddError(err.Error())
 			continue
 		}
-		_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
+		jobHistory.IncrSuccess()
 	}
+	_ = db.PersistJobHistory(jobHistory.End())
 }
 
 func SyncComponentRelationships(parentComponentID uuid.UUID, relationships []*pkg.ComponentRelationship) error {
