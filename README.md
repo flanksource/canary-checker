@@ -132,7 +132,7 @@ To specify a username and password for the chart-managed Postgres server, create
 
 #### External Postgres Server
 
-In order to connect to an existing Postgres server, a database must be created on the server, along with a user that has <Not sure exactly what needs to be here> permissions
+In order to connect to an existing Postgres server, a database must be created on the server, along with a user that has administrator permissions for the database.git 
 
 |                     |                   |
 |---------------------|-------------------|
