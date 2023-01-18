@@ -1,0 +1,68 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: SystemTemplate
+metadata:
+  name: elasticsearch
+spec:
+  type: ElasticSearch
+  icon: elastic
+  schedule: "@every 10m"
+  id:
+    javascript: properties.id
+  components:
+    - name: nodes
+      type: ElasticSearchNode
+      properties:
+        - name: disk-space-total
+          kubernetes:
+            - kind: PersistentVolumeClaim
+              namespace: default
+              selectors:
+                matchLabels: common.k8s.elastic.co/type=elasticsearch
+              transform:
+                include: spec.resources.requests.storage
+        - name: disk-space-used
+        - name: version
+          kubernetes:
+            - kind: Pod
+              namespace: default
+              selectors:
+                matchLabels: common.k8s.elastic.co/type=elasticsearch
+              transform:
+                include: metadata.labels.elasticsearch\.k8s\.elastic\.co/version
+        - name: jvm-usage
+        - name: memory
+          kubernetes:
+            - kind: PodMetrics
+              namespace: default
+              selectors:
+                matchLabels: common.k8s.elastic.co/type=elasticsearch
+              transform:
+                include: containers[0].usage.memory
+        - name: cores
+          kubernetes:
+            - kind: PodMetrics
+              namespace: default
+              selectors:
+                matchLabels: common.k8s.elastic.co/type=elasticsearch
+              transform:
+                include: containers[0].usage.cpu
+        - name: load
+    - name: index
+      type: ElasticSearchIndex
+      properties:
+        - name: name
+        - name: documents
+        - name: size
+        - name: healthy-indices
+        - name: unhealthy-indices
+  properties:
+    - name: version
+      kubernetes:
+        - kind: ElasticSearch
+          namespace: default
+          transform:
+            include: spec.version
+    - name: disk-space-used
+    - name: disk-space-free-min
+    - name: total-documents
