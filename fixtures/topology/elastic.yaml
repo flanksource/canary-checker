@@ -31,6 +31,15 @@ spec:
               transform:
                 include: metadata.labels.elasticsearch\.k8s\.elastic\.co/version
         - name: jvm-usage
+          http:
+            - endpoint: http://elasticsearch-http.default.svc:9200/_nodes/jvm
+              authentication:
+                username:
+                  value: elastic
+                password:
+                  valueFrom:
+                    secretKeyRef:
+                      name: elasticsearch-elastic-user
         - name: memory
           kubernetes:
             - kind: PodMetrics
@@ -53,9 +62,45 @@ spec:
       properties:
         - name: name
         - name: documents
+          http:
+            - endpoint: http://elasticsearch-http.default.svc:9200/_stats
+              authentication:
+                username:
+                  value: elastic
+                password:
+                  valueFrom:
+                    secretKeyRef:
+                      name: elasticsearch-elastic-user
         - name: size
+          http:
+            - endpoint: http://elasticsearch-http.default.svc:9200/_stats
+              authentication:
+                username:
+                  value: elastic
+                password:
+                  valueFrom:
+                    secretKeyRef:
+                      name: elasticsearch-elastic-user
         - name: healthy-indices
+          http:
+            - endpoint: http://elasticsearch-http.default.svc:9200/_stats
+              authentication:
+                username:
+                  value: elastic
+                password:
+                  valueFrom:
+                    secretKeyRef:
+                      name: elasticsearch-elastic-user
         - name: unhealthy-indices
+          http:
+            - endpoint: http://elasticsearch-http.default.svc:9200/_stats
+              authentication:
+                username:
+                  value: elastic
+                password:
+                  valueFrom:
+                    secretKeyRef:
+                      name: elasticsearch-elastic-user
   properties:
     - name: version
       kubernetes:
