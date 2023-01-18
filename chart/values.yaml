@@ -28,14 +28,17 @@ db:
     storageClass:
     storage:
   external:
-    # Setting this to true will use a external postgres DB
+    # Setting enabled to true will use a external postgres DB, disabling the embedded DB
     enabled: false
-    # Setting this to true will provision a new postgress DB for you
+    # Setting create to true will create a postgres stateful set for config-db to connect to.
+    # If create=true, the secretKeyRef will be created by helm with the specified name and key
+    #   Optionally populate a secret named 'postgres-connection' before install with POSTGRES_USER and POSTGRES_PASSWORD to set the created username and password, otherwise a random password will be created for a 'postgres' user
+    # If create=false, a prexisting secret containing the URI to an existing postgres database must be provided
+    #   The URI must be in the format 'postgresql://"$user":"$password"@"$host"/"$database"'
+      # Setting this to true will provision a new postgress DB for you
     create: false
     secretKeyRef:
-      # Setting this to true will create the secret automatically.
-      create: false
-      name: postgres-connection
+      name: canary-checker-postgres
       # This is the key that either the secret will create(if create is true) or
       # this is the key it will look for in the secret(if secretRefKey is
       # mentioned). The name of the key is mandatory to set.
@@ -63,7 +66,8 @@ flanksource-ui:
   nameOverride: "canary-checker-ui"
   fullnameOverride: "canary-checker-ui"
   oryKratosURL: ""
-  backendURL: ""
+  # Mandatory.  Set to the name of the service installed by the chart (RFC1035 formatted $RELEASE_NAME)
+  backendURL: "canary-checker"
   ingress:
     enabled: true
     host: "canary-checker-ui.local"
