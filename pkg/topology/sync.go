@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
@@ -22,28 +23,30 @@ func ComponentRun() {
 		return
 	}
 
+	jobHistory := models.NewJobHistory("ComponentRelationshipSync", "", "").Start()
+	_ = db.PersistJobHistory(jobHistory)
 	for _, component := range components {
 		comps, err := db.GetComponentsWithSelectors(component.Selectors)
 		if err != nil {
 			logger.Errorf("error getting components with selectors: %s. err: %v", component.Selectors, err)
+			jobHistory.AddError(err.Error())
 			continue
 		}
 		relationships, err := db.NewComponentRelationships(component.ID, component.Path, comps)
 		if err != nil {
 			logger.Errorf("error getting relationships: %v", err)
+			jobHistory.AddError(err.Error())
 			continue
 		}
 		err = SyncComponentRelationships(component.ID, relationships)
 		if err != nil {
 			logger.Errorf("error syncing relationships: %v", err)
+			jobHistory.AddError(err.Error())
 			continue
 		}
-
-		// // Sync config relationships
-		// if err := db.UpsertComponentConfigRelationship(component.ID, component.Configs); err != nil {
-		// 	logger.Errorf("error upserting config relationships: %v", err)
-		// }
+		jobHistory.IncrSuccess()
 	}
+	_ = db.PersistJobHistory(jobHistory.End())
 }
 
 func ComponentStatusSummarySync() {
@@ -55,13 +58,18 @@ func ComponentStatusSummarySync() {
 		logger.Errorf("error getting components: %v", err)
 		return
 	}
+	jobHistory := models.NewJobHistory("ComponentStatusSummarySync", "", "").Start()
+	_ = db.PersistJobHistory(jobHistory)
 	for _, component := range components.Walk() {
 		_, err = db.UpdateStatusAndSummaryForComponent(component.ID, component.Status, component.Summary)
 		if err != nil {
 			logger.Errorf("error persisting component: %v", err)
+			jobHistory.AddError(err.Error())
 			continue
 		}
+		jobHistory.IncrSuccess()
 	}
+	_ = db.PersistJobHistory(jobHistory.End())
 }
 
 func SyncComponentRelationships(parentComponentID uuid.UUID, relationships []*pkg.ComponentRelationship) error {
@@ -117,8 +125,12 @@ func SyncComponentRelationships(parentComponentID uuid.UUID, relationships []*pk
 func ComponentCostRun() {
 	logger.Debugf("Syncing component costs")
 
+	jobHistory := models.NewJobHistory("ComponentCostSync", "", "").Start()
 	err := db.UpdateComponentCosts()
 	if err != nil {
 		logger.Errorf("Error updating component costs: %v", err)
+		_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+		return
 	}
+	_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
 }

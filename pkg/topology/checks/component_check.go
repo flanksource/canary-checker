@@ -9,6 +9,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
@@ -20,14 +21,19 @@ func ComponentCheckRun() {
 		logger.Errorf("error getting components: %v", err)
 		return
 	}
+	jobHistory := models.NewJobHistory("ComponentCheckRelationshipSync", "", "").Start()
+	_ = db.PersistJobHistory(jobHistory)
 	for _, component := range components {
 		relationships := GetCheckComponentRelationshipsForComponent(component)
 		err = SyncCheckComponentRelationshipsForComponent(component.ID, relationships)
 		if err != nil {
 			logger.Errorf("error persisting relationships: %v", err)
+			jobHistory.AddError(err.Error())
 			continue
 		}
+		jobHistory.IncrSuccess()
 	}
+	_ = db.PersistJobHistory(jobHistory.End())
 }
 
 func GetCheckComponentRelationshipsForComponent(component *pkg.Component) (relationships []*pkg.CheckComponentRelationship) {

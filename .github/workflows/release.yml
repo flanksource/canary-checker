@@ -27,7 +27,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: v1.17.x
+          go-version: v1.18.x
       - uses: actions/cache@v2
         with:
           path: |
