@@ -29,7 +29,7 @@ spec:
           - kind: Node
             name: k8s
             display:
-              javascript: JSON.stringify(k8s.getNodeTopology(results)) 
+              javascript: JSON.stringify(k8s.getNodeTopology(results))
       properties:
         - name: node-metrics
           lookup:
@@ -60,7 +60,7 @@ spec:
               - junit-fail**
               - junit-pass**
             display:
-              javascript: JSON.stringify(k8s.getPodTopology(results)) 
+              javascript: JSON.stringify(k8s.getPodTopology(results))
       properties:
         - name: pod-metrics
           lookup:
@@ -106,4 +106,3 @@ spec:
   #               }
   #               ]
   #               JSON.stringify(props)
-

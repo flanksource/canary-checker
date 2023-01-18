@@ -17,4 +17,3 @@ spec:
     - selectors:
         - labelSelector: "component=kube-scheduler"
       name: kube-scheduler
-        
