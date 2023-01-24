@@ -7,7 +7,7 @@ ARCH = $(shell uname -m | sed 's/x86_64/amd64/')
 KUSTOMIZE=$(PWD)/.bin/kustomize
 
 ifeq ($(VERSION),)
-  VERSION_TAG=$(shell git describe --abbrev=0 --tags --exact-match 2>/dev/null || echo latest)
+  VERSION_TAG=$(shell git describe --abbrev=0 --tags || echo latest)
 else
   VERSION_TAG=$(VERSION)
 endif

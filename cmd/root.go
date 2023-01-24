@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/flanksource/canary-checker/pkg/cache"
@@ -35,11 +34,6 @@ var pushServers, pullServers []string
 var sharedLibrary []string
 var exposeEnv bool
 var logPass, logFail bool
-var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
-)
 
 func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&httpPort, "httpPort", httpPort, "Port to expose a health dashboard ")
@@ -70,18 +64,6 @@ func readFromEnv(v string) string {
 func init() {
 	logger.BindFlags(Root.PersistentFlags())
 
-	if len(commit) > 8 {
-		version = fmt.Sprintf("%v, commit %v, built at %v", version, commit[0:8], date)
-	}
-	Root.AddCommand(&cobra.Command{
-		Use:   "version",
-		Short: "Print the version of canary-checker",
-		Args:  cobra.MinimumNArgs(0),
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(version)
-		},
-	})
-	runner.Version = version
 	Root.PersistentFlags().StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database")
 	Root.PersistentFlags().BoolVar(&db.Trace, "db-trace", false, "Trace database queries")
 	Root.PersistentFlags().BoolVar(&logFail, "log-fail", true, "Log every failing check")
