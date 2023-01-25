@@ -80,7 +80,7 @@ Canary Checker is a Kubernetes native multi-tenant synthetic monitoring system. 
 
 Before installing the Canary Checker, please ensure you have the [prerequisites installed](docs/prereqs.md) on your Kubernetes cluster.
 
-The recommded method for installing Canary Checker is using [helm](https://helm.sh/)
+The recommended method for installing Canary Checker is using [helm](https://helm.sh/)
 
 ### Install Helm
 
