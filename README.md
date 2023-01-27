@@ -130,7 +130,7 @@ The helm chart will create a postgres server statefulset, with a random password
 
 To specify a username and password for the chart-managed Postgres server, create a secret in the namespace that the chart will install to, named `postgres-connection`, which contains `POSTGRES_USER` and `POSTGRES_PASSWORD` keys.
 
-#### External Postgres Server
+##### External Postgres Server
 
 In order to connect to an existing Postgres server, a database must be created on the server, along with a user that has administrator permissions for the database.git 
 
@@ -145,7 +145,7 @@ The connection URI must be specified in the format `postgresql://"$user":"$passw
 
 #### Flanksource UI
 
-By default, the canary checker only presents an API.  To view the data graphically, the Flankdource UI is required, and is installed by default. The UI should be configured to allow external access to via ingress
+The canary checker itself only presents an API.  To view the data graphically, the Flanksource UI is required, and is installed by default. The UI should be configured to allow external access to via ingress
 
 |                     |                   |
 |---------------------|-------------------|
