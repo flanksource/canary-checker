@@ -40,7 +40,7 @@ echo "::endgroup::"
 
 echo "::group::Operator"
 ## starting operator in background
-go run main.go operator -vvv --db="postgres://postgres:mysecretpassword@localhost:5432/postgres" --maxStatusCheckCount=1 &
+go run main.go operator --db-migrations -vvv --db="postgres://postgres:mysecretpassword@localhost:5432/postgres?sslmode=disable" --maxStatusCheckCount=1 &
 PROC_ID=$!
 
 ## sleeping for a bit to let the operator start and statuses to be present
