@@ -59,8 +59,8 @@ func NewSession(ctx *context.Context, conn v1.AWSConnection) (*aws.Config, error
 		cfg.Region = conn.Region
 	}
 	if conn.Endpoint != "" {
-		cfg.EndpointResolver = aws.EndpointResolverFunc(
-			func(service, region string) (aws.Endpoint, error) {
+		cfg.EndpointResolverWithOptions = aws.EndpointResolverWithOptionsFunc(
+			func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 				return aws.Endpoint{URL: conn.Endpoint}, nil
 			})
 	}
