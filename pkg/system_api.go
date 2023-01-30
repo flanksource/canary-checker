@@ -202,6 +202,10 @@ type Component struct {
 	SelectorID       string                   `json:"-" gorm:"-"`
 	Incidents        []Incident               `json:"incidents,omitempty" gorm:"-"`
 	ConfigInsights   []map[string]interface{} `json:"insights,omitempty" gorm:"-"`
+	CostPerMinute    float64                  `json:"cost_per_minute,omitempty" gorm:"column:cost_per_minute"`
+	CostTotal1d      float64                  `json:"cost_total_1d,omitempty" gorm:"column:cost_total_1d"`
+	CostTotal7d      float64                  `json:"cost_total_7d,omitempty" gorm:"column:cost_total_7d"`
+	CostTotal30d     float64                  `json:"cost_total_30d,omitempty" gorm:"column:cost_total_30d"`
 }
 
 type ComponentRelationship struct {
