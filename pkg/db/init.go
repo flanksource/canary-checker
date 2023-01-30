@@ -3,41 +3,26 @@ package db
 import (
 	"context"
 	"database/sql"
-	"embed"
 	"fmt"
-	"os"
+	"path"
 	"strings"
 
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
-	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty"
 	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/log/logrusadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/jackc/pgx/v4/stdlib"
-	jsontime "github.com/liamylian/jsontime/v2/v2"
-	"github.com/pressly/goose/v3"
 	"github.com/robfig/cron/v3"
-	"github.com/sirupsen/logrus"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	glogger "gorm.io/gorm/logger"
 	"gorm.io/plugin/prometheus"
 )
-
-//go:embed migrations/*.sql
-var embedMigrations embed.FS
-
-//go:embed migrations/_always/*.sql
-var embedScripts embed.FS
 
 var Pool *pgxpool.Pool
 var Gorm *gorm.DB
 var ConnectionString string
 var DefaultExpiryDays int
-var pgxConnectionString string
+var RunMigrations bool
 var PostgresServer *embeddedpostgres.EmbeddedPostgres
-var Trace bool
 var HTTPEndpoint = "http://localhost:8080/db"
 
 func Start(ctx context.Context) error {
@@ -69,6 +54,25 @@ func IsConnected() bool {
 	return Pool != nil
 }
 
+func embeddedDB() error {
+	dataPath := strings.TrimSuffix(strings.TrimPrefix(ConnectionString, "embedded://"), "/")
+	logger.Infof("Starting embedded postgres server at %s", dataPath)
+	PostgresServer = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().
+		Port(6432).
+		DataPath(dataPath).
+		RuntimePath(path.Join(dataPath, "runtime")).
+		BinariesPath(path.Join(dataPath, "bin")).
+		Version(embeddedpostgres.V14).
+		Username("postgres").Password("postgres").
+		Database("canary"))
+	ConnectionString = "postgres://postgres:postgres@localhost:6432/canary"
+	err := PostgresServer.Start()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func Init() error {
 	if ConnectionString == "" {
 		logger.Warnf("No db connection string specified")
@@ -77,90 +81,24 @@ func Init() error {
 	if Pool != nil {
 		return nil
 	}
+
 	if strings.HasPrefix(ConnectionString, "embedded://") {
-		dataPath := strings.ReplaceAll(ConnectionString, "embedded://", "")
-		dataPath = strings.TrimSuffix(dataPath, "/")
-		err := os.Chmod(dataPath, 0750)
-		if err != nil {
-			logger.Errorf("error changing permission of dataPath: %v, Error: %v", dataPath, err)
-		}
-		dataDir := strings.Split(dataPath, "/")[len(strings.Split(dataPath, "/"))-1]
-		runtimePath := strings.TrimSuffix(dataPath, dataDir) + "runtime"
-		binPath := strings.TrimSuffix(dataPath, dataDir) + "bin"
-		logger.Infof("Starting embedded postgres server at %s", dataPath)
-		PostgresServer = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().
-			Port(6432).
-			DataPath(dataPath).
-			RuntimePath(runtimePath).
-			BinariesPath(binPath).
-			Version(embeddedpostgres.V14).
-			Username("postgres").Password("postgres").
-			Database("canary"))
-		ConnectionString = "postgres://postgres:postgres@localhost:6432/canary"
-		err = PostgresServer.Start()
-		if err != nil {
-			return err
-		}
+		return embeddedDB()
 	}
 
-	config, err := pgxpool.ParseConfig(ConnectionString)
-	if err != nil {
-		if err != nil {
-			return err
-		}
-	}
-
-	if Trace {
-		logrusLogger := &logrus.Logger{
-			Out:          os.Stderr,
-			Formatter:    new(logrus.TextFormatter),
-			Hooks:        make(logrus.LevelHooks),
-			Level:        logrus.DebugLevel,
-			ExitFunc:     os.Exit,
-			ReportCaller: false,
-		}
-		config.ConnConfig.Logger = logrusadapter.NewLogger(logrusLogger)
-	}
-
-	if config.MaxConns < 10 {
-		// prevent deadlocks from concurrent queries
-		config.MaxConns = 10
-	}
-
-	Pool, err = pgxpool.ConnectConfig(context.Background(), config)
+	var err error
+	Pool, err = duty.NewPgxPool(ConnectionString)
 	if err != nil {
 		return err
 	}
 
-	row := Pool.QueryRow(context.TODO(), "SELECT pg_size_pretty(pg_database_size($1));", config.ConnConfig.Database)
-	var size string
-	if err := row.Scan(&size); err != nil {
-		Pool = nil
-		return err
-	}
-	pgxConnectionString = stdlib.RegisterConnConfig(config.ConnConfig)
-
-	db, err := GetDB()
+	Gorm, err = duty.NewGorm(ConnectionString, duty.DefaultGormConfig())
 	if err != nil {
 		return err
-	}
-
-	Gorm, err = gorm.Open(postgres.New(postgres.Config{
-		Conn: db,
-	}), &gorm.Config{
-		FullSaveAssociations: true,
-	})
-
-	if err != nil {
-		return err
-	}
-
-	if logger.IsTraceEnabled() {
-		Gorm.Logger.LogMode(glogger.Info)
 	}
 
 	if err := Gorm.Use(prometheus.New(prometheus.Config{
-		DBName:      config.ConnConfig.Database,
+		DBName:      Pool.Config().ConnConfig.Database,
 		StartServer: false,
 		MetricsCollector: []prometheus.MetricsCollector{
 			&prometheus.Postgres{},
@@ -169,44 +107,13 @@ func Init() error {
 		logger.Warnf("Failed to register prometheus metrics: %v", err)
 	}
 
-	jsontime.AddTimeFormatAlias("postgres_timestamp", v1.PostgresTimestampFormat)
-	return Migrate()
-}
-
-func Migrate() error {
-	goose.SetTableName("canary_checker_db_version")
-	goose.SetBaseFS(embedMigrations)
-	db, err := GetDB()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-	for {
-		if err := goose.UpByOne(db, "migrations", goose.WithAllowMissing()); err == goose.ErrNoNextVersion {
-			break
-		} else if err != nil {
+	if RunMigrations {
+		if err := duty.Migrate(ConnectionString); err != nil {
 			return err
 		}
 	}
 
-	// Run idempotent migrations which are written in
-	// the pkg/db/always.sql file. There may be race conditions where certain tables
-	// may not exist or dependent on other migrations which is why it is always run
-	// after migrations are completed
-
-	scripts, _ := embedScripts.ReadDir("migrations/_always")
-
-	for _, file := range scripts {
-		script, err := embedScripts.ReadFile("migrations/_always/" + file.Name())
-		if err != nil {
-			return err
-		}
-		if _, err := Pool.Exec(context.TODO(), string(script)); err != nil {
-			return err
-		}
-	}
-
-	return err
+	return nil
 }
 
 func Cleanup() {
@@ -223,7 +130,7 @@ func Cleanup() {
 }
 
 func GetDB() (*sql.DB, error) {
-	return sql.Open("pgx", pgxConnectionString)
+	return duty.NewDB(ConnectionString)
 }
 
 func ConvertNamedParams(sql string, namedArgs map[string]interface{}) (string, []interface{}) {

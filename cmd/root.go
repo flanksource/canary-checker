@@ -65,7 +65,7 @@ func init() {
 	logger.BindFlags(Root.PersistentFlags())
 
 	Root.PersistentFlags().StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database")
-	Root.PersistentFlags().BoolVar(&db.Trace, "db-trace", false, "Trace database queries")
+	Root.PersistentFlags().BoolVar(&db.RunMigrations, "db-migrations", false, "Run database migrations")
 	Root.PersistentFlags().BoolVar(&logFail, "log-fail", true, "Log every failing check")
 	Root.PersistentFlags().BoolVar(&logPass, "log-pass", false, "Log every passing check")
 	Root.PersistentFlags().StringArrayVar(&sharedLibrary, "shared-library", []string{}, "Add javascript files to be shared by all javascript templates")
