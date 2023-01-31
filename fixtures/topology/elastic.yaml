@@ -14,22 +14,41 @@ spec:
       type: ElasticSearchNode
       properties:
         - name: disk-space-total
-          kubernetes:
-            - kind: PersistentVolumeClaim
-              namespace: default
-              selectors:
-                matchLabels: common.k8s.elastic.co/type=elasticsearch
+          http:
+            - endpoint: http://elasticsearch-http.default.svc:9200/_clusters/stats
               transform:
-                include: spec.resources.requests.storage
+                include: nodes.os.fs.available
+              authentication:
+                username:
+                  value: elastic
+                password:
+                  valueFrom:
+                    secretKeyRef:
+                      name: elasticsearch-elastic-user
         - name: disk-space-used
-        - name: version
-          kubernetes:
-            - kind: Pod
-              namespace: default
-              selectors:
-                matchLabels: common.k8s.elastic.co/type=elasticsearch
+          http:
+            - endpoint: http://elasticsearch-http.default.svc:9200/_clusters/stats
               transform:
-                include: metadata.labels.elasticsearch\.k8s\.elastic\.co/version
+                include: nodes.os.fs.total
+              authentication:
+                username:
+                  value: elastic
+                password:
+                  valueFrom:
+                    secretKeyRef:
+                      name: elasticsearch-elastic-user
+        - name: version
+          http:
+            - endpoint: http://elasticsearch-http.default.svc:9200/_clusters/stats
+              transform:
+                include: nodes.versions
+              authentication:
+                username:
+                  value: elastic
+                password:
+                  valueFrom:
+                    secretKeyRef:
+                      name: elasticsearch-elastic-user
         - name: jvm-usage
           http:
             - endpoint: http://elasticsearch-http.default.svc:9200/_nodes/jvm
@@ -41,21 +60,29 @@ spec:
                     secretKeyRef:
                       name: elasticsearch-elastic-user
         - name: memory
-          kubernetes:
-            - kind: PodMetrics
-              namespace: default
-              selectors:
-                matchLabels: common.k8s.elastic.co/type=elasticsearch
+          http:
+            - endpoint: http://elasticsearch-http.default.svc:9200/_clusters/stats
               transform:
-                include: containers[0].usage.memory
+                include: nodes.os.mem.total
+              authentication:
+                username:
+                  value: elastic
+                password:
+                  valueFrom:
+                    secretKeyRef:
+                      name: elasticsearch-elastic-user
         - name: cores
-          kubernetes:
-            - kind: PodMetrics
-              namespace: default
-              selectors:
-                matchLabels: common.k8s.elastic.co/type=elasticsearch
+          http:
+            - endpoint: http://elasticsearch-http.default.svc:9200/_nodes/os
               transform:
-                include: containers[0].usage.cpu
+                include: os.available_processors
+              authentication:
+                username:
+                  value: elastic
+                password:
+                  valueFrom:
+                    secretKeyRef:
+                      name: elasticsearch-elastic-user
         - name: load
     - name: index
       type: ElasticSearchIndex
@@ -64,6 +91,8 @@ spec:
         - name: documents
           http:
             - endpoint: http://elasticsearch-http.default.svc:9200/_stats
+              transform:
+                include: _all.primaries.docs.count
               authentication:
                 username:
                   value: elastic
@@ -74,6 +103,8 @@ spec:
         - name: size
           http:
             - endpoint: http://elasticsearch-http.default.svc:9200/_stats
+              transform:
+                include: _all.primaries.store.size_in_bytes
               authentication:
                 username:
                   value: elastic
@@ -94,6 +125,8 @@ spec:
         - name: unhealthy-indices
           http:
             - endpoint: http://elasticsearch-http.default.svc:9200/_stats
+              transform:
+                include: _all.primaries.indexing.index_failed
               authentication:
                 username:
                   value: elastic
@@ -103,11 +136,50 @@ spec:
                       name: elasticsearch-elastic-user
   properties:
     - name: version
-      kubernetes:
-        - kind: ElasticSearch
-          namespace: default
+      http:
+        - endpoint: http://elasticsearch-http.default.svc:9200/_clusters/stats
           transform:
-            include: spec.version
+            include: nodes.versions
+          authentication:
+            username:
+              value: elastic
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-elastic-user
     - name: disk-space-used
+      http:
+        - endpoint: http://elasticsearch-http.default.svc:9200/_clusters/stats
+          transform:
+            include: nodes.os.fs.available
+          authentication:
+            username:
+              value: elastic
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-elastic-user
     - name: disk-space-free-min
+      http:
+        - endpoint: http://elasticsearch-http.default.svc:9200/_clusters/stats
+          transform:
+            include: nodes.os.fs.total
+          authentication:
+            username:
+              value: elastic
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-elastic-user
     - name: total-documents
+      http:
+        - endpoint: http://elasticsearch-http.default.svc:9200/_stats
+          transform:
+            include: _all.primaries.docs.count
+          authentication:
+            username:
+              value: elastic
+            password:
+              valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-elastic-user
