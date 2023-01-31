@@ -1126,6 +1126,7 @@ spec:
                               description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
                               type: string
                           type: object
+                          x-kubernetes-map-type: atomic
                         type: array
                       description:
                         description: Description for the check
@@ -1351,6 +1352,7 @@ spec:
                         required:
                           - key
                         type: object
+                        x-kubernetes-map-type: atomic
                       fieldRef:
                         description: 'Selects a field of the pod: supports metadata.name, metadata.namespace, metadata.labels, metadata.annotations, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.'
                         properties:
@@ -1363,6 +1365,7 @@ spec:
                         required:
                           - fieldPath
                         type: object
+                        x-kubernetes-map-type: atomic
                       secretKeyRef:
                         description: Selects a key of a secret in the pod's namespace
                         properties:
@@ -1378,6 +1381,7 @@ spec:
                         required:
                           - key
                         type: object
+                        x-kubernetes-map-type: atomic
                       value:
                         type: string
                     type: object
