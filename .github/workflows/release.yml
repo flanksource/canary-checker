@@ -77,16 +77,6 @@ jobs:
   #       env:
   #         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
   #         MKDOCS_INSIDERS: ${{secrets.MKDOCS_INSIDERS}}
-  trigger:
-    runs-on: ubuntu-latest
-    needs: docker
-    steps:
-      - name: send dispatch
-        uses: peter-evans/repository-dispatch@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          repository: flanksource/aws-sandbox
-          event-type: canary-checker-release
   helm:
     runs-on: ubuntu-latest
     needs: [semantic-release, docker]
