@@ -20,7 +20,7 @@
     wget -nv -nc -O https://github.com/flanksource/canary-checker/releases/latest/download/canary-checker.exe
     ```
 
-### Windows Service
+## Windows Service
 
 Canary Checker can be installed as a service in Windows environment using the `install-service.ps1` which is available at the root of the repo.
 The script accepts the following parameters to define the service.
