@@ -53,8 +53,10 @@ func (r *SystemReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 	if !controllerutil.ContainsFinalizer(systemTemplate, SystemTemplateFinalizerName) {
-		logger.Info("adding finalizer", "finalizers", systemTemplate.GetFinalizers())
 		controllerutil.AddFinalizer(systemTemplate, SystemTemplateFinalizerName)
+		if err := r.Client.Update(ctx, systemTemplate); err != nil {
+			logger.Error(err, "failed to update finalizers")
+		}
 	}
 
 	if !systemTemplate.DeletionTimestamp.IsZero() {
@@ -70,16 +72,33 @@ func (r *SystemReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	systemTemplate.Status.PersistedID = &id
+
+	// If template does not have a PersistedID, update its status to set one
+	if systemTemplate.GetPersistedID() == "" {
+		var systemTemplateForStatus v1.SystemTemplate
+		// We have to fetch the object again to avoid client caching old object
+		err = r.Get(ctx, req.NamespacedName, &systemTemplateForStatus)
+		if err != nil {
+			logger.Error(err, "Error fetching system template for status update")
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+		}
+
+		systemTemplateForStatus.Status.PersistedID = &id
+		err = r.Status().Update(ctx, &systemTemplateForStatus)
+		if err != nil {
+			logger.Error(err, "failed to update status for system template")
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+		}
+
+	}
+
 	// Sync jobs if system template is created or updated
-	if changed || systemTemplate.Status.ObservedGeneration == 1 {
+	if changed || systemTemplate.Generation == 1 {
 		if err := systemJobs.SyncSystemJob(*systemTemplate); err != nil {
 			logger.Error(err, "failed to sync system template job")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}
 	}
-	systemTemplate.Status.ObservedGeneration = systemTemplate.Generation
-	r.Patch(systemTemplate)
 	return ctrl.Result{}, nil
 }
 
@@ -88,14 +107,4 @@ func (r *SystemReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1.SystemTemplate{}).
 		Complete(r)
-}
-
-func (r *SystemReconciler) Patch(systemTemplate *v1.SystemTemplate) {
-	r.Log.V(3).Info("patching", "systemTemplate", systemTemplate.Name, "namespace", systemTemplate.Namespace, "status", systemTemplate.Status.Status)
-	if err := r.Update(gocontext.Background(), systemTemplate, &client.UpdateOptions{}); err != nil {
-		r.Log.Error(err, "failed to patch", "systemTemplate", systemTemplate.Name)
-	}
-	if err := r.Status().Update(gocontext.Background(), systemTemplate); err != nil {
-		r.Log.Error(err, "failed to update status", "systemTemplate", systemTemplate.Name)
-	}
 }
