@@ -104,6 +104,7 @@ spec:
             - --httpPort
             - "8080"
             - --disable-postgrest={{ .Values.disablePostgrest }}
+            - --db-migrations={{ .Values.db.runMigrations }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
