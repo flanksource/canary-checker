@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"path"
 	"strings"
 
@@ -56,6 +57,11 @@ func IsConnected() bool {
 
 func embeddedDB() error {
 	dataPath := strings.TrimSuffix(strings.TrimPrefix(ConnectionString, "embedded://"), "/")
+	err := os.Chmod(dataPath, 0750)
+	if err != nil {
+		logger.Errorf("Error changing permission of dataPath: %v, Error: %v", dataPath, err)
+		return err
+	}
 	logger.Infof("Starting embedded postgres server at %s", dataPath)
 	PostgresServer = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().
 		Port(6432).
@@ -66,11 +72,7 @@ func embeddedDB() error {
 		Username("postgres").Password("postgres").
 		Database("canary"))
 	ConnectionString = "postgres://postgres:postgres@localhost:6432/canary"
-	err := PostgresServer.Start()
-	if err != nil {
-		return err
-	}
-	return nil
+	return PostgresServer.Start()
 }
 
 func Init() error {
