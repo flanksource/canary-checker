@@ -202,6 +202,7 @@ func PersistCheckComponentRelationship(relationship *pkg.CheckComponentRelations
 	return tx.Error
 }
 
+// TODO: Simplify logic and improve readability
 func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 	existing := &pkg.Component{}
 	var persisted []uuid.UUID
@@ -222,6 +223,7 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 	if tx.Error != nil {
 		return persisted, tx.Error
 	}
+
 	if existing.ID != uuid.Nil {
 		component.ID = existing.ID
 		tx = Gorm.Table("components").Clauses(
@@ -229,7 +231,10 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 				Columns:   []clause.Column{{Name: "system_template_id"}, {Name: "name"}, {Name: "type"}, {Name: "parent_id"}},
 				UpdateAll: true,
 			},
-		).UpdateColumns(component).Update("deleted_at", nil) // explicitly set deleted_at to null; UpdateColumns doesn't set deleted_at to null. Needed in case a component is deleted but found again in the next sync
+		).UpdateColumns(component)
+
+		// Since gorm ignores nil fields, we are setting deleted_at explicitly
+		Gorm.Table("components").Where("id = ?", existing.ID).UpdateColumn("deleted_at", nil)
 	} else {
 		tx = Gorm.Table("components").Clauses(
 			clause.OnConflict{
@@ -276,39 +281,38 @@ func DeleteSystemTemplate(systemTemplate *v1.SystemTemplate) error {
 	if tx.Error != nil {
 		return tx.Error
 	}
-	return DeleteComponnents(systemTemplate.GetPersistedID(), deleteTime)
+	return DeleteComponentsWithSystemTemplate(systemTemplate.GetPersistedID(), deleteTime)
 }
 
 // DeleteComponents deletes all components associated with a systemTemplate
-func DeleteComponnents(systemTemplateID string, deleteTime time.Time) error {
+func DeleteComponentsWithSystemTemplate(systemTemplateID string, deleteTime time.Time) error {
 	logger.Infof("Deleting all components associated with system: %s", systemTemplateID)
 	componentsModel := &[]pkg.Component{}
-	tx := Gorm.Where("system_template_id = ?", systemTemplateID).Find(componentsModel).UpdateColumn("deleted_at", deleteTime)
-	DeleteComponentRelationshipForComponents(componentsModel, deleteTime)
+	if err := Gorm.Where("system_template_id = ?", systemTemplateID).Find(componentsModel).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+		return err
+	}
 	for _, component := range *componentsModel {
+		if err := DeleteComponentChildren(component.ID.String(), deleteTime); err != nil {
+			logger.Errorf("Error deleting component[%s] children: %v", component.ID, err)
+		}
+
+		if err := DeleteComponentRelationship(component.ID.String(), deleteTime); err != nil {
+			logger.Errorf("Error deleting component[%s] relationship for component %v", component.ID, err)
+		}
+
 		if component.ComponentChecks != nil {
 			if err := DeleteInlineCanariesForComponent(component.ID.String(), deleteTime); err != nil {
-				logger.Debugf("Error deleting inline canaries for component %s: %v", component.ID, err)
-				continue
+				logger.Errorf("Error deleting inline canaries for component %s: %v", component.ID, err)
 			}
 		}
 
 		if component.Configs != nil {
 			if err := DeleteConfigRelationshipForComponent(component.ID, deleteTime); err != nil {
-				logger.Debugf("Error deleting config relationships for component %s: %v", component.ID, err)
-				continue
+				logger.Errorf("Error deleting config relationships for component %s: %v", component.ID, err)
 			}
 		}
 	}
-	return tx.Error
-}
-
-func DeleteComponentRelationshipForComponents(components *[]pkg.Component, deleteTime time.Time) {
-	for _, component := range *components {
-		if err := DeleteComponentRelationship(component.ID.String(), deleteTime); err != nil {
-			logger.Debugf("Error deleting component relationship for component %v", component.ID)
-		}
-	}
+	return nil
 }
 
 func DeleteComponentRelationship(componentID string, deleteTime time.Time) error {
@@ -317,24 +321,46 @@ func DeleteComponentRelationship(componentID string, deleteTime time.Time) error
 
 // DeleteComponentsWithID deletes all components with specified ids.
 func DeleteComponentsWithIDs(compIDs []string, deleteTime time.Time) error {
-	logger.Infof("deleting component with ids: %v", compIDs)
-	tx := Gorm.Table("components").Where("id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime)
-	if tx.Error != nil {
-		return tx.Error
+	logger.Infof("Deleting component ids: %v", compIDs)
+	if err := Gorm.Table("components").Where("id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+		return err
 	}
-	tx = Gorm.Table("component_relationships").Where("component_id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime)
-	if tx.Error != nil {
-		return tx.Error
+	if err := Gorm.Table("component_relationships").Where("component_id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+		return err
 	}
 	if err := Gorm.Table("check_component_relationships").Where("component_id in (?)", compIDs).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
 		return err
 	}
 	for _, compID := range compIDs {
 		if err := DeleteInlineCanariesForComponent(compID, deleteTime); err != nil {
-			logger.Debugf("Error deleting component relationship for component %v", compID)
+			logger.Errorf("Error deleting component[%s] relationship: %v", compID, err)
+		}
+
+		if err := DeleteComponentChildren(compID, deleteTime); err != nil {
+			logger.Errorf("Error deleting component[%s] children: %v", compID, err)
 		}
 	}
-	return tx.Error
+	return nil
+}
+
+func DeleteComponentChildren(componentID string, deleteTime time.Time) error {
+	return Gorm.Exec(`
+        WITH RECURSIVE
+        children AS (
+            SELECT parent_id as parent, id as descendant, 1 as level
+            FROM components
+            UNION ALL
+            SELECT c.parent, components.id as child, c.level + 1
+            FROM children as c
+            JOIN components
+            ON c.descendant = components.parent_id
+        ) 
+        UPDATE components
+        SET
+            deleted_at = ?
+        FROM children
+        WHERE components.id = children.descendant AND components.id = ?
+    `, deleteTime, componentID).Error
 }
 
 func DeleteInlineCanariesForComponent(componentID string, deleteTime time.Time) error {
