@@ -21,6 +21,7 @@ debug: false
 logLevel: "-v"
 
 db:
+  runMigrations: false
   embedded:
     # If the database is embedded, setting this to true will persist the contents of the database
     # through a persistent volume
