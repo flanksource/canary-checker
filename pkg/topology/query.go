@@ -13,14 +13,12 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty"
 )
 
 var json = jsontime.ConfigWithCustomTimeFormat
 
-const (
-	DefaultDepth       = 1
-	EmptyJSONBArraySQL = "(SELECT json_build_array())::jsonb"
-)
+const DefaultDepth = 1
 
 func parseItems(items string) []string {
 	if strings.TrimSpace(items) == "" {
@@ -83,50 +81,7 @@ type TopologyParams struct {
 }
 
 func (p TopologyParams) String() string {
-	s := ""
-	if p.ID != "" {
-		s += fmt.Sprintf("id=%s ", p.ID)
-	}
-	if p.TopologyID != "" {
-		s += "topologyId=" + p.TopologyID
-	}
-	if p.ComponentID != "" {
-		s += " componentId=" + p.ComponentID
-	}
-	if p.Depth > 0 {
-		s += fmt.Sprintf(" depth=%d", p.Depth)
-	}
-	if len(p.Status) > 0 {
-		s += " status=" + strings.Join(p.Status, ",")
-	}
-	if len(p.Types) > 0 {
-		s += " types=" + strings.Join(p.Types, ",")
-	}
-	if p.Flatten {
-		s += " flatten=true"
-	}
-	if p.Labels != "" {
-		s += " labels=" + p.Labels
-	}
-	if p.Owner != "" {
-		s += " owner=" + p.Owner
-	}
-	if p.IncludeConfig {
-		s += " includeConfig=true"
-	}
-	if p.IncludeHealth {
-		s += " includeHealth=true"
-	}
-	if p.IncludeIncidents {
-		s += " includeIncidents=true"
-	}
-	if p.IncludeInsights {
-		s += " includeInsights=true"
-	}
-	if p.IncludeInsightsSummary {
-		s += " includeInsightsSummary=true"
-	}
-	return strings.TrimSpace(s)
+	return fmt.Sprintf("%#v", p)
 }
 
 func (p TopologyParams) getLabels() map[string]string {
@@ -156,100 +111,22 @@ func (p TopologyParams) getID() string {
 	return ""
 }
 
-func (p TopologyParams) GetComponentWhereClause() string {
-	s := "where components.deleted_at is null "
-	if p.getID() != "" {
-		s += `and (starts_with(path,
-			(SELECT
-				(CASE WHEN (path IS NULL OR path = '') THEN id :: text ELSE concat(path,'.', id) END)
-				FROM components where id = :id)
-			) or id = :id or path = :id :: text)`
-	}
-	if p.Owner != "" {
-		s += " AND (components.owner = :owner or id = :id)"
-	}
-	if p.Labels != "" {
-		s += " AND (components.labels @> :labels"
-		if p.getID() != "" {
-			s += " or id = :id"
-		}
-		s += ")"
-	}
-	return s
-}
-
-func (p TopologyParams) GetComponentRelationWhereClause() string {
-	s := "where component_relationships.deleted_at is null AND parent.deleted_at is null"
-	if p.Owner != "" {
-		s += " AND (parent.owner = :owner)"
-	}
-	if p.Labels != "" {
-		s += " AND (parent.labels @> :labels)"
-	}
-	if p.getID() != "" {
-		s += ` and (component_relationships.relationship_id = :id or starts_with(component_relationships.relationship_path, (SELECT
-			(CASE WHEN (path IS NULL OR path = '') THEN id :: text ELSE concat(path,'.', id) END)
-			FROM components where id = :id)))`
-	} else {
-		s += ` and (parent.parent_id is null or starts_with(component_relationships.relationship_path, (SELECT
-			(CASE WHEN (path IS NULL OR path = '') THEN id :: text ELSE concat(path,'.', id) END)
-			FROM components where id = parent.id)))`
-	}
-	return s
-}
-
 func Query(params TopologyParams) (pkg.Components, error) {
-	query := fmt.Sprintf(`
-	SELECT json_agg(
-        jsonb_set_lax(
-            jsonb_set_lax(
-                jsonb_set_lax(
-                    jsonb_set_lax(
-                        jsonb_set_lax(
-                            jsonb_set_lax(
-                                to_jsonb(components),'{checks}', %s
-                            ), '{configs}', %s
-                        ), '{incidents}', %s
-                    ), '{insights}', %s
-                ), '{summary,insights}', %s
-            ), '{summary,incidents}', %s
-        )
-    ) :: jsonb AS components FROM components %s
-	UNION (
-    SELECT json_agg(
-        jsonb_set_lax(
-            jsonb_set_lax(
-                jsonb_set_lax(
-                    jsonb_set_lax(
-                        jsonb_set_lax(
-                            jsonb_set_lax(
-                                jsonb_set_lax(
-                                    to_jsonb(components), '{parent_id}', to_jsonb(component_relationships.relationship_id), true
-                                ),'{checks}', %s
-                            ), '{configs}', %s
-                        ), '{incidents}', %s
-                    ), '{insights}', %s
-                ), '{summary,insights}', %s
-            ), '{summary,incidents}', %s
-        )
-    ):: jsonb AS components FROM component_relationships
-    INNER JOIN components ON components.id = component_relationships.component_id
-    INNER JOIN components AS parent ON component_relationships.relationship_id = parent.id %s)`,
-		getChecksForComponents(), params.getConfigForComponents(), params.getIncidentsForComponents(), params.getConfigAnalysisForComponents(), params.getConfigAnalysisSummaryForComponents(), getIncidentSummaryForComponents(), params.GetComponentWhereClause(),
-		getChecksForComponents(), params.getConfigForComponents(), params.getIncidentsForComponents(), params.getConfigAnalysisForComponents(), params.getConfigAnalysisSummaryForComponents(), getIncidentSummaryForComponents(), params.GetComponentRelationWhereClause())
-
-	args := make(map[string]interface{})
-	if params.getID() != "" {
-		args["id"] = params.getID()
-	}
-	if params.Owner != "" {
-		args["owner"] = params.Owner
-	}
-	if params.Labels != "" {
-		args["labels"] = params.getLabels()
-	}
-
-	logger.Tracef("Querying topology (%s) => %s", params, query)
+	query, args := duty.TopologyQuery(duty.TopologyOptions{
+		ID:                     params.getID(),
+		Owner:                  params.Owner,
+		Labels:                 params.getLabels(),
+		Flatten:                params.Flatten,
+		Depth:                  params.Depth,
+		Status:                 params.Status,
+		Types:                  params.Types,
+		IncludeIncidents:       params.IncludeIncidents,
+		IncludeHealth:          params.IncludeHealth,
+		IncludeConfig:          params.IncludeConfig,
+		IncludeInsights:        params.IncludeInsights,
+		IncludeInsightsSummary: params.IncludeInsightsSummary,
+	})
+	logger.Infof("Querying topology (%s) => %s", params, query)
 
 	var results pkg.Components
 	rows, err := db.QueryNamed(context.Background(), query, args)
@@ -366,106 +243,4 @@ func filterComponentsWithDepth(components []*pkg.Component, depth int) []*pkg.Co
 		comp.Components = filterComponentsWithDepth(comp.Components, depth-1)
 	}
 	return components
-}
-
-func getChecksForComponents() string {
-	return `(
-        SELECT json_agg(checks) FROM checks
-        LEFT JOIN check_component_relationships ON checks.id = check_component_relationships.check_id
-        WHERE check_component_relationships.component_id = components.id AND check_component_relationships.deleted_at IS NULL
-        GROUP BY check_component_relationships.component_id
-    ) :: jsonb`
-}
-
-func (p TopologyParams) getConfigForComponents() string {
-	if !p.IncludeConfig {
-		return EmptyJSONBArraySQL
-	}
-	return `(
-        SELECT json_agg(json_build_object(
-            'id', config_items.id,
-            'name', config_items.name,
-            'external_type', config_items.external_type,
-            'config_type', config_items.config_type,
-            'cost_per_minute', config_items.cost_per_minute,
-            'cost_total_1d', config_items.cost_total_1d,
-            'cost_total_7d', config_items.cost_total_7d,
-            'cost_total_30d', config_items.cost_total_30d
-        )) FROM config_items
-        LEFT JOIN config_component_relationships ON config_items.id = config_component_relationships.config_id
-        WHERE config_component_relationships.component_id = components.id AND config_component_relationships.deleted_at IS NULL
-        GROUP BY config_component_relationships.component_id
-    ) :: jsonb`
-}
-
-func (p TopologyParams) getIncidentsForComponents() string {
-	if !p.IncludeIncidents {
-		return EmptyJSONBArraySQL
-	}
-	return `(
-        SELECT json_agg(json_build_object(
-            'id', incidents.id,
-            'title', incidents.title,
-            'severity', incidents.severity,
-            'description', incidents.description,
-            'type', incidents.type
-        )) FROM incidents
-        INNER JOIN hypotheses ON hypotheses.incident_id = incidents.id
-        INNER JOIN evidences ON evidences.hypothesis_id = hypotheses.id
-        WHERE evidences.component_id = components.id AND (incidents.resolved IS NULL AND incidents.closed IS NULL)
-        GROUP BY evidences.component_id
-    ) :: jsonb`
-}
-
-func getIncidentSummaryForComponents() string {
-	return `(
-        SELECT json_object_agg(flatten.type, flatten.summary_json)
-        FROM (
-            SELECT summary.component_id, summary.type, json_object_agg(f.k, f.v) as summary_json
-            FROM (
-                SELECT evidences.component_id AS component_id, incidents.type, json_build_object(severity, count(*)) AS severity_agg
-                FROM incidents
-                INNER JOIN hypotheses ON hypotheses.incident_id = incidents.id
-                INNER JOIN evidences ON evidences.hypothesis_id = hypotheses.id
-                WHERE evidences.component_id = components.id AND (incidents.resolved IS NULL AND incidents.closed IS NULL)
-                GROUP BY incidents.severity, incidents.type, evidences.component_id
-            ) AS summary, json_each(summary.severity_agg) AS f(k,v) GROUP BY summary.type, summary.component_id
-        ) AS flatten GROUP BY flatten.component_id
-    ) :: jsonb`
-}
-
-func (p TopologyParams) getConfigAnalysisForComponents() string {
-	if !p.IncludeInsights {
-		return EmptyJSONBArraySQL
-	}
-	return `(
-        SELECT json_agg(json_build_object(
-            'config_id', config_analysis.config_id,
-            'analyzer', config_analysis.analyzer,
-            'analysis_type', config_analysis.analysis_type,
-            'severity', config_analysis.severity
-        )) FROM config_analysis
-        LEFT JOIN config_component_relationships ON config_analysis.config_id = config_component_relationships.config_id
-        WHERE config_component_relationships.component_id = components.id AND config_component_relationships.deleted_at IS NULL
-        GROUP BY config_component_relationships.component_id
-    ) :: jsonb`
-}
-
-func (p TopologyParams) getConfigAnalysisSummaryForComponents() string {
-	if !p.IncludeInsightsSummary {
-		return `(SELECT json_build_object())::jsonb`
-	}
-	return `(
-        SELECT json_object_agg(flatten.analysis_type, flatten.summary_json)
-        FROM (
-            SELECT summary.component_id, summary.analysis_type, json_object_agg(f.k, f.v) as summary_json
-            FROM (
-                SELECT config_component_relationships.component_id AS component_id, config_analysis.analysis_type, json_build_object(severity, count(*)) AS severity_agg
-                FROM config_analysis
-                LEFT JOIN config_component_relationships ON config_analysis.config_id = config_component_relationships.config_id
-                WHERE config_component_relationships.component_id = components.id AND config_component_relationships.deleted_at IS NULL
-                GROUP BY config_analysis.severity, config_analysis.analysis_type, config_component_relationships.component_id
-            ) AS summary, json_each(summary.severity_agg) AS f(k,v) GROUP BY summary.analysis_type, summary.component_id
-        ) AS flatten GROUP BY flatten.component_id
-    ) :: jsonb`
 }

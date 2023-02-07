@@ -147,6 +147,7 @@ func ConvertNamedParams(sql string, namedArgs map[string]interface{}) (string, [
 	return sql, args
 }
 
+// TODO: Use pgx/v5 and use Pool.Query(ctx, sql, pgx.NamedArgs{})
 func QueryNamed(ctx context.Context, sql string, args map[string]interface{}) (pgx.Rows, error) {
 	sql, namedArgs := ConvertNamedParams(sql, args)
 	return Pool.Query(ctx, sql, namedArgs...)
