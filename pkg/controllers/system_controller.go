@@ -89,7 +89,6 @@ func (r *SystemReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 			logger.Error(err, "failed to update status for system template")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}
-
 	}
 
 	// Sync jobs if system template is created or updated
