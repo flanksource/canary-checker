@@ -27,6 +27,20 @@ func parseItems(items string) []string {
 	return strings.Split(items, ",")
 }
 
+type TopologyParams struct {
+	ID                     string   `query:"id"`
+	TopologyID             string   `query:"topologyId"`
+	ComponentID            string   `query:"componentId"`
+	Owner                  string   `query:"owner"`
+	Labels                 string   `query:"labels"`
+	Status                 []string `query:"status"`
+	Types                  []string `query:"types"`
+	Depth                  int      `query:"depth"`
+	Flatten                bool     `query:"flatten"`
+	IncludeHealth          bool     `query:"includeHealth"`
+	IncludeInsightsSummary bool     `query:"includeInsightsSummary"`
+}
+
 func NewTopologyParams(values url.Values) TopologyParams {
 	params := TopologyParams{
 		ID:                     values.Get("id"),
@@ -37,10 +51,7 @@ func NewTopologyParams(values url.Values) TopologyParams {
 		Owner:                  values.Get("owner"),
 		Flatten:                values.Get("flatten") == "true",
 		Labels:                 values.Get("labels"),
-		IncludeConfig:          values.Get("includeConfig") != "",
 		IncludeHealth:          values.Get("includeHealth") != "false",
-		IncludeIncidents:       values.Get("includeIncidents") != "",
-		IncludeInsights:        values.Get("includeInsights") != "",
 		IncludeInsightsSummary: values.Get("includeInsightsSummary") != "false",
 	}
 
@@ -61,23 +72,6 @@ func NewTopologyParams(values url.Values) TopologyParams {
 		params.Depth = DefaultDepth
 	}
 	return params
-}
-
-type TopologyParams struct {
-	ID                     string   `query:"id"`
-	TopologyID             string   `query:"topologyId"`
-	ComponentID            string   `query:"componentId"`
-	Owner                  string   `query:"owner"`
-	Labels                 string   `query:"labels"`
-	Status                 []string `query:"status"`
-	Types                  []string `query:"types"`
-	Depth                  int      `query:"depth"`
-	Flatten                bool     `query:"flatten"`
-	IncludeConfig          bool     `query:"includeConfig"`
-	IncludeHealth          bool     `query:"includeHealth"`
-	IncludeIncidents       bool     `query:"includeIncidents"`
-	IncludeInsights        bool     `query:"includeInsights"`
-	IncludeInsightsSummary bool     `query:"includeInsightsSummary"`
 }
 
 func (p TopologyParams) String() string {
@@ -120,10 +114,7 @@ func Query(params TopologyParams) (pkg.Components, error) {
 		Depth:                  params.Depth,
 		Status:                 params.Status,
 		Types:                  params.Types,
-		IncludeIncidents:       params.IncludeIncidents,
 		IncludeHealth:          params.IncludeHealth,
-		IncludeConfig:          params.IncludeConfig,
-		IncludeInsights:        params.IncludeInsights,
 		IncludeInsightsSummary: params.IncludeInsightsSummary,
 	})
 	logger.Infof("Querying topology (%s) => %s", params, query)
