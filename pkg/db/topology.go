@@ -344,23 +344,10 @@ func DeleteComponentsWithIDs(compIDs []string, deleteTime time.Time) error {
 }
 
 func DeleteComponentChildren(componentID string, deleteTime time.Time) error {
-	return Gorm.Exec(`
-        WITH RECURSIVE
-        children AS (
-            SELECT parent_id as parent, id as descendant, 1 as level
-            FROM components
-            UNION ALL
-            SELECT c.parent, components.id as child, c.level + 1
-            FROM children as c
-            JOIN components
-            ON c.descendant = components.parent_id
-        ) 
-        UPDATE components
-        SET
-            deleted_at = ?
-        FROM children
-        WHERE components.id = children.descendant AND components.id = ?
-    `, deleteTime, componentID).Error
+	return Gorm.Table("components").
+		Where("path LIKE ?", "%"+componentID+"%").
+		Update("deleted_at", deleteTime).
+		Error
 }
 
 func DeleteInlineCanariesForComponent(componentID string, deleteTime time.Time) error {
