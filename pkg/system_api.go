@@ -134,10 +134,10 @@ func (components Components) CreateTreeStructure() Components {
 
 		c.TopologyType = ComponentType
 		if c.ParentId != nil {
-			toRemoveCompIDs = append(toRemoveCompIDs, c.ID)
 			parent := components.FindByID(*c.ParentId)
 			if parent != nil {
 				parent.Components = append(parent.Components, c)
+				toRemoveCompIDs = append(toRemoveCompIDs, c.ID)
 			}
 		}
 	}
