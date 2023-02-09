@@ -107,15 +107,9 @@ func (p TopologyParams) getID() string {
 
 func Query(params TopologyParams) (pkg.Components, error) {
 	query, args := duty.TopologyQuery(duty.TopologyOptions{
-		ID:                     params.getID(),
-		Owner:                  params.Owner,
-		Labels:                 params.getLabels(),
-		Flatten:                params.Flatten,
-		Depth:                  params.Depth,
-		Status:                 params.Status,
-		Types:                  params.Types,
-		IncludeHealth:          params.IncludeHealth,
-		IncludeInsightsSummary: params.IncludeInsightsSummary,
+		ID:     params.getID(),
+		Owner:  params.Owner,
+		Labels: params.getLabels(),
 	})
 	logger.Infof("Querying topology (%s) => %s", params, query)
 
