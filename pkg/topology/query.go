@@ -198,6 +198,33 @@ func (p TopologyParams) GetComponentRelationWhereClause() string {
 	return s
 }
 
+func QueryRenderComponents(ctx context.Context, systemTemplateID string) ([]pkg.Renderers, error) {
+	query := `select spec->'renderers' from templates where id = $1`
+	args := map[string]interface{}{
+		"id": systemTemplateID,
+	}
+
+	rows, err := db.QueryNamed(ctx, query, args)
+	if err != nil {
+		return nil, fmt.Errorf("db.QueryNamed(); %w", err)
+	}
+	defer rows.Close()
+
+	var results []pkg.Renderers
+	for rows.Next() {
+		var renderer pkg.Renderers
+		if rows.RawValues()[0] == nil {
+			continue
+		}
+		if err := json.Unmarshal(rows.RawValues()[0], &renderer); err != nil {
+			return nil, errors.Wrapf(err, "failed to unmarshal components: %s", rows.RawValues()[0])
+		}
+		results = append(results, renderer)
+	}
+
+	return results, nil
+}
+
 func Query(params TopologyParams) (pkg.Components, error) {
 	query := fmt.Sprintf(`
 	SELECT json_agg(

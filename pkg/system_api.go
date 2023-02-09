@@ -166,6 +166,17 @@ func (components Components) Walk() Components {
 	return comps
 }
 
+type RenderComponent struct {
+	Name string `json:"name,omitempty"`
+	Type string `json:"type,omitempty"`
+	JSX  string `json:"jsx,omitempty"`
+}
+
+type Renderers struct {
+	Components []RenderComponent `json:"components,omitempty"`
+	Properties []RenderComponent `json:"properties,omitempty"`
+}
+
 type Component struct {
 	Name         string              `json:"name,omitempty"`
 	ID           uuid.UUID           `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
@@ -188,6 +199,7 @@ type Component struct {
 	Lifecycle        string                   `json:"lifecycle,omitempty"`
 	Properties       Properties               `json:"properties,omitempty" gorm:"type:properties"`
 	Components       Components               `json:"components,omitempty" gorm:"-"`
+	Renderers        Renderers                `json:"renderers,omitempty" gorm:"-"`
 	ParentId         *uuid.UUID               `json:"parent_id,omitempty"` //nolint
 	Selectors        v1.ResourceSelectors     `json:"selectors,omitempty" gorm:"resourceSelectors" swaggerignore:"true"`
 	ComponentChecks  v1.ComponentChecks       `json:"-" gorm:"componentChecks" swaggerignore:"true"`

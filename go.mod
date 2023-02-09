@@ -40,6 +40,7 @@ require (
 	github.com/jackc/pgx/v4 v4.17.2
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
+	github.com/jvatic/goja-babel v0.0.0-20230204121733-ac82a55cfa50
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/liamylian/jsontime/v2 v2.0.0
 	github.com/lib/pq v1.10.7
@@ -120,6 +121,8 @@ require (
 	github.com/cloudflare/circl v1.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/dlclark/regexp2 v1.8.0 // indirect
+	github.com/dop251/goja v0.0.0-20230203172422-5460598cfa32 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/dustin/gojson v0.0.0-20160307161227-2e71ec9dd5ad // indirect
 	github.com/elastic/elastic-transport-go/v8 v8.1.0 // indirect
@@ -140,6 +143,7 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
+	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
