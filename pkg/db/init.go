@@ -73,7 +73,7 @@ func embeddedDB() error {
 		Version(embeddedpostgres.V14).
 		Username("postgres").Password("postgres").
 		Database("canary"))
-	ConnectionString = "postgres://postgres:postgres@localhost:6432/canary"
+	ConnectionString = "postgres://postgres:postgres@localhost:6432/canary?sslmode=disable"
 	err = PostgresServer.Start()
 	if err != nil {
 		return fmt.Errorf("error starting embedded postgres: %v", err)
