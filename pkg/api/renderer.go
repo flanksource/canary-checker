@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"text/template"
 
@@ -48,15 +49,14 @@ func GetCustomRenderer(ctx echo.Context) error {
 		return errorResonse(ctx, err, http.StatusInternalServerError)
 	}
 
-	ctx.Response().WriteHeader(http.StatusOK)
-	ctx.Response().Header().Add("Content-Type", "application/javascript")
-	ctx.Response().Write([]byte(registryResp))
-
-	return nil
+	return ctx.Stream(http.StatusOK, "application/javascript", registryResp)
 }
 
 func compileComponents(output map[string]component, components []pkg.RenderComponent, isProp bool) error {
-	babel.Init(len(components))
+	if err := babel.Init(len(components)); err != nil {
+		return fmt.Errorf("failed to init babel; %w", err)
+	}
+
 	for _, c := range components {
 		res, err := babel.TransformString(c.JSX, map[string]interface{}{
 			"plugins": []string{
@@ -90,13 +90,13 @@ func componentKey(isProp bool, c pkg.RenderComponent) string {
 	return fmt.Sprintf("%s_%s", prefix, c.Name)
 }
 
-func renderComponents(components map[string]component) (string, error) {
+func renderComponents(components map[string]component) (io.Reader, error) {
 	var buf bytes.Buffer
 	if err := jsComponentTpl.Execute(&buf, components); err != nil {
-		return "", fmt.Errorf("error generating components; %w", err)
+		return nil, fmt.Errorf("error generating components; %w", err)
 	}
 
-	return buf.String(), nil
+	return &buf, nil
 }
 
 const jsComponentRegistryTpl = `
