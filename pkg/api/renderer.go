@@ -43,7 +43,7 @@ func GetCustomRenderer(ctx echo.Context) error {
 		}
 	}
 
-	registryResp, err := renderComponent(components)
+	registryResp, err := renderComponents(components)
 	if err != nil {
 		return errorResonse(ctx, err, http.StatusInternalServerError)
 	}
@@ -65,7 +65,7 @@ func compileComponents(output map[string]component, components []pkg.RenderCompo
 			},
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("error transforming jsx; %w", err)
 		}
 
 		output[componentKey(isProp, c)] = component{
@@ -78,17 +78,22 @@ func compileComponents(output map[string]component, components []pkg.RenderCompo
 }
 
 func componentKey(isProp bool, c pkg.RenderComponent) string {
+	prefix := "component"
 	if isProp {
-		return fmt.Sprintf("property-%s-name", c.Name)
+		prefix = "property"
 	}
 
-	return fmt.Sprintf("component-%s-name", c.Name)
+	if c.Type != "" {
+		return fmt.Sprintf("%s_%s_%s", prefix, c.Type, c.Name)
+	}
+
+	return fmt.Sprintf("%s_%s", prefix, c.Name)
 }
 
-func renderComponent(components map[string]component) (string, error) {
+func renderComponents(components map[string]component) (string, error) {
 	var buf bytes.Buffer
 	if err := jsComponentTpl.Execute(&buf, components); err != nil {
-		return "", err
+		return "", fmt.Errorf("error generating components; %w", err)
 	}
 
 	return buf.String(), nil
@@ -96,18 +101,19 @@ func renderComponent(components map[string]component) (string, error) {
 
 const jsComponentRegistryTpl = `
 {{range $k, $v := .}}
-{{$v.JS}}
+const {{$k}} = {{$v.JS}}
 {{end}}
 
 const componentRegistry = {
-	{{range $k, $v := .}}"{{$k}}": {{$v.Name}},
+	{{range $k, $v := .}}"{{$k}}": {{$k}},
 	{{end}}
-}`
+};
+`
 
 func init() {
 	tpl, err := template.New("registry").Parse(jsComponentRegistryTpl)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("error parsing template jsComponentRegistryTpl. %w", err))
 	}
 
 	jsComponentTpl = tpl
