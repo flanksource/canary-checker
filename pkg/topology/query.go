@@ -179,7 +179,7 @@ func (p TopologyParams) GetComponentWhereClause() string {
 }
 
 func (p TopologyParams) GetComponentRelationWhereClause() string {
-	s := "where component_relationships.deleted_at is null"
+	s := "where component_relationships.deleted_at is null AND parent.deleted_at is null"
 	if p.Owner != "" {
 		s += " AND (parent.owner = :owner)"
 	}
