@@ -56,23 +56,29 @@ func IsConnected() bool {
 }
 
 func embeddedDB() error {
-	dataPath := strings.TrimSuffix(strings.TrimPrefix(ConnectionString, "embedded://"), "/")
-	err := os.Chmod(dataPath, 0750)
+	embeddedPath := strings.TrimSuffix(strings.TrimPrefix(ConnectionString, "embedded://"), "/")
+	err := os.Chmod(embeddedPath, 0750)
 	if err != nil {
-		logger.Errorf("Error changing permission of dataPath: %v, Error: %v", dataPath, err)
+		logger.Errorf("Error changing permission of dataPath: %v, Error: %v", embeddedPath, err)
 		return err
 	}
-	logger.Infof("Starting embedded postgres server at %s", dataPath)
+
+	logger.Infof("Starting embedded postgres server at %s", embeddedPath)
+
 	PostgresServer = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().
 		Port(6432).
-		DataPath(dataPath).
-		RuntimePath(path.Join(dataPath, "runtime")).
-		BinariesPath(path.Join(dataPath, "bin")).
+		DataPath(path.Join(embeddedPath, "data")).
+		RuntimePath(embeddedPath).
+		BinariesPath(embeddedPath).
 		Version(embeddedpostgres.V14).
 		Username("postgres").Password("postgres").
 		Database("canary"))
-	ConnectionString = "postgres://postgres:postgres@localhost:6432/canary"
-	return PostgresServer.Start()
+	ConnectionString = "postgres://postgres:postgres@localhost:6432/canary?sslmode=disable"
+	err = PostgresServer.Start()
+	if err != nil {
+		return fmt.Errorf("error starting embedded postgres: %v", err)
+	}
+	return nil
 }
 
 func Init() error {
@@ -85,7 +91,9 @@ func Init() error {
 	}
 
 	if strings.HasPrefix(ConnectionString, "embedded://") {
-		return embeddedDB()
+		if err := embeddedDB(); err != nil {
+			return err
+		}
 	}
 
 	var err error
