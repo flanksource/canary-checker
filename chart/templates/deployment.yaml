@@ -22,11 +22,13 @@ spec:
         labels:
           {{- include "canary-checker.labels" . | nindent 10 }}
       spec:
+        {{- if .Values.db.embedded.storageClass }}
         storageClassName: {{ .Values.db.embedded.storageClass }}
+        {{- end }}
         accessModes: ["ReadWriteOnce"]
         resources:
           requests:
-            storage: {{ .Values.db.embedded.storage }}
+            storage: {{ .Values.db.embedded.storage | default "10Gi"}}
   {{- end }}
   {{- end }}
   template:

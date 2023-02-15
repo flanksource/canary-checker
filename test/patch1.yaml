@@ -148,25 +148,6 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  # Disable reload/all in tests
-  annotations: null
-  name: canary-checker
-  namespace: platform-system
-spec:
-  template:
-    metadata:
-      annotations:
-        $patch: delete
-    spec:
-      containers:
-        - name: canary-checker
-          resources:
-            requests:
-              cpu: 10m
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
   name: cert-manager-webhook
   namespace: cert-manager
 spec:

@@ -32,8 +32,10 @@ spec:
         name: postgresql
       spec:
         accessModes: ["ReadWriteOnce"]
+        {{- if .Values.db.external.storageClass }}
         storageClassName: {{ .Values.db.external.storageClass }}
+        {{- end }}
         resources:
           requests:
-            storage: {{ .Values.db.external.storage }}
+            storage: {{ .Values.db.external.storage | default "10Gi" }}
 {{- end }}
