@@ -39,7 +39,7 @@ require (
 	github.com/hirochachacha/go-smb2 v1.0.10
 	github.com/jackc/pgx/v4 v4.18.0
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
-	github.com/jszwec/csvutil v1.5.0
+	github.com/jszwec/csvutil v1.7.1
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/liamylian/jsontime/v2 v2.0.0
 	github.com/lib/pq v1.10.7
