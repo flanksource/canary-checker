@@ -78,6 +78,8 @@ func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
 	var msg, errorMsg string
 	var pass = true
 	var lastTransitionedTime *metav1.Time
+	var highestLatency float64
+	var uptimeAgg pkg.Uptime
 
 	transitioned := false
 	for _, result := range results {
@@ -90,6 +92,15 @@ func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
 		checkStatus[checkKey] = &v1.CheckStatus{}
 		checkStatus[checkKey].Uptime1H = uptime.String()
 		checkStatus[checkKey].Latency1H = latency.String()
+
+		// Increment aggregate uptime
+		uptimeAgg.Passed += uptime.Passed
+		uptimeAgg.Failed += uptime.Failed
+
+		// Use highest latency for canary status
+		if latency.Rolling1H > highestLatency {
+			highestLatency = latency.Rolling1H
+		}
 
 		// Transition
 		q := cache.QueryParams{Check: checkKey, StatusCount: 1}
@@ -127,14 +138,6 @@ func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
 		}
 	}
 
-	// TODO: Uptime and Latency Agg
-	uptime, latency := metrics.Record(job.Canary, &pkg.CheckResult{
-		//Check:    v1.Check{Type: "canary"},
-		Check:    results[0].Check,
-		Pass:     pass,
-		Duration: duration,
-	})
-
 	payload := CanaryStatusPayload{
 		Pass:                 pass,
 		CheckStatus:          checkStatus,
@@ -142,8 +145,8 @@ func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
 		LastTransitionedTime: lastTransitionedTime,
 		Message:              msg,
 		ErrorMessage:         errorMsg,
-		Uptime:               uptime.String(),
-		Latency:              utils.Age(time.Duration(latency.Rolling1H) * time.Millisecond),
+		Uptime:               uptimeAgg.String(),
+		Latency:              utils.Age(time.Duration(highestLatency) * time.Millisecond),
 		NamespacedName:       job.GetNamespacedName(),
 	}
 
