@@ -87,90 +87,23 @@ spec:
     - name: index
       type: ElasticSearchIndex
       properties:
-        - name: name
-        - name: documents
-          http:
-            - endpoint: http://elasticsearch-http.default.svc:9200/_stats
-              transform:
-                include: _all.primaries.docs.count
-              authentication:
-                username:
-                  value: elastic
-                password:
-                  valueFrom:
-                    secretKeyRef:
-                      name: elasticsearch-elastic-user
-        - name: size
-          http:
-            - endpoint: http://elasticsearch-http.default.svc:9200/_stats
-              transform:
-                include: _all.primaries.store.size_in_bytes
-              authentication:
-                username:
-                  value: elastic
-                password:
-                  valueFrom:
-                    secretKeyRef:
-                      name: elasticsearch-elastic-user
-        - name: healthy-indices
-          http:
-            - endpoint: http://elasticsearch-http.default.svc:9200/_stats
-              authentication:
-                username:
-                  value: elastic
-                password:
-                  valueFrom:
-                    secretKeyRef:
-                      name: elasticsearch-elastic-user
-        - name: unhealthy-indices
-          http:
-            - endpoint: http://elasticsearch-http.default.svc:9200/_stats
-              transform:
-                include: _all.primaries.indexing.index_failed
-              authentication:
-                username:
-                  value: elastic
-                password:
-                  valueFrom:
-                    secretKeyRef:
-                      name: elasticsearch-elastic-user
+        - name: index-metrics
+          lookup:
+            kubernetes:
+              - kind: ElasticMetrics
+                ready: false
+                name: elasticmetrics
+                display:
+                  javascript: JSON.stringify(elastic.getIndexMetrics(results))
   properties:
-    - name: version
-      http:
-        - endpoint: http://elasticsearch-http.default.svc:9200/_clusters/stats
-          transform:
-            include: nodes.versions
-          authentication:
-            username:
-              value: elastic
-            password:
-              valueFrom:
-                secretKeyRef:
-                  name: elasticsearch-elastic-user
-    - name: disk-space-used
-      http:
-        - endpoint: http://elasticsearch-http.default.svc:9200/_clusters/stats
-          transform:
-            include: nodes.os.fs.available
-          authentication:
-            username:
-              value: elastic
-            password:
-              valueFrom:
-                secretKeyRef:
-                  name: elasticsearch-elastic-user
-    - name: disk-space-free-min
-      http:
-        - endpoint: http://elasticsearch-http.default.svc:9200/_clusters/stats
-          transform:
-            include: nodes.os.fs.total
-          authentication:
-            username:
-              value: elastic
-            password:
-              valueFrom:
-                secretKeyRef:
-                  name: elasticsearch-elastic-user
+    - name: node-metrics
+      lookup:
+        kubernetes:
+          - kind: ElasticMetrics
+            ready: false
+            name: elasticmetrics
+            display:
+              javascript: JSON.stringify(elastic.getNodeMetrics(results))
     - name: total-documents
       http:
         - endpoint: http://elasticsearch-http.default.svc:9200/_stats
