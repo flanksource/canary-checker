@@ -81,7 +81,6 @@ func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
 
 	transitioned := false
 	for _, result := range results {
-
 		// Increment duration
 		duration += result.Duration
 

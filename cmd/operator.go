@@ -139,5 +139,4 @@ func run(cmd *cobra.Command, args []string) {
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 	}
-
 }
