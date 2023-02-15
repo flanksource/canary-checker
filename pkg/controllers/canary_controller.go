@@ -24,8 +24,9 @@ import (
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/google/uuid"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
@@ -82,8 +83,10 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	canary.SetRunnerName(r.RunnerName)
 	// Add finalizer first if not exist to avoid the race condition between init and delete
 	if !controllerutil.ContainsFinalizer(canary, FinalizerName) {
-		logger.Info("adding finalizer", "finalizers", canary.GetFinalizers())
 		controllerutil.AddFinalizer(canary, FinalizerName)
+		if err := r.Client.Update(ctx, canary); err != nil {
+			logger.Error(err, "failed to update finalizers")
+		}
 	}
 
 	if !canary.DeletionTimestamp.IsZero() {
@@ -97,9 +100,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 
 	c, checks, changed, err := db.PersistCanary(*canary, "kubernetes/"+string(canary.ObjectMeta.UID))
 	if err != nil {
-		return ctrl.Result{
-			Requeue: true,
-		}, err
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	var checkIDs []string
@@ -131,12 +132,22 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		}
 	}
 
-	// update status
+	// Update status
 	id := c.ID.String() // id is the uuid of the canary
-	canary.Status.PersistedID = &id
-	canary.Status.Checks = checks
-	canary.Status.ObservedGeneration = canary.Generation
-	r.Patch(canary)
+	var canaryForStatus v1.Canary
+	err = r.Get(ctx, req.NamespacedName, &canaryForStatus)
+	if err != nil {
+		logger.Error(err, "Error fetching canary for status update")
+		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+	}
+
+	canaryForStatus.Status.PersistedID = &id
+	canaryForStatus.Status.Checks = checks
+	canaryForStatus.Status.ObservedGeneration = canary.Generation
+	if err = r.Status().Update(ctx, &canaryForStatus); err != nil {
+		logger.Error(err, "failed to update status for canary")
+		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+	}
 	return ctrl.Result{}, nil
 }
 
@@ -147,100 +158,39 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *CanaryReconciler) Report(ctx *context.Context, canary v1.Canary, results []*pkg.CheckResult) {
+func (r *CanaryReconciler) Report() {
+	for payload := range canaryJobs.CanaryStatusChannel {
+		var canary v1.Canary
+		err := r.Get(gocontext.Background(), payload.NamespacedName, &canary)
+		if err != nil {
+			r.Log.Error(err, "failed to get canary", "canary", canary.Name)
+			continue
+		}
 
-	// canary.Status.LastCheck = &metav1.Time{Time: time.Now()}
-	// transitioned := false
-	// var messages, errors []string
-	// var checkStatus = make(map[string]*v1.CheckStatus)
-	// var duration int64
-	// var pass = true
-	// var passed int
-	// for _, result := range results {
-	// 	if r.LogPass && result.Pass || r.LogFail && !result.Pass {
-	// 		r.Log.Info(result.String())
-	// 	}
-	// 	duration += result.Duration
-	// 	cache.PostgresCache.Add(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
-	// 	uptime, latency := metrics.Record(canary, result)
-	// 	checkKey := canary.GetKey(result.Check)
-	// 	checkStatus[checkKey] = &v1.CheckStatus{}
-	// 	checkStatus[checkKey].Uptime1H = uptime.String()
-	// 	checkStatus[checkKey].Latency1H = latency.String()
-	// 	q := cache.QueryParams{Check: checkKey, StatusCount: 1}
-	// 	if canary.Status.LastTransitionedTime != nil {
-	// 		q.Start = canary.Status.LastTransitionedTime.Format(time.RFC3339)
-	// 	}
-	// 	lastStatus, err := cache.PostgresCache.Query(q)
-	// 	if err != nil || len(lastStatus) == 0 || len(lastStatus[0].Statuses) == 0 {
-	// 		transitioned = true
-	// 	} else if len(lastStatus) > 0 && (lastStatus[0].Statuses[0].Status != result.Pass) {
-	// 		transitioned = true
-	// 	}
-	// 	if !result.Pass {
-	// 		r.Events.Event(&canary, corev1.EventTypeWarning, "Failed", fmt.Sprintf("%s-%s: %s", result.Check.GetType(), result.Check.GetEndpoint(), result.Message))
-	// 	} else {
-	// 		passed++
-	// 	}
-	// 	if transitioned {
-	// 		checkStatus[checkKey].LastTransitionedTime = &metav1.Time{Time: time.Now()}
-	// 		canary.Status.LastTransitionedTime = &metav1.Time{Time: time.Now()}
-	// 	}
+		canary.Status.Latency1H = payload.Latency
+		canary.Status.Uptime1H = payload.Uptime
+		if payload.LastTransitionedTime != nil {
+			canary.Status.LastTransitionedTime = payload.LastTransitionedTime
+		}
 
-	// 	pass = pass && result.Pass
-	// 	if result.Message != "" {
-	// 		messages = append(messages, result.Message)
-	// 	}
-	// 	if result.Error != "" {
-	// 		errors = append(errors, result.Error)
-	// 	}
-	// 	checkStatus[checkKey].Message = &result.Message
-	// 	checkStatus[checkKey].ErrorMessage = &result.Error
-	// 	push.Queue(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
-	// }
+		canary.Status.Message = &payload.Message
+		canary.Status.ErrorMessage = &payload.ErrorMessage
 
-	// uptime, latency := metrics.Record(canary, &pkg.CheckResult{
-	// 	Check: v1.Check{
-	// 		Type: "canary",
-	// 	},
-	// 	Pass:     pass,
-	// 	Duration: duration,
-	// })
-	// canary.Status.Latency1H = utils.Age(time.Duration(latency.Rolling1H) * time.Millisecond)
-	// canary.Status.Uptime1H = uptime.String()
+		canary.Status.LastCheck = &metav1.Time{Time: time.Now()}
+		canary.Status.ChecksStatus = payload.CheckStatus
+		if payload.Pass {
+			canary.Status.Status = &v1.Passed
+		} else {
+			canary.Status.Status = &v1.Failed
+		}
 
-	// msg := ""
-	// errorMsg := ""
-	// if len(messages) == 1 {
-	// 	msg = messages[0]
-	// } else if len(messages) > 1 {
-	// 	msg = fmt.Sprintf("%s, (%d more)", messages[0], len(messages)-1)
-	// }
-	// if len(errors) == 1 {
-	// 	errorMsg = errors[0]
-	// } else if len(errors) > 1 {
-	// 	errorMsg = fmt.Sprintf("%s, (%d more)", errors[0], len(errors)-1)
-	// }
+		for _, eventMsg := range payload.FailEvents {
+			r.Events.Event(&canary, corev1.EventTypeWarning, "Failed", eventMsg)
+		}
 
-	// canary.Status.Message = &msg
-	// canary.Status.ErrorMessage = &errorMsg
-
-	// canary.Status.ChecksStatus = checkStatus
-	// if pass {
-	// 	canary.Status.Status = &v1.Passed
-	// } else {
-	// 	canary.Status.Status = &v1.Failed
-	// }
-	// r.Patch(ctx, &canary)
-}
-
-func (r *CanaryReconciler) Patch(canary *v1.Canary) {
-	r.Log.V(3).Info("patching", "canary", canary.Name, "namespace", canary.Namespace, "status", canary.Status.Status)
-	if err := r.Status().Update(gocontext.Background(), canary); err != nil {
-		r.Log.Error(err, "failed to update status", "canary", canary.Name)
-	}
-	if err := r.Update(gocontext.Background(), canary, &client.UpdateOptions{}); err != nil {
-		r.Log.Error(err, "failed to patch", "canary", canary.Name)
+		if err := r.Status().Update(gocontext.Background(), &canary); err != nil {
+			r.Log.Error(err, "failed to update status", "canary", canary.Name)
+		}
 	}
 }
 

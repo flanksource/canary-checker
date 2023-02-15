@@ -14,9 +14,11 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/push"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
 	"github.com/robfig/cron/v3"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -28,6 +30,8 @@ var LogPass, LogFail bool
 
 var Kommons *kommons.Client
 var FuncScheduler = cron.New()
+
+var CanaryStatusChannel chan CanaryStatusPayload
 
 func StartScanCanaryConfigs(dataFile string, configFiles []string) {
 	DataFile = dataFile
@@ -55,15 +59,108 @@ func (job CanaryJob) Run() {
 	for _, result := range results {
 		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
 			logger.Infof(result.String())
+			// Add to cache
+			cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
 		}
-		cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
-		metrics.Record(result.Canary, result)
-		push.Queue(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
 	}
+	job.updateStatusAndEvent(results)
 }
 
 func (job *CanaryJob) NewContext() *context.Context {
 	return context.New(job.Client, job.Canary)
+}
+
+func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
+	var checkStatus = make(map[string]*v1.CheckStatus)
+	var duration int64
+	var messages, errors []string
+	var failEvents []string
+	var msg, errorMsg string
+	var pass = true
+	var lastTransitionedTime *metav1.Time
+
+	transitioned := false
+	for _, result := range results {
+
+		// Increment duration
+		duration += result.Duration
+
+		// Set uptime and latency
+		uptime, latency := metrics.Record(job.Canary, result)
+		checkKey := job.Canary.GetKey(result.Check)
+		checkStatus[checkKey] = &v1.CheckStatus{}
+		checkStatus[checkKey].Uptime1H = uptime.String()
+		checkStatus[checkKey].Latency1H = latency.String()
+
+		// Transition
+		q := cache.QueryParams{Check: checkKey, StatusCount: 1}
+		if job.Canary.Status.LastTransitionedTime != nil {
+			q.Start = job.Canary.Status.LastTransitionedTime.Format(time.RFC3339)
+		}
+		lastStatus, err := cache.PostgresCache.Query(q)
+		if err != nil || len(lastStatus) == 0 || len(lastStatus[0].Statuses) == 0 {
+			transitioned = true
+		} else if len(lastStatus) > 0 && (lastStatus[0].Statuses[0].Status != result.Pass) {
+			transitioned = true
+		}
+		if transitioned {
+			checkStatus[checkKey].LastTransitionedTime = &metav1.Time{Time: time.Now()}
+			lastTransitionedTime = &metav1.Time{Time: time.Now()}
+		}
+
+		push.Queue(pkg.FromV1(job.Canary, result.Check), pkg.FromResult(*result))
+
+		// Update status message
+		if len(messages) == 1 {
+			msg = messages[0]
+		} else if len(messages) > 1 {
+			msg = fmt.Sprintf("%s, (%d more)", messages[0], len(messages)-1)
+		}
+		if len(errors) == 1 {
+			errorMsg = errors[0]
+		} else if len(errors) > 1 {
+			errorMsg = fmt.Sprintf("%s, (%d more)", errors[0], len(errors)-1)
+		}
+
+		if !result.Pass {
+			failEvents = append(failEvents, fmt.Sprintf("%s-%s: %s", result.Check.GetType(), result.Check.GetEndpoint(), result.Message))
+			pass = false
+		}
+	}
+
+	// TODO: Uptime and Latency Agg
+	uptime, latency := metrics.Record(job.Canary, &pkg.CheckResult{
+		//Check:    v1.Check{Type: "canary"},
+		Check:    results[0].Check,
+		Pass:     pass,
+		Duration: duration,
+	})
+
+	payload := CanaryStatusPayload{
+		Pass:                 pass,
+		CheckStatus:          checkStatus,
+		FailEvents:           failEvents,
+		LastTransitionedTime: lastTransitionedTime,
+		Message:              msg,
+		ErrorMessage:         errorMsg,
+		Uptime:               uptime.String(),
+		Latency:              utils.Age(time.Duration(latency.Rolling1H) * time.Millisecond),
+		NamespacedName:       job.GetNamespacedName(),
+	}
+
+	CanaryStatusChannel <- payload
+}
+
+type CanaryStatusPayload struct {
+	Pass                 bool
+	CheckStatus          map[string]*v1.CheckStatus
+	FailEvents           []string
+	LastTransitionedTime *metav1.Time
+	Message              string
+	ErrorMessage         string
+	Uptime               string
+	Latency              string
+	NamespacedName       types.NamespacedName
 }
 
 func findCronEntry(canary v1.Canary) *cron.Entry {
@@ -182,4 +279,9 @@ func DeleteCanaryJob(canary v1.Canary) {
 
 func ScheduleFunc(schedule string, fn func()) (interface{}, error) {
 	return FuncScheduler.AddFunc(schedule, fn)
+}
+
+func init() {
+	// We are adding a small buffer to prevent blocking
+	CanaryStatusChannel = make(chan CanaryStatusPayload, 64)
 }

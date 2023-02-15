@@ -128,6 +128,9 @@ func run(cmd *cobra.Command, args []string) {
 		setupLog.Error(err, "unable to create controller", "controller", "Canary")
 		os.Exit(1)
 	}
+	// Listen for status updates
+	go canaryReconciler.Report()
+
 	if err = systemReconciler.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "System")
 		os.Exit(1)
@@ -136,4 +139,5 @@ func run(cmd *cobra.Command, args []string) {
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 	}
+
 }
