@@ -138,6 +138,12 @@ func (components Components) CreateTreeStructure() Components {
 			if parent != nil {
 				parent.Components = append(parent.Components, c)
 				toRemoveCompIDs = append(toRemoveCompIDs, c.ID)
+			} else if c.RelationshipID != nil {
+				relation := components.FindByID(*c.RelationshipID)
+				if relation != nil {
+					relation.Components = append(relation.Components, c)
+					toRemoveCompIDs = append(toRemoveCompIDs, c.ID)
+				}
 			}
 		}
 	}
@@ -189,6 +195,7 @@ type Component struct {
 	Properties       Properties               `json:"properties,omitempty" gorm:"type:properties"`
 	Components       Components               `json:"components,omitempty" gorm:"-"`
 	ParentId         *uuid.UUID               `json:"parent_id,omitempty"` //nolint
+	RelationshipID   *uuid.UUID               `json:"relationship_id,omitempty"`
 	Selectors        v1.ResourceSelectors     `json:"selectors,omitempty" gorm:"resourceSelectors" swaggerignore:"true"`
 	ComponentChecks  v1.ComponentChecks       `json:"-" gorm:"componentChecks" swaggerignore:"true"`
 	Checks           Checks                   `json:"checks,omitempty" gorm:"-"`
