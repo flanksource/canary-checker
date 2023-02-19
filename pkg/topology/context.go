@@ -26,6 +26,10 @@ func (c *ComponentContext) GetTemplater() ktemplate.StructTemplater {
 	if c.templater != nil {
 		return *c.templater
 	}
+	var props = make(map[string]interface{})
+	if c.CurrentComponent != nil && c.CurrentComponent.Properties != nil {
+		props = c.CurrentComponent.Properties.AsMap()
+	}
 	c.templater = &ktemplate.StructTemplater{
 		// RequiredTag: "template",
 		DelimSets: []ktemplate.Delims{
@@ -36,7 +40,7 @@ func (c *ComponentContext) GetTemplater() ktemplate.StructTemplater {
 		},
 		Values: map[string]interface{}{
 			"component":  c.CurrentComponent,
-			"properties": c.CurrentComponent.Properties.AsMap(),
+			"properties": props,
 		},
 	}
 	return *c.templater
