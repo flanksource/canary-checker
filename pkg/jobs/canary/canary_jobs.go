@@ -59,9 +59,9 @@ func (job CanaryJob) Run() {
 	for _, result := range results {
 		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
 			logger.Infof(result.String())
-			// Add to cache
-			cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
 		}
+		cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
+
 	}
 	job.updateStatusAndEvent(results)
 }
