@@ -165,54 +165,61 @@ func (q QueryParams) ExecuteSummary(db Querier) (pkg.Checks, error) {
 		statusColumns += ", 'message', message, 'error', error"
 	}
 	sql := fmt.Sprintf(`
+WITH filtered_check_status AS (
+    SELECT * FROM check_statuses
+    WHERE %s
+)
 SELECT
-checks.id::text,
-canary_id::text,
-passed.passed,
-failed.failed,
-stats.p99, stats.p97, stats.p95,
-statii,
-type,
-checks.icon,
-checks.name,
-checks.description,
-canaries.namespace,
-canaries.name as canaryName,
-canaries.labels,
-severity,
-owner,
-last_runtime,
-checks.created_at,
-checks.updated_at,
-checks.deleted_at,
-status
-	FROM checks checks
-  FULL JOIN (
+    checks.id::text,
+    canary_id::text,
+    passed.passed,
+    failed.failed,
+    stats.p99, stats.p97, stats.p95,
+    statii,
+    type,
+    checks.icon,
+    checks.name,
+    checks.description,
+    canaries.namespace,
+    canaries.name as canaryName,
+    canaries.labels,
+    severity,
+    owner,
+    last_runtime,
+    checks.created_at,
+    checks.updated_at,
+    checks.deleted_at,
+    status
+FROM checks checks
+
+FULL JOIN (
   	SELECT check_id,
-			percentile_disc(0.99) within group (order by check_statuses.duration) as p99,
-			percentile_disc(0.97) within group (order by check_statuses.duration) as p97,
-			percentile_disc(0.05) within group (order by check_statuses.duration) as p95
-			FROM check_statuses WHERE %s  GROUP BY check_id
-  ) as stats ON stats.check_id = checks.id
-	FULL JOIN canaries on checks.canary_id = canaries.id
-  FULL JOIN (
-    SELECT check_id,
-      count(*) as failed
-		FROM check_statuses
-    WHERE status = false  AND %s
+			percentile_disc(0.99) within group (order by filtered_check_status.duration) as p99,
+			percentile_disc(0.97) within group (order by filtered_check_status.duration) as p97,
+			percentile_disc(0.05) within group (order by filtered_check_status.duration) as p95
+			FROM filtered_check_status GROUP BY check_id
+) as stats ON stats.check_id = checks.id
+
+FULL JOIN canaries on checks.canary_id = canaries.id
+
+FULL JOIN (
+    SELECT check_id, count(*) as failed
+	FROM filtered_check_status
+    WHERE status = false
     GROUP BY check_id
-  ) as failed ON failed.check_id = checks.id
-  FULL JOIN (
-    SELECT check_id,
-      count(*) as passed
-		FROM check_statuses
-    WHERE  status = true AND %s
+) as failed ON failed.check_id = checks.id
+
+FULL JOIN (
+    SELECT check_id, count(*) as passed
+	FROM check_statuses
+    WHERE  status = true
     GROUP BY check_id
-  ) as passed ON passed.check_id = checks.id
-		FULL JOIN (
-			SELECT check_id, json_agg(json_build_object('status',status,'duration',duration,'time',time %s)) as statii
+) as passed ON passed.check_id = checks.id
+
+FULL JOIN (
+    SELECT check_id, json_agg(json_build_object('status',status,'duration',duration,'time',time %s)) as statii
 	FROM (
-			SELECT check_id,
+		SELECT check_id,
 				status,
 				time,
 				duration,
@@ -222,14 +229,13 @@ status
 					PARTITION BY check_id
 					ORDER BY time DESC
 				)
-			FROM check_statuses
-			WHERE  %s
-		) check_statuses
+		FROM filtered_check_status
+	) check_statuses
 	WHERE rank <= :count
 	GROUP by check_id
-		) as statuses ON statuses.check_id = checks.id
-		WHERE (passed.passed > 0 OR failed.failed > 0) %s
-	`, clause, clause, clause, statusColumns, clause, canaryClause)
+) as statuses ON statuses.check_id = checks.id
+WHERE (passed.passed > 0 OR failed.failed > 0) %s
+	`, clause, statusColumns, canaryClause)
 
 	if q.StatusCount == 0 {
 		q.StatusCount = 5
