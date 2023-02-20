@@ -295,5 +295,3 @@ require (
 )
 
 replace k8s.io/client-go => k8s.io/client-go v0.26.0
-
-replace github.com/flanksource/duty => ../duty

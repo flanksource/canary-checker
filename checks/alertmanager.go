@@ -8,7 +8,6 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/logger"
 	alertmanagerClient "github.com/prometheus/alertmanager/api/v2/client"
 	alertmanagerAlert "github.com/prometheus/alertmanager/api/v2/client/alert"
 )
@@ -33,9 +32,10 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	var results pkg.Results
 	results = append(results, result)
 
-	logger.Infof("YASH: IN ALERTMANAGER")
 	client := alertmanagerClient.NewHTTPClientWithConfig(nil, &alertmanagerClient.TransportConfig{
-		Host: check.GetEndpoint(), Schemes: []string{"https", "http"}, BasePath: alertmanagerClient.DefaultBasePath,
+		Host:     check.GetEndpoint(),
+		Schemes:  []string{"http", "https"},
+		BasePath: alertmanagerClient.DefaultBasePath,
 	})
 	var filters []string
 	for k, v := range check.Filters {
@@ -63,9 +63,6 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 		alertMessage[name] = extractMessage(alert.Annotations)
 	}
 
-	for k, v := range alertMessage {
-		logger.Infof("YASH ALERTMANAGER MESSAGE %s=%s", k, v)
-	}
 	result.AddDetails(alertMessage)
 	return results
 }
