@@ -152,6 +152,8 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
+                      host:
+                        type: string
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
@@ -189,8 +191,6 @@ spec:
                           template:
                             type: string
                         type: object
-                      url:
-                        type: string
                     required:
                       - name
                     type: object

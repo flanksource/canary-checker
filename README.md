@@ -899,7 +899,7 @@ jmeter:
 
 | Field   | Description                                 | Scheme            | Required |
 |---------|---------------------------------------------|-------------------|----------|
-| url     | host endpoint of the alertmanager instance  | string            | yes      |
+| host    | host endpoint of the alertmanager instance  | string            | yes      |
 | filters | filters to apply for alertmanager           | map[string]string |          |
 | alerts  | regex based filters to apply for alertname  | []string          |          |
 | ignore  | regex based filters to ignore for alertname | []string          |          |

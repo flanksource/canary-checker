@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 30
   alertmanager:
-    - url: alertmanager.canary.lab.flanksource.com
+    - host: alertmanager.canary.lab.flanksource.com
       name: alertmanager-check
       alerts:
         - Kube.*

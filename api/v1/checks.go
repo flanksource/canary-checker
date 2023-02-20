@@ -426,7 +426,7 @@ type AlertManager struct {
 type AlertManagerCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
-	URL         string            `yaml:"url" json:"url,omitempty" template:"true"`
+	Host        string            `yaml:"host" json:"host,omitempty" template:"true"`
 	Auth        *Authentication   `yaml:"auth,omitempty" json:"auth,omitempty"`
 	Alerts      []string          `yaml:"alerts" json:"alerts,omitempty" template:"true"`
 	Filters     map[string]string `yaml:"filters" json:"filters,omitempty" template:"true"`
@@ -438,7 +438,7 @@ func (c AlertManagerCheck) GetType() string {
 }
 
 func (c AlertManagerCheck) GetEndpoint() string {
-	return c.URL
+	return c.Host
 }
 
 type PodCheck struct {
