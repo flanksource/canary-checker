@@ -415,6 +415,32 @@ func (c ElasticsearchCheck) GetEndpoint() string {
 	return c.URL
 }
 
+/*
+[include:datasources/alertmanager_pass.yaml]
+*/
+
+type AlertManager struct {
+	AlertManagerCheck `yaml:",inline" json:",inline"`
+}
+
+type AlertManagerCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	URL         string            `yaml:"url" json:"url,omitempty" template:"true"`
+	Auth        *Authentication   `yaml:"auth,omitempty" json:"auth,omitempty"`
+	Alerts      []string          `yaml:"alerts" json:"alerts,omitempty" template:"true"`
+	Filters     map[string]string `yaml:"filters" json:"filters,omitempty" template:"true"`
+	Ignore      []string          `yaml:"ignore" json:"ignore,omitempty" template:"true"`
+}
+
+func (c AlertManagerCheck) GetType() string {
+	return "alertmanager"
+}
+
+func (c AlertManagerCheck) GetEndpoint() string {
+	return c.URL
+}
+
 type PodCheck struct {
 	Description          `yaml:",inline" json:",inline"`
 	Namespace            string `yaml:"namespace" json:"namespace,omitempty" template:"true"`
@@ -1146,4 +1172,5 @@ var AllChecks = []external.Check{
 	DatabaseBackupCheck{},
 	ConfigDBCheck{},
 	ElasticsearchCheck{},
+	AlertManagerCheck{},
 }

@@ -50,6 +50,7 @@ var All = []Checker{
 	&DatabaseBackupChecker{},
 	&ConfigdbChecker{},
 	&ElasticsearchChecker{},
+	&AlertManagerChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),

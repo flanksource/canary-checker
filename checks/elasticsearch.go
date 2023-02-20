@@ -1,7 +1,6 @@
 package checks
 
 import (
-	//gocontext "context"
 	"encoding/json"
 	"fmt"
 	"strings"
