@@ -45,6 +45,7 @@
   - [Jmeter - Run the supplied JMX test plan against the specified host](#jmeter---run-the-supplied-jmx-test-plan-against-the-specified-host)
   - [SSL - Verify the expiry date of a SSL cert](#ssl---verify-the-expiry-date-of-a-ssl-cert)
   - [Exec - Execute commands or script on the host](#exec---execute-commands-or-script-on-the-host)
+  - [Alertmanager - Query alertmanager for firing alerts](#alertmanager---query alertmanager)
   - [TCP](#tcp)
   - [Junit](#junit)
     - [displayTemplate](#displaytemplate-3)
@@ -893,6 +894,15 @@ jmeter:
 | description | description for the check | string | No |
 | display | format on how the result is going to be displayed on the console | Template | No |
 | test | test against which result needs to be verified | Template | No |
+
+### Alertmanager - Query Alertmanager
+
+| Field   | Description                                 | Scheme            | Required |
+|---------|---------------------------------------------|-------------------|----------|
+| host    | host endpoint of the alertmanager instance  | string            | yes      |
+| filters | filters to apply for alertmanager           | map[string]string |          |
+| alerts  | regex based filters to apply for alertname  | []string          |          |
+| ignore  | regex based filters to ignore for alertname | []string          |          |
 
 ### TCP
 

@@ -1,0 +1,20 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: alertmanager
+spec:
+  interval: 30
+  alertmanager:
+    - host: alertmanager.canary.lab.flanksource.com
+      name: alertmanager-check
+      alerts:
+        - Kube.*
+      ignore:
+        - KubeScheduler.*
+      filters:
+        severity: critical
+        cluster: arn:aws:eks.*
+      display:
+        template: "{{ .results }}"
+      test:
+        template: "true"
