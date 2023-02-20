@@ -140,18 +140,6 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg
 			comp.Properties = append(comp.Properties, props...)
 		}
 
-		// Lookup config and populate properties
-		for _, property := range component.Properties {
-			if property.ConfigLookup == nil {
-				continue
-			}
-			prop, err := lookupConfig(ctx, property, comp.Properties)
-			if err != nil {
-				return nil, errors.Wrapf(err, "property config lookup failed: %s", property)
-			}
-			comp.Properties = append(comp.Properties, prop)
-		}
-
 		if comp.Icon == "" && component.Icon != "" {
 			comp.Icon = component.Icon
 		}

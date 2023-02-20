@@ -9,13 +9,14 @@ import (
 	"strings"
 	"time"
 
+	"encoding/base64"
+
 	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/timer"
-	"github.com/hairyhenderson/gomplate/v3/base64"
 	"github.com/prometheus/client_golang/prometheus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -191,10 +192,8 @@ func (cfg *AWS) GetExistingInstanceIds(idString string) ([]string, error) {
 
 func (cfg *AWS) Launch(check v1.EC2Check, name, ami string) (string, *time.Duration, error) {
 	start := NewTimer()
-	userData, err := base64.Encode([]byte(check.UserData))
-	if err != nil {
-		return "", nil, fmt.Errorf("error encoding userData: %s", err)
-	}
+	userData := base64.StdEncoding.EncodeToString([]byte(check.UserData))
+
 	if check.SecurityGroup == "" {
 		check.SecurityGroup = "default"
 	}
