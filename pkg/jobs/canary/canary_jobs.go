@@ -61,7 +61,6 @@ func (job CanaryJob) Run() {
 			logger.Infof(result.String())
 		}
 		cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
-
 	}
 	job.updateStatusAndEvent(results)
 }
