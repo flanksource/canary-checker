@@ -154,10 +154,13 @@ func (q QueryParams) ExecuteSummary(db Querier) (pkg.Checks, error) {
 	if err != nil {
 		return nil, err
 	}
-	var canaryClause string
+	var checkClause string
 	if q.CanaryID != "" {
-		canaryClause += " AND checks.canary_id = :canary_id "
+		checkClause += " AND checks.canary_id = :canary_id "
 		namedArgs["canary_id"] = q.CanaryID
+	}
+	if _, exists := namedArgs["check_key"]; exists {
+		checkClause += " AND checks.id = :check_key "
 	}
 
 	statusColumns := ""
@@ -192,7 +195,7 @@ SELECT
     status
 FROM checks checks
 
-FULL JOIN (
+RIGHT JOIN (
   	SELECT check_id,
 			percentile_disc(0.99) within group (order by filtered_check_status.duration) as p99,
 			percentile_disc(0.97) within group (order by filtered_check_status.duration) as p97,
@@ -200,23 +203,23 @@ FULL JOIN (
 			FROM filtered_check_status GROUP BY check_id
 ) as stats ON stats.check_id = checks.id
 
-FULL JOIN canaries on checks.canary_id = canaries.id
+INNER JOIN canaries on checks.canary_id = canaries.id
 
-FULL JOIN (
+LEFT JOIN (
     SELECT check_id, count(*) as failed
 	FROM filtered_check_status
     WHERE status = false
     GROUP BY check_id
 ) as failed ON failed.check_id = checks.id
 
-FULL JOIN (
+LEFT JOIN (
     SELECT check_id, count(*) as passed
 	FROM check_statuses
     WHERE  status = true
     GROUP BY check_id
 ) as passed ON passed.check_id = checks.id
 
-FULL JOIN (
+RIGHT JOIN (
     SELECT check_id, json_agg(json_build_object('status',status,'duration',duration,'time',time %s)) as statii
 	FROM (
 		SELECT check_id,
@@ -235,7 +238,7 @@ FULL JOIN (
 	GROUP by check_id
 ) as statuses ON statuses.check_id = checks.id
 WHERE (passed.passed > 0 OR failed.failed > 0) %s
-	`, clause, statusColumns, canaryClause)
+	`, clause, statusColumns, checkClause)
 
 	if q.StatusCount == 0 {
 		q.StatusCount = 5
