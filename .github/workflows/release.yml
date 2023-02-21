@@ -132,10 +132,16 @@ jobs:
     needs: [helm, semantic-release]
     steps:
       - uses: actions/checkout@v3
+      - name: Set version
+        # Always use git tags as semantic release can fail due to rate limit
+        run: |
+          git fetch --prune --unshallow
+          echo "RELEASE_VERSION=$(git describe --abbrev=0 --tags | sed -e 's/^v//')" >> $GITHUB_ENV
+      - uses: actions/checkout@v3
         with:
           repository: "${{ github.repository_owner }}/incident-commander-chart"
           token: ${{ secrets.FLANKBOT }}
-          path: ./incident-commander-chart
+          path: /tmp/incident-commander-chart
       - name: Install yq
         run: |
           wget https://github.com/mikefarah/yq/releases/download/${VERSION}/${BINARY}.tar.gz -O - |\
@@ -143,17 +149,12 @@ jobs:
         env:
           VERSION: v4.25.1
           BINARY: yq_linux_amd64
-      - name: Set version
-        # Always use git tags as semantic release can fail due to rate limit
-        run: |
-          git fetch --prune --unshallow
-          echo "RELEASE_VERSION=$(git describe --abbrev=0 --tags | sed -e 's/^v//')" >> $GITHUB_ENV
       - name: Update canary-checker version in Incident-commander-chart
         run: |
-          cd incident-commander-chart
+          cd /tmp/incident-commander-chart
           yq eval-all -i  '(.dependencies[] | select(.name == "canary-checker")) ref $d | $d.version = "${{ env.RELEASE_VERSION }}"' chart/Chart.yaml
       - name: Push changes to chart repo
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "chore: update canary-checker chart dependency to ${{ env.RELEASE_VERSION }}"
-          repository: ./incident-commander-chart
+          repository: /tmp/incident-commander-chart
