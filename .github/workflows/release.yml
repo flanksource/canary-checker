@@ -138,6 +138,11 @@ jobs:
         env:
           VERSION: v4.25.1
           BINARY: yq_linux_amd64
+      - name: Set version
+        # Always use git tags as semantic release can fail due to rate limit
+        run: |
+          git fetch --prune --unshallow
+          echo "RELEASE_VERSION=$(git describe --abbrev=0 --tags | sed -e 's/^v//')" >> $GITHUB_ENV
       - name: Update canary-checker version in Incident-commander-chart
         run: |
           cd incident-commander-chart
