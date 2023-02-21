@@ -192,7 +192,7 @@ SELECT
     status
 FROM checks checks
 
-FULL JOIN (
+RIGHT JOIN (
   	SELECT check_id,
 			percentile_disc(0.99) within group (order by filtered_check_status.duration) as p99,
 			percentile_disc(0.97) within group (order by filtered_check_status.duration) as p97,
@@ -200,23 +200,23 @@ FULL JOIN (
 			FROM filtered_check_status GROUP BY check_id
 ) as stats ON stats.check_id = checks.id
 
-FULL JOIN canaries on checks.canary_id = canaries.id
+INNER JOIN canaries on checks.canary_id = canaries.id
 
-FULL JOIN (
+LEFT JOIN (
     SELECT check_id, count(*) as failed
 	FROM filtered_check_status
     WHERE status = false
     GROUP BY check_id
 ) as failed ON failed.check_id = checks.id
 
-FULL JOIN (
+LEFT JOIN (
     SELECT check_id, count(*) as passed
 	FROM check_statuses
     WHERE  status = true
     GROUP BY check_id
 ) as passed ON passed.check_id = checks.id
 
-FULL JOIN (
+RIGHT JOIN (
     SELECT check_id, json_agg(json_build_object('status',status,'duration',duration,'time',time %s)) as statii
 	FROM (
 		SELECT check_id,
