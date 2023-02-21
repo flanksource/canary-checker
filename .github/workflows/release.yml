@@ -81,17 +81,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: [semantic-release, docker]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Download yq
         run: |
           wget -nv -nc -O yq https://github.com/mikefarah/yq/releases/download/v4.20.2/yq_linux_amd64
           chmod +x yq
+      - name: Set version
+        # Always use git tags as semantic release can fail due to rate limit
+        run: |
+          git fetch --prune --unshallow
+          echo "RELEASE_VERSION=$(git describe --abbrev=0 --tags | sed -e 's/^v//')" >> $GITHUB_ENV
       - name: Update chart version
-        run: ./yq -i e '.version = "${{ needs.semantic-release.outputs.release-version }}"' chart/Chart.yaml
+        run: ./yq -i e '.version = "${{ env.RELEASE_VERSION }}"' chart/Chart.yaml
       - name: Update app version
-        run: ./yq -i e '.appVersion = "${{ needs.semantic-release.outputs.release-version }}"' chart/Chart.yaml
+        run: ./yq -i e '.appVersion = "${{ env.RELEASE_VERSION }}"' chart/Chart.yaml
       - name: Update image tags
-        run: ./yq -i e '.image.tag = "v${{ needs.semantic-release.outputs.release-version }}"' chart/values.yaml
+        run: ./yq -i e '.image.tag = "v${{ env.RELEASE_VERSION }}"' chart/values.yaml
       - name: Set up Helm
         uses: azure/setup-helm@v1
         with:
@@ -136,9 +141,9 @@ jobs:
       - name: Update canary-checker version in Incident-commander-chart
         run: |
           cd incident-commander-chart
-          yq eval-all -i  '(.dependencies[] | select(.name == "canary-checker")) ref $d | $d.version = "${{ needs.semantic-release.outputs.release-version }}"' chart/Chart.yaml
+          yq eval-all -i  '(.dependencies[] | select(.name == "canary-checker")) ref $d | $d.version = "${{ env.RELEASE_VERSION }}"' chart/Chart.yaml
       - name: Push changes to chart repo
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "chore: update canary-checker chart dependency to ${{ needs.semantic-release.outputs.release-version }}"
+          commit_message: "chore: update canary-checker chart dependency to ${{ env.RELEASE_VERSION }}"
           repository: ./incident-commander-chart
