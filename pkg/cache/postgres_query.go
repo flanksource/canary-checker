@@ -154,10 +154,13 @@ func (q QueryParams) ExecuteSummary(db Querier) (pkg.Checks, error) {
 	if err != nil {
 		return nil, err
 	}
-	var canaryClause string
+	var checkClause string
 	if q.CanaryID != "" {
-		canaryClause += " AND checks.canary_id = :canary_id "
+		checkClause += " AND checks.canary_id = :canary_id "
 		namedArgs["canary_id"] = q.CanaryID
+	}
+	if _, exists := namedArgs["check_key"]; exists {
+		checkClause += " AND checks.id = :check_key "
 	}
 
 	statusColumns := ""
@@ -235,7 +238,7 @@ RIGHT JOIN (
 	GROUP by check_id
 ) as statuses ON statuses.check_id = checks.id
 WHERE (passed.passed > 0 OR failed.failed > 0) %s
-	`, clause, statusColumns, canaryClause)
+	`, clause, statusColumns, checkClause)
 
 	if q.StatusCount == 0 {
 		q.StatusCount = 5
