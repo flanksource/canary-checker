@@ -175,8 +175,8 @@ WITH filtered_check_status AS (
 SELECT
     checks.id::text,
     canary_id::text,
-    passed.passed,
-    failed.failed,
+    stats.passed,
+    stats.failed,
     stats.p99, stats.p97, stats.p95,
     statii,
     type,
@@ -196,28 +196,19 @@ SELECT
 FROM checks checks
 
 RIGHT JOIN (
-  	SELECT check_id,
-			percentile_disc(0.99) within group (order by filtered_check_status.duration) as p99,
-			percentile_disc(0.97) within group (order by filtered_check_status.duration) as p97,
-			percentile_disc(0.05) within group (order by filtered_check_status.duration) as p95
-			FROM filtered_check_status GROUP BY check_id
+  	SELECT 
+        check_id,
+        percentile_disc(0.99) within group (order by filtered_check_status.duration) as p99,
+        percentile_disc(0.97) within group (order by filtered_check_status.duration) as p97,
+        percentile_disc(0.05) within group (order by filtered_check_status.duration) as p95,
+        COUNT(*) FILTER (WHERE filtered_check_status.status = TRUE) as passed,
+        COUNT(*) FILTER (WHERE filtered_check_status.status = FALSE) as failed
+	FROM
+        filtered_check_status
+    GROUP BY check_id
 ) as stats ON stats.check_id = checks.id
 
 INNER JOIN canaries on checks.canary_id = canaries.id
-
-LEFT JOIN (
-    SELECT check_id, count(*) as failed
-	FROM filtered_check_status
-    WHERE status = false
-    GROUP BY check_id
-) as failed ON failed.check_id = checks.id
-
-LEFT JOIN (
-    SELECT check_id, count(*) as passed
-	FROM check_statuses
-    WHERE  status = true
-    GROUP BY check_id
-) as passed ON passed.check_id = checks.id
 
 RIGHT JOIN (
     SELECT check_id, json_agg(json_build_object('status',status,'duration',duration,'time',time %s)) as statii
@@ -237,7 +228,7 @@ RIGHT JOIN (
 	WHERE rank <= :count
 	GROUP by check_id
 ) as statuses ON statuses.check_id = checks.id
-WHERE (passed.passed > 0 OR failed.failed > 0) %s
+WHERE (stats.passed > 0 OR stats.failed > 0) %s
 	`, clause, statusColumns, checkClause)
 
 	if q.StatusCount == 0 {
