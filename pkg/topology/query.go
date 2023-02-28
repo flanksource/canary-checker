@@ -12,60 +12,54 @@ import (
 	"github.com/flanksource/duty/models"
 )
 
-const DefaultDepth = 1
+const DefaultDepth = 3
 
 type TopologyParams struct {
-	ID                     string   `query:"id"`
-	Owner                  string   `query:"owner"`
-	Labels                 string   `query:"labels"`
-	Status                 []string `query:"status"`
-	Types                  []string `query:"types"`
-	Depth                  int      `query:"depth"`
-	Flatten                bool     `query:"flatten"`
-	IncludeHealth          bool     `query:"includeHealth"`
-	IncludeInsightsSummary bool     `query:"includeInsightsSummary"`
+	ID      string   `query:"id"`
+	Owner   string   `query:"owner"`
+	Labels  string   `query:"labels"`
+	Status  []string `query:"status"`
+	Types   []string `query:"types"`
+	Depth   int      `query:"depth"`
+	Flatten bool     `query:"flatten"`
 }
 
-func NewTopologyParams(values url.Values) TopologyParams {
+func NewTopologyParams(values url.Values) duty.TopologyOptions {
 	parseItems := func(items string) []string {
+		if strings.TrimSpace(items) == "" {
+			return nil
+		}
 		return strings.Split(strings.TrimSpace(items), ",")
 	}
 
-	params := TopologyParams{
-		ID:                     values.Get("id"),
-		Status:                 parseItems(values.Get("status")),
-		Types:                  parseItems(values.Get("type")),
-		Owner:                  values.Get("owner"),
-		Flatten:                values.Get("flatten") == "true",
-		Labels:                 values.Get("labels"),
-		IncludeHealth:          values.Get("includeHealth") != "false",
-		IncludeInsightsSummary: values.Get("includeInsightsSummary") != "false",
+	var labels map[string]string
+	if values.Get("labels") != "" {
+		labels = collections.KeyValueSliceToMap(strings.Split(values.Get("labels"), ","))
 	}
 
 	var err error
-	if depth := values.Get("depth"); depth != "" {
-		params.Depth, err = strconv.Atoi(depth)
+	var depth = DefaultDepth
+	if depthStr := values.Get("depth"); depthStr != "" {
+		depth, err = strconv.Atoi(depthStr)
 		if err != nil {
-			params.Depth = DefaultDepth
+			depth = DefaultDepth
 		}
-	} else {
-		params.Depth = DefaultDepth
 	}
-	return params
+	return duty.TopologyOptions{
+		ID:      values.Get("id"),
+		Owner:   values.Get("owner"),
+		Labels:  labels,
+		Status:  parseItems(values.Get("status")),
+		Depth:   depth,
+		Types:   parseItems(values.Get("type")),
+		Flatten: values.Get("flatten") == "true",
+	}
 }
 
 func (p TopologyParams) String() string {
 	return fmt.Sprintf("%#v", p)
 }
 
-func Query(params TopologyParams) (models.Components, error) {
-	return duty.QueryTopology(db.Pool, duty.TopologyOptions{
-		ID:      params.ID,
-		Owner:   params.Owner,
-		Labels:  collections.KeyValueSliceToMap(strings.Split(params.Labels, ",")),
-		Status:  params.Status,
-		Depth:   params.Depth,
-		Types:   params.Types,
-		Flatten: params.Flatten,
-	})
+func Query(params duty.TopologyOptions) (models.Components, error) {
+	return duty.QueryTopology(db.Pool, params)
 }

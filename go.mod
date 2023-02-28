@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.33.1
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
-	github.com/denisenkom/go-mssqldb v0.12.0
+	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
 	github.com/elastic/go-elasticsearch/v8 v8.1.0
 	github.com/fergusstrange/embedded-postgres v1.19.0
@@ -34,10 +34,9 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/gobwas/glob v0.2.3
 	github.com/google/uuid v1.3.0
-	github.com/hairyhenderson/gomplate/v3 v3.6.0
 	github.com/henvic/httpretty v0.0.6
 	github.com/hirochachacha/go-smb2 v1.0.10
-	github.com/jackc/pgx/v4 v4.18.0
+	github.com/jackc/pgx/v5 v5.3.0
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
 	github.com/labstack/echo/v4 v4.9.1
@@ -153,7 +152,7 @@ require (
 	github.com/go-openapi/validate v0.22.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-	github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe // indirect
+	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -182,15 +181,8 @@ require (
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
-	github.com/jackc/pgconn v1.14.0 // indirect
-	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgproto3/v2 v2.3.2 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/jackc/pgtype v1.14.0 // indirect
-	github.com/jackc/pgx/v5 v5.3.0 // indirect
-	github.com/jackc/puddle v1.3.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect

@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -51,9 +52,7 @@ func ComponentRun() {
 
 func ComponentStatusSummarySync() {
 	logger.Debugf("Syncing Status and Summary for components")
-	components, err := Query(TopologyParams{
-		Depth: 0,
-	})
+	components, err := Query(duty.TopologyOptions{Depth: 3})
 	if err != nil {
 		logger.Errorf("error getting components: %v", err)
 		return

@@ -14,8 +14,11 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
 	"github.com/google/uuid"
+	jsontime "github.com/liamylian/jsontime/v2/v2"
 	"github.com/pkg/errors"
 )
+
+var json = jsontime.ConfigWithCustomTimeFormat
 
 func mergeComponentLookup(ctx *ComponentContext, component *v1.ComponentSpec, spec *v1.CanarySpec) (pkg.Components, error) {
 	name := component.Name
