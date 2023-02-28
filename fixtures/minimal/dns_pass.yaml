@@ -2,8 +2,9 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: dns-pass
+  namespace: default
 spec:
-  interval: 30
+  schedule: "@every 1m"
   dns:
     - server: 8.8.8.8
       name: A record query
