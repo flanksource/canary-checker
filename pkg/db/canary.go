@@ -43,7 +43,11 @@ func GetAllCanaries() ([]v1.Canary, error) {
 		return nil, err
 	}
 	for _, _canary := range _canaries {
-		canaries = append(canaries, *_canary.ToV1())
+		c := _canary.ToV1()
+		if c == nil {
+			continue
+		}
+		canaries = append(canaries, *c)
 	}
 	return canaries, nil
 }

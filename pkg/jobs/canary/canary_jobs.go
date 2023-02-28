@@ -16,6 +16,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/push"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
 	"github.com/robfig/cron/v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -244,9 +245,12 @@ func SyncCanaryJob(canary v1.Canary) error {
 func SyncCanaryJobs() {
 	logger.Debugf("Syncing canary jobs")
 
+	jobHistory := models.NewJobHistory("CanarySync", "canary", "").Start()
 	canaries, err := db.GetAllCanaries()
 	if err != nil {
 		logger.Errorf("Failed to get canaries: %v", err)
+		jobHistory.AddError(err.Error())
+		_ = db.PersistJobHistory(jobHistory.End())
 		return
 	}
 
@@ -256,16 +260,21 @@ func SyncCanaryJobs() {
 			pkgCanary, _, _, err := db.PersistCanary(canary, canary.Annotations["source"])
 			if err != nil {
 				logger.Errorf("Failed to persist canary %s: %v", canary.Name, err)
+				jobHistory.AddError(err.Error())
 				continue
 			}
 
 			if err := SyncCanaryJob(*pkgCanary.ToV1()); err != nil {
 				logger.Errorf(err.Error())
+				jobHistory.AddError(err.Error())
 			}
 		} else if err := SyncCanaryJob(canary); err != nil {
 			logger.Errorf(err.Error())
+			jobHistory.AddError(err.Error())
 		}
 	}
+	jobHistory.IncrSuccess()
+	_ = db.PersistJobHistory(jobHistory.End())
 	logger.Infof("Synced canary jobs %d", len(CanaryScheduler.Entries()))
 }
 
