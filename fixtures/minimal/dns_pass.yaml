@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: dns-pass
 spec:
-  schedule: @every 1m
+  schedule: "@every 1m"
   dns:
     - server: 8.8.8.8
       name: A record query
