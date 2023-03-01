@@ -1,7 +1,6 @@
 package topology
 
 import (
-	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -13,16 +12,6 @@ import (
 )
 
 const DefaultDepth = 3
-
-type TopologyParams struct {
-	ID      string   `query:"id"`
-	Owner   string   `query:"owner"`
-	Labels  string   `query:"labels"`
-	Status  []string `query:"status"`
-	Types   []string `query:"types"`
-	Depth   int      `query:"depth"`
-	Flatten bool     `query:"flatten"`
-}
 
 func NewTopologyParams(values url.Values) duty.TopologyOptions {
 	parseItems := func(items string) []string {
@@ -54,10 +43,6 @@ func NewTopologyParams(values url.Values) duty.TopologyOptions {
 		Types:   parseItems(values.Get("type")),
 		Flatten: values.Get("flatten") == "true",
 	}
-}
-
-func (p TopologyParams) String() string {
-	return fmt.Sprintf("%#v", p)
 }
 
 func Query(params duty.TopologyOptions) (models.Components, error) {
