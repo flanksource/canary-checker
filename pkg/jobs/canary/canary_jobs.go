@@ -246,6 +246,7 @@ func SyncCanaryJobs() {
 	logger.Debugf("Syncing canary jobs")
 
 	jobHistory := models.NewJobHistory("CanarySync", "canary", "").Start()
+	_ = db.PersistJobHistory(jobHistory)
 	canaries, err := db.GetAllCanaries()
 	if err != nil {
 		logger.Errorf("Failed to get canaries: %v", err)
@@ -264,7 +265,13 @@ func SyncCanaryJobs() {
 				continue
 			}
 
-			if err := SyncCanaryJob(*pkgCanary.ToV1()); err != nil {
+			v1canary, err := pkgCanary.ToV1()
+			if err != nil {
+				logger.Errorf("Failed to convert canary to V1 %s: %v", canary.Name, err)
+				jobHistory.AddError(err.Error())
+				continue
+			}
+			if err := SyncCanaryJob(*v1canary); err != nil {
 				logger.Errorf(err.Error())
 				jobHistory.AddError(err.Error())
 			}

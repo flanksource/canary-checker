@@ -62,8 +62,11 @@ func GetCheckComponentRelationshipsForComponent(component *pkg.Component) (relat
 			if err != nil {
 				logger.Debugf("error creating canary from inline: %v", err)
 			}
-			if err := canaryJobs.SyncCanaryJob(*canary.ToV1()); err != nil {
-				logger.Debugf("error creating canary job: %v", err)
+
+			if v1canary, err := canary.ToV1(); err == nil {
+				if err := canaryJobs.SyncCanaryJob(*v1canary); err != nil {
+					logger.Debugf("error creating canary job: %v", err)
+				}
 			}
 			inlineChecks, err := db.GetAllChecksForCanary(canary.ID)
 			if err != nil {
