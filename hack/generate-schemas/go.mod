@@ -1,6 +1,6 @@
 module github.com/flanksource/canary-checker/hack/generate-schemas
 
-go 1.18
+go 1.19
 
 require (
 	github.com/alecthomas/jsonschema v0.0.0-20211228220459-151e3c21f49d
