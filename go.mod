@@ -24,7 +24,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.19.0
 	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
 	github.com/flanksource/commons v1.6.3
-	github.com/flanksource/duty v1.0.13
+	github.com/flanksource/duty v1.0.25
 	github.com/flanksource/kommons v0.31.1
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ldap/ldap/v3 v3.4.1
@@ -36,7 +36,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/henvic/httpretty v0.0.6
 	github.com/hirochachacha/go-smb2 v1.0.10
-	github.com/jackc/pgx/v5 v5.3.0
+	github.com/jackc/pgx/v5 v5.3.1
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.5.0
 	github.com/labstack/echo/v4 v4.9.1
@@ -76,7 +76,7 @@ require (
 )
 
 require (
-	ariga.io/atlas v0.9.0 // indirect
+	ariga.io/atlas v0.9.1 // indirect
 	cloud.google.com/go v0.110.0 // indirect
 	cloud.google.com/go/compute v1.18.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
@@ -246,7 +246,7 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
-	github.com/zclconf/go-cty v1.12.1 // indirect
+	github.com/zclconf/go-cty v1.13.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/otel v1.13.0 // indirect
 	go.opentelemetry.io/otel/trace v1.13.0 // indirect
@@ -277,7 +277,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/postgres v1.4.7 // indirect
+	gorm.io/driver/postgres v1.4.8 // indirect
 	inet.af/netaddr v0.0.0-20220811202034-502d2d690317 // indirect
 	k8s.io/apiextensions-apiserver v0.26.0 // indirect
 	k8s.io/cli-runtime v0.24.4 // indirect
@@ -293,5 +293,3 @@ require (
 )
 
 replace k8s.io/client-go => k8s.io/client-go v0.26.0
-
-replace github.com/flanksource/duty => ../duty

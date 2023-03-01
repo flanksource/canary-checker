@@ -59,15 +59,22 @@ func ComponentStatusSummarySync() {
 	}
 	jobHistory := models.NewJobHistory("ComponentStatusSummarySync", "", "").Start()
 	_ = db.PersistJobHistory(jobHistory)
-	for _, component := range components.Walk() {
-		_, err = db.UpdateStatusAndSummaryForComponent(component.ID, component.Status, component.Summary)
-		if err != nil {
+	/*
+		updateStatusAndSummaryForComponent := func(c *models.Component) {
+			if _, err := db.UpdateStatusAndSummaryForComponent(c.ID, c.Status, c.Summary); err != nil {
+				logger.Errorf("error persisting component: %v", err)
+				jobHistory.AddError(err.Error())
+			}
+			jobHistory.IncrSuccess()
+		}
+	*/
+	components.Map(func(c *models.Component) {
+		if _, err := db.UpdateStatusAndSummaryForComponent(c.ID, c.Status, c.Summary); err != nil {
 			logger.Errorf("error persisting component: %v", err)
 			jobHistory.AddError(err.Error())
-			continue
 		}
 		jobHistory.IncrSuccess()
-	}
+	})
 	_ = db.PersistJobHistory(jobHistory.End())
 }
 
