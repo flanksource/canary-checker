@@ -16,7 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.30.5
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.33.1
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.5
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
