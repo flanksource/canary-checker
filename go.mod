@@ -229,9 +229,9 @@ require (
 	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/spf13/afero v1.9.4 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
-	github.com/tidwall/gjson v1.6.7 // indirect
-	github.com/tidwall/match v1.0.3 // indirect
-	github.com/tidwall/pretty v1.0.2 // indirect
+	github.com/tidwall/gjson v1.9.3 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/ugorji/go/codec v1.2.10 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/vadimi/go-ntlm v1.2.1 // indirect
