@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -51,24 +52,29 @@ func ComponentRun() {
 
 func ComponentStatusSummarySync() {
 	logger.Debugf("Syncing Status and Summary for components")
-	components, err := Query(TopologyParams{
-		Depth: 0,
-	})
+	components, err := Query(duty.TopologyOptions{Depth: 3})
 	if err != nil {
 		logger.Errorf("error getting components: %v", err)
 		return
 	}
 	jobHistory := models.NewJobHistory("ComponentStatusSummarySync", "", "").Start()
 	_ = db.PersistJobHistory(jobHistory)
-	for _, component := range components.Walk() {
-		_, err = db.UpdateStatusAndSummaryForComponent(component.ID, component.Status, component.Summary)
-		if err != nil {
+	/*
+		updateStatusAndSummaryForComponent := func(c *models.Component) {
+			if _, err := db.UpdateStatusAndSummaryForComponent(c.ID, c.Status, c.Summary); err != nil {
+				logger.Errorf("error persisting component: %v", err)
+				jobHistory.AddError(err.Error())
+			}
+			jobHistory.IncrSuccess()
+		}
+	*/
+	components.Map(func(c *models.Component) {
+		if _, err := db.UpdateStatusAndSummaryForComponent(c.ID, c.Status, c.Summary); err != nil {
 			logger.Errorf("error persisting component: %v", err)
 			jobHistory.AddError(err.Error())
-			continue
 		}
 		jobHistory.IncrSuccess()
-	}
+	})
 	_ = db.PersistJobHistory(jobHistory.End())
 }
 

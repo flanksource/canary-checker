@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -264,8 +265,8 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 	return persisted, tx.Error
 }
 
-func UpdateStatusAndSummaryForComponent(id uuid.UUID, status pkg.ComponentStatus, summary v1.Summary) (int64, error) {
-	tx := Gorm.Table("components").Where("id = ? and (status != ? or summary != ?)", id, status, summary).UpdateColumns(pkg.Component{Status: status, Summary: summary})
+func UpdateStatusAndSummaryForComponent(id uuid.UUID, status models.ComponentStatus, summary models.Summary) (int64, error) {
+	tx := Gorm.Table("components").Where("id = ? and (status != ? or summary != ?)", id, status, summary).UpdateColumns(models.Component{Status: status, Summary: summary})
 	return tx.RowsAffected, tx.Error
 }
 

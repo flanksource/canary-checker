@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/flanksource/commons/timer"
+	"github.com/flanksource/duty"
 
 	"github.com/spf13/cobra"
 
@@ -30,7 +31,7 @@ var Topology = &cobra.Command{
 	},
 }
 
-var queryParams topology.TopologyParams
+var queryParams duty.TopologyOptions
 var topologyOutput string
 
 var QueryTopology = &cobra.Command{
@@ -133,8 +134,7 @@ var RunTopology = &cobra.Command{
 
 func init() {
 	Topology.PersistentFlags().StringVarP(&namespace, "namespace", "n", "default", "Namespace to query")
-	QueryTopology.Flags().StringVar(&queryParams.TopologyID, "topology", "", "The topology id to query")
-	QueryTopology.Flags().StringVar(&queryParams.ComponentID, "component", "", "The component id to query")
+	QueryTopology.Flags().StringVar(&queryParams.ID, "component", "", "The component id to query")
 	QueryTopology.Flags().IntVar(&queryParams.Depth, "depth", 1, "The depth of the components to return")
 	RunTopology.Flags().StringVarP(&topologyOutput, "output", "o", "", "Output file to write results to")
 	Topology.AddCommand(RunTopology, QueryTopology, AddTopology)
