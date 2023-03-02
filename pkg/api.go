@@ -127,7 +127,7 @@ func (c Canary) GetCheckID(checkName string) string {
 	return c.Checks[checkName]
 }
 
-func (c Canary) ToV1() *v1.Canary {
+func (c Canary) ToV1() (*v1.Canary, error) {
 	canary := v1.Canary{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.Name,
@@ -145,12 +145,12 @@ func (c Canary) ToV1() *v1.Canary {
 	}
 	if err := json.Unmarshal(c.Spec, &canary.Spec); err != nil {
 		logger.Debugf("Failed to unmarshal canary spec: %s", err)
-		return nil
+		return nil, err
 	}
 	id := c.ID.String()
 	canary.Status.PersistedID = &id
 	canary.Status.Checks = c.Checks
-	return &canary
+	return &canary, nil
 }
 
 func CanaryFromV1(canary v1.Canary) (Canary, error) {
