@@ -88,6 +88,7 @@ func serve() {
 	e.Use(middleware.Logger())
 
 	e.GET("/api", api.CheckSummary)
+	e.GET("/api/summary", api.HealthSummary)
 	e.GET("/about", api.About)
 	e.GET("/api/graph", api.CheckDetails)
 	e.POST("/api/push", api.PushHandler)

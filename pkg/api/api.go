@@ -70,3 +70,18 @@ func CheckSummary(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, apiResponse)
 }
+
+func HealthSummary(c echo.Context) error {
+	start := time.Now()
+	results, err := cache.PostgresCache.QuerySummary()
+	if err != nil {
+		return errorResonse(c, err, http.StatusInternalServerError)
+	}
+
+	apiResponse := &Response{
+		RunnerName: runner.RunnerName,
+		Checks:     results,
+		Duration:   int(time.Since(start).Milliseconds()),
+	}
+	return c.JSON(http.StatusOK, apiResponse)
+}
