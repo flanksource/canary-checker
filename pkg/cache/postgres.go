@@ -95,7 +95,7 @@ SELECT
     check_status_summary.p99,
     check_status_summary.last_pass,
     check_status_summary.last_fail,
-    checs.last_transition_time,
+    checks.last_transition_time,
     checks.type,
     checks.icon,
     checks.name,
