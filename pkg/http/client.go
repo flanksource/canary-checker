@@ -261,7 +261,7 @@ func (h *HTTPRequest) Do(body string) *HTTPResponse {
 	}
 	client := h.getHTTPClient()
 	start := time.Now()
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) //nolint
 	r := NewHTTPResponse(h, resp, start).SetError(err)
 
 	if logger.IsTraceEnabled() {
