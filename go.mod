@@ -24,7 +24,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.19.0
 	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
 	github.com/flanksource/commons v1.6.3
-	github.com/flanksource/duty v1.0.25
+	github.com/flanksource/duty v1.0.26
 	github.com/flanksource/kommons v0.31.1
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ldap/ldap/v3 v3.4.1
@@ -66,7 +66,7 @@ require (
 	google.golang.org/api v0.110.0
 	google.golang.org/genproto v0.0.0-20230223222841-637eb2293923
 	gopkg.in/flanksource/yaml.v3 v3.2.0
-	gorm.io/gorm v1.24.5
+	gorm.io/gorm v1.24.6
 	gorm.io/plugin/prometheus v0.0.0-20220517015831-ca6bfaf20bf4
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1
