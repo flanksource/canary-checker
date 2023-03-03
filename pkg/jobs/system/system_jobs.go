@@ -92,7 +92,7 @@ func SyncSystemsJobs() {
 	}
 
 	for _, systemTemplate := range systemTemplates {
-		jobHistory := models.NewJobHistory("SystemTemplateSync", "system_template", fmt.Sprintf("%s/%s", systemTemplate.Namespace, systemTemplate.Name)).Start()
+		jobHistory := models.NewJobHistory("SystemTemplateSync", "system_template", systemTemplate.GetPersistedID()).Start()
 		_ = db.PersistJobHistory(jobHistory)
 		if err := SyncSystemJob(systemTemplate); err != nil {
 			logger.Errorf("Error syncing system job: %v", err)
