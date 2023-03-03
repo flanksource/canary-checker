@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -237,4 +238,11 @@ func getChecksForCanaries() string {
 	return `
 	(SELECT json_object_agg(checks.name, checks.id) from checks WHERE checks.canary_id = canaries.id AND checks.deleted_at is null GROUP BY checks.canary_id) :: jsonb
 			 `
+}
+
+func RefreshCheckStatusSummary() {
+	_, err := Pool.Exec(context.Background(), `REFRESH MATERIALIZED VIEW check_status_summary`)
+	if err != nil {
+		logger.Errorf("error refreshing check_status_summary materialized view: %v", err)
+	}
 }

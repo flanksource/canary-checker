@@ -2,6 +2,7 @@ package jobs
 
 import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg/db"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/system"
 	"github.com/flanksource/canary-checker/pkg/topology"
@@ -37,6 +38,9 @@ func Start() {
 	}
 	if _, err := ScheduleFunc(v1.ComponentConfigSchedule, configs.ComponentConfigRun); err != nil {
 		logger.Errorf("Failed to schedule component config: %v", err)
+	}
+	if _, err := ScheduleFunc(v1.CheckStatusSummarySchedule, db.RefreshCheckStatusSummary); err != nil {
+		logger.Errorf("Failed to schedule check status summary refresh: %v", err)
 	}
 
 	canaryJobs.SyncCanaryJobs()
