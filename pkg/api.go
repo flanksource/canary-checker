@@ -199,7 +199,7 @@ type Check struct {
 	UpdatedAt          *time.Time          `json:"updatedAt,omitempty"`
 	CreatedAt          *time.Time          `json:"createdAt,omitempty"`
 	DeletedAt          *time.Time          `json:"deletedAt,omitempty"`
-	SilencedAt         *time.Time          `json:"silenced_at,omitempty"`
+	SilencedAt         *time.Time          `json:"silencedAt,omitempty"`
 	Canary             *v1.Canary          `json:"-" gorm:"-"`
 }
 

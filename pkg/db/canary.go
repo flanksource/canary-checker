@@ -13,6 +13,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -241,8 +242,7 @@ func getChecksForCanaries() string {
 }
 
 func RefreshCheckStatusSummary() {
-	_, err := Pool.Exec(context.Background(), `REFRESH MATERIALIZED VIEW check_status_summary`)
-	if err != nil {
+	if err := duty.RefreshCheckStatusSummary(Pool); err != nil {
 		logger.Errorf("error refreshing check_status_summary materialized view: %v", err)
 	}
 }
