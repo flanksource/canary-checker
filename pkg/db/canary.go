@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -237,4 +238,10 @@ func getChecksForCanaries() string {
 	return `
 	(SELECT json_object_agg(checks.name, checks.id) from checks WHERE checks.canary_id = canaries.id AND checks.deleted_at is null GROUP BY checks.canary_id) :: jsonb
 			 `
+}
+
+func RefreshCheckStatusSummary() {
+	if err := duty.RefreshCheckStatusSummary(Pool); err != nil {
+		logger.Errorf("error refreshing check_status_summary materialized view: %v", err)
+	}
 }

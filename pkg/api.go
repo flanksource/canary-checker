@@ -82,9 +82,11 @@ func (l Latency) String() string {
 }
 
 type Uptime struct {
-	Passed int     `json:"passed"`
-	Failed int     `json:"failed"`
-	P100   float64 `json:"p100,omitempty"`
+	Passed   int        `json:"passed"`
+	Failed   int        `json:"failed"`
+	P100     float64    `json:"p100,omitempty"`
+	LastPass *time.Time `json:"last_pass,omitempty"`
+	LastFail *time.Time `json:"last_fail,omitempty"`
 }
 
 func (u Uptime) String() string {
@@ -174,29 +176,31 @@ func CanaryFromV1(canary v1.Canary) (Canary, error) {
 }
 
 type Check struct {
-	ID          uuid.UUID           `json:"id" gorm:"default:generate_ulid()"`
-	CanaryID    uuid.UUID           `json:"canary_id"`
-	Spec        types.JSON          `json:"-"`
-	Type        string              `json:"type"`
-	Name        string              `json:"name"`
-	CanaryName  string              `json:"canary_name" gorm:"-"`
-	Namespace   string              `json:"namespace"  gorm:"-"`
-	Labels      types.JSONStringMap `json:"labels" gorm:"type:jsonstringmap"`
-	Description string              `json:"description,omitempty"`
-	Status      string              `json:"status,omitempty"`
-	Uptime      Uptime              `json:"uptime"  gorm:"-"`
-	Latency     Latency             `json:"latency"  gorm:"-"`
-	Statuses    []CheckStatus       `json:"checkStatuses"  gorm:"-"`
-	Owner       string              `json:"owner,omitempty"`
-	Severity    string              `json:"severity,omitempty"`
-	Icon        string              `json:"icon,omitempty"`
-	DisplayType string              `json:"displayType,omitempty"  gorm:"-"`
-	LastRuntime *time.Time          `json:"lastRuntime,omitempty"`
-	NextRuntime *time.Time          `json:"nextRuntime,omitempty"`
-	UpdatedAt   *time.Time          `json:"updatedAt,omitempty"`
-	CreatedAt   *time.Time          `json:"createdAt,omitempty"`
-	DeletedAt   *time.Time          `json:"deletedAt,omitempty"`
-	Canary      *v1.Canary          `json:"-" gorm:"-"`
+	ID                 uuid.UUID           `json:"id" gorm:"default:generate_ulid()"`
+	CanaryID           uuid.UUID           `json:"canary_id"`
+	Spec               types.JSON          `json:"-"`
+	Type               string              `json:"type"`
+	Name               string              `json:"name"`
+	CanaryName         string              `json:"canary_name" gorm:"-"`
+	Namespace          string              `json:"namespace"  gorm:"-"`
+	Labels             types.JSONStringMap `json:"labels" gorm:"type:jsonstringmap"`
+	Description        string              `json:"description,omitempty"`
+	Status             string              `json:"status,omitempty"`
+	Uptime             Uptime              `json:"uptime"  gorm:"-"`
+	Latency            Latency             `json:"latency"  gorm:"-"`
+	Statuses           []CheckStatus       `json:"checkStatuses"  gorm:"-"`
+	Owner              string              `json:"owner,omitempty"`
+	Severity           string              `json:"severity,omitempty"`
+	Icon               string              `json:"icon,omitempty"`
+	DisplayType        string              `json:"displayType,omitempty"  gorm:"-"`
+	LastRuntime        *time.Time          `json:"lastRuntime,omitempty"`
+	LastTransitionTime *time.Time          `json:"lastTransitionTime,omitempty"`
+	NextRuntime        *time.Time          `json:"nextRuntime,omitempty"`
+	UpdatedAt          *time.Time          `json:"updatedAt,omitempty"`
+	CreatedAt          *time.Time          `json:"createdAt,omitempty"`
+	DeletedAt          *time.Time          `json:"deletedAt,omitempty"`
+	SilencedAt         *time.Time          `json:"silencedAt,omitempty"`
+	Canary             *v1.Canary          `json:"-" gorm:"-"`
 }
 
 func FromExternalCheck(canary Canary, check external.Check) Check {

@@ -8,6 +8,8 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"gorm.io/gorm/clause"
@@ -42,7 +44,10 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 		logger.Errorf("error marshalling details: %v", err)
 	}
 	checks := pkg.Checks{}
-	if db.Gorm.Model(&checks).Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Where("canary_id = ? AND type = ? AND name = ?", check.CanaryID, check.Type, check.GetName()).Updates(map[string]interface{}{"status": check.Status, "labels": check.Labels, "last_runtime": time.Now()}).Error != nil {
+	if db.Gorm.Model(&checks).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		Where("canary_id = ? AND type = ? AND name = ?", check.CanaryID, check.Type, check.GetName()).
+		Updates(map[string]any{"status": check.Status, "labels": check.Labels, "last_runtime": time.Now()}).Error != nil {
 		logger.Errorf("error updating check: %v", err)
 		return
 	}
@@ -80,6 +85,10 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 
 func (c *postgresCache) Query(q QueryParams) (pkg.Checks, error) {
 	return q.ExecuteSummary(db.Pool)
+}
+
+func (c *postgresCache) QuerySummary() (models.Checks, error) {
+	return duty.QueryCheckSummary(db.Pool)
 }
 
 func (c *postgresCache) QueryStatus(q QueryParams) ([]pkg.Timeseries, error) {
