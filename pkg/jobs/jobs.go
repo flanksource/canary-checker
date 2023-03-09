@@ -42,6 +42,9 @@ func Start() {
 	if _, err := ScheduleFunc(v1.CheckStatusSummarySchedule, db.RefreshCheckStatusSummary); err != nil {
 		logger.Errorf("Failed to schedule check status summary refresh: %v", err)
 	}
+	if _, err := ScheduleFunc(v1.CheckStatusDeleteSchedule, db.DeleteOldCheckStatuses); err != nil {
+		logger.Errorf("Failed to schedule check status deleter: %v", err)
+	}
 
 	canaryJobs.SyncCanaryJobs()
 }
