@@ -4,31 +4,7 @@ on:
     branches:
       - master
       - main
-    paths:
-      - "**.go"
-      - "Makefile"
-      - "**.yaml"
-      - "**.yml"
-      - "**/github/workflows/lint.yml"
-      - "**/.eslint*"
-      - "**/package.json"
-      - "Makefile"
-      - "**.jsx?"
-      - "**.tsx?"
-      - "chart/**"
   pull_request:
-    paths:
-      - "**.go"
-      - "Makefile"
-      - "**.yaml"
-      - "**.yml"
-      - "**/github/workflows/lint.yml"
-      - "**/.eslint*"
-      - "**/package.json"
-      - "Makefile"
-      - "**.jsx?"
-      - "**.tsx?"
-      - "chart/**"
 jobs:
   golangci:
     name: lint
