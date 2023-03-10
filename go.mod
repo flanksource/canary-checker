@@ -9,14 +9,14 @@ require (
 	github.com/antonmedv/expr v1.12.1
 	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/aws/aws-sdk-go v1.44.209
-	github.com/aws/aws-sdk-go-v2 v1.17.5
+	github.com/aws/aws-sdk-go-v2 v1.17.6
 	github.com/aws/aws-sdk-go-v2/config v1.18.15
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.15
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.30.5
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.33.1
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.6
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
@@ -102,8 +102,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.23 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.55 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.29 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.23 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.30 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.24 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.30 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.0.21 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.11 // indirect
