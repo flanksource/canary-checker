@@ -9,4 +9,5 @@ const (
 	ComponentConfigSchedule            = "@every 2m"
 	ComponentCostSchedule              = "@every 1h"
 	CheckStatusSummarySchedule         = "@every 1m"
+	CheckStatusDeleteSchedule          = "@every 24h"
 )

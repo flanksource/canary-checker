@@ -51,6 +51,7 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database. Use embedded:///path/to/dir to use the embedded database")
 	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
 	flags.StringVarP(&cache.DefaultWindow, "default-window", "", "1h", "Default search window")
+	flags.IntVar(&db.CheckStatusRetentionDays, "check-status-retention-period", db.DefaultCheckStatusRetentionDays, "Check status retention period in days")
 }
 
 func readFromEnv(v string) string {
