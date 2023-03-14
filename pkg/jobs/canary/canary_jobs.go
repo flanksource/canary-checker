@@ -70,7 +70,7 @@ func (job CanaryJob) Run() {
 
 	// Skip run if job ran too recently
 	if lastRunDelta < minimumTimeBetweenCanaryRuns {
-		logger.Infof("Skipping Canary[%s] since it last ran %.2f seconds ago", job.Canary.GetPersistedID(), lastRunDelta.Seconds())
+		logger.Infof("Skipping Canary[%s]:%s since it last ran %.2f seconds ago", job.Canary.GetPersistedID(), job.GetNamespacedName(), lastRunDelta.Seconds())
 		return
 	}
 	results := checks.RunChecks(job.NewContext())
