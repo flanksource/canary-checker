@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -55,7 +56,23 @@ func (job CanaryJob) GetNamespacedName() types.NamespacedName {
 	return types.NamespacedName{Name: job.Canary.Name, Namespace: job.Canary.Namespace}
 }
 
+var minimumTimeBetweenCanaryRuns = 10 * time.Second
+var canaryLastRuntimes = sync.Map{}
+
 func (job CanaryJob) Run() {
+	lastRunDelta := minimumTimeBetweenCanaryRuns
+	// Get last runtime from sync map
+	var lastRuntime time.Time
+	if lastRuntimeVal, exists := canaryLastRuntimes.Load(job.Canary.GetPersistedID()); exists {
+		lastRuntime = lastRuntimeVal.(time.Time)
+		lastRunDelta = time.Since(lastRuntime)
+	}
+
+	// Skip run if job ran too recently
+	if lastRunDelta < minimumTimeBetweenCanaryRuns {
+		logger.Infof("Skipping Canary[%s]:%s since it last ran %.2f seconds ago", job.Canary.GetPersistedID(), job.GetNamespacedName(), lastRunDelta.Seconds())
+		return
+	}
 	results := checks.RunChecks(job.NewContext())
 	for _, result := range results {
 		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
@@ -64,6 +81,9 @@ func (job CanaryJob) Run() {
 		cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
 	}
 	job.updateStatusAndEvent(results)
+
+	// Update last runtime map
+	canaryLastRuntimes.Store(job.Canary.GetPersistedID(), time.Now())
 }
 
 func (job *CanaryJob) NewContext() *context.Context {
@@ -228,9 +248,8 @@ func SyncCanaryJob(canary v1.Canary) error {
 	_, err := CanaryScheduler.AddJob(canary.Spec.GetSchedule(), job)
 	if err != nil {
 		return fmt.Errorf("failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
-	} else {
-		logger.Infof("Scheduled %s: %s", canary, canary.Spec.GetSchedule())
 	}
+	logger.Infof("Scheduled %s: %s", canary, canary.Spec.GetSchedule())
 
 	entry = findCronEntry(canary)
 	if entry != nil && time.Until(entry.Next) < 1*time.Hour {
