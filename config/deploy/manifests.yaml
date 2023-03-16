@@ -3178,6 +3178,8 @@ spec:
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
+                      ingressClass:
+                        type: string
                       ingressHost:
                         type: string
                       ingressName:
