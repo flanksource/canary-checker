@@ -127,39 +127,6 @@ func (components *Components) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (components Components) CreateTreeStructure() Components {
-	var toRemoveCompIDs []uuid.UUID
-	for _, _c := range components {
-		c := _c
-
-		c.TopologyType = ComponentType
-		if c.ParentId != nil {
-			parent := components.FindByID(*c.ParentId)
-			if parent != nil {
-				parent.Components = append(parent.Components, c)
-				toRemoveCompIDs = append(toRemoveCompIDs, c.ID)
-			} else if c.RelationshipID != nil {
-				relation := components.FindByID(*c.RelationshipID)
-				if relation != nil {
-					relation.Components = append(relation.Components, c)
-					toRemoveCompIDs = append(toRemoveCompIDs, c.ID)
-				}
-			}
-		}
-	}
-	for _, id := range toRemoveCompIDs {
-		i := components.FindIndexByID(id)
-		if i != -1 {
-			components = append((components)[:i], (components)[i+1:]...)
-		}
-	}
-	for _, component := range components {
-		component.Summary = component.Summarize()
-	}
-
-	return components
-}
-
 func (components Components) Walk() Components {
 	var comps Components
 	for _, _c := range components {
@@ -195,7 +162,6 @@ type Component struct {
 	Properties       Properties               `json:"properties,omitempty" gorm:"type:properties"`
 	Components       Components               `json:"components,omitempty" gorm:"-"`
 	ParentId         *uuid.UUID               `json:"parent_id,omitempty"` //nolint
-	RelationshipID   *uuid.UUID               `json:"relationship_id,omitempty"`
 	Selectors        v1.ResourceSelectors     `json:"selectors,omitempty" gorm:"resourceSelectors" swaggerignore:"true"`
 	ComponentChecks  v1.ComponentChecks       `json:"-" gorm:"componentChecks" swaggerignore:"true"`
 	Checks           Checks                   `json:"checks,omitempty" gorm:"-"`
@@ -342,59 +308,6 @@ func (components Components) Find(name string) *Component {
 	}
 	return nil
 }
-
-func (components Components) GetIds() []string {
-	ids := []string{}
-	for _, component := range components {
-		ids = append(ids, component.ID.String())
-	}
-	return ids
-}
-
-func (components Components) FindByID(id uuid.UUID) *Component {
-	for _, component := range components {
-		if component.ID == id {
-			return component
-		}
-	}
-	return nil
-}
-
-func (components Components) FindIndexByID(id uuid.UUID) int {
-	for i, component := range components {
-		if component.ID == id {
-			return i
-		}
-	}
-	return -1
-}
-
-func contains(list []string, item string) bool {
-	for _, i := range list {
-		if i == item {
-			return true
-		}
-	}
-	return false
-}
-
-func (components Components) FilterChildByStatus(status ...string) Components {
-	if len(status) == 0 {
-		return components
-	}
-	for _, component := range components {
-		filtered := Components{}
-		for _, child := range component.Components {
-			if contains(status, string(child.Status)) {
-				filtered = append(filtered, child)
-			}
-		}
-		component.Components = filtered
-	}
-	return components
-}
-
-type Owner string
 
 type Text struct {
 	Tooltip string `json:"tooltip,omitempty"`
