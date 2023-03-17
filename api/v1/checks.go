@@ -456,6 +456,7 @@ type PodCheck struct {
 	Path                 string `yaml:"path,omitempty" json:"path,omitempty" template:"true"`
 	IngressName          string `yaml:"ingressName" json:"ingressName,omitempty" template:"true" `
 	IngressHost          string `yaml:"ingressHost" json:"ingressHost,omitempty" template:"true"`
+	IngressClass         string `yaml:"ingressClass" json:"ingressClass,omitempty"`
 	ExpectedContent      string `yaml:"expectedContent,omitempty" json:"expectedContent,omitempty" template:"true"`
 	ExpectedHTTPStatuses []int  `yaml:"expectedHttpStatuses,omitempty" json:"expectedHttpStatuses,omitempty"`
 	PriorityClass        string `yaml:"priorityClass,omitempty" json:"priorityClass,omitempty"`

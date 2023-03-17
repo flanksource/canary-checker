@@ -397,6 +397,9 @@ func (c *PodChecker) createServiceAndIngress(podCheck canaryv1.PodCheck, pod *v1
 		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.Service.Name = svc.Name
 		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.Service.Port.Number = int32(podCheck.Port)
 		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].PathType = &pathType
+		if podCheck.IngressClass != "" {
+			ingress.Spec.IngressClassName = &podCheck.IngressClass
+		}
 		if _, err := c.k8s.NetworkingV1().Ingresses(podCheck.Namespace).Update(gocontext.TODO(), ingress, metav1.UpdateOptions{}); err != nil {
 			return perrors.Wrapf(err, "failed to update ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
 		}
@@ -450,6 +453,9 @@ func (c *PodChecker) newIngress(podCheck canaryv1.PodCheck, svc string) *network
 				},
 			},
 		},
+	}
+	if podCheck.IngressClass != "" {
+		ingress.Spec.IngressClassName = &podCheck.IngressClass
 	}
 	return ingress
 }
