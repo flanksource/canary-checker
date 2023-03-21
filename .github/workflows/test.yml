@@ -45,7 +45,7 @@ jobs:
         run: ./test/e2e.sh fixtures/${{matrix.suite}}
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
-        if: always() and  github.event.repository.fork == 'false'
+        if: always() &&  github.event.repository.fork == 'false'
         with:
           files: test/test-results.xml
           check_name: E2E - ${{matrix.suite}}
