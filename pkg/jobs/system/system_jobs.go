@@ -70,7 +70,6 @@ func (job SystemJob) Run() {
 	}
 	topology.ComponentRun()
 	topology.ComponentStatusSummarySync()
-	topology.ComponentCostRun()
 	checks.ComponentCheckRun()
 	configs.ComponentConfigRun()
 }
