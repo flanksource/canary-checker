@@ -5,6 +5,7 @@ on:
       - master
       - main
   pull_request:
+  merge_group:
 jobs:
   golangci:
     name: lint
