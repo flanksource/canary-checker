@@ -68,10 +68,6 @@ func (job SystemJob) Run() {
 			logger.Errorf("error deleting components: %v", err)
 		}
 	}
-	topology.ComponentRun()
-	topology.ComponentStatusSummarySync()
-	checks.ComponentCheckRun()
-	configs.ComponentConfigRun()
 }
 
 func SyncSystemsJobs() {
