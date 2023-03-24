@@ -10,8 +10,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/topology"
-	"github.com/flanksource/canary-checker/pkg/topology/checks"
-	"github.com/flanksource/canary-checker/pkg/topology/configs"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
