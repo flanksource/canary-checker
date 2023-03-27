@@ -11,7 +11,9 @@ import (
 )
 
 const (
-	DefaultCheckStatusRetentionDays = 60
+	DefaultCheckStatusRetentionDays          = 60
+	RetentionDaysFor1hrCheckStatusAggregate  = 180
+	RetentionDaysFor1dayCheckStatusAggregate = 1000
 
 	checkStatusAggDuration1h = "1hour"
 	checkStatusAggDuration1d = "1day"
@@ -38,6 +40,32 @@ func DeleteOldCheckStatuses() {
 		jobHistory.IncrSuccess()
 	}
 	_ = PersistJobHistory(jobHistory.End())
+}
+
+// DeleteOldAggregatedCheckStatuses maintains retention period of old aggregate check statuses.
+func DeleteOldAggregatedCheckStatuses() {
+	jobHistory := models.NewJobHistory("DeleteOldAggregatedCheckStatuses", "", "").Start()
+	if err := PersistJobHistory(jobHistory); err != nil {
+		logger.Errorf("error persisting job history: %v", err)
+	}
+	defer func() {
+		if err := PersistJobHistory(jobHistory.End()); err != nil {
+			logger.Errorf("error persisting end of job: %v", err)
+		}
+	}()
+
+	const query = `DELETE FROM check_statuses_aggregate WHERE 
+	(interval_duration = ? AND (NOW() - created_at) > INTERVAL '1 day' * ?) OR
+	(interval_duration = ? AND (NOW() - created_at) > INTERVAL '1 day' * ?)`
+	tx := Gorm.Exec(query, checkStatusAggDuration1h, RetentionDaysFor1hrCheckStatusAggregate, checkStatusAggDuration1d, RetentionDaysFor1dayCheckStatusAggregate)
+	if tx.Error != nil {
+		logger.Errorf("error deleting old aggregated check statuses: %v", tx.Error)
+		jobHistory.AddError(tx.Error.Error())
+		return
+	}
+
+	logger.Infof("Successfully deleted %v entries", tx.RowsAffected)
+	jobHistory.IncrSuccess()
 }
 
 // AggregateCheckStatuses aggregates check statuses hourly

@@ -53,6 +53,9 @@ func Start() {
 	if _, err := ScheduleFunc(v1.CheckStatusesAggregate1dSchedule, db.AggregateCheckStatuses1d); err != nil {
 		logger.Errorf("Failed to schedule check statuses aggregator 1d: %v", err)
 	}
+	if _, err := ScheduleFunc(v1.CheckStatusesAggregatedDeleteSchedule, db.DeleteOldAggregatedCheckStatuses); err != nil {
+		logger.Errorf("Failed to schedule check statuses aggregator remover: %v", err)
+	}
 
 	canaryJobs.SyncCanaryJobs()
 }
