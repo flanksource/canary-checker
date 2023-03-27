@@ -112,7 +112,7 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg.Component, error) {
 	var components pkg.Components
 	for _, child := range component.Components {
-		children, err := lookupComponents(ctx, child)
+		children, err := lookupComponents(ctx, v1.ComponentSpec(child))
 		if err != nil {
 			return nil, err
 		}
