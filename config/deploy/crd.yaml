@@ -3811,10 +3811,9 @@ spec:
                 components:
                   description: Create new child components
                   items:
-                    description: RawMessage is a raw encoded JSON value. It implements Marshaler and Unmarshaler and can be used to delay JSON decoding or precompute a JSON encoding.
-                    format: byte
-                    type: string
+                    type: object
                   type: array
+                  x-kubernetes-preserve-unknown-fields: true
                 configs:
                   description: Lookup and associate config items with this component
                   items:
@@ -3974,6 +3973,7 @@ spec:
                         type: integer
                     type: object
                   type: array
+                  x-kubernetes-preserve-unknown-fields: true
                 relationships:
                   items:
                     properties:
@@ -4087,10 +4087,9 @@ spec:
                       components:
                         description: Create new child components
                         items:
-                          description: RawMessage is a raw encoded JSON value. It implements Marshaler and Unmarshaler and can be used to delay JSON decoding or precompute a JSON encoding.
-                          format: byte
-                          type: string
+                          type: object
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       configs:
                         description: Lookup and associate config items with this component
                         items:
@@ -4250,6 +4249,7 @@ spec:
                               type: integer
                           type: object
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       relationships:
                         items:
                           properties:
