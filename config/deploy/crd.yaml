@@ -3809,8 +3809,11 @@ spec:
                     type: object
                   type: array
                 components:
-                  description: 'Create new child components TODO: This should be a component spec but due to kubernetes crd size limitations we are keeping it as a string and unmarshalling it at runtime'
-                  type: string
+                  description: Create new child components
+                  items:
+                    type: object
+                  type: array
+                  x-kubernetes-preserve-unknown-fields: true
                 configs:
                   description: Lookup and associate config items with this component
                   items:
@@ -3970,6 +3973,7 @@ spec:
                         type: integer
                     type: object
                   type: array
+                  x-kubernetes-preserve-unknown-fields: true
                 relationships:
                   items:
                     properties:
@@ -4081,8 +4085,11 @@ spec:
                           type: object
                         type: array
                       components:
-                        description: 'Create new child components TODO: This should be a component spec but due to kubernetes crd size limitations we are keeping it as a string and unmarshalling it at runtime'
-                        type: string
+                        description: Create new child components
+                        items:
+                          type: object
+                        type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       configs:
                         description: Lookup and associate config items with this component
                         items:
@@ -4242,6 +4249,7 @@ spec:
                               type: integer
                           type: object
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       relationships:
                         items:
                           properties:

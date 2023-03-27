@@ -28,15 +28,15 @@ type ComponentSpec struct {
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
 	Lifecycle     string             `json:"lifecycle,omitempty"`
 	Relationships []RelationshipSpec `json:"relationships,omitempty"`
-	Properties    []*Property        `json:"properties,omitempty"`
+	// +kubebuilder:validation:XPreserveUnknownFields
+	Properties []*Property `json:"properties,omitempty"`
 	// +kubebuilder:validation:XPreserveUnknownFields
 	// Lookup component definitions from an external source, use the
 	// forEach property to iterate over the results to further enrich each component.
 	Lookup *CanarySpec `json:"lookup,omitempty"`
+	// +kubebuilder:validation:XPreserveUnknownFields
 	// Create new child components
-	// TODO: This should be a component spec but due to kubernetes crd size limitations
-	// we are keeping it as a string and unmarshalling it at runtime
-	Components string `json:"components,omitempty"`
+	Components []ComponentSpecObject `json:"components,omitempty"`
 	// Lookup and associcate other components with this component
 	Selectors       ResourceSelectors `json:"selectors,omitempty"`
 	ComponentChecks ComponentChecks   `json:"checks,omitempty"`
@@ -50,6 +50,9 @@ type ComponentSpec struct {
 	// ${.component} can be used to reference the component itself
 	ForEach *ForEach `json:"forEach,omitempty"`
 }
+
+// +kubebuilder:validation:Type=object
+type ComponentSpecObject ComponentSpec
 
 func (c ComponentSpec) String() string {
 	if c.Name != "" {
