@@ -110,12 +110,14 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 }
 
 func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg.Component, error) {
-	components := pkg.Components{}
-	for _, childRaw := range component.Components {
-		child := v1.ComponentSpec{}
-		if err := json.Unmarshal([]byte(childRaw), &child); err != nil {
-			return nil, err
-		}
+	var components pkg.Components
+
+	var parsedComponents []v1.ComponentSpec
+	if err := json.Unmarshal([]byte(component.Components), &parsedComponents); err != nil {
+		return nil, err
+	}
+
+	for _, child := range parsedComponents {
 		children, err := lookupComponents(ctx, child)
 		if err != nil {
 			return nil, err

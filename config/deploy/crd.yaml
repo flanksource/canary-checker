@@ -3809,12 +3809,8 @@ spec:
                     type: object
                   type: array
                 components:
-                  description: Create new child components
-                  items:
-                    description: RawMessage is a raw encoded JSON value. It implements Marshaler and Unmarshaler and can be used to delay JSON decoding or precompute a JSON encoding.
-                    format: byte
-                    type: string
-                  type: array
+                  description: 'Create new child components TODO: This should be a component spec but due to kubernetes crd size limitations we are keeping it as a string and unmarshalling it at runtime'
+                  type: string
                 configs:
                   description: Lookup and associate config items with this component
                   items:
@@ -4085,12 +4081,8 @@ spec:
                           type: object
                         type: array
                       components:
-                        description: Create new child components
-                        items:
-                          description: RawMessage is a raw encoded JSON value. It implements Marshaler and Unmarshaler and can be used to delay JSON decoding or precompute a JSON encoding.
-                          format: byte
-                          type: string
-                        type: array
+                        description: 'Create new child components TODO: This should be a component spec but due to kubernetes crd size limitations we are keeping it as a string and unmarshalling it at runtime'
+                        type: string
                       configs:
                         description: Lookup and associate config items with this component
                         items:

@@ -862,17 +862,6 @@ func (in *ComponentSpec) DeepCopyInto(out *ComponentSpec) {
 		*out = new(CanarySpec)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.Components != nil {
-		in, out := &in.Components, &out.Components
-		*out = make([]json.RawMessage, len(*in))
-		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = make(json.RawMessage, len(*in))
-				copy(*out, *in)
-			}
-		}
-	}
 	if in.Selectors != nil {
 		in, out := &in.Selectors, &out.Selectors
 		*out = make(ResourceSelectors, len(*in))

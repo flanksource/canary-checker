@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -35,7 +34,9 @@ type ComponentSpec struct {
 	// forEach property to iterate over the results to further enrich each component.
 	Lookup *CanarySpec `json:"lookup,omitempty"`
 	// Create new child components
-	Components []json.RawMessage `json:"components,omitempty"`
+	// TODO: This should be a component spec but due to kubernetes crd size limitations
+	// we are keeping it as a string and unmarshalling it at runtime
+	Components string `json:"components,omitempty"`
 	// Lookup and associcate other components with this component
 	Selectors       ResourceSelectors `json:"selectors,omitempty"`
 	ComponentChecks ComponentChecks   `json:"checks,omitempty"`
