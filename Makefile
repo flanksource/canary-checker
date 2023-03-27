@@ -145,6 +145,9 @@ deploy-docs:
 	which netlify 2>&1 > /dev/null || sudo npm install -g netlify-cli
 	netlify deploy --site cfe8c6b7-79b7-4a88-9e13-ff792126717f --prod --dir build/docs
 
+.PHONY: dev
+dev:
+	go build -o ./.bin/$(NAME) -gcflags="all=-N -l" -v main.go
 
 .PHONY: build
 build:
