@@ -76,7 +76,7 @@ require (
 )
 
 require (
-	ariga.io/atlas v0.9.1 // indirect
+	ariga.io/atlas v0.10.0 // indirect
 	cloud.google.com/go v0.110.0 // indirect
 	cloud.google.com/go/compute v1.18.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
@@ -293,3 +293,5 @@ require (
 )
 
 replace k8s.io/client-go => k8s.io/client-go v0.26.0
+
+replace github.com/flanksource/duty => /home/gunners/Projects/flanksource/duty
