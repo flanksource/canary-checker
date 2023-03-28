@@ -110,18 +110,20 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 }
 
 func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg.Component, error) {
-	var components pkg.Components
+	var components, childComponents pkg.Components
 	for _, child := range component.Components {
 		children, err := lookupComponents(ctx, v1.ComponentSpec(child))
 		if err != nil {
 			return nil, err
 		}
-		components = append(components, children...)
+		childComponents = append(childComponents, children...)
 	}
 
-	if component.Lookup == nil {
-		components = append(components, pkg.NewComponent(component))
-	} else {
+	pkgComp := pkg.NewComponent(component)
+	pkgComp.Components = childComponents
+	components = append(components, pkgComp)
+
+	if component.Lookup != nil {
 		logger.Debugf("Looking up components for %s => %s", component, component.ForEach)
 		if children, err := mergeComponentLookup(ctx, &component, component.Lookup); err != nil {
 			return nil, err
@@ -130,7 +132,7 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg
 		}
 	}
 
-	for _, comp := range components {
+	for _, comp := range components.Walk() {
 		for _, property := range component.Properties {
 			props, err := lookupProperty(ctx.WithComponents(&components, comp), property)
 			if err != nil {
@@ -139,10 +141,10 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg
 			comp.Properties = append(comp.Properties, props...)
 		}
 
-		if comp.Icon == "" && component.Icon != "" {
+		if comp.Icon == "" {
 			comp.Icon = component.Icon
 		}
-		if comp.Lifecycle == "" && component.Lifecycle != "" {
+		if comp.Lifecycle == "" {
 			comp.Lifecycle = component.Lifecycle
 		}
 		if comp.ExternalId == "" && component.Id != nil {
@@ -359,14 +361,8 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 				component.Components = append(component.Components, components...)
 				continue
 			}
-			group := pkg.NewComponent(comp)
-			group.Components = append(group.Components, components...)
-			if len(group.Components) > 0 {
-				group.Summary = group.Components.Summarize()
-			}
 
-			group.Status = pkg.ComponentStatus(group.Summary.GetStatus())
-			component.Components = append(component.Components, group)
+			component.Components = append(component.Components, components...)
 		}
 	}
 
