@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	DefaultCheckStatusRetentionDays          = 60
-	RetentionDaysFor1hrCheckStatusAggregate  = 180
-	RetentionDaysFor1dayCheckStatusAggregate = 1000
+	DefaultCheckStatusRetentionDays        = 60
+	RetentionDaysFor1hCheckStatusAggregate = 180
+	RetentionDaysFor1dCheckStatusAggregate = 1000
 
 	checkStatusAggDuration1h = "1hour"
 	checkStatusAggDuration1d = "1day"
@@ -42,9 +42,9 @@ func DeleteOldCheckStatuses() {
 	_ = PersistJobHistory(jobHistory.End())
 }
 
-// DeleteOldAggregatedCheckStatuses maintains retention period of old aggregate check statuses.
-func DeleteOldAggregatedCheckStatuses() {
-	jobHistory := models.NewJobHistory("DeleteOldAggregatedCheckStatuses", "", "").Start()
+// DeleteOld1dAggregatedCheckStatuses maintains retention period of old 1day aggregate check statuses.
+func DeleteOld1dAggregatedCheckStatuses() {
+	jobHistory := models.NewJobHistory("DeleteOld1dAggregatedCheckStatuses", "", "").Start()
 	if err := PersistJobHistory(jobHistory); err != nil {
 		logger.Errorf("error persisting job history: %v", err)
 	}
@@ -54,10 +54,32 @@ func DeleteOldAggregatedCheckStatuses() {
 		}
 	}()
 
-	const query = `DELETE FROM check_statuses_aggregate WHERE 
-	(interval_duration = ? AND (NOW() - created_at) > INTERVAL '1 day' * ?) OR
-	(interval_duration = ? AND (NOW() - created_at) > INTERVAL '1 day' * ?)`
-	tx := Gorm.Exec(query, checkStatusAggDuration1h, RetentionDaysFor1hrCheckStatusAggregate, checkStatusAggDuration1d, RetentionDaysFor1dayCheckStatusAggregate)
+	const query = `DELETE FROM check_statuses_1d WHERE (NOW() - created_at) > INTERVAL '1 day' * ?`
+	tx := Gorm.Exec(query, RetentionDaysFor1dCheckStatusAggregate)
+	if tx.Error != nil {
+		logger.Errorf("error deleting old aggregated check statuses: %v", tx.Error)
+		jobHistory.AddError(tx.Error.Error())
+		return
+	}
+
+	logger.Infof("Successfully deleted %v entries", tx.RowsAffected)
+	jobHistory.IncrSuccess()
+}
+
+// DeleteOld1hAggregatedCheckStatuses maintains retention period of old 1hour aggregated check statuses.
+func DeleteOld1hAggregatedCheckStatuses() {
+	jobHistory := models.NewJobHistory("DeleteOld1hAggregatedCheckStatuses", "", "").Start()
+	if err := PersistJobHistory(jobHistory); err != nil {
+		logger.Errorf("error persisting job history: %v", err)
+	}
+	defer func() {
+		if err := PersistJobHistory(jobHistory.End()); err != nil {
+			logger.Errorf("error persisting end of job: %v", err)
+		}
+	}()
+
+	const query = `DELETE FROM check_statuses_1h WHERE (NOW() - created_at) > INTERVAL '1 day' * ?`
+	tx := Gorm.Exec(query, RetentionDaysFor1hCheckStatusAggregate)
 	if tx.Error != nil {
 		logger.Errorf("error deleting old aggregated check statuses: %v", tx.Error)
 		jobHistory.AddError(tx.Error.Error())
@@ -116,12 +138,12 @@ func aggregateCheckStatuses(aggregateDurationType string) error {
 		check_statuses.check_id,
 		date_trunc(?, "time"),
 		count(*) AS total_checks,
-		count(*) FILTER (WHERE check_statuses.status = TRUE) AS successful_checks,
-		count(*) FILTER (WHERE check_statuses.status = FALSE) AS failed_checks,
-		SUM(duration) AS total_duration
+		count(*) FILTER (WHERE check_statuses.status = TRUE) AS passed,
+		count(*) FILTER (WHERE check_statuses.status = FALSE) AS failed,
+		SUM(duration) AS duration
 	FROM check_statuses 
 	LEFT JOIN checks ON check_statuses.check_id = checks.id
-	WHERE checks.created_at > NOW() - INTERVAL '7 day'
+	WHERE checks.created_at > NOW() - INTERVAL '1 day' * ?
 	GROUP BY 1, 2
 	ORDER BY 1,	2 DESC`
 
@@ -129,34 +151,45 @@ func aggregateCheckStatuses(aggregateDurationType string) error {
 	var err error
 	switch aggregateDurationType {
 	case checkStatusAggDuration1h:
-		rows, err = Gorm.Raw(query, "hour").Rows()
+		rows, err = Gorm.Raw(query, "hour", 1).Rows() // Only look for aggregated data in the last day
 		if err != nil {
 			return fmt.Errorf("error aggregating check statuses 1h: %w", err)
 		}
 		defer rows.Close()
 
+		for rows.Next() {
+			var aggr models.CheckStatusAggregate1h
+			if err := rows.Scan(&aggr.CheckID, &aggr.CreatedAt, &aggr.Total, &aggr.Passed, &aggr.Failed, &aggr.Duration); err != nil {
+				return fmt.Errorf("error scanning aggregated check statuses: %w", err)
+			}
+
+			cols := []clause.Column{{Name: "check_id"}, {Name: "created_at"}}
+			if err := Gorm.Clauses(clause.OnConflict{Columns: cols, UpdateAll: true}).Create(aggr).Error; err != nil {
+				return fmt.Errorf("error upserting canaries: %w", err)
+			}
+		}
+
 	case checkStatusAggDuration1d:
-		rows, err = Gorm.Raw(query, "day").Rows()
+		rows, err = Gorm.Raw(query, "day", 7).Rows() // Only look for aggregated data in the last 7 days
 		if err != nil {
 			return fmt.Errorf("error aggregating check statuses 1h: %w", err)
 		}
 		defer rows.Close()
+
+		for rows.Next() {
+			var aggr models.CheckStatusAggregate1d
+			if err := rows.Scan(&aggr.CheckID, &aggr.CreatedAt, &aggr.Total, &aggr.Passed, &aggr.Failed, &aggr.Duration); err != nil {
+				return fmt.Errorf("error scanning aggregated check statuses: %w", err)
+			}
+
+			cols := []clause.Column{{Name: "check_id"}, {Name: "created_at"}}
+			if err := Gorm.Clauses(clause.OnConflict{Columns: cols, UpdateAll: true}).Create(aggr).Error; err != nil {
+				return fmt.Errorf("error upserting canaries: %w", err)
+			}
+		}
 
 	default:
 		return errors.New("unknown duration for aggregation")
-	}
-
-	for rows.Next() {
-		var aggr models.CheckStatusAggregate
-		aggr.IntervalDuration = aggregateDurationType
-		if err := rows.Scan(&aggr.CheckID, &aggr.IntervalStart, &aggr.TotalChecks, &aggr.SuccessfulChecks, &aggr.FailedChecks, &aggr.TotalDuration); err != nil {
-			return fmt.Errorf("error scanning aggregated check statuses: %w", err)
-		}
-
-		cols := []clause.Column{{Name: "check_id"}, {Name: "created_at"}, {Name: "interval_duration"}}
-		if err := Gorm.Clauses(clause.OnConflict{Columns: cols, UpdateAll: true}).Create(aggr).Error; err != nil {
-			return fmt.Errorf("error upserting canaries: %w", err)
-		}
 	}
 
 	return nil
