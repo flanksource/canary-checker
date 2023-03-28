@@ -154,6 +154,8 @@ func aggregateCheckStatuses(aggregateDurationType string) error {
 		rows, err = Gorm.Raw(query, "hour", 1).Rows() // Only look for aggregated data in the last day
 		if err != nil {
 			return fmt.Errorf("error aggregating check statuses 1h: %w", err)
+		} else if rows.Err() != nil {
+			return fmt.Errorf("error aggregating check statuses 1h: %w", rows.Err())
 		}
 		defer rows.Close()
 
@@ -173,6 +175,8 @@ func aggregateCheckStatuses(aggregateDurationType string) error {
 		rows, err = Gorm.Raw(query, "day", 7).Rows() // Only look for aggregated data in the last 7 days
 		if err != nil {
 			return fmt.Errorf("error aggregating check statuses 1h: %w", err)
+		} else if rows.Err() != nil {
+			return fmt.Errorf("error aggregating check statuses 1h: %w", rows.Err())
 		}
 		defer rows.Close()
 
