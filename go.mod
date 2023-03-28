@@ -23,8 +23,8 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.1.0
 	github.com/fergusstrange/embedded-postgres v1.19.0
 	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
-	github.com/flanksource/commons v1.6.3
-	github.com/flanksource/duty v1.0.36
+	github.com/flanksource/commons v1.6.4
+	github.com/flanksource/duty v1.0.44
 	github.com/flanksource/kommons v0.31.1
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ldap/ldap/v3 v3.4.1
@@ -66,7 +66,7 @@ require (
 	google.golang.org/api v0.110.0
 	google.golang.org/genproto v0.0.0-20230223222841-637eb2293923
 	gopkg.in/flanksource/yaml.v3 v3.2.0
-	gorm.io/gorm v1.24.6
+	gorm.io/gorm v1.24.7-0.20230306060331-85eaf9eeda11
 	gorm.io/plugin/prometheus v0.0.0-20220517015831-ca6bfaf20bf4
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1
@@ -222,7 +222,7 @@ require (
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
-	github.com/rogpeppe/go-internal v1.9.0 // indirect
+	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
@@ -246,7 +246,7 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
-	github.com/zclconf/go-cty v1.13.0 // indirect
+	github.com/zclconf/go-cty v1.13.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/otel v1.13.0 // indirect
 	go.opentelemetry.io/otel/trace v1.13.0 // indirect
@@ -277,7 +277,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/postgres v1.4.8 // indirect
+	gorm.io/driver/postgres v1.5.0 // indirect
 	inet.af/netaddr v0.0.0-20220811202034-502d2d690317 // indirect
 	k8s.io/apiextensions-apiserver v0.26.0 // indirect
 	k8s.io/cli-runtime v0.24.4 // indirect
@@ -293,5 +293,3 @@ require (
 )
 
 replace k8s.io/client-go => k8s.io/client-go v0.26.0
-
-replace github.com/flanksource/duty => /home/gunners/Projects/flanksource/duty
