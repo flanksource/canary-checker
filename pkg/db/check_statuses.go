@@ -142,7 +142,7 @@ func AggregateCheckStatuses1d() {
 
 func aggregateCheckStatuses(aggregateDurationType string) error {
 	const query = `
-		SELECT
+	SELECT
 		check_statuses.check_id,
 		date_trunc(?, "time"),
 		count(*) AS total_checks,
@@ -151,7 +151,7 @@ func aggregateCheckStatuses(aggregateDurationType string) error {
 		SUM(duration) AS duration
 	FROM check_statuses 
 	LEFT JOIN checks ON check_statuses.check_id = checks.id
-	WHERE checks.created_at > NOW() - INTERVAL '1 day' * ?
+	WHERE checks.created_at > NOW() - INTERVAL '1 hour' * ?
 	GROUP BY 1, 2
 	ORDER BY 1,	2 DESC`
 
@@ -159,7 +159,7 @@ func aggregateCheckStatuses(aggregateDurationType string) error {
 	var err error
 	switch aggregateDurationType {
 	case checkStatusAggDuration1h:
-		rows, err = Gorm.Raw(query, "hour", 1).Rows() // Only look for aggregated data in the last day
+		rows, err = Gorm.Raw(query, "hour", 3).Rows() // Only look for aggregated data in the last 3 hour
 		if err != nil {
 			return fmt.Errorf("error aggregating check statuses 1h: %w", err)
 		} else if rows.Err() != nil {
@@ -180,7 +180,7 @@ func aggregateCheckStatuses(aggregateDurationType string) error {
 		}
 
 	case checkStatusAggDuration1d:
-		rows, err = Gorm.Raw(query, "day", 7).Rows() // Only look for aggregated data in the last 7 days
+		rows, err = Gorm.Raw(query, "day", 3*24).Rows() // Only look for aggregated data in the last 3 days
 		if err != nil {
 			return fmt.Errorf("error aggregating check statuses 1h: %w", err)
 		} else if rows.Err() != nil {
