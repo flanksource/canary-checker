@@ -44,7 +44,7 @@ func Start() {
 	if _, err := ScheduleFunc(v1.CheckStatusSummarySchedule, db.RefreshCheckStatusSummary); err != nil {
 		logger.Errorf("Failed to schedule check status summary refresh: %v", err)
 	}
-	if _, err := ScheduleFunc(v1.CheckStatusDeleteSchedule, db.DeleteOldCheckStatuses); err != nil {
+	if _, err := ScheduleFunc(v1.CheckStatusDeleteSchedule, db.DeleteAllOldCheckStatuses); err != nil {
 		logger.Errorf("Failed to schedule check status deleter: %v", err)
 	}
 	if _, err := ScheduleFunc(v1.CheckStatusesAggregate1hSchedule, db.AggregateCheckStatuses1h); err != nil {
@@ -53,13 +53,6 @@ func Start() {
 	if _, err := ScheduleFunc(v1.CheckStatusesAggregate1dSchedule, db.AggregateCheckStatuses1d); err != nil {
 		logger.Errorf("Failed to schedule check statuses aggregator 1d: %v", err)
 	}
-	if _, err := ScheduleFunc(v1.CheckStatuses1dAggregatedDeleteSchedule, db.DeleteOld1dAggregatedCheckStatuses); err != nil {
-		logger.Errorf("Failed to schedule 1d check statuses aggregate remover: %v", err)
-	}
-	if _, err := ScheduleFunc(v1.CheckStatuses1hAggregatedDeleteSchedule, db.DeleteOld1hAggregatedCheckStatuses); err != nil {
-		logger.Errorf("Failed to schedule 1h check statuses aggregate remover: %v", err)
-	}
-
 	canaryJobs.SyncCanaryJobs()
 }
 

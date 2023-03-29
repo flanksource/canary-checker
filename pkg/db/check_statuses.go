@@ -21,7 +21,15 @@ const (
 
 var CheckStatusRetentionDays int
 
-func DeleteOldCheckStatuses() {
+// DeleteAllOldCheckStatuses deletes check statuses older than the configured retention period
+// from 3 different tables.
+func DeleteAllOldCheckStatuses() {
+	deleteOldCheckStatuses()
+	deleteOld1hAggregatedCheckStatuses()
+	deleteOld1dAggregatedCheckStatuses()
+}
+
+func deleteOldCheckStatuses() {
 	jobHistory := models.NewJobHistory("DeleteOldCheckStatuses", "", "").Start()
 	_ = PersistJobHistory(jobHistory)
 
@@ -42,8 +50,8 @@ func DeleteOldCheckStatuses() {
 	_ = PersistJobHistory(jobHistory.End())
 }
 
-// DeleteOld1dAggregatedCheckStatuses maintains retention period of old 1day aggregate check statuses.
-func DeleteOld1dAggregatedCheckStatuses() {
+// deleteOld1dAggregatedCheckStatuses maintains retention period of old 1day aggregate check statuses.
+func deleteOld1dAggregatedCheckStatuses() {
 	jobHistory := models.NewJobHistory("DeleteOld1dAggregatedCheckStatuses", "", "").Start()
 	if err := PersistJobHistory(jobHistory); err != nil {
 		logger.Errorf("error persisting job history: %v", err)
@@ -66,8 +74,8 @@ func DeleteOld1dAggregatedCheckStatuses() {
 	jobHistory.IncrSuccess()
 }
 
-// DeleteOld1hAggregatedCheckStatuses maintains retention period of old 1hour aggregated check statuses.
-func DeleteOld1hAggregatedCheckStatuses() {
+// deleteOld1hAggregatedCheckStatuses maintains retention period of old 1hour aggregated check statuses.
+func deleteOld1hAggregatedCheckStatuses() {
 	jobHistory := models.NewJobHistory("DeleteOld1hAggregatedCheckStatuses", "", "").Start()
 	if err := PersistJobHistory(jobHistory); err != nil {
 		logger.Errorf("error persisting job history: %v", err)
