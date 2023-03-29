@@ -132,7 +132,7 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg
 		}
 	}
 
-	for _, comp := range components.Walk() {
+	for _, comp := range components {
 		for _, property := range component.Properties {
 			props, err := lookupProperty(ctx.WithComponents(&components, comp), property)
 			if err != nil {
