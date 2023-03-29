@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/commons/logger"
 )
 
@@ -32,8 +33,8 @@ func configQuery(config pkg.Config) *gorm.DB {
 		query = query.Where("namespace = ?", config.Namespace)
 	}
 
-	if config.Labels != nil && len(config.Labels) > 0 {
-		query = query.Where("tags @> ?", config.Labels)
+	if config.Tags != nil && len(config.Tags) > 0 {
+		query = query.Where("tags @> ?", types.JSONStringMap(config.Tags))
 	}
 
 	// ExternalType is derived from v1.Config.Type which is a user input field

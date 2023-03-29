@@ -4018,14 +4018,14 @@ spec:
                         items:
                           type: string
                         type: array
-                      labels:
-                        additionalProperties:
-                          type: string
-                        type: object
                       name:
                         type: string
                       namespace:
                         type: string
+                      tags:
+                        additionalProperties:
+                          type: string
+                        type: object
                       type:
                         type: string
                     type: object
@@ -4073,14 +4073,14 @@ spec:
                                 items:
                                   type: string
                                 type: array
-                              labels:
-                                additionalProperties:
-                                  type: string
-                                type: object
                               name:
                                 type: string
                               namespace:
                                 type: string
+                              tags:
+                                additionalProperties:
+                                  type: string
+                                type: object
                               type:
                                 type: string
                             type: object
@@ -4294,14 +4294,14 @@ spec:
                               items:
                                 type: string
                               type: array
-                            labels:
-                              additionalProperties:
-                                type: string
-                              type: object
                             name:
                               type: string
                             namespace:
                               type: string
+                            tags:
+                              additionalProperties:
+                                type: string
+                              type: object
                             type:
                               type: string
                           type: object
@@ -4349,14 +4349,14 @@ spec:
                                       items:
                                         type: string
                                       type: array
-                                    labels:
-                                      additionalProperties:
-                                        type: string
-                                      type: object
                                     name:
                                       type: string
                                     namespace:
                                       type: string
+                                    tags:
+                                      additionalProperties:
+                                        type: string
+                                      type: object
                                     type:
                                       type: string
                                   type: object
@@ -4506,14 +4506,14 @@ spec:
                         items:
                           type: string
                         type: array
-                      labels:
-                        additionalProperties:
-                          type: string
-                        type: object
                       name:
                         type: string
                       namespace:
                         type: string
+                      tags:
+                        additionalProperties:
+                          type: string
+                        type: object
                       type:
                         type: string
                     type: object
@@ -4550,14 +4550,14 @@ spec:
                                 items:
                                   type: string
                                 type: array
-                              labels:
-                                additionalProperties:
-                                  type: string
-                                type: object
                               name:
                                 type: string
                               namespace:
                                 type: string
+                              tags:
+                                additionalProperties:
+                                  type: string
+                                type: object
                               type:
                                 type: string
                             type: object
