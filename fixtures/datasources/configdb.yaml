@@ -1,0 +1,9 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: config db
+spec:
+  interval: 30
+  configDB:
+    - name: config-db-check
+      query: "SELECT * FROM config_items"

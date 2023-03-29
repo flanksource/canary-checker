@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/commons/timer"
 
 	"github.com/flanksource/canary-checker/cmd/output"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/spf13/cobra"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -26,6 +27,11 @@ var junit, csv bool
 var Run = &cobra.Command{
 	Use:   "run <canary.yaml>",
 	Short: "Execute checks and return",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if err := db.Init(); err != nil {
+			logger.Fatalf("error connecting with postgres %v", err)
+		}
+	},
 	Run: func(cmd *cobra.Command, configFiles []string) {
 		timer := timer.NewTimer()
 		if len(configFiles) == 0 {

@@ -110,18 +110,20 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 }
 
 func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg.Component, error) {
-	var components pkg.Components
+	var components, childComponents pkg.Components
 	for _, child := range component.Components {
 		children, err := lookupComponents(ctx, v1.ComponentSpec(child))
 		if err != nil {
 			return nil, err
 		}
-		components = append(components, children...)
+		childComponents = append(childComponents, children...)
 	}
 
-	if component.Lookup == nil {
-		components = append(components, pkg.NewComponent(component))
-	} else {
+	pkgComp := pkg.NewComponent(component)
+	pkgComp.Components = childComponents
+	components = append(components, pkgComp)
+
+	if component.Lookup != nil {
 		logger.Debugf("Looking up components for %s => %s", component, component.ForEach)
 		if children, err := mergeComponentLookup(ctx, &component, component.Lookup); err != nil {
 			return nil, err
@@ -139,10 +141,10 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg
 			comp.Properties = append(comp.Properties, props...)
 		}
 
-		if comp.Icon == "" && component.Icon != "" {
+		if comp.Icon == "" {
 			comp.Icon = component.Icon
 		}
-		if comp.Lifecycle == "" && component.Lifecycle != "" {
+		if comp.Lifecycle == "" {
 			comp.Lifecycle = component.Lifecycle
 		}
 		if comp.ExternalId == "" && component.Id != nil {
@@ -265,47 +267,46 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Propertie
 	if err != nil {
 		return nil, err
 	}
-	if len(results) == 0 {
+	if len(results) != 1 {
 		return nil, nil
 	}
 
-	if len(results) == 1 {
-		data := []byte(results[0].(string))
-		if isComponentList(data) {
-			// the result is map of components to properties, find the existing component
-			// and then merge the property into it
-			components := pkg.Components{}
-			err = json.Unmarshal([]byte(results[0].(string)), &components)
-			if err != nil {
-				return nil, err
-			}
-			for _, component := range components {
-				found := ctx.Components.Find(component.Name)
-				if found == nil {
-					return nil, fmt.Errorf("component %s not found", component.Name)
-				}
-				for _, property := range component.Properties {
-					foundProperty := found.Properties.Find(property.Name)
-					if foundProperty == nil {
-						return nil, fmt.Errorf("property %s not found", property.Name)
-					}
-					foundProperty.Merge(property)
-				}
-			}
-			return nil, nil
-		} else if isPropertyList(data) {
-			properties := pkg.Properties{}
-			err = json.Unmarshal([]byte(results[0].(string)), &properties)
-			return properties, err
-		} else {
-			prop.Text = string(data)
-			return pkg.Properties{prop}, nil
-			// logger.Errorf("unknown list item type %T: %v", data, string(data))
-			// return nil, nil
-		}
+	var dataStr string
+	var ok bool
+	if dataStr, ok = results[0].(string); !ok {
+		return nil, fmt.Errorf("unknown property type %T", results)
 	}
-	logger.Errorf("unknown property type %T", results)
-	return nil, nil
+	data := []byte(dataStr)
+	if isComponentList(data) {
+		// the result is map of components to properties, find the existing component
+		// and then merge the property into it
+		components := pkg.Components{}
+		err = json.Unmarshal([]byte(results[0].(string)), &components)
+		if err != nil {
+			return nil, err
+		}
+		for _, component := range components {
+			found := ctx.Components.Find(component.Name)
+			if found == nil {
+				return nil, fmt.Errorf("component %s not found", component.Name)
+			}
+			for _, property := range component.Properties {
+				foundProperty := found.Properties.Find(property.Name)
+				if foundProperty == nil {
+					return nil, fmt.Errorf("property %s not found", property.Name)
+				}
+				foundProperty.Merge(property)
+			}
+		}
+		return nil, nil
+	} else if isPropertyList(data) {
+		properties := pkg.Properties{}
+		err = json.Unmarshal([]byte(results[0].(string)), &properties)
+		return properties, err
+	} else {
+		prop.Text = string(data)
+		return pkg.Properties{prop}, nil
+	}
 }
 
 type TopologyRunOptions struct {
@@ -359,14 +360,8 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 				component.Components = append(component.Components, components...)
 				continue
 			}
-			group := pkg.NewComponent(comp)
-			group.Components = append(group.Components, components...)
-			if len(group.Components) > 0 {
-				group.Summary = group.Components.Summarize()
-			}
 
-			group.Status = pkg.ComponentStatus(group.Summary.GetStatus())
-			component.Components = append(component.Components, group)
+			component.Components = append(component.Components, components...)
 		}
 	}
 

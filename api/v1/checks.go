@@ -697,11 +697,9 @@ func (c GitHubCheck) GetEndpoint() string {
 }
 
 type ConfigDBCheck struct {
-	Templatable    `yaml:",inline" json:",inline"`
-	Description    `yaml:",inline" json:",inline"`
-	Authentication Authentication `yaml:"authentication,omitempty" json:"authentication,omitempty"`
-	Host           string         `yaml:"host" json:"host"`
-	Query          string         `yaml:"query" json:"query"`
+	Templatable `yaml:",inline" json:",inline"`
+	Description `yaml:",inline" json:",inline"`
+	Query       string `yaml:"query" json:"query"`
 }
 
 func (c ConfigDBCheck) GetType() string {
@@ -709,7 +707,7 @@ func (c ConfigDBCheck) GetType() string {
 }
 
 func (c ConfigDBCheck) GetEndpoint() string {
-	return fmt.Sprintf("%v/%v", c.Host, c.Query)
+	return c.Query
 }
 
 type ResourceSelector struct {
