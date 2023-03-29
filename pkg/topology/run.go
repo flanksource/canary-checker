@@ -226,7 +226,7 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties
 		"tags":   _config.Tags.ToMapStringAny(),
 	}
 	prop.Text, err = templating.Template(templateEnv, property.ConfigLookup.Display.Template)
-	return prop, nil
+	return prop, err
 }
 
 func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Properties, error) {
