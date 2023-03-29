@@ -159,3 +159,47 @@ func (s Summary) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	data, _ := json.Marshal(s)
 	return gorm.Expr("?", data)
 }
+
+type LogsSelectors []LogsSelector
+
+func (rs LogsSelectors) Value() (driver.Value, error) {
+	if len(rs) == 0 {
+		return []byte("[]"), nil
+	}
+
+	return json.Marshal(rs)
+}
+
+func (rs *LogsSelectors) Scan(val interface{}) error {
+	if val == nil {
+		*rs = LogsSelectors{}
+		return nil
+	}
+
+	var ba []byte
+	switch v := val.(type) {
+	case []byte:
+		ba = v
+	default:
+		return fmt.Errorf("value is not []byte: It's %T", val)
+	}
+
+	return json.Unmarshal(ba, rs)
+}
+
+func (LogsSelectors) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	switch db.Dialector.Name() {
+	case SqliteType:
+		return jsonType
+	case PostgresType:
+		return jsonbType
+	case SQLServerType:
+		return nvarcharType
+	}
+	return ""
+}
+
+func (rs LogsSelectors) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
+	data, _ := json.Marshal(rs)
+	return gorm.Expr("?", string(data))
+}

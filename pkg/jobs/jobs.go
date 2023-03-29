@@ -18,6 +18,7 @@ func Start() {
 	systemJobs.SystemScheduler.Start()
 	canaryJobs.CanaryScheduler.Start()
 	FuncScheduler.Start()
+
 	if _, err := ScheduleFunc(v1.SyncCanaryJobsSchedule, canaryJobs.SyncCanaryJobs); err != nil {
 		logger.Errorf("Failed to schedule sync jobs for canary: %v", err)
 	}
@@ -47,6 +48,7 @@ func Start() {
 	}
 
 	canaryJobs.SyncCanaryJobs()
+	systemJobs.SyncSystemsJobs()
 }
 
 func ScheduleFunc(schedule string, fn func()) (interface{}, error) {

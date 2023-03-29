@@ -179,6 +179,7 @@ type Component struct {
 	CostTotal1d      float64                  `json:"cost_total_1d,omitempty" gorm:"column:cost_total_1d"`
 	CostTotal7d      float64                  `json:"cost_total_7d,omitempty" gorm:"column:cost_total_7d"`
 	CostTotal30d     float64                  `json:"cost_total_30d,omitempty" gorm:"column:cost_total_30d"`
+	Logs             v1.LogsSelectors         `json:"logs,omitempty" gorm:"column:logs_selectors"`
 }
 
 type ComponentRelationship struct {
@@ -202,7 +203,7 @@ type CheckComponentRelationship struct {
 }
 
 func (component Component) Clone() Component {
-	return Component{
+	clone := Component{
 		Name:            component.Name,
 		TopologyType:    component.TopologyType,
 		Order:           component.Order,
@@ -224,6 +225,9 @@ func (component Component) Clone() Component {
 		ExternalId:      component.ExternalId,
 		Schedule:        component.Schedule,
 	}
+
+	copy(clone.Logs, component.Logs)
+	return clone
 }
 
 func (component Component) String() string {
@@ -264,6 +268,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Selectors:       c.Selectors,
 		ComponentChecks: c.ComponentChecks,
 		Configs:         configs,
+		Logs:            c.Logs,
 	}
 	if c.Summary != nil {
 		_c.Summary = *c.Summary

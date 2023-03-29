@@ -222,7 +222,7 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 		}
 	}
 	if tx.Error != nil {
-		return persisted, tx.Error
+		return persisted, fmt.Errorf("error finding component: %v", tx.Error)
 	}
 
 	if existing.ID != uuid.Nil {
@@ -247,6 +247,7 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 	if tx.Error != nil {
 		return persisted, tx.Error
 	}
+
 	persisted = append(persisted, component.ID)
 	for _, child := range component.Components {
 		child.SystemTemplateID = component.SystemTemplateID
@@ -255,6 +256,7 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 		} else {
 			child.Path = component.ID.String()
 		}
+
 		child.ParentId = &component.ID
 		if childIDs, err := PersistComponent(child); err != nil {
 			logger.Errorf("Error persisting child component of %v, :v", component.ID, err)
@@ -262,6 +264,7 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 			persisted = append(persisted, childIDs...)
 		}
 	}
+
 	return persisted, tx.Error
 }
 
