@@ -24,7 +24,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.19.0
 	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
 	github.com/flanksource/commons v1.6.4
-	github.com/flanksource/duty v1.0.43
+	github.com/flanksource/duty v1.0.44
 	github.com/flanksource/kommons v0.31.1
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ldap/ldap/v3 v3.4.1
@@ -222,7 +222,7 @@ require (
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
-	github.com/rogpeppe/go-internal v1.9.0 // indirect
+	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
