@@ -185,6 +185,14 @@ func (jsonQuery *JSONQueryExpression) Build(builder clause.Builder) {
 // JSONMap defiend JSON data type, need to implements driver.Valuer, sql.Scanner interface
 type JSONMap map[string]interface{}
 
+func (m JSONMap) ToMapStringAny() map[string]any {
+	r := make(map[string]any)
+	for k, v := range m {
+		r[k] = v
+	}
+	return r
+}
+
 // Value return json value, implement driver.Valuer interface
 func (m JSONMap) Value() (driver.Value, error) {
 	if m == nil {
@@ -257,6 +265,14 @@ func (jm JSONMap) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 
 // JSONStringMap defiend JSON data type, need to implements driver.Valuer, sql.Scanner interface
 type JSONStringMap map[string]string
+
+func (m JSONStringMap) ToMapStringAny() map[string]any {
+	r := make(map[string]any)
+	for k, v := range m {
+		r[k] = v
+	}
+	return r
+}
 
 // Value return json value, implement driver.Valuer interface
 func (m JSONStringMap) Value() (driver.Value, error) {

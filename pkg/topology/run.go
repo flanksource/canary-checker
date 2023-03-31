@@ -3,7 +3,6 @@ package topology
 import (
 	"fmt"
 
-	"github.com/PaesslerAG/jsonpath"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
@@ -189,20 +188,12 @@ func lookup(client *kommons.Client, name string, spec v1.CanarySpec) ([]interfac
 
 func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties pkg.Properties) (*pkg.Property, error) {
 	prop := pkg.NewProperty(*property)
-
-	logger.Infof("Looking up config for %s => %s", property.Name, property.ConfigLookup.Config)
-
+	logger.Debugf("Looking up config for %s => %s", property.Name, property.ConfigLookup.Config)
 	if property.ConfigLookup.Config == nil {
-		templateEnv := make(map[string]interface{})
-		if ctx.CurrentComponent != nil {
-			templateEnv["componentID"] = ctx.CurrentComponent.ID.String()
-		}
-		val, err := templating.Template(templateEnv, property.ConfigLookup.Display.Template)
-		if err != nil {
-			return prop, err
-		}
-		prop.Text = val
-		return prop, nil
+		return nil, fmt.Errorf("empty config in configLookup")
+	}
+	if property.ConfigLookup.Display.Template.IsEmpty() {
+		return prop, fmt.Errorf("configLookup cannot have empty display")
 	}
 
 	configName := property.ConfigLookup.Config.Name
@@ -220,7 +211,6 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties
 	if err := ctx.TemplateConfig(config); err != nil {
 		return nil, err
 	}
-
 	pkgConfig := pkg.NewConfig(*config)
 	pkgConfig.Name = configName
 	_config, err := db.FindConfig(*pkgConfig)
@@ -231,22 +221,12 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties
 		return prop, nil
 	}
 
-	var v interface{}
-	rawJSON, err := _config.Spec.MarshalJSON()
-	if err != nil {
-		return prop, err
+	templateEnv := map[string]any{
+		"config": _config.Spec.ToMapStringAny(),
+		"tags":   _config.Tags.ToMapStringAny(),
 	}
-	err = json.Unmarshal(rawJSON, &v)
-	if err != nil {
-		return prop, err
-	}
-	result, err := jsonpath.Get(property.ConfigLookup.Field, v)
-	if err != nil {
-		return prop, err
-	}
-
-	prop.Text = fmt.Sprintf("%s", result)
-	return prop, nil
+	prop.Text, err = templating.Template(templateEnv, property.ConfigLookup.Display.Template)
+	return prop, err
 }
 
 func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Properties, error) {

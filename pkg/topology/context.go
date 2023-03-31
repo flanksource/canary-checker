@@ -79,10 +79,10 @@ func (c *ComponentContext) TemplateConfig(config *v1.Config) error {
 	}
 	//FIXME struct templater does not support maps
 	var labels = make(map[string]string)
-	for k, v := range config.Labels {
+	for k, v := range config.Tags {
 		labels[k], _ = templater.Template(v)
 	}
-	(*config).Labels = labels
+	(*config).Tags = labels
 	return nil
 }
 

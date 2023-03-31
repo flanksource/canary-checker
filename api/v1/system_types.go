@@ -74,7 +74,7 @@ type Config struct {
 	Type      string            `json:"type,omitempty"`
 	Name      string            `json:"name,omitempty"`
 	Namespace string            `json:"namespace,omitempty"`
-	Labels    map[string]string `json:"labels,omitempty"`
+	Tags      map[string]string `json:"tags,omitempty"`
 }
 
 func (c Config) String() string {
@@ -86,8 +86,8 @@ func (c Config) String() string {
 	if c.Name != "" {
 		s += "/" + c.Name
 	}
-	if len(c.Labels) > 0 {
-		s += " " + fmt.Sprintf("%v", c.Labels)
+	if len(c.Tags) > 0 {
+		s += " " + fmt.Sprintf("%v", c.Tags)
 	}
 	return s
 }
