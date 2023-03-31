@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/flanksource/duty/types"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
@@ -160,46 +161,37 @@ func (s Summary) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	return gorm.Expr("?", data)
 }
 
-type LogsSelectors []LogsSelector
-
-func (rs LogsSelectors) Value() (driver.Value, error) {
-	if len(rs) == 0 {
-		return []byte("[]"), nil
-	}
-
-	return json.Marshal(rs)
+// LogSelector ...
+type LogSelector struct {
+	Name   string            `json:"name,omitempty" yaml:"name,omitempty"`
+	Type   string            `json:"type,omitempty" yaml:"type,omitempty" template:"true"`
+	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty" template:"true"`
 }
 
-func (rs *LogsSelectors) Scan(val interface{}) error {
-	if val == nil {
-		*rs = LogsSelectors{}
-		return nil
-	}
+type LogSelectors []LogSelector
 
-	var ba []byte
-	switch v := val.(type) {
-	case []byte:
-		ba = v
-	default:
-		return fmt.Errorf("value is not []byte: It's %T", val)
-	}
-
-	return json.Unmarshal(ba, rs)
+func (t LogSelectors) Value() (driver.Value, error) {
+	return types.GenericStructValue(t, true)
 }
 
-func (LogsSelectors) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+func (t *LogSelectors) Scan(val any) error {
+	return types.GenericStructScan(&t, val)
+}
+
+func (LogSelectors) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	switch db.Dialector.Name() {
-	case SqliteType:
-		return jsonType
-	case PostgresType:
-		return jsonbType
-	case SQLServerType:
-		return nvarcharType
+	case types.SqliteType:
+		return types.JSONType
+	case types.PostgresType:
+		return types.JSONBType
+	case types.SQLServerType:
+		return types.NVarcharType
 	}
+
 	return ""
 }
 
-func (rs LogsSelectors) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
+func (rs LogSelectors) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	data, _ := json.Marshal(rs)
 	return gorm.Expr("?", string(data))
 }
