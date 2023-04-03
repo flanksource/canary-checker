@@ -108,27 +108,32 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 	return nil
 }
 
-func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) ([]*pkg.Component, error) {
-	var components, childComponents pkg.Components
-	for _, child := range component.Components {
-		children, err := lookupComponents(ctx, v1.ComponentSpec(child))
-		if err != nil {
-			return nil, err
-		}
-		childComponents = append(childComponents, children...)
-	}
-
-	pkgComp := pkg.NewComponent(component)
-	pkgComp.Components = childComponents
-	components = append(components, pkgComp)
+func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (components pkg.Components, err error) {
+	// Either it should have lookup or child components
+	// Since lookup translates flatly into other components
+	// Having child on those lookups do not make sense since they would
+	// have to  be applied on all the result of looked up components ?
 
 	if component.Lookup != nil {
+		var lookedUpComponents pkg.Components
 		logger.Debugf("Looking up components for %s => %s", component, component.ForEach)
-		if children, err := mergeComponentLookup(ctx, &component, component.Lookup); err != nil {
+		if lookedUpComponents, err = mergeComponentLookup(ctx, &component, component.Lookup); err != nil {
 			return nil, err
-		} else {
-			components = append(components, children...)
 		}
+		components = append(components, lookedUpComponents...)
+	} else {
+		var childComponents pkg.Components
+		for _, child := range component.Components {
+			children, err := lookupComponents(ctx, v1.ComponentSpec(child))
+			if err != nil {
+				return nil, err
+			}
+			childComponents = append(childComponents, children...)
+		}
+
+		pkgComp := pkg.NewComponent(component)
+		pkgComp.Components = childComponents
+		components = append(components, pkgComp)
 	}
 
 	for _, comp := range components {
