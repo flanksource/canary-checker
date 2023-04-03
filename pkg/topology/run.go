@@ -109,10 +109,8 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 }
 
 func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (components pkg.Components, err error) {
-	// Either it should have lookup or child components
-	// Since lookup translates flatly into other components
-	// Having child on those lookups do not make sense since they would
-	// have to  be applied on all the result of looked up components ?
+	// A component can have either a lookup or child components
+	// A lookup will translates flatly into a list of components
 
 	if component.Lookup != nil {
 		var lookedUpComponents pkg.Components
