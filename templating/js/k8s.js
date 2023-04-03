@@ -225,6 +225,12 @@ k8s = {
         type: "KubernetesPod",
         labels: labels,
         external_id: pod.metadata.namespace + "/"+ pod.metadata.name,
+        configs: [
+          {
+            name: pod.metadata.name,
+            external_type: "Kubernetes::Pod",
+          }
+        ],
         properties: [
           {
             name: "cpu",
@@ -278,6 +284,12 @@ k8s = {
           labelSelector: "",
           fieldSelector: "node="+node.metadata.name
         }],
+        configs: [
+          {
+            name: node.metadata.name,
+            external_type: "Kubernetes::Node",
+          }
+        ],
         properties: [
           {
             name: "cpu",
