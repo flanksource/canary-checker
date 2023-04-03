@@ -4049,6 +4049,21 @@ spec:
                 lifecycle:
                   description: The lifecycle state of the component e.g. production, staging, dev, etc.
                   type: string
+                logSelectors:
+                  description: Logs is a list of logs selector for apm-hub.
+                  items:
+                    description: LogSelector ...
+                    properties:
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      name:
+                        type: string
+                      type:
+                        type: string
+                    type: object
+                  type: array
                 lookup:
                   description: Lookup component definitions from an external source, use the forEach property to iterate over the results to further enrich each component.
                   type: object
@@ -4325,6 +4340,21 @@ spec:
                       lifecycle:
                         description: The lifecycle state of the component e.g. production, staging, dev, etc.
                         type: string
+                      logSelectors:
+                        description: Logs is a list of logs selector for apm-hub.
+                        items:
+                          description: LogSelector ...
+                          properties:
+                            labels:
+                              additionalProperties:
+                                type: string
+                              type: object
+                            name:
+                              type: string
+                            type:
+                              type: string
+                          type: object
+                        type: array
                       lookup:
                         description: Lookup component definitions from an external source, use the forEach property to iterate over the results to further enrich each component.
                         type: object

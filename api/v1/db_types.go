@@ -178,7 +178,7 @@ func (t *LogSelectors) Scan(val any) error {
 	return types.GenericStructScan(&t, val)
 }
 
-func (LogSelectors) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+func (t LogSelectors) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	switch db.Dialector.Name() {
 	case types.SqliteType:
 		return types.JSONType
@@ -191,7 +191,7 @@ func (LogSelectors) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	return ""
 }
 
-func (rs LogSelectors) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
-	data, _ := json.Marshal(rs)
+func (t LogSelectors) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
+	data, _ := json.Marshal(t)
 	return gorm.Expr("?", string(data))
 }
