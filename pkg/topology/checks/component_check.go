@@ -58,7 +58,14 @@ func GetCheckComponentRelationshipsForComponent(component *pkg.Component) (relat
 			}
 		}
 		if componentCheck.Inline != nil {
-			canary, err := db.CreateComponentCanaryFromInline(component.ID.String(), component.Name, component.Namespace, component.Schedule, component.Owner, componentCheck.Inline)
+			inlineSchedule := component.Schedule
+			if componentCheck.Inline.Schedule != "" {
+				inlineSchedule = componentCheck.Inline.Schedule
+			}
+			canary, err := db.CreateComponentCanaryFromInline(
+				component.ID.String(), component.Name, component.Namespace,
+				inlineSchedule, component.Owner, componentCheck.Inline,
+			)
 			if err != nil {
 				logger.Debugf("error creating canary from inline: %v", err)
 			}

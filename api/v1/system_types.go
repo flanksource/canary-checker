@@ -66,7 +66,8 @@ type NamespaceSelector struct {
 
 type ComponentCheck struct {
 	Selector ResourceSelector `json:"selector,omitempty"`
-	Inline   *CanarySpec      `json:"inline,omitempty"`
+	// +kubebuilder:validation:XPreserveUnknownFields
+	Inline *CanarySpec `json:"inline,omitempty"`
 }
 
 type Config struct {
