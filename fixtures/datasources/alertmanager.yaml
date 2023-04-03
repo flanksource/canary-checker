@@ -8,12 +8,9 @@ spec:
     - host: alertmanager.canary.lab.flanksource.com
       name: alertmanager-check
       alerts:
-        - Kube.*
+        - .*
       ignore:
         - KubeScheduler.*
-      filters:
-        severity: critical
-        cluster: arn:aws:eks.*
       display:
         template: "{{ .results }}"
       test:
