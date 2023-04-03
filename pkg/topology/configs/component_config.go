@@ -72,7 +72,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 
 		// If configID does not exist, create a new relationship
 		if !collections.Contains(existingConfigIDs, dbConfig.ID.String()) {
-			if err := db.PersistConfigComponentRelationship(dbConfig.ID, componentID, selectorID); err != nil {
+			if err := db.PersistConfigComponentRelationship(*dbConfig.ID, componentID, selectorID); err != nil {
 				return errors.Wrap(err, "error persisting config relationships")
 			}
 			continue
@@ -83,7 +83,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 			Update("deleted_at", time.Now()).Error; err != nil {
 			return errors.Wrap(err, "error updating config relationships")
 		}
-		if err := db.PersistConfigComponentRelationship(dbConfig.ID, componentID, selectorID); err != nil {
+		if err := db.PersistConfigComponentRelationship(*dbConfig.ID, componentID, selectorID); err != nil {
 			return errors.Wrap(err, "error persisting config relationships")
 		}
 	}

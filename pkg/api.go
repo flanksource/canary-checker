@@ -292,7 +292,7 @@ type Checker interface {
 }
 
 type Config struct {
-	ID           uuid.UUID           `json:"id,omitempty"`
+	ID           *uuid.UUID          `json:"id,omitempty"`
 	ConfigType   string              `json:"config_type,omitempty"`
 	Name         string              `json:"name,omitempty"`
 	Namespace    string              `json:"namespace,omitempty"`
