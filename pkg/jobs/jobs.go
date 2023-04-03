@@ -15,6 +15,8 @@ import (
 var FuncScheduler = cron.New()
 
 func Start() {
+	logger.Infof("Starting jobs ...")
+
 	systemJobs.SystemScheduler.Start()
 	canaryJobs.CanaryScheduler.Start()
 	FuncScheduler.Start()
@@ -43,10 +45,15 @@ func Start() {
 	if _, err := ScheduleFunc(v1.CheckStatusSummarySchedule, db.RefreshCheckStatusSummary); err != nil {
 		logger.Errorf("Failed to schedule check status summary refresh: %v", err)
 	}
-	if _, err := ScheduleFunc(v1.CheckStatusDeleteSchedule, db.DeleteOldCheckStatuses); err != nil {
+	if _, err := ScheduleFunc(v1.CheckStatusDeleteSchedule, db.DeleteAllOldCheckStatuses); err != nil {
 		logger.Errorf("Failed to schedule check status deleter: %v", err)
 	}
-
+	if _, err := ScheduleFunc(v1.CheckStatusesAggregate1hSchedule, db.AggregateCheckStatuses1h); err != nil {
+		logger.Errorf("Failed to schedule check statuses aggregator 1h: %v", err)
+	}
+	if _, err := ScheduleFunc(v1.CheckStatusesAggregate1dSchedule, db.AggregateCheckStatuses1d); err != nil {
+		logger.Errorf("Failed to schedule check statuses aggregator 1d: %v", err)
+	}
 	canaryJobs.SyncCanaryJobs()
 	systemJobs.SyncSystemsJobs()
 }

@@ -24,52 +24,62 @@ spec:
       configs:
         - name: flanksource-canary-cluster
           type: EKS
-      lookup:
-        kubernetes:
-          - kind: Node
-            name: k8s
-            display:
-              javascript: JSON.stringify(k8s.getNodeTopology(results)) 
-      properties:
-        - name: node-metrics
+#     properties:
+#       - name: cluster-name
+#         configLookup:
+#           display:
+#             javascript: findConfigItem("EKS", "flanksource-canary-cluster")["name"]
+#       - name: cluster-status
+#         configLookup:
+#           display:
+#             javascript: getConfigItems("EKS")[0]["spec"]["status"]
+
+      components:
+        - name: NodesGroup
+          type: virtual
+          icon: server
           lookup:
             kubernetes:
-              - kind: NodeMetrics
-                ready: false
-                name: nodemetrics
+              - kind: Node
+                name: k8s
                 display:
-                  javascript: JSON.stringify(k8s.getNodeMetrics(results))
-        - name: cluster-name
-          configLookup:
-            display:
-              javascript: findConfigItem("EKS", "flanksource-canary-cluster")["name"]
-        - name: cluster-status
-          configLookup:
-            display:
-              javascript: getConfigItems("EKS")[0]["spec"]["status"]
+                  javascript: JSON.stringify(k8s.getNodeTopology(results)) 
+          properties:
+            - name: node-metrics
+              lookup:
+                kubernetes:
+                  - kind: NodeMetrics
+                    ready: false
+                    name: nodemetrics
+                    display:
+                      javascript: JSON.stringify(k8s.getNodeMetrics(results))
     - name: pods
       icon: pods
       type: KubernetesPods
       owner: Dev
-      lookup:
-        kubernetes:
-          - kind: Pod
-            name: k8s-pods
-            ready: false
-            ignore:
-              - junit-fail**
-              - junit-pass**
-            display:
-              javascript: JSON.stringify(k8s.getPodTopology(results)) 
-      properties:
-        - name: pod-metrics
+      components:
+        - name: PodGroup
+          icon: pods
+          type: virtual
           lookup:
             kubernetes:
-              - kind: PodMetrics
+              - kind: Pod
+                name: k8s-pods
                 ready: false
-                name: podmetrics
+                ignore:
+                  - junit-fail**
+                  - junit-pass**
                 display:
-                  javascript: JSON.stringify(k8s.getPodMetrics(results))
+                  javascript: JSON.stringify(k8s.getPodTopology(results)) 
+          properties:
+            - name: pod-metrics
+              lookup:
+                kubernetes:
+                  - kind: PodMetrics
+                    ready: false
+                    name: podmetrics
+                    display:
+                      javascript: JSON.stringify(k8s.getPodMetrics(results))
   # properties:
   #   - name: name
   #     lookup:
