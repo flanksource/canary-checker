@@ -4049,7 +4049,7 @@ spec:
                 lifecycle:
                   description: The lifecycle state of the component e.g. production, staging, dev, etc.
                   type: string
-                logSelectors:
+                logs:
                   description: Logs is a list of logs selector for apm-hub.
                   items:
                     description: LogSelector ...
@@ -4341,7 +4341,7 @@ spec:
                       lifecycle:
                         description: The lifecycle state of the component e.g. production, staging, dev, etc.
                         type: string
-                      logSelectors:
+                      logs:
                         description: Logs is a list of logs selector for apm-hub.
                         items:
                           description: LogSelector ...
