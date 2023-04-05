@@ -28,9 +28,7 @@ func (c *AlertManagerChecker) Run(ctx *context.Context) pkg.Results {
 
 func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.AlertManagerCheck)
-	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
-	results = append(results, result)
 
 	client := alertmanagerClient.NewHTTPClientWithConfig(nil, &alertmanagerClient.TransportConfig{
 		Host:     check.GetEndpoint(),
@@ -63,7 +61,12 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 		alertMessage[name] = extractMessage(alert.Annotations)
 	}
 
-	result.AddDetails(alertMessage)
+	for alert := range alertMessage {
+		result := pkg.Success(check, ctx.Canary)
+		result.AddDetails(alertMessage[alert])
+		results = append(results, result)
+	}
+
 	return results
 }
 

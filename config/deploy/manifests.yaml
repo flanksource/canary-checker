@@ -4284,6 +4284,7 @@ spec:
                             inline:
                               description: CanarySpec defines the desired state of Canary
                               type: object
+                              x-kubernetes-preserve-unknown-fields: true
                             selector:
                               properties:
                                 fieldSelector:
