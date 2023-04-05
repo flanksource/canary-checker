@@ -50,7 +50,7 @@ type ComponentSpec struct {
 	// ${.component} can be used to reference the component itself
 	ForEach *ForEach `json:"forEach,omitempty"`
 	// Logs is a list of logs selector for apm-hub.
-	LogSelectors LogSelectors `json:"logSelectors,omitempty"`
+	LogSelectors LogSelectors `json:"logs,omitempty"`
 }
 
 // +kubebuilder:validation:Type=object
