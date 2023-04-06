@@ -73,6 +73,9 @@ func (job CanaryJob) Run() {
 		logger.Infof("Skipping Canary[%s]:%s since it last ran %.2f seconds ago", job.Canary.GetPersistedID(), job.GetNamespacedName(), lastRunDelta.Seconds())
 		return
 	}
+
+	// Get transformed checks before and after, and then delete the olds ones that are not in new set
+	existingTransformedChecks, _ := db.GetTransformedCheckIDs(job.Canary.GetPersistedID())
 	results := checks.RunChecks(job.NewContext())
 	for _, result := range results {
 		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
@@ -81,6 +84,14 @@ func (job CanaryJob) Run() {
 		cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
 	}
 	job.updateStatusAndEvent(results)
+
+	newTransformedChecks, err := db.GetTransformedCheckIDs(job.Canary.GetPersistedID()) // If something existing is not in new, marked that for deletion
+	if err == nil {
+		checksToDelete := utils.SetDifference(existingTransformedChecks, newTransformedChecks)
+		if err := db.DeleteChecks(checksToDelete); err != nil {
+			logger.Errorf("error deleting transformed checks for canary %s: %v", job.Canary.GetPersistedID(), err)
+		}
+	}
 
 	// Update last runtime map
 	canaryLastRuntimes.Store(job.Canary.GetPersistedID(), time.Now())

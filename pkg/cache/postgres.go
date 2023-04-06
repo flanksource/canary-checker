@@ -34,7 +34,19 @@ func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) {
 		} else {
 			check.Status = "unhealthy"
 		}
+		c.AddCheckFromStatus(check, status)
 		c.AddCheckStatus(check, status)
+	}
+}
+
+func (c *postgresCache) AddCheckFromStatus(check pkg.Check, status pkg.CheckStatus) {
+	if status.Check == nil {
+		return
+	}
+	// Before syncing canary, mark all these checks as deleted_at
+	check.Labels["transformed-from"] = check.CanaryID.String()
+	if _, err := db.PersistCheck(check, check.CanaryID); err != nil {
+		logger.Errorf("error persisting check with canary %s: %v", check.CanaryID, err)
 	}
 }
 

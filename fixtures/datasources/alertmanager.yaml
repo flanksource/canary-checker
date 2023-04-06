@@ -11,7 +11,8 @@ spec:
         - .*
       ignore:
         - KubeScheduler.*
-      display:
-        template: "{{ .results }}"
+      transform:
+        javascript: |
+          JSON.stringify([{name: results.name, icon: 'alert', message: results.message, description: ''}]);
       test:
         template: "true"

@@ -149,7 +149,6 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 	}
 
 	var transformed []pkg.TransformedCheckResult
-
 	if err := json.Unmarshal([]byte(out), &transformed); err != nil {
 		return nil, err
 	}

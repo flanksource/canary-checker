@@ -63,7 +63,10 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 
 	for alert := range alertMessage {
 		result := pkg.Success(check, ctx.Canary)
-		result.AddDetails(alertMessage[alert])
+		result.AddDetails(map[string]any{
+			"name":    alert,
+			"message": alertMessage[alert],
+		})
 		results = append(results, result)
 	}
 
