@@ -189,7 +189,7 @@ func lookup(client *kommons.Client, name string, spec v1.CanarySpec) ([]interfac
 	return results, nil
 }
 
-func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties pkg.Properties) (*pkg.Property, error) {
+func lookupConfig(ctx *ComponentContext, property *v1.Property) (*pkg.Property, error) {
 	prop := pkg.NewProperty(*property)
 	logger.Debugf("Looking up config for %s => %s", property.Name, property.ConfigLookup.Config)
 	if property.ConfigLookup.Config == nil {
@@ -201,11 +201,13 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties
 
 	configName := property.ConfigLookup.Config.Name
 	if property.ConfigLookup.ID != "" {
-		// Lookup in the same properties
-		for _, prop := range sisterProperties {
-			if prop.Name == property.ConfigLookup.ID {
-				configName = fmt.Sprintf("%v", prop.GetValue())
-				break
+		if ctx.CurrentComponent != nil {
+			// Lookup in the same properties
+			for _, prop := range ctx.CurrentComponent.Properties {
+				if prop.Name == property.ConfigLookup.ID {
+					configName = fmt.Sprintf("%v", prop.GetValue())
+					break
+				}
 			}
 		}
 	}
@@ -236,7 +238,7 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Propertie
 	prop := pkg.NewProperty(*property)
 
 	if property.ConfigLookup != nil {
-		prop, err := lookupConfig(ctx, property, ctx.CurrentComponent.Properties)
+		prop, err := lookupConfig(ctx, property)
 		if err != nil {
 			return nil, errors.Wrapf(err, "property config lookup failed: %s", property)
 		}
