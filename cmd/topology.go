@@ -19,6 +19,7 @@ import (
 	"github.com/flanksource/commons/logger"
 )
 
+var topologyRunNamespace string
 var Topology = &cobra.Command{
 	Use: "topology",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
@@ -76,7 +77,7 @@ func getTopologyRunOptions(depth int) topology.TopologyRunOptions {
 	return topology.TopologyRunOptions{
 		Client:    kommonsClient,
 		Depth:     10,
-		Namespace: namespace,
+		Namespace: topologyRunNamespace,
 	}
 }
 
@@ -133,10 +134,10 @@ var RunTopology = &cobra.Command{
 }
 
 func init() {
-	Topology.PersistentFlags().StringVarP(&namespace, "namespace", "n", "default", "Namespace to query")
 	QueryTopology.Flags().StringVar(&queryParams.ID, "component", "", "The component id to query")
 	QueryTopology.Flags().IntVar(&queryParams.Depth, "depth", 1, "The depth of the components to return")
 	RunTopology.Flags().StringVarP(&topologyOutput, "output", "o", "", "Output file to write results to")
+	RunTopology.Flags().StringVarP(&topologyRunNamespace, "namespace", "n", "default", "Namespace to query")
 	Topology.AddCommand(RunTopology, QueryTopology, AddTopology)
 	Root.AddCommand(Topology)
 }

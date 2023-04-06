@@ -22,6 +22,9 @@ var Root = &cobra.Command{
 			}
 		}
 		db.ConnectionString = readFromEnv(db.ConnectionString)
+		if db.ConnectionString == "DB_URL" {
+			db.ConnectionString = ""
+		}
 	},
 }
 
@@ -29,7 +32,7 @@ var dev bool
 var httpPort = 8080
 var publicEndpoint = "http://localhost:8080"
 var metricsPort, devGuiPort int
-var namespace, includeCheck, prometheusURL, operatorNamespace string
+var includeCheck, prometheusURL string
 var pushServers, pullServers []string
 var sharedLibrary []string
 var exposeEnv bool
@@ -41,7 +44,6 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&metricsPort, "metricsPort", 8081, "Port to expose a health dashboard ")
 	flags.StringVar(&publicEndpoint, "public-endpoint", publicEndpoint, "Host on which the health dashboard is exposed. Could be used for generting-links, redirects etc.")
 	flags.BoolVar(&dev, "dev", false, "Run in development mode")
-	flags.StringVarP(&operatorNamespace, "namespace", "n", "", "Watch only specified namespaces, otherwise watch all")
 	flags.StringVar(&includeCheck, "include-check", "", "Run matching canaries - useful for debugging")
 	flags.IntVar(&cache.DefaultCacheCount, "maxStatusCheckCount", 5, "Maximum number of past checks in the in memory cache")
 	flags.StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")

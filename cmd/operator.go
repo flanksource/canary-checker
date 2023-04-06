@@ -27,6 +27,7 @@ import (
 
 var webhookPort int
 var enableLeaderElection bool
+var operatorNamespace string
 var operatorExecutor bool
 var disablePostgrest bool
 var Operator = &cobra.Command{
@@ -37,6 +38,7 @@ var Operator = &cobra.Command{
 
 func init() {
 	ServerFlags(Operator.Flags())
+	Operator.Flags().StringVarP(&operatorNamespace, "namespace", "n", "", "Watch only specified namespaces, otherwise watch all")
 	Operator.Flags().BoolVar(&operatorExecutor, "executor", true, "If false, only serve the UI and sync the configs")
 	Operator.Flags().IntVar(&webhookPort, "webhookPort", 8082, "Port for webhooks ")
 	Operator.Flags().BoolVar(&enableLeaderElection, "enable-leader-election", false, "Enabling this will ensure there is only one active controller manager")
@@ -85,7 +87,7 @@ func run(cmd *cobra.Command, args []string) {
 		Namespace:               operatorNamespace,
 		Port:                    webhookPort,
 		LeaderElection:          enableLeaderElection,
-		LeaderElectionNamespace: namespace,
+		LeaderElectionNamespace: operatorNamespace,
 		LeaderElectionID:        "bc88107d.flanksource.com",
 	})
 	if err != nil {
@@ -100,7 +102,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	includeNamespaces := []string{}
 	if operatorNamespace != "" {
-		includeNamespaces = strings.Split(namespace, ",")
+		includeNamespaces = strings.Split(operatorNamespace, ",")
 	}
 	runner.RunnerLabels = labels.LoadFromFile("/etc/podinfo/labels")
 

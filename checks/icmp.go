@@ -102,6 +102,6 @@ func (c *IcmpChecker) checkICMP(ip net.IP, packetCount int) (*ping.Statistics, e
 	}
 	pinger.Count = packetCount
 	pinger.Timeout = time.Second * 10
-	pinger.Run()
-	return pinger.Statistics(), nil
+	err = pinger.Run()
+	return pinger.Statistics(), err
 }
