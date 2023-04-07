@@ -8,8 +8,8 @@ import (
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/canary-checker/pkg/dns"
+	"github.com/go-ping/ping"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/sparrc/go-ping"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -102,6 +102,6 @@ func (c *IcmpChecker) checkICMP(ip net.IP, packetCount int) (*ping.Statistics, e
 	}
 	pinger.Count = packetCount
 	pinger.Timeout = time.Second * 10
-	pinger.Run()
-	return pinger.Statistics(), nil
+	err = pinger.Run()
+	return pinger.Statistics(), err
 }

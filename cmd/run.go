@@ -21,7 +21,7 @@ import (
 	"github.com/flanksource/commons/logger"
 )
 
-var outputFile, dataFile string
+var outputFile, dataFile, runNamespace string
 var junit, csv bool
 
 var Run = &cobra.Command{
@@ -55,8 +55,8 @@ var Run = &cobra.Command{
 			}
 			logger.Infof("Checking %s, %d checks found", configfile, len(configs))
 			for _, config := range configs {
-				if namespace != "" {
-					config.Namespace = namespace
+				if runNamespace != "" {
+					config.Namespace = runNamespace
 				}
 				if config.Name == "" {
 					config.Name = CleanupFilename(configfile)
@@ -114,9 +114,9 @@ var Run = &cobra.Command{
 }
 
 func init() {
-	Run.PersistentFlags().StringVarP(&namespace, "namespace", "n", "", "Namespace to run canary checks in")
 	Run.PersistentFlags().StringVarP(&dataFile, "data", "d", "", "Template out each spec using the JSON or YAML data in this file")
 	Run.PersistentFlags().StringVarP(&outputFile, "output-file", "o", "", "file to output the results in")
+	Run.Flags().StringVarP(&runNamespace, "namespace", "n", "", "Namespace to run canary checks in")
 	Run.Flags().BoolVarP(&junit, "junit", "j", false, "output results in junit format")
 	Run.Flags().BoolVar(&csv, "csv", false, "output results in csv format")
 }
