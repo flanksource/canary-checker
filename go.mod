@@ -29,7 +29,7 @@ require (
 	github.com/go-logr/logr v1.2.4
 	github.com/go-logr/zapr v1.2.3
 	github.com/go-ping/ping v1.1.0
-	github.com/go-redis/redis/v8 v8.11.4
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/gobwas/glob v0.2.3
 	github.com/google/uuid v1.3.0
@@ -42,7 +42,7 @@ require (
 	github.com/liamylian/jsontime/v2 v2.0.0
 	github.com/lib/pq v1.10.7
 	github.com/microsoft/go-mssqldb v0.21.0
-	github.com/onsi/ginkgo v1.16.4
+	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.27.6
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/phf/go-queue v0.0.0-20170504031614-9abe38d0371d
