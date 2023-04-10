@@ -4052,7 +4052,6 @@ spec:
                 logs:
                   description: Logs is a list of logs selector for apm-hub.
                   items:
-                    description: LogSelector ...
                     properties:
                       labels:
                         additionalProperties:
@@ -4344,7 +4343,6 @@ spec:
                       logs:
                         description: Logs is a list of logs selector for apm-hub.
                         items:
-                          description: LogSelector ...
                           properties:
                             labels:
                               additionalProperties:
