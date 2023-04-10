@@ -12,12 +12,15 @@ import (
 
 	"github.com/spf13/cobra"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	configSync "github.com/flanksource/canary-checker/pkg/sync"
 	"github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
 )
+
+var topologyRunNamespace string
 
 var Topology = &cobra.Command{
 	Use: "topology",
@@ -76,9 +79,12 @@ func getTopologyRunOptions(depth int) topology.TopologyRunOptions {
 	return topology.TopologyRunOptions{
 		Client:    kommonsClient,
 		Depth:     10,
-		Namespace: namespace,
+		Namespace: topologyRunNamespace,
 	}
 }
+
+// StaticTemplatedID for topologies created by CLI, to ensure that components are updated rather than duplicated
+var StaticTemplatedID string = "cf38821d-434f-4496-9bbd-c0c633bb2699"
 
 var RunTopology = &cobra.Command{
 	Use:   "run <system.yaml>",
@@ -88,6 +94,7 @@ var RunTopology = &cobra.Command{
 		if len(configFiles) == 0 {
 			log.Fatalln("Must specify at least one topology definition")
 		}
+
 		opts := getTopologyRunOptions(10)
 
 		var results = []*pkg.Component{}
@@ -104,6 +111,11 @@ var RunTopology = &cobra.Command{
 			for _, config := range configs {
 				wg.Add(1)
 				_config := config
+				if _config.GetPersistedID() == "" {
+					_config.Status = v1.SystemTemplateStatus{
+						PersistedID: &StaticTemplatedID,
+					}
+				}
 				go func() {
 					components := topology.Run(opts, _config)
 					results = append(results, components...)
@@ -133,10 +145,10 @@ var RunTopology = &cobra.Command{
 }
 
 func init() {
-	Topology.PersistentFlags().StringVarP(&namespace, "namespace", "n", "default", "Namespace to query")
 	QueryTopology.Flags().StringVar(&queryParams.ID, "component", "", "The component id to query")
 	QueryTopology.Flags().IntVar(&queryParams.Depth, "depth", 1, "The depth of the components to return")
 	RunTopology.Flags().StringVarP(&topologyOutput, "output", "o", "", "Output file to write results to")
+	RunTopology.Flags().StringVarP(&topologyRunNamespace, "namespace", "n", "default", "Namespace to query")
 	Topology.AddCommand(RunTopology, QueryTopology, AddTopology)
 	Root.AddCommand(Topology)
 }

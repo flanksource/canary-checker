@@ -1,6 +1,6 @@
 module github.com/flanksource/canary-checker
 
-go 1.19
+go 1.20
 
 require (
 	cloud.google.com/go/storage v1.30.1
@@ -18,11 +18,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.2
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
-	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
 	github.com/elastic/go-elasticsearch/v8 v8.1.0
 	github.com/fergusstrange/embedded-postgres v1.21.0
-	github.com/flanksource/changehub/api v0.0.0-20211009193440-b6e0ca984e25
 	github.com/flanksource/commons v1.7.0
 	github.com/flanksource/duty v1.0.50
 	github.com/flanksource/kommons v0.31.1
@@ -30,6 +28,7 @@ require (
 	github.com/go-ldap/ldap/v3 v3.4.1
 	github.com/go-logr/logr v1.2.4
 	github.com/go-logr/zapr v1.2.3
+	github.com/go-ping/ping v1.1.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/gobwas/glob v0.2.3
@@ -42,6 +41,7 @@ require (
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/liamylian/jsontime/v2 v2.0.0
 	github.com/lib/pq v1.10.7
+	github.com/microsoft/go-mssqldb v0.21.0
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.27.6
 	github.com/orcaman/concurrent-map v1.0.0
@@ -54,7 +54,6 @@ require (
 	github.com/robertkrimen/otto v0.2.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sevennt/echo-pprof v0.1.1-0.20220616082843-66a461746b5f
-	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
 	github.com/vadimi/go-http-ntlm v1.0.3

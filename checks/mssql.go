@@ -3,10 +3,10 @@ package checks
 import (
 	"github.com/flanksource/canary-checker/api/context"
 
-	_ "github.com/denisenkom/go-mssqldb" // required by mssql
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	_ "github.com/microsoft/go-mssqldb" // required by mssql
 )
 
 func init() {

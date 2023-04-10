@@ -22,7 +22,7 @@ var json = jsontime.ConfigWithCustomTimeFormat
 func mergeComponentLookup(ctx *ComponentContext, component *v1.ComponentSpec, spec *v1.CanarySpec) (pkg.Components, error) {
 	name := component.Name
 	components := pkg.Components{}
-	results, err := lookup(ctx.Kommons, name, *spec)
+	results, err := lookup(ctx, name, *spec)
 	if err != nil {
 		return nil, errors.Wrapf(err, "component lookup failed: %s", component)
 	}
@@ -164,9 +164,17 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 	return components, nil
 }
 
-func lookup(client *kommons.Client, name string, spec v1.CanarySpec) ([]interface{}, error) {
+func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface{}, error) {
 	results := []interface{}{}
-	for _, result := range checks.RunChecks(context.New(client, v1.NewCanaryFromSpec(name, spec))) {
+	canaryCtx := &context.Context{
+		Context:     ctx,
+		Canary:      v1.NewCanaryFromSpec(name, spec),
+		Namespace:   ctx.Namespace,
+		Kommons:     ctx.Kommons,
+		Environment: ctx.Environment,
+		Logger:      ctx.Logger,
+	}
+	for _, result := range checks.RunChecks(canaryCtx) {
 		if result.Error != "" {
 			logger.Errorf("error in running checks; check: %s wouldn't be persisted: %s", name, result.Error)
 			return nil, nil
@@ -189,7 +197,7 @@ func lookup(client *kommons.Client, name string, spec v1.CanarySpec) ([]interfac
 	return results, nil
 }
 
-func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties pkg.Properties) (*pkg.Property, error) {
+func lookupConfig(ctx *ComponentContext, property *v1.Property) (*pkg.Property, error) {
 	prop := pkg.NewProperty(*property)
 	logger.Debugf("Looking up config for %s => %s", property.Name, property.ConfigLookup.Config)
 	if property.ConfigLookup.Config == nil {
@@ -201,11 +209,13 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property, sisterProperties
 
 	configName := property.ConfigLookup.Config.Name
 	if property.ConfigLookup.ID != "" {
-		// Lookup in the same properties
-		for _, prop := range sisterProperties {
-			if prop.Name == property.ConfigLookup.ID {
-				configName = fmt.Sprintf("%v", prop.GetValue())
-				break
+		if ctx.CurrentComponent != nil {
+			// Lookup in the same properties
+			for _, prop := range ctx.CurrentComponent.Properties {
+				if prop.Name == property.ConfigLookup.ID {
+					configName = fmt.Sprintf("%v", prop.GetValue())
+					break
+				}
 			}
 		}
 	}
@@ -236,7 +246,7 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Propertie
 	prop := pkg.NewProperty(*property)
 
 	if property.ConfigLookup != nil {
-		prop, err := lookupConfig(ctx, property, ctx.CurrentComponent.Properties)
+		prop, err := lookupConfig(ctx, property)
 		if err != nil {
 			return nil, errors.Wrapf(err, "property config lookup failed: %s", property)
 		}
@@ -246,7 +256,7 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Propertie
 		return pkg.Properties{prop}, nil
 	}
 
-	results, err := lookup(ctx.Kommons, property.Name, *property.Lookup)
+	results, err := lookup(ctx, property.Name, *property.Lookup)
 	if err != nil {
 		return nil, err
 	}
@@ -299,10 +309,10 @@ type TopologyRunOptions struct {
 }
 
 func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
-	logger.Debugf("Running topology %s depth=%d", s.Name, opts.Depth)
 	if s.Namespace == "" {
 		s.Namespace = opts.Namespace
 	}
+	logger.Debugf("Running topology %s/%s depth=%d", s.Namespace, s.Name, opts.Depth)
 	ctx := NewComponentContext(opts.Client, s)
 	var results pkg.Components
 	component := &pkg.Component{

@@ -28,7 +28,6 @@ var AddCanary = &cobra.Command{
 }
 
 func init() {
-	AddTopology.PersistentFlags().StringVarP(&namespace, "namespace", "n", "default", "Namespace to query")
 	Sync.AddCommand(AddCanary)
 	Root.AddCommand(Sync)
 }
