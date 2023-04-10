@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/flanksource/duty/types"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
@@ -159,39 +158,4 @@ func (Summary) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 func (s Summary) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	data, _ := json.Marshal(s)
 	return gorm.Expr("?", data)
-}
-
-// LogSelector ...
-type LogSelector struct {
-	Name   string            `json:"name,omitempty" yaml:"name,omitempty"`
-	Type   string            `json:"type,omitempty" yaml:"type,omitempty" template:"true"`
-	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty" template:"true"`
-}
-
-type LogSelectors []LogSelector
-
-func (t LogSelectors) Value() (driver.Value, error) {
-	return types.GenericStructValue(t, true)
-}
-
-func (t *LogSelectors) Scan(val any) error {
-	return types.GenericStructScan(&t, val)
-}
-
-func (t LogSelectors) GormDBDataType(db *gorm.DB, field *schema.Field) string {
-	switch db.Dialector.Name() {
-	case types.SqliteType:
-		return types.JSONType
-	case types.PostgresType:
-		return types.JSONBType
-	case types.SQLServerType:
-		return types.NVarcharType
-	}
-
-	return ""
-}
-
-func (t LogSelectors) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
-	data, _ := json.Marshal(t)
-	return gorm.Expr("?", string(data))
 }

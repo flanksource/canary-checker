@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
+	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
 	"github.com/pkg/errors"
@@ -179,7 +180,7 @@ type Component struct {
 	CostTotal1d      float64                  `json:"cost_total_1d,omitempty" gorm:"column:cost_total_1d"`
 	CostTotal7d      float64                  `json:"cost_total_7d,omitempty" gorm:"column:cost_total_7d"`
 	CostTotal30d     float64                  `json:"cost_total_30d,omitempty" gorm:"column:cost_total_30d"`
-	LogSelectors     v1.LogSelectors          `json:"logSelectors,omitempty" gorm:"column:log_selectors"`
+	LogSelectors     dutyTypes.LogSelectors   `json:"logs,omitempty" gorm:"column:log_selectors"`
 }
 
 type ComponentRelationship struct {

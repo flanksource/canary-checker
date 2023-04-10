@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/flanksource/duty/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -50,7 +51,7 @@ type ComponentSpec struct {
 	// ${.component} can be used to reference the component itself
 	ForEach *ForEach `json:"forEach,omitempty"`
 	// Logs is a list of logs selector for apm-hub.
-	LogSelectors LogSelectors `json:"logs,omitempty"`
+	LogSelectors types.LogSelectors `json:"logs,omitempty"`
 }
 
 // +kubebuilder:validation:Type=object
