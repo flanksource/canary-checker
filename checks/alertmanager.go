@@ -29,6 +29,8 @@ func (c *AlertManagerChecker) Run(ctx *context.Context) pkg.Results {
 func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.AlertManagerCheck)
 	var results pkg.Results
+	result := pkg.Success(check, ctx.Canary)
+	results = append(results, result)
 
 	client := alertmanagerClient.NewHTTPClientWithConfig(nil, &alertmanagerClient.TransportConfig{
 		Host:     check.GetEndpoint(),
@@ -55,21 +57,19 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 		return results
 	}
 
-	alertMessage := make(map[string]any)
+	var alertMessages []map[string]any
 	for _, alert := range alerts.Payload {
-		name := alert.Labels["alertname"]
-		alertMessage[name] = extractMessage(alert.Annotations)
+		alertMap := map[string]any{
+			"name":        alert.Labels["alertname"],
+			"message":     extractMessage(alert.Annotations),
+			"labels":      alert.Labels,
+			"annotations": alert.Annotations,
+			"fingerprint": *alert.Fingerprint,
+		}
+		alertMessages = append(alertMessages, alertMap)
 	}
 
-	for alert := range alertMessage {
-		result := pkg.Success(check, ctx.Canary)
-		result.AddDetails(map[string]any{
-			"name":    alert,
-			"message": alertMessage[alert],
-		})
-		results = append(results, result)
-	}
-
+	result.AddDetails(alertMessages)
 	return results
 }
 

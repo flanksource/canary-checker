@@ -13,6 +13,15 @@ spec:
         - KubeScheduler.*
       transform:
         javascript: |
-          JSON.stringify([{name: results.name, icon: 'alert', message: results.message, description: ''}]);
+          var out = _.map(results, function(r) {
+            return {
+              name: r.name,
+              labels: r.labels,
+              icon: 'alert',
+              message: r.message,
+              description: r.message,
+            }
+          })
+          JSON.stringify(out);
       test:
         template: "true"
