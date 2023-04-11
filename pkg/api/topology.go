@@ -91,7 +91,7 @@ func Topology(c echo.Context) error {
 
 	res.Teams, err = db.GetTeamsOfComponents(c.Request().Context(), res.componentIDs)
 	if err != nil {
-		return errorResonse(c, err, http.StatusBadRequest)
+		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 
 	return c.JSON(http.StatusOK, res)
