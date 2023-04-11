@@ -170,6 +170,7 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 			}
 			r.Canary.Labels[k] = v
 		}
+		r.Canary.Labels["transformed-from"] = ctx.Canary.GetPersistedID()
 		results = append(results, &r)
 	}
 
