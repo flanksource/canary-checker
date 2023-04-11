@@ -3,9 +3,61 @@ package api
 import (
 	"net/http"
 
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/topology"
+	"github.com/flanksource/duty/models"
 	"github.com/labstack/echo/v4"
 )
+
+type Tag struct {
+	Key string `json:"key"`
+	Val string `json:"val"`
+}
+
+type TopologyRes struct {
+	componentIDs   []string          `json:"-"`
+	Components     models.Components `json:"components,omitempty"`
+	HealthStatuses []string          `json:"healthStatuses,omitempty"`
+	Teams          []string          `json:"teams,omitempty"`
+	Tags           []Tag             `json:"tags,omitempty"`
+	Types          []string          `json:"types,omitempty"`
+}
+
+func (t *TopologyRes) AddHealthStatuses(s string) {
+	for i := range t.HealthStatuses {
+		if t.HealthStatuses[i] == s {
+			return
+		}
+	}
+
+	t.HealthStatuses = append(t.HealthStatuses, s)
+}
+
+func (t *TopologyRes) AddType(typ string) {
+	for i := range t.Types {
+		if t.Types[i] == typ {
+			return
+		}
+	}
+
+	t.Types = append(t.Types, typ)
+}
+
+func (t *TopologyRes) AddTag(typ map[string]string) {
+	for k, v := range typ {
+		var exists bool
+		for _, tag := range t.Tags {
+			if tag.Key == k && tag.Val == v {
+				exists = true
+				break
+			}
+		}
+
+		if !exists {
+			t.Tags = append(t.Tags, Tag{Key: k, Val: v})
+		}
+	}
+}
 
 // TopologyQuery godoc
 // @Id TopologyQuery
@@ -29,9 +81,30 @@ func Topology(c echo.Context) error {
 		return errorResonse(c, err, http.StatusBadRequest)
 	}
 
+	var res TopologyRes
 	if len(results) == 0 {
-		c.Response().Header().Set("Content-Type", "application/json")
-		return c.String(http.StatusOK, "{}")
+		return c.JSON(http.StatusOK, res)
 	}
-	return c.JSON(http.StatusOK, results)
+
+	res.Components = results
+	populateTopologyResult(results, &res)
+
+	res.Teams, err = db.GetTeamsOfComponents(c.Request().Context(), res.componentIDs)
+	if err != nil {
+		return errorResonse(c, err, http.StatusBadRequest)
+	}
+
+	return c.JSON(http.StatusOK, res)
+}
+
+// populateTopologyResult goes through the components recursively (depth-first)
+// and populates the TopologyRes struct.
+func populateTopologyResult(components models.Components, res *TopologyRes) {
+	for _, component := range components {
+		res.componentIDs = append(res.componentIDs, component.ID.String())
+		res.AddTag(component.Labels)
+		res.AddType(component.Type)
+		res.AddHealthStatuses(string(component.Status))
+		populateTopologyResult(component.Components, res)
+	}
 }

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -14,6 +15,16 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
+
+func GetTeamsOfComponents(ctx context.Context, componentIDs []string) ([]string, error) {
+	var teams []string
+	err := Gorm.Table("team_components").Select("DISTINCT teams.name").Joins("LEFT JOIN teams ON teams.id = team_components.team_id").Where("component_id IN (?)", componentIDs).Find(&teams).Error
+	if err != nil {
+		return teams, err
+	}
+
+	return teams, nil
+}
 
 func PersistSystemTemplate(system *v1.SystemTemplate) (string, bool, error) {
 	model := pkg.SystemTemplateFromV1(system)
