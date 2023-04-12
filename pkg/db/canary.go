@@ -11,8 +11,10 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/metrics"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -100,10 +102,23 @@ func GetTransformedCheckIDs(canaryID string) ([]string, error) {
 	var ids []string
 	err := Gorm.Table("checks").
 		Select("id").
-		Where("canary_id = ?", canaryID).Where("labels->>'transformed-from' = ?", canaryID).
+		Where("canary_id = ? AND transformed = true", canaryID).
 		Find(&ids).
 		Error
 	return ids, err
+}
+
+func UpdateChecksStatus(ids []string, status models.CheckHealthStatus) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	if !utils.Contains(models.CheckHealthStatuses, status) {
+		return fmt.Errorf("Invalid check health status: %s", status)
+	}
+	return Gorm.Table("checks").
+		Update("status", status).
+		Where("id in (?)", ids).
+		Error
 }
 
 func DeleteCanary(canary v1.Canary) error {

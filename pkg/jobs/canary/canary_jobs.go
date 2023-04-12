@@ -87,8 +87,8 @@ func (job CanaryJob) Run() {
 
 	newTransformedChecks, err := db.GetTransformedCheckIDs(job.Canary.GetPersistedID()) // If something existing is not in new, marked that for deletion
 	if err == nil {
-		checksToDelete := utils.SetDifference(existingTransformedChecks, newTransformedChecks)
-		if err := db.DeleteChecks(checksToDelete); err != nil {
+		checksToMarkHealthy := utils.SetDifference(existingTransformedChecks, newTransformedChecks)
+		if err := db.UpdateChecksStatus(checksToMarkHealthy, models.CheckStatusHealthy); err != nil {
 			logger.Errorf("error deleting transformed checks for canary %s: %v", job.Canary.GetPersistedID(), err)
 		}
 	}

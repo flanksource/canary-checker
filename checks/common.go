@@ -170,7 +170,9 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 			}
 			r.Canary.Labels[k] = v
 		}
-		r.Canary.Labels["transformed-from"] = ctx.Canary.GetPersistedID()
+		// We use this label to set the transformed column to true
+		// This label is used and then removed in pkg.FromV1 function
+		r.Canary.Labels["transformed"] = "true"
 		results = append(results, &r)
 	}
 

@@ -194,6 +194,7 @@ type Check struct {
 	Severity           string              `json:"severity,omitempty"`
 	Icon               string              `json:"icon,omitempty"`
 	DisplayType        string              `json:"displayType,omitempty"  gorm:"-"`
+	Transformed        bool                `json:"transformed,omitempty"`
 	LastRuntime        *time.Time          `json:"lastRuntime,omitempty"`
 	LastTransitionTime *time.Time          `json:"lastTransitionTime,omitempty"`
 	NextRuntime        *time.Time          `json:"nextRuntime,omitempty"`
@@ -244,6 +245,10 @@ func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Che
 		Labels:      labels.FilterLabels(canary.GetAllLabels(check.GetLabels())),
 		Statuses:    statuses,
 		Type:        check.GetType(),
+	}
+	if _, exists := c.Labels["transformed"]; exists {
+		c.Transformed = true
+		delete(c.Labels, "transformed")
 	}
 	return c
 }
