@@ -19,12 +19,17 @@ type RunNowRequest struct {
 	CanaryID string `json:"id"`
 }
 
+type CheckErrorMessage struct {
+	Description string `json:"description"`
+	Error       string `json:"error"`
+}
+
 // RunNowResponse represents the response body for a run now request
 type RunNowResponse struct {
-	Total   int      `json:"total"`
-	Failed  int      `json:"failed"`
-	Success int      `json:"success"`
-	Errors  []string `json:"errors,omitempty"`
+	Total   int                 `json:"total"`
+	Failed  int                 `json:"failed"`
+	Success int                 `json:"success"`
+	Errors  []CheckErrorMessage `json:"errors,omitempty"`
 }
 
 func (t *RunNowResponse) FromCheckResults(result []*pkg.CheckResult) {
@@ -37,7 +42,10 @@ func (t *RunNowResponse) FromCheckResults(result []*pkg.CheckResult) {
 
 		t.Failed++
 		if r.Error != "" {
-			t.Errors = append(t.Errors, r.Error)
+			t.Errors = append(t.Errors, CheckErrorMessage{
+				Description: r.GetDescription(),
+				Error:       r.Error,
+			})
 		}
 	}
 }
