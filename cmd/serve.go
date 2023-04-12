@@ -99,6 +99,8 @@ func serve() {
 		return c.String(http.StatusOK, "OK")
 	})
 
+	e.POST("/run-now", api.RunNowHandler)
+
 	// Start server
 	go func() {
 		if err := e.Start(fmt.Sprintf(":%d", httpPort)); err != nil && err != http.ErrServerClosed {
