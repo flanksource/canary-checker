@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -14,8 +15,12 @@ type Tag struct {
 	Val string `json:"val"`
 }
 
-type TopologyRes struct {
-	componentIDs   []string          `json:"-"`
+type TopologyResponse struct {
+	componentIDs    []string
+	healthStatusMap map[string]struct{}
+	typeMap         map[string]struct{}
+	tagMap          map[string]struct{}
+
 	Components     models.Components `json:"components,omitempty"`
 	HealthStatuses []string          `json:"healthStatuses,omitempty"`
 	Teams          []string          `json:"teams,omitempty"`
@@ -23,38 +28,38 @@ type TopologyRes struct {
 	Types          []string          `json:"types,omitempty"`
 }
 
-func (t *TopologyRes) AddHealthStatuses(s string) {
-	for i := range t.HealthStatuses {
-		if t.HealthStatuses[i] == s {
-			return
-		}
+func (t *TopologyResponse) AddHealthStatuses(s string) {
+	if t.healthStatusMap == nil {
+		t.healthStatusMap = make(map[string]struct{})
 	}
 
-	t.HealthStatuses = append(t.HealthStatuses, s)
+	if _, exists := t.healthStatusMap[s]; !exists {
+		t.HealthStatuses = append(t.HealthStatuses, s)
+		t.healthStatusMap[s] = struct{}{}
+	}
 }
 
-func (t *TopologyRes) AddType(typ string) {
-	for i := range t.Types {
-		if t.Types[i] == typ {
-			return
-		}
+func (t *TopologyResponse) AddType(typ string) {
+	if t.typeMap == nil {
+		t.typeMap = make(map[string]struct{})
 	}
 
-	t.Types = append(t.Types, typ)
+	if _, exists := t.typeMap[typ]; !exists {
+		t.Types = append(t.Types, typ)
+		t.typeMap[typ] = struct{}{}
+	}
 }
 
-func (t *TopologyRes) AddTag(typ map[string]string) {
-	for k, v := range typ {
-		var exists bool
-		for _, tag := range t.Tags {
-			if tag.Key == k && tag.Val == v {
-				exists = true
-				break
-			}
-		}
+func (t *TopologyResponse) AddTag(tags map[string]string) {
+	if t.tagMap == nil {
+		t.tagMap = make(map[string]struct{})
+	}
 
-		if !exists {
+	for k, v := range tags {
+		tagKey := fmt.Sprintf("%s=%s", k, v)
+		if _, exists := t.tagMap[tagKey]; !exists {
 			t.Tags = append(t.Tags, Tag{Key: k, Val: v})
+			t.tagMap[tagKey] = struct{}{}
 		}
 	}
 }
@@ -81,7 +86,7 @@ func Topology(c echo.Context) error {
 		return errorResonse(c, err, http.StatusBadRequest)
 	}
 
-	var res TopologyRes
+	var res TopologyResponse
 	if len(results) == 0 {
 		return c.JSON(http.StatusOK, res)
 	}
@@ -99,7 +104,7 @@ func Topology(c echo.Context) error {
 
 // populateTopologyResult goes through the components recursively (depth-first)
 // and populates the TopologyRes struct.
-func populateTopologyResult(components models.Components, res *TopologyRes) {
+func populateTopologyResult(components models.Components, res *TopologyResponse) {
 	for _, component := range components {
 		res.componentIDs = append(res.componentIDs, component.ID.String())
 		res.AddTag(component.Labels)

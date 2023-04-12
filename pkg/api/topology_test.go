@@ -5,12 +5,13 @@ import (
 
 	"github.com/flanksource/duty/models"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func Test_populateTopologyResult(t *testing.T) {
 	type args struct {
 		components models.Components
-		res        TopologyRes
+		res        TopologyResponse
 	}
 	tests := []struct {
 		name string
@@ -19,13 +20,13 @@ func Test_populateTopologyResult(t *testing.T) {
 		{
 			name: "first",
 			args: args{
-				res: TopologyRes{
-					Types:          []string{"type-1", "type-1-1", "type-1-2", "type-2", "type-2-1", "type-2-1-1", "type-2-1-2", "type-2-1-3", "type-2-2"},
-					HealthStatuses: []string{"OK"},
+				res: TopologyResponse{
+					Types:          []string{"type-1", "type-1-1", "duplicate-type", "type-2", "type-2-1", "type-2-1-1", "type-2-1-2", "type-2-1-3", "type-2-2"},
+					HealthStatuses: []string{"OK", "UNHEALTHY"},
 					Tags: []Tag{
 						{Key: "tag", Val: "tag-1"},
 						{Key: "tag", Val: "tag-1-1"},
-						{Key: "tag", Val: "tag-1-2"},
+						{Key: "tag", Val: "duplicate"},
 						{Key: "tag", Val: "tag-2"},
 						{Key: "tag", Val: "tag-2-1"},
 						{Key: "tag", Val: "tag-2-1-1"},
@@ -54,9 +55,17 @@ func Test_populateTopologyResult(t *testing.T) {
 							{
 								Name:   "first-second",
 								Status: "OK",
-								Type:   "type-1-2",
+								Type:   "duplicate-type",
 								Labels: map[string]string{
-									"tag": "tag-1-2",
+									"tag": "duplicate",
+								},
+							},
+							{
+								Name:   "first-third",
+								Status: "OK",
+								Type:   "duplicate-type",
+								Labels: map[string]string{
+									"tag": "duplicate",
 								},
 							},
 						},
@@ -105,7 +114,7 @@ func Test_populateTopologyResult(t *testing.T) {
 							},
 							{
 								Name:   "second-second",
-								Status: "OK",
+								Status: "UNHEALTHY",
 								Type:   "type-2-2",
 								Labels: map[string]string{
 									"tag": "tag-2-2",
@@ -120,9 +129,9 @@ func Test_populateTopologyResult(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var res TopologyRes
+			var res TopologyResponse
 			populateTopologyResult(tt.args.components, &res)
-			if diff := cmp.Diff(tt.args.res, res); diff != "" {
+			if diff := cmp.Diff(tt.args.res, res, cmpopts.IgnoreUnexported(TopologyResponse{})); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
 		})
