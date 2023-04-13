@@ -79,7 +79,7 @@ func RunCanaryHandler(c echo.Context) error {
 func RunTopologyHandler(c echo.Context) error {
 	id := c.Param("id")
 
-	topologyModel, err := db.GetSystemTemplate(c.Request().Context(), id)
+	systemTemplate, err := db.GetSystemTemplate(c.Request().Context(), id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errorResonse(c, fmt.Errorf("topology with id=%s was not found", id), http.StatusNotFound)
@@ -96,9 +96,9 @@ func RunTopologyHandler(c echo.Context) error {
 	opts := topology.TopologyRunOptions{
 		Client:    kommonsClient,
 		Depth:     10,
-		Namespace: "default", // TODO:
+		Namespace: systemTemplate.Namespace,
 	}
-	if err := topology.SyncComponents(opts, *topologyModel); err != nil {
+	if err := topology.SyncComponents(opts, *systemTemplate); err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 
