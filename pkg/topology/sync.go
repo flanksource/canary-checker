@@ -52,14 +52,14 @@ func ComponentRun() {
 
 func ComponentStatusSummarySync() {
 	logger.Debugf("Syncing Status and Summary for components")
-	components, err := Query(duty.TopologyOptions{Depth: 3})
+	topologyResponse, err := Query(duty.TopologyOptions{Depth: 3})
 	if err != nil {
 		logger.Errorf("error getting components: %v", err)
 		return
 	}
 	jobHistory := models.NewJobHistory("ComponentStatusSummarySync", "", "").Start()
 	_ = db.PersistJobHistory(jobHistory)
-	components.Map(func(c *models.Component) {
+	topologyResponse.Components.Map(func(c *models.Component) {
 		if _, err := db.UpdateStatusAndSummaryForComponent(c.ID, c.Status, c.Summary); err != nil {
 			logger.Errorf("error persisting component: %v", err)
 			jobHistory.AddError(err.Error())
