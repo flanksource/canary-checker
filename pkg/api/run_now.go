@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/checks"
@@ -79,6 +80,21 @@ func RunCanaryHandler(c echo.Context) error {
 func RunTopologyHandler(c echo.Context) error {
 	id := c.Param("id")
 
+	topologyRunDepth := 10
+	_depth := c.QueryParam("depth")
+	if _depth != "" {
+		num, err := strconv.Atoi(_depth)
+		if err != nil {
+			return errorResonse(c, err, http.StatusBadRequest)
+		}
+
+		if num < 0 {
+			return errorResonse(c, fmt.Errorf("depth must be greater than 0"), http.StatusBadRequest)
+		}
+
+		topologyRunDepth = num
+	}
+
 	systemTemplate, err := db.GetSystemTemplate(c.Request().Context(), id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -95,7 +111,7 @@ func RunTopologyHandler(c echo.Context) error {
 
 	opts := topology.TopologyRunOptions{
 		Client:    kommonsClient,
-		Depth:     10,
+		Depth:     topologyRunDepth,
 		Namespace: systemTemplate.Namespace,
 	}
 	if err := topology.SyncComponents(opts, *systemTemplate); err != nil {
