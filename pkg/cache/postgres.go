@@ -27,26 +27,31 @@ func NewPostgresCache(pool *pgxpool.Pool) *postgresCache {
 	}
 }
 
-func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) {
+func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) []string {
+	var checkIDs []string
 	for _, status := range statii {
 		if status.Status {
 			check.Status = "healthy"
 		} else {
 			check.Status = "unhealthy"
 		}
-		c.AddCheckFromStatus(check, status)
+		checkID, err := c.AddCheckFromStatus(check, status)
+		if err != nil {
+			logger.Errorf("error persisting check with canary %s: %v", check.CanaryID, err)
+		} else {
+			checkIDs = append(checkIDs, checkID.String())
+		}
 		c.AddCheckStatus(check, status)
 	}
+	return checkIDs
 }
 
-func (c *postgresCache) AddCheckFromStatus(check pkg.Check, status pkg.CheckStatus) {
+func (c *postgresCache) AddCheckFromStatus(check pkg.Check, status pkg.CheckStatus) (uuid.UUID, error) {
 	if status.Check == nil {
-		return
+		return uuid.Nil, nil
 	}
-	// Before syncing canary, mark all these checks as deleted_at
-	if _, err := db.PersistCheck(check, check.CanaryID); err != nil {
-		logger.Errorf("error persisting check with canary %s: %v", check.CanaryID, err)
-	}
+
+	return db.PersistCheck(check, check.CanaryID)
 }
 
 func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) {

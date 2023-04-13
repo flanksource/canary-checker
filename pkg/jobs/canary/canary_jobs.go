@@ -76,21 +76,21 @@ func (job CanaryJob) Run() {
 
 	// Get transformed checks before and after, and then delete the olds ones that are not in new set
 	existingTransformedChecks, _ := db.GetTransformedCheckIDs(job.Canary.GetPersistedID())
+	var newChecksCreated []string
 	results := checks.RunChecks(job.NewContext())
 	for _, result := range results {
 		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
 			logger.Infof(result.String())
 		}
-		cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
+		checkIDsAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
+		newChecksCreated = append(newChecksCreated, checkIDsAdded...)
 	}
 	job.updateStatusAndEvent(results)
 
-	newTransformedChecks, err := db.GetTransformedCheckIDs(job.Canary.GetPersistedID()) // If something existing is not in new, marked that for deletion
-	if err == nil {
-		checksToMarkHealthy := utils.SetDifference(existingTransformedChecks, newTransformedChecks)
-		if err := db.UpdateChecksStatus(checksToMarkHealthy, models.CheckStatusHealthy); err != nil {
-			logger.Errorf("error deleting transformed checks for canary %s: %v", job.Canary.GetPersistedID(), err)
-		}
+	// Checks which are not present now should be marked as healthy
+	checksToMarkHealthy := utils.SetDifference(existingTransformedChecks, newChecksCreated)
+	if err := db.UpdateChecksStatus(checksToMarkHealthy, models.CheckStatusHealthy); err != nil {
+		logger.Errorf("error deleting transformed checks for canary %s: %v", job.Canary.GetPersistedID(), err)
 	}
 
 	// Update last runtime map

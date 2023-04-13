@@ -116,8 +116,8 @@ func UpdateChecksStatus(ids []string, status models.CheckHealthStatus) error {
 		return fmt.Errorf("Invalid check health status: %s", status)
 	}
 	return Gorm.Table("checks").
-		Update("status", status).
 		Where("id in (?)", ids).
+		Update("status", status).
 		Error
 }
 
