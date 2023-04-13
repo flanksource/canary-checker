@@ -99,7 +99,8 @@ func serve() {
 		return c.String(http.StatusOK, "OK")
 	})
 
-	e.POST("/run-now", api.RunNowHandler)
+	e.POST("/run/canary/:id", api.RunCanaryHandler)
+	e.POST("/run/topology/:id", api.RunTopologyHandler)
 
 	// Start server
 	go func() {

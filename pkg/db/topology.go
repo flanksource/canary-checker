@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -43,6 +44,16 @@ func PersistComponents(results []*pkg.Component) error {
 		}
 	}
 	return nil
+}
+
+func GetSystemTemplate(ctx context.Context, id string) (*v1.SystemTemplate, error) {
+	var _systemTemplate pkg.SystemTemplate
+	if err := Gorm.WithContext(ctx).Table("templates").Where("id = ? AND deleted_at is NULL", id).First(&_systemTemplate).Error; err != nil {
+		return nil, err
+	}
+
+	systemTemplate := _systemTemplate.ToV1()
+	return &systemTemplate, nil
 }
 
 func GetAllSystemTemplates() ([]v1.SystemTemplate, error) {

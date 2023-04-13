@@ -2,6 +2,7 @@ package topology
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -405,4 +406,55 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 		c.Schedule = ctx.SystemTemplate.Spec.Schedule
 	}
 	return results
+}
+
+func SyncComponents(opts TopologyRunOptions, systemTemplate v1.SystemTemplate) error {
+	components := Run(opts, systemTemplate)
+	systemTemplateID, err := uuid.Parse(systemTemplate.GetPersistedID())
+	if err != nil {
+		return fmt.Errorf("failed to parse system template id: %w", err)
+	}
+
+	var compIDs []uuid.UUID
+	for _, component := range components {
+		component.Name = systemTemplate.Name
+		component.Namespace = systemTemplate.Namespace
+		component.Labels = systemTemplate.Labels
+		component.SystemTemplateID = &systemTemplateID
+		componentsIDs, err := db.PersistComponent(component)
+		if err != nil {
+			return fmt.Errorf("failed to persist component(id=%s, name=%s): %w", component.ID, component.Name, err)
+		}
+
+		compIDs = append(compIDs, componentsIDs...)
+	}
+
+	dbCompsIDs, err := db.GetActiveComponentsIDsWithSystemTemplateID(systemTemplateID.String())
+	if err != nil {
+		return fmt.Errorf("failed to get components: %w", err)
+	}
+
+	deleteCompIDs := difference(dbCompsIDs, compIDs)
+	if deleteCompIDs != nil {
+		if err := db.DeleteComponentsWithIDs(deleteCompIDs, time.Now()); err != nil {
+			return fmt.Errorf("failed to delete components: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// difference returns the elements in `a` that aren't in `b`.
+func difference(a, b []uuid.UUID) []string {
+	mb := make(map[string]struct{}, len(b))
+	for _, x := range b {
+		mb[x.String()] = struct{}{}
+	}
+	var diff []string
+	for _, x := range a {
+		if _, found := mb[x.String()]; !found {
+			diff = append(diff, x.String())
+		}
+	}
+	return diff
 }
