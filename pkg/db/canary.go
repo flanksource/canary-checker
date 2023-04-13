@@ -113,7 +113,7 @@ func UpdateChecksStatus(ids []string, status models.CheckHealthStatus) error {
 		return nil
 	}
 	if !utils.Contains(models.CheckHealthStatuses, status) {
-		return fmt.Errorf("Invalid check health status: %s", status)
+		return fmt.Errorf("invalid check health status: %s", status)
 	}
 	return Gorm.Table("checks").
 		Where("id in (?)", ids).
