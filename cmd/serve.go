@@ -99,6 +99,9 @@ func serve() {
 		return c.String(http.StatusOK, "OK")
 	})
 
+	e.POST("/run/canary/:id", api.RunCanaryHandler)
+	e.POST("/run/topology/:id", api.RunTopologyHandler)
+
 	// Start server
 	go func() {
 		if err := e.Start(fmt.Sprintf(":%d", httpPort)); err != nil && err != http.ErrServerClosed {

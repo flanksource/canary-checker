@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/util/duration"
 )
 
@@ -21,12 +22,12 @@ func Age(d time.Duration) string {
 }
 
 // SetDifference returns the list of elements present in a but not present in b
-func SetDifference(a, b []string) []string {
-	mb := make(map[string]struct{}, len(b))
+func SetDifference[T comparable](a, b []T) []T {
+	mb := make(map[T]struct{}, len(b))
 	for _, x := range b {
 		mb[x] = struct{}{}
 	}
-	var diff []string
+	var diff []T
 	for _, x := range a {
 		if _, found := mb[x]; !found {
 			diff = append(diff, x)
@@ -46,4 +47,13 @@ func GenerateJSONMD5Hash(obj interface{}) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(hash[:]), nil
+}
+
+func UUIDsToStrings(in []uuid.UUID) []string {
+	out := make([]string, len(in))
+	for i, u := range in {
+		out[i] = u.String()
+	}
+
+	return out
 }

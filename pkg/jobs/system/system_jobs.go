@@ -13,7 +13,6 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
-	"github.com/google/uuid"
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -37,34 +36,8 @@ func (job SystemJob) Run() {
 		Depth:     10,
 		Namespace: job.Namespace,
 	}
-	components := topology.Run(opts, job.SystemTemplate)
-	systemTemplateID, err := uuid.Parse(job.SystemTemplate.GetPersistedID())
-	if err != nil {
-		logger.Errorf("error finding the systemTemplateID")
-		return
-	}
-	var compIDs []uuid.UUID
-	for _, component := range components {
-		component.Name = job.SystemTemplate.Name
-		component.Namespace = job.SystemTemplate.Namespace
-		component.Labels = job.SystemTemplate.Labels
-		component.SystemTemplateID = &systemTemplateID
-		componentsIDs, err := db.PersistComponent(component)
-		if err != nil {
-			logger.Errorf("error persisting the component: %v", err)
-			return
-		}
-		compIDs = append(compIDs, componentsIDs...)
-	}
-	dbCompsIDs, err := db.GetActiveComponentsIDsWithSystemTemplateID(systemTemplateID.String())
-	if err != nil {
-		logger.Errorf("error getting components for system: %v", err)
-	}
-	deleteCompIDs := difference(dbCompsIDs, compIDs)
-	if deleteCompIDs != nil {
-		if err := db.DeleteComponentsWithIDs(deleteCompIDs, time.Now()); err != nil {
-			logger.Errorf("error deleting components: %v", err)
-		}
+	if err := topology.SyncComponents(opts, job.SystemTemplate); err != nil {
+		logger.Errorf("failed to run system template %s: %v", job.GetNamespacedName(), err)
 	}
 }
 
@@ -156,19 +129,4 @@ func DeleteSystemJob(systemTemplate v1.SystemTemplate) {
 	}
 	logger.Tracef("deleting cron entry for system template %s/%s with entry ID: %v", systemTemplate.Name, systemTemplate.Namespace, entry.ID)
 	SystemScheduler.Remove(entry.ID)
-}
-
-// difference returns the elements in `a` that aren't in `b`.
-func difference(a, b []uuid.UUID) []string {
-	mb := make(map[string]struct{}, len(b))
-	for _, x := range b {
-		mb[x.String()] = struct{}{}
-	}
-	var diff []string
-	for _, x := range a {
-		if _, found := mb[x.String()]; !found {
-			diff = append(diff, x.String())
-		}
-	}
-	return diff
 }
