@@ -10,6 +10,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/db/types"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/canary-checker/templating"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
@@ -431,30 +432,15 @@ func SyncComponents(opts TopologyRunOptions, systemTemplate v1.SystemTemplate) e
 
 	dbCompsIDs, err := db.GetActiveComponentsIDsWithSystemTemplateID(systemTemplateID.String())
 	if err != nil {
-		return fmt.Errorf("failed to get components: %w", err)
+		logger.Errorf("error getting components for system(id=%s): %v", systemTemplateID.String(), err)
 	}
 
-	deleteCompIDs := difference(dbCompsIDs, compIDs)
-	if deleteCompIDs != nil {
-		if err := db.DeleteComponentsWithIDs(deleteCompIDs, time.Now()); err != nil {
-			return fmt.Errorf("failed to delete components: %w", err)
+	deleteCompIDs := utils.SetDifference(dbCompsIDs, compIDs)
+	if len(deleteCompIDs) != 0 {
+		if err := db.DeleteComponentsWithIDs(utils.UUIDsToStrings(deleteCompIDs), time.Now()); err != nil {
+			logger.Errorf("error deleting components: %v", err)
 		}
 	}
 
 	return nil
-}
-
-// difference returns the elements in `a` that aren't in `b`.
-func difference(a, b []uuid.UUID) []string {
-	mb := make(map[string]struct{}, len(b))
-	for _, x := range b {
-		mb[x.String()] = struct{}{}
-	}
-	var diff []string
-	for _, x := range a {
-		if _, found := mb[x.String()]; !found {
-			diff = append(diff, x.String())
-		}
-	}
-	return diff
 }
