@@ -253,7 +253,7 @@ WHERE (stats.passed > 0 OR stats.failed > 0) %s
 		check.Uptime.Passed = intV(vals[2])
 		check.Uptime.Failed = intV(vals[3])
 		check.Latency.Percentile99 = float64V(vals[4])
-		check.Latency.Percentile97 = float64V(vals[6])
+		check.Latency.Percentile97 = float64V(vals[5])
 		check.Latency.Percentile95 = float64V(vals[6])
 		check.Type = vals[8].(string)
 		check.Icon = vals[9].(string)
