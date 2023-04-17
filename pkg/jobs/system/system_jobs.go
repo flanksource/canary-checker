@@ -10,6 +10,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/topology"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
@@ -56,13 +57,15 @@ func (job SystemJob) Run() {
 		}
 		compIDs = append(compIDs, componentsIDs...)
 	}
+
 	dbCompsIDs, err := db.GetActiveComponentsIDsWithSystemTemplateID(systemTemplateID.String())
 	if err != nil {
-		logger.Errorf("error getting components for system: %v", err)
+		logger.Errorf("error getting components for system(id=%s): %v", systemTemplateID.String(), err)
 	}
-	deleteCompIDs := difference(dbCompsIDs, compIDs)
-	if deleteCompIDs != nil {
-		if err := db.DeleteComponentsWithIDs(deleteCompIDs, time.Now()); err != nil {
+
+	deleteCompIDs := utils.SetDifference(dbCompsIDs, compIDs)
+	if len(deleteCompIDs) != 0 {
+		if err := db.DeleteComponentsWithIDs(utils.UUIDsToStrings(deleteCompIDs), time.Now()); err != nil {
 			logger.Errorf("error deleting components: %v", err)
 		}
 	}
@@ -156,19 +159,4 @@ func DeleteSystemJob(systemTemplate v1.SystemTemplate) {
 	}
 	logger.Tracef("deleting cron entry for system template %s/%s with entry ID: %v", systemTemplate.Name, systemTemplate.Namespace, entry.ID)
 	SystemScheduler.Remove(entry.ID)
-}
-
-// difference returns the elements in `a` that aren't in `b`.
-func difference(a, b []uuid.UUID) []string {
-	mb := make(map[string]struct{}, len(b))
-	for _, x := range b {
-		mb[x.String()] = struct{}{}
-	}
-	var diff []string
-	for _, x := range a {
-		if _, found := mb[x.String()]; !found {
-			diff = append(diff, x.String())
-		}
-	}
-	return diff
 }
