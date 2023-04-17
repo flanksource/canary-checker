@@ -50,13 +50,13 @@ func (t *RunCanaryResponse) FromCheckResults(result []*pkg.CheckResult) {
 func RunCanaryHandler(c echo.Context) error {
 	id := c.Param("id")
 
-	canaryModel, err := db.GetCanary(id)
+	canaryModel, err := db.FindCanaryByID(id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errorResonse(c, fmt.Errorf("canary with id=%s was not found", id), http.StatusNotFound)
-		}
-
 		return errorResonse(c, err, http.StatusInternalServerError)
+	}
+
+	if canaryModel == nil {
+		return errorResonse(c, fmt.Errorf("canary with id=%s was not found", id), http.StatusNotFound)
 	}
 
 	canary, err := canaryModel.ToV1()
