@@ -49,6 +49,15 @@ func GenerateJSONMD5Hash(obj interface{}) (string, error) {
 	return hex.EncodeToString(hash[:]), nil
 }
 
+func Contains[T comparable](arr []T, item T) bool {
+	for _, elem := range arr {
+		if elem == item {
+			return true
+		}
+	}
+	return false
+}
+
 func UUIDsToStrings(in []uuid.UUID) []string {
 	out := make([]string, len(in))
 	for i, u := range in {

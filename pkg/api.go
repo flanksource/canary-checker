@@ -44,13 +44,14 @@ func (t *JSONTime) UnmarshalJSON(b []byte) error {
 }
 
 type CheckStatus struct {
-	Status   bool        `json:"status"`
-	Invalid  bool        `json:"invalid,omitempty"`
-	Time     string      `json:"time"`
-	Duration int         `json:"duration"`
-	Message  string      `json:"message,omitempty"`
-	Error    string      `json:"error,omitempty"`
-	Detail   interface{} `json:"-"`
+	Status   bool            `json:"status"`
+	Invalid  bool            `json:"invalid,omitempty"`
+	Time     string          `json:"time"`
+	Duration int             `json:"duration"`
+	Message  string          `json:"message,omitempty"`
+	Error    string          `json:"error,omitempty"`
+	Detail   interface{}     `json:"-"`
+	Check    *external.Check `json:"check,omitempty"`
 }
 
 func (s CheckStatus) GetTime() (time.Time, error) {
@@ -193,6 +194,7 @@ type Check struct {
 	Severity           string              `json:"severity,omitempty"`
 	Icon               string              `json:"icon,omitempty"`
 	DisplayType        string              `json:"displayType,omitempty"  gorm:"-"`
+	Transformed        bool                `json:"transformed,omitempty"`
 	LastRuntime        *time.Time          `json:"lastRuntime,omitempty"`
 	LastTransitionTime *time.Time          `json:"lastTransitionTime,omitempty"`
 	NextRuntime        *time.Time          `json:"nextRuntime,omitempty"`
@@ -225,6 +227,7 @@ func FromResult(result CheckResult) CheckStatus {
 		Message:  result.Message,
 		Error:    result.Error,
 		Detail:   result.Detail,
+		Check:    &result.Check,
 	}
 }
 func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Check {
@@ -242,6 +245,10 @@ func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Che
 		Labels:      labels.FilterLabels(canary.GetAllLabels(check.GetLabels())),
 		Statuses:    statuses,
 		Type:        check.GetType(),
+	}
+	if _, exists := c.Labels["transformed"]; exists {
+		c.Transformed = true
+		delete(c.Labels, "transformed")
 	}
 	return c
 }
@@ -427,6 +434,7 @@ type GenericCheck struct {
 	v1.Description `yaml:",inline" json:",inline"`
 	Type           string
 	Endpoint       string
+	Labels         map[string]string
 }
 
 func (generic GenericCheck) GetType() string {
@@ -457,6 +465,10 @@ type TransformedCheckResult struct {
 }
 
 func (t TransformedCheckResult) ToCheckResult() CheckResult {
+	labels := t.Labels
+	if labels == nil {
+		labels = make(map[string]string)
+	}
 	return CheckResult{
 		Start:       t.Start,
 		Pass:        t.Pass,
@@ -473,6 +485,7 @@ func (t TransformedCheckResult) ToCheckResult() CheckResult {
 				Description: t.Description,
 				Name:        t.Name,
 				Icon:        t.Icon,
+				Labels:      labels,
 			},
 			Type:     t.Type,
 			Endpoint: t.Endpoint,

@@ -149,7 +149,6 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 	}
 
 	var transformed []pkg.TransformedCheckResult
-
 	if err := json.Unmarshal([]byte(out), &transformed); err != nil {
 		return nil, err
 	}
@@ -171,6 +170,9 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 			}
 			r.Canary.Labels[k] = v
 		}
+		// We use this label to set the transformed column to true
+		// This label is used and then removed in pkg.FromV1 function
+		r.Canary.Labels["transformed"] = "true" //nolint:goconst
 		results = append(results, &r)
 	}
 

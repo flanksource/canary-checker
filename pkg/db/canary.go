@@ -11,8 +11,10 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/metrics"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -85,6 +87,7 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 				"owner":       check.Owner,
 				"severity":    check.Severity,
 				"icon":        check.Icon,
+				"labels":      check.Labels,
 				"deleted_at":  nil,
 			}),
 	}).Create(&check)
@@ -93,6 +96,29 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 	}
 
 	return check.ID, nil
+}
+
+func GetTransformedCheckIDs(canaryID string) ([]string, error) {
+	var ids []string
+	err := Gorm.Table("checks").
+		Select("id").
+		Where("canary_id = ? AND transformed = true", canaryID).
+		Find(&ids).
+		Error
+	return ids, err
+}
+
+func UpdateChecksStatus(ids []string, status models.CheckHealthStatus) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	if !utils.Contains(models.CheckHealthStatuses, status) {
+		return fmt.Errorf("invalid check health status: %s", status)
+	}
+	return Gorm.Table("checks").
+		Where("id in (?)", ids).
+		Update("status", status).
+		Error
 }
 
 func DeleteCanary(canary v1.Canary) error {
