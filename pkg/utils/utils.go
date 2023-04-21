@@ -56,6 +56,7 @@ func Contains[T comparable](arr []T, item T) bool {
 		}
 	}
 	return false
+}
 
 func UUIDsToStrings(in []uuid.UUID) []string {
 	out := make([]string, len(in))
