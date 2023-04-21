@@ -165,11 +165,22 @@ func DeleteChecks(id []string) error {
 func GetCanary(id string) (*pkg.Canary, error) {
 	var model *pkg.Canary
 	if err := Gorm.Where("id = ?", id).First(&model).Error; err != nil {
+		return nil, err
+	}
+
+	return model, nil
+}
+
+func FindCanaryByID(id string) (*pkg.Canary, error) {
+	var model *pkg.Canary
+	if err := Gorm.Where("id = ?", id).First(&model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
+
 		return nil, err
 	}
+
 	return model, nil
 }
 

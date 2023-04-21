@@ -2,6 +2,7 @@ package topology
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -9,6 +10,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/db/types"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/canary-checker/templating"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
@@ -405,4 +407,40 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 		c.Schedule = ctx.SystemTemplate.Spec.Schedule
 	}
 	return results
+}
+
+func SyncComponents(opts TopologyRunOptions, systemTemplate v1.SystemTemplate) error {
+	components := Run(opts, systemTemplate)
+	systemTemplateID, err := uuid.Parse(systemTemplate.GetPersistedID())
+	if err != nil {
+		return fmt.Errorf("failed to parse system template id: %w", err)
+	}
+
+	var compIDs []uuid.UUID
+	for _, component := range components {
+		component.Name = systemTemplate.Name
+		component.Namespace = systemTemplate.Namespace
+		component.Labels = systemTemplate.Labels
+		component.SystemTemplateID = &systemTemplateID
+		componentsIDs, err := db.PersistComponent(component)
+		if err != nil {
+			return fmt.Errorf("failed to persist component(id=%s, name=%s): %w", component.ID, component.Name, err)
+		}
+
+		compIDs = append(compIDs, componentsIDs...)
+	}
+
+	dbCompsIDs, err := db.GetActiveComponentsIDsWithSystemTemplateID(systemTemplateID.String())
+	if err != nil {
+		logger.Errorf("error getting components for system(id=%s): %v", systemTemplateID.String(), err)
+	}
+
+	deleteCompIDs := utils.SetDifference(dbCompsIDs, compIDs)
+	if len(deleteCompIDs) != 0 {
+		if err := db.DeleteComponentsWithIDs(utils.UUIDsToStrings(deleteCompIDs), time.Now()); err != nil {
+			logger.Errorf("error deleting components: %v", err)
+		}
+	}
+
+	return nil
 }

@@ -77,7 +77,7 @@ spec:
                   name: {{ .Values.db.external.secretKeyRef.name }}
                   key: {{ .Values.db.external.secretKeyRef.key }}
               {{- else }}
-              value: "embedded:///opt/database/data/"
+              value: "embedded:///opt/database/"
               {{- end }}
           volumeMounts:
             {{- if eq .Values.dockerSocket true }}
