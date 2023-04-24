@@ -9,13 +9,13 @@ import (
 // +kubebuilder:object:root=true
 
 // +kubebuilder:subresource:status
-type SystemTemplate struct {
+type Topology struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              SystemTemplateSpec   `json:"spec,omitempty"`
-	Status            SystemTemplateStatus `json:"status,omitempty"`
+	Spec              TopologySpec   `json:"spec,omitempty"`
+	Status            TopologyStatus `json:"status,omitempty"`
 }
-type SystemTemplateSpec struct {
+type TopologySpec struct {
 	Type       string          `json:"type,omitempty"`
 	Id         *Template       `json:"id,omitempty"` //nolint
 	Schedule   string          `json:"schedule,omitempty"`
@@ -33,22 +33,22 @@ type SystemTemplateSpec struct {
 	Configs []Config `json:"configs,omitempty"`
 }
 
-func (s SystemTemplate) IsEmpty() bool {
+func (s Topology) IsEmpty() bool {
 	return len(s.Spec.Properties) == 0 && len(s.Spec.Components) == 0 && s.Name == ""
 }
 
-func (spec SystemTemplateSpec) GetSchedule() string {
+func (spec TopologySpec) GetSchedule() string {
 	return spec.Schedule
 }
 
-type SystemTemplateStatus struct {
+type TopologyStatus struct {
 	PersistedID *string `json:"persistentID,omitempty"`
 	// +optional
 	ObservedGeneration int64  `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`
 	Status             string `json:"status,omitempty"`
 }
 
-func (s SystemTemplate) GetPersistedID() string {
+func (s Topology) GetPersistedID() string {
 	if s.Status.PersistedID != nil {
 		return *s.Status.PersistedID
 	}
@@ -95,13 +95,13 @@ func (c Config) String() string {
 
 // +kubebuilder:object:root=true
 
-// SystemTemplateList contains a list of SystemTemplate
-type SystemTemplateList struct {
+// TopologyList contains a list of Topology
+type TopologyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []SystemTemplate `json:"items"`
+	Items           []Topology `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&SystemTemplate{}, &SystemTemplateList{})
+	SchemeBuilder.Register(&Topology{}, &TopologyList{})
 }

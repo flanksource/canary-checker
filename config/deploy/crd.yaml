@@ -3981,14 +3981,14 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
   creationTimestamp: null
-  name: systemtemplates.canaries.flanksource.com
+  name: topologies.canaries.flanksource.com
 spec:
   group: canaries.flanksource.com
   names:
-    kind: SystemTemplate
-    listKind: SystemTemplateList
-    plural: systemtemplates
-    singular: systemtemplate
+    kind: Topology
+    listKind: TopologyList
+    plural: topologies
+    singular: topology
   scope: Namespaced
   versions:
     - name: v1

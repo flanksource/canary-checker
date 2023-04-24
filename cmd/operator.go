@@ -117,7 +117,7 @@ func run(cmd *cobra.Command, args []string) {
 		RunnerName:        runner.RunnerName,
 	}
 
-	systemReconciler := &controllers.SystemReconciler{
+	systemReconciler := &controllers.TopologyReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("system"),
 		Scheme: mgr.GetScheme(),
