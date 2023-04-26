@@ -19,6 +19,7 @@ import (
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8sTypes "k8s.io/apimachinery/pkg/types"
 )
 
 var json = jsontime.ConfigWithCustomTimeFormat
@@ -90,11 +91,9 @@ func (s *Topology) ToV1() v1.Topology {
 			Name:      s.Name,
 			Namespace: s.Namespace,
 			Labels:    s.Labels,
+			UID:       k8sTypes.UID(id),
 		},
 		Spec: topologySpec,
-		Status: v1.TopologyStatus{
-			PersistedID: &id,
-		},
 	}
 }
 

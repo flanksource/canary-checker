@@ -3854,7 +3854,7 @@ rules:
       - canaries.flanksource.com
     resources:
       - canaries
-      - systemtemplates
+      - topologies
     verbs:
       - create
       - delete
@@ -3867,7 +3867,7 @@ rules:
       - canaries.flanksource.com
     resources:
       - canaries/status
-      - systemtemplates/status
+      - topologies/status
     verbs:
       - get
       - patch

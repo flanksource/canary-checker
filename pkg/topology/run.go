@@ -413,7 +413,7 @@ func SyncComponents(opts TopologyRunOptions, topology v1.Topology) error {
 	components := Run(opts, topology)
 	topologyID, err := uuid.Parse(topology.GetPersistedID())
 	if err != nil {
-		return fmt.Errorf("failed to parse system template id: %w", err)
+		return fmt.Errorf("failed to parse topology id: %w", err)
 	}
 
 	var compIDs []uuid.UUID

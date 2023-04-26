@@ -73,7 +73,7 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
-	// Sync jobs if system template is created or updated
+	// Sync jobs if topology is created or updated
 	if changed || topology.Generation == 1 {
 		if err := systemJobs.SyncTopologyJob(*topology); err != nil {
 			logger.Error(err, "failed to sync topology job")

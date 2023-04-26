@@ -1,5 +1,5 @@
 apiVersion: canaries.flanksource.com/v1
-kind: SystemTemplate
+kind: Topology
 metadata:
   name: inline-check
 spec:
