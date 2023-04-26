@@ -13,7 +13,6 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/logger"
 )
 
 type AzureDevopsChecker struct {
@@ -46,46 +45,37 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 	if err != nil {
 		return results.ErrorMessage(fmt.Errorf("failed to get project (name=%s): %w", check.Project, err))
 	}
-
 	projectID := project.Id.String()
+
+	pipelineRegexp, err := regexp.Compile(check.Pipeline)
+	isRegexp := nil == err
+	// regexp compilation failed means we assume that it's a literal string.
+	// However, even literal strings can be valid regexp, like "Hello world".
+
 	pipelineClient := pipelines.NewClient(ctx, connection)
 	allPipelines, err := pipelineClient.ListPipelines(ctx, pipelines.ListPipelinesArgs{Project: &projectID})
 	if err != nil {
 		return results.ErrorMessage(fmt.Errorf("failed to get pipeline (project=%s): %w", check.Project, err))
 	}
 
-	var isRegexp bool
-	pipelineRegex, err := regexp.Compile(check.Pipeline)
-	if err != nil {
-		// regexp compilation failed means we assume that it's a literal string.
-		// However, even literal strings can be valid regexp, like "Hello world".
-	} else {
-		isRegexp = true
-	}
-
-	var matchedPipelines []pipelines.Pipeline
-	for _, p := range *allPipelines {
+	for _, pipeline := range *allPipelines {
 		if isRegexp {
-			matched := pipelineRegex.MatchString(*p.Name)
+			matched := pipelineRegexp.MatchString(*pipeline.Name)
 			if !matched {
 				continue
 			}
-		} else {
-			if *p.Name != check.Pipeline {
-				continue
-			}
+		} else if *pipeline.Name != check.Pipeline {
+			continue
 		}
 
-		logger.Infof("Checking pipeline %s", *p.Name)
-		runs, err := pipelineClient.ListRuns(ctx, pipelines.ListRunsArgs{PipelineId: p.Id, Project: &projectID})
+		runs, err := pipelineClient.ListRuns(ctx, pipelines.ListRunsArgs{PipelineId: pipeline.Id, Project: &projectID})
 		if err != nil {
-			return results.ErrorMessage(fmt.Errorf("failed to get run (pipeline=%s): %w", check.Pipeline, err))
+			return results.ErrorMessage(fmt.Errorf("failed to get runs (pipeline=%s): %w", check.Pipeline, err))
 		}
 
 		if len(*runs) == 0 {
 			continue
 		}
-
 		latestRun := (*runs)[0]
 
 		if !matchPipelineVariables(check.Variables, latestRun.Variables) {
@@ -94,7 +84,7 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 
 		// Need to query the Run once again to get more details about it
 		// because the ListRuns API doesn't return Resources.
-		if latestRunDetail, err := pipelineClient.GetRun(ctx, pipelines.GetRunArgs{Project: &projectID, PipelineId: p.Id, RunId: (*runs)[0].Id}); err != nil {
+		if latestRunDetail, err := pipelineClient.GetRun(ctx, pipelines.GetRunArgs{Project: &projectID, PipelineId: pipeline.Id, RunId: (*runs)[0].Id}); err != nil {
 			return results.ErrorMessage(fmt.Errorf("failed to get run (pipeline=%s): %w", check.Pipeline, err))
 		} else {
 			latestRun = *latestRunDetail
@@ -112,10 +102,8 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 		}
 
 		if *latestRun.Result != pipelines.RunResultValues.Succeeded {
-			return results.Failf("Runtime completed with unsuccessful result: %s", latestRun.Result)
+			return results.Failf("Runtime completed with unsuccessful result: %s", *latestRun.Result)
 		}
-
-		matchedPipelines = append(matchedPipelines, p)
 	}
 
 	return results
