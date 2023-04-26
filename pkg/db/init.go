@@ -68,8 +68,8 @@ func embeddedDB() error {
 	PostgresServer = embeddedpostgres.NewDatabase(embeddedpostgres.DefaultConfig().
 		Port(6432).
 		DataPath(path.Join(embeddedPath, "data")).
-		RuntimePath(embeddedPath).
-		BinariesPath(embeddedPath).
+		RuntimePath(path.Join(embeddedPath, "runtime")).
+		BinariesPath(path.Join(embeddedPath, "bin")).
 		Version(embeddedpostgres.V14).
 		Username("postgres").Password("postgres").
 		Database("canary"))
@@ -82,7 +82,7 @@ func embeddedDB() error {
 }
 
 func Init() error {
-	if ConnectionString == "" {
+	if ConnectionString == "" || ConnectionString == "DB_URL" {
 		logger.Warnf("No db connection string specified")
 		return nil
 	}
