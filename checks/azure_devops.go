@@ -3,6 +3,7 @@ package checks
 import (
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7/core"
@@ -49,7 +50,7 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 	pipelineClient := pipelines.NewClient(ctx, connection)
 	allPipelines, err := pipelineClient.ListPipelines(ctx, pipelines.ListPipelinesArgs{Project: &projectID})
 	if err != nil {
-		return results.ErrorMessage(fmt.Errorf("failed to get pipeline (name=%s): %w", check.Pipeline, err))
+		return results.ErrorMessage(fmt.Errorf("failed to get pipeline (project=%s): %w", check.Project, err))
 	}
 
 	var isRegexp bool
@@ -75,8 +76,56 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 		}
 
 		logger.Infof("Checking pipeline %s", *p.Name)
+		runs, err := pipelineClient.ListRuns(ctx, pipelines.ListRunsArgs{PipelineId: p.Id, Project: &projectID})
+		if err != nil {
+			return results.ErrorMessage(fmt.Errorf("failed to get run (pipeline=%s): %w", check.Pipeline, err))
+		}
+
+		if len(*runs) == 0 {
+			continue
+		}
+
+		latestRun := (*runs)[0]
+
+		if !matchPipelineVariables(check.Variables, latestRun.Variables) {
+			continue
+		}
+
+		if check.ThresholdMillis != nil {
+			runDuration := latestRun.FinishedDate.Time.Sub(latestRun.CreatedDate.Time)
+			if runDuration > time.Duration(*check.ThresholdMillis)*time.Millisecond {
+				return results.Failf("Runtime:%v was over the threshold:%v", runDuration, *check.ThresholdMillis)
+			}
+		}
+
+		if *latestRun.Result != pipelines.RunResultValues.Succeeded {
+			return results.Failf("Runtime completed with unsuccessful result: %s", latestRun.Result)
+		}
+
 		matchedPipelines = append(matchedPipelines, p)
 	}
 
 	return results
+}
+
+func matchPipelineVariables(want map[string]string, got *map[string]pipelines.Variable) bool {
+	if len(want) == 0 {
+		return true
+	}
+
+	if len(*got) == 0 && len(want) != 0 {
+		return false
+	}
+
+	for k, v := range want {
+		if _, ok := (*got)[k]; !ok {
+			return false
+		}
+
+		if *(*got)[k].Value != v {
+			return false
+		}
+	}
+
+	return true
 }

@@ -1141,14 +1141,15 @@ type AzureDevopsCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 
-	Organization        string   `yaml:"organization" json:"organization"`
-	PersonalAccessToken string   `yaml:"personalAccessToken" json:"personalAccessToken"`
-	Project             string   `yaml:"project" json:"project"` // Name or ID of the Project
-	Pipeline            string   `yaml:"pipeline" json:"pipeline"`
-	Status              string   `yaml:"status" json:"status"`
-	Variables           []string `yaml:"variables" json:"variables"`
-	Branches            []string `ymal:"branch" json:"branch"`
-	ThresholdMillis     int      `yaml:"thresholdMillis" json:"thresholdMillis"`
+	Organization        string            `yaml:"organization" json:"organization"`
+	PersonalAccessToken string            `yaml:"personalAccessToken" json:"personalAccessToken"`
+	Project             string            `yaml:"project" json:"project"` // Name or ID of the Project
+	Pipeline            string            `yaml:"pipeline" json:"pipeline"`
+	Variables           map[string]string `yaml:"variables" json:"variables"`
+	Branches            []string          `ymal:"branch" json:"branch"`
+
+	// ThresholdMillis the maximum duration of a Run. (Optional)
+	ThresholdMillis *int `yaml:"thresholdMillis" json:"thresholdMillis"`
 }
 
 func (c AzureDevopsCheck) GetType() string {
