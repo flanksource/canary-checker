@@ -16,23 +16,26 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func PersistTopology(t *v1.Topology) (string, bool, error) {
-	model := pkg.TopologyFromV1(t)
-	if t.GetPersistedID() != "" {
-		model.ID, _ = uuid.Parse(t.GetPersistedID())
-	}
+func PersistTopology(t *v1.Topology) (bool, error) {
+	var err error
 	var changed bool
+
+	model := pkg.TopologyFromV1(t)
+	model.ID, err = uuid.Parse(t.GetPersistedID())
+	if err != nil {
+		return changed, err
+	}
 	tx := Gorm.Table("topologies").Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "name"}, {Name: "namespace"}},
 		UpdateAll: true,
 	}).Create(model)
 	if tx.Error != nil {
-		return "", changed, tx.Error
+		return changed, tx.Error
 	}
 	if tx.RowsAffected > 0 {
 		changed = true
 	}
-	return model.ID.String(), changed, nil
+	return changed, nil
 }
 
 func PersistComponents(results []*pkg.Component) error {
@@ -288,10 +291,7 @@ func DeleteTopology(t *v1.Topology) error {
 	logger.Infof("Deleting topology %s/%s", t.Namespace, t.Name)
 	model := pkg.TopologyFromV1(t)
 	deleteTime := time.Now()
-	if t.GetPersistedID() == "" {
-		logger.Errorf("Topology %s/%s has not been persisted", t.Namespace, t.Name)
-		return nil
-	}
+
 	tx := Gorm.Table("topologies").Find(model, "id = ?", t.GetPersistedID()).UpdateColumn("deleted_at", deleteTime)
 	if tx.Error != nil {
 		return tx.Error

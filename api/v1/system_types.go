@@ -49,10 +49,7 @@ type TopologyStatus struct {
 }
 
 func (s Topology) GetPersistedID() string {
-	if s.Status.PersistedID != nil {
-		return *s.Status.PersistedID
-	}
-	return ""
+	return string(s.GetUID())
 }
 
 type Selector struct {

@@ -68,27 +68,9 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 		return ctrl.Result{}, r.Update(ctx, topology)
 	}
 
-	id, changed, err := db.PersistTopology(topology)
+	changed, err := db.PersistTopology(topology)
 	if err != nil {
 		return ctrl.Result{}, err
-	}
-
-	// If template does not have a PersistedID, update its status to set one
-	if topology.GetPersistedID() == "" {
-		var topologyForStatus v1.Topology
-		// We have to fetch the object again to avoid client caching old object
-		err = r.Get(ctx, req.NamespacedName, &topologyForStatus)
-		if err != nil {
-			logger.Error(err, "Error fetching topology for status update")
-			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
-		}
-
-		topologyForStatus.Status.PersistedID = &id
-		err = r.Status().Update(ctx, &topologyForStatus)
-		if err != nil {
-			logger.Error(err, "failed to update status for topology")
-			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
-		}
 	}
 
 	// Sync jobs if system template is created or updated
