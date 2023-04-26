@@ -3,6 +3,7 @@ package checks
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7"
@@ -91,6 +92,18 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 			continue
 		}
 
+		// Need to query the Run once again to get more details about it
+		// because the ListRuns API doesn't return Resources.
+		if latestRunDetail, err := pipelineClient.GetRun(ctx, pipelines.GetRunArgs{Project: &projectID, PipelineId: p.Id, RunId: (*runs)[0].Id}); err != nil {
+			return results.ErrorMessage(fmt.Errorf("failed to get run (pipeline=%s): %w", check.Pipeline, err))
+		} else {
+			latestRun = *latestRunDetail
+		}
+
+		if !matchBranchNames(check.Branches, latestRun.Resources) {
+			continue
+		}
+
 		if check.ThresholdMillis != nil {
 			runDuration := latestRun.FinishedDate.Time.Sub(latestRun.CreatedDate.Time)
 			if runDuration > time.Duration(*check.ThresholdMillis)*time.Millisecond {
@@ -113,7 +126,7 @@ func matchPipelineVariables(want map[string]string, got *map[string]pipelines.Va
 		return true
 	}
 
-	if len(*got) == 0 && len(want) != 0 {
+	if len(want) != 0 && len(*got) == 0 {
 		return false
 	}
 
@@ -128,4 +141,43 @@ func matchPipelineVariables(want map[string]string, got *map[string]pipelines.Va
 	}
 
 	return true
+}
+
+func matchBranchNames(branches []string, resources *pipelines.RunResources) bool {
+	if len(branches) == 0 {
+		return true
+	}
+
+	if len(branches) != 0 && resources == nil {
+		return false
+	}
+
+	branchName := getBranchName(resources)
+	for _, w := range branches {
+		if branchName == w {
+			return true
+		}
+	}
+
+	return false
+}
+
+// getBranchName extracts the name of the branch from a RunResources object.
+// The branch name is extracted from the refname which is of the form "refs/heads/2pm".
+func getBranchName(got *pipelines.RunResources) string {
+	repo, ok := (*got.Repositories)["self"]
+	if !ok {
+		return ""
+	}
+
+	if repo.RefName == nil {
+		return ""
+	}
+
+	sections := strings.Split(*repo.RefName, "/")
+	if len(sections) == 0 {
+		return ""
+	}
+
+	return sections[len(sections)-1]
 }
