@@ -68,26 +68,31 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 			continue
 		}
 
+		// This fetches top 10,000 runs for a particular pipeline.
+		// Unfortunately, there's no way to fetch the latest run for a pipeline.
+		// Additionally, this endpoint doesn't support the filters we require
+		// - fetching only X amount of runs
+		// - fetching only those runs that have completed
+		// https://learn.microsoft.com/en-us/rest/api/azure/devops/pipelines/runs/list?view=azure-devops-rest-7.1
 		runs, err := pipelineClient.ListRuns(ctx, pipelines.ListRunsArgs{PipelineId: pipeline.Id, Project: &projectID})
 		if err != nil {
 			return results.ErrorMessage(fmt.Errorf("failed to get runs (pipeline=%s): %w", check.Pipeline, err))
 		}
 
-		if len(*runs) == 0 {
+		latestRun := getLatestCompletedRun(*runs)
+		if latestRun == nil {
 			continue
 		}
-		latestRun := (*runs)[0]
 
 		if !matchPipelineVariables(check.Variables, latestRun.Variables) {
 			continue
 		}
 
-		// Need to query the Run once again to get more details about it
+		// Need to query the Run API to get more details about it
 		// because the ListRuns API doesn't return Resources.
-		if latestRunDetail, err := pipelineClient.GetRun(ctx, pipelines.GetRunArgs{Project: &projectID, PipelineId: pipeline.Id, RunId: (*runs)[0].Id}); err != nil {
+		latestRun, err = pipelineClient.GetRun(ctx, pipelines.GetRunArgs{Project: &projectID, PipelineId: pipeline.Id, RunId: (*runs)[0].Id})
+		if err != nil {
 			return results.ErrorMessage(fmt.Errorf("failed to get run (pipeline=%s): %w", check.Pipeline, err))
-		} else {
-			latestRun = *latestRunDetail
 		}
 
 		if !matchBranchNames(check.Branches, latestRun.Resources) {
@@ -96,8 +101,9 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 
 		if check.ThresholdMillis != nil {
 			runDuration := latestRun.FinishedDate.Time.Sub(latestRun.CreatedDate.Time)
-			if runDuration > time.Duration(*check.ThresholdMillis)*time.Millisecond {
-				return results.Failf("Runtime:%v was over the threshold:%v", runDuration, *check.ThresholdMillis)
+			threhold := time.Duration(*check.ThresholdMillis) * time.Millisecond
+			if runDuration > threhold {
+				return results.Failf("Runtime:%v was over the threshold:%v", runDuration, threhold)
 			}
 		}
 
@@ -107,6 +113,24 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 	}
 
 	return results
+}
+
+// getLatestCompletedRun returns the latest completed pipeline run.
+// It assumes that the runs are ordered by completion date in descending order.
+func getLatestCompletedRun(runs []pipelines.Run) *pipelines.Run {
+	if len(runs) == 0 {
+		return nil
+	}
+
+	for _, run := range runs {
+		if *run.State != pipelines.RunStateValues.Completed {
+			continue
+		}
+
+		return &run
+	}
+
+	return nil
 }
 
 func matchPipelineVariables(want map[string]string, got *map[string]pipelines.Variable) bool {
