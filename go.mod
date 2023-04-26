@@ -41,6 +41,7 @@ require (
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/liamylian/jsontime/v2 v2.0.0
 	github.com/lib/pq v1.10.7
+	github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0
 	github.com/microsoft/go-mssqldb v0.21.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.27.6

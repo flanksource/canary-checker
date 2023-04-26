@@ -1846,6 +1846,8 @@ github.com/matttproud/golang_protobuf_extensions v1.0.4 h1:mmDVorXM7PCGKw94cs5zk
 github.com/matttproud/golang_protobuf_extensions v1.0.4/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
 github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2/go.mod h1:eD9eIE7cdwcMi9rYluz88Jz2VyhSmden33/aXg4oVIY=
 github.com/microsoft/ApplicationInsights-Go v0.4.4/go.mod h1:fKRUseBqkw6bDiXTs3ESTiU/4YTIHsQS4W3fP2ieF4U=
+github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0 h1:mmJCWLe63QvybxhW1iBmQWEaCKdc4SKgALfTNZ+OphU=
+github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0/go.mod h1:mDunUZ1IUJdJIRHvFb+LPBUtxe3AYB5MI6BMXNg8194=
 github.com/microsoft/go-mssqldb v0.18.0/go.mod h1:ukJCBnnzLzpVF0qYRT+eg1e+eSwjeQ7IvenUv8QPook=
 github.com/microsoft/go-mssqldb v0.21.0 h1:p2rpHIL7TlSv1QrbXJUAcbyRKnIT0C9rRkH2E4OjLn8=
 github.com/microsoft/go-mssqldb v0.21.0/go.mod h1:+4wZTUnz/SV6nffv+RRRB/ss8jPng5Sho2SmM1l2ts4=
