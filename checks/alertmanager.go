@@ -8,6 +8,8 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/duty"
 	alertmanagerClient "github.com/prometheus/alertmanager/api/v2/client"
 	alertmanagerAlert "github.com/prometheus/alertmanager/api/v2/client/alert"
 )
@@ -31,6 +33,12 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	var results pkg.Results
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
+
+	if connection, err := duty.FindConnectionByURL(ctx, db.Gorm, check.Host); err != nil {
+		return results.Failf("failed to find connection from %q: %w", check.Host, err)
+	} else if connection != nil {
+		check.Host = connection.URL
+	}
 
 	client := alertmanagerClient.NewHTTPClientWithConfig(nil, &alertmanagerClient.TransportConfig{
 		Host:     check.GetEndpoint(),

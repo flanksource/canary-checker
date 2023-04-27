@@ -1,13 +1,16 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
+	"gorm.io/gorm"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -744,6 +747,8 @@ func (c KubernetesCheck) CheckReady() bool {
 }
 
 type AWSConnection struct {
+	// Name of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+	Name      string         `yaml:"name,omitempty" json:"name,omitempty"`
 	AccessKey kommons.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
 	SecretKey kommons.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
 	Region    string         `yaml:"region,omitempty" json:"region,omitempty"`
@@ -754,6 +759,27 @@ type AWSConnection struct {
 	ObjectPath string `yaml:"objectPath,omitempty" json:"objectPath,omitempty"`
 	// Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY
 	UsePathStyle bool `yaml:"usePathStyle,omitempty" json:"usePathStyle,omitempty"`
+}
+
+// FindConnection attempts to find the connection by name
+// and populates the endpoint, accessKey and secretKey.
+func (t *AWSConnection) FindConnection(ctx context.Context, db *gorm.DB) error {
+	if t.Name == "" {
+		return nil
+	}
+
+	connection, err := duty.FindConnectionByURL(ctx, db, t.Name)
+	if err != nil {
+		return err
+	}
+
+	if connection != nil {
+		t.AccessKey.Value = connection.Username
+		t.SecretKey.Value = connection.Password
+		t.Endpoint = connection.URL
+	}
+
+	return nil
 }
 
 type GCPConnection struct {

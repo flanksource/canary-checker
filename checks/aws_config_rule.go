@@ -13,6 +13,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	awsUtil "github.com/flanksource/canary-checker/pkg/clients/aws"
+	"github.com/flanksource/canary-checker/pkg/db"
 )
 
 type AwsConfigRuleChecker struct {
@@ -41,6 +42,11 @@ func (c *AwsConfigRuleChecker) Check(ctx *context.Context, extConfig external.Ch
 	if check.AWSConnection == nil {
 		check.AWSConnection = &v1.AWSConnection{}
 	}
+
+	if err := check.AWSConnection.FindConnection(ctx, db.Gorm); err != nil {
+		return results.Failf("failed to find connection: %w", err)
+	}
+
 	cfg, err := awsUtil.NewSession(ctx, *check.AWSConnection)
 	if err != nil {
 		return results.Failf("failed to create a session: %v", err)
