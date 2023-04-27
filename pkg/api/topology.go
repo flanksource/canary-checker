@@ -24,10 +24,10 @@ import (
 // @Router /api/topology [get]
 func Topology(c echo.Context) error {
 	params := topology.NewTopologyParams(c.QueryParams())
-	results, err := topology.Query(params)
+	topologyResponse, err := topology.Query(params)
 	if err != nil {
 		return errorResonse(c, err, http.StatusBadRequest)
 	}
 
-	return c.JSON(http.StatusOK, results)
+	return c.JSON(http.StatusOK, topologyResponse)
 }

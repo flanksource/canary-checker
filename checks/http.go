@@ -9,6 +9,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/commons/text"
+	"github.com/flanksource/duty"
 	"github.com/flanksource/kommons"
 	"github.com/pkg/errors"
 
@@ -17,6 +18,7 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/http"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/utils"
@@ -101,17 +103,23 @@ func truncate(text string, max int) string {
 	return text[0:max]
 }
 
-// CheckConfig : Check every record of DNS name against config information
-// Returns check result and metrics
-
 func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.HTTPCheck)
 	var results pkg.Results
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
+
+	// Attempt to look for a connection from the HTTP endpoint.
+	if connection, err := duty.FindConnectionByURL(ctx, db.Gorm, check.Endpoint); err != nil {
+		return results.ErrorMessage(fmt.Errorf("failed to find connection from endpoint(%s): %w", check.Endpoint, err))
+	} else if connection != nil {
+		check.Endpoint = connection.URL
+	}
+
 	if _, err := url.Parse(check.Endpoint); err != nil {
 		return results.ErrorMessage(err)
 	}
+
 	var err error
 	endpoint := check.Endpoint
 	body := check.Body

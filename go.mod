@@ -8,7 +8,7 @@ require (
 	github.com/allegro/bigcache v1.2.1
 	github.com/antonmedv/expr v1.12.5
 	github.com/asecurityteam/rolling v2.0.4+incompatible
-	github.com/aws/aws-sdk-go v1.44.252
+	github.com/aws/aws-sdk-go v1.44.256
 	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.22
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.21
@@ -21,7 +21,7 @@ require (
 	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
 	github.com/elastic/go-elasticsearch/v8 v8.1.0
 	github.com/fergusstrange/embedded-postgres v1.21.0
-	github.com/flanksource/commons v1.9.0
+	github.com/flanksource/commons v1.10.0
 	github.com/flanksource/duty v1.0.77
 	github.com/flanksource/kommons v0.31.1
 	github.com/friendsofgo/errors v0.9.2
@@ -63,7 +63,7 @@ require (
 	golang.org/x/crypto v0.8.0
 	golang.org/x/net v0.9.0
 	golang.org/x/sync v0.1.0
-	google.golang.org/api v0.120.0
+	google.golang.org/api v0.121.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
 	gopkg.in/flanksource/yaml.v3 v3.2.2
 	gorm.io/gorm v1.25.0
@@ -77,7 +77,7 @@ require (
 
 require (
 	ariga.io/atlas v0.10.1 // indirect
-	cloud.google.com/go v0.110.0 // indirect
+	cloud.google.com/go v0.110.1 // indirect
 	cloud.google.com/go/compute v1.19.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.0.0 // indirect
@@ -89,7 +89,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/PaesslerAG/gval v1.0.0 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230426101702-58e86b294756 // indirect
-	github.com/Shopify/ejson v1.3.3 // indirect
+	github.com/Shopify/ejson v1.4.0 // indirect
 	github.com/TomOnTime/utfutil v0.0.0-20210710122150-437f72b26edf // indirect
 	github.com/XiaoMi/pegasus-go-client v0.0.0-20210427083443-f3b6b08bc4c2 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
@@ -117,7 +117,7 @@ require (
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/cloudflare/circl v1.3.2 // indirect
+	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -160,7 +160,7 @@ require (
 	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/s2a-go v0.1.2 // indirect
+	github.com/google/s2a-go v0.1.3 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/wire v0.5.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
@@ -251,7 +251,7 @@ require (
 	go.opentelemetry.io/otel v1.13.0 // indirect
 	go.opentelemetry.io/otel/trace v1.13.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
-	go.uber.org/atomic v1.10.0 // indirect
+	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	gocloud.dev v0.29.0 // indirect
@@ -288,3 +288,7 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.13.9 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 )
+
+replace k8s.io/client-go => k8s.io/client-go v0.26.0
+
+replace github.com/flanksource/duty => ../duty
