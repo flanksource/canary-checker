@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/pkg/db"
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -52,6 +53,10 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	defer os.Remove(testPlanFilename) // nolint: errcheck
 	if err != nil {
 		return results.Failf("unable to write test plan file")
+	}
+
+	if err := check.PopulateConnection(ctx, db.Gorm); err != nil {
+		return results.Failf("unable to populate JMeter connection: %v", err)
 	}
 
 	var host string

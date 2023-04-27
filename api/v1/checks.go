@@ -203,7 +203,7 @@ func (c ResticCheck) GetType() string {
 
 type JmeterCheck struct {
 	Description `yaml:",inline" json:",inline"`
-	// Jmx defines tge ConfigMap or Secret reference to get the JMX test plan
+	// Jmx defines the ConfigMap or Secret reference to get the JMX test plan
 	Jmx kommons.EnvVar `yaml:"jmx" json:"jmx"`
 	// Host is the server against which test plan needs to be executed
 	Host string `yaml:"host,omitempty" json:"host,omitempty"`
@@ -223,6 +223,30 @@ func (c JmeterCheck) GetEndpoint() string {
 
 func (c JmeterCheck) GetType() string {
 	return "jmeter"
+}
+
+// PopulateConnection will attempt to populate the host and port from the connection name.
+func (c *JmeterCheck) PopulateConnection(ctx context.Context, db *gorm.DB) error {
+	if c.Host == "" {
+		return nil
+	}
+
+	connection, err := duty.FindConnectionByURL(ctx, db, c.Host)
+	if err != nil {
+		return err
+	}
+
+	if connection != nil {
+		c.Host = connection.URL
+
+		if portRaw, ok := connection.Properties["port"]; ok {
+			if port, err := strconv.Atoi(portRaw); nil == err {
+				c.Port = int32(port)
+			}
+		}
+	}
+
+	return nil
 }
 
 type DockerPullCheck struct {
@@ -288,9 +312,12 @@ func (c ContainerdPushCheck) GetType() string {
 
 type RedisCheck struct {
 	Description `yaml:",inline" json:",inline"`
-	Addr        string          `yaml:"addr" json:"addr" template:"true"`
-	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
-	DB          int             `yaml:"db" json:"db"`
+	// ConnectionName is the name of the connection.
+	// It is used to populate addr, db and auth.
+	ConnectionName string          `yaml:"connectionName,omitempty" json:"connectionName,omitempty"`
+	Addr           string          `yaml:"addr" json:"addr" template:"true"`
+	Auth           *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	DB             int             `yaml:"db" json:"db"`
 }
 
 func (c RedisCheck) GetType() string {

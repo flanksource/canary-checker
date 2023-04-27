@@ -30,18 +30,22 @@ type SQLDetails struct {
 func querySQL(driver string, connection string, query string) (*SQLDetails, error) {
 	db, err := sql.Open(driver, connection)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to db: %s", err.Error())
+		return nil, fmt.Errorf("failed to connect to db: %w", err)
 	}
 	defer db.Close()
+
 	rows, err := db.Query(query)
 	result := SQLDetails{}
 	if err != nil || rows.Err() != nil {
-		return nil, fmt.Errorf("failed to query db: %s", err.Error())
+		return nil, fmt.Errorf("failed to query db: %w", err)
 	}
+	defer rows.Close()
+
 	columns, err := rows.Columns()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get columns")
+		return nil, fmt.Errorf("failed to get columns: %w", err)
 	}
+
 	for rows.Next() {
 		var rowValues = make([]interface{}, len(columns))
 		for i := range rowValues {
@@ -51,6 +55,7 @@ func querySQL(driver string, connection string, query string) (*SQLDetails, erro
 		if err := rows.Scan(rowValues...); err != nil {
 			return nil, err
 		}
+
 		var row = make(map[string]interface{})
 		for i, val := range rowValues {
 			v := *val.(*sql.NullString)
@@ -60,8 +65,10 @@ func querySQL(driver string, connection string, query string) (*SQLDetails, erro
 				row[columns[i]] = nil
 			}
 		}
+
 		result.Rows = append(result.Rows, row)
 	}
+
 	result.Count = len(result.Rows)
 	return &result, nil
 }
@@ -76,6 +83,7 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 	result := pkg.Success(checker.GetCheck(), ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
+
 	connection, err := GetConnection(ctx, &check.Connection, ctx.Namespace)
 	if err != nil {
 		return results.ErrorMessage(err)
@@ -88,9 +96,11 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
+
 	result.AddDetails(details)
 	if details.Count < check.Result {
-		return results.Failf("Query return %d rows, expected %d", details.Count, check.Result)
+		return results.Failf("Query returned %d rows, expected %d", details.Count, check.Result)
 	}
+
 	return results
 }
