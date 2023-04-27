@@ -164,7 +164,7 @@ func matchBranchNames(branches []string, resources *pipelines.RunResources) bool
 		return false
 	}
 
-	branchName := getBranchName(resources)
+	branchName := extractBranchName(resources)
 	for _, w := range branches {
 		if branchName == w {
 			return true
@@ -174,9 +174,9 @@ func matchBranchNames(branches []string, resources *pipelines.RunResources) bool
 	return false
 }
 
-// getBranchName extracts the name of the branch from a RunResources object.
+// extractBranchName extracts the name of the branch from a RunResources object.
 // The branch name is extracted from the refname which is of the form "refs/heads/2pm".
-func getBranchName(got *pipelines.RunResources) string {
+func extractBranchName(got *pipelines.RunResources) string {
 	repo, ok := (*got.Repositories)["self"]
 	if !ok {
 		return ""
