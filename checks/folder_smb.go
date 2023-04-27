@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/hirochachacha/go-smb2"
 )
 
@@ -72,15 +73,24 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 	namespace := ctx.Canary.Namespace
+
 	var serverPath = strings.TrimPrefix(check.Path, "smb://")
-	server, sharename, path, err := getServerDetails(serverPath)
+	server, sharename, path, err := extractServerDetails(serverPath)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
 
-	auth, err := GetAuthValues(check.SMBConnection.Auth, ctx.Kommons, namespace)
+	foundConn, err := check.SMBConnection.PopulateFromConnection(ctx, db.Gorm)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Failf("failed to populate SMB connection: %w", err)
+	}
+
+	auth := check.SMBConnection.Auth
+	if !foundConn {
+		auth, err = GetAuthValues(check.SMBConnection.Auth, ctx.Kommons, namespace)
+		if err != nil {
+			return results.ErrorMessage(err)
+		}
 	}
 
 	session, totalBlockCount, freeBlockCount, blockSize, err := smbConnect(server, check.SMBConnection.GetPort(), sharename, auth)
@@ -110,7 +120,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	return results
 }
 
-func getServerDetails(serverPath string) (server, sharename, searchPath string, err error) {
+func extractServerDetails(serverPath string) (server, sharename, searchPath string, err error) {
 	serverPath = strings.TrimLeft(serverPath, "\\")
 	if serverPath == "" {
 		return "", "", "", fmt.Errorf("empty path specified")

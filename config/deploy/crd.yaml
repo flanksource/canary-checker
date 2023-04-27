@@ -236,6 +236,9 @@ spec:
                             type: object
                           endpoint:
                             type: string
+                          name:
+                            description: Name of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                            type: string
                           objectPath:
                             description: glob path to restrict matches to a subset
                             type: string
@@ -372,6 +375,9 @@ spec:
                                 type: object
                             type: object
                           endpoint:
+                            type: string
+                          name:
+                            description: Name of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                             type: string
                           objectPath:
                             description: glob path to restrict matches to a subset
@@ -973,6 +979,9 @@ spec:
                                     type: object
                                 type: object
                               endpoint:
+                                type: string
+                              name:
+                                description: Name of the connection. It'll be used to populate the endpoint and credentials.
                                 type: string
                             type: object
                           instance:
@@ -1659,6 +1668,9 @@ spec:
                             type: object
                           endpoint:
                             type: string
+                          name:
+                            description: Name of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                            type: string
                           objectPath:
                             description: glob path to restrict matches to a subset
                             type: string
@@ -1765,6 +1777,9 @@ spec:
                                 type: object
                             type: object
                           endpoint:
+                            type: string
+                          name:
+                            description: Name of the connection. It'll be used to populate the endpoint and credentials.
                             type: string
                         type: object
                       icon:
@@ -1873,6 +1888,9 @@ spec:
                             type: object
                           host:
                             type: string
+                          name:
+                            description: Name of the connection. It'll be used to populate the connection fields.
+                            type: string
                           port:
                             description: Port for the SSH server. Defaults to 22
                             type: integer
@@ -1955,6 +1973,9 @@ spec:
                           domain:
                             description: Domain...
                             type: string
+                          name:
+                            description: Name of the connection. It'll be used to populate the connection fields.
+                            type: string
                           port:
                             description: Port on which smb server is running. Defaults to 445
                             type: integer
@@ -2019,6 +2040,8 @@ spec:
                         type: object
                       githubToken:
                         properties:
+                          connection:
+                            type: string
                           name:
                             type: string
                           value:
@@ -2031,19 +2054,17 @@ spec:
                                     type: string
                                   name:
                                     type: string
-                                  optional:
-                                    type: boolean
                                 required:
                                   - key
                                 type: object
+                              connection:
+                                type: string
                               secretKeyRef:
                                 properties:
                                   key:
                                     type: string
                                   name:
                                     type: string
-                                  optional:
-                                    type: boolean
                                 required:
                                   - key
                                 type: object

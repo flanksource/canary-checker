@@ -8,6 +8,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/clients/gcp"
+	"github.com/flanksource/canary-checker/pkg/db"
 )
 
 type GCS struct {
@@ -19,6 +20,11 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
+
+	if err := check.GCPConnection.PopulateFromConnection(ctx, db.Gorm); err != nil {
+		return results.Failf("failed to populate GCP connection: %w", err)
+	}
+
 	cfg, err := gcp.NewSession(ctx, check.GCPConnection)
 	if err != nil {
 		return results.ErrorMessage(err)

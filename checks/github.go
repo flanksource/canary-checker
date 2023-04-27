@@ -10,6 +10,8 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/duty"
 )
 
 func init() {
@@ -36,16 +38,27 @@ func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	_, githubToken, err := ctx.Kommons.GetEnvValue(*check.GithubToken, ctx.Canary.GetNamespace())
-	if err != nil {
-		return results.Failf("error fetching github token: %v", err)
+
+	var githubToken string
+	if connection, err := duty.FindConnectionFromEnvVar(ctx, db.Gorm, check.GithubToken); err != nil {
+		return results.Failf("failed to find connection for github token: %w", err)
+	} else if connection != nil {
+		githubToken = connection.Password
+	} else {
+		// TODO: Get kubernetes interface
+		githubToken, err = duty.GetEnvValueFromCache(nil, check.GithubToken, ctx.Canary.GetNamespace())
+		if err != nil {
+			return results.Failf("error fetching github token from env cache: %w", err)
+		}
 	}
+
 	askGitCmd := fmt.Sprintf("GITHUB_TOKEN=%v askgit \"%v\" --format json", githubToken, check.Query)
 	cmd := osExec.Command("bash", "-c", askGitCmd)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return results.Failf("error executing askgit command: %v", err)
 	}
+
 	rows := string(output)
 	var rowResults = make([]map[string]string, 0)
 	for _, row := range strings.Split(rows, "\n") {

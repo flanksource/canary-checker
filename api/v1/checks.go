@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -419,6 +420,21 @@ func (c ElasticsearchCheck) GetEndpoint() string {
 	return c.URL
 }
 
+func (c ElasticsearchCheck) PopulateConnection(ctx context.Context, db *gorm.DB) error {
+	connection, err := duty.FindConnectionByURL(ctx, db, c.URL)
+	if err != nil {
+		return err
+	}
+
+	if connection != nil {
+		c.URL = connection.URL
+		c.Auth.Username.Value = connection.Username
+		c.Auth.Password.Value = connection.Password
+	}
+
+	return nil
+}
+
 /*
 [include:datasources/alertmanager_pass.yaml]
 */
@@ -612,6 +628,8 @@ func (c JunitCheck) GetType() string {
 }
 
 type SMBConnection struct {
+	// Name of the connection. It'll be used to populate the connection fields.
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
 	//Port on which smb server is running. Defaults to 445
 	Port int             `yaml:"port,omitempty" json:"port,omitempty"`
 	Auth *Authentication `yaml:"auth" json:"auth"`
@@ -632,11 +650,83 @@ func (c SMBConnection) GetPort() int {
 	return 445
 }
 
+func (c *SMBConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB) (found bool, err error) {
+	if c.Name == "" {
+		return false, nil
+	}
+
+	connection, err := duty.FindConnectionByURL(ctx, db, c.Name)
+	if err != nil {
+		return false, err
+	}
+
+	if connection == nil {
+		return false, nil
+	}
+
+	c.Domain = connection.URL
+	c.Auth = &Authentication{
+		Username: kommons.EnvVar{Value: connection.Username},
+		Password: kommons.EnvVar{Value: connection.Password},
+	}
+
+	if workstation, ok := connection.Properties["workstation"]; ok {
+		c.Workstation = workstation
+	}
+
+	if sharename, ok := connection.Properties["sharename"]; ok {
+		c.Sharename = sharename
+	}
+
+	if searchPath, ok := connection.Properties["searchPath"]; ok {
+		c.SearchPath = searchPath
+	}
+
+	if portRaw, ok := connection.Properties["port"]; ok {
+		if port, err := strconv.Atoi(portRaw); nil == err {
+			c.Port = port
+		}
+	}
+
+	return true, nil
+}
+
 type SFTPConnection struct {
+	// Name of the connection. It'll be used to populate the connection fields.
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
 	// Port for the SSH server. Defaults to 22
 	Port int             `yaml:"port,omitempty" json:"port,omitempty"`
 	Host string          `yaml:"host" json:"host"`
 	Auth *Authentication `yaml:"auth" json:"auth"`
+}
+
+func (c *SFTPConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB) (found bool, err error) {
+	if c.Name == "" {
+		return false, nil
+	}
+
+	connection, err := duty.FindConnectionByURL(ctx, db, c.Name)
+	if err != nil {
+		return false, err
+	}
+
+	if connection == nil {
+		return false, nil
+	}
+
+	c.Host = connection.URL
+	c.Auth = &Authentication{
+		Username: kommons.EnvVar{Value: connection.Username},
+		Password: kommons.EnvVar{Value: connection.Password},
+	}
+
+	if portRaw, ok := connection.Properties["port"]; ok {
+		if port, err := strconv.Atoi(portRaw); nil == err {
+			c.Port = port
+		}
+	}
+
+	return true, nil
 }
 
 func (c SFTPConnection) GetPort() int {
@@ -688,8 +778,8 @@ type GitHubCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 	// Query to be executed. Please see https://github.com/askgitdev/askgit for more details regarding syntax
-	Query       string          `yaml:"query" json:"query"`
-	GithubToken *kommons.EnvVar `yaml:"githubToken,omitempty" json:"githubToken,omitempty"`
+	Query       string       `yaml:"query" json:"query"`
+	GithubToken types.EnvVar `yaml:"githubToken,omitempty" json:"githubToken,omitempty"`
 }
 
 func (c GitHubCheck) GetType() string {
@@ -761,9 +851,9 @@ type AWSConnection struct {
 	UsePathStyle bool `yaml:"usePathStyle,omitempty" json:"usePathStyle,omitempty"`
 }
 
-// FindConnection attempts to find the connection by name
-// and populates the endpoint, accessKey and secretKey.
-func (t *AWSConnection) FindConnection(ctx context.Context, db *gorm.DB) error {
+// PopulateFromConnection attempts to find the connection by name
+// and populate the endpoint, accessKey and secretKey.
+func (t *AWSConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB) error {
 	if t.Name == "" {
 		return nil
 	}
@@ -783,6 +873,8 @@ func (t *AWSConnection) FindConnection(ctx context.Context, db *gorm.DB) error {
 }
 
 type GCPConnection struct {
+	// Name of the connection. It'll be used to populate the endpoint and credentials.
+	Name        string          `yaml:"name,omitempty" json:"name,omitempty"`
 	Endpoint    string          `yaml:"endpoint" json:"endpoint,omitempty"`
 	Credentials *kommons.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
 }
@@ -792,6 +884,26 @@ func (g *GCPConnection) Validate() *GCPConnection {
 		return &GCPConnection{}
 	}
 	return g
+}
+
+// PopulateFromConnection attempts to find the connection by name
+// and populate the endpoint and credentials.
+func (t *GCPConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB) error {
+	if t.Name == "" {
+		return nil
+	}
+
+	connection, err := duty.FindConnectionByURL(ctx, db, t.Name)
+	if err != nil {
+		return err
+	}
+
+	if connection != nil {
+		t.Credentials.Value = connection.Password
+		t.Endpoint = connection.URL
+	}
+
+	return nil
 }
 
 type FolderCheck struct {

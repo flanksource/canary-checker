@@ -12,6 +12,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/clients/gcp"
+	"github.com/flanksource/canary-checker/pkg/db"
 )
 
 var (
@@ -29,11 +30,16 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 	var results pkg.Results
 	results = append(results, result)
 
+	if err := check.GCP.PopulateFromConnection(ctx, db.Gorm); err != nil {
+		return results.Failf("failed to populate GCP connection: %w", err)
+	}
+
 	svc, err := gcp.NewSQLAdmin(ctx, check.GCP.GCPConnection)
 	if err != nil {
 		databaseScanFailCount.WithLabelValues(check.GCP.Project, check.GCP.Instance).Inc()
 		return results.ErrorMessage(err)
 	}
+
 	// Only checking one backup for now, but setting up the logic that this could maybe be configurable.
 	// Would need some extra parsing on the age to select latest
 	backupList, err := svc.BackupRuns.List(check.GCP.Project, check.GCP.Instance).MaxResults(1).Do()

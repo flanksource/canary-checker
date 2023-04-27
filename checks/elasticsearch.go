@@ -7,6 +7,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/canary-checker/pkg/db"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -33,6 +34,10 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
+
+	if err := check.PopulateConnection(ctx, db.Gorm); err != nil {
+		return results.Failf("Failed to find connection for elastic search: %w", err)
+	}
 
 	cfg := elasticsearch.Config{
 		Addresses: []string{check.GetEndpoint()},

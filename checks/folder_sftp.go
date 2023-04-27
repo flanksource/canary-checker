@@ -6,6 +6,7 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
@@ -14,15 +15,24 @@ func CheckSFTP(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	auth, err := GetAuthValues(check.SFTPConnection.Auth, ctx.Kommons, ctx.Canary.Namespace)
+
+	foundConn, err := check.SFTPConnection.PopulateFromConnection(ctx, db.Gorm)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Failf("failed to populate SFTP connection: %w", err)
 	}
+
+	auth := check.SFTPConnection.Auth
+	if !foundConn {
+		auth, err = GetAuthValues(check.SFTPConnection.Auth, ctx.Kommons, ctx.Canary.Namespace)
+		if err != nil {
+			return results.ErrorMessage(err)
+		}
+	}
+
 	conn, err := sshConnect(check.SFTPConnection.Host, check.SFTPConnection.GetPort(), auth.GetUsername(), auth.GetPassword())
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
-
 	defer conn.Close()
 
 	client, err := sftp.NewClient(conn)

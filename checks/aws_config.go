@@ -9,6 +9,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	awsUtil "github.com/flanksource/canary-checker/pkg/clients/aws"
+	"github.com/flanksource/canary-checker/pkg/db"
 )
 
 type AwsConfigChecker struct {
@@ -34,13 +35,18 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
+
 	if check.AWSConnection == nil {
 		check.AWSConnection = &v1.AWSConnection{}
+	} else if err := check.AWSConnection.PopulateFromConnection(ctx, db.Gorm); err != nil {
+		return results.Failf("failed to populate aws connection: %w", err)
 	}
+
 	cfg, err := awsUtil.NewSession(ctx, *check.AWSConnection)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
+
 	client := configservice.NewFromConfig(*cfg)
 	if check.AggregatorName != nil {
 		output, err := client.SelectAggregateResourceConfig(ctx, &configservice.SelectAggregateResourceConfigInput{
@@ -60,5 +66,6 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 		}
 		result.AddDetails(output.Results)
 	}
+
 	return results
 }
