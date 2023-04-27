@@ -50,7 +50,7 @@ require (
 	github.com/pkg/sftp v1.13.5
 	github.com/prometheus/alertmanager v0.25.0
 	github.com/prometheus/client_golang v1.14.0
-	github.com/prometheus/common v0.39.0
+	github.com/prometheus/common v0.42.0
 	github.com/robertkrimen/otto v0.2.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sevennt/echo-pprof v0.1.1-0.20220616082843-66a461746b5f
