@@ -29,7 +29,7 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	if check.AWSConnection == nil {
 		check.AWSConnection = &v1.AWSConnection{}
 	} else if err := check.AWSConnection.PopulateFromConnection(ctx, db.Gorm); err != nil {
-		return results.Failf("failed to populate aws connection: %w", err)
+		return results.Failf("failed to populate aws connection: %v", err)
 	}
 
 	cfg, err := awsUtil.NewSession(ctx, *check.AWSConnection)

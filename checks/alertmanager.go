@@ -35,7 +35,7 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	results = append(results, result)
 
 	if connection, err := duty.FindConnectionByURL(ctx, db.Gorm, check.Host); err != nil {
-		return results.Failf("failed to find connection from %q: %w", check.Host, err)
+		return results.Failf("failed to find connection from %q: %v", check.Host, err)
 	} else if connection != nil {
 		check.Host = connection.URL
 	}

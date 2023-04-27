@@ -76,7 +76,7 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 		return results.Failf("unknown query type: %s", queryType)
 	} else {
 		if connection, err := duty.FindConnectionByURL(ctx, db.Gorm, check.Query); err != nil {
-			return results.Failf("failed to find connection from %q: %w", check.Query, err)
+			return results.Failf("failed to find connection from %q: %v", check.Query, err)
 		} else if connection != nil {
 			check.Query = connection.URL
 		}

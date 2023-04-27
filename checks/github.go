@@ -41,14 +41,18 @@ func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 
 	var githubToken string
 	if connection, err := duty.FindConnectionFromEnvVar(ctx, db.Gorm, check.GithubToken); err != nil {
-		return results.Failf("failed to find connection for github token: %w", err)
+		return results.Failf("failed to find connection for github token: %v", err)
 	} else if connection != nil {
 		githubToken = connection.Password
 	} else {
-		// TODO: Get kubernetes interface
-		githubToken, err = duty.GetEnvValueFromCache(nil, check.GithubToken, ctx.Canary.GetNamespace())
+		k8Client, err := ctx.Kommons.GetClientset()
 		if err != nil {
-			return results.Failf("error fetching github token from env cache: %w", err)
+			return results.Failf("error getting k8s client from kommons client: %v", err)
+		}
+
+		githubToken, err = duty.GetEnvValueFromCache(k8Client, check.GithubToken, ctx.Canary.GetNamespace())
+		if err != nil {
+			return results.Failf("error fetching github token from env cache: %v", err)
 		}
 	}
 

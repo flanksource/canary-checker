@@ -420,7 +420,7 @@ func (c ElasticsearchCheck) GetEndpoint() string {
 	return c.URL
 }
 
-func (c ElasticsearchCheck) PopulateConnection(ctx context.Context, db *gorm.DB) error {
+func (c *ElasticsearchCheck) PopulateConnection(ctx context.Context, db *gorm.DB) error {
 	connection, err := duty.FindConnectionByURL(ctx, db, c.URL)
 	if err != nil {
 		return err
@@ -837,12 +837,14 @@ func (c KubernetesCheck) CheckReady() bool {
 }
 
 type AWSConnection struct {
-	// Name of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
-	Name      string         `yaml:"name,omitempty" json:"name,omitempty"`
-	AccessKey kommons.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
-	SecretKey kommons.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
-	Region    string         `yaml:"region,omitempty" json:"region,omitempty"`
-	Endpoint  string         `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
+	// ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+	// It's named "connectionName" instead of just "name" to avoid collision since CloudWatch and EC2 check
+	// embeds this struct.
+	ConnectionName string         `yaml:"connectionName,omitempty" json:"connectionName,omitempty"`
+	AccessKey      kommons.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
+	SecretKey      kommons.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
+	Region         string         `yaml:"region,omitempty" json:"region,omitempty"`
+	Endpoint       string         `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
 	// Skip TLS verify when connecting to aws
 	SkipTLSVerify bool `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
 	// glob path to restrict matches to a subset
@@ -854,11 +856,11 @@ type AWSConnection struct {
 // PopulateFromConnection attempts to find the connection by name
 // and populate the endpoint, accessKey and secretKey.
 func (t *AWSConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB) error {
-	if t.Name == "" {
+	if t.ConnectionName == "" {
 		return nil
 	}
 
-	connection, err := duty.FindConnectionByURL(ctx, db, t.Name)
+	connection, err := duty.FindConnectionByURL(ctx, db, t.ConnectionName)
 	if err != nil {
 		return err
 	}
@@ -888,19 +890,19 @@ func (g *GCPConnection) Validate() *GCPConnection {
 
 // PopulateFromConnection attempts to find the connection by name
 // and populate the endpoint and credentials.
-func (t *GCPConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB) error {
-	if t.Name == "" {
+func (g *GCPConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB) error {
+	if g.Name == "" {
 		return nil
 	}
 
-	connection, err := duty.FindConnectionByURL(ctx, db, t.Name)
+	connection, err := duty.FindConnectionByURL(ctx, db, g.Name)
 	if err != nil {
 		return err
 	}
 
 	if connection != nil {
-		t.Credentials.Value = connection.Password
-		t.Endpoint = connection.URL
+		g.Credentials.Value = connection.Password
+		g.Endpoint = connection.URL
 	}
 
 	return nil
@@ -1256,6 +1258,7 @@ type DatabaseBackup struct {
 type EC2 struct {
 	EC2Check `yaml:",inline" json:",inline"`
 }
+
 type EC2Check struct {
 	Description   `yaml:",inline" json:",inline"`
 	AWSConnection `yaml:",inline" json:",inline"`

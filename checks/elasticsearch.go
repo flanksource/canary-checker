@@ -36,7 +36,7 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 	results = append(results, result)
 
 	if err := check.PopulateConnection(ctx, db.Gorm); err != nil {
-		return results.Failf("Failed to find connection for elastic search: %w", err)
+		return results.Failf("Failed to find connection for elastic search: %v", err)
 	}
 
 	cfg := elasticsearch.Config{

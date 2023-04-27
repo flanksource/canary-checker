@@ -5,8 +5,10 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/duty"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/dns"
 	"github.com/go-ping/ping"
 	"github.com/prometheus/client_golang/prometheus"
@@ -50,10 +52,17 @@ func (c *IcmpChecker) Run(ctx *context.Context) pkg.Results {
 // Returns check result and metrics
 func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.ICMPCheck)
-	endpoint := check.Endpoint
 	var results pkg.Results
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
+
+	if connection, err := duty.FindConnectionByURL(ctx, db.Gorm, check.Endpoint); err != nil {
+		return results.Failf("failed to find connection from %q: %v", check.Endpoint, err)
+	} else if connection != nil {
+		check.Endpoint = connection.URL
+	}
+
+	endpoint := check.Endpoint
 	ips, err := dns.Lookup("A", endpoint)
 	if err != nil {
 		return results.ErrorMessage(err)
@@ -85,6 +94,7 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		packetLoss.WithLabelValues(endpoint, ips[0].String()).Set(loss)
 		return results //nolint
 	}
+
 	return results.Failf("no IP found for %s", endpoint)
 }
 

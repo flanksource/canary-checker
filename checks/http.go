@@ -111,7 +111,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	// Attempt to look for a connection from the HTTP endpoint.
 	if connection, err := duty.FindConnectionByURL(ctx, db.Gorm, check.Endpoint); err != nil {
-		return results.Failf("failed to find connection from %q: %w", check.Endpoint, err)
+		return results.Failf("failed to find connection from %q: %v", check.Endpoint, err)
 	} else if connection != nil {
 		check.Endpoint = connection.URL
 	}

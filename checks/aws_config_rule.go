@@ -44,7 +44,7 @@ func (c *AwsConfigRuleChecker) Check(ctx *context.Context, extConfig external.Ch
 	}
 
 	if err := check.AWSConnection.PopulateFromConnection(ctx, db.Gorm); err != nil {
-		return results.Failf("failed to populate aws connection: %w", err)
+		return results.Failf("failed to populate aws connection: %v", err)
 	}
 
 	cfg, err := awsUtil.NewSession(ctx, *check.AWSConnection)
