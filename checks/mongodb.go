@@ -6,6 +6,8 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/duty"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -36,26 +38,41 @@ func (c *MongoDBChecker) Check(ctx *context.Context, extConfig external.Check) p
 	results = append(results, result)
 	var err error
 
-	connection, err := GetConnection(ctx, &check.Connection, ctx.Namespace)
+	k8sClient, err := ctx.Kommons.GetClientset()
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Failf("error getting k8s client from kommons client: %v", err)
+	}
+
+	var dbConnectionString string
+	if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.Connection.Connection); err != nil {
+		return results.Failf("error getting connection: %v", err)
+	} else if connection != nil {
+		dbConnectionString = connection.URL
+	} else {
+		dbConnectionString, err = GetConnection(ctx, &check.Connection, ctx.Namespace)
+		if err != nil {
+			return results.ErrorMessage(err)
+		}
 	}
 
 	opts := options.Client().
-		ApplyURI(connection).
+		ApplyURI(dbConnectionString).
 		SetConnectTimeout(3 * time.Second).
 		SetSocketTimeout(3 * time.Second)
 
 	_ctx, cancel := gocontext.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
+
 	client, err := mongo.Connect(_ctx, opts)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
 	defer client.Disconnect(ctx) //nolint: errcheck
+
 	err = client.Ping(_ctx, readpref.Primary())
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
+
 	return results
 }

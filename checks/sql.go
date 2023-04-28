@@ -8,6 +8,8 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/duty"
 )
 
 type SQLChecker interface {
@@ -84,15 +86,28 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 	var results pkg.Results
 	results = append(results, result)
 
-	connection, err := GetConnection(ctx, &check.Connection, ctx.Namespace)
+	k8sClient, err := ctx.Kommons.GetClientset()
 	if err != nil {
-		return results.ErrorMessage(err)
-	}
-	if ctx.IsTrace() {
-		ctx.Tracef("connecting to %s", connection)
+		return results.Failf("error getting k8s client from kommons client: %v", err)
 	}
 
-	details, err := querySQL(checker.GetDriver(), connection, check.GetQuery())
+	var dbConnectionString string
+	if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.Connection.Connection); err != nil {
+		return results.Failf("error getting connection: %v", err)
+	} else if connection != nil {
+		dbConnectionString = connection.URL
+	} else {
+		dbConnectionString, err = GetConnection(ctx, &check.Connection, ctx.Namespace)
+		if err != nil {
+			return results.ErrorMessage(err)
+		}
+	}
+
+	if ctx.IsTrace() {
+		ctx.Tracef("connecting to %s", dbConnectionString)
+	}
+
+	details, err := querySQL(checker.GetDriver(), dbConnectionString, check.GetQuery())
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

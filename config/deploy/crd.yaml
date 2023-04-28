@@ -3629,6 +3629,9 @@ spec:
                       checkIntegrity:
                         description: CheckIntegrity when enabled will check the Integrity and consistency of the restic reposiotry
                         type: boolean
+                      connection:
+                        description: Name of the connection that'll be used to derive connection details.
+                        type: string
                       description:
                         description: Description for the check
                         type: string

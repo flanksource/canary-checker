@@ -30,7 +30,7 @@ var All = []Checker{
 	&ConfigdbChecker{},
 	&DatabaseBackupChecker{},
 	&DNSChecker{},
-	&EC2Checker{}, // TODO
+	&EC2Checker{},
 	&ElasticsearchChecker{},
 	&ExecChecker{},
 	&FolderChecker{},
@@ -41,10 +41,10 @@ var All = []Checker{
 	&JunitChecker{},      // TODO
 	&KubernetesChecker{}, // TODO
 	&LdapChecker{},
-	&MongoDBChecker{},  // TODO
-	&MssqlChecker{},    // TODO
-	&MysqlChecker{},    // TODO
-	&PostgresChecker{}, // TODO
+	&MongoDBChecker{},
+	&MssqlChecker{},
+	&MysqlChecker{},
+	&PostgresChecker{},
 	&PrometheusChecker{},
 	&RedisChecker{},
 	&ResticChecker{},
