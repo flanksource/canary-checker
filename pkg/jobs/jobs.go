@@ -17,14 +17,14 @@ var FuncScheduler = cron.New()
 func Start() {
 	logger.Infof("Starting jobs ...")
 
-	systemJobs.SystemScheduler.Start()
+	systemJobs.TopologyScheduler.Start()
 	canaryJobs.CanaryScheduler.Start()
 	FuncScheduler.Start()
 
 	if _, err := ScheduleFunc(v1.SyncCanaryJobsSchedule, canaryJobs.SyncCanaryJobs); err != nil {
 		logger.Errorf("Failed to schedule sync jobs for canary: %v", err)
 	}
-	if _, err := ScheduleFunc(v1.SyncSystemsJobsSchedule, systemJobs.SyncSystemsJobs); err != nil {
+	if _, err := ScheduleFunc(v1.SyncSystemsJobsSchedule, systemJobs.SyncTopologyJobs); err != nil {
 		logger.Errorf("Failed to schedule sync jobs for systems: %v", err)
 	}
 	if _, err := ScheduleFunc(v1.ComponentRunSchedule, topology.ComponentRun); err != nil {
@@ -55,7 +55,7 @@ func Start() {
 		logger.Errorf("Failed to schedule check statuses aggregator 1d: %v", err)
 	}
 	canaryJobs.SyncCanaryJobs()
-	systemJobs.SyncSystemsJobs()
+	systemJobs.SyncTopologyJobs()
 }
 
 func ScheduleFunc(schedule string, fn func()) (interface{}, error) {

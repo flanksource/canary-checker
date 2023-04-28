@@ -1,6 +1,6 @@
 #yaml-language-server: $schema=../../generate-schemas/schemas/system.schema.json
 apiVersion: canaries.flanksource.com/v1
-kind: SystemTemplate
+kind: Topology
 metadata:
   name: cluster
   labels:

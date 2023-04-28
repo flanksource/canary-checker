@@ -310,7 +310,7 @@ type TopologyRunOptions struct {
 	Namespace string
 }
 
-func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
+func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
 	if s.Namespace == "" {
 		s.Namespace = opts.Namespace
 	}
@@ -318,33 +318,33 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 	ctx := NewComponentContext(opts.Client, s)
 	var results pkg.Components
 	component := &pkg.Component{
-		Name:      ctx.SystemTemplate.Spec.Text,
-		Namespace: ctx.SystemTemplate.GetNamespace(),
-		Labels:    ctx.SystemTemplate.Labels,
-		Tooltip:   ctx.SystemTemplate.Spec.Tooltip,
-		Icon:      ctx.SystemTemplate.Spec.Icon,
-		Text:      ctx.SystemTemplate.Spec.Text,
-		Type:      ctx.SystemTemplate.Spec.Type,
-		Schedule:  ctx.SystemTemplate.Spec.Schedule,
+		Name:      ctx.Topology.Spec.Text,
+		Namespace: ctx.Topology.GetNamespace(),
+		Labels:    ctx.Topology.Labels,
+		Tooltip:   ctx.Topology.Spec.Tooltip,
+		Icon:      ctx.Topology.Spec.Icon,
+		Text:      ctx.Topology.Spec.Text,
+		Type:      ctx.Topology.Spec.Type,
+		Schedule:  ctx.Topology.Spec.Schedule,
 	}
 
 	if component.Name == "" {
-		component.Name = ctx.SystemTemplate.Name
+		component.Name = ctx.Topology.Name
 	}
 
 	if opts.Depth > 0 {
-		for _, comp := range ctx.SystemTemplate.Spec.Components {
+		for _, comp := range ctx.Topology.Spec.Components {
 			components, err := lookupComponents(ctx, comp)
 			if err != nil {
 				logger.Errorf("Error looking up component %s: %s", comp.Name, err)
 				continue
 			}
-			// add systemTemplates labels to the components
+			// add topology labels to the components
 			for _, component := range components {
 				if component.Labels == nil {
 					component.Labels = make(types.JSONStringMap)
 				}
-				for key, value := range ctx.SystemTemplate.Labels {
+				for key, value := range ctx.Topology.Labels {
 					// don't overwrite the component labels
 					if _, isPresent := component.Labels[key]; !isPresent {
 						component.Labels[key] = value
@@ -368,7 +368,7 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 
 	ctx.Components = &component.Components
 
-	for _, property := range ctx.SystemTemplate.Spec.Properties {
+	for _, property := range ctx.Topology.Spec.Properties {
 		props, err := lookupProperty(ctx, &property)
 		if err != nil {
 			logger.Errorf("Failed to lookup property %s: %v", property.Name, err)
@@ -379,8 +379,8 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 	if len(component.Components) > 0 {
 		component.Summary = component.Components.Summarize()
 	}
-	if component.ID.String() == "" && ctx.SystemTemplate.Spec.Id != nil {
-		id, err := templating.Template(component.GetAsEnvironment(), *ctx.SystemTemplate.Spec.Id)
+	if component.ID.String() == "" && ctx.Topology.Spec.Id != nil {
+		id, err := templating.Template(component.GetAsEnvironment(), *ctx.Topology.Spec.Id)
 		if err != nil {
 			logger.Errorf("Failed to lookup id: %v", err)
 		} else {
@@ -403,25 +403,25 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 	results = append(results, component)
 	logger.Infof("%s id=%s external_id=%s status=%s", component.Name, component.ID, component.ExternalId, component.Status)
 	for _, c := range results.Walk() {
-		c.Namespace = ctx.SystemTemplate.GetNamespace()
-		c.Schedule = ctx.SystemTemplate.Spec.Schedule
+		c.Namespace = ctx.Topology.GetNamespace()
+		c.Schedule = ctx.Topology.Spec.Schedule
 	}
 	return results
 }
 
-func SyncComponents(opts TopologyRunOptions, systemTemplate v1.SystemTemplate) error {
-	components := Run(opts, systemTemplate)
-	systemTemplateID, err := uuid.Parse(systemTemplate.GetPersistedID())
+func SyncComponents(opts TopologyRunOptions, topology v1.Topology) error {
+	components := Run(opts, topology)
+	topologyID, err := uuid.Parse(topology.GetPersistedID())
 	if err != nil {
-		return fmt.Errorf("failed to parse system template id: %w", err)
+		return fmt.Errorf("failed to parse topology id: %w", err)
 	}
 
 	var compIDs []uuid.UUID
 	for _, component := range components {
-		component.Name = systemTemplate.Name
-		component.Namespace = systemTemplate.Namespace
-		component.Labels = systemTemplate.Labels
-		component.SystemTemplateID = &systemTemplateID
+		component.Name = topology.Name
+		component.Namespace = topology.Namespace
+		component.Labels = topology.Labels
+		component.TopologyID = &topologyID
 		componentsIDs, err := db.PersistComponent(component)
 		if err != nil {
 			return fmt.Errorf("failed to persist component(id=%s, name=%s): %w", component.ID, component.Name, err)
@@ -430,9 +430,9 @@ func SyncComponents(opts TopologyRunOptions, systemTemplate v1.SystemTemplate) e
 		compIDs = append(compIDs, componentsIDs...)
 	}
 
-	dbCompsIDs, err := db.GetActiveComponentsIDsWithSystemTemplateID(systemTemplateID.String())
+	dbCompsIDs, err := db.GetActiveComponentsIDsOfTopology(topologyID.String())
 	if err != nil {
-		logger.Errorf("error getting components for system(id=%s): %v", systemTemplateID.String(), err)
+		logger.Errorf("error getting components for system(id=%s): %v", topologyID.String(), err)
 	}
 
 	deleteCompIDs := utils.SetDifference(dbCompsIDs, compIDs)

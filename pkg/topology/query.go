@@ -8,7 +8,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/duty"
-	"github.com/flanksource/duty/models"
 )
 
 const DefaultDepth = 3
@@ -45,6 +44,6 @@ func NewTopologyParams(values url.Values) duty.TopologyOptions {
 	}
 }
 
-func Query(params duty.TopologyOptions) (models.Components, error) {
+func Query(params duty.TopologyOptions) (*duty.TopologyResponse, error) {
 	return duty.QueryTopology(db.Pool, params)
 }

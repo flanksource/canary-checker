@@ -115,7 +115,7 @@ definitions:
         type: string
       summary:
         $ref: '#/definitions/Summary'
-      system_template_id:
+      topology_id:
         description: nolint
         type: string
       text:

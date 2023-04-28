@@ -12,7 +12,7 @@ import (
 
 var schemas = map[string]interface{}{
 	"canary":    &v1.Canary{},
-	"system":    &v1.SystemTemplate{},
+	"topology":  &v1.Topology{},
 	"component": &v1.Component{},
 }
 var generateSchema = &cobra.Command{

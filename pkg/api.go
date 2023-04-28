@@ -120,7 +120,6 @@ type Canary struct {
 	Name      string
 	Namespace string
 	Checks    types.JSONStringMap `gorm:"-"`
-	Schedule  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
@@ -171,7 +170,6 @@ func CanaryFromV1(canary v1.Canary) (Canary, error) {
 		Name:      canary.Name,
 		Namespace: canary.Namespace,
 		Source:    canary.Annotations["source"],
-		Schedule:  canary.Spec.GetSchedule(),
 		Checks:    types.JSONStringMap(checks),
 	}, nil
 }

@@ -112,7 +112,7 @@ var RunTopology = &cobra.Command{
 				wg.Add(1)
 				_config := config
 				if _config.GetPersistedID() == "" {
-					_config.Status = v1.SystemTemplateStatus{
+					_config.Status = v1.TopologyStatus{
 						PersistedID: &StaticTemplatedID,
 					}
 				}
