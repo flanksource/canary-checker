@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/duty"
 	"github.com/flanksource/kommons"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -45,18 +47,50 @@ func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	envVars, err := c.getEnvVars(check, ctx.Canary.Namespace, ctx.Kommons)
-	if err != nil {
-		return results.Failf("error getting envVars %v", err)
+
+	var envVars map[string]string
+	var err error
+	if check.ConnectionName != "" {
+		k8sClient, err := ctx.Kommons.GetClientset()
+		if err != nil {
+			return results.Failf("error getting k8s client from kommons client: %v", err)
+		}
+
+		connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName)
+		if err != nil {
+			return results.Failf("error getting connection: %v", err)
+		}
+
+		if connection == nil {
+			return results.Failf("connection %q not found", check.ConnectionName)
+		}
+
+		envVars = map[string]string{
+			resticPasswordEnvKey: connection.Password,
+			// resticAwsSecretAccessKey:   secretKey,
+			// resticAwsAccessKeyIDEnvKey: connection,
+		}
+
+		// TODO: Not sure why wee need AWS credentials here.
+		// If it's required, will need to think how a single connection can provide
+		// both AWS credentials and a restic password.
+	} else {
+		envVars, err = c.getEnvVars(check, ctx.Canary.Namespace, ctx.Kommons)
+		if err != nil {
+			return results.Failf("error getting envVars %v", err)
+		}
 	}
+
 	if check.CheckIntegrity {
 		if err := checkIntegrity(check.Repository, check.CaCert, envVars); err != nil {
 			return results.Failf("integrity check failed %v", err)
 		}
 	}
+
 	if err := checkBackupFreshness(check.Repository, check.MaxAge, check.CaCert, envVars); err != nil {
 		return results.Failf("backup freshness check failed: %v", err)
 	}
+
 	return results
 }
 

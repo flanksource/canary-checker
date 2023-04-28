@@ -14,6 +14,7 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/timer"
@@ -110,27 +111,22 @@ type AWS struct {
 }
 
 func NewAWS(ctx *context.Context, check v1.EC2Check) (*AWS, error) {
-	namespace := ctx.Canary.GetNamespace()
-	_, accessKey, err := ctx.Kommons.GetEnvValue(check.AccessKey, namespace)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse EC2 access key: %v", err)
-	}
-	_, secretKey, err := ctx.Kommons.GetEnvValue(check.SecretKey, namespace)
-	if err != nil {
-		return nil, fmt.Errorf(fmt.Sprintf("Could not parse EC2 secret key: %v", err))
+	if err := check.AWSConnection.Populate(ctx, db.Gorm, ctx.Kommons, ctx.Canary.GetNamespace()); err != nil {
+		return nil, fmt.Errorf("failed to populate AWS connection: %v", err)
 	}
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: check.SkipTLSVerify},
 	}
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(check.AWSConnection.AccessKey.Value, check.AWSConnection.SecretKey.Value, "")),
 		config.WithRegion(check.Region),
 		config.WithHTTPClient(&http.Client{Transport: tr}),
 	)
 	if err != nil {
 		return nil, fmt.Errorf(fmt.Sprintf("failed to load AWS credentials: %v", err))
 	}
+
 	return &AWS{
 		EC2:    ec2.NewFromConfig(cfg),
 		Config: cfg,

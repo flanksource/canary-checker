@@ -39,12 +39,7 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 	var results pkg.Results
 	results = append(results, result)
 
-	k8sClient, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return results.Failf("error getting k8s client from kommons client: %v", err)
-	}
-
-	if err := check.AWSConnection.PopulateFromConnection(ctx, db.Gorm, k8sClient, ctx.Namespace); err != nil {
+	if err := check.AWSConnection.Populate(ctx, db.Gorm, ctx.Kommons, ctx.Namespace); err != nil {
 		return results.Failf("failed to populate aws connection: %v", err)
 	}
 

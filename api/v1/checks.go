@@ -133,17 +133,13 @@ type Bucket struct {
 }
 
 type S3Check struct {
-	Description `yaml:",inline" json:",inline"`
-	Bucket      Bucket `yaml:"bucket" json:"bucket,omitempty"`
-	AccessKey   string `yaml:"accessKey" json:"accessKey,omitempty"`
-	SecretKey   string `yaml:"secretKey" json:"secretKey,omitempty"`
-	ObjectPath  string `yaml:"objectPath" json:"objectPath,omitempty"`
-	// Skip TLS verify when connecting to s3
-	SkipTLSVerify bool `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
+	Description   `yaml:",inline" json:",inline"`
+	AWSConnection `yaml:",inline" json:",inline"`
+	BucketName    string `yaml:"bucketName" json:"bucketName,omitempty"`
 }
 
 func (c S3Check) GetEndpoint() string {
-	return fmt.Sprintf("%s/%s", c.Bucket.Endpoint, c.Bucket.Name)
+	return fmt.Sprintf("%s/%s", c.AWSConnection.Endpoint, c.BucketName)
 }
 
 func (c S3Check) GetType() string {
@@ -181,6 +177,8 @@ func (c CloudWatchCheck) GetType() string {
 
 type ResticCheck struct {
 	Description `yaml:",inline" json:",inline"`
+	// Name of the connection that'll be used to derive connection details.
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name
 	Repository string `yaml:"repository" json:"repository"`
 	// Password for the restic repository
@@ -894,22 +892,47 @@ type AWSConnection struct {
 	UsePathStyle bool `yaml:"usePathStyle,omitempty" json:"usePathStyle,omitempty"`
 }
 
-// PopulateFromConnection attempts to find the connection by name
+// populateFromConnection attempts to find the connection by name
 // and populate the endpoint, accessKey and secretKey.
-func (t *AWSConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) error {
-	if t.ConnectionName == "" {
-		return nil
-	}
-
+func (t *AWSConnection) populateFromConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) error {
 	connection, err := duty.HydratedConnectionByURL(ctx, db, k8sClient, namespace, t.ConnectionName)
 	if err != nil {
 		return err
 	}
 
-	if connection != nil {
-		t.AccessKey.Value = connection.Username
-		t.SecretKey.Value = connection.Password
-		t.Endpoint = connection.URL
+	if connection == nil {
+		return fmt.Errorf("connetion %q not found", t.ConnectionName)
+	}
+
+	t.AccessKey.Value = connection.Username
+	t.SecretKey.Value = connection.Password
+	t.Endpoint = connection.URL
+
+	return nil
+}
+
+// Populate populates an AWSConnection with credentials and other information.
+// If a connection name is specified, it'll be used to populate the endpoint, accessKey and secretKey.
+func (t *AWSConnection) Populate(ctx context.Context, db *gorm.DB, kommonsClient *kommons.Client, namespace string) error {
+	if t.ConnectionName == "" {
+		k8sClient, err := kommonsClient.GetClientset()
+		if err != nil {
+			return fmt.Errorf("error getting k8s client from kommons client: %w", err)
+		}
+
+		return t.populateFromConnection(ctx, db, k8sClient, namespace)
+	}
+
+	if _, accessKey, err := kommonsClient.GetEnvValue(t.AccessKey, namespace); err != nil {
+		return fmt.Errorf("could not parse EC2 access key: %v", err)
+	} else {
+		t.AccessKey.Value = accessKey
+	}
+
+	if _, secretKey, err := kommonsClient.GetEnvValue(t.SecretKey, namespace); err != nil {
+		return fmt.Errorf(fmt.Sprintf("Could not parse EC2 secret key: %v", err))
+	} else {
+		t.SecretKey.Value = secretKey
 	}
 
 	return nil

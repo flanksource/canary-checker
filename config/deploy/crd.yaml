@@ -3728,18 +3728,46 @@ spec:
                   items:
                     properties:
                       accessKey:
-                        type: string
-                      bucket:
                         properties:
-                          endpoint:
-                            type: string
                           name:
                             type: string
-                          region:
+                          value:
                             type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
                         type: object
+                      bucketName:
+                        type: string
+                      connection:
+                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey. It's named "connection" instead of just "name" so that it fits with the convention
+                        type: string
                       description:
                         description: Description for the check
+                        type: string
+                      endpoint:
                         type: string
                       icon:
                         description: Icon for overwriting default icon on the dashboard
@@ -3753,11 +3781,47 @@ spec:
                         description: Name of the check
                         type: string
                       objectPath:
+                        description: glob path to restrict matches to a subset
+                        type: string
+                      region:
                         type: string
                       secretKey:
-                        type: string
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       skipTLSVerify:
-                        description: Skip TLS verify when connecting to s3
+                        description: Skip TLS verify when connecting to aws
+                        type: boolean
+                      usePathStyle:
+                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                         type: boolean
                     required:
                       - name

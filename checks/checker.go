@@ -47,8 +47,8 @@ var All = []Checker{
 	&PostgresChecker{}, // TODO
 	&PrometheusChecker{},
 	&RedisChecker{},
-	&ResticChecker{}, // TODO
-	&S3Checker{},     // TODO
+	&ResticChecker{},
+	&S3Checker{},
 	NewNamespaceChecker(),
 	NewPodChecker(), // TODO
 	NewTCPChecker(),
