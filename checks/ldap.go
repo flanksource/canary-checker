@@ -38,16 +38,28 @@ func (c *LdapChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	check := extConfig.(v1.LDAPCheck)
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
+	var err error
 	results = append(results, result)
 
-	k8sClient, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return results.Failf("error getting k8s client from kommons client: %v", err)
-	}
+	if check.ConnectionName != "" {
+		if ctx.Kommons == nil {
+			return results.Failf("kommons client is not configured. cannot retrieve connection.")
+		}
 
-	if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName); err != nil {
-		return results.Failf("error getting k8s client from kommons client: %v", err)
-	} else if connection != nil {
+		k8sClient, err := ctx.Kommons.GetClientset()
+		if err != nil {
+			return results.Failf("error getting k8s client from kommons client: %v", err)
+		}
+
+		connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName)
+		if err != nil {
+			return results.Failf("error getting k8s client from kommons client: %v", err)
+		}
+
+		if connection == nil {
+			return results.Failf("connection %q was not found", connection)
+		}
+
 		check.Host = connection.URL
 		check.Auth.Username.Value = connection.Username
 		check.Auth.Password.Value = connection.Password

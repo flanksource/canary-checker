@@ -50,12 +50,7 @@ func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	} else if connection != nil {
 		githubToken = connection.Password
 	} else {
-		k8Client, err := ctx.Kommons.GetClientset()
-		if err != nil {
-			return results.Failf("error getting k8s client from kommons client: %v", err)
-		}
-
-		githubToken, err = duty.GetEnvValueFromCache(k8Client, check.GithubToken, ctx.Canary.GetNamespace())
+		githubToken, err = duty.GetEnvValueFromCache(k8sClient, check.GithubToken, ctx.Canary.GetNamespace())
 		if err != nil {
 			return results.Failf("error fetching github token from env cache: %v", err)
 		}

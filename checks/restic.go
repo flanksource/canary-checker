@@ -51,6 +51,10 @@ func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	var envVars map[string]string
 	var err error
 	if check.ConnectionName != "" {
+		if ctx.Kommons == nil {
+			return results.Failf("kommons client is not configured. cannot retrieve connection.")
+		}
+
 		k8sClient, err := ctx.Kommons.GetClientset()
 		if err != nil {
 			return results.Failf("error getting k8s client from kommons client: %v", err)

@@ -35,14 +35,25 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	var results pkg.Results
 	results = append(results, result)
 
-	k8sClient, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return results.Failf("error getting k8s client from kommons client: %v", err)
-	}
+	if check.ConnectionName != "" {
+		if ctx.Kommons == nil {
+			return results.Failf("kommons client is not configured. cannot retrieve connection.")
+		}
 
-	if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName); err != nil {
-		return results.Failf("failed to find host from connection for prometheus checker %q: %v", check.ConnectionName, err)
-	} else if connection != nil {
+		k8sClient, err := ctx.Kommons.GetClientset()
+		if err != nil {
+			return results.Failf("error getting k8s client from kommons client: %v", err)
+		}
+
+		connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName)
+		if err != nil {
+			return results.Failf("failed to find host from connection for prometheus checker %q: %v", check.ConnectionName, err)
+		}
+
+		if connection == nil {
+			return results.Failf("%q was not found", check.ConnectionName)
+		}
+
 		check.Host = connection.URL
 	}
 

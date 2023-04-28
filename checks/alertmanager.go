@@ -34,15 +34,21 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
 
-	k8sClient, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return results.Failf("error getting k8s client from kommons client: %v", err)
-	}
+	if check.ConnectionName != "" {
+		if ctx.Kommons == nil {
+			return results.Failf("kommons client is not configured. cannot retrieve connection.")
+		}
 
-	if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName); err != nil {
-		return results.Failf("failed to find connection from %q: %v", check.ConnectionName, err)
-	} else if connection != nil {
-		check.Host = connection.URL
+		k8sClient, err := ctx.Kommons.GetClientset()
+		if err != nil {
+			return results.Failf("error getting k8s client from kommons client: %v", err)
+		}
+
+		if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName); err != nil {
+			return results.Failf("failed to find connection from %q: %v", check.ConnectionName, err)
+		} else if connection != nil {
+			check.Host = connection.URL
+		}
 	}
 
 	client := alertmanagerClient.NewHTTPClientWithConfig(nil, &alertmanagerClient.TransportConfig{
