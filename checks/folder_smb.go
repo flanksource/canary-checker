@@ -80,7 +80,12 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.ErrorMessage(err)
 	}
 
-	foundConn, err := check.SMBConnection.PopulateFromConnection(ctx, db.Gorm)
+	k8sClient, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return results.Failf("error getting k8s client from kommons client: %v", err)
+	}
+
+	foundConn, err := check.SMBConnection.PopulateFromConnection(ctx, db.Gorm, k8sClient, ctx.Namespace)
 	if err != nil {
 		return results.Failf("failed to populate SMB connection: %v", err)
 	}

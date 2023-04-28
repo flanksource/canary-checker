@@ -23,34 +23,33 @@ type Checker interface {
 }
 
 var All = []Checker{
-	&DNSChecker{},
-	&HTTPChecker{},
-	&IcmpChecker{},
-	&S3Checker{},
-	&PostgresChecker{},
-	&MssqlChecker{},
-	&MysqlChecker{},
-	&LdapChecker{},
-	&JmeterChecker{},
-	&ResticChecker{},
-	&RedisChecker{},
-	&JunitChecker{},
-	&EC2Checker{},
-	&PrometheusChecker{},
-	&MongoDBChecker{},
-	&CloudWatchChecker{},
-	&GitHubChecker{},
-	&KubernetesChecker{},
-	&FolderChecker{},
-	&ExecChecker{},
+	&AlertManagerChecker{},
 	&AwsConfigChecker{},
 	&AwsConfigRuleChecker{},
-	&DatabaseBackupChecker{},
+	&CloudWatchChecker{},
 	&ConfigdbChecker{},
+	&DatabaseBackupChecker{},
+	&DNSChecker{},
+	&EC2Checker{}, // TODO
 	&ElasticsearchChecker{},
-	&AlertManagerChecker{},
-	&AzureDevopsChecker{},
-	NewPodChecker(),
+	&ExecChecker{},
+	&FolderChecker{},
+	&GitHubChecker{},
+	&HTTPChecker{},
+	&IcmpChecker{},
+	&JmeterChecker{},
+	&JunitChecker{},      // TODO
+	&KubernetesChecker{}, // TODO
+	&LdapChecker{},
+	&MongoDBChecker{},  // TODO
+	&MssqlChecker{},    // TODO
+	&MysqlChecker{},    // TODO
+	&PostgresChecker{}, // TODO
+	&PrometheusChecker{},
+	&RedisChecker{},
+	&ResticChecker{}, // TODO
+	&S3Checker{},     // TODO
 	NewNamespaceChecker(),
+	NewPodChecker(), // TODO
 	NewTCPChecker(),
 }

@@ -4,10 +4,12 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/duty"
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/commons/logger"
 	"github.com/prometheus/common/model"
@@ -33,9 +35,21 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	var results pkg.Results
 	results = append(results, result)
 
+	k8sClient, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return results.Failf("error getting k8s client from kommons client: %v", err)
+	}
+
+	if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName); err != nil {
+		return results.Failf("failed to find host from connection for prometheus checker %q: %v", check.ConnectionName, err)
+	} else if connection != nil {
+		check.Host = connection.URL
+	}
+
 	if check.Host == "" {
 		return results.Failf("Must specify a prometheus host")
 	}
+
 	promClient, err := prometheus.NewPrometheusAPI(check.Host)
 	if err != nil {
 		return results.ErrorMessage(err)

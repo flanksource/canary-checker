@@ -109,9 +109,13 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
 
-	// Attempt to look for a connection from the HTTP endpoint.
-	if connection, err := duty.FindConnectionByURL(ctx, db.Gorm, check.Endpoint); err != nil {
-		return results.Failf("failed to find connection from %q: %v", check.Endpoint, err)
+	k8sClient, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return results.Failf("error getting k8s client from kommons client: %v", err)
+	}
+
+	if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName); err != nil {
+		return results.Failf("failed to find HTTP connection %q: %v", check.ConnectionName, err)
 	} else if connection != nil {
 		check.Endpoint = connection.URL
 	}
@@ -120,7 +124,6 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		return results.ErrorMessage(err)
 	}
 
-	var err error
 	endpoint := check.Endpoint
 	body := check.Body
 	if check.TemplateBody {

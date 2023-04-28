@@ -44,20 +44,29 @@ func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 
 	var redisOpts *redis.Options
 	if check.ConnectionName != "" {
-		connection, err := duty.FindConnectionByURL(ctx, db.Gorm, check.ConnectionName)
+		k8sClient, err := ctx.Kommons.GetClientset()
 		if err != nil {
-			return results.Failf("failed to fetch connection: %v", err)
-		} else if connection != nil {
-			redisOpts = &redis.Options{
-				Addr:     connection.URL,
-				Username: connection.Username,
-				Password: connection.Password,
-			}
+			return results.Failf("error getting k8s client from kommons client: %v", err)
+		}
 
-			if db, ok := connection.Properties["db"]; ok {
-				if dbInt, err := strconv.Atoi(db); nil == err {
-					redisOpts.DB = dbInt
-				}
+		connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName)
+		if err != nil {
+			return results.Failf("failed to fetch connection %q: %v", check.ConnectionName, err)
+		}
+
+		if connection == nil {
+			return results.Failf("provided connection %q was not found", check.ConnectionName)
+		}
+
+		redisOpts = &redis.Options{
+			Addr:     connection.URL,
+			Username: connection.Username,
+			Password: connection.Password,
+		}
+
+		if db, ok := connection.Properties["db"]; ok {
+			if dbInt, err := strconv.Atoi(db); nil == err {
+				redisOpts.DB = dbInt
 			}
 		}
 	} else {

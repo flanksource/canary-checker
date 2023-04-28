@@ -13,6 +13,7 @@ import (
 	"github.com/flanksource/kommons"
 	"gorm.io/gorm"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 type Check struct {
@@ -47,6 +48,8 @@ func (c Check) GetLabels() map[string]string {
 type HTTPCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	// Name of the connection that'll be used to derive the endpoint.
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// HTTP endpoint to check.  Mutually exclusive with Namespace
 	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty" template:"true"`
 	// Namespace to crawl for TLS endpoints.  Mutually exclusive with Endpoint
@@ -109,6 +112,7 @@ func (t TCPCheck) GetType() string {
 type ICMPCheck struct {
 	Description         `yaml:",inline" json:",inline"`
 	Endpoint            string `yaml:"endpoint" json:"endpoint,omitempty"`
+	ConnectionName      string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	ThresholdMillis     int64  `yaml:"thresholdMillis,omitempty" json:"thresholdMillis,omitempty"`
 	PacketLossThreshold int64  `yaml:"packetLossThreshold,omitempty" json:"packetLossThreshold,omitempty"`
 	PacketCount         int    `yaml:"packetCount,omitempty" json:"packetCount,omitempty"`
@@ -203,6 +207,8 @@ func (c ResticCheck) GetType() string {
 
 type JmeterCheck struct {
 	Description `yaml:",inline" json:",inline"`
+	// Name of the connection that'll be used to derive host and other connection details.
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Jmx defines the ConfigMap or Secret reference to get the JMX test plan
 	Jmx kommons.EnvVar `yaml:"jmx" json:"jmx"`
 	// Host is the server against which test plan needs to be executed
@@ -226,12 +232,12 @@ func (c JmeterCheck) GetType() string {
 }
 
 // PopulateConnection will attempt to populate the host and port from the connection name.
-func (c *JmeterCheck) PopulateConnection(ctx context.Context, db *gorm.DB) error {
-	if c.Host == "" {
+func (c *JmeterCheck) PopulateConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) error {
+	if c.ConnectionName == "" {
 		return nil
 	}
 
-	connection, err := duty.FindConnectionByURL(ctx, db, c.Host)
+	connection, err := duty.HydratedConnectionByURL(ctx, db, k8sClient, namespace, c.ConnectionName)
 	if err != nil {
 		return err
 	}
@@ -430,13 +436,14 @@ type Elasticsearch struct {
 }
 
 type ElasticsearchCheck struct {
-	Description `yaml:",inline" json:",inline"`
-	Templatable `yaml:",inline" json:",inline"`
-	URL         string          `yaml:"url" json:"url,omitempty" template:"true"`
-	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
-	Query       string          `yaml:"query" json:"query,omitempty" template:"true"`
-	Index       string          `yaml:"index" json:"index,omitempty" template:"true"`
-	Results     int             `yaml:"results" json:"results,omitempty" template:"true"`
+	Description    `yaml:",inline" json:",inline"`
+	Templatable    `yaml:",inline" json:",inline"`
+	ConnectionName string          `yaml:"connection,omitempty" json:"connection,omitempty"`
+	URL            string          `yaml:"url" json:"url,omitempty" template:"true"`
+	Auth           *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	Query          string          `yaml:"query" json:"query,omitempty" template:"true"`
+	Index          string          `yaml:"index" json:"index,omitempty" template:"true"`
+	Results        int             `yaml:"results" json:"results,omitempty" template:"true"`
 }
 
 func (c ElasticsearchCheck) GetType() string {
@@ -447,8 +454,8 @@ func (c ElasticsearchCheck) GetEndpoint() string {
 	return c.URL
 }
 
-func (c *ElasticsearchCheck) PopulateConnection(ctx context.Context, db *gorm.DB) error {
-	connection, err := duty.FindConnectionByURL(ctx, db, c.URL)
+func (c *ElasticsearchCheck) PopulateConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) error {
+	connection, err := duty.HydratedConnectionByURL(ctx, db, k8sClient, namespace, c.ConnectionName)
 	if err != nil {
 		return err
 	}
@@ -471,13 +478,14 @@ type AlertManager struct {
 }
 
 type AlertManagerCheck struct {
-	Description `yaml:",inline" json:",inline"`
-	Templatable `yaml:",inline" json:",inline"`
-	Host        string            `yaml:"host" json:"host,omitempty" template:"true"`
-	Auth        *Authentication   `yaml:"auth,omitempty" json:"auth,omitempty"`
-	Alerts      []string          `yaml:"alerts" json:"alerts,omitempty" template:"true"`
-	Filters     map[string]string `yaml:"filters" json:"filters,omitempty" template:"true"`
-	Ignore      []string          `yaml:"ignore" json:"ignore,omitempty" template:"true"`
+	Description    `yaml:",inline" json:",inline"`
+	Templatable    `yaml:",inline" json:",inline"`
+	ConnectionName string            `yaml:"connection,omitempty" json:"connection,omitempty"`
+	Host           string            `yaml:"host" json:"host,omitempty" template:"true"`
+	Auth           *Authentication   `yaml:"auth,omitempty" json:"auth,omitempty"`
+	Alerts         []string          `yaml:"alerts" json:"alerts,omitempty" template:"true"`
+	Filters        map[string]string `yaml:"filters" json:"filters,omitempty" template:"true"`
+	Ignore         []string          `yaml:"ignore" json:"ignore,omitempty" template:"true"`
 }
 
 func (c AlertManagerCheck) GetType() string {
@@ -522,12 +530,13 @@ func (c PodCheck) GetType() string {
 }
 
 type LDAPCheck struct {
-	Description   `yaml:",inline" json:",inline"`
-	Host          string          `yaml:"host" json:"host" template:"true"`
-	Auth          *Authentication `yaml:"auth" json:"auth"`
-	BindDN        string          `yaml:"bindDN" json:"bindDN"`
-	UserSearch    string          `yaml:"userSearch,omitempty" json:"userSearch,omitempty"`
-	SkipTLSVerify bool            `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
+	Description    `yaml:",inline" json:",inline"`
+	ConnectionName string          `yaml:"connection,omitempty" json:"connection,omitempty"`
+	Host           string          `yaml:"host" json:"host" template:"true"`
+	Auth           *Authentication `yaml:"auth" json:"auth"`
+	BindDN         string          `yaml:"bindDN" json:"bindDN"`
+	UserSearch     string          `yaml:"userSearch,omitempty" json:"userSearch,omitempty"`
+	SkipTLSVerify  bool            `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
 }
 
 func (c LDAPCheck) GetEndpoint() string {
@@ -574,6 +583,7 @@ func (c NamespaceCheck) GetType() string {
 
 type DNSCheck struct {
 	Description     `yaml:",inline" json:",inline"`
+	ConnectionName  string   `yaml:"connection,omitempty" json:"connection,omitempty"`
 	Server          string   `yaml:"server" json:"server,omitempty"`
 	Port            int      `yaml:"port,omitempty" json:"port,omitempty"`
 	Query           string   `yaml:"query,omitempty" json:"query,omitempty"`
@@ -655,8 +665,9 @@ func (c JunitCheck) GetType() string {
 }
 
 type SMBConnection struct {
-	// Name of the connection. It'll be used to populate the connection fields.
-	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+	// ConnectionName of the connection. It'll be used to populate the connection fields.
+	// It's named "connection" instead of just "name" so that it fits with the convention
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	//Port on which smb server is running. Defaults to 445
 	Port int             `yaml:"port,omitempty" json:"port,omitempty"`
 	Auth *Authentication `yaml:"auth" json:"auth"`
@@ -677,12 +688,12 @@ func (c SMBConnection) GetPort() int {
 	return 445
 }
 
-func (c *SMBConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB) (found bool, err error) {
-	if c.Name == "" {
+func (c *SMBConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) (found bool, err error) {
+	if c.ConnectionName == "" {
 		return false, nil
 	}
 
-	connection, err := duty.FindConnectionByURL(ctx, db, c.Name)
+	connection, err := duty.HydratedConnectionByURL(ctx, db, k8sClient, namespace, c.ConnectionName)
 	if err != nil {
 		return false, err
 	}
@@ -719,20 +730,21 @@ func (c *SMBConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB)
 }
 
 type SFTPConnection struct {
-	// Name of the connection. It'll be used to populate the connection fields.
-	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+	// ConnectionName of the connection. It'll be used to populate the connection fields.
+	// It's named "connection" instead of just "name" so that it fits with the convention
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Port for the SSH server. Defaults to 22
 	Port int             `yaml:"port,omitempty" json:"port,omitempty"`
 	Host string          `yaml:"host" json:"host"`
 	Auth *Authentication `yaml:"auth" json:"auth"`
 }
 
-func (c *SFTPConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB) (found bool, err error) {
-	if c.Name == "" {
+func (c *SFTPConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) (found bool, err error) {
+	if c.ConnectionName == "" {
 		return false, nil
 	}
 
-	connection, err := duty.FindConnectionByURL(ctx, db, c.Name)
+	connection, err := duty.HydratedConnectionByURL(ctx, db, k8sClient, namespace, c.ConnectionName)
 	if err != nil {
 		return false, err
 	}
@@ -769,9 +781,11 @@ func (c SFTPConnection) GetPort() int {
 type Prometheus struct {
 	PrometheusCheck `yaml:",inline" json:",inline"`
 }
+
 type PrometheusCheck struct {
-	Description `yaml:",inline" json:",inline"`
-	Templatable `yaml:",inline" json:",inline"`
+	Description    `yaml:",inline" json:",inline"`
+	Templatable    `yaml:",inline" json:",inline"`
+	ConnectionName string `yaml:"connection" json:"connection"`
 	// Address of the prometheus server
 	Host string `yaml:"host" json:"host" template:"true" `
 	// PromQL query
@@ -802,8 +816,9 @@ type Git struct {
 }
 
 type GitHubCheck struct {
-	Description `yaml:",inline" json:",inline"`
-	Templatable `yaml:",inline" json:",inline"`
+	Description    `yaml:",inline" json:",inline"`
+	Templatable    `yaml:",inline" json:",inline"`
+	ConnectionName string `yaml:"connection,inline" json:"connection,inline"`
 	// Query to be executed. Please see https://github.com/askgitdev/askgit for more details regarding syntax
 	Query       string       `yaml:"query" json:"query"`
 	GithubToken types.EnvVar `yaml:"githubToken,omitempty" json:"githubToken,omitempty"`
@@ -865,9 +880,8 @@ func (c KubernetesCheck) CheckReady() bool {
 
 type AWSConnection struct {
 	// ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
-	// It's named "connectionName" instead of just "name" to avoid collision since CloudWatch and EC2 check
-	// embeds this struct.
-	ConnectionName string         `yaml:"connectionName,omitempty" json:"connectionName,omitempty"`
+	// It's named "connection" instead of just "name" so that it fits with the convention
+	ConnectionName string         `yaml:"connection,omitempty" json:"connection,omitempty"`
 	AccessKey      kommons.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
 	SecretKey      kommons.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
 	Region         string         `yaml:"region,omitempty" json:"region,omitempty"`
@@ -882,12 +896,12 @@ type AWSConnection struct {
 
 // PopulateFromConnection attempts to find the connection by name
 // and populate the endpoint, accessKey and secretKey.
-func (t *AWSConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB) error {
+func (t *AWSConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) error {
 	if t.ConnectionName == "" {
 		return nil
 	}
 
-	connection, err := duty.FindConnectionByURL(ctx, db, t.ConnectionName)
+	connection, err := duty.HydratedConnectionByURL(ctx, db, k8sClient, namespace, t.ConnectionName)
 	if err != nil {
 		return err
 	}
@@ -902,10 +916,11 @@ func (t *AWSConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB)
 }
 
 type GCPConnection struct {
-	// Name of the connection. It'll be used to populate the endpoint and credentials.
-	Name        string          `yaml:"name,omitempty" json:"name,omitempty"`
-	Endpoint    string          `yaml:"endpoint" json:"endpoint,omitempty"`
-	Credentials *kommons.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
+	// ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
+	// It's named "connection" instead of just "name" so that it fits with the convention.
+	ConnectionName string          `yaml:"connection,omitempty" json:"connection,omitempty"`
+	Endpoint       string          `yaml:"endpoint" json:"endpoint,omitempty"`
+	Credentials    *kommons.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
 }
 
 func (g *GCPConnection) Validate() *GCPConnection {
@@ -917,12 +932,12 @@ func (g *GCPConnection) Validate() *GCPConnection {
 
 // PopulateFromConnection attempts to find the connection by name
 // and populate the endpoint and credentials.
-func (g *GCPConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB) error {
-	if g.Name == "" {
+func (g *GCPConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) error {
+	if g.ConnectionName == "" {
 		return nil
 	}
 
-	connection, err := duty.FindConnectionByURL(ctx, db, g.Name)
+	connection, err := duty.HydratedConnectionByURL(ctx, db, k8sClient, namespace, g.ConnectionName)
 	if err != nil {
 		return err
 	}
@@ -1331,39 +1346,38 @@ func (c AzureDevopsCheck) GetEndpoint() string {
 }
 
 var AllChecks = []external.Check{
-	AzureDevopsCheck{},
-	HTTPCheck{},
-	TCPCheck{},
-	ICMPCheck{},
-	S3Check{},
-	DockerPullCheck{},
-	DockerPushCheck{},
-	ContainerdPullCheck{},
-	ContainerdPushCheck{},
-	PostgresCheck{},
-	MssqlCheck{},
-	MysqlCheck{},
-	RedisCheck{},
-	PodCheck{},
-	LDAPCheck{},
-	ResticCheck{},
-	NamespaceCheck{},
-	DNSCheck{},
-	HelmCheck{},
-	JmeterCheck{},
-	JunitCheck{},
-	EC2Check{},
-	PrometheusCheck{},
-	MongoDBCheck{},
-	CloudWatchCheck{},
-	GitHubCheck{},
-	Kubernetes{},
-	FolderCheck{},
-	ExecCheck{},
+	AlertManagerCheck{},
 	AwsConfigCheck{},
 	AwsConfigRuleCheck{},
-	DatabaseBackupCheck{},
+	CloudWatchCheck{},
 	ConfigDBCheck{},
+	ContainerdPullCheck{},
+	ContainerdPushCheck{},
+	DatabaseBackupCheck{},
+	DNSCheck{},
+	DockerPullCheck{},
+	DockerPushCheck{},
+	EC2Check{},
 	ElasticsearchCheck{},
-	AlertManagerCheck{},
+	ExecCheck{},
+	FolderCheck{},
+	GitHubCheck{},
+	HelmCheck{},
+	HTTPCheck{},
+	ICMPCheck{},
+	JmeterCheck{},
+	JunitCheck{},
+	Kubernetes{},
+	LDAPCheck{},
+	MongoDBCheck{},
+	MssqlCheck{},
+	MysqlCheck{},
+	NamespaceCheck{},
+	PodCheck{},
+	PostgresCheck{},
+	PrometheusCheck{},
+	RedisCheck{},
+	ResticCheck{},
+	S3Check{},
+	TCPCheck{},
 }

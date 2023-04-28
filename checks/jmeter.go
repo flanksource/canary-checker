@@ -55,7 +55,12 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 		return results.Failf("unable to write test plan file")
 	}
 
-	if err := check.PopulateConnection(ctx, db.Gorm); err != nil {
+	k8sClient, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return results.Failf("error getting k8s client from kommons client: %v", err)
+	}
+
+	if err := check.PopulateConnection(ctx, db.Gorm, k8sClient, ctx.Namespace); err != nil {
 		return results.Failf("unable to populate JMeter connection: %v", err)
 	}
 

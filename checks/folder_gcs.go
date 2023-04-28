@@ -21,7 +21,12 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 
-	if err := check.GCPConnection.PopulateFromConnection(ctx, db.Gorm); err != nil {
+	k8sClient, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return results.Failf("error getting k8s client from kommons client: %v", err)
+	}
+
+	if err := check.GCPConnection.PopulateFromConnection(ctx, db.Gorm, k8sClient, ctx.Namespace); err != nil {
 		return results.Failf("failed to populate GCP connection: %v", err)
 	}
 

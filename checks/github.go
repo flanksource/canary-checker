@@ -39,9 +39,14 @@ func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	var results pkg.Results
 	results = append(results, result)
 
+	k8sClient, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return results.Failf("error getting k8s client from kommons client: %v", err)
+	}
+
 	var githubToken string
-	if connection, err := duty.FindConnectionFromEnvVar(ctx, db.Gorm, check.GithubToken); err != nil {
-		return results.Failf("failed to find connection for github token: %v", err)
+	if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName); err != nil {
+		return results.Failf("failed to find connection for github token %q: %v", check.ConnectionName, err)
 	} else if connection != nil {
 		githubToken = connection.Password
 	} else {

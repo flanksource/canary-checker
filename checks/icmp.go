@@ -56,8 +56,13 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
 
-	if connection, err := duty.FindConnectionByURL(ctx, db.Gorm, check.Endpoint); err != nil {
-		return results.Failf("failed to find connection from %q: %v", check.Endpoint, err)
+	k8sClient, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return results.Failf("error getting k8s client from kommons client: %v", err)
+	}
+
+	if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName); err != nil {
+		return results.Failf("failed to find ICMP connection %q: %v", check.ConnectionName, err)
 	} else if connection != nil {
 		check.Endpoint = connection.URL
 	}

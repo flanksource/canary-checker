@@ -4,6 +4,9 @@ import (
 	"crypto/tls"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/duty"
+	"github.com/flanksource/kommons"
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -36,19 +39,38 @@ func (c *LdapChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	ld, err := ldap.DialURL(check.Host, ldap.DialWithTLSConfig(&tls.Config{
-		InsecureSkipVerify: check.SkipTLSVerify,
-	}))
+
+	k8sClient, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return results.Failf("error getting k8s client from kommons client: %v", err)
+	}
+
+	if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName); err != nil {
+		return results.Failf("error getting k8s client from kommons client: %v", err)
+	} else if connection != nil {
+		check.Host = connection.URL
+		check.Auth.Username.Value = connection.Username
+		check.Auth.Password.Value = connection.Password
+
+		check.Auth = &v1.Authentication{
+			Username: kommons.EnvVar{Value: check.Auth.Username.Value},
+			Password: kommons.EnvVar{Value: check.Auth.Password.Value},
+		}
+	} else {
+		namespace := ctx.Canary.Namespace
+		check.Auth, err = GetAuthValues(check.Auth, ctx.Kommons, namespace)
+		if err != nil {
+			return results.Failf("failed to fetch auth details: %v", err)
+		}
+	}
+
+	ld, err := ldap.DialURL(check.Host, ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: check.SkipTLSVerify}))
 	if err != nil {
 		return results.Failf("Failed to connect %v", err)
 	}
-	namespace := ctx.Canary.Namespace
-	auth, err := GetAuthValues(check.Auth, ctx.Kommons, namespace)
-	if err != nil {
-		return results.Failf("failed to fetch auth details: %v", err)
-	}
-	if err := ld.Bind(auth.Username.Value, auth.Password.Value); err != nil {
-		return results.Failf("Failed to bind using %s %v", auth.Username.Value, err)
+
+	if err := ld.Bind(check.Auth.Username.Value, check.Auth.Password.Value); err != nil {
+		return results.Failf("Failed to bind using %s %v", check.Auth.Username.Value, err)
 	}
 
 	req := &ldap.SearchRequest{
@@ -57,7 +79,6 @@ func (c *LdapChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		Filter: check.UserSearch,
 	}
 	res, err := ld.Search(req)
-
 	if err != nil {
 		return results.Failf("Failed to search host %v error: %v", check.Host, err)
 	}

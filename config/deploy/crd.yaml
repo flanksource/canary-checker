@@ -134,6 +134,8 @@ spec:
                           - password
                           - username
                         type: object
+                      connection:
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -234,10 +236,10 @@ spec:
                                     type: object
                                 type: object
                             type: object
-                          endpoint:
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                             type: string
-                          name:
-                            description: Name of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                          endpoint:
                             type: string
                           objectPath:
                             description: glob path to restrict matches to a subset
@@ -374,10 +376,10 @@ spec:
                                     type: object
                                 type: object
                             type: object
-                          endpoint:
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                             type: string
-                          name:
-                            description: Name of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                          endpoint:
                             type: string
                           objectPath:
                             description: glob path to restrict matches to a subset
@@ -632,6 +634,9 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      connection:
+                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -946,6 +951,9 @@ spec:
                         properties:
                           gcpConnection:
                             properties:
+                              connection:
+                                description: ConnectionName of the connection. It'll be used to populate the endpoint and credentials. It's named "connection" instead of just "name" so that it fits with the convention.
+                                type: string
                               credentials:
                                 properties:
                                   name:
@@ -979,9 +987,6 @@ spec:
                                     type: object
                                 type: object
                               endpoint:
-                                type: string
-                              name:
-                                description: Name of the connection. It'll be used to populate the endpoint and credentials.
                                 type: string
                             type: object
                           instance:
@@ -1034,6 +1039,8 @@ spec:
                 dns:
                   items:
                     properties:
+                      connection:
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -1310,6 +1317,9 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         type: array
+                      connection:
+                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -1456,6 +1466,8 @@ spec:
                           - password
                           - username
                         type: object
+                      connection:
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -1666,10 +1678,10 @@ spec:
                                     type: object
                                 type: object
                             type: object
-                          endpoint:
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                             type: string
-                          name:
-                            description: Name of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                          endpoint:
                             type: string
                           objectPath:
                             description: glob path to restrict matches to a subset
@@ -1744,6 +1756,9 @@ spec:
                         type: object
                       gcpConnection:
                         properties:
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint and credentials. It's named "connection" instead of just "name" so that it fits with the convention.
+                            type: string
                           credentials:
                             properties:
                               name:
@@ -1777,9 +1792,6 @@ spec:
                                 type: object
                             type: object
                           endpoint:
-                            type: string
-                          name:
-                            description: Name of the connection. It'll be used to populate the endpoint and credentials.
                             type: string
                         type: object
                       icon:
@@ -2040,8 +2052,6 @@ spec:
                         type: object
                       githubToken:
                         properties:
-                          connection:
-                            type: string
                           name:
                             type: string
                           value:
@@ -2057,8 +2067,6 @@ spec:
                                 required:
                                   - key
                                 type: object
-                              connection:
-                                type: string
                               secretKeyRef:
                                 properties:
                                   key:
@@ -2464,7 +2472,7 @@ spec:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
                       jmx:
-                        description: Jmx defines tge ConfigMap or Secret reference to get the JMX test plan
+                        description: Jmx defines the ConfigMap or Secret reference to get the JMX test plan
                         properties:
                           name:
                             type: string
@@ -3407,6 +3415,8 @@ spec:
                 prometheus:
                   items:
                     properties:
+                      connection:
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -3461,6 +3471,7 @@ spec:
                             type: string
                         type: object
                     required:
+                      - connection
                       - host
                       - name
                       - query
@@ -3541,6 +3552,9 @@ spec:
                           - password
                           - username
                         type: object
+                      connectionName:
+                        description: ConnectionName is the name of the connection. It is used to populate addr, db and auth.
+                        type: string
                       db:
                         type: integer
                       description:

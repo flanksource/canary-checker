@@ -8,5 +8,5 @@ spec:
     - path: /tmp/premier-league
       name: sample sftp check
       sftpConnection:
-        name: connection://sftp/emirates
+        connection: connection://sftp/emirates
       maxCount: 10

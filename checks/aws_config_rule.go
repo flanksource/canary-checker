@@ -41,10 +41,15 @@ func (c *AwsConfigRuleChecker) Check(ctx *context.Context, extConfig external.Ch
 	results = append(results, result)
 	if check.AWSConnection == nil {
 		check.AWSConnection = &v1.AWSConnection{}
-	}
+	} else {
+		k8sClient, err := ctx.Kommons.GetClientset()
+		if err != nil {
+			return results.Failf("error getting k8s client from kommons client: %v", err)
+		}
 
-	if err := check.AWSConnection.PopulateFromConnection(ctx, db.Gorm); err != nil {
-		return results.Failf("failed to populate aws connection: %v", err)
+		if err := check.AWSConnection.PopulateFromConnection(ctx, db.Gorm, k8sClient, ctx.Namespace); err != nil {
+			return results.Failf("failed to populate aws connection: %v", err)
+		}
 	}
 
 	cfg, err := awsUtil.NewSession(ctx, *check.AWSConnection)

@@ -16,7 +16,12 @@ func CheckSFTP(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 
-	foundConn, err := check.SFTPConnection.PopulateFromConnection(ctx, db.Gorm)
+	k8sClient, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return results.Failf("error getting k8s client from kommons client: %v", err)
+	}
+
+	foundConn, err := check.SFTPConnection.PopulateFromConnection(ctx, db.Gorm, k8sClient, ctx.Namespace)
 	if err != nil {
 		return results.Failf("failed to populate SFTP connection: %v", err)
 	}
