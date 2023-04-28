@@ -237,7 +237,7 @@ spec:
                                 type: object
                             type: object
                           connection:
-                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey. It's named "connection" instead of just "name" so that it fits with the convention
                             type: string
                           endpoint:
                             type: string
@@ -377,7 +377,7 @@ spec:
                                 type: object
                             type: object
                           connection:
-                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey. It's named "connection" instead of just "name" so that it fits with the convention
                             type: string
                           endpoint:
                             type: string
@@ -635,7 +635,7 @@ spec:
                             type: object
                         type: object
                       connection:
-                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey. It's named "connection" instead of just "name" so that it fits with the convention
                         type: string
                       description:
                         description: Description for the check
@@ -1318,7 +1318,7 @@ spec:
                           x-kubernetes-map-type: atomic
                         type: array
                       connection:
-                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey. It's named "connection" instead of just "name" so that it fits with the convention
                         type: string
                       description:
                         description: Description for the check
@@ -1679,7 +1679,7 @@ spec:
                                 type: object
                             type: object
                           connection:
-                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey. It's named "connection" instead of just "name" so that it fits with the convention
                             type: string
                           endpoint:
                             type: string
@@ -1898,10 +1898,10 @@ spec:
                               - password
                               - username
                             type: object
-                          host:
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the connection fields. It's named "connection" instead of just "name" so that it fits with the convention
                             type: string
-                          name:
-                            description: Name of the connection. It'll be used to populate the connection fields.
+                          host:
                             type: string
                           port:
                             description: Port for the SSH server. Defaults to 22
@@ -1982,11 +1982,11 @@ spec:
                               - password
                               - username
                             type: object
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the connection fields. It's named "connection" instead of just "name" so that it fits with the convention
+                            type: string
                           domain:
                             description: Domain...
-                            type: string
-                          name:
-                            description: Name of the connection. It'll be used to populate the connection fields.
                             type: string
                           port:
                             description: Port on which smb server is running. Defaults to 445
@@ -2293,6 +2293,9 @@ spec:
                       body:
                         description: Request Body Contents
                         type: string
+                      connection:
+                        description: Name of the connection that'll be used to derive the endpoint.
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -2425,6 +2428,8 @@ spec:
                 icmp:
                   items:
                     properties:
+                      connection:
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -2462,6 +2467,9 @@ spec:
                 jmeter:
                   items:
                     properties:
+                      connection:
+                        description: Name of the connection that'll be used to derive host and other connection details.
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -2754,6 +2762,8 @@ spec:
                           - username
                         type: object
                       bindDN:
+                        type: string
+                      connection:
                         type: string
                       description:
                         description: Description for the check
