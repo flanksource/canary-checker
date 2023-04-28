@@ -106,18 +106,21 @@ func truncate(text string, max int) string {
 func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.HTTPCheck)
 	var results pkg.Results
+	var err error
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
 
-	k8sClient, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return results.Failf("error getting k8s client from kommons client: %v", err)
-	}
+	if check.ConnectionName != "" {
+		k8sClient, err := ctx.Kommons.GetClientset()
+		if err != nil {
+			return results.Failf("error getting k8s client from kommons client: %v", err)
+		}
 
-	if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName); err != nil {
-		return results.Failf("failed to find HTTP connection %q: %v", check.ConnectionName, err)
-	} else if connection != nil {
-		check.Endpoint = connection.URL
+		if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName); err != nil {
+			return results.Failf("failed to find HTTP connection %q: %v", check.ConnectionName, err)
+		} else if connection != nil {
+			check.Endpoint = connection.URL
+		}
 	}
 
 	if _, err := url.Parse(check.Endpoint); err != nil {

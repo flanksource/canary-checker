@@ -38,8 +38,8 @@ var All = []Checker{
 	&HTTPChecker{},
 	&IcmpChecker{},
 	&JmeterChecker{},
-	&JunitChecker{},      // TODO
-	&KubernetesChecker{}, // TODO
+	&JunitChecker{},
+	&KubernetesChecker{},
 	&LdapChecker{},
 	&MongoDBChecker{},
 	&MssqlChecker{},
@@ -50,6 +50,6 @@ var All = []Checker{
 	&ResticChecker{},
 	&S3Checker{},
 	NewNamespaceChecker(),
-	NewPodChecker(), // TODO
+	NewPodChecker(),
 	NewTCPChecker(),
 }
