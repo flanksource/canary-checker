@@ -219,6 +219,7 @@ func (in *AzureDevopsCheck) DeepCopyInto(out *AzureDevopsCheck) {
 	*out = *in
 	in.Description.DeepCopyInto(&out.Description)
 	out.Templatable = in.Templatable
+	in.PersonalAccessToken.DeepCopyInto(&out.PersonalAccessToken)
 	if in.Variables != nil {
 		in, out := &in.Variables, &out.Variables
 		*out = make(map[string]string, len(*in))

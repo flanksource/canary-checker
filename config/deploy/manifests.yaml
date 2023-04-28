@@ -490,6 +490,8 @@ spec:
                         items:
                           type: string
                         type: array
+                      connection:
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -518,7 +520,33 @@ spec:
                       organization:
                         type: string
                       personalAccessToken:
-                        type: string
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       pipeline:
                         type: string
                       project:

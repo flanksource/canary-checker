@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
 	v1 "k8s.io/api/core/v1"
 )
@@ -1141,8 +1142,9 @@ type AzureDevopsCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 
+	ConnectionName      string            `yaml:"connection,omitempty" json:"connection,omitempty"`
 	Organization        string            `yaml:"organization" json:"organization"`
-	PersonalAccessToken string            `yaml:"personalAccessToken" json:"personalAccessToken"`
+	PersonalAccessToken types.EnvVar      `yaml:"personalAccessToken" json:"personalAccessToken"`
 	Project             string            `yaml:"project" json:"project"` // Name or ID of the Project
 	Pipeline            string            `yaml:"pipeline" json:"pipeline"`
 	Variables           map[string]string `yaml:"variables" json:"variables"`
