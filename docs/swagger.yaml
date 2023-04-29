@@ -137,13 +137,13 @@ definitions:
     type: array
   Config:
     properties:
-      config_type:
+      config_class:
         type: string
       external_id:
         items:
           type: string
         type: array
-      external_type:
+      type:
         type: string
       id:
         type: string

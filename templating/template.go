@@ -49,8 +49,8 @@ func Template(environment map[string]interface{}, template v1.Template) (string,
 			configType, _ := call.Argument(0).ToString()
 			configName, _ := call.Argument(1).ToString()
 			configItemParams := pkg.Config{
-				ExternalType: configType,
-				Name:         configName,
+				Type: configType,
+				Name: configName,
 			}
 			configItem, err := db.FindConfig(configItemParams)
 			if err != nil {

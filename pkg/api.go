@@ -297,18 +297,18 @@ type Checker interface {
 }
 
 type Config struct {
-	ID           *uuid.UUID          `json:"id,omitempty"`
-	ConfigType   string              `json:"config_type,omitempty"`
-	Name         string              `json:"name,omitempty"`
-	Namespace    string              `json:"namespace,omitempty"`
-	Spec         *types.JSONMap      `json:"spec,omitempty" gorm:"column:config"`
-	Tags         types.JSONStringMap `json:"tags,omitempty"  gorm:"type:jsonstringmap"`
-	ExternalID   pq.StringArray      `json:"external_id,omitempty" gorm:"type:text[]"`
-	ExternalType string              `json:"external_type,omitempty"`
+	ID          *uuid.UUID          `json:"id,omitempty"`
+	ConfigClass string              `json:"config_class,omitempty"`
+	Name        string              `json:"name,omitempty"`
+	Namespace   string              `json:"namespace,omitempty"`
+	Spec        *types.JSONMap      `json:"spec,omitempty" gorm:"column:config"`
+	Tags        types.JSONStringMap `json:"tags,omitempty"  gorm:"type:jsonstringmap"`
+	ExternalID  pq.StringArray      `json:"external_id,omitempty" gorm:"type:text[]"`
+	Type        string              `json:"type,omitempty"`
 }
 
 func (c Config) String() string {
-	s := c.ConfigType
+	s := c.ConfigClass
 	if c.Namespace != "" {
 		s += "/" + c.Namespace
 	}
@@ -332,11 +332,11 @@ func NewConfigs(configs []v1.Config) Configs {
 
 func NewConfig(config v1.Config) *Config {
 	return &Config{
-		Name:         config.Name,
-		Namespace:    config.Namespace,
-		Tags:         types.JSONStringMap(config.Tags),
-		ExternalID:   pq.StringArray(config.ID),
-		ExternalType: config.Type,
+		Name:       config.Name,
+		Namespace:  config.Namespace,
+		Tags:       types.JSONStringMap(config.Tags),
+		ExternalID: pq.StringArray(config.ID),
+		Type:       config.Type,
 	}
 }
 
@@ -345,7 +345,7 @@ func ToV1Config(config Config) v1.Config {
 		Name:      config.Name,
 		Namespace: config.Namespace,
 		ID:        config.ExternalID,
-		Type:      config.ExternalType,
+		Type:      config.Type,
 	}
 }
 

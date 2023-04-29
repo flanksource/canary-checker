@@ -228,7 +228,7 @@ k8s = {
         configs: [
           {
             name: pod.metadata.name,
-            external_type: "Kubernetes::Pod",
+            type: "Kubernetes::Pod",
           }
         ],
         properties: [
@@ -287,7 +287,7 @@ k8s = {
         configs: [
           {
             name: node.metadata.name,
-            external_type: "Kubernetes::Node",
+            type: "Kubernetes::Node",
           }
         ],
         properties: [
