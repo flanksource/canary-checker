@@ -23,8 +23,8 @@ type ConfigComponentRelationship struct {
 
 func configQuery(config pkg.Config) *gorm.DB {
 	query := Gorm.Table("config_items")
-	if config.ConfigType != "" {
-		query = query.Where("config_type = ?", config.ConfigType)
+	if config.ConfigClass != "" {
+		query = query.Where("config_class = ?", config.ConfigClass)
 	}
 	if config.Name != "" {
 		query = query.Where("name = ?", config.Name)
@@ -37,10 +37,10 @@ func configQuery(config pkg.Config) *gorm.DB {
 		query = query.Where("tags @> ?", config.Tags)
 	}
 
-	// ExternalType is derived from v1.Config.Type which is a user input field
-	// It can refer to both external_type or config_type for now
-	if config.ExternalType != "" {
-		query = query.Where("external_type = @external_type OR config_type = @external_type", sql.Named("external_type", config.ExternalType))
+	// Type is derived from v1.Config.Type which is a user input field
+	// It can refer to both type or config_class for now
+	if config.Type != "" {
+		query = query.Where("type = @config_type OR config_class = @config_type", sql.Named("config_type", config.Type))
 	}
 	if len(config.ExternalID) > 0 {
 		query = query.Where("external_id @> ?", config.ExternalID)
@@ -70,7 +70,7 @@ func FindConfigForComponent(componentID, configType string) ([]pkg.Config, error
 	relationshipQuery := Gorm.Table("config_component_relationships").Select("config_id").Where("component_id = ? AND deleted_at IS NULL", componentID)
 	query := Gorm.Table("config_items").Where("id IN (?)", relationshipQuery)
 	if configType != "" {
-		query = query.Where("external_type = @config_type OR config_type = @config_type", sql.Named("config_type", configType))
+		query = query.Where("type = @config_type OR config_class = @config_type", sql.Named("config_type", configType))
 	}
 	err := query.Find(&dbConfigObjects).Error
 	return dbConfigObjects, err

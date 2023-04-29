@@ -9,11 +9,11 @@
 package swagger
 
 type Config struct {
-	ConfigType string `json:"config_type,omitempty"`
-	ExternalId []string `json:"external_id,omitempty"`
-	ExternalType string `json:"external_type,omitempty"`
-	Id string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-	Namespace string `json:"namespace,omitempty"`
-	Spec *interface{} `json:"spec,omitempty"`
+	Id          string       `json:"id,omitempty"`
+	ConfigClass string       `json:"config_class,omitempty"`
+	ExternalId  []string     `json:"external_id,omitempty"`
+	Type        string       `json:"type,omitempty"`
+	Name        string       `json:"name,omitempty"`
+	Namespace   string       `json:"namespace,omitempty"`
+	Spec        *interface{} `json:"spec,omitempty"`
 }
