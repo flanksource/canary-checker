@@ -21,7 +21,7 @@ require (
 	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
 	github.com/elastic/go-elasticsearch/v8 v8.1.0
 	github.com/fergusstrange/embedded-postgres v1.21.0
-	github.com/flanksource/commons v1.7.0
+	github.com/flanksource/commons v1.9.0
 	github.com/flanksource/duty v1.0.77
 	github.com/flanksource/kommons v0.31.1
 	github.com/friendsofgo/errors v0.9.2
