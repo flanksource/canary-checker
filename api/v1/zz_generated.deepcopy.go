@@ -873,7 +873,7 @@ func (in *ComponentSpec) DeepCopyInto(out *ComponentSpec) {
 	}
 	if in.Selectors != nil {
 		in, out := &in.Selectors, &out.Selectors
-		*out = make(models.ResourceSelectors, len(*in))
+		*out = make(types.ResourceSelectors, len(*in))
 		copy(*out, *in)
 	}
 	if in.ComponentChecks != nil {
@@ -961,7 +961,7 @@ func (in *ComponentSpecObject) DeepCopyInto(out *ComponentSpecObject) {
 	}
 	if in.Selectors != nil {
 		in, out := &in.Selectors, &out.Selectors
-		*out = make(models.ResourceSelectors, len(*in))
+		*out = make(types.ResourceSelectors, len(*in))
 		copy(*out, *in)
 	}
 	if in.ComponentChecks != nil {
@@ -1651,7 +1651,7 @@ func (in *ForEach) DeepCopyInto(out *ForEach) {
 	}
 	if in.Selectors != nil {
 		in, out := &in.Selectors, &out.Selectors
-		*out = make(models.ResourceSelectors, len(*in))
+		*out = make(types.ResourceSelectors, len(*in))
 		copy(*out, *in)
 	}
 	if in.Relationships != nil {

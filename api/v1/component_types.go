@@ -39,8 +39,8 @@ type ComponentSpec struct {
 	// Create new child components
 	Components []ComponentSpecObject `json:"components,omitempty"`
 	// Lookup and associcate other components with this component
-	Selectors       models.ResourceSelectors `json:"selectors,omitempty"`
-	ComponentChecks ComponentChecks          `json:"checks,omitempty"`
+	Selectors       types.ResourceSelectors `json:"selectors,omitempty"`
+	ComponentChecks ComponentChecks         `json:"checks,omitempty"`
 	// Lookup and associate config items with this component
 	Configs Configs `json:"configs,omitempty"`
 	//
@@ -70,11 +70,11 @@ type ForEach struct {
 	// Properties are created once the full component tree is created, property lookup functions
 	// can return a map of coomponent name => properties to allow for bulk property lookups
 	// being applied to multiple components in the tree
-	Properties      Properties               `json:"properties,omitempty"`
-	Configs         []Config                 `json:"configs,omitempty"`
-	Selectors       models.ResourceSelectors `json:"selectors,omitempty"`
-	Relationships   []RelationshipSpec       `json:"relationships,omitempty"`
-	ComponentChecks ComponentChecks          `json:"checks,omitempty"`
+	Properties      Properties              `json:"properties,omitempty"`
+	Configs         []Config                `json:"configs,omitempty"`
+	Selectors       types.ResourceSelectors `json:"selectors,omitempty"`
+	Relationships   []RelationshipSpec      `json:"relationships,omitempty"`
+	ComponentChecks ComponentChecks         `json:"checks,omitempty"`
 }
 
 func (f *ForEach) IsEmpty() bool {

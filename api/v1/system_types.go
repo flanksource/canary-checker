@@ -3,7 +3,6 @@ package v1
 import (
 	"fmt"
 
-	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -64,7 +63,7 @@ type NamespaceSelector struct {
 }
 
 type ComponentCheck struct {
-	Selector models.ResourceSelector `json:"selector,omitempty"`
+	Selector types.ResourceSelector `json:"selector,omitempty"`
 	// +kubebuilder:validation:XPreserveUnknownFields
 	Inline *CanarySpec `json:"inline,omitempty"`
 }

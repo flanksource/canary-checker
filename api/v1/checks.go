@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/external"
-	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
 	v1 "k8s.io/api/core/v1"
 )
@@ -714,8 +714,8 @@ func (c ConfigDBCheck) GetEndpoint() string {
 type KubernetesCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
-	Namespace   models.ResourceSelector `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-	Resource    models.ResourceSelector `yaml:"resource,omitempty" json:"resource,omitempty"`
+	Namespace   types.ResourceSelector `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Resource    types.ResourceSelector `yaml:"resource,omitempty" json:"resource,omitempty"`
 	// Ignore the specified resources from the fetched resources. Can be a glob pattern.
 	Ignore []string `yaml:"ignore,omitempty" json:"ignore,omitempty"`
 	Kind   string   `yaml:"kind" json:"kind"`

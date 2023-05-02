@@ -123,7 +123,7 @@ func UpdateComponentCosts() error {
     `).Error
 }
 
-func GetComponentsWithSelectors(resourceSelectors models.ResourceSelectors) (components models.Components, err error) {
+func GetComponentsWithSelectors(resourceSelectors types.ResourceSelectors) (components models.Components, err error) {
 	var uniqueComponents = make(map[string]*models.Component)
 	for _, resourceSelector := range resourceSelectors {
 		var selectorID string
@@ -316,11 +316,11 @@ func DeleteComponentsOfTopology(topologyID string, deleteTime time.Time) error {
 			logger.Errorf("Error deleting component[%s] relationship for component %v", component.ID, err)
 		}
 
-		// if component.ComponentChecks != nil {
-		// 	if err := DeleteInlineCanariesForComponent(component.ID.String(), deleteTime); err != nil {
-		// 		logger.Errorf("Error deleting inline canaries for component %s: %v", component.ID, err)
-		// 	}
-		// }
+		if component.ComponentChecks != nil {
+			if err := DeleteInlineCanariesForComponent(component.ID.String(), deleteTime); err != nil {
+				logger.Errorf("Error deleting inline canaries for component %s: %v", component.ID, err)
+			}
+		}
 
 		if component.Configs != nil {
 			if err := DeleteConfigRelationshipForComponent(component.ID, deleteTime); err != nil {
