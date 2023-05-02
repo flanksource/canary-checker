@@ -8,7 +8,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/duty/models"
+
 	//"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/commons/logger"
 )
@@ -21,25 +22,25 @@ type ConfigComponentRelationship struct {
 	DeletedAt   *time.Time
 }
 
-func configQuery(config pkg.Config) *gorm.DB {
+func configQuery(config models.ConfigItem) *gorm.DB {
 	query := Gorm.Table("config_items")
 	if config.ConfigClass != "" {
 		query = query.Where("config_class = ?", config.ConfigClass)
 	}
-	if config.Name != "" {
+	if config.Name != nil && *config.Name != "" {
 		query = query.Where("name = ?", config.Name)
 	}
-	if config.Namespace != "" {
+	if config.Namespace != nil && *config.Namespace != "" {
 		query = query.Where("namespace = ?", config.Namespace)
 	}
 
-	if config.Tags != nil && len(config.Tags) > 0 {
+	if config.Tags != nil && len(*config.Tags) > 0 {
 		query = query.Where("tags @> ?", config.Tags)
 	}
 
 	// Type is derived from v1.Config.Type which is a user input field
 	// It can refer to both type or config_class for now
-	if config.Type != "" {
+	if config.Type != nil && *config.Type != "" {
 		query = query.Where("type = @config_type OR config_class = @config_type", sql.Named("config_type", config.Type))
 	}
 	if len(config.ExternalID) > 0 {
@@ -48,12 +49,13 @@ func configQuery(config pkg.Config) *gorm.DB {
 	return query
 }
 
-func FindConfig(config pkg.Config) (*pkg.Config, error) {
+func FindConfig(config models.ConfigItem) (*models.ConfigItem, error) {
 	if Gorm == nil {
 		logger.Debugf("Config lookup on %v will be ignored, db not initialized", config)
 		return nil, gorm.ErrRecordNotFound
 	}
-	var dbConfigObject pkg.Config
+
+	var dbConfigObject models.ConfigItem
 	query := configQuery(config)
 	tx := query.Limit(1).Find(&dbConfigObject)
 	if tx.Error != nil {
@@ -65,8 +67,8 @@ func FindConfig(config pkg.Config) (*pkg.Config, error) {
 	return &dbConfigObject, nil
 }
 
-func FindConfigForComponent(componentID, configType string) ([]pkg.Config, error) {
-	var dbConfigObjects []pkg.Config
+func FindConfigForComponent(componentID, configType string) ([]models.ConfigItem, error) {
+	var dbConfigObjects []models.ConfigItem
 	relationshipQuery := Gorm.Table("config_component_relationships").Select("config_id").Where("component_id = ? AND deleted_at IS NULL", componentID)
 	query := Gorm.Table("config_items").Where("id IN (?)", relationshipQuery)
 	if configType != "" {

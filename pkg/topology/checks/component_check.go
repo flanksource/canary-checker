@@ -5,7 +5,6 @@ import (
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
-	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
@@ -36,65 +35,67 @@ func ComponentCheckRun() {
 	_ = db.PersistJobHistory(jobHistory.End())
 }
 
-func GetCheckComponentRelationshipsForComponent(component *pkg.Component) (relationships []*pkg.CheckComponentRelationship) {
-	for _, componentCheck := range component.ComponentChecks {
-		if componentCheck.Selector.LabelSelector != "" {
-			labelChecks, err := db.GetChecksWithLabelSelector(componentCheck.Selector.LabelSelector)
-			if err != nil {
-				logger.Debugf("error getting checks with label selector: %s. err: %v", componentCheck.Selector.LabelSelector, err)
-			}
-			for _, labelCheck := range labelChecks {
-				selectorID, err := utils.GenerateJSONMD5Hash(componentCheck)
-				if err != nil {
-					logger.Errorf("Error generationg selector_id hash: %v", err)
-				}
+func GetCheckComponentRelationshipsForComponent(component *models.Component) (relationships []*pkg.CheckComponentRelationship) {
+	// NOTE: ComponentChecks has been removed from components
+	//
+	// for _, componentCheck := range component.ComponentChecks {
+	// 	if componentCheck.Selector.LabelSelector != "" {
+	// 		labelChecks, err := db.GetChecksWithLabelSelector(componentCheck.Selector.LabelSelector)
+	// 		if err != nil {
+	// 			logger.Debugf("error getting checks with label selector: %s. err: %v", componentCheck.Selector.LabelSelector, err)
+	// 		}
+	// 		for _, labelCheck := range labelChecks {
+	// 			selectorID, err := utils.GenerateJSONMD5Hash(componentCheck)
+	// 			if err != nil {
+	// 				logger.Errorf("Error generationg selector_id hash: %v", err)
+	// 			}
 
-				relationships = append(relationships, &pkg.CheckComponentRelationship{
-					CanaryID:    labelCheck.CanaryID,
-					CheckID:     labelCheck.ID,
-					ComponentID: component.ID,
-					SelectorID:  selectorID,
-				})
-			}
-		}
-		if componentCheck.Inline != nil {
-			inlineSchedule := component.Schedule
-			if componentCheck.Inline.Schedule != "" {
-				inlineSchedule = componentCheck.Inline.Schedule
-			}
-			canary, err := db.CreateComponentCanaryFromInline(
-				component.ID.String(), component.Name, component.Namespace,
-				inlineSchedule, component.Owner, componentCheck.Inline,
-			)
-			if err != nil {
-				logger.Debugf("error creating canary from inline: %v", err)
-			}
+	// 			relationships = append(relationships, &pkg.CheckComponentRelationship{
+	// 				CanaryID:    labelCheck.CanaryID,
+	// 				CheckID:     labelCheck.ID,
+	// 				ComponentID: component.ID,
+	// 				SelectorID:  selectorID,
+	// 			})
+	// 		}
+	// 	}
+	// 	if componentCheck.Inline != nil {
+	// 		inlineSchedule := component.Schedule
+	// 		if componentCheck.Inline.Schedule != "" {
+	// 			inlineSchedule = componentCheck.Inline.Schedule
+	// 		}
+	// 		canary, err := db.CreateComponentCanaryFromInline(
+	// 			component.ID.String(), component.Name, component.Namespace,
+	// 			inlineSchedule, component.Owner, componentCheck.Inline,
+	// 		)
+	// 		if err != nil {
+	// 			logger.Debugf("error creating canary from inline: %v", err)
+	// 		}
 
-			if v1canary, err := canary.ToV1(); err == nil {
-				if err := canaryJobs.SyncCanaryJob(*v1canary); err != nil {
-					logger.Debugf("error creating canary job: %v", err)
-				}
-			}
-			inlineChecks, err := db.GetAllChecksForCanary(canary.ID)
-			if err != nil {
-				logger.Debugf("error getting checks for canary: %s. err: %v", canary.ID, err)
-				continue
-			}
-			for _, inlineCheck := range inlineChecks {
-				selectorID, err := utils.GenerateJSONMD5Hash(componentCheck)
-				if err != nil {
-					logger.Errorf("Error generationg selector_id hash: %v", err)
-				}
+	// 		if v1canary, err := canary.ToV1(); err == nil {
+	// 			if err := canaryJobs.SyncCanaryJob(*v1canary); err != nil {
+	// 				logger.Debugf("error creating canary job: %v", err)
+	// 			}
+	// 		}
+	// 		inlineChecks, err := db.GetAllChecksForCanary(canary.ID)
+	// 		if err != nil {
+	// 			logger.Debugf("error getting checks for canary: %s. err: %v", canary.ID, err)
+	// 			continue
+	// 		}
+	// 		for _, inlineCheck := range inlineChecks {
+	// 			selectorID, err := utils.GenerateJSONMD5Hash(componentCheck)
+	// 			if err != nil {
+	// 				logger.Errorf("Error generationg selector_id hash: %v", err)
+	// 			}
 
-				relationships = append(relationships, &pkg.CheckComponentRelationship{
-					CanaryID:    inlineCheck.CanaryID,
-					CheckID:     inlineCheck.ID,
-					ComponentID: component.ID,
-					SelectorID:  selectorID,
-				})
-			}
-		}
-	}
+	// 			relationships = append(relationships, &pkg.CheckComponentRelationship{
+	// 				CanaryID:    inlineCheck.CanaryID,
+	// 				CheckID:     inlineCheck.ID,
+	// 				ComponentID: component.ID,
+	// 				SelectorID:  selectorID,
+	// 			})
+	// 		}
+	// 	}
+	// }
 	return relationships
 }
 

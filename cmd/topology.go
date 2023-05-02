@@ -9,6 +9,7 @@ import (
 
 	"github.com/flanksource/commons/timer"
 	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/models"
 
 	"github.com/spf13/cobra"
 
@@ -97,7 +98,7 @@ var RunTopology = &cobra.Command{
 
 		opts := getTopologyRunOptions(10)
 
-		var results = []*pkg.Component{}
+		var results = []*models.Component{}
 
 		wg := sync.WaitGroup{}
 

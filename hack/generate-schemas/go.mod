@@ -119,6 +119,7 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/liamylian/jsontime/v2 v2.0.0 // indirect
+	github.com/lib/pq v1.10.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect
@@ -189,3 +190,5 @@ replace (
 )
 
 replace k8s.io/client-go => k8s.io/client-go v0.26.1
+
+replace github.com/flanksource/duty => ../../../duty

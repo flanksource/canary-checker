@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
 )
@@ -26,7 +25,11 @@ func ComponentConfigRun() {
 	jobHistory := models.NewJobHistory("ComponentConfigRelationshipSync", "", "").Start()
 	_ = db.PersistJobHistory(jobHistory)
 	for _, component := range components {
-		if err := SyncComponentConfigRelationship(component.ID, component.Configs); err != nil {
+		// TODO: Get config items from component.Configs
+		// component.Configs
+		var configItems []*models.ConfigItem
+
+		if err := SyncComponentConfigRelationship(component.ID, configItems); err != nil {
 			logger.Errorf("error persisting config relationships: %v", err)
 			jobHistory.AddError(err.Error())
 			continue
@@ -36,7 +39,7 @@ func ComponentConfigRun() {
 	_ = db.PersistJobHistory(jobHistory.End())
 }
 
-func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs) error {
+func SyncComponentConfigRelationship(componentID uuid.UUID, configs []*models.ConfigItem) error {
 	if len(configs) == 0 {
 		return nil
 	}
@@ -72,7 +75,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 
 		// If configID does not exist, create a new relationship
 		if !collections.Contains(existingConfigIDs, dbConfig.ID.String()) {
-			if err := db.PersistConfigComponentRelationship(*dbConfig.ID, componentID, selectorID); err != nil {
+			if err := db.PersistConfigComponentRelationship(dbConfig.ID, componentID, selectorID); err != nil {
 				return errors.Wrap(err, "error persisting config relationships")
 			}
 			continue
@@ -83,7 +86,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 			Update("deleted_at", time.Now()).Error; err != nil {
 			return errors.Wrap(err, "error updating config relationships")
 		}
-		if err := db.PersistConfigComponentRelationship(*dbConfig.ID, componentID, selectorID); err != nil {
+		if err := db.PersistConfigComponentRelationship(dbConfig.ID, componentID, selectorID); err != nil {
 			return errors.Wrap(err, "error persisting config relationships")
 		}
 	}

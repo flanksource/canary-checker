@@ -10,6 +10,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -38,7 +39,7 @@ func PersistTopology(t *v1.Topology) (bool, error) {
 	return changed, nil
 }
 
-func PersistComponents(results []*pkg.Component) error {
+func PersistComponents(results []*models.Component) error {
 	for _, component := range results {
 		_, err := PersistComponent(component)
 		if err != nil {
@@ -72,7 +73,7 @@ func GetAllTopologies() ([]v1.Topology, error) {
 }
 
 // Get all the components from table which has not null selectors
-func GetAllComponentsWithSelectors() (components pkg.Components, err error) {
+func GetAllComponentsWithSelectors() (components models.Components, err error) {
 	if err := Gorm.Table("components").Where("deleted_at is NULL and selectors != 'null'").Find(&components).Error; err != nil {
 		return nil, err
 	}
@@ -122,8 +123,8 @@ func UpdateComponentCosts() error {
     `).Error
 }
 
-func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (components pkg.Components, err error) {
-	var uniqueComponents = make(map[string]*pkg.Component)
+func GetComponentsWithSelectors(resourceSelectors models.ResourceSelectors) (components models.Components, err error) {
+	var uniqueComponents = make(map[string]*models.Component)
 	for _, resourceSelector := range resourceSelectors {
 		var selectorID string
 		selectorID, err = utils.GenerateJSONMD5Hash(resourceSelector)
@@ -159,21 +160,21 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 	return components, nil
 }
 
-func GetAllComponentsWithConfigs() (components pkg.Components, err error) {
+func GetAllComponentsWithConfigs() (components models.Components, err error) {
 	if err := Gorm.Table("components").Where("deleted_at is NULL and configs != 'null'").Find(&components).Error; err != nil {
 		return nil, err
 	}
 	return
 }
 
-func GetAllComponentWithCanaries() (components pkg.Components, err error) {
+func GetAllComponentWithCanaries() (components models.Components, err error) {
 	if err := Gorm.Table("components").Where("deleted_at is NULL and component_checks != 'null'").Find(&components).Error; err != nil {
 		return nil, err
 	}
 	return
 }
 
-func NewComponentRelationships(relationshipID uuid.UUID, path string, components pkg.Components) (relationships []*pkg.ComponentRelationship, err error) {
+func NewComponentRelationships(relationshipID uuid.UUID, path string, components models.Components) (relationships []*pkg.ComponentRelationship, err error) {
 	for _, component := range components {
 		relationships = append(relationships, &pkg.ComponentRelationship{
 			RelationshipID:   relationshipID,
@@ -218,8 +219,8 @@ func PersistCheckComponentRelationship(relationship *pkg.CheckComponentRelations
 }
 
 // TODO: Simplify logic and improve readability
-func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
-	existing := &pkg.Component{}
+func PersistComponent(component *models.Component) ([]uuid.UUID, error) {
+	existing := &models.Component{}
 	var persisted []uuid.UUID
 	var tx *gorm.DB
 	if component.TopologyID == nil {
@@ -282,7 +283,7 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 	return persisted, tx.Error
 }
 
-func UpdateStatusAndSummaryForComponent(id uuid.UUID, status models.ComponentStatus, summary models.Summary) (int64, error) {
+func UpdateStatusAndSummaryForComponent(id uuid.UUID, status types.ComponentStatus, summary types.Summary) (int64, error) {
 	tx := Gorm.Table("components").Where("id = ? and (status != ? or summary != ?)", id, status, summary).UpdateColumns(models.Component{Status: status, Summary: summary})
 	return tx.RowsAffected, tx.Error
 }
@@ -302,7 +303,7 @@ func DeleteTopology(t *v1.Topology) error {
 // DeleteComponents deletes all components associated with a topology
 func DeleteComponentsOfTopology(topologyID string, deleteTime time.Time) error {
 	logger.Infof("Deleting all components associated with topology: %s", topologyID)
-	componentsModel := &[]pkg.Component{}
+	componentsModel := &[]models.Component{}
 	if err := Gorm.Where("topology_id = ?", topologyID).Find(componentsModel).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
 		return err
 	}
@@ -315,11 +316,11 @@ func DeleteComponentsOfTopology(topologyID string, deleteTime time.Time) error {
 			logger.Errorf("Error deleting component[%s] relationship for component %v", component.ID, err)
 		}
 
-		if component.ComponentChecks != nil {
-			if err := DeleteInlineCanariesForComponent(component.ID.String(), deleteTime); err != nil {
-				logger.Errorf("Error deleting inline canaries for component %s: %v", component.ID, err)
-			}
-		}
+		// if component.ComponentChecks != nil {
+		// 	if err := DeleteInlineCanariesForComponent(component.ID.String(), deleteTime); err != nil {
+		// 		logger.Errorf("Error deleting inline canaries for component %s: %v", component.ID, err)
+		// 	}
+		// }
 
 		if component.Configs != nil {
 			if err := DeleteConfigRelationshipForComponent(component.ID, deleteTime); err != nil {

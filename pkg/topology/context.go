@@ -3,7 +3,7 @@ package topology
 import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
 	"github.com/flanksource/kommons/ktemplate"
 	"github.com/pkg/errors"
@@ -16,9 +16,9 @@ type ComponentContext struct {
 	// Components keep track of the components that properties can apply to,
 	// properties can return a map of component names to properties to facilitate
 	// queries that are more efficient to perform for all components rather than a component at a time
-	Components *pkg.Components
+	Components *models.Components
 	// Properties can either be looked up on an individual component, or act as a summary across all components
-	CurrentComponent *pkg.Component
+	CurrentComponent *models.Component
 	templater        *ktemplate.StructTemplater
 }
 
@@ -46,7 +46,7 @@ func (c *ComponentContext) GetTemplater() ktemplate.StructTemplater {
 	return *c.templater
 }
 
-func (c *ComponentContext) SetCurrentComponent(component *pkg.Component) {
+func (c *ComponentContext) SetCurrentComponent(component *models.Component) {
 	c.CurrentComponent = component
 	if c.templater != nil {
 		c.templater.Values = map[string]interface{}{
@@ -102,7 +102,7 @@ func (c *ComponentContext) Clone() *ComponentContext {
 		Components:        c.Components,
 	}
 }
-func (c *ComponentContext) WithComponents(components *pkg.Components, current *pkg.Component) *ComponentContext {
+func (c *ComponentContext) WithComponents(components *models.Components, current *models.Component) *ComponentContext {
 	cloned := c.Clone()
 	cloned.Components = components
 	cloned.CurrentComponent = current

@@ -9,10 +9,11 @@ import (
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/canary-checker/templating"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
+	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
 	"github.com/google/uuid"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
@@ -21,9 +22,9 @@ import (
 
 var json = jsontime.ConfigWithCustomTimeFormat
 
-func mergeComponentLookup(ctx *ComponentContext, component *v1.ComponentSpec, spec *v1.CanarySpec) (pkg.Components, error) {
+func mergeComponentLookup(ctx *ComponentContext, component *v1.ComponentSpec, spec *v1.CanarySpec) (models.Components, error) {
 	name := component.Name
-	components := pkg.Components{}
+	components := models.Components{}
 	results, err := lookup(ctx, name, *spec)
 	if err != nil {
 		return nil, errors.Wrapf(err, "component lookup failed: %s", component)
@@ -35,7 +36,7 @@ func mergeComponentLookup(ctx *ComponentContext, component *v1.ComponentSpec, sp
 	} else {
 		// the property returned a list of new properties
 		for _, result := range results {
-			var p pkg.Component
+			var p models.Component
 			data, err := json.Marshal(result)
 			if err != nil {
 				return nil, err
@@ -55,7 +56,7 @@ func mergeComponentLookup(ctx *ComponentContext, component *v1.ComponentSpec, sp
 	return components, nil
 }
 
-func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *pkg.Component) error {
+func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *models.Component) error {
 	logger.Debugf("[%s] %s", component.Name, spec.ForEach)
 	if spec.ForEach == nil {
 		return nil
@@ -89,13 +90,21 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 		}
 	}
 
+	var configItems []*models.ConfigItem
 	for _, childConfig := range spec.ForEach.Configs {
 		child := childConfig
 		if err := ctx.TemplateConfig(&child); err != nil {
 			logger.Errorf("Failed to lookup configs %s: %v", child, err)
 		} else {
-			component.Configs = append(component.Configs, pkg.NewConfig(child))
+			configItems = append(configItems, pkg.NewConfig(child))
 		}
+	}
+
+	configJSON, err := json.Marshal(configItems)
+	if err != nil {
+		logger.Errorf("Failed to marshal config items: %v", err)
+	} else {
+		component.Configs = configJSON
 	}
 
 	for _, _selector := range spec.ForEach.Selectors {
@@ -110,19 +119,19 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 	return nil
 }
 
-func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (components pkg.Components, err error) {
+func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (components models.Components, err error) {
 	// A component can have either a lookup or child components
 	// A lookup will translates flatly into a list of components
 
 	if component.Lookup != nil {
-		var lookedUpComponents pkg.Components
+		var lookedUpComponents models.Components
 		logger.Debugf("Looking up components for %s => %s", component, component.ForEach)
 		if lookedUpComponents, err = mergeComponentLookup(ctx, &component, component.Lookup); err != nil {
 			return nil, err
 		}
 		components = append(components, lookedUpComponents...)
 	} else {
-		var childComponents pkg.Components
+		var childComponents models.Components
 		for _, child := range component.Components {
 			children, err := lookupComponents(ctx, v1.ComponentSpec(child))
 			if err != nil {
@@ -199,8 +208,9 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 	return results, nil
 }
 
-func lookupConfig(ctx *ComponentContext, property *v1.Property) (*pkg.Property, error) {
-	prop := pkg.NewProperty(*property)
+func lookupConfig(ctx *ComponentContext, property *v1.Property) (*models.Property, error) {
+	prop := property.ToModel()
+
 	logger.Debugf("Looking up config for %s => %s", property.Name, property.ConfigLookup.Config)
 	if property.ConfigLookup.Config == nil {
 		return nil, fmt.Errorf("empty config in configLookup")
@@ -227,7 +237,7 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*pkg.Property, 
 		return nil, err
 	}
 	pkgConfig := pkg.NewConfig(*config)
-	pkgConfig.Name = configName
+	pkgConfig.Name = &configName
 	_config, err := db.FindConfig(*pkgConfig)
 	if err != nil {
 		return prop, err
@@ -236,26 +246,35 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*pkg.Property, 
 		return prop, nil
 	}
 
+	configMap, err := _config.ConfigJSONStringMap()
+	if err != nil {
+		return prop, fmt.Errorf("failed to marshal config: %w", err)
+	}
+
 	templateEnv := map[string]any{
-		"config": _config.Spec.ToMapStringAny(),
+		"config": configMap,
 		"tags":   _config.Tags.ToMapStringAny(),
 	}
 	prop.Text, err = templating.Template(templateEnv, property.ConfigLookup.Display.Template)
 	return prop, err
 }
 
-func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Properties, error) {
-	prop := pkg.NewProperty(*property)
+func lookupProperty(ctx *ComponentContext, property *v1.Property) (models.Properties, error) {
+	if property == nil {
+		return nil, nil
+	}
+
+	prop := property.ToModel()
 
 	if property.ConfigLookup != nil {
 		prop, err := lookupConfig(ctx, property)
 		if err != nil {
 			return nil, errors.Wrapf(err, "property config lookup failed: %s", property)
 		}
-		return pkg.Properties{prop}, nil
+		return models.Properties{prop}, nil
 	}
 	if property.Lookup == nil {
-		return pkg.Properties{prop}, nil
+		return models.Properties{prop}, nil
 	}
 
 	results, err := lookup(ctx, property.Name, *property.Lookup)
@@ -275,7 +294,7 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Propertie
 	if isComponentList(data) {
 		// the result is map of components to properties, find the existing component
 		// and then merge the property into it
-		components := pkg.Components{}
+		components := models.Components{}
 		err = json.Unmarshal([]byte(results[0].(string)), &components)
 		if err != nil {
 			return nil, err
@@ -295,12 +314,12 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Propertie
 		}
 		return nil, nil
 	} else if isPropertyList(data) {
-		properties := pkg.Properties{}
+		properties := models.Properties{}
 		err = json.Unmarshal([]byte(results[0].(string)), &properties)
 		return properties, err
 	} else {
 		prop.Text = string(data)
-		return pkg.Properties{prop}, nil
+		return models.Properties{prop}, nil
 	}
 }
 
@@ -310,14 +329,14 @@ type TopologyRunOptions struct {
 	Namespace string
 }
 
-func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
+func Run(opts TopologyRunOptions, s v1.Topology) []*models.Component {
 	if s.Namespace == "" {
 		s.Namespace = opts.Namespace
 	}
 	logger.Debugf("Running topology %s/%s depth=%d", s.Namespace, s.Name, opts.Depth)
 	ctx := NewComponentContext(opts.Client, s)
-	var results pkg.Components
-	component := &pkg.Component{
+	var results models.Components
+	component := &models.Component{
 		Name:      ctx.Topology.Spec.Text,
 		Namespace: ctx.Topology.GetNamespace(),
 		Labels:    ctx.Topology.Labels,
@@ -342,7 +361,7 @@ func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
 			// add topology labels to the components
 			for _, component := range components {
 				if component.Labels == nil {
-					component.Labels = make(types.JSONStringMap)
+					component.Labels = make(dutyTypes.JSONStringMap)
 				}
 				for key, value := range ctx.Topology.Labels {
 					// don't overwrite the component labels
@@ -396,10 +415,9 @@ func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
 		component.ExternalId = component.Name
 	}
 
-	component.Status = pkg.ComponentStatus(component.Summary.GetStatus())
-	// if logger.IsTraceEnabled() {
+	component.Status = component.Summary.GetStatus()
+
 	logger.Debugf(component.Components.Debug(""))
-	// }
 	results = append(results, component)
 	logger.Infof("%s id=%s external_id=%s status=%s", component.Name, component.ID, component.ExternalId, component.Status)
 	for _, c := range results.Walk() {

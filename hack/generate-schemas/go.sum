@@ -805,8 +805,6 @@ github.com/felixge/httpsnoop v1.0.2/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSw
 github.com/felixge/httpsnoop v1.0.3/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/flanksource/commons v1.7.0 h1:B87CrUFM2hcAkiJey5ermZESW7guM6ia2Z67AOeA7hQ=
 github.com/flanksource/commons v1.7.0/go.mod h1:f9gxPkf6psRWWADpVutZ4hedPrgbIJfV3WoZWQQzgxE=
-github.com/flanksource/duty v1.0.77 h1:4qfYOIWW1ACo4WZo1Kn3hxX/SkZ8AKYtQ+P7ybK2JWo=
-github.com/flanksource/duty v1.0.77/go.mod h1:Xzlp3Q3OGyT7wRKUxji7jNcj9XZKZ30kgFHMzPrFXpY=
 github.com/flanksource/gomplate/v3 v3.20.1/go.mod h1:LPpzujBIg9HBXRUngDKK/zNmEjHpEUieKa/2oRjkCzI=
 github.com/flanksource/gomplate/v3 v3.20.3 h1:mnNaO37uwvv8Kvi4Xswj1tHKP5UMre3FLNaKvAwqhSw=
 github.com/flanksource/gomplate/v3 v3.20.3/go.mod h1:l4iCvp30TdhZk89eRGuNkPwlRjJLXdUSblr+VyuZfAk=
@@ -1354,6 +1352,7 @@ github.com/lib/pq v1.1.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/lib/pq v1.2.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/lib/pq v1.10.2/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/lib/pq v1.10.4/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
+github.com/lib/pq v1.10.7 h1:p7ZhMD+KsSRozJr34udlUrhboJwWAgCg34+/ZZNvZZw=
 github.com/lib/pq v1.10.7/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de/go.mod h1:zAbeS9B/r2mtpb6U+EI2rYA5OAXxsYw6wTamcNW+zcE=
 github.com/linode/linodego v1.4.0/go.mod h1:PVsRxSlOiJyvG4/scTszpmZDTdgS+to3X6eS8pRrWI8=
