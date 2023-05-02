@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -76,6 +77,16 @@ type Config struct {
 	Tags      map[string]string `json:"tags,omitempty"`
 }
 
+func (c Config) ToModel() *types.ConfigQuery {
+	return &types.ConfigQuery{
+		ID:        c.ID,
+		Type:      c.Type,
+		Name:      c.Name,
+		Namespace: c.Namespace,
+		Tags:      c.Tags,
+	}
+}
+
 func (c Config) String() string {
 	s := c.Type
 	if c.Namespace != "" {
@@ -89,6 +100,17 @@ func (c Config) String() string {
 		s += " " + fmt.Sprintf("%v", c.Tags)
 	}
 	return s
+}
+
+type Configs []*Config
+
+func (c Configs) ToModel() types.ConfigQueries {
+	queries := make(types.ConfigQueries, len(c))
+	for i, c := range c {
+		queries[i] = c.ToModel()
+	}
+
+	return queries
 }
 
 // +kubebuilder:object:root=true

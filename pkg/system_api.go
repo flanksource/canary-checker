@@ -115,8 +115,6 @@ type CheckComponentRelationship struct {
 }
 
 func NewComponent(c v1.ComponentSpec) *models.Component {
-	configs := NewConfigs(c.Configs)
-	configJSON, _ := json.Marshal(configs)
 	_c := models.Component{
 		Name:         c.Name,
 		Owner:        c.Owner,
@@ -126,7 +124,7 @@ func NewComponent(c v1.ComponentSpec) *models.Component {
 		Tooltip:      c.Tooltip,
 		Icon:         c.Icon,
 		Selectors:    c.Selectors,
-		Configs:      configJSON,
+		Configs:      c.Configs.ToModel(),
 		LogSelectors: c.LogSelectors,
 	}
 

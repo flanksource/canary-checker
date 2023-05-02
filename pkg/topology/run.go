@@ -90,21 +90,13 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 		}
 	}
 
-	var configItems []*models.ConfigItem
 	for _, childConfig := range spec.ForEach.Configs {
 		child := childConfig
 		if err := ctx.TemplateConfig(&child); err != nil {
 			logger.Errorf("Failed to lookup configs %s: %v", child, err)
 		} else {
-			configItems = append(configItems, pkg.NewConfig(child))
+			component.Configs = append(component.Configs, child.ToModel())
 		}
-	}
-
-	configJSON, err := json.Marshal(configItems)
-	if err != nil {
-		logger.Errorf("Failed to marshal config items: %v", err)
-	} else {
-		component.Configs = configJSON
 	}
 
 	for _, _selector := range spec.ForEach.Selectors {
@@ -236,6 +228,7 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*models.Propert
 	if err := ctx.TemplateConfig(config); err != nil {
 		return nil, err
 	}
+
 	pkgConfig := pkg.NewConfig(*config)
 	pkgConfig.Name = &configName
 	_config, err := db.FindConfig(*pkgConfig)

@@ -42,7 +42,7 @@ type ComponentSpec struct {
 	Selectors       models.ResourceSelectors `json:"selectors,omitempty"`
 	ComponentChecks ComponentChecks          `json:"checks,omitempty"`
 	// Lookup and associate config items with this component
-	Configs []Config `json:"configs,omitempty"`
+	Configs Configs `json:"configs,omitempty"`
 	//
 	Summary *types.Summary `json:"summary,omitempty"`
 	// Only applies when using lookup, when specified the components and properties

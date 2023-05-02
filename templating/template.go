@@ -64,7 +64,7 @@ func Template(environment map[string]interface{}, template v1.Template) (string,
 			}
 			jsonMap, err := configItem.ConfigJSONStringMap()
 			if err != nil {
-				logger.Errorf("Error fetching config item for js: %v", err)
+				logger.Errorf("failed to convert config item to json: %v", err)
 				emptyObj, _ := vm.ToValue(map[string]string{})
 				return emptyObj
 			}
