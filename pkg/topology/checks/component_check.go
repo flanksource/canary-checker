@@ -20,9 +20,10 @@ func ComponentCheckRun() {
 	logger.Debugf("Syncing Check Relationships")
 	components, err := db.GetAllComponentWithCanaries()
 	if err != nil {
-		logger.Errorf("error getting components: %v", err)
+		logger.Errorf("error getting components with canaries: %v", err)
 		return
 	}
+
 	jobHistory := models.NewJobHistory("ComponentCheckRelationshipSync", "", "").Start()
 	_ = db.PersistJobHistory(jobHistory)
 	for _, component := range components {

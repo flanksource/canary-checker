@@ -19,7 +19,7 @@ func ComponentConfigRun() {
 	logger.Debugf("Syncing Component Config Relationships")
 	components, err := db.GetAllComponentsWithConfigs()
 	if err != nil {
-		logger.Errorf("error getting components: %v", err)
+		logger.Errorf("error getting components with configs: %v", err)
 		return
 	}
 

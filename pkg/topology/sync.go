@@ -20,7 +20,7 @@ func ComponentRun() {
 
 	components, err := db.GetAllComponentsWithSelectors()
 	if err != nil {
-		logger.Errorf("error getting components: %v", err)
+		logger.Errorf("error getting components with selectors: %v", err)
 		return
 	}
 
@@ -54,9 +54,10 @@ func ComponentStatusSummarySync() {
 	logger.Debugf("Syncing Status and Summary for components")
 	topology, err := Query(duty.TopologyOptions{Depth: 3})
 	if err != nil {
-		logger.Errorf("error getting components: %v", err)
+		logger.Errorf("error querying topology: %v", err)
 		return
 	}
+
 	jobHistory := models.NewJobHistory("ComponentStatusSummarySync", "", "").Start()
 	_ = db.PersistJobHistory(jobHistory)
 	topology.Components.Map(func(c *models.Component) {
