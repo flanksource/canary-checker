@@ -229,13 +229,12 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*models.Propert
 		return nil, err
 	}
 
-	pkgConfig := pkg.NewConfig(*config)
-	pkgConfig.Name = &configName
-	_config, err := db.FindConfig(*pkgConfig)
+	configQuery := config.ToModel()
+	configQuery.Name = configName
+	_config, err := db.FindConfig(configQuery)
 	if err != nil {
 		return prop, err
-	}
-	if _config == nil {
+	} else if _config == nil {
 		return prop, nil
 	}
 

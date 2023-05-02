@@ -6,6 +6,7 @@ import (
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -25,11 +26,7 @@ func ComponentConfigRun() {
 	jobHistory := models.NewJobHistory("ComponentConfigRelationshipSync", "", "").Start()
 	_ = db.PersistJobHistory(jobHistory)
 	for _, component := range components {
-		// TODO: Get config items from component.Configs
-		// component.Configs
-		var configItems []*models.ConfigItem
-
-		if err := SyncComponentConfigRelationship(component.ID, configItems); err != nil {
+		if err := SyncComponentConfigRelationship(component.ID, component.Configs); err != nil {
 			logger.Errorf("error persisting config relationships: %v", err)
 			jobHistory.AddError(err.Error())
 			continue
@@ -39,7 +36,7 @@ func ComponentConfigRun() {
 	_ = db.PersistJobHistory(jobHistory.End())
 }
 
-func SyncComponentConfigRelationship(componentID uuid.UUID, configs []*models.ConfigItem) error {
+func SyncComponentConfigRelationship(componentID uuid.UUID, configs types.ConfigQueries) error {
 	if len(configs) == 0 {
 		return nil
 	}
@@ -58,7 +55,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs []*models.Co
 
 	var newConfigsIDs []string
 	for _, config := range configs {
-		dbConfig, err := db.FindConfig(*config)
+		dbConfig, err := db.FindConfig(config)
 		if dbConfig == nil || errors.Is(err, gorm.ErrRecordNotFound) {
 			logger.Tracef("no config found for %s", *config)
 			continue

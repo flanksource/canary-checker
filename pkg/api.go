@@ -13,9 +13,7 @@ import (
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
-	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -296,26 +294,6 @@ func (c Check) GetDescription() string {
 
 type Checker interface {
 	CheckArgs(args map[string]interface{}) *CheckResult
-}
-
-func NewConfigs(configs []v1.Config) []*models.ConfigItem {
-	var pkgConfigs []*models.ConfigItem
-	for _, config := range configs {
-		pkgConfigs = append(pkgConfigs, NewConfig(config))
-	}
-
-	return pkgConfigs
-}
-
-func NewConfig(config v1.Config) *models.ConfigItem {
-	tags := dutyTypes.JSONStringMap(config.Tags)
-	return &models.ConfigItem{
-		Name:       &config.Name,
-		Namespace:  &config.Namespace,
-		Tags:       &tags,
-		ExternalID: pq.StringArray(config.ID),
-		Type:       &config.Type,
-	}
 }
 
 func ToV1Config(config models.ConfigItem) v1.Config {

@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 
 	//"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/commons/logger"
@@ -22,34 +23,38 @@ type ConfigComponentRelationship struct {
 	DeletedAt   *time.Time
 }
 
-func configQuery(config models.ConfigItem) *gorm.DB {
+func configQuery(config *types.ConfigQuery) *gorm.DB {
 	query := Gorm.Table("config_items")
-	if config.ConfigClass != "" {
-		query = query.Where("config_class = ?", config.ConfigClass)
+	if config.Class != "" {
+		query = query.Where("config_class = ?", config.Class)
 	}
-	if config.Name != nil && *config.Name != "" {
+
+	if config.Name != "" {
 		query = query.Where("name = ?", config.Name)
 	}
-	if config.Namespace != nil && *config.Namespace != "" {
+
+	if config.Namespace != "" {
 		query = query.Where("namespace = ?", config.Namespace)
 	}
 
-	if config.Tags != nil && len(*config.Tags) > 0 {
+	if len(config.Tags) > 0 {
 		query = query.Where("tags @> ?", config.Tags)
 	}
 
 	// Type is derived from v1.Config.Type which is a user input field
 	// It can refer to both type or config_class for now
-	if config.Type != nil && *config.Type != "" {
+	if config.Type != "" {
 		query = query.Where("type = @config_type OR config_class = @config_type", sql.Named("config_type", config.Type))
 	}
+
 	if len(config.ExternalID) > 0 {
 		query = query.Where("external_id @> ?", config.ExternalID)
 	}
+
 	return query
 }
 
-func FindConfig(config models.ConfigItem) (*models.ConfigItem, error) {
+func FindConfig(config *types.ConfigQuery) (*models.ConfigItem, error) {
 	if Gorm == nil {
 		logger.Debugf("Config lookup on %v will be ignored, db not initialized", config)
 		return nil, gorm.ErrRecordNotFound

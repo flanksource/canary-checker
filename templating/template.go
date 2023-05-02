@@ -18,7 +18,7 @@ import (
 	_ "github.com/flanksource/canary-checker/templating/js"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/text"
-	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	"github.com/robertkrimen/otto/registry"
 	_ "github.com/robertkrimen/otto/underscore"
 )
@@ -48,20 +48,18 @@ func Template(environment map[string]interface{}, template v1.Template) (string,
 		err := vm.Set("findConfigItem", func(call otto.FunctionCall) otto.Value {
 			configType, _ := call.Argument(0).ToString()
 			configName, _ := call.Argument(1).ToString()
-			configItemParams := models.ConfigItem{
-				Type: &configType,
-				Name: &configName,
-			}
-			configItem, err := db.FindConfig(configItemParams)
+			configItem, err := db.FindConfig(&types.ConfigQuery{Type: configType, Name: configName})
 			if err != nil {
 				logger.Errorf("Error fetching config item for js: %v", err)
 				emptyObj, _ := vm.ToValue(map[string]string{})
 				return emptyObj
 			}
+
 			if configItem == nil {
 				emptyObj, _ := vm.ToValue(map[string]string{})
 				return emptyObj
 			}
+
 			jsonMap, err := configItem.ConfigJSONStringMap()
 			if err != nil {
 				logger.Errorf("failed to convert config item to json: %v", err)
