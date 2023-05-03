@@ -60,7 +60,7 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 		return results.Failf("error getting k8s client from kommons client: %v", err)
 	}
 
-	if err := check.PopulateConnection(ctx, db.Gorm, k8sClient, ctx.Namespace); err != nil {
+	if err := check.HydrateConnection(ctx, db.Gorm, k8sClient, ctx.Namespace); err != nil {
 		return results.Failf("unable to populate JMeter connection: %v", err)
 	}
 

@@ -229,8 +229,8 @@ func (c JmeterCheck) GetType() string {
 	return "jmeter"
 }
 
-// PopulateConnection will attempt to populate the host and port from the connection name.
-func (c *JmeterCheck) PopulateConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) error {
+// HydrateConnection will attempt to populate the host and port from the connection name.
+func (c *JmeterCheck) HydrateConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) error {
 	if c.ConnectionName == "" {
 		return nil
 	}
@@ -581,7 +581,6 @@ func (c NamespaceCheck) GetType() string {
 
 type DNSCheck struct {
 	Description     `yaml:",inline" json:",inline"`
-	ConnectionName  string   `yaml:"connection,omitempty" json:"connection,omitempty"`
 	Server          string   `yaml:"server" json:"server,omitempty"`
 	Port            int      `yaml:"port,omitempty" json:"port,omitempty"`
 	Query           string   `yaml:"query,omitempty" json:"query,omitempty"`
@@ -914,7 +913,7 @@ func (t *AWSConnection) populateFromConnection(ctx context.Context, db *gorm.DB,
 // Populate populates an AWSConnection with credentials and other information.
 // If a connection name is specified, it'll be used to populate the endpoint, accessKey and secretKey.
 func (t *AWSConnection) Populate(ctx context.Context, db *gorm.DB, kommonsClient *kommons.Client, namespace string) error {
-	if t.ConnectionName == "" {
+	if t.ConnectionName != "" {
 		k8sClient, err := kommonsClient.GetClientset()
 		if err != nil {
 			return fmt.Errorf("error getting k8s client from kommons client: %w", err)

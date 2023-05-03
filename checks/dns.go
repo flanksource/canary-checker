@@ -12,8 +12,6 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/duty"
 	"golang.org/x/net/context"
 )
 
@@ -75,12 +73,6 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 	if fn, ok := resolvers[strings.ToUpper(queryType)]; !ok {
 		return results.Failf("unknown query type: %s", queryType)
 	} else {
-		if connection, err := duty.FindConnectionByURL(ctx, db.Gorm, check.ConnectionName); err != nil {
-			return results.Failf("failed to find connection from %q: %v", check.ConnectionName, err)
-		} else if connection != nil {
-			check.Query = connection.URL
-		}
-
 		go func() {
 			pass, message, err := fn(ctx, &r, check)
 			if err != nil {
