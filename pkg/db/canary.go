@@ -20,8 +20,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func GetAllCanaries() ([]v1.Canary, error) {
-	var canaries []v1.Canary
+func GetAllCanaries() ([]pkg.Canary, error) {
 	var _canaries []pkg.Canary
 	var rawCanaries interface{}
 	query := fmt.Sprintf("SELECT json_agg(jsonb_set_lax(to_jsonb(canaries),'{checks}', %s)) :: jsonb as canaries from canaries where deleted_at is null", getChecksForCanaries())
@@ -45,14 +44,7 @@ func GetAllCanaries() ([]v1.Canary, error) {
 	if err := json.Unmarshal(rawCanaries.([]byte), &_canaries); err != nil {
 		return nil, err
 	}
-	for _, _canary := range _canaries {
-		c, err := _canary.ToV1()
-		if err != nil {
-			return nil, err
-		}
-		canaries = append(canaries, *c)
-	}
-	return canaries, nil
+	return _canaries, nil
 }
 
 func GetAllChecks() ([]pkg.Check, error) {
@@ -249,6 +241,14 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 		changed = true
 	}
 
+	// Duplicate key happens when an already created canary is persisted
+	// We will ignore this error but act on other errors
+	if err != nil {
+		if !errors.Is(tx.Error, gorm.ErrDuplicatedKey) {
+			return nil, map[string]string{}, changed, tx.Error
+		}
+	}
+
 	var checks = make(map[string]string)
 
 	for _, config := range canary.Spec.GetAllChecks() {
@@ -263,9 +263,6 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 			logger.Errorf("error persisting check", err)
 		}
 		checks[config.GetName()] = id.String()
-	}
-	if tx.Error != nil {
-		return nil, checks, changed, tx.Error
 	}
 
 	return &model, checks, changed, nil
