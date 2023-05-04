@@ -8,13 +8,17 @@ import (
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/external"
-	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
 	"gorm.io/gorm"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
 )
+
+type checkContext interface {
+	context.Context
+	HydrateConnectionByURL(connectionName string) (*models.Connection, error)
+}
 
 type Check struct {
 	Name, Type, Endpoint, Description, Icon string
@@ -230,27 +234,25 @@ func (c JmeterCheck) GetType() string {
 }
 
 // HydrateConnection will attempt to populate the host and port from the connection name.
-func (c *JmeterCheck) HydrateConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) error {
-	if c.ConnectionName == "" {
-		return nil
-	}
-
-	connection, err := duty.HydratedConnectionByURL(ctx, db, k8sClient, namespace, c.ConnectionName)
+func (c *JmeterCheck) HydrateConnection(ctx checkContext) (bool, error) {
+	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	if connection != nil {
-		c.Host = connection.URL
+	if connection == nil {
+		return false, nil
+	}
 
-		if portRaw, ok := connection.Properties["port"]; ok {
-			if port, err := strconv.Atoi(portRaw); nil == err {
-				c.Port = int32(port)
-			}
+	c.Host = connection.URL
+
+	if portRaw, ok := connection.Properties["port"]; ok {
+		if port, err := strconv.Atoi(portRaw); nil == err {
+			c.Port = int32(port)
 		}
 	}
 
-	return nil
+	return true, nil
 }
 
 type DockerPullCheck struct {
@@ -452,8 +454,8 @@ func (c ElasticsearchCheck) GetEndpoint() string {
 	return c.URL
 }
 
-func (c *ElasticsearchCheck) PopulateConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) error {
-	connection, err := duty.HydratedConnectionByURL(ctx, db, k8sClient, namespace, c.ConnectionName)
+func (c *ElasticsearchCheck) PopulateConnection(ctx checkContext) error {
+	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
 	if err != nil {
 		return err
 	}
@@ -543,6 +545,28 @@ func (c LDAPCheck) GetEndpoint() string {
 
 func (c LDAPCheck) GetType() string {
 	return "ldap"
+}
+
+func (c *LDAPCheck) HydrateConnection(ctx checkContext) (bool, error) {
+	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
+	if err != nil {
+		return false, err
+	}
+
+	if connection == nil {
+		return false, nil
+	}
+
+	c.Host = connection.URL
+	c.Auth.Username.Value = connection.Username
+	c.Auth.Password.Value = connection.Password
+
+	c.Auth = &Authentication{
+		Username: kommons.EnvVar{Value: c.Auth.Username.Value},
+		Password: kommons.EnvVar{Value: c.Auth.Password.Value},
+	}
+
+	return true, nil
 }
 
 type NamespaceCheck struct {
@@ -685,12 +709,8 @@ func (c SMBConnection) GetPort() int {
 	return 445
 }
 
-func (c *SMBConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) (found bool, err error) {
-	if c.ConnectionName == "" {
-		return false, nil
-	}
-
-	connection, err := duty.HydratedConnectionByURL(ctx, db, k8sClient, namespace, c.ConnectionName)
+func (c *SMBConnection) PopulateFromConnection(ctx checkContext) (found bool, err error) {
+	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
 	if err != nil {
 		return false, err
 	}
@@ -736,12 +756,8 @@ type SFTPConnection struct {
 	Auth *Authentication `yaml:"auth" json:"auth"`
 }
 
-func (c *SFTPConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) (found bool, err error) {
-	if c.ConnectionName == "" {
-		return false, nil
-	}
-
-	connection, err := duty.HydratedConnectionByURL(ctx, db, k8sClient, namespace, c.ConnectionName)
+func (c *SFTPConnection) PopulateFromConnection(ctx checkContext) (found bool, err error) {
+	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
 	if err != nil {
 		return false, err
 	}
@@ -795,6 +811,20 @@ func (c PrometheusCheck) GetType() string {
 
 func (c PrometheusCheck) GetEndpoint() string {
 	return fmt.Sprintf("%v/%v", c.Host, c.Description)
+}
+
+func (c *PrometheusCheck) HydrateConnection(ctx checkContext) (bool, error) {
+	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
+	if err != nil {
+		return false, err
+	}
+
+	if connection == nil {
+		return false, nil
+	}
+
+	c.Host = connection.URL
+	return true, nil
 }
 
 type MongoDBCheck struct {
@@ -891,35 +921,18 @@ type AWSConnection struct {
 	UsePathStyle bool `yaml:"usePathStyle,omitempty" json:"usePathStyle,omitempty"`
 }
 
-// populateFromConnection attempts to find the connection by name
-// and populate the endpoint, accessKey and secretKey.
-func (t *AWSConnection) populateFromConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) error {
-	connection, err := duty.HydratedConnectionByURL(ctx, db, k8sClient, namespace, t.ConnectionName)
-	if err != nil {
-		return err
-	}
-
-	if connection == nil {
-		return fmt.Errorf("connetion %q not found", t.ConnectionName)
-	}
-
-	t.AccessKey.Value = connection.Username
-	t.SecretKey.Value = connection.Password
-	t.Endpoint = connection.URL
-
-	return nil
-}
-
 // Populate populates an AWSConnection with credentials and other information.
 // If a connection name is specified, it'll be used to populate the endpoint, accessKey and secretKey.
-func (t *AWSConnection) Populate(ctx context.Context, db *gorm.DB, kommonsClient *kommons.Client, namespace string) error {
+func (t *AWSConnection) Populate(ctx checkContext, db *gorm.DB, kommonsClient *kommons.Client, namespace string) error {
 	if t.ConnectionName != "" {
-		k8sClient, err := kommonsClient.GetClientset()
+		connection, err := ctx.HydrateConnectionByURL(t.ConnectionName)
 		if err != nil {
-			return fmt.Errorf("error getting k8s client from kommons client: %w", err)
+			return fmt.Errorf("could not parse EC2 access key: %v", err)
 		}
 
-		return t.populateFromConnection(ctx, db, k8sClient, namespace)
+		t.AccessKey.Value = connection.Username
+		t.SecretKey.Value = connection.Password
+		t.Endpoint = connection.URL
 	}
 
 	if _, accessKey, err := kommonsClient.GetEnvValue(t.AccessKey, namespace); err != nil {
@@ -954,12 +967,8 @@ func (g *GCPConnection) Validate() *GCPConnection {
 
 // PopulateFromConnection attempts to find the connection by name
 // and populate the endpoint and credentials.
-func (g *GCPConnection) PopulateFromConnection(ctx context.Context, db *gorm.DB, k8sClient kubernetes.Interface, namespace string) error {
-	if g.ConnectionName == "" {
-		return nil
-	}
-
-	connection, err := duty.HydratedConnectionByURL(ctx, db, k8sClient, namespace, g.ConnectionName)
+func (g *GCPConnection) PopulateFromConnection(ctx checkContext) error {
+	connection, err := ctx.HydrateConnectionByURL(g.ConnectionName)
 	if err != nil {
 		return err
 	}

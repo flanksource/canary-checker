@@ -1039,8 +1039,6 @@ spec:
                 dns:
                   items:
                     properties:
-                      connection:
-                        type: string
                       description:
                         description: Description for the check
                         type: string

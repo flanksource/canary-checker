@@ -11,6 +11,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/checks"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/kommons"
 
 	"github.com/flanksource/canary-checker/cmd"
@@ -72,7 +73,7 @@ func runFixture(t *testing.T, name string) {
 			if canary.Name == "" {
 				canary.Name = cmd.CleanupFilename(name)
 			}
-			context := context.New(kommonsClient, canary)
+			context := context.New(kommonsClient, db.Gorm, canary)
 
 			checkResults := checks.RunChecks(context)
 			for _, res := range checkResults {

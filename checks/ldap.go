@@ -4,9 +4,6 @@ import (
 	"crypto/tls"
 
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/duty"
-	"github.com/flanksource/kommons"
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -41,34 +38,9 @@ func (c *LdapChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	var err error
 	results = append(results, result)
 
-	if check.ConnectionName != "" {
-		if ctx.Kommons == nil {
-			return results.Failf("kommons client is not configured. cannot retrieve connection.")
-		}
-
-		k8sClient, err := ctx.Kommons.GetClientset()
-		if err != nil {
-			return results.Failf("error getting k8s client from kommons client: %v", err)
-		}
-
-		connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName)
-		if err != nil {
-			return results.Failf("error getting k8s client from kommons client: %v", err)
-		}
-
-		if connection == nil {
-			return results.Failf("connection %q was not found", connection)
-		}
-
-		check.Host = connection.URL
-		check.Auth.Username.Value = connection.Username
-		check.Auth.Password.Value = connection.Password
-
-		check.Auth = &v1.Authentication{
-			Username: kommons.EnvVar{Value: check.Auth.Username.Value},
-			Password: kommons.EnvVar{Value: check.Auth.Password.Value},
-		}
-	} else {
+	if ok, err := check.HydrateConnection(ctx); err != nil {
+		return results.Failf("failed to hydrate connection: %v", err)
+	} else if !ok {
 		namespace := ctx.Canary.Namespace
 		check.Auth, err = GetAuthValues(check.Auth, ctx.Kommons, namespace)
 		if err != nil {

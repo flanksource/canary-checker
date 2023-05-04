@@ -12,7 +12,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/clients/gcp"
-	"github.com/flanksource/canary-checker/pkg/db"
 )
 
 var (
@@ -30,12 +29,7 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 	var results pkg.Results
 	results = append(results, result)
 
-	k8sClient, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return results.Failf("error getting k8s client from kommons client: %v", err)
-	}
-
-	if err := check.GCP.PopulateFromConnection(ctx, db.Gorm, k8sClient, ctx.Namespace); err != nil {
+	if err := check.GCP.PopulateFromConnection(ctx); err != nil {
 		return results.Failf("failed to populate GCP connection: %v", err)
 	}
 

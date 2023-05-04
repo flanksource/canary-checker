@@ -6,7 +6,6 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
@@ -16,12 +15,7 @@ func CheckSFTP(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 
-	k8sClient, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return results.Failf("error getting k8s client from kommons client: %v", err)
-	}
-
-	foundConn, err := check.SFTPConnection.PopulateFromConnection(ctx, db.Gorm, k8sClient, ctx.Namespace)
+	foundConn, err := check.SFTPConnection.PopulateFromConnection(ctx)
 	if err != nil {
 		return results.Failf("failed to populate SFTP connection: %v", err)
 	}

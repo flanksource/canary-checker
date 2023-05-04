@@ -7,7 +7,6 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
-	"github.com/flanksource/canary-checker/pkg/db"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -35,12 +34,7 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 	var results pkg.Results
 	results = append(results, result)
 
-	k8sClient, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return results.Failf("error getting k8s client from kommons client: %v", err)
-	}
-
-	if err := check.PopulateConnection(ctx, db.Gorm, k8sClient, ctx.Namespace); err != nil {
+	if err := check.PopulateConnection(ctx); err != nil {
 		return results.Failf("Failed to find connection for elastic search: %v", err)
 	}
 

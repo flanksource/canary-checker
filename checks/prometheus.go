@@ -4,12 +4,10 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/duty"
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/commons/logger"
 	"github.com/prometheus/common/model"
@@ -35,26 +33,8 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	var results pkg.Results
 	results = append(results, result)
 
-	if check.ConnectionName != "" {
-		if ctx.Kommons == nil {
-			return results.Failf("kommons client is not configured. cannot retrieve connection.")
-		}
-
-		k8sClient, err := ctx.Kommons.GetClientset()
-		if err != nil {
-			return results.Failf("error getting k8s client from kommons client: %v", err)
-		}
-
-		connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName)
-		if err != nil {
-			return results.Failf("failed to find host from connection for prometheus checker %q: %v", check.ConnectionName, err)
-		}
-
-		if connection == nil {
-			return results.Failf("%q was not found", check.ConnectionName)
-		}
-
-		check.Host = connection.URL
+	if _, err := check.HydrateConnection(ctx); err != nil {
+		return results.Failf("error hydrating connection: %v", err)
 	}
 
 	if check.Host == "" {

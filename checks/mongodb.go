@@ -6,8 +6,6 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
-	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/duty"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -38,13 +36,8 @@ func (c *MongoDBChecker) Check(ctx *context.Context, extConfig external.Check) p
 	results = append(results, result)
 	var err error
 
-	k8sClient, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return results.Failf("error getting k8s client from kommons client: %v", err)
-	}
-
 	var dbConnectionString string
-	if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.Connection.Connection); err != nil {
+	if connection, err := ctx.HydrateConnectionByURL(check.Connection.Connection); err != nil {
 		return results.Failf("error getting connection: %v", err)
 	} else if connection != nil {
 		dbConnectionString = connection.URL

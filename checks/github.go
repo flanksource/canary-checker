@@ -10,7 +10,6 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/duty"
 )
 
@@ -39,17 +38,17 @@ func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	var results pkg.Results
 	results = append(results, result)
 
-	k8sClient, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return results.Failf("error getting k8s client from kommons client: %v", err)
-	}
-
 	var githubToken string
-	if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName); err != nil {
+	if connection, err := ctx.HydrateConnectionByURL(check.ConnectionName); err != nil {
 		return results.Failf("failed to find connection for github token %q: %v", check.ConnectionName, err)
 	} else if connection != nil {
 		githubToken = connection.Password
 	} else {
+		k8sClient, err := ctx.Kommons.GetClientset()
+		if err != nil {
+			return results.Failf("error getting k8s client from kommons client: %v", err)
+		}
+
 		githubToken, err = duty.GetEnvValueFromCache(k8sClient, check.GithubToken, ctx.Canary.GetNamespace())
 		if err != nil {
 			return results.Failf("error fetching github token from env cache: %v", err)

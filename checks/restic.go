@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/duty"
 	"github.com/flanksource/kommons"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -51,22 +49,9 @@ func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	var envVars map[string]string
 	var err error
 	if check.ConnectionName != "" {
-		if ctx.Kommons == nil {
-			return results.Failf("kommons client is not configured. cannot retrieve connection.")
-		}
-
-		k8sClient, err := ctx.Kommons.GetClientset()
-		if err != nil {
-			return results.Failf("error getting k8s client from kommons client: %v", err)
-		}
-
-		connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName)
+		connection, err := ctx.HydrateConnectionByURL(check.ConnectionName)
 		if err != nil {
 			return results.Failf("error getting connection: %v", err)
-		}
-
-		if connection == nil {
-			return results.Failf("connection %q not found", check.ConnectionName)
 		}
 
 		envVars = map[string]string{

@@ -8,8 +8,6 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/duty"
 	alertmanagerClient "github.com/prometheus/alertmanager/api/v2/client"
 	alertmanagerAlert "github.com/prometheus/alertmanager/api/v2/client/alert"
 )
@@ -35,16 +33,7 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	results = append(results, result)
 
 	if check.ConnectionName != "" {
-		if ctx.Kommons == nil {
-			return results.Failf("kommons client is not configured. cannot retrieve connection.")
-		}
-
-		k8sClient, err := ctx.Kommons.GetClientset()
-		if err != nil {
-			return results.Failf("error getting k8s client from kommons client: %v", err)
-		}
-
-		if connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName); err != nil {
+		if connection, err := ctx.HydrateConnectionByURL(check.ConnectionName); err != nil {
 			return results.Failf("failed to find connection from %q: %v", check.ConnectionName, err)
 		} else if connection != nil {
 			check.Host = connection.URL

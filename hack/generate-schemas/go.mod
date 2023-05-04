@@ -5,11 +5,7 @@ go 1.19
 require (
 	github.com/alecthomas/jsonschema v0.0.0-20211228220459-151e3c21f49d
 	github.com/flanksource/canary-checker v1.0.0
-<<<<<<< HEAD
 	github.com/flanksource/commons v1.10.0
-=======
-	github.com/flanksource/commons v1.9.0
->>>>>>> a018dac (chore: make resources and dependency fix)
 	github.com/spf13/cobra v1.6.1
 )
 
@@ -101,11 +97,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-<<<<<<< HEAD
 	github.com/google/s2a-go v0.1.3 // indirect
-=======
-	github.com/google/s2a-go v0.1.2 // indirect
->>>>>>> a018dac (chore: make resources and dependency fix)
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/google/wire v0.5.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.8.0 // indirect
@@ -183,11 +175,7 @@ require (
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.8.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
-<<<<<<< HEAD
 	google.golang.org/api v0.121.0 // indirect
-=======
-	google.golang.org/api v0.120.0 // indirect
->>>>>>> a018dac (chore: make resources and dependency fix)
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.54.0 // indirect
@@ -220,10 +208,6 @@ replace (
 	helm.sh/helm/v3 => helm.sh/helm/v3 v3.5.1
 )
 
-<<<<<<< HEAD
 replace k8s.io/client-go => k8s.io/client-go v0.26.4
 
-replace github.com/flanksource/duty => /home/gunners/Projects/flanksource/duty
-=======
-replace k8s.io/client-go => k8s.io/client-go v0.26.1
->>>>>>> a018dac (chore: make resources and dependency fix)
+replace github.com/flanksource/duty => ../../../duty
