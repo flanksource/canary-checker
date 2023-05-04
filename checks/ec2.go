@@ -14,7 +14,6 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/timer"
@@ -111,7 +110,7 @@ type AWS struct {
 }
 
 func NewAWS(ctx *context.Context, check v1.EC2Check) (*AWS, error) {
-	if err := check.AWSConnection.Populate(ctx, db.Gorm, ctx.Kommons, ctx.Canary.GetNamespace()); err != nil {
+	if err := check.AWSConnection.Populate(ctx, ctx.Kommons, ctx.Canary.GetNamespace()); err != nil {
 		return nil, fmt.Errorf("failed to populate AWS connection: %v", err)
 	}
 

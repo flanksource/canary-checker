@@ -15,7 +15,7 @@ func CheckSFTP(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 
-	foundConn, err := check.SFTPConnection.PopulateFromConnection(ctx)
+	foundConn, err := check.SFTPConnection.HydrateConnection(ctx)
 	if err != nil {
 		return results.Failf("failed to populate SFTP connection: %v", err)
 	}

@@ -12,7 +12,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	awsUtil "github.com/flanksource/canary-checker/pkg/clients/aws"
-	"github.com/flanksource/canary-checker/pkg/db"
 )
 
 type CloudWatchChecker struct {
@@ -39,7 +38,7 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 	var results pkg.Results
 	results = append(results, result)
 
-	if err := check.AWSConnection.Populate(ctx, db.Gorm, ctx.Kommons, ctx.Namespace); err != nil {
+	if err := check.AWSConnection.Populate(ctx, ctx.Kommons, ctx.Namespace); err != nil {
 		return results.Failf("failed to populate aws connection: %v", err)
 	}
 

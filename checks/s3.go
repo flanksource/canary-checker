@@ -10,7 +10,6 @@ import (
 	"net/http"
 
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/pkg/db"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -70,7 +69,7 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 	var results pkg.Results
 	results = append(results, result)
 
-	if err := check.AWSConnection.Populate(ctx, db.Gorm, ctx.Kommons, ctx.Namespace); err != nil {
+	if err := check.AWSConnection.Populate(ctx, ctx.Kommons, ctx.Namespace); err != nil {
 		return results.Failf("failed to populate aws connection: %v", err)
 	}
 

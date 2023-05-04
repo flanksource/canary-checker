@@ -12,7 +12,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	awsUtil "github.com/flanksource/canary-checker/pkg/clients/aws"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
 )
 
@@ -28,7 +27,7 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	if check.AWSConnection == nil {
 		check.AWSConnection = &v1.AWSConnection{}
-	} else if err := check.AWSConnection.Populate(ctx, db.Gorm, ctx.Kommons, ctx.Namespace); err != nil {
+	} else if err := check.AWSConnection.Populate(ctx, ctx.Kommons, ctx.Namespace); err != nil {
 		return results.Failf("failed to populate aws connection: %v", err)
 	}
 

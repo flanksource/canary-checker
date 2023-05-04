@@ -34,7 +34,7 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 	var results pkg.Results
 	results = append(results, result)
 
-	if err := check.PopulateConnection(ctx); err != nil {
+	if err := check.HydrateConnection(ctx); err != nil {
 		return results.Failf("Failed to find connection for elastic search: %v", err)
 	}
 

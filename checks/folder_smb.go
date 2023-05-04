@@ -79,7 +79,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.ErrorMessage(err)
 	}
 
-	foundConn, err := check.SMBConnection.PopulateFromConnection(ctx)
+	foundConn, err := check.SMBConnection.HydrateConnection(ctx)
 	if err != nil {
 		return results.Failf("failed to populate SMB connection: %v", err)
 	}

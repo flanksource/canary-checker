@@ -20,7 +20,7 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 
-	if err := check.GCPConnection.PopulateFromConnection(ctx); err != nil {
+	if err := check.GCPConnection.HydrateConnection(ctx); err != nil {
 		return results.Failf("failed to populate GCP connection: %v", err)
 	}
 

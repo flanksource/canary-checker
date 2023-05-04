@@ -39,16 +39,9 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 	var personalAccessToken string
 	if check.PersonalAccessToken.ValueStatic != "" {
 		personalAccessToken = check.PersonalAccessToken.ValueStatic
-	} else if check.ConnectionName != "" {
-		connection, err := ctx.HydrateConnectionByURL(check.ConnectionName)
-		if err != nil {
-			return results.ErrorMessage(err)
-		}
-
-		if connection == nil {
-			return results.Failf("connection %q not found", check.ConnectionName)
-		}
-
+	} else if connection, err := ctx.HydrateConnectionByURL(check.ConnectionName); err != nil {
+		return results.Failf("failed to hydrate connection: %v", err)
+	} else if connection != nil {
 		personalAccessToken = connection.Password
 	} else if ctx.Kommons != nil {
 		k8sClient, err := ctx.Kommons.GetClientset()

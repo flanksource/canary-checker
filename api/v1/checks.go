@@ -11,7 +11,6 @@ import (
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
-	"gorm.io/gorm"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -454,7 +453,7 @@ func (c ElasticsearchCheck) GetEndpoint() string {
 	return c.URL
 }
 
-func (c *ElasticsearchCheck) PopulateConnection(ctx checkContext) error {
+func (c *ElasticsearchCheck) HydrateConnection(ctx checkContext) error {
 	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
 	if err != nil {
 		return err
@@ -709,7 +708,7 @@ func (c SMBConnection) GetPort() int {
 	return 445
 }
 
-func (c *SMBConnection) PopulateFromConnection(ctx checkContext) (found bool, err error) {
+func (c *SMBConnection) HydrateConnection(ctx checkContext) (found bool, err error) {
 	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
 	if err != nil {
 		return false, err
@@ -756,7 +755,7 @@ type SFTPConnection struct {
 	Auth *Authentication `yaml:"auth" json:"auth"`
 }
 
-func (c *SFTPConnection) PopulateFromConnection(ctx checkContext) (found bool, err error) {
+func (c *SFTPConnection) HydrateConnection(ctx checkContext) (found bool, err error) {
 	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
 	if err != nil {
 		return false, err
@@ -923,7 +922,7 @@ type AWSConnection struct {
 
 // Populate populates an AWSConnection with credentials and other information.
 // If a connection name is specified, it'll be used to populate the endpoint, accessKey and secretKey.
-func (t *AWSConnection) Populate(ctx checkContext, db *gorm.DB, kommonsClient *kommons.Client, namespace string) error {
+func (t *AWSConnection) Populate(ctx checkContext, kommonsClient *kommons.Client, namespace string) error {
 	if t.ConnectionName != "" {
 		connection, err := ctx.HydrateConnectionByURL(t.ConnectionName)
 		if err != nil {
@@ -965,9 +964,9 @@ func (g *GCPConnection) Validate() *GCPConnection {
 	return g
 }
 
-// PopulateFromConnection attempts to find the connection by name
+// HydrateConnection attempts to find the connection by name
 // and populate the endpoint and credentials.
-func (g *GCPConnection) PopulateFromConnection(ctx checkContext) error {
+func (g *GCPConnection) HydrateConnection(ctx checkContext) error {
 	connection, err := ctx.HydrateConnectionByURL(g.ConnectionName)
 	if err != nil {
 		return err

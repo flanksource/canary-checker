@@ -32,12 +32,10 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
 
-	if check.ConnectionName != "" {
-		if connection, err := ctx.HydrateConnectionByURL(check.ConnectionName); err != nil {
-			return results.Failf("failed to find connection from %q: %v", check.ConnectionName, err)
-		} else if connection != nil {
-			check.Host = connection.URL
-		}
+	if connection, err := ctx.HydrateConnectionByURL(check.ConnectionName); err != nil {
+		return results.Failf("failed to find connection from %q: %v", check.ConnectionName, err)
+	} else if connection != nil {
+		check.Host = connection.URL
 	}
 
 	client := alertmanagerClient.NewHTTPClientWithConfig(nil, &alertmanagerClient.TransportConfig{
