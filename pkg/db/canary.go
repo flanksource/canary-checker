@@ -48,7 +48,8 @@ func GetAllCanaries() ([]v1.Canary, error) {
 	for _, _canary := range _canaries {
 		c, err := _canary.ToV1()
 		if err != nil {
-			return nil, err
+			logger.Errorf("Error parsing canary[%s]: %v", _canary.ID, err)
+			continue
 		}
 		canaries = append(canaries, *c)
 	}
