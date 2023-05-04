@@ -37,7 +37,7 @@ require (
 	github.com/henvic/httpretty v0.0.6
 	github.com/hirochachacha/go-smb2 v1.0.10
 	github.com/jackc/pgx/v5 v5.3.1
-	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
+	github.com/joshdk/go-junit v1.0.0
 	github.com/jszwec/csvutil v1.8.0
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/liamylian/jsontime/v2 v2.0.0
