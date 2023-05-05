@@ -79,7 +79,7 @@ require (
 	github.com/dustin/gojson v0.0.0-20160307161227-2e71ec9dd5ad // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
-	github.com/flanksource/duty v1.0.77 // indirect
+	github.com/flanksource/duty v1.0.78 // indirect
 	github.com/flanksource/kommons v0.31.1 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
@@ -173,8 +173,8 @@ require (
 	k8s.io/apimachinery v0.26.4 // indirect
 	k8s.io/cli-runtime v0.24.4 // indirect
 	k8s.io/client-go v11.0.0+incompatible // indirect
-	k8s.io/klog/v2 v2.90.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20230426210814-b0c0aaee3cc0 // indirect
+	k8s.io/klog/v2 v2.100.1 // indirect
+	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
 	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 // indirect
 	sigs.k8s.io/controller-runtime v0.14.1 // indirect
 	sigs.k8s.io/kustomize v2.0.3+incompatible // indirect
