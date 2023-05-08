@@ -43,12 +43,24 @@ func (t *DynatraceChecker) Check(ctx *context.Context, extConfig external.Check)
 	}
 
 	apiClient := dynatrace.NewAPIClient(config)
-	problems, _, err := apiClient.ProblemsApi.GetProblems(ctx).Execute()
+	problems, apiResponse, err := apiClient.ProblemsApi.GetProblems(ctx).Execute()
 	if err != nil {
 		return results.Failf("error getting Dynatrace problems: %s", err.Error())
 	}
+	defer apiResponse.Body.Close()
 
 	logger.Infof("Found %d problems and %d warnings", len(*problems.Problems), len(*problems.Warnings))
 
+	var problemDetails []map[string]any
+	for _, problem := range *problems.Problems {
+		problemDetails = append(problemDetails, map[string]any{
+			"name": problem.Title,
+			// "message": problem.
+			"labels":   problem.EntityTags,
+			"severity": problem.SeverityLevel,
+		})
+	}
+
+	result.AddDetails(problemDetails)
 	return results
 }
