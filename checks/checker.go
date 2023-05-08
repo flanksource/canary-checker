@@ -50,6 +50,7 @@ var All = []Checker{
 	&ElasticsearchChecker{},
 	&AlertManagerChecker{},
 	&AzureDevopsChecker{},
+	&DynatraceChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),

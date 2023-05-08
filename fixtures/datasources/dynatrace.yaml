@@ -1,0 +1,15 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: dynatrace
+  labels:
+    "Expected-Fail": "true"
+spec:
+  interval: 120
+  owner: DBAdmin
+  severity: high
+  dynatrace:
+    - name: dynatrace
+      scheme: https
+      host: <HOST>
+      apiKey: '<ACCESS_TOKEN>' # https://www.dynatrace.com/support/help/manage/access-control/access-tokens/personal-access-token

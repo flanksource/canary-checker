@@ -416,6 +416,23 @@ func (c ElasticsearchCheck) GetEndpoint() string {
 	return c.URL
 }
 
+type DynatraceCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	Host        string         `yaml:"host" json:"host,omitempty" template:"true"`
+	Scheme      string         `yaml:"scheme" json:"scheme,omitempty"`
+	APIKey      kommons.EnvVar `yaml:"apiKey" json:"apiKey,omitempty"`
+	Namespace   string         `yaml:"namespace" json:"namespace,omitempty" template:"true"`
+}
+
+func (t DynatraceCheck) GetType() string {
+	return "dynatrace"
+}
+
+func (t DynatraceCheck) GetEndpoint() string {
+	return fmt.Sprintf("%s://%s", t.Scheme, t.Host)
+}
+
 /*
 [include:datasources/alertmanager_pass.yaml]
 */
@@ -1181,6 +1198,7 @@ var AllChecks = []external.Check{
 	ResticCheck{},
 	NamespaceCheck{},
 	DNSCheck{},
+	DynatraceCheck{},
 	HelmCheck{},
 	JmeterCheck{},
 	JunitCheck{},
