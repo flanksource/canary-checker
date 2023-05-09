@@ -1100,7 +1100,7 @@ func (c ExecCheck) GetTestFunction() Template {
 	if c.Test.Expression == "" {
 		c.Test.Expression = "results.ExitCode == 0"
 	}
-	return c.Test
+	return c.Test.Template
 }
 
 type AwsConfigCheck struct {

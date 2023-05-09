@@ -108,6 +108,7 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 		if tpl.IsEmpty() {
 			break
 		}
+
 		message, err := template(ctx.New(r.Data), tpl)
 		if err != nil {
 			r.ErrorMessage(err)
@@ -118,7 +119,35 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 				r.Failf("Test expression failed. Expecting true from: %v", tpl.Expression)
 			}
 		}
+
+		data := map[string]any{"duration": r.Duration}
+		r.TestSeverity = measureTestSeverity(ctx.New(data), v.GetTestThreshold())
 	}
 
 	return r
+}
+
+func measureTestSeverity(ctx *context.Context, threshold *v1.TestThreshold) pkg.TestSeverity {
+	if threshold == nil {
+		return pkg.TestSeverityUnknown
+	}
+
+	thresholds := []struct {
+		severity pkg.TestSeverity
+		expr     string
+	}{
+		{pkg.TestSeverityCritical, threshold.Critical},
+		{pkg.TestSeverityHigh, threshold.High},
+		{pkg.TestSeverityLow, threshold.Low},
+	}
+
+	for _, t := range thresholds {
+		if res, err := template(ctx, v1.Template{Expression: t.expr}); err != nil {
+			return pkg.TestSeverityUnknown
+		} else if res == "true" {
+			return t.severity
+		}
+	}
+
+	return pkg.TestSeverityUnknown
 }
