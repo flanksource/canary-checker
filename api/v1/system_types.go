@@ -1,10 +1,14 @@
 package v1
 
 import (
+	"encoding/json"
 	"fmt"
 
+	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8sTypes "k8s.io/apimachinery/pkg/types"
 )
 
 // +kubebuilder:object:root=true
@@ -16,6 +20,38 @@ type Topology struct {
 	Spec              TopologySpec   `json:"spec,omitempty"`
 	Status            TopologyStatus `json:"status,omitempty"`
 }
+
+func (topology *Topology) ToModel() *models.Topology {
+	spec, _ := json.Marshal(topology.Spec)
+	return &models.Topology{
+		Name:      topology.GetName(),
+		Namespace: topology.GetNamespace(),
+		Labels:    types.JSONStringMap(topology.GetLabels()),
+		Spec:      spec,
+	}
+}
+
+func TopologyFromModels(s models.Topology) Topology {
+	var topologySpec TopologySpec
+	id := s.ID.String()
+	if err := json.Unmarshal(s.Spec, &topologySpec); err != nil {
+		logger.Errorf("error unmarshalling topology spec %s", err)
+	}
+	return Topology{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Topology",
+			APIVersion: "canaries.flanksource.com/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      s.Name,
+			Namespace: s.Namespace,
+			Labels:    s.Labels,
+			UID:       k8sTypes.UID(id),
+		},
+		Spec: topologySpec,
+	}
+}
+
 type TopologySpec struct {
 	Type       string          `json:"type,omitempty"`
 	Id         *Template       `json:"id,omitempty"` //nolint

@@ -21,7 +21,7 @@ func PersistTopology(t *v1.Topology) (bool, error) {
 	var err error
 	var changed bool
 
-	model := pkg.TopologyFromV1(t)
+	model := t.ToModel()
 	model.ID, err = uuid.Parse(t.GetPersistedID())
 	if err != nil {
 		return changed, err
@@ -51,23 +51,23 @@ func PersistComponents(results []*models.Component) error {
 }
 
 func GetTopology(ctx context.Context, id string) (*v1.Topology, error) {
-	var t pkg.Topology
+	var t models.Topology
 	if err := Gorm.WithContext(ctx).Table("topologies").Where("id = ? AND deleted_at is NULL", id).First(&t).Error; err != nil {
 		return nil, err
 	}
 
-	tv1 := t.ToV1()
+	tv1 := v1.TopologyFromModels(t)
 	return &tv1, nil
 }
 
 func GetAllTopologies() ([]v1.Topology, error) {
 	var v1topologies []v1.Topology
-	var topologies []pkg.Topology
+	var topologies []models.Topology
 	if err := Gorm.Table("topologies").Find(&topologies).Where("deleted_at is NULL").Error; err != nil {
 		return nil, err
 	}
 	for _, t := range topologies {
-		v1topologies = append(v1topologies, t.ToV1())
+		v1topologies = append(v1topologies, v1.TopologyFromModels(t))
 	}
 	return v1topologies, nil
 }
@@ -290,7 +290,7 @@ func UpdateStatusAndSummaryForComponent(id uuid.UUID, status types.ComponentStat
 
 func DeleteTopology(t *v1.Topology) error {
 	logger.Infof("Deleting topology %s/%s", t.Namespace, t.Name)
-	model := pkg.TopologyFromV1(t)
+	model := t.ToModel()
 	deleteTime := time.Now()
 
 	tx := Gorm.Table("topologies").Find(model, "id = ?", t.GetPersistedID()).UpdateColumn("deleted_at", deleteTime)

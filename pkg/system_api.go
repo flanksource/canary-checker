@@ -5,12 +5,9 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db/types"
-	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	k8sTypes "k8s.io/apimachinery/pkg/types"
 )
 
 var json = jsontime.ConfigWithCustomTimeFormat
@@ -44,49 +41,6 @@ func (status ComponentStatus) Compare(other ComponentStatus) int {
 }
 
 const ComponentType = "component"
-
-type Topology struct {
-	ID        uuid.UUID `gorm:"default:generate_ulid()"`
-	Name      string
-	Namespace string
-	Labels    types.JSONStringMap
-	Spec      types.JSON
-	Schedule  string
-	CreatedAt time.Time  `json:"created_at,omitempty" time_format:"postgres_timestamp"`
-	UpdatedAt time.Time  `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
-}
-
-func TopologyFromV1(topology *v1.Topology) *Topology {
-	spec, _ := json.Marshal(topology.Spec)
-	return &Topology{
-		Name:      topology.GetName(),
-		Namespace: topology.GetNamespace(),
-		Labels:    types.JSONStringMap(topology.GetLabels()),
-		Spec:      spec,
-	}
-}
-
-func (s *Topology) ToV1() v1.Topology {
-	var topologySpec v1.TopologySpec
-	id := s.ID.String()
-	if err := json.Unmarshal(s.Spec, &topologySpec); err != nil {
-		logger.Errorf("error unmarshalling topology spec %s", err)
-	}
-	return v1.Topology{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Topology",
-			APIVersion: "canaries.flanksource.com/v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      s.Name,
-			Namespace: s.Namespace,
-			Labels:    s.Labels,
-			UID:       k8sTypes.UID(id),
-		},
-		Spec: topologySpec,
-	}
-}
 
 type Object struct {
 	Name      string              `json:"name,omitempty"`
