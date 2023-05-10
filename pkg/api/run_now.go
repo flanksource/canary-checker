@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/flanksource/canary-checker/api/context"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -59,7 +60,7 @@ func RunCanaryHandler(c echo.Context) error {
 		return errorResonse(c, fmt.Errorf("canary with id=%s was not found", id), http.StatusNotFound)
 	}
 
-	canary, err := canaryModel.ToV1()
+	canary, err := v1.CanaryFromModel(canaryModel)
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}

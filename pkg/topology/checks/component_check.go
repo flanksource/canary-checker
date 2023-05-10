@@ -80,7 +80,7 @@ func GetCheckComponentRelationshipsForComponent(component *models.Component) (re
 				logger.Debugf("error creating canary from inline: %v", err)
 			}
 
-			if v1canary, err := canary.ToV1(); err == nil {
+			if v1canary, err := v1.CanaryFromModel(canary); err == nil {
 				if err := canaryJobs.SyncCanaryJob(*v1canary); err != nil {
 					logger.Debugf("error creating canary job: %v", err)
 				}

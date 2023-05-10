@@ -7,6 +7,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -64,7 +65,7 @@ func GetAllActiveChecksForCanary(canaryID uuid.UUID) (checks pkg.Checks, err err
 	return checks, nil
 }
 
-func CreateComponentCanaryFromInline(id, name, namespace, schedule, owner string, spec *v1.CanarySpec) (*pkg.Canary, error) {
+func CreateComponentCanaryFromInline(id, name, namespace, schedule, owner string, spec *v1.CanarySpec) (*models.Canary, error) {
 	if spec.GetSchedule() == "@never" {
 		spec.Schedule = schedule
 	}

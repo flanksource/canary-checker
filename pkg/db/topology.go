@@ -367,7 +367,7 @@ func DeleteComponentChildren(componentID string, deleteTime time.Time) error {
 }
 
 func DeleteInlineCanariesForComponent(componentID string, deleteTime time.Time) error {
-	var canaries = []*pkg.Canary{}
+	var canaries = []*models.Canary{}
 	source := "component/" + componentID
 	if err := Gorm.Where("source = ?", source).Find(&canaries).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
 		return err

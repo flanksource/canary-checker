@@ -14,7 +14,6 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Endpoint struct {
@@ -112,68 +111,6 @@ type Timeseries struct {
 	Count int `json:"count,omitempty"`
 }
 
-type Canary struct {
-	ID        uuid.UUID `gorm:"default:generate_ulid()"`
-	Spec      types.JSON
-	Labels    types.JSONStringMap
-	Source    string
-	Name      string
-	Namespace string
-	Checks    types.JSONStringMap `gorm:"-"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
-}
-
-func (c Canary) GetCheckID(checkName string) string {
-	return c.Checks[checkName]
-}
-
-func (c Canary) ToV1() (*v1.Canary, error) {
-	canary := v1.Canary{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.Name,
-			Namespace: c.Namespace,
-			Annotations: map[string]string{
-				"source": c.Source,
-			},
-			Labels: c.Labels,
-		},
-	}
-	var deletionTimestamp metav1.Time
-	if c.DeletedAt != nil && !c.DeletedAt.IsZero() {
-		deletionTimestamp = metav1.NewTime(*c.DeletedAt)
-		canary.ObjectMeta.DeletionTimestamp = &deletionTimestamp
-	}
-	if err := json.Unmarshal(c.Spec, &canary.Spec); err != nil {
-		logger.Debugf("Failed to unmarshal canary spec: %s", err)
-		return nil, err
-	}
-	id := c.ID.String()
-	canary.Status.PersistedID = &id
-	canary.Status.Checks = c.Checks
-	return &canary, nil
-}
-
-func CanaryFromV1(canary v1.Canary) (Canary, error) {
-	spec, err := json.Marshal(canary.Spec)
-	if err != nil {
-		return Canary{}, err
-	}
-	var checks = make(map[string]string)
-	if canary.Status.Checks != nil {
-		checks = canary.Status.Checks
-	}
-	return Canary{
-		Spec:      spec,
-		Labels:    types.JSONStringMap(canary.Labels),
-		Name:      canary.Name,
-		Namespace: canary.Namespace,
-		Source:    canary.Annotations["source"],
-		Checks:    types.JSONStringMap(checks),
-	}, nil
-}
-
 type Check struct {
 	ID                 uuid.UUID           `json:"id" gorm:"default:generate_ulid()"`
 	CanaryID           uuid.UUID           `json:"canary_id"`
@@ -203,7 +140,7 @@ type Check struct {
 	Canary             *v1.Canary          `json:"-" gorm:"-"`
 }
 
-func FromExternalCheck(canary Canary, check external.Check) Check {
+func FromExternalCheck(canary models.Canary, check external.Check) Check {
 	return Check{
 		CanaryID:    canary.ID,
 		Type:        check.GetType(),
