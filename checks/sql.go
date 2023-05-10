@@ -34,6 +34,7 @@ func querySQL(driver string, connection string, query string) (*SQLDetails, erro
 	}
 	defer db.Close()
 	rows, err := db.Query(query)
+	defer rows.Close()
 	result := SQLDetails{}
 	if err != nil || rows.Err() != nil {
 		return nil, fmt.Errorf("failed to query db: %s", err.Error())
