@@ -310,22 +310,22 @@ type Canary struct {
 	Status CanaryStatus `json:"status,omitempty"`
 }
 
-func (canary Canary) ToModel() (models.Canary, error) {
-	spec, err := json.Marshal(canary.Spec)
+func (c Canary) ToModel() (models.Canary, error) {
+	spec, err := json.Marshal(c.Spec)
 	if err != nil {
 		return models.Canary{}, err
 	}
 	var checks = make(map[string]string)
-	if canary.Status.Checks != nil {
-		checks = canary.Status.Checks
+	if c.Status.Checks != nil {
+		checks = c.Status.Checks
 	}
 
 	return models.Canary{
 		Spec:      spec,
-		Labels:    types.JSONStringMap(canary.Labels),
-		Name:      canary.Name,
-		Namespace: canary.Namespace,
-		Source:    canary.Annotations["source"],
+		Labels:    types.JSONStringMap(c.Labels),
+		Name:      c.Name,
+		Namespace: c.Namespace,
+		Source:    c.Annotations["source"],
 		Checks:    types.JSONStringMap(checks),
 	}, nil
 }

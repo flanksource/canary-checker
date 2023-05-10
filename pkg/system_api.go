@@ -7,10 +7,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
-	jsontime "github.com/liamylian/jsontime/v2/v2"
 )
-
-var json = jsontime.ConfigWithCustomTimeFormat
 
 type ComponentStatus string
 

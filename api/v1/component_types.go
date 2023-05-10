@@ -140,24 +140,24 @@ type Property struct {
 	Summary      *Template     `json:"summary,omitempty"`
 }
 
-func (property Property) ToModel() *models.Property {
+func (p Property) ToModel() *models.Property {
 	return &models.Property{
-		Label:          property.Label,
-		Name:           property.Name,
-		Tooltip:        property.Tooltip,
-		Icon:           property.Icon,
-		Order:          property.Order,
-		Text:           property.Text,
-		Value:          property.Value,
-		Unit:           property.Unit,
-		Max:            property.Max,
-		Min:            property.Min,
-		Status:         property.Status,
-		LastTransition: property.LastTransition,
-		Links:          property.Links,
-		Headline:       property.Headline,
-		Type:           property.Type,
-		Color:          property.Color,
+		Label:          p.Label,
+		Name:           p.Name,
+		Tooltip:        p.Tooltip,
+		Icon:           p.Icon,
+		Order:          p.Order,
+		Text:           p.Text,
+		Value:          p.Value,
+		Unit:           p.Unit,
+		Max:            p.Max,
+		Min:            p.Min,
+		Status:         p.Status,
+		LastTransition: p.LastTransition,
+		Links:          p.Links,
+		Headline:       p.Headline,
+		Type:           p.Type,
+		Color:          p.Color,
 	}
 }
 

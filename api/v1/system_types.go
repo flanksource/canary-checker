@@ -21,20 +21,28 @@ type Topology struct {
 	Status            TopologyStatus `json:"status,omitempty"`
 }
 
-func (topology *Topology) ToModel() *models.Topology {
-	spec, _ := json.Marshal(topology.Spec)
+func (t *Topology) ToModel() *models.Topology {
+	spec, _ := json.Marshal(t.Spec)
 	return &models.Topology{
-		Name:      topology.GetName(),
-		Namespace: topology.GetNamespace(),
-		Labels:    types.JSONStringMap(topology.GetLabels()),
+		Name:      t.GetName(),
+		Namespace: t.GetNamespace(),
+		Labels:    types.JSONStringMap(t.GetLabels()),
 		Spec:      spec,
 	}
 }
 
-func TopologyFromModels(s models.Topology) Topology {
+func (t Topology) IsEmpty() bool {
+	return len(t.Spec.Properties) == 0 && len(t.Spec.Components) == 0 && t.Name == ""
+}
+
+func (t Topology) GetPersistedID() string {
+	return string(t.GetUID())
+}
+
+func TopologyFromModels(t models.Topology) Topology {
 	var topologySpec TopologySpec
-	id := s.ID.String()
-	if err := json.Unmarshal(s.Spec, &topologySpec); err != nil {
+	id := t.ID.String()
+	if err := json.Unmarshal(t.Spec, &topologySpec); err != nil {
 		logger.Errorf("error unmarshalling topology spec %s", err)
 	}
 	return Topology{
@@ -43,9 +51,9 @@ func TopologyFromModels(s models.Topology) Topology {
 			APIVersion: "canaries.flanksource.com/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      s.Name,
-			Namespace: s.Namespace,
-			Labels:    s.Labels,
+			Name:      t.Name,
+			Namespace: t.Namespace,
+			Labels:    t.Labels,
 			UID:       k8sTypes.UID(id),
 		},
 		Spec: topologySpec,
@@ -70,10 +78,6 @@ type TopologySpec struct {
 	Configs []Config `json:"configs,omitempty"`
 }
 
-func (s Topology) IsEmpty() bool {
-	return len(s.Spec.Properties) == 0 && len(s.Spec.Components) == 0 && s.Name == ""
-}
-
 func (spec TopologySpec) GetSchedule() string {
 	return spec.Schedule
 }
@@ -83,10 +87,6 @@ type TopologyStatus struct {
 	// +optional
 	ObservedGeneration int64  `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`
 	Status             string `json:"status,omitempty"`
-}
-
-func (s Topology) GetPersistedID() string {
-	return string(s.GetUID())
 }
 
 type Selector struct {
