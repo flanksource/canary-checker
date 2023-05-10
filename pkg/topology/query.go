@@ -1,6 +1,7 @@
 package topology
 
 import (
+	"context"
 	"net/url"
 	"strconv"
 	"strings"
@@ -45,5 +46,5 @@ func NewTopologyParams(values url.Values) duty.TopologyOptions {
 }
 
 func Query(params duty.TopologyOptions) (*duty.TopologyResponse, error) {
-	return duty.QueryTopology(db.Pool, params)
+	return duty.QueryTopology(context.Background(), db.Pool, params)
 }

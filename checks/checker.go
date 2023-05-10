@@ -20,11 +20,9 @@ func (c Checks) Includes(checker Checker) bool {
 type Checker interface {
 	Run(ctx *context.Context) pkg.Results
 	Type() string
-	Check(ctx *context.Context, extConfig external.Check) pkg.Results
 }
 
 var All = []Checker{
-
 	&DNSChecker{},
 	&HTTPChecker{},
 	&IcmpChecker{},
@@ -51,6 +49,7 @@ var All = []Checker{
 	&ConfigdbChecker{},
 	&ElasticsearchChecker{},
 	&AlertManagerChecker{},
+	&AzureDevopsChecker{},
 	NewPodChecker(),
 	NewNamespaceChecker(),
 	NewTCPChecker(),

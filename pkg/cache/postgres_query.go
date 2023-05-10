@@ -109,6 +109,7 @@ func (q QueryParams) ExecuteDetails(db Querier) ([]pkg.Timeseries, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var results []pkg.Timeseries
 	for rows.Next() {
@@ -240,6 +241,7 @@ WHERE (stats.passed > 0 OR stats.failed > 0) %s
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	checks := pkg.Checks{}
 	for rows.Next() {

@@ -38,6 +38,7 @@ func querySQL(driver string, connection string, query string) (*SQLDetails, erro
 	if err != nil || rows.Err() != nil {
 		return nil, fmt.Errorf("failed to query db: %s", err.Error())
 	}
+	defer rows.Close()
 	columns, err := rows.Columns()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get columns")
