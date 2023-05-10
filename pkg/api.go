@@ -46,14 +46,15 @@ func (t *JSONTime) UnmarshalJSON(b []byte) error {
 }
 
 type CheckStatus struct {
-	Status   bool            `json:"status"`
-	Invalid  bool            `json:"invalid,omitempty"`
-	Time     string          `json:"time"`
-	Duration int             `json:"duration"`
-	Message  string          `json:"message,omitempty"`
-	Error    string          `json:"error,omitempty"`
-	Detail   interface{}     `json:"-"`
-	Check    *external.Check `json:"check,omitempty"`
+	Status       bool            `json:"status"`
+	Invalid      bool            `json:"invalid,omitempty"`
+	Time         string          `json:"time"`
+	Duration     int             `json:"duration"`
+	Message      string          `json:"message,omitempty"`
+	Error        string          `json:"error,omitempty"`
+	Detail       interface{}     `json:"-"`
+	Check        *external.Check `json:"check,omitempty"`
+	TestSeverity TestSeverity    `json:"test_severity,omitempty"`
 }
 
 func (s CheckStatus) GetTime() (time.Time, error) {
@@ -227,14 +228,15 @@ func FromExternalCheck(canary Canary, check external.Check) Check {
 
 func FromResult(result CheckResult) CheckStatus {
 	return CheckStatus{
-		Status:   result.Pass,
-		Invalid:  result.Invalid,
-		Duration: int(result.Duration),
-		Time:     time.Now().UTC().Format(time.RFC3339),
-		Message:  result.Message,
-		Error:    result.Error,
-		Detail:   result.Detail,
-		Check:    &result.Check,
+		Status:       result.Pass,
+		Invalid:      result.Invalid,
+		Duration:     int(result.Duration),
+		Time:         time.Now().UTC().Format(time.RFC3339),
+		Message:      result.Message,
+		Error:        result.Error,
+		Detail:       result.Detail,
+		Check:        &result.Check,
+		TestSeverity: result.TestSeverity,
 	}
 }
 func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Check {

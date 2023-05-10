@@ -105,6 +105,9 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 
 	switch v := r.Check.(type) {
 	case v1.TestFunction:
+		data := map[string]any{"duration": r.Duration}
+		r.TestSeverity = measureTestSeverity(ctx.New(data), v.GetTestThreshold())
+
 		tpl := v.GetTestFunction()
 		if tpl.IsEmpty() {
 			break
@@ -120,9 +123,6 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 				r.Failf("Test expression failed. Expecting true from: %v", tpl.Expression)
 			}
 		}
-
-		data := map[string]any{"duration": r.Duration}
-		r.TestSeverity = measureTestSeverity(ctx.New(data), v.GetTestThreshold())
 	}
 
 	return r
