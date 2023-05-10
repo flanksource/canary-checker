@@ -12,4 +12,5 @@ spec:
     - name: dynatrace
       scheme: https
       host: <HOST>
-      apiKey: '<ACCESS_TOKEN>' # https://www.dynatrace.com/support/help/manage/access-control/access-tokens/personal-access-token
+      apiKey: 
+        value: '<ACCESS_TOKEN>' # https://www.dynatrace.com/support/help/manage/access-control/access-tokens/personal-access-token
