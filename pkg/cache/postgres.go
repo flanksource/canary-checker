@@ -104,7 +104,7 @@ func (c *postgresCache) Query(q QueryParams) (pkg.Checks, error) {
 }
 
 func (c *postgresCache) QuerySummary() (models.Checks, error) {
-	return duty.QueryCheckSummary(db.Pool)
+	return duty.QueryCheckSummary(context.Background(), db.Pool)
 }
 
 func (c *postgresCache) QueryStatus(q QueryParams) ([]pkg.Timeseries, error) {

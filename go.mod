@@ -22,7 +22,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.1.0
 	github.com/fergusstrange/embedded-postgres v1.21.0
 	github.com/flanksource/commons v1.9.0
-	github.com/flanksource/duty v1.0.77
+	github.com/flanksource/duty v1.0.82
 	github.com/flanksource/kommons v0.31.1
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ldap/ldap/v3 v3.4.1
@@ -245,6 +245,7 @@ require (
 	github.com/xdg-go/stringprep v1.0.3 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
+	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	github.com/zclconf/go-cty v1.13.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
