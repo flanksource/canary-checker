@@ -1,6 +1,8 @@
 package checks
 
 import (
+	"fmt"
+
 	"github.com/dynatrace-ace/dynatrace-go-api-client/api/v2/environment/dynatrace"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -51,7 +53,7 @@ func (t *DynatraceChecker) Check(ctx *context.Context, extConfig external.Check)
 	var problemDetails []map[string]any
 	for _, problem := range *problems.Problems {
 		data := map[string]any{
-			"title":            problem.Title,
+			"title":            fmt.Sprintf("%s %s", problem.Title, problem.ProblemId), // For uniqueness
 			"status":           problem.Status,
 			"impactLevel":      problem.ImpactLevel,
 			"severity":         problem.SeverityLevel,
