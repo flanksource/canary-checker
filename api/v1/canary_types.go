@@ -347,9 +347,9 @@ func CanaryFromModel(c *models.Canary) (*Canary, error) {
 		canary.ObjectMeta.DeletionTimestamp = &deletionTimestamp
 	}
 	if err := json.Unmarshal(c.Spec, &canary.Spec); err != nil {
-		logger.Debugf("Failed to unmarshal canary spec: %s", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal spec: %w", err)
 	}
+
 	id := c.ID.String()
 	canary.Status.PersistedID = &id
 	canary.Status.Checks = c.Checks
