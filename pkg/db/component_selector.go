@@ -3,8 +3,8 @@ package db
 import (
 	"strings"
 
-	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 )
 
 func GetLabelsFromSelector(selector string) (matchLabels map[string]string) {
