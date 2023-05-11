@@ -6,7 +6,6 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/logger"
 )
 
 type DynatraceChecker struct{}
@@ -49,16 +48,37 @@ func (t *DynatraceChecker) Check(ctx *context.Context, extConfig external.Check)
 	}
 	defer apiResponse.Body.Close()
 
-	logger.Infof("Found %d problems and %d warnings", len(*problems.Problems), len(*problems.Warnings))
-
 	var problemDetails []map[string]any
 	for _, problem := range *problems.Problems {
-		problemDetails = append(problemDetails, map[string]any{
-			"name": problem.Title,
-			// "message": problem.
-			"labels":   problem.EntityTags,
-			"severity": problem.SeverityLevel,
-		})
+		data := map[string]any{
+			"title":            problem.Title,
+			"status":           problem.Status,
+			"impactLevel":      problem.ImpactLevel,
+			"severity":         problem.SeverityLevel,
+			"impactedEntities": problem.ImpactedEntities,
+			"affectedEntities": problem.AffectedEntities,
+		}
+
+		if problem.EntityTags != nil && len(*problem.EntityTags) != 0 {
+			var labels = make(map[string]string, len(*problem.EntityTags))
+			for _, entity := range *problem.EntityTags {
+				if entity.Key == nil {
+					continue
+				}
+
+				labels[*entity.Key] = *entity.Value
+			}
+
+			data["labels"] = labels
+			data["entityTags"] = problem.EntityTags
+		}
+
+		if problem.EvidenceDetails != nil {
+			data["totalEvidences"] = problem.EvidenceDetails.TotalCount
+			data["evidences"] = problem.EvidenceDetails.Details
+		}
+
+		problemDetails = append(problemDetails, data)
 	}
 
 	result.AddDetails(problemDetails)

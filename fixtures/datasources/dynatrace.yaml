@@ -14,3 +14,14 @@ spec:
       host: <HOST>
       apiKey: 
         value: '<ACCESS_TOKEN>' # https://www.dynatrace.com/support/help/manage/access-control/access-tokens/personal-access-token
+      javascript: |
+          var out = _.map(results, function(r) {
+            return {
+              name: r.title,
+              description: r.title,
+              labels: r.labels,
+              icon: 'alert',
+              severity: r.severity,
+            }
+          })
+          JSON.stringify(out);
