@@ -13,7 +13,6 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/duty"
 )
 
@@ -40,30 +39,22 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 	var personalAccessToken string
 	if check.PersonalAccessToken.ValueStatic != "" {
 		personalAccessToken = check.PersonalAccessToken.ValueStatic
+	} else if connection, err := ctx.HydrateConnectionByURL(check.ConnectionName); err != nil {
+		return results.Failf("failed to hydrate connection: %v", err)
+	} else if connection != nil {
+		personalAccessToken = connection.Password
 	} else if ctx.Kommons != nil {
 		k8sClient, err := ctx.Kommons.GetClientset()
 		if err != nil {
 			return results.Failf("failed to get k8s client: %v", err)
 		}
 
-		if check.ConnectionName != "" {
-			connection, err := duty.HydratedConnectionByURL(ctx, db.Gorm, k8sClient, ctx.Namespace, check.ConnectionName)
-			if err != nil {
-				return results.ErrorMessage(err)
-			}
-
-			if connection == nil {
-				return results.Failf("connection %q not found", check.ConnectionName)
-			}
-
-			personalAccessToken = connection.Password
-		} else if ctx.Kommons != nil {
-			value, err := duty.GetEnvValueFromCache(k8sClient, check.PersonalAccessToken, ctx.Namespace)
-			if err != nil {
-				return results.ErrorMessage(err)
-			}
-			personalAccessToken = value
+		value, err := duty.GetEnvValueFromCache(k8sClient, check.PersonalAccessToken, ctx.Namespace)
+		if err != nil {
+			return results.ErrorMessage(err)
 		}
+
+		personalAccessToken = value
 	}
 
 	connection := azuredevops.NewPatConnection(fmt.Sprintf("https://dev.azure.com/%s", check.Organization), personalAccessToken)

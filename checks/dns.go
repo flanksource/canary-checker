@@ -64,12 +64,12 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 		r = net.Resolver{}
 	}
 
-	resultCh := make(chan *pkg.CheckResult, 1)
-
 	queryType := check.QueryType
 	if queryType == "" {
 		queryType = "A"
 	}
+
+	resultCh := make(chan *pkg.CheckResult, 1)
 	if fn, ok := resolvers[strings.ToUpper(queryType)]; !ok {
 		return results.Failf("unknown query type: %s", queryType)
 	} else {

@@ -50,10 +50,11 @@ func (c *IcmpChecker) Run(ctx *context.Context) pkg.Results {
 // Returns check result and metrics
 func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.ICMPCheck)
-	endpoint := check.Endpoint
 	var results pkg.Results
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
+
+	endpoint := check.Endpoint
 	ips, err := dns.Lookup("A", endpoint)
 	if err != nil {
 		return results.ErrorMessage(err)
@@ -85,6 +86,7 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		packetLoss.WithLabelValues(endpoint, ips[0].String()).Set(loss)
 		return results //nolint
 	}
+
 	return results.Failf("no IP found for %s", endpoint)
 }
 

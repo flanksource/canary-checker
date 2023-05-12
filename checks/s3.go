@@ -69,57 +69,62 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 	var results pkg.Results
 	results = append(results, result)
 
-	bucket := check.Bucket
+	if err := check.AWSConnection.Populate(ctx, ctx.Kommons, ctx.Namespace); err != nil {
+		return results.Failf("failed to populate aws connection: %v", err)
+	}
+
 	cfg := aws.NewConfig().
-		WithRegion(bucket.Region).
-		WithEndpoint(bucket.Endpoint).
-		WithCredentials(
-			credentials.NewStaticCredentials(check.AccessKey, check.SecretKey, ""),
-		)
+		WithRegion(check.AWSConnection.Region).
+		WithEndpoint(check.AWSConnection.Endpoint).
+		WithCredentials(credentials.NewStaticCredentials(check.AWSConnection.AccessKey.Value, check.AWSConnection.SecretKey.Value, ""))
+
 	if check.SkipTLSVerify {
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
 		cfg = cfg.WithHTTPClient(&http.Client{Transport: tr})
 	}
+
 	ssn, err := session.NewSession(cfg)
 	if err != nil {
-		return results.Failf("Failed to create S3 session for %s: %v", bucket.Name, err)
+		return results.Failf("Failed to create S3 session for bucket %s: %v", check.BucketName, err)
 	}
+
 	client := s3.New(ssn)
 	yes := true
 	client.Config.S3ForcePathStyle = &yes
 
 	listTimer := NewTimer()
-	_, err = client.ListObjects(&s3.ListObjectsInput{Bucket: &bucket.Name})
+	_, err = client.ListObjects(&s3.ListObjectsInput{Bucket: &check.BucketName})
 	if err != nil {
-		return results.Failf("Failed to list objects in bucket %s: %v", bucket.Name, err)
+		return results.Failf("Failed to list objects in bucket %s: %v", check.BucketName, err)
 	}
-	listHistogram.WithLabelValues(bucket.Endpoint, bucket.Name).Observe(listTimer.Elapsed())
+	listHistogram.WithLabelValues(check.AWSConnection.Endpoint, check.BucketName).Observe(listTimer.Elapsed())
 
 	data := utils.RandomString(16)
 	updateTimer := NewTimer()
 	_, err = client.PutObject(&s3.PutObjectInput{
-		Bucket: &bucket.Name,
+		Bucket: &check.BucketName,
 		Key:    &check.ObjectPath,
 		Body:   bytes.NewReader([]byte(data)),
 	})
 	if err != nil {
-		return results.Failf("Failed to put object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err)
+		return results.Failf("Failed to put object %s in bucket %s: %v", check.ObjectPath, check.BucketName, err)
 	}
-	updateHistogram.WithLabelValues(bucket.Endpoint, bucket.Name).Observe(updateTimer.Elapsed())
+	updateHistogram.WithLabelValues(check.AWSConnection.Endpoint, check.BucketName).Observe(updateTimer.Elapsed())
 
 	obj, err := client.GetObject(&s3.GetObjectInput{
-		Bucket: &bucket.Name,
+		Bucket: &check.BucketName,
 		Key:    &check.ObjectPath,
 	})
-
 	if err != nil {
-		return results.Failf("Failed to get object %s in bucket %s: %v", check.ObjectPath, bucket.Name, err)
+		return results.Failf("Failed to get object %s in bucket %s: %v", check.ObjectPath, check.BucketName, err)
 	}
+
 	returnedData, _ := io.ReadAll(obj.Body)
 	if string(returnedData) != data {
 		return results.Failf("Get object doesn't match %s != %s", data, string(returnedData))
 	}
+
 	return results
 }

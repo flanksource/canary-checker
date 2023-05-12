@@ -64,7 +64,7 @@ var Run = &cobra.Command{
 				wg.Add(1)
 				_config := config
 				go func() {
-					queue <- checks.RunChecks(context.New(kommonsClient, _config))
+					queue <- checks.RunChecks(context.New(kommonsClient, db.Gorm, _config))
 					wg.Done()
 				}()
 			}

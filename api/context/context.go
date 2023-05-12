@@ -2,12 +2,16 @@ package context
 
 import (
 	gocontext "context"
+	"errors"
 	"fmt"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
+	"gorm.io/gorm"
 )
 
 type KubernetesContext struct {
@@ -25,6 +29,7 @@ type Context struct {
 	Canary      v1.Canary
 	Environment map[string]interface{}
 	logger.Logger
+	db *gorm.DB
 }
 
 func (ctx *Context) String() string {
@@ -39,6 +44,34 @@ func (ctx *Context) WithDeadline(deadline time.Time) (*Context, gocontext.Cancel
 	_ctx, fn := gocontext.WithDeadline(ctx.Context, deadline)
 	ctx.Context = _ctx
 	return ctx, fn
+}
+
+func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Connection, error) {
+	if connectionName == "" {
+		return nil, nil
+	}
+
+	if ctx.db == nil {
+		return nil, errors.New("db has not been initialized")
+	}
+
+	k8sClient, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return nil, err
+	}
+
+	connection, err := duty.HydratedConnectionByURL(ctx, ctx.db, k8sClient, ctx.Namespace, connectionName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Connection name was explicitly provided but was not found.
+	// That's an error.
+	if connection == nil {
+		return nil, fmt.Errorf("connection %s not found", connectionName)
+	}
+
+	return connection, nil
 }
 
 func NewKubernetesContext(client *kommons.Client, namespace string) *KubernetesContext {
@@ -64,11 +97,13 @@ func (ctx *KubernetesContext) Clone() *KubernetesContext {
 	}
 }
 
-func New(client *kommons.Client, canary v1.Canary) *Context {
+func New(client *kommons.Client, db *gorm.DB, canary v1.Canary) *Context {
 	if canary.Namespace == "" {
 		canary.Namespace = "default"
 	}
+
 	return &Context{
+		db:          db,
 		Context:     gocontext.Background(),
 		Kommons:     client,
 		Namespace:   canary.GetNamespace(),

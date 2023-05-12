@@ -1,15 +1,23 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
 	v1 "k8s.io/api/core/v1"
 )
+
+type checkContext interface {
+	context.Context
+	HydrateConnectionByURL(connectionName string) (*models.Connection, error)
+}
 
 type Check struct {
 	Name, Type, Endpoint, Description, Icon string
@@ -43,6 +51,8 @@ func (c Check) GetLabels() map[string]string {
 type HTTPCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	// Name of the connection that'll be used to derive the endpoint.
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// HTTP endpoint to check.  Mutually exclusive with Namespace
 	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty" template:"true"`
 	// Namespace to crawl for TLS endpoints.  Mutually exclusive with Endpoint
@@ -125,17 +135,13 @@ type Bucket struct {
 }
 
 type S3Check struct {
-	Description `yaml:",inline" json:",inline"`
-	Bucket      Bucket `yaml:"bucket" json:"bucket,omitempty"`
-	AccessKey   string `yaml:"accessKey" json:"accessKey,omitempty"`
-	SecretKey   string `yaml:"secretKey" json:"secretKey,omitempty"`
-	ObjectPath  string `yaml:"objectPath" json:"objectPath,omitempty"`
-	// Skip TLS verify when connecting to s3
-	SkipTLSVerify bool `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
+	Description   `yaml:",inline" json:",inline"`
+	AWSConnection `yaml:",inline" json:",inline"`
+	BucketName    string `yaml:"bucketName" json:"bucketName,omitempty"`
 }
 
 func (c S3Check) GetEndpoint() string {
-	return fmt.Sprintf("%s/%s", c.Bucket.Endpoint, c.Bucket.Name)
+	return fmt.Sprintf("%s/%s", c.AWSConnection.Endpoint, c.BucketName)
 }
 
 func (c S3Check) GetType() string {
@@ -173,6 +179,10 @@ func (c CloudWatchCheck) GetType() string {
 
 type ResticCheck struct {
 	Description `yaml:",inline" json:",inline"`
+	// Name of the connection used to derive restic password.
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
+	// Name of the AWS connection used to derive the access key and secret key.
+	AWSConnectionName string `yaml:"awsConnectionName,omitempty" json:"awsConnectionName,omitempty"`
 	// Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name
 	Repository string `yaml:"repository" json:"repository"`
 	// Password for the restic repository
@@ -199,7 +209,9 @@ func (c ResticCheck) GetType() string {
 
 type JmeterCheck struct {
 	Description `yaml:",inline" json:",inline"`
-	// Jmx defines tge ConfigMap or Secret reference to get the JMX test plan
+	// Name of the connection that'll be used to derive host and other connection details.
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
+	// Jmx defines the ConfigMap or Secret reference to get the JMX test plan
 	Jmx kommons.EnvVar `yaml:"jmx" json:"jmx"`
 	// Host is the server against which test plan needs to be executed
 	Host string `yaml:"host,omitempty" json:"host,omitempty"`
@@ -219,6 +231,28 @@ func (c JmeterCheck) GetEndpoint() string {
 
 func (c JmeterCheck) GetType() string {
 	return "jmeter"
+}
+
+// HydrateConnection will attempt to populate the host and port from the connection name.
+func (c *JmeterCheck) HydrateConnection(ctx checkContext) (bool, error) {
+	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
+	if err != nil {
+		return false, err
+	}
+
+	if connection == nil {
+		return false, nil
+	}
+
+	c.Host = connection.URL
+
+	if portRaw, ok := connection.Properties["port"]; ok {
+		if port, err := strconv.Atoi(portRaw); nil == err {
+			c.Port = int32(port)
+		}
+	}
+
+	return true, nil
 }
 
 type DockerPullCheck struct {
@@ -284,9 +318,12 @@ func (c ContainerdPushCheck) GetType() string {
 
 type RedisCheck struct {
 	Description `yaml:",inline" json:",inline"`
-	Addr        string          `yaml:"addr" json:"addr" template:"true"`
-	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
-	DB          int             `yaml:"db" json:"db"`
+	// ConnectionName is the name of the connection.
+	// It is used to populate addr, db and auth.
+	ConnectionName string          `yaml:"connection,omitempty" json:"connection,omitempty"`
+	Addr           string          `yaml:"addr" json:"addr" template:"true"`
+	Auth           *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	DB             int             `yaml:"db" json:"db"`
 }
 
 func (c RedisCheck) GetType() string {
@@ -399,13 +436,14 @@ type Elasticsearch struct {
 }
 
 type ElasticsearchCheck struct {
-	Description `yaml:",inline" json:",inline"`
-	Templatable `yaml:",inline" json:",inline"`
-	URL         string          `yaml:"url" json:"url,omitempty" template:"true"`
-	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
-	Query       string          `yaml:"query" json:"query,omitempty" template:"true"`
-	Index       string          `yaml:"index" json:"index,omitempty" template:"true"`
-	Results     int             `yaml:"results" json:"results,omitempty" template:"true"`
+	Description    `yaml:",inline" json:",inline"`
+	Templatable    `yaml:",inline" json:",inline"`
+	ConnectionName string          `yaml:"connection,omitempty" json:"connection,omitempty"`
+	URL            string          `yaml:"url" json:"url,omitempty" template:"true"`
+	Auth           *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	Query          string          `yaml:"query" json:"query,omitempty" template:"true"`
+	Index          string          `yaml:"index" json:"index,omitempty" template:"true"`
+	Results        int             `yaml:"results" json:"results,omitempty" template:"true"`
 }
 
 func (c ElasticsearchCheck) GetType() string {
@@ -414,6 +452,21 @@ func (c ElasticsearchCheck) GetType() string {
 
 func (c ElasticsearchCheck) GetEndpoint() string {
 	return c.URL
+}
+
+func (c *ElasticsearchCheck) HydrateConnection(ctx checkContext) error {
+	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
+	if err != nil {
+		return err
+	}
+
+	if connection != nil {
+		c.URL = connection.URL
+		c.Auth.Username.Value = connection.Username
+		c.Auth.Password.Value = connection.Password
+	}
+
+	return nil
 }
 
 type DynatraceCheck struct {
@@ -442,13 +495,14 @@ type AlertManager struct {
 }
 
 type AlertManagerCheck struct {
-	Description `yaml:",inline" json:",inline"`
-	Templatable `yaml:",inline" json:",inline"`
-	Host        string            `yaml:"host" json:"host,omitempty" template:"true"`
-	Auth        *Authentication   `yaml:"auth,omitempty" json:"auth,omitempty"`
-	Alerts      []string          `yaml:"alerts" json:"alerts,omitempty" template:"true"`
-	Filters     map[string]string `yaml:"filters" json:"filters,omitempty" template:"true"`
-	Ignore      []string          `yaml:"ignore" json:"ignore,omitempty" template:"true"`
+	Description    `yaml:",inline" json:",inline"`
+	Templatable    `yaml:",inline" json:",inline"`
+	ConnectionName string            `yaml:"connection,omitempty" json:"connection,omitempty"`
+	Host           string            `yaml:"host" json:"host,omitempty" template:"true"`
+	Auth           *Authentication   `yaml:"auth,omitempty" json:"auth,omitempty"`
+	Alerts         []string          `yaml:"alerts" json:"alerts,omitempty" template:"true"`
+	Filters        map[string]string `yaml:"filters" json:"filters,omitempty" template:"true"`
+	Ignore         []string          `yaml:"ignore" json:"ignore,omitempty" template:"true"`
 }
 
 func (c AlertManagerCheck) GetType() string {
@@ -493,12 +547,13 @@ func (c PodCheck) GetType() string {
 }
 
 type LDAPCheck struct {
-	Description   `yaml:",inline" json:",inline"`
-	Host          string          `yaml:"host" json:"host" template:"true"`
-	Auth          *Authentication `yaml:"auth" json:"auth"`
-	BindDN        string          `yaml:"bindDN" json:"bindDN"`
-	UserSearch    string          `yaml:"userSearch,omitempty" json:"userSearch,omitempty"`
-	SkipTLSVerify bool            `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
+	Description    `yaml:",inline" json:",inline"`
+	ConnectionName string          `yaml:"connection,omitempty" json:"connection,omitempty"`
+	Host           string          `yaml:"host" json:"host" template:"true"`
+	Auth           *Authentication `yaml:"auth" json:"auth"`
+	BindDN         string          `yaml:"bindDN" json:"bindDN"`
+	UserSearch     string          `yaml:"userSearch,omitempty" json:"userSearch,omitempty"`
+	SkipTLSVerify  bool            `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
 }
 
 func (c LDAPCheck) GetEndpoint() string {
@@ -507,6 +562,28 @@ func (c LDAPCheck) GetEndpoint() string {
 
 func (c LDAPCheck) GetType() string {
 	return "ldap"
+}
+
+func (c *LDAPCheck) HydrateConnection(ctx checkContext) (bool, error) {
+	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
+	if err != nil {
+		return false, err
+	}
+
+	if connection == nil {
+		return false, nil
+	}
+
+	c.Host = connection.URL
+	c.Auth.Username.Value = connection.Username
+	c.Auth.Password.Value = connection.Password
+
+	c.Auth = &Authentication{
+		Username: kommons.EnvVar{Value: c.Auth.Username.Value},
+		Password: kommons.EnvVar{Value: c.Auth.Password.Value},
+	}
+
+	return true, nil
 }
 
 type NamespaceCheck struct {
@@ -626,6 +703,8 @@ func (c JunitCheck) GetType() string {
 }
 
 type SMBConnection struct {
+	// ConnectionName of the connection. It'll be used to populate the connection fields.
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	//Port on which smb server is running. Defaults to 445
 	Port int             `yaml:"port,omitempty" json:"port,omitempty"`
 	Auth *Authentication `yaml:"auth" json:"auth"`
@@ -646,11 +725,78 @@ func (c SMBConnection) GetPort() int {
 	return 445
 }
 
+func (c *SMBConnection) HydrateConnection(ctx checkContext) (found bool, err error) {
+	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
+	if err != nil {
+		return false, err
+	}
+
+	if connection == nil {
+		return false, nil
+	}
+
+	c.Auth = &Authentication{
+		Username: kommons.EnvVar{Value: connection.Username},
+		Password: kommons.EnvVar{Value: connection.Password},
+	}
+
+	if workstation, ok := connection.Properties["workstation"]; ok {
+		c.Workstation = workstation
+	}
+
+	if domain, ok := connection.Properties["domain"]; ok {
+		c.Domain = domain
+	}
+
+	if sharename, ok := connection.Properties["sharename"]; ok {
+		c.Sharename = sharename
+	}
+
+	if searchPath, ok := connection.Properties["searchPath"]; ok {
+		c.SearchPath = searchPath
+	}
+
+	if portRaw, ok := connection.Properties["port"]; ok {
+		if port, err := strconv.Atoi(portRaw); nil == err {
+			c.Port = port
+		}
+	}
+
+	return true, nil
+}
+
 type SFTPConnection struct {
+	// ConnectionName of the connection. It'll be used to populate the connection fields.
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Port for the SSH server. Defaults to 22
 	Port int             `yaml:"port,omitempty" json:"port,omitempty"`
 	Host string          `yaml:"host" json:"host"`
 	Auth *Authentication `yaml:"auth" json:"auth"`
+}
+
+func (c *SFTPConnection) HydrateConnection(ctx checkContext) (found bool, err error) {
+	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
+	if err != nil {
+		return false, err
+	}
+
+	if connection == nil {
+		return false, nil
+	}
+
+	c.Host = connection.URL
+	c.Auth = &Authentication{
+		Username: kommons.EnvVar{Value: connection.Username},
+		Password: kommons.EnvVar{Value: connection.Password},
+	}
+
+	if portRaw, ok := connection.Properties["port"]; ok {
+		if port, err := strconv.Atoi(portRaw); nil == err {
+			c.Port = port
+		}
+	}
+
+	return true, nil
 }
 
 func (c SFTPConnection) GetPort() int {
@@ -666,9 +812,11 @@ func (c SFTPConnection) GetPort() int {
 type Prometheus struct {
 	PrometheusCheck `yaml:",inline" json:",inline"`
 }
+
 type PrometheusCheck struct {
-	Description `yaml:",inline" json:",inline"`
-	Templatable `yaml:",inline" json:",inline"`
+	Description    `yaml:",inline" json:",inline"`
+	Templatable    `yaml:",inline" json:",inline"`
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Address of the prometheus server
 	Host string `yaml:"host" json:"host" template:"true" `
 	// PromQL query
@@ -681,6 +829,20 @@ func (c PrometheusCheck) GetType() string {
 
 func (c PrometheusCheck) GetEndpoint() string {
 	return fmt.Sprintf("%v/%v", c.Host, c.Description)
+}
+
+func (c *PrometheusCheck) HydrateConnection(ctx checkContext) (bool, error) {
+	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
+	if err != nil {
+		return false, err
+	}
+
+	if connection == nil {
+		return false, nil
+	}
+
+	c.Host = connection.URL
+	return true, nil
 }
 
 type MongoDBCheck struct {
@@ -699,11 +861,12 @@ type Git struct {
 }
 
 type GitHubCheck struct {
-	Description `yaml:",inline" json:",inline"`
-	Templatable `yaml:",inline" json:",inline"`
+	Description    `yaml:",inline" json:",inline"`
+	Templatable    `yaml:",inline" json:",inline"`
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Query to be executed. Please see https://github.com/askgitdev/askgit for more details regarding syntax
-	Query       string          `yaml:"query" json:"query"`
-	GithubToken *kommons.EnvVar `yaml:"githubToken,omitempty" json:"githubToken,omitempty"`
+	Query       string       `yaml:"query" json:"query"`
+	GithubToken types.EnvVar `yaml:"githubToken,omitempty" json:"githubToken,omitempty"`
 }
 
 func (c GitHubCheck) GetType() string {
@@ -761,10 +924,12 @@ func (c KubernetesCheck) CheckReady() bool {
 }
 
 type AWSConnection struct {
-	AccessKey kommons.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
-	SecretKey kommons.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
-	Region    string         `yaml:"region,omitempty" json:"region,omitempty"`
-	Endpoint  string         `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
+	// ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+	ConnectionName string         `yaml:"connection,omitempty" json:"connection,omitempty"`
+	AccessKey      kommons.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
+	SecretKey      kommons.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
+	Region         string         `yaml:"region,omitempty" json:"region,omitempty"`
+	Endpoint       string         `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
 	// Skip TLS verify when connecting to aws
 	SkipTLSVerify bool `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
 	// glob path to restrict matches to a subset
@@ -773,9 +938,40 @@ type AWSConnection struct {
 	UsePathStyle bool `yaml:"usePathStyle,omitempty" json:"usePathStyle,omitempty"`
 }
 
+// Populate populates an AWSConnection with credentials and other information.
+// If a connection name is specified, it'll be used to populate the endpoint, accessKey and secretKey.
+func (t *AWSConnection) Populate(ctx checkContext, kommonsClient *kommons.Client, namespace string) error {
+	if t.ConnectionName != "" {
+		connection, err := ctx.HydrateConnectionByURL(t.ConnectionName)
+		if err != nil {
+			return fmt.Errorf("could not parse EC2 access key: %v", err)
+		}
+
+		t.AccessKey.Value = connection.Username
+		t.SecretKey.Value = connection.Password
+		t.Endpoint = connection.URL
+	}
+
+	if _, accessKey, err := kommonsClient.GetEnvValue(t.AccessKey, namespace); err != nil {
+		return fmt.Errorf("could not parse EC2 access key: %v", err)
+	} else {
+		t.AccessKey.Value = accessKey
+	}
+
+	if _, secretKey, err := kommonsClient.GetEnvValue(t.SecretKey, namespace); err != nil {
+		return fmt.Errorf(fmt.Sprintf("Could not parse EC2 secret key: %v", err))
+	} else {
+		t.SecretKey.Value = secretKey
+	}
+
+	return nil
+}
+
 type GCPConnection struct {
-	Endpoint    string          `yaml:"endpoint" json:"endpoint,omitempty"`
-	Credentials *kommons.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
+	// ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
+	ConnectionName string          `yaml:"connection,omitempty" json:"connection,omitempty"`
+	Endpoint       string          `yaml:"endpoint" json:"endpoint,omitempty"`
+	Credentials    *kommons.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
 }
 
 func (g *GCPConnection) Validate() *GCPConnection {
@@ -783,6 +979,22 @@ func (g *GCPConnection) Validate() *GCPConnection {
 		return &GCPConnection{}
 	}
 	return g
+}
+
+// HydrateConnection attempts to find the connection by name
+// and populate the endpoint and credentials.
+func (g *GCPConnection) HydrateConnection(ctx checkContext) error {
+	connection, err := ctx.HydrateConnectionByURL(g.ConnectionName)
+	if err != nil {
+		return err
+	}
+
+	if connection != nil {
+		g.Credentials.Value = connection.Password
+		g.Endpoint = connection.URL
+	}
+
+	return nil
 }
 
 type FolderCheck struct {
@@ -1135,6 +1347,7 @@ type DatabaseBackup struct {
 type EC2 struct {
 	EC2Check `yaml:",inline" json:",inline"`
 }
+
 type EC2Check struct {
 	Description   `yaml:",inline" json:",inline"`
 	AWSConnection `yaml:",inline" json:",inline"`
@@ -1180,40 +1393,40 @@ func (c AzureDevopsCheck) GetEndpoint() string {
 }
 
 var AllChecks = []external.Check{
-	AzureDevopsCheck{},
-	HTTPCheck{},
-	TCPCheck{},
-	ICMPCheck{},
-	S3Check{},
-	DockerPullCheck{},
-	DockerPushCheck{},
-	ContainerdPullCheck{},
-	ContainerdPushCheck{},
-	PostgresCheck{},
-	MssqlCheck{},
-	MysqlCheck{},
-	RedisCheck{},
-	PodCheck{},
-	LDAPCheck{},
-	ResticCheck{},
-	NamespaceCheck{},
-	DNSCheck{},
-	DynatraceCheck{},
-	HelmCheck{},
-	JmeterCheck{},
-	JunitCheck{},
-	EC2Check{},
-	PrometheusCheck{},
-	MongoDBCheck{},
-	CloudWatchCheck{},
-	GitHubCheck{},
-	Kubernetes{},
-	FolderCheck{},
-	ExecCheck{},
+	AlertManagerCheck{},
 	AwsConfigCheck{},
 	AwsConfigRuleCheck{},
-	DatabaseBackupCheck{},
+	AzureDevopsCheck{},
+	CloudWatchCheck{},
 	ConfigDBCheck{},
+	ContainerdPullCheck{},
+	ContainerdPushCheck{},
+	DatabaseBackupCheck{},
+	DNSCheck{},
+	DockerPullCheck{},
+	DockerPushCheck{},
+	DynatraceCheck{},
+	EC2Check{},
 	ElasticsearchCheck{},
-	AlertManagerCheck{},
+	ExecCheck{},
+	FolderCheck{},
+	GitHubCheck{},
+	HelmCheck{},
+	HTTPCheck{},
+	ICMPCheck{},
+	JmeterCheck{},
+	JunitCheck{},
+	Kubernetes{},
+	LDAPCheck{},
+	MongoDBCheck{},
+	MssqlCheck{},
+	MysqlCheck{},
+	NamespaceCheck{},
+	PodCheck{},
+	PostgresCheck{},
+	PrometheusCheck{},
+	RedisCheck{},
+	ResticCheck{},
+	S3Check{},
+	TCPCheck{},
 }

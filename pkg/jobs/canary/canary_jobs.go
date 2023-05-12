@@ -98,7 +98,7 @@ func (job CanaryJob) Run() {
 }
 
 func (job *CanaryJob) NewContext() *context.Context {
-	return context.New(job.Client, job.Canary)
+	return context.New(job.Client, db.Gorm, job.Canary)
 }
 
 func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {

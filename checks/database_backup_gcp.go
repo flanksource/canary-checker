@@ -29,11 +29,16 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 	var results pkg.Results
 	results = append(results, result)
 
+	if err := check.GCP.HydrateConnection(ctx); err != nil {
+		return results.Failf("failed to populate GCP connection: %v", err)
+	}
+
 	svc, err := gcp.NewSQLAdmin(ctx, check.GCP.GCPConnection)
 	if err != nil {
 		databaseScanFailCount.WithLabelValues(check.GCP.Project, check.GCP.Instance).Inc()
 		return results.ErrorMessage(err)
 	}
+
 	// Only checking one backup for now, but setting up the logic that this could maybe be configurable.
 	// Would need some extra parsing on the age to select latest
 	backupList, err := svc.BackupRuns.List(check.GCP.Project, check.GCP.Instance).MaxResults(1).Do()

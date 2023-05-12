@@ -119,6 +119,7 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/liamylian/jsontime/v2 v2.0.0 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect
@@ -172,8 +173,8 @@ require (
 	k8s.io/apimachinery v0.26.4 // indirect
 	k8s.io/cli-runtime v0.24.4 // indirect
 	k8s.io/client-go v11.0.0+incompatible // indirect
-	k8s.io/klog/v2 v2.90.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20230426210814-b0c0aaee3cc0 // indirect
+	k8s.io/klog/v2 v2.100.1 // indirect
+	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
 	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 // indirect
 	sigs.k8s.io/controller-runtime v0.14.1 // indirect
 	sigs.k8s.io/kustomize v2.0.3+incompatible // indirect

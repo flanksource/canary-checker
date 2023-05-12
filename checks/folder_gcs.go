@@ -19,6 +19,11 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
+
+	if err := check.GCPConnection.HydrateConnection(ctx); err != nil {
+		return results.Failf("failed to populate GCP connection: %v", err)
+	}
+
 	cfg, err := gcp.NewSession(ctx, check.GCPConnection)
 	if err != nil {
 		return results.ErrorMessage(err)
