@@ -237,7 +237,7 @@ spec:
                                 type: object
                             type: object
                           connection:
-                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey. It's named "connection" instead of just "name" so that it fits with the convention
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                             type: string
                           endpoint:
                             type: string
@@ -377,7 +377,7 @@ spec:
                                 type: object
                             type: object
                           connection:
-                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey. It's named "connection" instead of just "name" so that it fits with the convention
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                             type: string
                           endpoint:
                             type: string
@@ -635,7 +635,7 @@ spec:
                             type: object
                         type: object
                       connection:
-                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey. It's named "connection" instead of just "name" so that it fits with the convention
+                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                         type: string
                       description:
                         description: Description for the check
@@ -952,7 +952,7 @@ spec:
                           gcpConnection:
                             properties:
                               connection:
-                                description: ConnectionName of the connection. It'll be used to populate the endpoint and credentials. It's named "connection" instead of just "name" so that it fits with the convention.
+                                description: ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
                                 type: string
                               credentials:
                                 properties:
@@ -1408,7 +1408,7 @@ spec:
                           x-kubernetes-map-type: atomic
                         type: array
                       connection:
-                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey. It's named "connection" instead of just "name" so that it fits with the convention
+                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                         type: string
                       description:
                         description: Description for the check
@@ -1769,7 +1769,7 @@ spec:
                                 type: object
                             type: object
                           connection:
-                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey. It's named "connection" instead of just "name" so that it fits with the convention
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                             type: string
                           endpoint:
                             type: string
@@ -1847,7 +1847,7 @@ spec:
                       gcpConnection:
                         properties:
                           connection:
-                            description: ConnectionName of the connection. It'll be used to populate the endpoint and credentials. It's named "connection" instead of just "name" so that it fits with the convention.
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
                             type: string
                           credentials:
                             properties:
@@ -1989,7 +1989,7 @@ spec:
                               - username
                             type: object
                           connection:
-                            description: ConnectionName of the connection. It'll be used to populate the connection fields. It's named "connection" instead of just "name" so that it fits with the convention
+                            description: ConnectionName of the connection. It'll be used to populate the connection fields.
                             type: string
                           host:
                             type: string
@@ -2073,7 +2073,7 @@ spec:
                               - username
                             type: object
                           connection:
-                            description: ConnectionName of the connection. It'll be used to populate the connection fields. It's named "connection" instead of just "name" so that it fits with the convention
+                            description: ConnectionName of the connection. It'll be used to populate the connection fields.
                             type: string
                           domain:
                             description: Domain...
@@ -2126,6 +2126,8 @@ spec:
                 github:
                   items:
                     properties:
+                      connection:
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -2518,8 +2520,6 @@ spec:
                 icmp:
                   items:
                     properties:
-                      connection:
-                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -3571,7 +3571,6 @@ spec:
                             type: string
                         type: object
                     required:
-                      - connection
                       - host
                       - name
                       - query
@@ -3652,7 +3651,7 @@ spec:
                           - password
                           - username
                         type: object
-                      connectionName:
+                      connection:
                         description: ConnectionName is the name of the connection. It is used to populate addr, db and auth.
                         type: string
                       db:
@@ -3855,7 +3854,7 @@ spec:
                       bucketName:
                         type: string
                       connection:
-                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey. It's named "connection" instead of just "name" so that it fits with the convention
+                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                         type: string
                       description:
                         description: Description for the check

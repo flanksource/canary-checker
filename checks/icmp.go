@@ -54,12 +54,6 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
 
-	if connection, err := ctx.HydrateConnectionByURL(check.ConnectionName); err != nil {
-		return results.Failf("failed to find ICMP connection %q: %v", check.ConnectionName, err)
-	} else if connection != nil {
-		check.Endpoint = connection.URL
-	}
-
 	endpoint := check.Endpoint
 	ips, err := dns.Lookup("A", endpoint)
 	if err != nil {

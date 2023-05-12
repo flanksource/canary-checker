@@ -115,7 +115,6 @@ func (t TCPCheck) GetType() string {
 type ICMPCheck struct {
 	Description         `yaml:",inline" json:",inline"`
 	Endpoint            string `yaml:"endpoint" json:"endpoint,omitempty"`
-	ConnectionName      string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	ThresholdMillis     int64  `yaml:"thresholdMillis,omitempty" json:"thresholdMillis,omitempty"`
 	PacketLossThreshold int64  `yaml:"packetLossThreshold,omitempty" json:"packetLossThreshold,omitempty"`
 	PacketCount         int    `yaml:"packetCount,omitempty" json:"packetCount,omitempty"`
@@ -319,7 +318,7 @@ type RedisCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	// ConnectionName is the name of the connection.
 	// It is used to populate addr, db and auth.
-	ConnectionName string          `yaml:"connectionName,omitempty" json:"connectionName,omitempty"`
+	ConnectionName string          `yaml:"connection,omitempty" json:"connection,omitempty"`
 	Addr           string          `yaml:"addr" json:"addr" template:"true"`
 	Auth           *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 	DB             int             `yaml:"db" json:"db"`
@@ -703,7 +702,6 @@ func (c JunitCheck) GetType() string {
 
 type SMBConnection struct {
 	// ConnectionName of the connection. It'll be used to populate the connection fields.
-	// It's named "connection" instead of just "name" so that it fits with the convention
 	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	//Port on which smb server is running. Defaults to 445
 	Port int             `yaml:"port,omitempty" json:"port,omitempty"`
@@ -735,7 +733,6 @@ func (c *SMBConnection) HydrateConnection(ctx checkContext) (found bool, err err
 		return false, nil
 	}
 
-	c.Domain = connection.URL
 	c.Auth = &Authentication{
 		Username: kommons.EnvVar{Value: connection.Username},
 		Password: kommons.EnvVar{Value: connection.Password},
@@ -743,6 +740,10 @@ func (c *SMBConnection) HydrateConnection(ctx checkContext) (found bool, err err
 
 	if workstation, ok := connection.Properties["workstation"]; ok {
 		c.Workstation = workstation
+	}
+
+	if domain, ok := connection.Properties["domain"]; ok {
+		c.Domain = domain
 	}
 
 	if sharename, ok := connection.Properties["sharename"]; ok {
@@ -764,7 +765,6 @@ func (c *SMBConnection) HydrateConnection(ctx checkContext) (found bool, err err
 
 type SFTPConnection struct {
 	// ConnectionName of the connection. It'll be used to populate the connection fields.
-	// It's named "connection" instead of just "name" so that it fits with the convention
 	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Port for the SSH server. Defaults to 22
 	Port int             `yaml:"port,omitempty" json:"port,omitempty"`
@@ -814,7 +814,7 @@ type Prometheus struct {
 type PrometheusCheck struct {
 	Description    `yaml:",inline" json:",inline"`
 	Templatable    `yaml:",inline" json:",inline"`
-	ConnectionName string `yaml:"connection" json:"connection"`
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Address of the prometheus server
 	Host string `yaml:"host" json:"host" template:"true" `
 	// PromQL query
@@ -861,7 +861,7 @@ type Git struct {
 type GitHubCheck struct {
 	Description    `yaml:",inline" json:",inline"`
 	Templatable    `yaml:",inline" json:",inline"`
-	ConnectionName string `yaml:"connection,inline" json:"connection,inline"`
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Query to be executed. Please see https://github.com/askgitdev/askgit for more details regarding syntax
 	Query       string       `yaml:"query" json:"query"`
 	GithubToken types.EnvVar `yaml:"githubToken,omitempty" json:"githubToken,omitempty"`
@@ -923,7 +923,6 @@ func (c KubernetesCheck) CheckReady() bool {
 
 type AWSConnection struct {
 	// ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
-	// It's named "connection" instead of just "name" so that it fits with the convention
 	ConnectionName string         `yaml:"connection,omitempty" json:"connection,omitempty"`
 	AccessKey      kommons.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
 	SecretKey      kommons.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
@@ -968,7 +967,6 @@ func (t *AWSConnection) Populate(ctx checkContext, kommonsClient *kommons.Client
 
 type GCPConnection struct {
 	// ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
-	// It's named "connection" instead of just "name" so that it fits with the convention.
 	ConnectionName string          `yaml:"connection,omitempty" json:"connection,omitempty"`
 	Endpoint       string          `yaml:"endpoint" json:"endpoint,omitempty"`
 	Credentials    *kommons.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
