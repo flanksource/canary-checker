@@ -18,6 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.2
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
+	github.com/dynatrace-ace/dynatrace-go-api-client/api/v2/environment/dynatrace v0.0.0-20210816162345-de2eacc8ac9a
 	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
 	github.com/elastic/go-elasticsearch/v8 v8.1.0
 	github.com/fergusstrange/embedded-postgres v1.21.0
