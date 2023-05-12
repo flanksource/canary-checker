@@ -179,8 +179,10 @@ func (c CloudWatchCheck) GetType() string {
 
 type ResticCheck struct {
 	Description `yaml:",inline" json:",inline"`
-	// Name of the connection that'll be used to derive connection details.
+	// Name of the connection used to derive restic password.
 	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
+	// Name of the AWS connection used to derive the access key and secret key.
+	AWSConnectionName string `yaml:"awsConnectionName,omitempty" json:"awsConnectionName,omitempty"`
 	// Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name
 	Repository string `yaml:"repository" json:"repository"`
 	// Password for the restic repository

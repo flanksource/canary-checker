@@ -3712,6 +3712,9 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      awsConnectionName:
+                        description: Name of the AWS connection used to derive the access key and secret key.
+                        type: string
                       caCert:
                         description: CaCert path to the root cert. In case of self-signed certificates
                         type: string
@@ -3719,7 +3722,7 @@ spec:
                         description: CheckIntegrity when enabled will check the Integrity and consistency of the restic reposiotry
                         type: boolean
                       connection:
-                        description: Name of the connection that'll be used to derive connection details.
+                        description: Name of the connection used to derive restic password.
                         type: string
                       description:
                         description: Description for the check
