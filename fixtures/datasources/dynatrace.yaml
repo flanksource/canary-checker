@@ -1,0 +1,26 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: dynatrace
+  labels:
+    "Expected-Fail": "true"
+spec:
+  schedule: "@every 1m"
+  owner: DBAdmin
+  severity: high
+  dynatrace:
+    - name: dynatrace
+      scheme: https
+      host: <HOST>
+      apiKey: 
+        value: '<ACCESS_TOKEN>' # https://www.dynatrace.com/support/help/manage/access-control/access-tokens/personal-access-token
+      javascript: |
+          var out = _.map(results, function(r) {
+            return {
+              name: r.title,
+              description: r.title,
+              labels: r.labels,
+              severity: r.severity,
+            }
+          })
+          JSON.stringify(out);
