@@ -5,15 +5,10 @@ metadata:
 spec:
   interval: 30
   github:
-    - query: "SELECT * FROM github_repo_checks('flanksource/template-operator') where branch='master' and conclusion='FAILURE'"
+    - query: "SELECT * FROM github_repo_checks('flanksource/canary-checker') where branch='master' and conclusion='FAILURE'"
       name: github-check
       test:
-        template: |
-          {{- if (eq (len .results) 0) }}
-           true
-          {{- else }}
-           fase
-          {{- end }}
+        expr: len(results) == 0
       githubToken:
         valueFrom:
           secretKeyRef:

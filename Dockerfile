@@ -32,25 +32,32 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
       fonts-freefont-ttf \
       --no-install-recommends
 
+  RUN apt-get update && apt-get upgrade -y && \
+      rm -Rf /var/lib/apt/lists/* && \
+      apt-get clean
 
-RUN curl -L https://github.com/restic/restic/releases/download/v0.12.0/restic_0.12.0_linux_amd64.bz2 -o restic.bz2 && \
+ENV RESTIC_VERSION=0.15.2
+RUN curl -L https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_amd64.bz2 -o restic.bz2 && \
   bunzip2  /app/restic.bz2 && \
   chmod +x /app/restic && \
   mv /app/restic /usr/local/bin/ && \
   rm -rf /app/restic.bz2
 
-#Install jmeter
-RUN curl -L https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.4.3.zip -o apache-jmeter-5.4.3.zip && \
-  unzip apache-jmeter-5.4.3.zip -d /opt && \
-  rm apache-jmeter-5.4.3.zip
+ENV JMETER_VERSION=5.5
+RUN curl -L https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-${JMETER_VERSION}.zip -o apache-jmeter-${JMETER_VERSION}.zip && \
+  unzip apache-jmeter-${JMETER_VERSION}.zip -d /opt && \
+  rm apache-jmeter-${JMETER_VERSION}.zip
 
-ENV PATH /opt/apache-jmeter-5.4.3/bin/:$PATH
+ENV PATH /opt/apache-jmeter-${JMETER_VERSION}/bin/:$PATH
 
 
 RUN curl -L https://github.com/flanksource/askgit/releases/download/v0.4.8-flanksource/askgit-linux-amd64.tar.gz -o askgit.tar.gz && \
     tar xf askgit.tar.gz && \
     mv askgit /usr/local/bin/askgit && \
-    rm askgit.tar.gz
+    rm askgit.tar.gz && \
+    wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.18_amd64.deb && \
+    dpkg -i libssl1.1_1.1.1f-1ubuntu2.18_amd64.deb && \
+    rm libssl1.1_1.1.1f-1ubuntu2.18_amd64.deb
 
 ENV K6_VERSION=v0.44.0
 RUN curl -L https://github.com/grafana/k6/releases/download/${K6_VERSION}/k6-${K6_VERSION}-linux-amd64.tar.gz -o k6.tar.gz && \
@@ -58,7 +65,7 @@ RUN curl -L https://github.com/grafana/k6/releases/download/${K6_VERSION}/k6-${K
     mv k6-${K6_VERSION}-linux-amd64/k6 /usr/local/bin/k6 && \
     rm k6.tar.gz
 
-RUN curl -Lsf https://sh.benthos.dev | bash -s -- 3.56.0
+RUN curl -Lsf https://sh.benthos.dev | bash -s -- 4.15.0
 
 RUN curl -L https://github.com/multiprocessio/dsq/releases/download/v0.23.0/dsq-linux-x64-v0.23.0.zip -o dsq.zip && \
     unzip dsq.zip && \

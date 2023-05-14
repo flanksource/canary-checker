@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 30
   ldap:
-    - host: ldap://apacheds.ldap.svc:10389
+    - host: ldap://apacheds.ldap.svc.cluster.local:10389
       name: ldap user login
       auth:
         username:
@@ -14,7 +14,7 @@ spec:
           value: secret
       bindDN: ou=users,dc=example,dc=com
       userSearch: "(&(objectClass=organizationalPerson))"
-    - host: ldap://apacheds.ldap.svc:10389
+    - host: ldap://apacheds.ldap.svc.cluster.local:10389
       name: ldap group login
       auth:
         username:

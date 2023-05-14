@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 30
   mongodb:
-    - connection: mongodb://$(username):$(password)@mongo.default.svc:27017/?authSource=admin
+    - connection: mongodb://$(username):$(password)@mongo.default.svc.cluster.local:27017/?authSource=admin
       name: mongo ping check
       description: mongo ping
       auth:
@@ -14,5 +14,5 @@ spec:
         password:
           value: secret
   dns:
-    - query: mongo.default.svc
+    - query: mongo.default.svc.cluster.local
       name: mongo dns check

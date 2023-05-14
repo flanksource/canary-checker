@@ -7,7 +7,6 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
 	"github.com/gobwas/glob"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,7 +61,7 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 				return results
 			}
 		}
-		logger.Debugf("Found %d resources in namespace %s with label=%s field=%s", len(resources), namespace, check.Resource.LabelSelector, check.Resource.FieldSelector)
+		ctx.Tracef("Found %d resources in namespace %s with label=%s field=%s", len(resources), namespace, check.Resource.LabelSelector, check.Resource.FieldSelector)
 		if check.CheckReady() {
 			for _, resource := range resources {
 				ready, msg := ctx.Kommons.IsReady(&resource)

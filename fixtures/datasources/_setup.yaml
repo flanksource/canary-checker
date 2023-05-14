@@ -341,7 +341,7 @@ spec:
       protocol: TCP
       name: grpc
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: podinfo-ing
@@ -355,9 +355,12 @@ spec:
     - host: podinfo.127.0.0.1.nip.io
       http:
         paths:
-          - backend:
-              serviceName: podinfo
-              servicePort: 9898
+          - pathType: ImplementationSpecific
+            backend:
+              service:
+                name: podinfo
+                port:
+                  number: 9898
 ---
 apiVersion: v1
 kind: Secret

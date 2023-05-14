@@ -8,6 +8,25 @@ stringData:
   DOCKER_PASSWORD: password
 ---
 apiVersion: v1
+metadata:
+  name: basic-auth
+  namespace: default
+kind: ConfigMap
+data:
+  pass: world
+  user: hello
+
+---
+apiVersion: v1
+metadata:
+  name: basic-auth
+  namespace: default
+kind: Secret
+stringData:
+  pass: world
+  user: hello
+---
+apiVersion: v1
 kind: Pod
 metadata:
   name: k8s-check-ready

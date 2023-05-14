@@ -177,7 +177,7 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 		return results.Failf("invalid pod spec: %v", err)
 	}
 
-	if err := ctx.Kommons.Apply(podCheck.Namespace, pod); err != nil {
+	if _, err := c.k8s.CoreV1().Pods(podCheck.Namespace).Create(ctx, pod, metav1.CreateOptions{}); err != nil {
 		return results.ErrorMessage(err)
 	}
 
