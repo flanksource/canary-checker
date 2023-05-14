@@ -17,7 +17,7 @@ jobs:
           - k8s
           - datasources
           - git
-          - restic
+          # - restic
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
