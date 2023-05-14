@@ -234,9 +234,9 @@ k8s = {
         properties: [
           {
             name: "version",
-            text:pod.spec.containers[0].image.split(':')[1],
+            text: pod.spec.containers[0].image.split(':')[1],
             headline: true
-          }
+          },
           {
             name: "cpu",
             headline: true,
