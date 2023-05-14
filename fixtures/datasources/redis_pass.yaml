@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 30
   redis:
-    - addr: "redis.default.svc:6379"
+    - addr: "redis.default.svc.cluster.local:6379"
       name: redis ping check
       db: 0
       description: "The redis pass test"

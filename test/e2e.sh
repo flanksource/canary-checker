@@ -109,17 +109,14 @@ echo "::group::Testing"
 USER=$(whoami)
 
 if [[ "$SKIP_TELEPRESENCE" != "true" ]]; then
-  telepresence helm install
-  telepresence="telepresence connect -- "
+  telepresence helm install || true
+  telepresence connect
 fi
-cmd="$telepresence ./test.test -test.v --test-folder $TEST_FOLDER $EXTRA"
-echo $cmd
 DOCKER_API_VERSION=1.39
 set +e -o pipefail
-sudo --preserve-env=KUBECONFIG,TEST_FOLDER,DOCKER_API_VERSION $cmd  2>&1 | tee test.out
+./test.test -test.v --test-folder $TEST_FOLDER $EXTRA | tee test.out
 code=$?
 echo "return=$code"
-sudo chown $USER test.out
 cat test.out | go-junit-report > test-results.xml
 echo "::endgroup::"
 exit $code

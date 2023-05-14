@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 30
   mysql:
-    - connection: "$(username):$(password)@tcp(mysql.default.svc:3306)/mysqldb"
+    - connection: "$(username):$(password)@tcp(mysql.default.svc.cluster.local:3306)/mysqldb"
       name: mysql ping check
       auth:
         username:
@@ -14,4 +14,3 @@ spec:
           value: admin123
       query: "SELECT 1"
       results: 1
-
