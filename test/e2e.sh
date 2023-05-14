@@ -109,7 +109,8 @@ echo "::group::Testing"
 USER=$(whoami)
 
 if [[ "$SKIP_TELEPRESENCE" != "true" ]]; then
-  telepresence="telepresence --mount false -m vpn-tcp --namespace default --run"
+  telepresence helm install
+  telepresence="telepresence connect -- "
 fi
 cmd="$telepresence ./test.test -test.v --test-folder $TEST_FOLDER $EXTRA"
 echo $cmd
