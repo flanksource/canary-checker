@@ -125,6 +125,18 @@ func (ctx *Context) IsTrace() bool {
 	return ctx.Canary.IsTrace()
 }
 
+func (ctx *Context) Debugf(format string, args ...interface{}) {
+	if ctx.IsDebug() {
+		ctx.Logger.Infof(format, args...)
+	}
+}
+
+func (ctx *Context) Tracef(format string, args ...interface{}) {
+	if ctx.IsTrace() {
+		ctx.Logger.Infof(format, args...)
+	}
+}
+
 func (ctx *Context) New(environment map[string]interface{}) *Context {
 	return &Context{
 		Context:     ctx.Context,

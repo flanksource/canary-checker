@@ -28,6 +28,7 @@ var Run = &cobra.Command{
 	Use:   "run <canary.yaml>",
 	Short: "Execute checks and return",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		logger.ParseFlags(cmd.Flags())
 		db.ConnectionString = readFromEnv(db.ConnectionString)
 		if err := db.Init(); err != nil {
 			logger.Fatalf("error connecting with postgres %v", err)

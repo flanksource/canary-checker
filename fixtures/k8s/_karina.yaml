@@ -29,6 +29,7 @@ minio:
 monitoring:
   disabled: false
   grafana:
+    # skipDashboards: true
     disabled: true
   prometheus:
     persistence:

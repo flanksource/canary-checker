@@ -133,6 +133,10 @@ func getLogs(ctx *context.Context, pod corev1.Pod) string {
 }
 
 func podExecf(ctx *context.Context, pod corev1.Pod, results pkg.Results, cmd string, args ...interface{}) (string, bool) {
+	if !ctx.IsTrace() {
+		ctx.Kommons.Logger.SetLogLevel(0)
+	}
+
 	_cmd := fmt.Sprintf(cmd, args...)
 	stdout, stderr, err := ctx.Kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", _cmd)
 	if stderr != "" || err != nil {
@@ -198,13 +202,13 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 		return nil
 	}
 
-	if err := ctx.Kommons.Apply(ctx.Namespace, pod); err != nil {
+	if _, err := k8s.CoreV1().Pods(ctx.Namespace).Create(ctx, pod, metav1.CreateOptions{}); err != nil {
 		return results.ErrorMessage(err)
 	}
 
 	defer deletePod(ctx, pod)
 
-	logger.Tracef("[%s/%s] waiting for tests to complete", ctx.Namespace, ctx.Canary.Name)
+	ctx.Tracef("[%s/%s] waiting for tests to complete", ctx.Namespace, ctx.Canary.Name)
 	if ctx.IsTrace() {
 		go func() {
 			if err := ctx.Kommons.StreamLogsV2(ctx.Namespace, pod.Name, timeout, pod.Spec.InitContainers[0].Name); err != nil {

@@ -201,16 +201,16 @@ endif
 		ln -s apache-jmeter-5.4.3/bin/jmeter .bin/jmeter
 
 .bin/restic:
-	wget -nv  https://github.com/restic/restic/releases/download/v0.12.1/restic_0.12.1_$(OS)_$(ARCH).bz2 -O .bin/restic.bz2 && \
-    bunzip2  .bin/restic.bz2 && \
-    chmod +x .bin/restic
+	curl -sSLo /usr/local/bin/restic.bz2  https://github.com/restic/restic/releases/download/v0.12.1/restic_0.12.1_$(OS)_$(ARCH).bz2   && \
+    bunzip2  /usr/local/bin/restic.bz2  && \
+    chmod +x /usr/local/bin/restic
 
 .bin/wait4x:
 	wget -nv https://github.com/atkrad/wait4x/releases/download/v0.3.0/wait4x-$(OS)-$(ARCH) -O .bin/wait4x && \
   chmod +x .bin/wait4x
 
 .bin/karina:
-	wget -q https://github.com/flanksource/karina/releases/download/v0.50.0/karina_$(OS)-$(ARCH) -O .bin/karina && \
+	curl -sSLo .bin/karina https://github.com/flanksource/karina/releases/download/v0.50.0/karina_$(OS)-$(ARCH) && \
 	chmod +x .bin/karina
 
 .bin/yq: .bin
@@ -224,8 +224,11 @@ ifeq ($(OS), darwin)
 	brew install --cask macfuse
 	brew install datawire/blackbird/telepresence-legacy
 else
-	sudo curl -fL https://app.getambassador.io/download/tel2/linux/amd64/latest/telepresence -o /usr/local/bin/telepresence
-	sudo chmod a+x /usr/local/bin/telepresence
+	sudo apt-get install -y conntrack
+	wget https://s3.amazonaws.com/datawire-static-files/telepresence/telepresence-0.109.tar.gz
+	tar xzf telepresence-0.109.tar.gz
+	sudo mv telepresence-0.109/bin/telepresence /usr/local/bin/
+	sudo mv telepresence-0.109/libexec/sshuttle-telepresence /usr/local/bin/
 endif
 endif
 

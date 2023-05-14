@@ -30,6 +30,7 @@ monitoring:
   disabled: false
   grafana:
     disabled: true
+    # skipDashboards: true
   prometheus:
     persistence:
       capacity: 2Gi
