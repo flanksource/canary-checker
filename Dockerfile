@@ -50,7 +50,10 @@ ENV PATH /opt/apache-jmeter-5.4.3/bin/:$PATH
 RUN curl -L https://github.com/flanksource/askgit/releases/download/v0.4.8-flanksource/askgit-linux-amd64.tar.gz -o askgit.tar.gz && \
     tar xf askgit.tar.gz && \
     mv askgit /usr/local/bin/askgit && \
-    rm askgit.tar.gz
+    rm askgit.tar.gz && \
+    wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.18_amd64.deb && \
+    dpkg -i libssl1.1_1.1.1f-1ubuntu2.18_amd64.deb && \
+    rm libssl1.1_1.1.1f-1ubuntu2.18_amd64.deb
 
 ENV K6_VERSION=v0.44.0
 RUN curl -L https://github.com/grafana/k6/releases/download/${K6_VERSION}/k6-${K6_VERSION}-linux-amd64.tar.gz -o k6.tar.gz && \
