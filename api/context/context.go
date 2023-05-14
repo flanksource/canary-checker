@@ -4,6 +4,7 @@ import (
 	gocontext "context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -47,6 +48,9 @@ func (ctx *Context) WithDeadline(deadline time.Time) (*Context, gocontext.Cancel
 }
 
 func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Connection, error) {
+	if !strings.HasPrefix(connectionName, "connection://") {
+		return nil, nil
+	}
 	if connectionName == "" {
 		return nil, nil
 	}
