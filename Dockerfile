@@ -13,7 +13,7 @@ RUN make build
 FROM eclipse-temurin:11.0.18_10-jdk-focal
 WORKDIR /app
 RUN apt-get update && \
-  apt-get install -y curl unzip ca-certificates jq wget gnupg2 bzip2 unattended-upgrade  --no-install-recommends && \
+  apt-get install -y curl unzip ca-certificates jq wget gnupg2 bzip2 --no-install-recommends && \
   rm -Rf /var/lib/apt/lists/*  && \
   rm -Rf /usr/share/doc && rm -Rf /usr/share/man  && \
   apt-get clean
@@ -32,10 +32,9 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
       fonts-freefont-ttf \
       --no-install-recommends
 
-  RUN apt-get update && \
-      unattended-upgrade && \
-      rm -Rf /var/lib/apt/lists/*
-
+  RUN apt-get update && apt-get upgrade -y && \
+      rm -Rf /var/lib/apt/lists/* && \
+      apt-get clean
 
 ENV RESTIC_VERSION=0.15.2
 RUN curl -L https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_amd64.bz2 -o restic.bz2 && \
