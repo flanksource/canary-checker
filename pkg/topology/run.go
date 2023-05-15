@@ -13,6 +13,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/canary-checker/templating"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
 	"github.com/google/uuid"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
@@ -410,6 +411,19 @@ func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
 }
 
 func SyncComponents(opts TopologyRunOptions, topology v1.Topology) error {
+	logger.Tracef("Running sync for components with topology: %s", topology.GetPersistedID())
+	// Check if deleted
+	var dbTopology models.Topology
+	if err := db.Gorm.Where("id = ?", topology.GetPersistedID()).First(&dbTopology).Error; err != nil {
+		return fmt.Errorf("failed to query topology id: %s: %w", topology.GetPersistedID(), err)
+	}
+
+	if dbTopology.DeletedAt != nil {
+		logger.Infof("Skipping topology[%s] as its deleted", topology.GetPersistedID())
+		// TODO: Should we run the db.DeleteTopology function always in this scenario
+		return nil
+	}
+
 	components := Run(opts, topology)
 	topologyID, err := uuid.Parse(topology.GetPersistedID())
 	if err != nil {
