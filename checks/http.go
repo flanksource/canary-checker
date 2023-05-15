@@ -101,18 +101,23 @@ func truncate(text string, max int) string {
 	return text[0:max]
 }
 
-// CheckConfig : Check every record of DNS name against config information
-// Returns check result and metrics
-
 func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.HTTPCheck)
 	var results pkg.Results
+	var err error
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
+
+	if connection, err := ctx.HydrateConnectionByURL(check.ConnectionName); err != nil {
+		return results.Failf("failed to find HTTP connection %q: %v", check.ConnectionName, err)
+	} else if connection != nil {
+		check.Endpoint = connection.URL
+	}
+
 	if _, err := url.Parse(check.Endpoint); err != nil {
 		return results.ErrorMessage(err)
 	}
-	var err error
+
 	endpoint := check.Endpoint
 	body := check.Body
 	if check.TemplateBody {

@@ -6,7 +6,7 @@ export KUBECONFIG=~/.kube/config
 export KARINA="karina -c $(pwd)/test/karina.yaml"
 export DOCKER_API_VERSION=1.39
 export CLUSTER_NAME=kind-test
-export PATH=$(pwd)/.bin:$PATH
+export PATH=$(pwd)/.bin:/usr/local/bin:$PATH
 export ROOT=$(pwd)
 export TEST_FOLDER=${TEST_FOLDER:-$1}
 export DOMAIN=${DOMAIN:-127.0.0.1.nip.io}
@@ -45,20 +45,20 @@ if [[ "$SKIP_KARINA" != "true" ]] ; then
     $KARINA ca generate --name ingress-ca --cert-path .certs/ingress-ca.crt --private-key-path .certs/ingress-ca.key --password foobar  --expiry 1
     $KARINA ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.pem --private-key-path .certs/sealed-secrets-key.pem --password foobar  --expiry 1
   fi
-  if $KARINA provision kind-cluster -e name=$CLUSTER_NAME -v ; then
-    echo "::endgroup::"
-  else
-    echo "::endgroup::"
-    exit 1
+  if ! kind get clusters | grep $CLUSTER_NAME; then
+    if $KARINA provision kind-cluster -e name=$CLUSTER_NAME -v ; then
+      echo "::endgroup::"
+    else
+      echo "::endgroup::"
+      exit 1
+    fi
   fi
 
-  kubectl config use-context kind-$CLUSTER_NAME
-
   echo "::group::Deploying Base"
-  $KARINA deploy bootstrap -vv
+  $KARINA deploy bootstrap -vv  --prune=false
   echo "::endgroup::"
 fi
-
+set -x
 _DOMAIN=$(kubectl get cm -n quack quack-config -o json | jq -r ".data.domain" || echo)
 if [[ "$_DOMAIN" != "" ]]; then
   echo Using domain: $_DOMAIN
@@ -69,7 +69,7 @@ if [ "$SKIP_SETUP" != "true" ]; then
   echo "::group::Setting up"
 
   if [ -e $TEST_FOLDER/_karina.yaml ]; then
-    $KARINA deploy phases --stubs --monitoring --apacheds --minio -c $(pwd)/$TEST_FOLDER/_karina.yaml -vv
+    $KARINA deploy phases --stubs --monitoring --apacheds --minio -c $(pwd)/$TEST_FOLDER/_karina.yaml -vv --prune=false
   fi
 
   if [ -e $TEST_FOLDER/_setup.sh ]; then
@@ -115,7 +115,7 @@ cmd="$telepresence ./test.test -test.v --test-folder $TEST_FOLDER $EXTRA"
 echo $cmd
 DOCKER_API_VERSION=1.39
 set +e -o pipefail
-sudo --preserve-env=KUBECONFIG,TEST_FOLDER,DOCKER_API_VERSION $cmd  2>&1 | tee test.out
+sudo --preserve-env=KUBECONFIG,TEST_FOLDER,DOCKER_API_VERSION,PATH $cmd  2>&1 | tee test.out
 code=$?
 echo "return=$code"
 sudo chown $USER test.out

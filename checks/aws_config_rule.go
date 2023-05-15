@@ -40,13 +40,16 @@ func (c *AwsConfigRuleChecker) Check(ctx *context.Context, extConfig external.Ch
 	results = append(results, result)
 	if check.AWSConnection == nil {
 		check.AWSConnection = &v1.AWSConnection{}
+	} else if err := check.AWSConnection.Populate(ctx, ctx.Kommons, ctx.Namespace); err != nil {
+		return results.Failf("failed to populate aws connection: %v", err)
 	}
+
 	cfg, err := awsUtil.NewSession(ctx, *check.AWSConnection)
 	if err != nil {
 		return results.Failf("failed to create a session: %v", err)
 	}
-	client := configservice.NewFromConfig(*cfg)
 
+	client := configservice.NewFromConfig(*cfg)
 	if err != nil {
 		return results.Failf("failed to describe compliance rules: %v", err)
 	}

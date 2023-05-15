@@ -1,6 +1,8 @@
+versions:
+  kind: 0.18.0
 patches:
   - ./patch1.yaml
-domain: !!env DOMAIN
+domain: 127.0.0.1.nip.io
 ca:
   cert: ../.certs/root-ca.crt
   privateKey: ../.certs/root-ca.key

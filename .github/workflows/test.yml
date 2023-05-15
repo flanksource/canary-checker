@@ -17,6 +17,7 @@ jobs:
           - k8s
           - datasources
           - git
+          # - restic
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
@@ -35,11 +36,6 @@ jobs:
           restore-keys: |
             cache-
       - run: make bin
-      - name: Install restic
-        run: |
-          sudo apt update
-          sudo apt install -y restic
-          sudo restic self-update
       - name: Test
         env:
           KUBERNETES_VERSION: v1.20.7

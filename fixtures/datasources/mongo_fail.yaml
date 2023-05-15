@@ -7,7 +7,7 @@ metadata:
 spec:
   interval: 30
   mongodb:
-    - connection: mongodb://mongo2.default.svc:27017/?authSource=admin
+    - connection: mongodb://mongo2.default.svc.cluster.local:27017/?authSource=admin
       name: mongo wrong password
       description: test mongo instance
       auth:

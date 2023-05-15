@@ -72,6 +72,7 @@ type CanarySpec struct {
 	ConfigDB       []ConfigDBCheck       `yaml:"configDB,omitempty" json:"configDB,omitempty"`
 	Elasticsearch  []ElasticsearchCheck  `yaml:"elasticsearch,omitempty" json:"elasticsearch,omitempty"`
 	AlertManager   []AlertManagerCheck   `yaml:"alertmanager,omitempty" json:"alertmanager,omitempty"`
+	Dynatrace      []DynatraceCheck      `yaml:"dynatrace,omitempty" json:"dynatrace,omitempty"`
 	AzureDevops    []AzureDevopsCheck    `yaml:"azureDevops,omitempty" json:"azureDevops,omitempty"`
 	// interval (in seconds) to run checks on Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
@@ -191,6 +192,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	for _, check := range spec.AzureDevops {
 		checks = append(checks, check)
 	}
+	for _, check := range spec.Dynatrace {
+		checks = append(checks, check)
+	}
 	return checks
 }
 
@@ -205,7 +209,7 @@ func (spec CanarySpec) GetSchedule() string {
 }
 
 func (c Canary) IsTrace() bool {
-	return c.Annotations != nil && c.Annotations["debug"] == "true" //nolint
+	return c.Annotations != nil && c.Annotations["trace"] == "true" //nolint
 }
 
 func (c Canary) IsDebug() bool {

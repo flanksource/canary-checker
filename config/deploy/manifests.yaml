@@ -134,6 +134,8 @@ spec:
                           - password
                           - username
                         type: object
+                      connection:
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -234,6 +236,9 @@ spec:
                                     type: object
                                 type: object
                             type: object
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                            type: string
                           endpoint:
                             type: string
                           objectPath:
@@ -371,6 +376,9 @@ spec:
                                     type: object
                                 type: object
                             type: object
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                            type: string
                           endpoint:
                             type: string
                           objectPath:
@@ -626,6 +634,9 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      connection:
+                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -940,6 +951,9 @@ spec:
                         properties:
                           gcpConnection:
                             properties:
+                              connection:
+                                description: ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
+                                type: string
                               credentials:
                                 properties:
                                   name:
@@ -1254,6 +1268,98 @@ spec:
                       - name
                     type: object
                   type: array
+                dynatrace:
+                  items:
+                    properties:
+                      apiKey:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
+                      description:
+                        description: Description for the check
+                        type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      host:
+                        type: string
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
+                      name:
+                        description: Name of the check
+                        type: string
+                      namespace:
+                        type: string
+                      scheme:
+                        type: string
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                    required:
+                      - name
+                    type: object
+                  type: array
                 ec2:
                   items:
                     properties:
@@ -1301,6 +1407,9 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         type: array
+                      connection:
+                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -1447,6 +1556,8 @@ spec:
                           - password
                           - username
                         type: object
+                      connection:
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -1657,6 +1768,9 @@ spec:
                                     type: object
                                 type: object
                             type: object
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                            type: string
                           endpoint:
                             type: string
                           objectPath:
@@ -1732,6 +1846,9 @@ spec:
                         type: object
                       gcpConnection:
                         properties:
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
+                            type: string
                           credentials:
                             properties:
                               name:
@@ -1871,6 +1988,9 @@ spec:
                               - password
                               - username
                             type: object
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the connection fields.
+                            type: string
                           host:
                             type: string
                           port:
@@ -1952,6 +2072,9 @@ spec:
                               - password
                               - username
                             type: object
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the connection fields.
+                            type: string
                           domain:
                             description: Domain...
                             type: string
@@ -2003,6 +2126,8 @@ spec:
                 github:
                   items:
                     properties:
+                      connection:
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -2031,8 +2156,6 @@ spec:
                                     type: string
                                   name:
                                     type: string
-                                  optional:
-                                    type: boolean
                                 required:
                                   - key
                                 type: object
@@ -2042,8 +2165,6 @@ spec:
                                     type: string
                                   name:
                                     type: string
-                                  optional:
-                                    type: boolean
                                 required:
                                   - key
                                 type: object
@@ -2264,6 +2385,9 @@ spec:
                       body:
                         description: Request Body Contents
                         type: string
+                      connection:
+                        description: Name of the connection that'll be used to derive the endpoint.
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -2433,6 +2557,9 @@ spec:
                 jmeter:
                   items:
                     properties:
+                      connection:
+                        description: Name of the connection that'll be used to derive host and other connection details.
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -2443,7 +2570,7 @@ spec:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
                       jmx:
-                        description: Jmx defines tge ConfigMap or Secret reference to get the JMX test plan
+                        description: Jmx defines the ConfigMap or Secret reference to get the JMX test plan
                         properties:
                           name:
                             type: string
@@ -2725,6 +2852,8 @@ spec:
                           - username
                         type: object
                       bindDN:
+                        type: string
+                      connection:
                         type: string
                       description:
                         description: Description for the check
@@ -3386,6 +3515,8 @@ spec:
                 prometheus:
                   items:
                     properties:
+                      connection:
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -3520,6 +3651,9 @@ spec:
                           - password
                           - username
                         type: object
+                      connection:
+                        description: ConnectionName is the name of the connection. It is used to populate addr, db and auth.
+                        type: string
                       db:
                         type: integer
                       description:
@@ -3578,12 +3712,18 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      awsConnectionName:
+                        description: Name of the AWS connection used to derive the access key and secret key.
+                        type: string
                       caCert:
                         description: CaCert path to the root cert. In case of self-signed certificates
                         type: string
                       checkIntegrity:
                         description: CheckIntegrity when enabled will check the Integrity and consistency of the restic reposiotry
                         type: boolean
+                      connection:
+                        description: Name of the connection used to derive restic password.
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -3683,18 +3823,46 @@ spec:
                   items:
                     properties:
                       accessKey:
-                        type: string
-                      bucket:
                         properties:
-                          endpoint:
-                            type: string
                           name:
                             type: string
-                          region:
+                          value:
                             type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
                         type: object
+                      bucketName:
+                        type: string
+                      connection:
+                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                        type: string
                       description:
                         description: Description for the check
+                        type: string
+                      endpoint:
                         type: string
                       icon:
                         description: Icon for overwriting default icon on the dashboard
@@ -3708,11 +3876,47 @@ spec:
                         description: Name of the check
                         type: string
                       objectPath:
+                        description: glob path to restrict matches to a subset
+                        type: string
+                      region:
                         type: string
                       secretKey:
-                        type: string
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                  optional:
+                                    type: boolean
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       skipTLSVerify:
-                        description: Skip TLS verify when connecting to s3
+                        description: Skip TLS verify when connecting to aws
+                        type: boolean
+                      usePathStyle:
+                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                         type: boolean
                     required:
                       - name

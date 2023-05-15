@@ -33,9 +33,14 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	var results pkg.Results
 	results = append(results, result)
 
+	if _, err := check.HydrateConnection(ctx); err != nil {
+		return results.Failf("error hydrating connection: %v", err)
+	}
+
 	if check.Host == "" {
 		return results.Failf("Must specify a prometheus host")
 	}
+
 	promClient, err := prometheus.NewPrometheusAPI(check.Host)
 	if err != nil {
 		return results.ErrorMessage(err)

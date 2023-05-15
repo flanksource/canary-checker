@@ -28,6 +28,7 @@ var Run = &cobra.Command{
 	Use:   "run <canary.yaml>",
 	Short: "Execute checks and return",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		logger.ParseFlags(cmd.Flags())
 		db.ConnectionString = readFromEnv(db.ConnectionString)
 		if err := db.Init(); err != nil {
 			logger.Fatalf("error connecting with postgres %v", err)
@@ -64,7 +65,7 @@ var Run = &cobra.Command{
 				wg.Add(1)
 				_config := config
 				go func() {
-					queue <- checks.RunChecks(context.New(kommonsClient, _config))
+					queue <- checks.RunChecks(context.New(kommonsClient, db.Gorm, _config))
 					wg.Done()
 				}()
 			}

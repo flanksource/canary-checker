@@ -18,6 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.2
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2
+	github.com/dynatrace-ace/dynatrace-go-api-client/api/v2/environment/dynatrace v0.0.0-20210816162345-de2eacc8ac9a
 	github.com/eko/gocache v1.2.1-0.20210528165708-4914d74fed3d
 	github.com/elastic/go-elasticsearch/v8 v8.1.0
 	github.com/fergusstrange/embedded-postgres v1.21.0
@@ -39,7 +40,6 @@ require (
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/jszwec/csvutil v1.8.0
 	github.com/labstack/echo/v4 v4.9.1
-	github.com/liamylian/jsontime/v2 v2.0.0
 	github.com/lib/pq v1.10.9
 	github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0
 	github.com/microsoft/go-mssqldb v0.21.0
@@ -198,6 +198,7 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
+	github.com/liamylian/jsontime/v2 v2.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect
