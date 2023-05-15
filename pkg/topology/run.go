@@ -411,7 +411,7 @@ func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
 }
 
 func SyncComponents(opts TopologyRunOptions, topology v1.Topology) error {
-	logger.Infof("Running sync for components with topology: %s", topology.GetPersistedID())
+	logger.Tracef("Running sync for components with topology: %s", topology.GetPersistedID())
 	// Check if deleted
 	var dbTopology models.Topology
 	if err := db.Gorm.Where("id = ?", topology.GetPersistedID()).First(&dbTopology).Error; err != nil {
