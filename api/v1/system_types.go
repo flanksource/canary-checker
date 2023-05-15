@@ -1,9 +1,14 @@
 package v1
 
 import (
+	"encoding/json"
 	"fmt"
 
+	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8sTypes "k8s.io/apimachinery/pkg/types"
 )
 
 // +kubebuilder:object:root=true
@@ -15,6 +20,46 @@ type Topology struct {
 	Spec              TopologySpec   `json:"spec,omitempty"`
 	Status            TopologyStatus `json:"status,omitempty"`
 }
+
+func (t *Topology) ToModel() *models.Topology {
+	spec, _ := json.Marshal(t.Spec)
+	return &models.Topology{
+		Name:      t.GetName(),
+		Namespace: t.GetNamespace(),
+		Labels:    types.JSONStringMap(t.GetLabels()),
+		Spec:      spec,
+	}
+}
+
+func (t Topology) IsEmpty() bool {
+	return len(t.Spec.Properties) == 0 && len(t.Spec.Components) == 0 && t.Name == ""
+}
+
+func (t Topology) GetPersistedID() string {
+	return string(t.GetUID())
+}
+
+func TopologyFromModels(t models.Topology) Topology {
+	var topologySpec TopologySpec
+	id := t.ID.String()
+	if err := json.Unmarshal(t.Spec, &topologySpec); err != nil {
+		logger.Errorf("error unmarshalling topology spec %s", err)
+	}
+	return Topology{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Topology",
+			APIVersion: "canaries.flanksource.com/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      t.Name,
+			Namespace: t.Namespace,
+			Labels:    t.Labels,
+			UID:       k8sTypes.UID(id),
+		},
+		Spec: topologySpec,
+	}
+}
+
 type TopologySpec struct {
 	Type       string          `json:"type,omitempty"`
 	Id         *Template       `json:"id,omitempty"` //nolint
@@ -33,10 +78,6 @@ type TopologySpec struct {
 	Configs []Config `json:"configs,omitempty"`
 }
 
-func (s Topology) IsEmpty() bool {
-	return len(s.Spec.Properties) == 0 && len(s.Spec.Components) == 0 && s.Name == ""
-}
-
 func (spec TopologySpec) GetSchedule() string {
 	return spec.Schedule
 }
@@ -46,10 +87,6 @@ type TopologyStatus struct {
 	// +optional
 	ObservedGeneration int64  `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`
 	Status             string `json:"status,omitempty"`
-}
-
-func (s Topology) GetPersistedID() string {
-	return string(s.GetUID())
 }
 
 type Selector struct {
@@ -62,7 +99,7 @@ type NamespaceSelector struct {
 }
 
 type ComponentCheck struct {
-	Selector ResourceSelector `json:"selector,omitempty"`
+	Selector types.ResourceSelector `json:"selector,omitempty"`
 	// +kubebuilder:validation:XPreserveUnknownFields
 	Inline *CanarySpec `json:"inline,omitempty"`
 }
@@ -73,6 +110,16 @@ type Config struct {
 	Name      string            `json:"name,omitempty"`
 	Namespace string            `json:"namespace,omitempty"`
 	Tags      map[string]string `json:"tags,omitempty"`
+}
+
+func (c Config) ToModel() *types.ConfigQuery {
+	return &types.ConfigQuery{
+		ID:        c.ID,
+		Type:      c.Type,
+		Name:      c.Name,
+		Namespace: c.Namespace,
+		Tags:      c.Tags,
+	}
 }
 
 func (c Config) String() string {
@@ -88,6 +135,17 @@ func (c Config) String() string {
 		s += " " + fmt.Sprintf("%v", c.Tags)
 	}
 	return s
+}
+
+type Configs []*Config
+
+func (c Configs) ToModel() types.ConfigQueries {
+	queries := make(types.ConfigQueries, len(c))
+	for i, c := range c {
+		queries[i] = c.ToModel()
+	}
+
+	return queries
 }
 
 // +kubebuilder:object:root=true

@@ -7,14 +7,13 @@ import (
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Endpoint struct {
@@ -112,68 +111,6 @@ type Timeseries struct {
 	Count int `json:"count,omitempty"`
 }
 
-type Canary struct {
-	ID        uuid.UUID `gorm:"default:generate_ulid()"`
-	Spec      types.JSON
-	Labels    types.JSONStringMap
-	Source    string
-	Name      string
-	Namespace string
-	Checks    types.JSONStringMap `gorm:"-"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
-}
-
-func (c Canary) GetCheckID(checkName string) string {
-	return c.Checks[checkName]
-}
-
-func (c Canary) ToV1() (*v1.Canary, error) {
-	canary := v1.Canary{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.Name,
-			Namespace: c.Namespace,
-			Annotations: map[string]string{
-				"source": c.Source,
-			},
-			Labels: c.Labels,
-		},
-	}
-	var deletionTimestamp metav1.Time
-	if c.DeletedAt != nil && !c.DeletedAt.IsZero() {
-		deletionTimestamp = metav1.NewTime(*c.DeletedAt)
-		canary.ObjectMeta.DeletionTimestamp = &deletionTimestamp
-	}
-	if err := json.Unmarshal(c.Spec, &canary.Spec); err != nil {
-		logger.Debugf("Failed to unmarshal canary spec: %s", err)
-		return nil, err
-	}
-	id := c.ID.String()
-	canary.Status.PersistedID = &id
-	canary.Status.Checks = c.Checks
-	return &canary, nil
-}
-
-func CanaryFromV1(canary v1.Canary) (Canary, error) {
-	spec, err := json.Marshal(canary.Spec)
-	if err != nil {
-		return Canary{}, err
-	}
-	var checks = make(map[string]string)
-	if canary.Status.Checks != nil {
-		checks = canary.Status.Checks
-	}
-	return Canary{
-		Spec:      spec,
-		Labels:    types.JSONStringMap(canary.Labels),
-		Name:      canary.Name,
-		Namespace: canary.Namespace,
-		Source:    canary.Annotations["source"],
-		Checks:    types.JSONStringMap(checks),
-	}, nil
-}
-
 type Check struct {
 	ID                 uuid.UUID           `json:"id" gorm:"default:generate_ulid()"`
 	CanaryID           uuid.UUID           `json:"canary_id"`
@@ -203,7 +140,7 @@ type Check struct {
 	Canary             *v1.Canary          `json:"-" gorm:"-"`
 }
 
-func FromExternalCheck(canary Canary, check external.Check) Check {
+func FromExternalCheck(canary models.Canary, check external.Check) Check {
 	return Check{
 		CanaryID:    canary.ID,
 		Type:        check.GetType(),
@@ -296,77 +233,14 @@ type Checker interface {
 	CheckArgs(args map[string]interface{}) *CheckResult
 }
 
-type Config struct {
-	ID          *uuid.UUID          `json:"id,omitempty"`
-	ConfigClass string              `json:"config_class,omitempty"`
-	Name        string              `json:"name,omitempty"`
-	Namespace   string              `json:"namespace,omitempty"`
-	Spec        *types.JSONMap      `json:"spec,omitempty" gorm:"column:config"`
-	Tags        types.JSONStringMap `json:"tags,omitempty"  gorm:"type:jsonstringmap"`
-	ExternalID  pq.StringArray      `json:"external_id,omitempty" gorm:"type:text[]"`
-	Type        string              `json:"type,omitempty"`
-}
-
-func (c Config) String() string {
-	s := c.ConfigClass
-	if c.Namespace != "" {
-		s += "/" + c.Namespace
-	}
-
-	if c.Name != "" {
-		s += "/" + c.Name
-	}
-	if len(c.Tags) > 0 {
-		s += " " + fmt.Sprintf("%v", c.Tags)
-	}
-	return s
-}
-
-func NewConfigs(configs []v1.Config) Configs {
-	var pkgConfigs Configs
-	for _, config := range configs {
-		pkgConfigs = append(pkgConfigs, NewConfig(config))
-	}
-	return pkgConfigs
-}
-
-func NewConfig(config v1.Config) *Config {
-	return &Config{
-		Name:       config.Name,
-		Namespace:  config.Namespace,
-		Tags:       types.JSONStringMap(config.Tags),
-		ExternalID: pq.StringArray(config.ID),
-		Type:       config.Type,
-	}
-}
-
-func ToV1Config(config Config) v1.Config {
+func ToV1Config(config models.ConfigItem) v1.Config {
 	return v1.Config{
-		Name:      config.Name,
-		Namespace: config.Namespace,
+		Name:      deref(config.Name),
+		Namespace: deref(config.Namespace),
 		ID:        config.ExternalID,
-		Type:      config.Type,
+		Type:      deref(config.Type),
 	}
 }
-
-func (c Config) GetSelectorID() string {
-	selectorID, err := utils.GenerateJSONMD5Hash(ToV1Config(c))
-	if err != nil {
-		return ""
-	}
-	return selectorID
-}
-
-// ToJSONMap converts the struct to map[string]interface{} to
-// be compatible with otto vm
-func (c Config) ToJSONMap() map[string]interface{} {
-	m := make(map[string]interface{})
-	b, _ := json.Marshal(&c)
-	_ = json.Unmarshal(b, &m)
-	return m
-}
-
-type Configs []*Config
 
 // URL information
 type URL struct {
@@ -510,4 +384,12 @@ func (m Metric) String() string {
 
 func (e Endpoint) GetEndpoint() string {
 	return e.String
+}
+
+func deref(v *string) string {
+	if v == nil {
+		return ""
+	}
+
+	return *v
 }

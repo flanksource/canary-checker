@@ -24,6 +24,8 @@ import (
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -310,6 +312,52 @@ type Canary struct {
 
 	Spec   CanarySpec   `json:"spec,omitempty"`
 	Status CanaryStatus `json:"status,omitempty"`
+}
+
+func (c Canary) ToModel() (models.Canary, error) {
+	spec, err := json.Marshal(c.Spec)
+	if err != nil {
+		return models.Canary{}, err
+	}
+	var checks = make(map[string]string)
+	if c.Status.Checks != nil {
+		checks = c.Status.Checks
+	}
+
+	return models.Canary{
+		Spec:      spec,
+		Labels:    types.JSONStringMap(c.Labels),
+		Name:      c.Name,
+		Namespace: c.Namespace,
+		Source:    c.Annotations["source"],
+		Checks:    types.JSONStringMap(checks),
+	}, nil
+}
+
+func CanaryFromModel(c *models.Canary) (*Canary, error) {
+	canary := Canary{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      c.Name,
+			Namespace: c.Namespace,
+			Annotations: map[string]string{
+				"source": c.Source,
+			},
+			Labels: c.Labels,
+		},
+	}
+	var deletionTimestamp metav1.Time
+	if c.DeletedAt != nil && !c.DeletedAt.IsZero() {
+		deletionTimestamp = metav1.NewTime(*c.DeletedAt)
+		canary.ObjectMeta.DeletionTimestamp = &deletionTimestamp
+	}
+	if err := json.Unmarshal(c.Spec, &canary.Spec); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal spec: %w", err)
+	}
+
+	id := c.ID.String()
+	canary.Status.PersistedID = &id
+	canary.Status.Checks = c.Checks
+	return &canary, nil
 }
 
 func NewCanaryFromSpec(name string, spec CanarySpec) Canary {

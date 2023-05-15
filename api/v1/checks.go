@@ -891,17 +891,11 @@ func (c ConfigDBCheck) GetEndpoint() string {
 	return c.Query
 }
 
-type ResourceSelector struct {
-	Name          string `yaml:"name,omitempty" json:"name,omitempty"`
-	LabelSelector string `json:"labelSelector,omitempty" yaml:"labelSelector,omitempty"`
-	FieldSelector string `json:"fieldSelector,omitempty" yaml:"fieldSelector,omitempty"`
-}
-
 type KubernetesCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
-	Namespace   ResourceSelector `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-	Resource    ResourceSelector `yaml:"resource,omitempty" json:"resource,omitempty"`
+	Namespace   types.ResourceSelector `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Resource    types.ResourceSelector `yaml:"resource,omitempty" json:"resource,omitempty"`
 	// Ignore the specified resources from the fetched resources. Can be a glob pattern.
 	Ignore []string `yaml:"ignore,omitempty" json:"ignore,omitempty"`
 	Kind   string   `yaml:"kind" json:"kind"`

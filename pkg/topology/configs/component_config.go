@@ -6,11 +6,11 @@ import (
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
 )
@@ -19,7 +19,7 @@ func ComponentConfigRun() {
 	logger.Debugf("Syncing Component Config Relationships")
 	components, err := db.GetAllComponentsWithConfigs()
 	if err != nil {
-		logger.Errorf("error getting components: %v", err)
+		logger.Errorf("error getting components with configs: %v", err)
 		return
 	}
 
@@ -36,7 +36,7 @@ func ComponentConfigRun() {
 	_ = db.PersistJobHistory(jobHistory.End())
 }
 
-func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs) error {
+func SyncComponentConfigRelationship(componentID uuid.UUID, configs types.ConfigQueries) error {
 	if len(configs) == 0 {
 		return nil
 	}
@@ -55,7 +55,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 
 	var newConfigsIDs []string
 	for _, config := range configs {
-		dbConfig, err := db.FindConfig(*config)
+		dbConfig, err := db.FindConfig(config)
 		if dbConfig == nil || errors.Is(err, gorm.ErrRecordNotFound) {
 			logger.Tracef("no config found for %s", *config)
 			continue
@@ -72,7 +72,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 
 		// If configID does not exist, create a new relationship
 		if !collections.Contains(existingConfigIDs, dbConfig.ID.String()) {
-			if err := db.PersistConfigComponentRelationship(*dbConfig.ID, componentID, selectorID); err != nil {
+			if err := db.PersistConfigComponentRelationship(dbConfig.ID, componentID, selectorID); err != nil {
 				return errors.Wrap(err, "error persisting config relationships")
 			}
 			continue
@@ -83,7 +83,7 @@ func SyncComponentConfigRelationship(componentID uuid.UUID, configs pkg.Configs)
 			Update("deleted_at", time.Now()).Error; err != nil {
 			return errors.Wrap(err, "error updating config relationships")
 		}
-		if err := db.PersistConfigComponentRelationship(*dbConfig.ID, componentID, selectorID); err != nil {
+		if err := db.PersistConfigComponentRelationship(dbConfig.ID, componentID, selectorID); err != nil {
 			return errors.Wrap(err, "error persisting config relationships")
 		}
 	}

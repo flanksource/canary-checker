@@ -21,7 +21,7 @@ func PersistTopology(t *v1.Topology) (bool, error) {
 	var err error
 	var changed bool
 
-	model := pkg.TopologyFromV1(t)
+	model := t.ToModel()
 	model.ID, err = uuid.Parse(t.GetPersistedID())
 	if err != nil {
 		return changed, err
@@ -39,7 +39,7 @@ func PersistTopology(t *v1.Topology) (bool, error) {
 	return changed, nil
 }
 
-func PersistComponents(results []*pkg.Component) error {
+func PersistComponents(results []*models.Component) error {
 	for _, component := range results {
 		_, err := PersistComponent(component)
 		if err != nil {
@@ -51,29 +51,29 @@ func PersistComponents(results []*pkg.Component) error {
 }
 
 func GetTopology(ctx context.Context, id string) (*v1.Topology, error) {
-	var t pkg.Topology
+	var t models.Topology
 	if err := Gorm.WithContext(ctx).Table("topologies").Where("id = ? AND deleted_at is NULL", id).First(&t).Error; err != nil {
 		return nil, err
 	}
 
-	tv1 := t.ToV1()
+	tv1 := v1.TopologyFromModels(t)
 	return &tv1, nil
 }
 
 func GetAllTopologies() ([]v1.Topology, error) {
 	var v1topologies []v1.Topology
-	var topologies []pkg.Topology
+	var topologies []models.Topology
 	if err := Gorm.Table("topologies").Find(&topologies).Where("deleted_at is NULL").Error; err != nil {
 		return nil, err
 	}
 	for _, t := range topologies {
-		v1topologies = append(v1topologies, t.ToV1())
+		v1topologies = append(v1topologies, v1.TopologyFromModels(t))
 	}
 	return v1topologies, nil
 }
 
 // Get all the components from table which has not null selectors
-func GetAllComponentsWithSelectors() (components pkg.Components, err error) {
+func GetAllComponentsWithSelectors() (components models.Components, err error) {
 	if err := Gorm.Table("components").Where("deleted_at is NULL and selectors != 'null'").Find(&components).Error; err != nil {
 		return nil, err
 	}
@@ -123,8 +123,8 @@ func UpdateComponentCosts() error {
     `).Error
 }
 
-func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (components pkg.Components, err error) {
-	var uniqueComponents = make(map[string]*pkg.Component)
+func GetComponentsWithSelectors(resourceSelectors types.ResourceSelectors) (components models.Components, err error) {
+	var uniqueComponents = make(map[string]*models.Component)
 	for _, resourceSelector := range resourceSelectors {
 		var selectorID string
 		selectorID, err = utils.GenerateJSONMD5Hash(resourceSelector)
@@ -160,21 +160,21 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 	return components, nil
 }
 
-func GetAllComponentsWithConfigs() (components pkg.Components, err error) {
+func GetAllComponentsWithConfigs() (components models.Components, err error) {
 	if err := Gorm.Table("components").Where("deleted_at is NULL and configs != 'null'").Find(&components).Error; err != nil {
 		return nil, err
 	}
 	return
 }
 
-func GetAllComponentWithCanaries() (components pkg.Components, err error) {
+func GetAllComponentWithCanaries() (components models.Components, err error) {
 	if err := Gorm.Table("components").Where("deleted_at is NULL and component_checks != 'null'").Find(&components).Error; err != nil {
 		return nil, err
 	}
 	return
 }
 
-func NewComponentRelationships(relationshipID uuid.UUID, path string, components pkg.Components) (relationships []*pkg.ComponentRelationship, err error) {
+func NewComponentRelationships(relationshipID uuid.UUID, path string, components models.Components) (relationships []*pkg.ComponentRelationship, err error) {
 	for _, component := range components {
 		relationships = append(relationships, &pkg.ComponentRelationship{
 			RelationshipID:   relationshipID,
@@ -219,8 +219,8 @@ func PersistCheckComponentRelationship(relationship *pkg.CheckComponentRelations
 }
 
 // TODO: Simplify logic and improve readability
-func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
-	existing := &pkg.Component{}
+func PersistComponent(component *models.Component) ([]uuid.UUID, error) {
+	existing := &models.Component{}
 	var persisted []uuid.UUID
 	var tx *gorm.DB
 	if component.TopologyID == nil {
@@ -290,7 +290,7 @@ func UpdateStatusAndSummaryForComponent(id uuid.UUID, status types.ComponentStat
 
 func DeleteTopology(t *v1.Topology) error {
 	logger.Infof("Deleting topology %s/%s", t.Namespace, t.Name)
-	model := pkg.TopologyFromV1(t)
+	model := t.ToModel()
 	deleteTime := time.Now()
 
 	tx := Gorm.Table("topologies").Find(model, "id = ?", t.GetPersistedID()).UpdateColumn("deleted_at", deleteTime)
@@ -303,7 +303,7 @@ func DeleteTopology(t *v1.Topology) error {
 // DeleteComponents deletes all components associated with a topology
 func DeleteComponentsOfTopology(topologyID string, deleteTime time.Time) error {
 	logger.Infof("Deleting all components associated with topology: %s", topologyID)
-	componentsModel := &[]pkg.Component{}
+	componentsModel := &[]models.Component{}
 	if err := Gorm.Where("topology_id = ?", topologyID).Find(componentsModel).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
 		return err
 	}
@@ -367,7 +367,7 @@ func DeleteComponentChildren(componentID string, deleteTime time.Time) error {
 }
 
 func DeleteInlineCanariesForComponent(componentID string, deleteTime time.Time) error {
-	var canaries = []*pkg.Canary{}
+	var canaries = []*models.Canary{}
 	source := "component/" + componentID
 	if err := Gorm.Where("source = ?", source).Find(&canaries).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
 		return err

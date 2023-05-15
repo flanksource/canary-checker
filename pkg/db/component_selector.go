@@ -3,8 +3,8 @@ package db
 import (
 	"strings"
 
-	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db/types"
+	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 )
 
 func GetLabelsFromSelector(selector string) (matchLabels map[string]string) {
@@ -23,11 +23,11 @@ func GetLabelsFromSelector(selector string) (matchLabels map[string]string) {
 	return
 }
 
-func GetComponentsWithLabelSelector(labelSelector string) (components pkg.Components, err error) {
+func GetComponentsWithLabelSelector(labelSelector string) (components models.Components, err error) {
 	if labelSelector == "" {
 		return nil, nil
 	}
-	var uninqueComponents = make(map[string]*pkg.Component)
+	var uniqueComponents = make(map[string]*models.Component)
 	matchLabels := GetLabelsFromSelector(labelSelector)
 	var labels = make(map[string]string)
 	var onlyKeys []string
@@ -38,43 +38,45 @@ func GetComponentsWithLabelSelector(labelSelector string) (components pkg.Compon
 			onlyKeys = append(onlyKeys, k)
 		}
 	}
-	var comps pkg.Components
+	var comps models.Components
 	if err := Gorm.Table("components").Where("labels @> ? and deleted_at is null", types.JSONStringMap(labels)).Find(&comps).Error; err != nil {
 		return nil, err
 	}
 	for _, c := range comps {
-		uninqueComponents[c.ID.String()] = c
+		uniqueComponents[c.ID.String()] = c
 	}
 	for _, k := range onlyKeys {
-		var comps pkg.Components
+		var comps models.Components
 		if err := Gorm.Table("components").Where("labels ?? ? and deleted_at is null", k).Find(&comps).Error; err != nil {
 			continue
 		}
 		for _, c := range comps {
-			uninqueComponents[c.ID.String()] = c
+			uniqueComponents[c.ID.String()] = c
 		}
 	}
-	for _, c := range uninqueComponents {
+	for _, c := range uniqueComponents {
 		components = append(components, c)
 	}
 	return components, nil
 }
 
-func GetComponentsWithFieldSelector(fieldSelector string) (components pkg.Components, err error) {
+func GetComponentsWithFieldSelector(fieldSelector string) (components models.Components, err error) {
 	if fieldSelector == "" {
 		return nil, nil
 	}
-	var uninqueComponents = make(map[string]*pkg.Component)
+	var uninqueComponents = make(map[string]*models.Component)
 	matchLabels := GetLabelsFromSelector(fieldSelector)
 	for k, v := range matchLabels {
-		var comp pkg.Components
+		var comp models.Components
 		Gorm.Raw("select * from lookup_component_by_property(?, ?)", k, v).Scan(&comp)
 		for _, c := range comp {
 			uninqueComponents[c.ID.String()] = c
 		}
 	}
+
 	for _, c := range uninqueComponents {
 		components = append(components, c)
 	}
+
 	return
 }

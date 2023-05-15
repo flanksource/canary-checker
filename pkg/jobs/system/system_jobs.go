@@ -56,6 +56,7 @@ func SyncTopologyJobs() {
 		logger.Errorf("Failed to get topology: %v", err)
 		return
 	}
+	logger.Debugf("Found %d topologies", len(topologies))
 
 	for _, topology := range topologies {
 		jobHistory := models.NewJobHistory("TopologySync", "topology", topology.GetPersistedID()).Start()

@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
@@ -55,7 +56,7 @@ func PushHandler(c echo.Context) error {
 		if canary != nil {
 			data.Check.CanaryID = canary.ID
 		} else {
-			canary = &pkg.Canary{
+			canary = &models.Canary{
 				Name:      data.Check.Name,
 				Namespace: data.Check.Namespace,
 			}

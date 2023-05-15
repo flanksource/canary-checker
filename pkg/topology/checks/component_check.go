@@ -1,8 +1,10 @@
 package checks
 
 import (
+	"encoding/json"
 	"time"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
@@ -18,9 +20,10 @@ func ComponentCheckRun() {
 	logger.Debugf("Syncing Check Relationships")
 	components, err := db.GetAllComponentWithCanaries()
 	if err != nil {
-		logger.Errorf("error getting components: %v", err)
+		logger.Errorf("error getting components with canaries: %v", err)
 		return
 	}
+
 	jobHistory := models.NewJobHistory("ComponentCheckRelationshipSync", "", "").Start()
 	_ = db.PersistJobHistory(jobHistory)
 	for _, component := range components {
@@ -36,7 +39,7 @@ func ComponentCheckRun() {
 	_ = db.PersistJobHistory(jobHistory.End())
 }
 
-func GetCheckComponentRelationshipsForComponent(component *pkg.Component) (relationships []*pkg.CheckComponentRelationship) {
+func GetCheckComponentRelationshipsForComponent(component *models.Component) (relationships []*pkg.CheckComponentRelationship) {
 	for _, componentCheck := range component.ComponentChecks {
 		if componentCheck.Selector.LabelSelector != "" {
 			labelChecks, err := db.GetChecksWithLabelSelector(componentCheck.Selector.LabelSelector)
@@ -57,20 +60,27 @@ func GetCheckComponentRelationshipsForComponent(component *pkg.Component) (relat
 				})
 			}
 		}
+
 		if componentCheck.Inline != nil {
+			var canarySpec v1.CanarySpec
+			if err := json.Unmarshal([]byte(*componentCheck.Inline), &canarySpec); err != nil {
+				logger.Debugf("error unmarshalling inline: %v", err)
+				continue
+			}
+
 			inlineSchedule := component.Schedule
-			if componentCheck.Inline.Schedule != "" {
-				inlineSchedule = componentCheck.Inline.Schedule
+			if canarySpec.Schedule != "" {
+				inlineSchedule = canarySpec.Schedule
 			}
 			canary, err := db.CreateComponentCanaryFromInline(
 				component.ID.String(), component.Name, component.Namespace,
-				inlineSchedule, component.Owner, componentCheck.Inline,
+				inlineSchedule, component.Owner, &canarySpec,
 			)
 			if err != nil {
 				logger.Debugf("error creating canary from inline: %v", err)
 			}
 
-			if v1canary, err := canary.ToV1(); err == nil {
+			if v1canary, err := v1.CanaryFromModel(canary); err == nil {
 				if err := canaryJobs.SyncCanaryJob(*v1canary); err != nil {
 					logger.Debugf("error creating canary job: %v", err)
 				}
@@ -95,6 +105,7 @@ func GetCheckComponentRelationshipsForComponent(component *pkg.Component) (relat
 			}
 		}
 	}
+
 	return relationships
 }
 
