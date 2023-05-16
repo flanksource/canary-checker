@@ -114,6 +114,7 @@ type Timeseries struct {
 
 type Canary struct {
 	ID        uuid.UUID `gorm:"default:generate_ulid()"`
+	AgentID   uuid.UUID
 	Spec      types.JSON
 	Labels    types.JSONStringMap
 	Source    string
