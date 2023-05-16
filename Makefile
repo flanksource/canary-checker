@@ -56,13 +56,19 @@ static: .bin/kustomize generate manifests .bin/yq
 	.bin/kustomize build ./config | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/manifests.yaml
 	.bin/kustomize build ./config/base | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/base.yaml
 
+GENERATE_SCHEMAS = cd hack/generate-schemas && go run ./main.go
+
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: .bin/controller-gen .bin/yq
 	schemaPath=.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties
 	.bin/controller-gen crd paths="./api/..." output:stdout | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/crd.yaml
-	cd hack/generate-schemas && go run ./main.go
+	$(GENERATE_SCHEMAS)
 	cd config/deploy && $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.checks.items.properties)' crd.yaml | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.forEach.properties)' /dev/stdin  | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.lookup.properties)'  /dev/stdin | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.properties.items.properties.lookup.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.forEach.properties)' /dev/stdin |  $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.lookup.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.checks.items.properties.inline.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.properties.items.properties.lookup.properties)' /dev/stdin > crd.slim.yaml
 	cd config/deploy && mv crd.slim.yaml crd.yaml
+
+.PHONY: gen-schemas
+gen-schemas:
+	$(GENERATE_SCHEMAS)
 
 # Run go fmt against code
 fmt:
