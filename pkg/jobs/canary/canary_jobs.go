@@ -300,8 +300,6 @@ func SyncCanaryJob(canary v1.Canary) error {
 }
 
 func SyncCanaryJobs() {
-	time.Sleep(time.Second * 3)
-
 	logger.Debugf("Syncing canary jobs")
 
 	jobHistory := models.NewJobHistory("CanarySync", "canary", "").Start()
