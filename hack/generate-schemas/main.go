@@ -41,7 +41,6 @@ var generateSchema = &cobra.Command{
 				logger.Fatalf("error marshalling (type=%s): %v", check.GetType(), err)
 			}
 
-			os.Mkdir(schemaPath, 0755)
 			p := path.Join(schemaPath, fmt.Sprintf("health_%s.schema.json", check.GetType()))
 			if err := os.WriteFile(p, data, 0644); err != nil {
 				logger.Fatalf("unable to save schema: %v", err)
