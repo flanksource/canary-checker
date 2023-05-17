@@ -224,6 +224,9 @@ k8s = {
         namespace: pod.metadata.namespace,
         type: "KubernetesPod",
         labels: labels,
+        log_selectors: [
+          {name: "Kubernetes", type: "KubernetesPod", labels: []},
+        ],
         external_id: pod.metadata.namespace + "/"+ pod.metadata.name,
         configs: [
           {
@@ -289,6 +292,9 @@ k8s = {
           labelSelector: "",
           fieldSelector: "node="+node.metadata.name
         }],
+        log_selectors: [
+          {name: "Kubernetes", type: "KubernetesNode", labels: []},
+        ],
         configs: [
           {
             name: node.metadata.name,
