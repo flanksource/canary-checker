@@ -49,6 +49,8 @@ db:
 
 nameOverride: ""
 
+allowPrivilegeEscalation: true
+
 ingress:
   enabled: false
   className: ""

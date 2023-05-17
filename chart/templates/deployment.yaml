@@ -57,7 +57,7 @@ spec:
       containers:
         - name: {{ include "canary-checker.name" . }}
           securityContext:
-            allowPrivilegeEscalation: true
+            allowPrivilegeEscalation: {{.Values.allowPrivilegeEscalation}}
             capabilities:
               add:
                 - CAP_NET_RAW
