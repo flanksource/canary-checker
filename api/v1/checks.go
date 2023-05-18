@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
@@ -76,7 +77,7 @@ type HTTPCheck struct {
 	// Request Body Contents
 	Body string `yaml:"body,omitempty" json:"body,omitempty" template:"true"`
 	// Header fields to be used in the query
-	Headers []kommons.EnvVar `yaml:"headers,omitempty" json:"headers,omitempty"`
+	Headers []types.EnvVar `yaml:"headers,omitempty" json:"headers,omitempty"`
 	// Credentials for authentication headers
 	Authentication *Authentication `yaml:"authentication,omitempty" json:"authentication,omitempty"`
 	//Template the request body
@@ -186,15 +187,15 @@ type ResticCheck struct {
 	// Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name
 	Repository string `yaml:"repository" json:"repository"`
 	// Password for the restic repository
-	Password *kommons.EnvVar `yaml:"password" json:"password"`
+	Password *types.EnvVar `yaml:"password" json:"password"`
 	// MaxAge for backup freshness
 	MaxAge string `yaml:"maxAge" json:"maxAge"`
 	// CheckIntegrity when enabled will check the Integrity and consistency of the restic reposiotry
 	CheckIntegrity bool `yaml:"checkIntegrity,omitempty" json:"checkIntegrity,omitempty"`
 	// AccessKey access key id for connection with aws s3, minio, wasabi, alibaba oss
-	AccessKey *kommons.EnvVar `yaml:"accessKey,omitempty" json:"accessKey,omitempty"`
+	AccessKey *types.EnvVar `yaml:"accessKey,omitempty" json:"accessKey,omitempty"`
 	// SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss
-	SecretKey *kommons.EnvVar `yaml:"secretKey,omitempty" json:"secretKey,omitempty"`
+	SecretKey *types.EnvVar `yaml:"secretKey,omitempty" json:"secretKey,omitempty"`
 	// CaCert path to the root cert. In case of self-signed certificates
 	CaCert string `yaml:"caCert,omitempty" json:"caCert,omitempty"`
 }
@@ -212,7 +213,7 @@ type JmeterCheck struct {
 	// Name of the connection that'll be used to derive host and other connection details.
 	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Jmx defines the ConfigMap or Secret reference to get the JMX test plan
-	Jmx kommons.EnvVar `yaml:"jmx" json:"jmx"`
+	Jmx types.EnvVar `yaml:"jmx" json:"jmx"`
 	// Host is the server against which test plan needs to be executed
 	Host string `yaml:"host,omitempty" json:"host,omitempty"`
 	// Port on which the server is running
@@ -462,8 +463,8 @@ func (c *ElasticsearchCheck) HydrateConnection(ctx checkContext) error {
 
 	if connection != nil {
 		c.URL = connection.URL
-		c.Auth.Username.Value = connection.Username
-		c.Auth.Password.Value = connection.Password
+		c.Auth.Username.ValueStatic = connection.Username
+		c.Auth.Password.ValueStatic = connection.Password
 	}
 
 	return nil
@@ -472,10 +473,10 @@ func (c *ElasticsearchCheck) HydrateConnection(ctx checkContext) error {
 type DynatraceCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
-	Host        string         `yaml:"host" json:"host,omitempty" template:"true"`
-	Scheme      string         `yaml:"scheme" json:"scheme,omitempty"`
-	APIKey      kommons.EnvVar `yaml:"apiKey" json:"apiKey,omitempty"`
-	Namespace   string         `yaml:"namespace" json:"namespace,omitempty" template:"true"`
+	Host        string       `yaml:"host" json:"host,omitempty" template:"true"`
+	Scheme      string       `yaml:"scheme" json:"scheme,omitempty"`
+	APIKey      types.EnvVar `yaml:"apiKey" json:"apiKey,omitempty"`
+	Namespace   string       `yaml:"namespace" json:"namespace,omitempty" template:"true"`
 }
 
 func (t DynatraceCheck) GetType() string {
@@ -575,12 +576,12 @@ func (c *LDAPCheck) HydrateConnection(ctx checkContext) (bool, error) {
 	}
 
 	c.Host = connection.URL
-	c.Auth.Username.Value = connection.Username
-	c.Auth.Password.Value = connection.Password
+	c.Auth.Username.ValueStatic = connection.Username
+	c.Auth.Password.ValueStatic = connection.Password
 
 	c.Auth = &Authentication{
-		Username: kommons.EnvVar{Value: c.Auth.Username.Value},
-		Password: kommons.EnvVar{Value: c.Auth.Password.Value},
+		Username: types.EnvVar{ValueStatic: c.Auth.Username.ValueStatic},
+		Password: types.EnvVar{ValueStatic: c.Auth.Password.ValueStatic},
 	}
 
 	return true, nil
@@ -736,8 +737,8 @@ func (c *SMBConnection) HydrateConnection(ctx checkContext) (found bool, err err
 	}
 
 	c.Auth = &Authentication{
-		Username: kommons.EnvVar{Value: connection.Username},
-		Password: kommons.EnvVar{Value: connection.Password},
+		Username: types.EnvVar{ValueStatic: connection.Username},
+		Password: types.EnvVar{ValueStatic: connection.Password},
 	}
 
 	if workstation, ok := connection.Properties["workstation"]; ok {
@@ -786,8 +787,8 @@ func (c *SFTPConnection) HydrateConnection(ctx checkContext) (found bool, err er
 
 	c.Host = connection.URL
 	c.Auth = &Authentication{
-		Username: kommons.EnvVar{Value: connection.Username},
-		Password: kommons.EnvVar{Value: connection.Password},
+		Username: types.EnvVar{ValueStatic: connection.Username},
+		Password: types.EnvVar{ValueStatic: connection.Password},
 	}
 
 	if portRaw, ok := connection.Properties["port"]; ok {
@@ -925,11 +926,11 @@ func (c KubernetesCheck) CheckReady() bool {
 
 type AWSConnection struct {
 	// ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
-	ConnectionName string         `yaml:"connection,omitempty" json:"connection,omitempty"`
-	AccessKey      kommons.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
-	SecretKey      kommons.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
-	Region         string         `yaml:"region,omitempty" json:"region,omitempty"`
-	Endpoint       string         `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
+	ConnectionName string       `yaml:"connection,omitempty" json:"connection,omitempty"`
+	AccessKey      types.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
+	SecretKey      types.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
+	Region         string       `yaml:"region,omitempty" json:"region,omitempty"`
+	Endpoint       string       `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
 	// Skip TLS verify when connecting to aws
 	SkipTLSVerify bool `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
 	// glob path to restrict matches to a subset
@@ -947,21 +948,26 @@ func (t *AWSConnection) Populate(ctx checkContext, kommonsClient *kommons.Client
 			return fmt.Errorf("could not parse EC2 access key: %v", err)
 		}
 
-		t.AccessKey.Value = connection.Username
-		t.SecretKey.Value = connection.Password
+		t.AccessKey.ValueStatic = connection.Username
+		t.SecretKey.ValueStatic = connection.Password
 		t.Endpoint = connection.URL
 	}
 
-	if _, accessKey, err := kommonsClient.GetEnvValue(t.AccessKey, namespace); err != nil {
-		return fmt.Errorf("could not parse EC2 access key: %v", err)
-	} else {
-		t.AccessKey.Value = accessKey
+	kubernetes, err := kommonsClient.GetClientset()
+	if err != nil {
+		return fmt.Errorf("could not get kubernetes clientset: %v", err)
 	}
 
-	if _, secretKey, err := kommonsClient.GetEnvValue(t.SecretKey, namespace); err != nil {
+	if accessKey, err := duty.GetEnvValueFromCache(kubernetes, t.AccessKey, namespace); err != nil {
+		return fmt.Errorf("could not parse EC2 access key: %v", err)
+	} else {
+		t.AccessKey.ValueStatic = accessKey
+	}
+
+	if secretKey, err := duty.GetEnvValueFromCache(kubernetes, t.SecretKey, namespace); err != nil {
 		return fmt.Errorf(fmt.Sprintf("Could not parse EC2 secret key: %v", err))
 	} else {
-		t.SecretKey.Value = secretKey
+		t.SecretKey.ValueStatic = secretKey
 	}
 
 	return nil
@@ -969,9 +975,9 @@ func (t *AWSConnection) Populate(ctx checkContext, kommonsClient *kommons.Client
 
 type GCPConnection struct {
 	// ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
-	ConnectionName string          `yaml:"connection,omitempty" json:"connection,omitempty"`
-	Endpoint       string          `yaml:"endpoint" json:"endpoint,omitempty"`
-	Credentials    *kommons.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
+	ConnectionName string        `yaml:"connection,omitempty" json:"connection,omitempty"`
+	Endpoint       string        `yaml:"endpoint" json:"endpoint,omitempty"`
+	Credentials    *types.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
 }
 
 func (g *GCPConnection) Validate() *GCPConnection {
@@ -990,7 +996,7 @@ func (g *GCPConnection) HydrateConnection(ctx checkContext) error {
 	}
 
 	if connection != nil {
-		g.Credentials.Value = connection.Password
+		g.Credentials.ValueStatic = connection.Password
 		g.Endpoint = connection.URL
 	}
 

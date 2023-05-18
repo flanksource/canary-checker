@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/kommons"
 	"github.com/henvic/httpretty"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,12 +16,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 )
 
-func isEmpty(val kommons.EnvVar) bool {
-	return val.Value == "" && val.ValueFrom == nil
-}
-
 func NewSession(ctx *context.Context, conn v1.AWSConnection) (*aws.Config, error) {
-	namespace := ctx.Canary.GetNamespace()
 	var tr http.RoundTripper
 	tr = &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: conn.SkipTLSVerify},
@@ -43,12 +37,12 @@ func NewSession(ctx *context.Context, conn v1.AWSConnection) (*aws.Config, error
 	}
 	cfg, err := config.LoadDefaultConfig(ctx, config.WithHTTPClient(&http.Client{Transport: tr}))
 
-	if !isEmpty(conn.AccessKey) {
-		_, accessKey, err := ctx.Kommons.GetEnvValue(conn.AccessKey, namespace)
+	if !conn.AccessKey.IsEmpty() {
+		accessKey, err := ctx.GetEnvValueFromCache(conn.AccessKey)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse EC2 access key: %v", err)
 		}
-		_, secretKey, err := ctx.Kommons.GetEnvValue(conn.SecretKey, namespace)
+		secretKey, err := ctx.GetEnvValueFromCache(conn.SecretKey)
 		if err != nil {
 			return nil, fmt.Errorf(fmt.Sprintf("Could not parse EC2 secret key: %v", err))
 		}

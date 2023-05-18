@@ -12,8 +12,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/canary-checker/templating"
-	"github.com/flanksource/kommons"
-	"github.com/flanksource/kommons/ktemplate"
+	ctemplate "github.com/flanksource/commons/template"
 	"github.com/robfig/cron/v3"
 )
 
@@ -24,12 +23,8 @@ func GetConnection(ctx *context.Context, conn *v1.Connection, namespace string) 
 	if conn.Authentication.IsEmpty() {
 		return conn.Connection, nil
 	}
-	client, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return "", err
-	}
 
-	auth, err := GetAuthValues(&conn.Authentication, ctx.Kommons, namespace)
+	auth, err := GetAuthValues(ctx, &conn.Authentication)
 	if err != nil {
 		return "", err
 	}
@@ -43,13 +38,12 @@ func GetConnection(ctx *context.Context, conn *v1.Connection, namespace string) 
 		"password":  auth.GetPassword(),
 		"domain":    auth.GetDomain(),
 	}
-	templater := ktemplate.StructTemplater{
-		Clientset: client,
-		Values:    data,
+	templater := ctemplate.StructTemplater{
+		Values: data,
 		// access go values in template requires prefix everything with .
 		// to support $(username) instead of $(.username) we add a function for each var
 		ValueFunctions: true,
-		DelimSets: []ktemplate.Delims{
+		DelimSets: []ctemplate.Delims{
 			{Left: "{{", Right: "}}"},
 			{Left: "$(", Right: ")"},
 		},
@@ -62,34 +56,20 @@ func GetConnection(ctx *context.Context, conn *v1.Connection, namespace string) 
 	return clone.Connection, nil
 }
 
-func GetAuthValues(auth *v1.Authentication, client *kommons.Client, namespace string) (*v1.Authentication, error) {
-	authentication := &v1.Authentication{
-		Username: kommons.EnvVar{
-			Value: "",
-		},
-		Password: kommons.EnvVar{
-			Value: "",
-		},
-	}
+func GetAuthValues(ctx *context.Context, auth *v1.Authentication) (*v1.Authentication, error) {
 	// in case nil we are sending empty string values for username and password
 	if auth == nil {
-		return authentication, nil
+		return auth, nil
 	}
-	_, username, err := client.GetEnvValueFromCache(auth.Username, namespace, 5*time.Minute)
-	if err != nil {
+	var err error
+
+	if auth.Username.ValueStatic, err = ctx.GetEnvValueFromCache(auth.Username); err != nil {
 		return nil, err
 	}
-	authentication.Username = kommons.EnvVar{
-		Value: username,
-	}
-	_, password, err := client.GetEnvValueFromCache(auth.Password, namespace, 120*time.Second)
-	if err != nil {
+	if auth.Password.ValueStatic, err = ctx.GetEnvValueFromCache(auth.Password); err != nil {
 		return nil, err
 	}
-	authentication.Password = kommons.EnvVar{
-		Value: password,
-	}
-	return authentication, err
+	return auth, nil
 }
 
 func age(t time.Time) string {
