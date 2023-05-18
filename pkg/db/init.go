@@ -118,7 +118,7 @@ func Init() error {
 	}
 
 	if RunMigrations {
-		if err := duty.Migrate(ConnectionString); err != nil {
+		if err := duty.Migrate(ConnectionString, nil); err != nil {
 			return err
 		}
 	}
