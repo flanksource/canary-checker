@@ -38,7 +38,6 @@ func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	namespace := ctx.Canary.Namespace
 
 	var redisOpts *redis.Options
 	if check.ConnectionName != "" {
@@ -59,7 +58,7 @@ func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 			}
 		}
 	} else {
-		auth, err := GetAuthValues(check.Auth, ctx.Kommons, namespace)
+		auth, err := GetAuthValues(ctx, check.Auth)
 		if err != nil {
 			return results.Failf("failed to fetch auth details: %v", err)
 		}

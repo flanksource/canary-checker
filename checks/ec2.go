@@ -118,7 +118,7 @@ func NewAWS(ctx *context.Context, check v1.EC2Check) (*AWS, error) {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: check.SkipTLSVerify},
 	}
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(check.AWSConnection.AccessKey.Value, check.AWSConnection.SecretKey.Value, "")),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(check.AWSConnection.AccessKey.ValueStatic, check.AWSConnection.SecretKey.ValueStatic, "")),
 		config.WithRegion(check.Region),
 		config.WithHTTPClient(&http.Client{Transport: tr}),
 	)

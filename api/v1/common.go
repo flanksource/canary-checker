@@ -10,7 +10,7 @@ import (
 
 	"github.com/c2h5oh/datasize"
 	"github.com/flanksource/commons/duration"
-	"github.com/flanksource/kommons"
+	"github.com/flanksource/duty/types"
 )
 
 type Duration string
@@ -169,8 +169,8 @@ type JSONCheck struct {
 }
 
 type Authentication struct {
-	Username kommons.EnvVar `yaml:"username" json:"username"`
-	Password kommons.EnvVar `yaml:"password" json:"password"`
+	Username types.EnvVar `yaml:"username" json:"username"`
+	Password types.EnvVar `yaml:"password" json:"password"`
 }
 
 func (auth Authentication) IsEmpty() bool {
@@ -178,11 +178,11 @@ func (auth Authentication) IsEmpty() bool {
 }
 
 func (auth Authentication) GetUsername() string {
-	return auth.Username.Value
+	return auth.Username.ValueStatic
 }
 
 func (auth Authentication) GetPassword() string {
-	return auth.Password.Value
+	return auth.Password.ValueStatic
 }
 
 func (auth Authentication) GetDomain() string {

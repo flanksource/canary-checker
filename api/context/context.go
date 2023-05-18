@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
 	"gorm.io/gorm"
 )
@@ -45,6 +46,14 @@ func (ctx *Context) WithDeadline(deadline time.Time) (*Context, gocontext.Cancel
 	_ctx, fn := gocontext.WithDeadline(ctx.Context, deadline)
 	ctx.Context = _ctx
 	return ctx, fn
+}
+
+func (ctx *Context) GetEnvValueFromCache(env types.EnvVar) (string, error) {
+	k8sClient, err := ctx.Kommons.GetClientset()
+	if err != nil {
+		return "", err
+	}
+	return duty.GetEnvValueFromCache(k8sClient, env, ctx.Namespace)
 }
 
 func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Connection, error) {

@@ -71,7 +71,6 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	namespace := ctx.Canary.Namespace
 
 	var serverPath = strings.TrimPrefix(check.Path, "smb://")
 	server, sharename, path, err := extractServerDetails(serverPath)
@@ -86,7 +85,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	auth := check.SMBConnection.Auth
 	if !foundConn {
-		auth, err = GetAuthValues(check.SMBConnection.Auth, ctx.Kommons, namespace)
+		auth, err = GetAuthValues(ctx, check.SMBConnection.Auth)
 		if err != nil {
 			return results.ErrorMessage(err)
 		}

@@ -41,7 +41,8 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	results = append(results, result)
 
 	namespace := ctx.Canary.Namespace
-	_, value, err := ctx.Kommons.GetEnvValue(check.Jmx, namespace)
+	//FIXME: the jmx file should not be cached
+	value, err := ctx.GetEnvValueFromCache(check.Jmx)
 	if err != nil {
 		return results.Failf("Failed to parse the jmx plan: %v", err)
 	}

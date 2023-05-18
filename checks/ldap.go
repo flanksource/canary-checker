@@ -41,8 +41,7 @@ func (c *LdapChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	if ok, err := check.HydrateConnection(ctx); err != nil {
 		return results.Failf("failed to hydrate connection: %v", err)
 	} else if !ok {
-		namespace := ctx.Canary.Namespace
-		check.Auth, err = GetAuthValues(check.Auth, ctx.Kommons, namespace)
+		check.Auth, err = GetAuthValues(ctx, check.Auth)
 		if err != nil {
 			return results.Failf("failed to fetch auth details: %v", err)
 		}
@@ -53,8 +52,8 @@ func (c *LdapChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		return results.Failf("Failed to connect %v", err)
 	}
 
-	if err := ld.Bind(check.Auth.Username.Value, check.Auth.Password.Value); err != nil {
-		return results.Failf("Failed to bind using %s %v", check.Auth.Username.Value, err)
+	if err := ld.Bind(check.Auth.Username.ValueStatic, check.Auth.Password.ValueStatic); err != nil {
+		return results.Failf("Failed to bind using %s %v", check.Auth.Username.ValueStatic, err)
 	}
 
 	req := &ldap.SearchRequest{

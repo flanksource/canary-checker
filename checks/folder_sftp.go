@@ -22,7 +22,7 @@ func CheckSFTP(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	auth := check.SFTPConnection.Auth
 	if !foundConn {
-		auth, err = GetAuthValues(check.SFTPConnection.Auth, ctx.Kommons, ctx.Canary.Namespace)
+		auth, err = GetAuthValues(ctx, check.SFTPConnection.Auth)
 		if err != nil {
 			return results.ErrorMessage(err)
 		}

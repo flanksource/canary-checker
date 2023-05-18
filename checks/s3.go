@@ -76,7 +76,7 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 	cfg := aws.NewConfig().
 		WithRegion(check.AWSConnection.Region).
 		WithEndpoint(check.AWSConnection.Endpoint).
-		WithCredentials(credentials.NewStaticCredentials(check.AWSConnection.AccessKey.Value, check.AWSConnection.SecretKey.Value, ""))
+		WithCredentials(credentials.NewStaticCredentials(check.AWSConnection.AccessKey.ValueStatic, check.AWSConnection.SecretKey.ValueStatic, ""))
 
 	if check.SkipTLSVerify {
 		tr := &http.Transport{
