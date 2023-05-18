@@ -29,14 +29,21 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 
 func transformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.CheckResult) {
 	for _, r := range in {
+		// If check fails, do not apply transform
+		if !r.Pass {
+			out = append(out, r)
+			continue
+		}
+
 		transformed, err := transform(ctx, r)
 		if err != nil {
 			r.Failf("transformation failure: %v", err)
 			out = append(out, r)
-		} else {
-			for _, t := range transformed {
-				out = append(out, processTemplates(ctx, t))
-			}
+			continue
+		}
+
+		for _, t := range transformed {
+			out = append(out, processTemplates(ctx, t))
 		}
 	}
 	return out

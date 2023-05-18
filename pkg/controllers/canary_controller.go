@@ -184,12 +184,12 @@ func (r *CanaryReconciler) Report() {
 			canary.Status.Status = &v1.Failed
 		}
 
-		for _, eventMsg := range payload.FailEvents {
-			r.Events.Event(&canary, corev1.EventTypeWarning, "Failed", eventMsg)
-		}
-
 		if err := r.Status().Update(gocontext.Background(), &canary); err != nil {
 			r.Log.Error(err, "failed to update status", "canary", canary.Name)
+		}
+
+		for _, eventMsg := range payload.FailEvents {
+			r.Events.Event(&canary, corev1.EventTypeWarning, "Failed", eventMsg)
 		}
 	}
 }
