@@ -9,6 +9,7 @@ docs/cli/
 .DS_Store
 cover.out
 test.test
+test.out
 *.tgz
 *.log
 wait4x

@@ -159,21 +159,21 @@ var (
 		Files: []S3FixtureFile{
 			{
 				Bucket:      "tests-e2e-1",
-				Filename:    "/pg/backups/date1/backup.zip",
+				Filename:    "pg/backups/date1/backup.zip",
 				Size:        50,
 				Age:         30 * 24 * time.Hour, // 30 days
 				ContentType: "application/zip",
 			},
 			{
 				Bucket:      "tests-e2e-1",
-				Filename:    "/pg/backups/date2/backup.zip",
+				Filename:    "pg/backups/date2/backup.zip",
 				Size:        50,
 				Age:         7 * 24 * time.Hour, // 7 days
 				ContentType: "application/zip",
 			},
 			{
 				Bucket:      "tests-e2e-1",
-				Filename:    "/mysql/backups/date1/mysql.zip",
+				Filename:    "mysql/backups/date1/mysql.zip",
 				Size:        30,
 				Age:         7*24*time.Hour - 10*time.Minute, // 30 days
 				ContentType: "application/zip",
