@@ -69,14 +69,14 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 	var results pkg.Results
 	results = append(results, result)
 
-	if err := check.AWSConnection.Populate(ctx, ctx.Kommons, ctx.Namespace); err != nil {
+	if err := check.AWSConnection.Populate(ctx, ctx.Kubernetes, ctx.Namespace); err != nil {
 		return results.Failf("failed to populate aws connection: %v", err)
 	}
 
 	cfg := aws.NewConfig().
 		WithRegion(check.AWSConnection.Region).
 		WithEndpoint(check.AWSConnection.Endpoint).
-		WithCredentials(credentials.NewStaticCredentials(check.AWSConnection.AccessKey.Value, check.AWSConnection.SecretKey.Value, ""))
+		WithCredentials(credentials.NewStaticCredentials(check.AWSConnection.AccessKey.ValueStatic, check.AWSConnection.SecretKey.ValueStatic, ""))
 
 	if check.SkipTLSVerify {
 		tr := &http.Transport{

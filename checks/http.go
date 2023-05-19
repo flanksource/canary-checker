@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -9,7 +8,6 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/commons/text"
-	"github.com/flanksource/kommons"
 	"github.com/pkg/errors"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -62,24 +60,21 @@ func (c *HTTPChecker) Run(ctx *context.Context) pkg.Results {
 	return results
 }
 
-func (c *HTTPChecker) configure(req *http.HTTPRequest, ctx *context.Context, check v1.HTTPCheck, kommons *kommons.Client) error {
+func (c *HTTPChecker) configure(req *http.HTTPRequest, ctx *context.Context, check v1.HTTPCheck) error {
 	for _, header := range check.Headers {
-		if kommons == nil {
-			return fmt.Errorf("HTTP headers are not supported outside k8s")
-		}
-		key, value, err := kommons.GetEnvValueFromCache(header, ctx.Canary.GetNamespace(), 5*time.Minute)
+		value, err := ctx.GetEnvValueFromCache(header)
 		if err != nil {
 			return errors.WithMessagef(err, "failed getting header: %v", header)
 		}
-		req.Header(key, value)
+		req.Header(header.Name, value)
 	}
 
-	auth, err := GetAuthValues(check.Authentication, kommons, ctx.Canary.GetNamespace())
+	auth, err := GetAuthValues(ctx, check.Authentication)
 	if err != nil {
 		return err
 	}
 	if auth != nil {
-		req.Auth(auth.Username.Value, auth.Password.Value)
+		req.Auth(auth.Username.ValueStatic, auth.Password.ValueStatic)
 	}
 
 	req.NTLM(check.NTLM)
@@ -129,7 +124,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	req := http.NewRequest(check.Endpoint).Method(check.GetMethod())
 
-	if err := c.configure(req, ctx, check, ctx.Kommons); err != nil {
+	if err := c.configure(req, ctx, check); err != nil {
 		return results.ErrorMessage(err)
 	}
 

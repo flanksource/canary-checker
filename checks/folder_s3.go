@@ -27,7 +27,7 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	if check.AWSConnection == nil {
 		check.AWSConnection = &v1.AWSConnection{}
-	} else if err := check.AWSConnection.Populate(ctx, ctx.Kommons, ctx.Namespace); err != nil {
+	} else if err := check.AWSConnection.Populate(ctx, ctx.Kubernetes, ctx.Namespace); err != nil {
 		return results.Failf("failed to populate aws connection: %v", err)
 	}
 

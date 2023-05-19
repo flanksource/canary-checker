@@ -184,11 +184,12 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	k8s, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return results.ErrorMessage(err)
+
+	if ctx.Kommons == nil {
+		return results.Failf("Kubernetes is not initialized")
 	}
 
+	k8s := ctx.Kubernetes
 	timeout := time.Duration(check.GetTimeout()) * time.Minute
 	pod, err := newPod(ctx, check)
 	if err != nil {

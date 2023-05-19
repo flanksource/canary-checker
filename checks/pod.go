@@ -40,7 +40,7 @@ const (
 
 type PodChecker struct {
 	lock *semaphore.Weighted
-	k8s  *kubernetes.Clientset
+	k8s  kubernetes.Interface
 	ng   *NameGenerator
 
 	latestNodeIndex int
@@ -51,15 +51,6 @@ func NewPodChecker() *PodChecker {
 		lock: semaphore.NewWeighted(1),
 		ng:   &NameGenerator{PodsCount: 20},
 	}
-
-	k8sClient, err := pkg.NewK8sClient()
-	if err != nil {
-		logger.Errorf("Failed to create kubernetes config %v", err)
-		return pc
-	}
-
-	pc.k8s = k8sClient
-
 	return pc
 }
 
@@ -69,12 +60,7 @@ func (c *PodChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
 	if len(ctx.Canary.Spec.Pod) > 0 {
 		if c.k8s == nil {
-			k8sClient, err := pkg.NewK8sClient()
-			if err != nil {
-				results = append(results, unexpectedErrorf(ctx.Canary.Spec.Pod[0], err, "Could not initialise k8s client"))
-				return results
-			}
-			c.k8s = k8sClient
+			c.k8s = ctx.Kubernetes
 		}
 		for _, conf := range ctx.Canary.Spec.Pod {
 			results = append(results, c.Check(ctx, conf)...)
@@ -264,18 +250,18 @@ func (c *PodChecker) Cleanup(ctx *context.Context, podCheck canaryv1.PodCheck) {
 	if c.k8s == nil {
 		logger.Warnf("connection to k8s not established")
 	}
-	err := c.k8s.CoreV1().Pods(podCheck.Namespace).DeleteCollection(gocontext.TODO(), metav1.DeleteOptions{}, listOptions)
+	err := c.k8s.CoreV1().Pods(podCheck.Namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, listOptions)
 	if err != nil && !errors.IsNotFound(err) {
 		logger.Warnf("Failed to delete pods for check %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
 	}
 
-	services, err := c.k8s.CoreV1().Services(podCheck.Namespace).List(gocontext.TODO(), listOptions)
+	services, err := c.k8s.CoreV1().Services(podCheck.Namespace).List(ctx, listOptions)
 	if err != nil {
 		logger.Warnf("Failed to get services to cleanup %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
 	}
 
 	for _, s := range services.Items {
-		if err := ctx.Kommons.DeleteByKind("Service", podCheck.Namespace, s.Name); err != nil && !errors.IsNotFound(err) {
+		if err := ctx.Kubernetes.CoreV1().Services(podCheck.Namespace).Delete(ctx, s.Name, metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
 			logger.Warnf("Failed delete services %s in namespace %s : %v", s.Name, podCheck.Namespace, err)
 		}
 	}

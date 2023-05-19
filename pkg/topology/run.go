@@ -20,6 +20,7 @@ import (
 	"github.com/google/uuid"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
 	"github.com/pkg/errors"
+	"k8s.io/client-go/kubernetes"
 )
 
 var json = jsontime.ConfigWithCustomTimeFormat
@@ -176,6 +177,7 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 		Canary:      v1.NewCanaryFromSpec(name, spec),
 		Namespace:   ctx.Namespace,
 		Kommons:     ctx.Kommons,
+		Kubernetes:  ctx.Kubernetes,
 		Environment: ctx.Environment,
 		Logger:      ctx.Logger,
 	}
@@ -309,8 +311,9 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Propertie
 
 type TopologyRunOptions struct {
 	*kommons.Client
-	Depth     int
-	Namespace string
+	Kubernetes kubernetes.Interface
+	Depth      int
+	Namespace  string
 }
 
 func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
@@ -318,7 +321,7 @@ func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
 		s.Namespace = opts.Namespace
 	}
 	logger.Debugf("Running topology %s/%s depth=%d", s.Namespace, s.Name, opts.Depth)
-	ctx := NewComponentContext(opts.Client, s)
+	ctx := NewComponentContext(opts.Client, opts.Kubernetes, s)
 	var results pkg.Components
 	component := &pkg.Component{
 		Name:      ctx.Topology.Spec.Text,

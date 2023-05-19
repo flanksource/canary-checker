@@ -1,1 +1,48 @@
-{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/ICMPCheck","definitions":{"ICMPCheck":{"required":["name"],"properties":{"description":{"type":"string"},"name":{"type":"string"},"icon":{"type":"string"},"labels":{"patternProperties":{".*":{"type":"string"}},"type":"object"},"endpoint":{"type":"string"},"thresholdMillis":{"type":"integer"},"packetLossThreshold":{"type":"integer"},"packetCount":{"type":"integer"}},"additionalProperties":false,"type":"object"}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/flanksource/canary-checker/api/v1/icmp-check",
+  "$ref": "#/$defs/ICMPCheck",
+  "$defs": {
+    "ICMPCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "thresholdMillis": {
+          "type": "integer"
+        },
+        "packetLossThreshold": {
+          "type": "integer"
+        },
+        "packetCount": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "Labels": {
+      "patternProperties": {
+        ".*": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  }
+}

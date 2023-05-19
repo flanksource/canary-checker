@@ -72,14 +72,15 @@ var AddTopology = &cobra.Command{
 
 func getTopologyRunOptions(depth int) topology.TopologyRunOptions {
 	logger.Tracef("depth: %v", depth)
-	kommonsClient, err := pkg.NewKommonsClient()
+	kommonsClient, k8s, err := pkg.NewKommonsClient()
 	if err != nil {
-		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
+		logger.Warnf("Failed to get kubernetes client: %v", err)
 	}
 	return topology.TopologyRunOptions{
-		Client:    kommonsClient,
-		Depth:     10,
-		Namespace: topologyRunNamespace,
+		Client:     kommonsClient,
+		Kubernetes: k8s,
+		Depth:      10,
+		Namespace:  topologyRunNamespace,
 	}
 }
 

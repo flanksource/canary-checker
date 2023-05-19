@@ -22,6 +22,7 @@ import (
 	"github.com/robfig/cron/v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 )
 
 var CanaryScheduler = cron.New()
@@ -31,6 +32,7 @@ var Executor bool
 var LogPass, LogFail bool
 
 var Kommons *kommons.Client
+var Kubernetes kubernetes.Interface
 var FuncScheduler = cron.New()
 
 var CanaryStatusChannel chan CanaryStatusPayload
@@ -46,6 +48,7 @@ func StartScanCanaryConfigs(dataFile string, configFiles []string) {
 
 type CanaryJob struct {
 	*kommons.Client
+	Kubernetes kubernetes.Interface
 	v1.Canary
 	// model   pkg.Canary
 	LogPass bool
@@ -98,7 +101,7 @@ func (job CanaryJob) Run() {
 }
 
 func (job *CanaryJob) NewContext() *context.Context {
-	return context.New(job.Client, db.Gorm, job.Canary)
+	return context.New(job.Client, job.Kubernetes, db.Gorm, job.Canary)
 }
 
 func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
@@ -232,7 +235,7 @@ func SyncCanaryJob(canary v1.Canary) error {
 
 	if Kommons == nil {
 		var err error
-		Kommons, err = pkg.NewKommonsClient()
+		Kommons, Kubernetes, err = pkg.NewKommonsClient()
 		if err != nil {
 			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
 		}
@@ -250,10 +253,11 @@ func SyncCanaryJob(canary v1.Canary) error {
 	}
 
 	job := CanaryJob{
-		Client:  Kommons,
-		Canary:  canary,
-		LogPass: canary.IsTrace() || canary.IsDebug() || LogPass,
-		LogFail: canary.IsTrace() || canary.IsDebug() || LogFail,
+		Client:     Kommons,
+		Kubernetes: Kubernetes,
+		Canary:     canary,
+		LogPass:    canary.IsTrace() || canary.IsDebug() || LogPass,
+		LogFail:    canary.IsTrace() || canary.IsDebug() || LogFail,
 	}
 
 	_, err := CanaryScheduler.AddJob(canary.Spec.GetSchedule(), job)

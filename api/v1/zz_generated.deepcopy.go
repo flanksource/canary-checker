@@ -24,7 +24,6 @@ package v1
 import (
 	"encoding/json"
 	"github.com/flanksource/duty/types"
-	"github.com/flanksource/kommons"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -1716,7 +1715,7 @@ func (in *GCPConnection) DeepCopyInto(out *GCPConnection) {
 	*out = *in
 	if in.Credentials != nil {
 		in, out := &in.Credentials, &out.Credentials
-		*out = new(kommons.EnvVar)
+		*out = new(types.EnvVar)
 		(*in).DeepCopyInto(*out)
 	}
 }
@@ -1818,7 +1817,7 @@ func (in *HTTPCheck) DeepCopyInto(out *HTTPCheck) {
 	}
 	if in.Headers != nil {
 		in, out := &in.Headers, &out.Headers
-		*out = make([]kommons.EnvVar, len(*in))
+		*out = make([]types.EnvVar, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -2543,17 +2542,17 @@ func (in *ResticCheck) DeepCopyInto(out *ResticCheck) {
 	in.Description.DeepCopyInto(&out.Description)
 	if in.Password != nil {
 		in, out := &in.Password, &out.Password
-		*out = new(kommons.EnvVar)
+		*out = new(types.EnvVar)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.AccessKey != nil {
 		in, out := &in.AccessKey, &out.AccessKey
-		*out = new(kommons.EnvVar)
+		*out = new(types.EnvVar)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.SecretKey != nil {
 		in, out := &in.SecretKey, &out.SecretKey
-		*out = new(kommons.EnvVar)
+		*out = new(types.EnvVar)
 		(*in).DeepCopyInto(*out)
 	}
 }

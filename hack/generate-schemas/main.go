@@ -1,13 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
 
-	"github.com/alecthomas/jsonschema"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/logger"
+	"github.com/invopop/jsonschema"
 	"github.com/spf13/cobra"
 )
 
@@ -16,12 +17,14 @@ var schemas = map[string]interface{}{
 	"topology":  &v1.Topology{},
 	"component": &v1.Component{},
 }
+
 var generateSchema = &cobra.Command{
 	Use: "generate-schema",
 	Run: func(cmd *cobra.Command, args []string) {
 		for file, obj := range schemas {
 			schema := jsonschema.Reflect(obj)
-			data, err := schema.MarshalJSON()
+
+			data, err := json.MarshalIndent(schema, "", "  ")
 			if err != nil {
 				logger.Fatalf("error marshalling: %v", err)
 			}
@@ -36,7 +39,7 @@ var generateSchema = &cobra.Command{
 
 		for _, check := range v1.AllChecks {
 			schema := jsonschema.Reflect(check)
-			data, err := schema.MarshalJSON()
+			data, err := json.MarshalIndent(schema, "", "  ")
 			if err != nil {
 				logger.Fatalf("error marshalling (type=%s): %v", check.GetType(), err)
 			}

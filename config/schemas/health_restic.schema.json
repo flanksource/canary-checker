@@ -1,1 +1,123 @@
-{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/ResticCheck","definitions":{"ConfigMapKeySelector":{"required":["key"],"properties":{"name":{"type":"string"},"key":{"type":"string"},"optional":{"type":"boolean"}},"additionalProperties":false,"type":"object"},"EnvVar":{"properties":{"name":{"type":"string"},"value":{"type":"string"},"valueFrom":{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/EnvVarSource"}},"additionalProperties":false,"type":"object"},"EnvVarSource":{"properties":{"configMapKeyRef":{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/ConfigMapKeySelector"},"secretKeyRef":{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/SecretKeySelector"}},"additionalProperties":false,"type":"object"},"ResticCheck":{"required":["name","repository","password","maxAge"],"properties":{"description":{"type":"string"},"name":{"type":"string"},"icon":{"type":"string"},"labels":{"patternProperties":{".*":{"type":"string"}},"type":"object"},"connection":{"type":"string"},"awsConnectionName":{"type":"string"},"repository":{"type":"string"},"password":{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/EnvVar"},"maxAge":{"type":"string"},"checkIntegrity":{"type":"boolean"},"accessKey":{"$ref":"#/definitions/EnvVar"},"secretKey":{"$ref":"#/definitions/EnvVar"},"caCert":{"type":"string"}},"additionalProperties":false,"type":"object"},"SecretKeySelector":{"required":["key"],"properties":{"name":{"type":"string"},"key":{"type":"string"},"optional":{"type":"boolean"}},"additionalProperties":false,"type":"object"}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/flanksource/canary-checker/api/v1/restic-check",
+  "$ref": "#/$defs/ResticCheck",
+  "$defs": {
+    "ConfigMapKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
+    "EnvVar": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "valueFrom": {
+          "$ref": "#/$defs/EnvVarSource"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "EnvVarSource": {
+      "properties": {
+        "configMapKeyRef": {
+          "$ref": "#/$defs/ConfigMapKeySelector"
+        },
+        "secretKeyRef": {
+          "$ref": "#/$defs/SecretKeySelector"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Labels": {
+      "patternProperties": {
+        ".*": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ResticCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "awsConnectionName": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "maxAge": {
+          "type": "string"
+        },
+        "checkIntegrity": {
+          "type": "boolean"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "caCert": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "repository",
+        "password",
+        "maxAge"
+      ]
+    },
+    "SecretKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    }
+  }
+}

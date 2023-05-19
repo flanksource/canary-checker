@@ -64,12 +64,11 @@ func RunCanaryHandler(c echo.Context) error {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 
-	kommonsClient, err := pkg.NewKommonsClient()
+	kommonsClient, k8s, err := pkg.NewKommonsClient()
 	if err != nil {
 		logger.Warnf("failed to get kommons client, checks that read kubernetes configs will fail: %v", err)
 	}
-
-	ctx := context.New(kommonsClient, db.Gorm, *canary)
+	ctx := context.New(kommonsClient, k8s, db.Gorm, *canary)
 	result := checks.RunChecks(ctx)
 
 	var response RunCanaryResponse
@@ -104,15 +103,16 @@ func RunTopologyHandler(c echo.Context) error {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 
-	kommonsClient, err := pkg.NewKommonsClient()
+	kommonsClient, k8s, err := pkg.NewKommonsClient()
 	if err != nil {
 		logger.Warnf("failed to get kommons client, checks that read kubernetes configs will fail: %v", err)
 	}
 
 	opts := pkgTopology.TopologyRunOptions{
-		Client:    kommonsClient,
-		Depth:     topologyRunDepth,
-		Namespace: topology.Namespace,
+		Client:     kommonsClient,
+		Kubernetes: k8s,
+		Depth:      topologyRunDepth,
+		Namespace:  topology.Namespace,
 	}
 	if err := pkgTopology.SyncComponents(opts, *topology); err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)

@@ -15,11 +15,13 @@ import (
 	"github.com/flanksource/kommons"
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 )
 
 var TopologyScheduler = cron.New()
 
 var Kommons *kommons.Client
+var Kubernetes kubernetes.Interface
 
 type TopologyJob struct {
 	*kommons.Client
@@ -45,7 +47,7 @@ func SyncTopologyJobs() {
 	logger.Infof("Syncing topology jobs")
 	if Kommons == nil {
 		var err error
-		Kommons, err = pkg.NewKommonsClient()
+		Kommons, Kubernetes, err = pkg.NewKommonsClient()
 		if err != nil {
 			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
 		}
@@ -77,7 +79,7 @@ func SyncTopologyJob(t v1.Topology) error {
 	}
 	if Kommons == nil {
 		var err error
-		Kommons, err = pkg.NewKommonsClient()
+		Kommons, Kubernetes, err = pkg.NewKommonsClient()
 		if err != nil {
 			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
 		}

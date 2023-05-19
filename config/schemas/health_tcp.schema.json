@@ -1,1 +1,42 @@
-{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/TCPCheck","definitions":{"TCPCheck":{"required":["name"],"properties":{"description":{"type":"string"},"name":{"type":"string"},"icon":{"type":"string"},"labels":{"patternProperties":{".*":{"type":"string"}},"type":"object"},"endpoint":{"type":"string"},"thresholdMillis":{"type":"integer"}},"additionalProperties":false,"type":"object"}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/flanksource/canary-checker/api/v1/tcp-check",
+  "$ref": "#/$defs/TCPCheck",
+  "$defs": {
+    "Labels": {
+      "patternProperties": {
+        ".*": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "TCPCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "thresholdMillis": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    }
+  }
+}
