@@ -1,1 +1,46 @@
-{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/ContainerdPushCheck","definitions":{"ContainerdPushCheck":{"required":["name","image"],"properties":{"description":{"type":"string"},"name":{"type":"string"},"icon":{"type":"string"},"labels":{"patternProperties":{".*":{"type":"string"}},"type":"object"},"image":{"type":"string"},"username":{"type":"string"},"password":{"type":"string"}},"additionalProperties":false,"type":"object"}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/flanksource/canary-checker/api/v1/containerd-push-check",
+  "$ref": "#/$defs/ContainerdPushCheck",
+  "$defs": {
+    "ContainerdPushCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "image": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "image"
+      ]
+    },
+    "Labels": {
+      "patternProperties": {
+        ".*": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  }
+}

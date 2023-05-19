@@ -1,1 +1,130 @@
-{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/GitHubCheck","definitions":{"ConfigMapKeySelector":{"required":["key"],"properties":{"name":{"type":"string"},"key":{"type":"string"}},"additionalProperties":false,"type":"object"},"EnvVar":{"properties":{"name":{"type":"string"},"value":{"type":"string"},"valueFrom":{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/EnvVarSource"}},"additionalProperties":false,"type":"object"},"EnvVarSource":{"properties":{"configMapKeyRef":{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/ConfigMapKeySelector"},"secretKeyRef":{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/SecretKeySelector"}},"additionalProperties":false,"type":"object"},"GitHubCheck":{"required":["name","query"],"properties":{"description":{"type":"string"},"name":{"type":"string"},"icon":{"type":"string"},"labels":{"patternProperties":{".*":{"type":"string"}},"type":"object"},"test":{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/Template"},"display":{"$ref":"#/definitions/Template"},"transform":{"$ref":"#/definitions/Template"},"connection":{"type":"string"},"query":{"type":"string"},"githubToken":{"$schema":"http://json-schema.org/draft-04/schema#","$ref":"#/definitions/EnvVar"}},"additionalProperties":false,"type":"object"},"SecretKeySelector":{"required":["key"],"properties":{"name":{"type":"string"},"key":{"type":"string"}},"additionalProperties":false,"type":"object"},"Template":{"properties":{"template":{"type":"string"},"jsonPath":{"type":"string"},"expr":{"type":"string"},"javascript":{"type":"string"}},"additionalProperties":false,"type":"object"}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/flanksource/canary-checker/api/v1/git-hub-check",
+  "$ref": "#/$defs/GitHubCheck",
+  "$defs": {
+    "ConfigMapKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
+    "EnvVar": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "valueFrom": {
+          "$ref": "#/$defs/EnvVarSource"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "EnvVarSource": {
+      "properties": {
+        "configMapKeyRef": {
+          "$ref": "#/$defs/ConfigMapKeySelector"
+        },
+        "secretKeyRef": {
+          "$ref": "#/$defs/SecretKeySelector"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "GitHubCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "query": {
+          "type": "string"
+        },
+        "githubToken": {
+          "$ref": "#/$defs/EnvVar"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "query"
+      ]
+    },
+    "Labels": {
+      "patternProperties": {
+        ".*": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "SecretKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
+    "Template": {
+      "properties": {
+        "template": {
+          "type": "string"
+        },
+        "jsonPath": {
+          "type": "string"
+        },
+        "expr": {
+          "type": "string"
+        },
+        "javascript": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    }
+  }
+}
