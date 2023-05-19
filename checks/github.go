@@ -10,7 +10,6 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/duty"
 )
 
 func init() {
@@ -44,12 +43,7 @@ func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	} else if connection != nil {
 		githubToken = connection.Password
 	} else {
-		k8sClient, err := ctx.Kommons.GetClientset()
-		if err != nil {
-			return results.Failf("error getting k8s client from kommons client: %v", err)
-		}
-
-		githubToken, err = duty.GetEnvValueFromCache(k8sClient, check.GithubToken, ctx.Canary.GetNamespace())
+		githubToken, err = ctx.GetEnvValueFromCache(check.GithubToken)
 		if err != nil {
 			return results.Failf("error fetching github token from env cache: %v", err)
 		}

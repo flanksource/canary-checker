@@ -37,6 +37,9 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
+	if ctx.Kommons == nil {
+		return results.Failf("Kubernetes is not initialized")
+	}
 	client, err := ctx.Kommons.GetClientByKind(check.Kind)
 	if err != nil {
 		return results.Failf("Failed to get client for kind %s: %v", check.Kind, err)
@@ -110,15 +113,11 @@ func getNamespaces(ctx *context.Context, check v1.KubernetesCheck) ([]string, er
 	if check.Namespace.Name != "" {
 		return []string{check.Namespace.Name}, nil
 	}
-	k8sClient, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return nil, err
-	}
 
 	if check.Namespace.FieldSelector == "" && check.Namespace.LabelSelector == "" {
-		return []string{""}, err
+		return []string{""}, nil
 	}
-	namespeceList, err := k8sClient.CoreV1().Namespaces().List(ctx, metav1.ListOptions{
+	namespeceList, err := ctx.Kubernetes.CoreV1().Namespaces().List(ctx, metav1.ListOptions{
 		LabelSelector: check.Namespace.LabelSelector,
 		FieldSelector: check.Namespace.FieldSelector,
 	})

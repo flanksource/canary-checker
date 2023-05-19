@@ -9,15 +9,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 )
 
-func unexpectedErrorf(check external.Check, err error, msg string, args ...interface{}) *pkg.CheckResult { //nolint: unparam
-	return &pkg.CheckResult{
-		Check:   check,
-		Pass:    false,
-		Invalid: false,
-		Message: fmt.Sprintf("unexpected error %s: %v", fmt.Sprintf(msg, args...), err),
-	}
-}
-
 func Error(check external.Check, err error) *pkg.CheckResult {
 	return &pkg.CheckResult{
 		Check:   check,

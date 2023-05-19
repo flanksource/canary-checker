@@ -11,8 +11,8 @@ import (
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
-	"github.com/flanksource/kommons"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 type checkContext interface {
@@ -941,7 +941,7 @@ type AWSConnection struct {
 
 // Populate populates an AWSConnection with credentials and other information.
 // If a connection name is specified, it'll be used to populate the endpoint, accessKey and secretKey.
-func (t *AWSConnection) Populate(ctx checkContext, kommonsClient *kommons.Client, namespace string) error {
+func (t *AWSConnection) Populate(ctx checkContext, k8s kubernetes.Interface, namespace string) error {
 	if t.ConnectionName != "" {
 		connection, err := ctx.HydrateConnectionByURL(t.ConnectionName)
 		if err != nil {
@@ -953,18 +953,13 @@ func (t *AWSConnection) Populate(ctx checkContext, kommonsClient *kommons.Client
 		t.Endpoint = connection.URL
 	}
 
-	kubernetes, err := kommonsClient.GetClientset()
-	if err != nil {
-		return fmt.Errorf("could not get kubernetes clientset: %v", err)
-	}
-
-	if accessKey, err := duty.GetEnvValueFromCache(kubernetes, t.AccessKey, namespace); err != nil {
+	if accessKey, err := duty.GetEnvValueFromCache(k8s, t.AccessKey, namespace); err != nil {
 		return fmt.Errorf("could not parse EC2 access key: %v", err)
 	} else {
 		t.AccessKey.ValueStatic = accessKey
 	}
 
-	if secretKey, err := duty.GetEnvValueFromCache(kubernetes, t.SecretKey, namespace); err != nil {
+	if secretKey, err := duty.GetEnvValueFromCache(k8s, t.SecretKey, namespace); err != nil {
 		return fmt.Errorf(fmt.Sprintf("Could not parse EC2 secret key: %v", err))
 	} else {
 		t.SecretKey.ValueStatic = secretKey

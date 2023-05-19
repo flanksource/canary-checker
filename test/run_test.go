@@ -13,6 +13,7 @@ import (
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/kommons"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg"
@@ -21,6 +22,7 @@ import (
 
 var testFolder string
 var kommonsClient *kommons.Client
+var k8s kubernetes.Interface
 var verbosity = 0
 
 func TestMain(m *testing.M) {
@@ -30,7 +32,7 @@ func TestMain(m *testing.M) {
 
 func init() {
 	var err error
-	kommonsClient, err = pkg.NewKommonsClient()
+	kommonsClient, k8s, err = pkg.NewKommonsClient()
 	if err != nil {
 		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
 	}
@@ -73,7 +75,7 @@ func runFixture(t *testing.T, name string) {
 			if canary.Name == "" {
 				canary.Name = cmd.CleanupFilename(name)
 			}
-			context := context.New(kommonsClient, db.Gorm, canary)
+			context := context.New(kommonsClient, k8s, db.Gorm, canary)
 
 			checkResults := checks.RunChecks(context)
 			for _, res := range checkResults {

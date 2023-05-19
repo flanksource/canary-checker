@@ -43,17 +43,11 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 		return results.Failf("failed to hydrate connection: %v", err)
 	} else if connection != nil {
 		personalAccessToken = connection.Password
-	} else if ctx.Kommons != nil {
-		k8sClient, err := ctx.Kommons.GetClientset()
-		if err != nil {
-			return results.Failf("failed to get k8s client: %v", err)
-		}
-
-		value, err := duty.GetEnvValueFromCache(k8sClient, check.PersonalAccessToken, ctx.Namespace)
+	} else if ctx.Kubernetes != nil {
+		value, err := duty.GetEnvValueFromCache(ctx.Kubernetes, check.PersonalAccessToken, ctx.Namespace)
 		if err != nil {
 			return results.ErrorMessage(err)
 		}
-
 		personalAccessToken = value
 	}
 

@@ -7,6 +7,7 @@ import (
 	"github.com/flanksource/kommons"
 	"github.com/flanksource/kommons/ktemplate"
 	"github.com/pkg/errors"
+	"k8s.io/client-go/kubernetes"
 )
 
 type ComponentContext struct {
@@ -109,9 +110,9 @@ func (c *ComponentContext) WithComponents(components *pkg.Components, current *p
 	return cloned
 }
 
-func NewComponentContext(client *kommons.Client, system v1.Topology) *ComponentContext {
+func NewComponentContext(client *kommons.Client, kubernetes kubernetes.Interface, system v1.Topology) *ComponentContext {
 	return &ComponentContext{
-		KubernetesContext: context.NewKubernetesContext(client, system.Namespace),
+		KubernetesContext: context.NewKubernetesContext(client, kubernetes, system.Namespace),
 		Topology:          system,
 	}
 }

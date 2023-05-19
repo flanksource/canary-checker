@@ -39,9 +39,9 @@ var Run = &cobra.Command{
 		if len(configFiles) == 0 {
 			log.Fatalln("Must specify at least one canary")
 		}
-		kommonsClient, err := pkg.NewKommonsClient()
+		kommonsClient, k8s, err := pkg.NewKommonsClient()
 		if err != nil {
-			logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
+			logger.Warnf("Failed to get kubernetes client: %v", err)
 		}
 		var results = []*pkg.CheckResult{}
 
@@ -65,7 +65,7 @@ var Run = &cobra.Command{
 				wg.Add(1)
 				_config := config
 				go func() {
-					queue <- checks.RunChecks(context.New(kommonsClient, db.Gorm, _config))
+					queue <- checks.RunChecks(context.New(kommonsClient, k8s, db.Gorm, _config))
 					wg.Done()
 				}()
 			}

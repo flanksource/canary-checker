@@ -110,7 +110,7 @@ type AWS struct {
 }
 
 func NewAWS(ctx *context.Context, check v1.EC2Check) (*AWS, error) {
-	if err := check.AWSConnection.Populate(ctx, ctx.Kommons, ctx.Canary.GetNamespace()); err != nil {
+	if err := check.AWSConnection.Populate(ctx, ctx.Kubernetes, ctx.Canary.GetNamespace()); err != nil {
 		return nil, fmt.Errorf("failed to populate AWS connection: %v", err)
 	}
 
@@ -314,10 +314,9 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	results = append(results, result)
 	prometheusCount.WithLabelValues(check.Region).Inc()
 	namespace := ctx.Canary.Namespace
-
 	kommonsClient := ctx.Kommons
 	if kommonsClient == nil {
-		return results.Failf("commons client not configured for ec2 checker")
+		return results.Failf("Kubernetes is not initialized")
 	}
 
 	aws, err := NewAWS(ctx, check)

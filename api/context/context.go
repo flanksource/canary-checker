@@ -14,11 +14,13 @@ import (
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
 	"gorm.io/gorm"
+	"k8s.io/client-go/kubernetes"
 )
 
 type KubernetesContext struct {
 	gocontext.Context
 	Kommons     *kommons.Client
+	Kubernetes  kubernetes.Interface
 	Namespace   string
 	Environment map[string]interface{}
 	logger.Logger
@@ -26,6 +28,7 @@ type KubernetesContext struct {
 
 type Context struct {
 	gocontext.Context
+	Kubernetes  kubernetes.Interface
 	Kommons     *kommons.Client
 	Namespace   string
 	Canary      v1.Canary
@@ -49,11 +52,7 @@ func (ctx *Context) WithDeadline(deadline time.Time) (*Context, gocontext.Cancel
 }
 
 func (ctx *Context) GetEnvValueFromCache(env types.EnvVar) (string, error) {
-	k8sClient, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return "", err
-	}
-	return duty.GetEnvValueFromCache(k8sClient, env, ctx.Namespace)
+	return duty.GetEnvValueFromCache(ctx.Kubernetes, env, ctx.Namespace)
 }
 
 func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Connection, error) {
@@ -68,12 +67,7 @@ func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Conne
 		return nil, errors.New("db has not been initialized")
 	}
 
-	k8sClient, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return nil, err
-	}
-
-	connection, err := duty.HydratedConnectionByURL(ctx, ctx.db, k8sClient, ctx.Namespace, connectionName)
+	connection, err := duty.HydratedConnectionByURL(ctx, ctx.db, ctx.Kubernetes, ctx.Namespace, connectionName)
 	if err != nil {
 		return nil, err
 	}
@@ -87,13 +81,14 @@ func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Conne
 	return connection, nil
 }
 
-func NewKubernetesContext(client *kommons.Client, namespace string) *KubernetesContext {
+func NewKubernetesContext(client *kommons.Client, kubernetes kubernetes.Interface, namespace string) *KubernetesContext {
 	if namespace == "" {
 		namespace = "default"
 	}
 	return &KubernetesContext{
 		Context:     gocontext.Background(),
 		Kommons:     client,
+		Kubernetes:  kubernetes,
 		Namespace:   namespace,
 		Environment: make(map[string]interface{}),
 		Logger:      logger.StandardLogger(),
@@ -104,13 +99,14 @@ func (ctx *KubernetesContext) Clone() *KubernetesContext {
 	return &KubernetesContext{
 		Context:     gocontext.Background(),
 		Kommons:     ctx.Kommons,
+		Kubernetes:  ctx.Kubernetes,
 		Namespace:   ctx.Namespace,
 		Environment: make(map[string]interface{}),
 		Logger:      logger.StandardLogger(),
 	}
 }
 
-func New(client *kommons.Client, db *gorm.DB, canary v1.Canary) *Context {
+func New(client *kommons.Client, kubernetes kubernetes.Interface, db *gorm.DB, canary v1.Canary) *Context {
 	if canary.Namespace == "" {
 		canary.Namespace = "default"
 	}
@@ -119,6 +115,7 @@ func New(client *kommons.Client, db *gorm.DB, canary v1.Canary) *Context {
 		db:          db,
 		Context:     gocontext.Background(),
 		Kommons:     client,
+		Kubernetes:  kubernetes,
 		Namespace:   canary.GetNamespace(),
 		Canary:      canary,
 		Environment: make(map[string]interface{}),
