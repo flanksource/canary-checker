@@ -2,6 +2,7 @@ package topology
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -12,6 +13,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/canary-checker/templating"
+	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
@@ -333,6 +335,7 @@ func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
 		component.Name = ctx.Topology.Name
 	}
 
+	ignoreLabels := []string{"kustomize.toolkit.fluxcd.io/name", "kustomize.toolkit.fluxcd.io/namespace"}
 	if opts.Depth > 0 {
 		for _, comp := range ctx.Topology.Spec.Components {
 			components, err := lookupComponents(ctx, comp)
@@ -346,6 +349,12 @@ func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
 					component.Labels = make(types.JSONStringMap)
 				}
 				for key, value := range ctx.Topology.Labels {
+					// Workaround for avoiding a recursive loop
+					// If resource is added via flux kustomize the label gets added to top level Pods and Nodes
+					if strings.HasPrefix(component.Type, "Kubernetes") && collections.Contains(ignoreLabels, key) {
+						continue
+					}
+
 					// don't overwrite the component labels
 					if _, isPresent := component.Labels[key]; !isPresent {
 						component.Labels[key] = value
