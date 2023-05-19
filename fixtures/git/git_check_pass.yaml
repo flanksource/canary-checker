@@ -8,7 +8,9 @@ spec:
     - query: "SELECT * FROM github_repo_checks('flanksource/duty') where branch='master' and conclusion='FAILURE'"
       name: github-check
       test:
-        expr: len(results) == 0
+        expr: len(results) != 0
+      display:
+        template: '{{ .results }}'
       githubToken:
         valueFrom:
           secretKeyRef:
