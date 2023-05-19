@@ -67,7 +67,7 @@ spec:
             capabilities:
               add:
                 - CAP_NET_RAW
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: {{ include "canary-checker.imageString" . }}
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           env:
             {{- if eq .Values.debug true }}
