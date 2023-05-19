@@ -13,7 +13,7 @@ else
 endif
 
 # Image URL to use all building/pushing image targets
-IMG_EL ?= docker.io/flanksource/canary-checker-elevated:${VERSION_TAG}
+IMG_F ?= docker.io/flanksource/canary-checker-full:${VERSION_TAG}
 IMG ?= docker.io/flanksource/canary-checker:${VERSION_TAG}
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
@@ -84,7 +84,7 @@ generate: .bin/controller-gen
 
 # Build the docker image
 docker:
-	docker build . -f build/elevated/Dockerfile -t ${IMG_EL}
+	docker build . -f build/full/Dockerfile -t ${IMG_F}
 	docker build . -f build/minimal/Dockerfile -t ${IMG}
 
 # Build the docker image
@@ -93,17 +93,17 @@ docker-dev: linux
 
 
 docker-push-%:
-	docker build . -f build/elevated/Dockerfile -t ${IMG_EL}
+	docker build . -f build/full/Dockerfile -t ${IMG_F}
 	docker build . -f build/minimal/Dockerfile -t ${IMG}
-	docker tag $(IMG_EL) $*/$(IMG_EL)
+	docker tag $(IMG_F) $*/$(IMG_F)
 	docker tag $(IMG) $*/$(IMG)
-	docker push  $*/$(IMG_EL)
+	docker push  $*/$(IMG_F)
 	docker push  $*/$(IMG)
-	kubectl set image deployment/$(NAME) $(NAME)=$*/$(IMG_EL)
+	kubectl set image deployment/$(NAME) $(NAME)=$*/$(IMG_F)
 
 # Push the docker image
 docker-push:
-	docker push ${IMG_EL}
+	docker push ${IMG_F}
 	docker push ${IMG}
 
 .PHONY: compress
