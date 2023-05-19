@@ -78,7 +78,9 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 		return results.Failf("Failed to get AWS config: %v", err)
 	}
 
-	client := s3.NewFromConfig(cfg)
+	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.UsePathStyle = check.AWSConnection.UsePathStyle
+	})
 
 	listTimer := NewTimer()
 	_, err = client.ListObjects(ctx, &s3.ListObjectsInput{Bucket: &check.BucketName})
@@ -123,8 +125,8 @@ func GetAWSConfig(ctx *context.Context, connection v1.AWSConnection) (cfg aws.Co
 	}
 
 	if connection.Endpoint != "" {
-		options = append(options, config.WithEndpointResolver(aws.EndpointResolverFunc(
-			func(service, region string) (aws.Endpoint, error) {
+		options = append(options, config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(
+			func(service, region string, options ...any) (aws.Endpoint, error) {
 				return aws.Endpoint{
 					URL: connection.Endpoint,
 				}, nil

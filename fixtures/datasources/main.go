@@ -92,8 +92,8 @@ func getS3Client(ctx context.Context) (*s3.Client, error) {
 	s3Cfg := getS3Credentials()
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(s3Cfg.Region),
-		config.WithEndpointResolver(aws.EndpointResolverFunc(
-			func(service, region string) (aws.Endpoint, error) {
+		config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(
+			func(service, region string, options ...any) (aws.Endpoint, error) {
 				return aws.Endpoint{
 					URL: s3Cfg.Endpoint,
 				}, nil
@@ -106,7 +106,9 @@ func getS3Client(ctx context.Context) (*s3.Client, error) {
 		return nil, err
 	}
 
-	client := s3.NewFromConfig(cfg)
+	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.UsePathStyle = true
+	})
 	return client, nil
 }
 
