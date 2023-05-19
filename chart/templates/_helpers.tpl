@@ -57,3 +57,21 @@ Image Name
 {{- define "canary-checker.imageString" -}}
 {{ .Values.image.repository }}{{- if eq (lower .Values.image.type) "full" }}-full{{- end }}:{{ .Values.image.tag }} 
 {{- end }}
+
+{{/*
+Container Security Context
+*/}}
+{{- define "canary-checker.containerSecurityContext" -}}
+allowPrivilegeEscalation: {{- if -eq (.Values.privilegeMode | toLower) "privileged"}}true{{- else }}false{{-end}}
+{{- if has (.Values.privilegeMode | toLower) ( list "privileged" "root" ) }}
+runAsUser: 0
+runAsGroup: 0
+fsGroup: 0
+{{- if -eq (.Values.privilegeMode | toLower) "privileged"}}
+capabilities:
+  add:
+    - CAP_NET_RAW
+{{- end }}
+{{- end }}
+{{- end }}
+
