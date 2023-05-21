@@ -25,7 +25,7 @@ db:
   embedded:
     # If the database is embedded, setting this to true will persist the contents of the database
     # through a persistent volume
-    persist: true
+    persist: false
     storageClass:
     storage:
   external:
