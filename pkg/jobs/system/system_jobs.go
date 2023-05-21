@@ -25,6 +25,7 @@ var Kubernetes kubernetes.Interface
 
 type TopologyJob struct {
 	*kommons.Client
+	Kubernetes kubernetes.Interface
 	v1.Topology
 }
 
@@ -34,9 +35,10 @@ func (job TopologyJob) GetNamespacedName() types.NamespacedName {
 
 func (job TopologyJob) Run() {
 	opts := pkgTopology.TopologyRunOptions{
-		Client:    job.Client,
-		Depth:     10,
-		Namespace: job.Namespace,
+		Client:     job.Client,
+		Kubernetes: job.Kubernetes,
+		Depth:      10,
+		Namespace:  job.Namespace,
 	}
 	if err := pkgTopology.SyncComponents(opts, job.Topology); err != nil {
 		logger.Errorf("failed to run topology %s: %v", job.GetNamespacedName(), err)
@@ -95,8 +97,9 @@ func SyncTopologyJob(t v1.Topology) error {
 		}
 	}
 	job := TopologyJob{
-		Client:   Kommons,
-		Topology: t,
+		Client:     Kommons,
+		Kubernetes: Kubernetes,
+		Topology:   t,
 	}
 
 	_, err := TopologyScheduler.AddJob(t.Spec.GetSchedule(), job)
