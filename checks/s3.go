@@ -4,23 +4,23 @@ package checks
 
 import (
 	"bytes"
-	"io"
-
 	"crypto/tls"
+	"io"
 	"net/http"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/commons/utils"
+	"github.com/henvic/httpretty"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/utils"
 )
 
 var (
@@ -73,29 +73,15 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 		return results.Failf("failed to populate aws connection: %v", err)
 	}
 
-	cfg := aws.NewConfig().
-		WithRegion(check.AWSConnection.Region).
-		WithEndpoint(check.AWSConnection.Endpoint).
-		WithCredentials(credentials.NewStaticCredentials(check.AWSConnection.AccessKey.ValueStatic, check.AWSConnection.SecretKey.ValueStatic, ""))
-
-	if check.SkipTLSVerify {
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		cfg = cfg.WithHTTPClient(&http.Client{Transport: tr})
-	}
-
-	ssn, err := session.NewSession(cfg)
+	cfg, err := GetAWSConfig(ctx, check.AWSConnection)
 	if err != nil {
-		return results.Failf("Failed to create S3 session for bucket %s: %v", check.BucketName, err)
+		return results.Failf("Failed to get AWS config: %v", err)
 	}
 
-	client := s3.New(ssn)
-	yes := true
-	client.Config.S3ForcePathStyle = &yes
+	client := s3.NewFromConfig(cfg)
 
 	listTimer := NewTimer()
-	_, err = client.ListObjects(&s3.ListObjectsInput{Bucket: &check.BucketName})
+	_, err = client.ListObjects(ctx, &s3.ListObjectsInput{Bucket: &check.BucketName})
 	if err != nil {
 		return results.Failf("Failed to list objects in bucket %s: %v", check.BucketName, err)
 	}
@@ -103,7 +89,7 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 
 	data := utils.RandomString(16)
 	updateTimer := NewTimer()
-	_, err = client.PutObject(&s3.PutObjectInput{
+	_, err = client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: &check.BucketName,
 		Key:    &check.ObjectPath,
 		Body:   bytes.NewReader([]byte(data)),
@@ -113,7 +99,7 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 	}
 	updateHistogram.WithLabelValues(check.AWSConnection.Endpoint, check.BucketName).Observe(updateTimer.Elapsed())
 
-	obj, err := client.GetObject(&s3.GetObjectInput{
+	obj, err := client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: &check.BucketName,
 		Key:    &check.ObjectPath,
 	})
@@ -127,4 +113,51 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 	}
 
 	return results
+}
+
+func GetAWSConfig(ctx *context.Context, connection v1.AWSConnection) (cfg aws.Config, err error) {
+	var options []func(*config.LoadOptions) error
+
+	if connection.Region != "" {
+		options = append(options, config.WithRegion(connection.Region))
+	}
+
+	if connection.Endpoint != "" {
+		options = append(options, config.WithEndpointResolver(aws.EndpointResolverFunc(
+			func(service, region string) (aws.Endpoint, error) {
+				return aws.Endpoint{
+					URL: connection.Endpoint,
+				}, nil
+			},
+		)))
+	}
+
+	if !connection.AccessKey.IsEmpty() {
+		options = append(options, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(connection.AccessKey.ValueStatic, connection.SecretKey.ValueStatic, "")))
+	}
+
+	if connection.SkipTLSVerify {
+		var tr http.RoundTripper
+		if ctx.IsTrace() {
+			httplogger := &httpretty.Logger{
+				Time:           true,
+				TLS:            true,
+				RequestHeader:  true,
+				RequestBody:    true,
+				ResponseHeader: true,
+				ResponseBody:   true,
+				Colors:         true,
+				Formatters:     []httpretty.Formatter{&httpretty.JSONFormatter{}},
+			}
+			tr = httplogger.RoundTripper(tr)
+		} else {
+			tr = &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+		}
+
+		options = append(options, config.WithHTTPClient(&http.Client{Transport: tr}))
+	}
+
+	return config.LoadDefaultConfig(ctx, options...)
 }

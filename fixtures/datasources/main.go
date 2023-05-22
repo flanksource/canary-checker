@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"net/http"
 	"os"
@@ -11,15 +12,15 @@ import (
 	"github.com/flanksource/commons/utils"
 	"github.com/ncw/swift"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/pkg/errors"
 )
 
-func prepareS3E2E(fixture S3Fixture) error {
-	client, err := getS3Client()
+func prepareS3E2E(ctx context.Context, fixture S3Fixture) error {
+	client, err := getS3Client(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get s3 client")
 	}
@@ -28,38 +29,39 @@ func prepareS3E2E(fixture S3Fixture) error {
 		req := &s3.CreateBucketInput{
 			Bucket: aws.String(bucket),
 		}
-		if _, err := client.CreateBucket(req); err != nil {
+		if _, err := client.CreateBucket(ctx, req); err != nil {
 			return errors.Wrapf(err, "failed to create bucket %s", bucket)
 		}
 	}
 
 	for _, file := range fixture.Files {
 		body := utils.RandomString(int(file.Size))
-		_, err = client.PutObject(&s3.PutObjectInput{
+		_, err = client.PutObject(ctx, &s3.PutObjectInput{
 			Bucket:      aws.String(file.Bucket),
 			Key:         aws.String(file.Filename),
 			Body:        bytes.NewReader([]byte(body)),
 			ContentType: aws.String(file.ContentType),
-			Metadata: map[string]*string{
-				"Last-Modified": aws.String(swift.TimeToFloatString(time.Now().Add(-1 * file.Age))),
+			Metadata: map[string]string{
+				"Last-Modified": swift.TimeToFloatString(time.Now().Add(-1 * file.Age)),
 			},
 		})
 		if err != nil {
 			return errors.Wrapf(err, "failed to put object %s to bucket %s", file.Filename, file.Bucket)
 		}
 	}
+
 	return nil
 }
 
-func cleanupS3E2E(fixture S3Fixture) {
-	client, err := getS3Client()
+func cleanupS3E2E(ctx context.Context, fixture S3Fixture) {
+	client, err := getS3Client(ctx)
 	if err != nil {
 		logger.Errorf("failed to create s3 client: %v", err)
 		return
 	}
 
 	for _, file := range fixture.Files {
-		_, err := client.DeleteObject(&s3.DeleteObjectInput{
+		_, err := client.DeleteObject(ctx, &s3.DeleteObjectInput{
 			Bucket: aws.String(file.Bucket),
 			Key:    aws.String(file.Filename),
 		})
@@ -69,7 +71,7 @@ func cleanupS3E2E(fixture S3Fixture) {
 	}
 
 	for _, bucket := range fixture.CreateBuckets {
-		if _, err := client.DeleteBucket(&s3.DeleteBucketInput{Bucket: aws.String(bucket)}); err != nil {
+		if _, err := client.DeleteBucket(ctx, &s3.DeleteBucketInput{Bucket: aws.String(bucket)}); err != nil {
 			logger.Errorf("failed to delete bucket %s: %v", bucket, err)
 		}
 	}
@@ -82,24 +84,29 @@ type S3Config struct {
 	Endpoint  string
 }
 
-func getS3Client() (*s3.S3, error) {
+func getS3Client(ctx context.Context) (*s3.Client, error) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
+
 	s3Cfg := getS3Credentials()
-	cfg := aws.NewConfig().
-		WithRegion(s3Cfg.Region).
-		WithEndpoint(s3Cfg.Endpoint).
-		WithCredentials(
-			credentials.NewStaticCredentials(s3Cfg.AccessKey, s3Cfg.SecretKey, ""),
-		).
-		WithHTTPClient(&http.Client{Transport: tr})
-	ssn, err := session.NewSession(cfg)
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(s3Cfg.Region),
+		config.WithEndpointResolver(aws.EndpointResolverFunc(
+			func(service, region string) (aws.Endpoint, error) {
+				return aws.Endpoint{
+					URL: s3Cfg.Endpoint,
+				}, nil
+			},
+		)),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(s3Cfg.AccessKey, s3Cfg.SecretKey, "")),
+		config.WithHTTPClient(&http.Client{Transport: tr}),
+	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create s3 session")
+		return nil, err
 	}
-	client := s3.New(ssn)
-	client.Config.S3ForcePathStyle = aws.Bool(true)
+
+	client := s3.NewFromConfig(cfg)
 	return client, nil
 }
 
@@ -136,14 +143,13 @@ func getEnvOrDefault(key, defaultValue string) string {
 
 func main() {
 	logger.Infof("Setting up")
-	if err := prepareS3E2E(s3Fixtures); err != nil {
+	if err := prepareS3E2E(context.Background(), s3Fixtures); err != nil {
 		logger.Errorf("error setting up %v", err)
 	}
 }
 
 var (
 	s3Fixtures = S3Fixture{
-
 		CreateBuckets: []string{
 			"tests-e2e-1",
 			"tests-e2e-2",
