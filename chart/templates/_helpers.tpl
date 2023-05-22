@@ -55,5 +55,5 @@ control-plane: canary-checker
 Image Name
 */}}
 {{- define "canary-checker.imageString" -}}
-{{ .Values.image.repository }}{{- if eq (.Values.image.type | toLower) "full" }}-full{{- end }}:{{ .Values.image.tag }} 
+{{ .Values.image.repository }}{{- if eq (lower .Values.image.type) "full" }}-full{{- end }}:{{ .Values.image.tag }} 
 {{- end }}
