@@ -1086,8 +1086,8 @@ github.com/fergusstrange/embedded-postgres v1.21.0 h1:Sups0nR31+OB4iOZ0ZU4IwUDsB
 github.com/fergusstrange/embedded-postgres v1.21.0/go.mod h1:wL562t1V+iuFwq0UcgMi2e9rp8CROY9wxWZEfP8Y874=
 github.com/flanksource/commons v1.10.0 h1:Mc+fzxq1rOJ08lapF0cc0bo9ZKNDxA7/81q2D/5jt0Q=
 github.com/flanksource/commons v1.10.0/go.mod h1:HpVjPtNe7v0UPk97kO/uUhOrYQ8yFD/mGglrTCkc9Ag=
-github.com/flanksource/duty v1.0.94 h1:NS+Fo10iqIHqzRtKrzRVbDNXZGNHp7iwp7+/zzuWnqI=
-github.com/flanksource/duty v1.0.94/go.mod h1:RJ/kcZ7dbL8/52tem757szVIA3IomS8bOAZIK0xb4rk=
+github.com/flanksource/duty v1.0.96 h1:z0+//1ia9mLF8dOki3aVXaEl8fEu79RqjYSEzkO7KRE=
+github.com/flanksource/duty v1.0.96/go.mod h1:RJ/kcZ7dbL8/52tem757szVIA3IomS8bOAZIK0xb4rk=
 github.com/flanksource/gomplate/v3 v3.20.1/go.mod h1:LPpzujBIg9HBXRUngDKK/zNmEjHpEUieKa/2oRjkCzI=
 github.com/flanksource/gomplate/v3 v3.20.3 h1:mnNaO37uwvv8Kvi4Xswj1tHKP5UMre3FLNaKvAwqhSw=
 github.com/flanksource/gomplate/v3 v3.20.3/go.mod h1:l4iCvp30TdhZk89eRGuNkPwlRjJLXdUSblr+VyuZfAk=
