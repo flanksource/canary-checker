@@ -416,7 +416,9 @@ func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
 	results = append(results, component)
 	logger.Infof("%s id=%s external_id=%s status=%s", component.Name, component.ID, component.ExternalId, component.Status)
 	for _, c := range results.Walk() {
-		c.Namespace = ctx.Topology.GetNamespace()
+		if c.Namespace == "" {
+			c.Namespace = ctx.Topology.GetNamespace()
+		}
 		c.Schedule = ctx.Topology.Spec.Schedule
 	}
 	return results
