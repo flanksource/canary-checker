@@ -3,6 +3,7 @@ WORKDIR /app
 
 ARG NAME
 ARG VERSION
+ENV IMAGE_TYPE=full
 COPY go.mod /app/go.mod
 COPY go.sum /app/go.sum
 RUN go mod download

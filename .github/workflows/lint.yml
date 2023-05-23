@@ -26,8 +26,6 @@ jobs:
         env:
           CI: false
         run: |
-          mkdir -p ui/build
-          touch ui/build/noop
           make resources
           git diff
           changed_files=$(git status -s)

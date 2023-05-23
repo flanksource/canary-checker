@@ -5,7 +5,6 @@ bin/
 .env
 .certs
 .kube
-build/
 docs/cli/
 .DS_Store
 cover.out
