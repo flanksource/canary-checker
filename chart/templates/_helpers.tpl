@@ -62,12 +62,12 @@ Image Name
 Container Security Context
 */}}
 {{- define "canary-checker.containerSecurityContext" -}}
-allowPrivilegeEscalation: {{- if -eq (.Values.privilegeMode | toLower) "privileged"}}true{{- else }}false{{-end}}
-{{- if has (.Values.privilegeMode | toLower) ( list "privileged" "root" ) }}
+allowPrivilegeEscalation: {{- if eq ( lower .Values.privilegeMode ) "privileged" }}true{{- else }}false{{- end }}
+{{- if has ( lower .Values.privilegeMode) ( list "privileged" "root" ) }}
 runAsUser: 0
 runAsGroup: 0
 fsGroup: 0
-{{- if -eq (.Values.privilegeMode | toLower) "privileged"}}
+{{- if eq ( lower .Values.privilegeMode ) "privileged" }}
 capabilities:
   add:
     - CAP_NET_RAW
