@@ -16,4 +16,4 @@ resources:
   - redis_pass.yaml
   - elasticsearch_fail.yaml
   - elasticsearch_pass.yaml
-  - alertmanager.yaml
+  - alertmanager_fail.yaml
