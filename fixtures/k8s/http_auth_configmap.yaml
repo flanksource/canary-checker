@@ -4,7 +4,7 @@ metadata:
   name: http-basic-auth-configmap
 spec:
   http:
-    - endpoint: https://httpbin.org/basic-auth/hello/world
+    - endpoint: http://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
       responseCodes: [200]
       authentication:
         username:
