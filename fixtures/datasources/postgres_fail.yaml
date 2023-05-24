@@ -14,6 +14,6 @@ spec:
         username:
           value: pqgotest
         password:
-          value:
+          value: ""
       query: "SELECT 1"
       results: 1
