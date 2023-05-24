@@ -89,7 +89,7 @@ spec:
               mountPath: "/run/containerd/containerd.sock"
             {{- end }}
             {{- if eq .Values.db.external.enabled false }}
-            {{- if eq .Values.db.embedded.persist false }}
+            {{- if eq .Values.db.embedded.persist true }}
             - name: canarychecker-database
               mountPath: "/opt/database"
             {{- end }}
