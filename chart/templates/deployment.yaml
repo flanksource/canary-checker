@@ -46,12 +46,6 @@ spec:
           hostPath:
             path: /run/containerd/containerd.sock
         {{- end }}
-        {{- if eq .Values.db.external.enabled false }}
-        {{- if eq .Values.db.embedded.persist false }}
-        - name: canarychecker-database
-          emptyDir: {}
-        {{- end }}
-        {{- end }}
         - name: podinfo
           downwardAPI:
             items:
@@ -95,8 +89,10 @@ spec:
               mountPath: "/run/containerd/containerd.sock"
             {{- end }}
             {{- if eq .Values.db.external.enabled false }}
+            {{- if eq .Values.db.embedded.persist false }}
             - name: canarychecker-database
               mountPath: "/opt/database"
+            {{- end }}
             {{- end }}
             - mountPath: /etc/podinfo
               name: podinfo
