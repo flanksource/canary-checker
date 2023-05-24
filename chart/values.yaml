@@ -19,6 +19,8 @@ containerdSocket: false
 # Set to true if you want to disable the postgrest service
 disablePostgrest: false
 
+serviceMonitor: true
+
 # Turn on pprof /debug endpoint
 debug: false
 logLevel: "-v"
