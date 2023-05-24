@@ -66,6 +66,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           snapshot: true
+          dockerfile: build/full/Dockerfile
           tags: "latest,v${{ env.RELEASE_VERSION }}"
   # docs:
   #   runs-on: ubuntu-latest
