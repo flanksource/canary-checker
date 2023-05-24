@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/commons/utils"
@@ -88,6 +89,10 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 		return results.Failf("Failed to list objects in bucket %s: %v", check.BucketName, err)
 	}
 	listHistogram.WithLabelValues(check.AWSConnection.Endpoint, check.BucketName).Observe(listTimer.Elapsed())
+
+	// For backward compatibility.
+	// AWS SDK v2 doesn't support path with leading prefixes.
+	check.ObjectPath = strings.TrimPrefix(check.ObjectPath, "/")
 
 	data := utils.RandomString(16)
 	updateTimer := NewTimer()
