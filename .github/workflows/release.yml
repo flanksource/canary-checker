@@ -21,9 +21,6 @@ jobs:
     needs: semantic-release
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: "16"
       - name: Install Go
         uses: actions/setup-go@v2
         with:
@@ -59,15 +56,25 @@ jobs:
         run: |
           git fetch --prune --unshallow
           echo "RELEASE_VERSION=$(git describe --abbrev=0 --tags | sed -e 's/^v//')" >> $GITHUB_ENV
-      - name: Publish to Registry
+      - name: Publish minimal image to registry
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
           name: flanksource/canary-checker
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           snapshot: true
+          dockerfile: build/minimal/Dockerfile
+          tags: "latest,v${{ env.RELEASE_VERSION }}"
+      - name: Publish full image to registry
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: flanksource/canary-checker-full
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          snapshot: true
           dockerfile: build/full/Dockerfile
           tags: "latest,v${{ env.RELEASE_VERSION }}"
+
   # docs:
   #   runs-on: ubuntu-latest
   #   needs: semantic-release
