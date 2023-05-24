@@ -7,11 +7,11 @@ metadata:
 spec:
   interval: 30
   http:
-    - endpoint: http://status.savanttools.com/?code=200
+    - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
       name: sample-check
       thresholdMillis: 3000
       responseCodes: [201, 200, 301]
       responseContent: ""
       maxSSLExpiry: 7
       test:
-        expr: 'code == 200'
+        expr: "code == 200"
