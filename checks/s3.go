@@ -148,11 +148,11 @@ func GetAWSConfig(ctx *context.Context, connection v1.AWSConnection) (cfg aws.Co
 		if ctx.IsTrace() {
 			httplogger := &httpretty.Logger{
 				Time:           true,
-				TLS:            true,
-				RequestHeader:  true,
-				RequestBody:    true,
+				TLS:            false,
+				RequestHeader:  false,
+				RequestBody:    false,
 				ResponseHeader: true,
-				ResponseBody:   true,
+				ResponseBody:   false,
 				Colors:         true,
 				Formatters:     []httpretty.Formatter{&httpretty.JSONFormatter{}},
 			}
