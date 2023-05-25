@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 30
   github:
-    - query: "SELECT * FROM github_repo_checks('flanksource/canary-checker') where branch='master' and conclusion='FAILURE'"
+    - query: "SELECT * FROM github_repo_checks('flanksource/duty') where branch='master' and conclusion='FAILURE'"
       name: github-check
       test:
         expr: len(results) == 0
