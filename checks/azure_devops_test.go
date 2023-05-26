@@ -6,10 +6,6 @@ import (
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7/pipelines"
 )
 
-func ptr[T any](t T) *T {
-	return &t
-}
-
 func TestMatchPipelineVariables(t *testing.T) {
 	tests := []struct {
 		name       string

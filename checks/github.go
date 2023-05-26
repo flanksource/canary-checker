@@ -53,7 +53,7 @@ func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	cmd := osExec.Command("bash", "-c", askGitCmd)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return results.Failf("error executing askgit command: %v", err)
+		return results.Failf("error executing askgit command. output=%q: %v", output, err)
 	}
 
 	rows := string(output)
