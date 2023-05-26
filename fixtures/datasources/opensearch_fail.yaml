@@ -9,7 +9,7 @@ spec:
   opensearch:
     - name: opensearch_fail
       description: OpenSearch checker
-      url: http://elasticsearch.default.svc.cluster.local:9200
+      url: http://opensearch.default.svc.cluster.local:9200
       index: index
       query: |
         {
