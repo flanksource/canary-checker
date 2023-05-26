@@ -68,6 +68,7 @@ type CanarySpec struct {
 	AwsConfigRule  []AwsConfigRuleCheck  `yaml:"awsConfigRule,omitempty" json:"awsConfigRule,omitempty"`
 	DatabaseBackup []DatabaseBackupCheck `yaml:"databaseBackup,omitempty" json:"databaseBackup,omitempty"`
 	ConfigDB       []ConfigDBCheck       `yaml:"configDB,omitempty" json:"configDB,omitempty"`
+	Opensearch     []OpenSearchCheck     `yaml:"opensearch,omitempty" json:"opensearch,omitempty"`
 	Elasticsearch  []ElasticsearchCheck  `yaml:"elasticsearch,omitempty" json:"elasticsearch,omitempty"`
 	AlertManager   []AlertManagerCheck   `yaml:"alertmanager,omitempty" json:"alertmanager,omitempty"`
 	Dynatrace      []DynatraceCheck      `yaml:"dynatrace,omitempty" json:"dynatrace,omitempty"`
@@ -191,6 +192,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Dynatrace {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.Opensearch {
 		checks = append(checks, check)
 	}
 	return checks

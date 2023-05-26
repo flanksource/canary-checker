@@ -46,6 +46,7 @@ var All = []Checker{
 	&MongoDBChecker{},
 	&MssqlChecker{},
 	&MysqlChecker{},
+	&OpenSearchChecker{},
 	&PostgresChecker{},
 	&PrometheusChecker{},
 	&RedisChecker{},

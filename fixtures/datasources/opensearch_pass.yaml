@@ -1,0 +1,27 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: opensearch-pass
+  labels:
+    canary: opensearch
+spec:
+  schedule: "@every 30s"
+  opensearch:
+    - name: opensearch_pass
+      description: OpenSearch checker
+      url: http://elasticsearch.default.svc.cluster.local:9200
+      index: index
+      query: |
+        {
+          "query": {
+            "term": {
+              "system.role": "api"
+            }
+          }
+        }
+      results: 1
+      auth:
+        username:
+          value: admin
+        password:
+          value: secret
