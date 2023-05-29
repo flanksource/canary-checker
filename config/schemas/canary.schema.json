@@ -491,6 +491,12 @@
           },
           "type": "array"
         },
+        "opensearch": {
+          "items": {
+            "$ref": "#/$defs/OpenSearchCheck"
+          },
+          "type": "array"
+        },
         "elasticsearch": {
           "items": {
             "$ref": "#/$defs/ElasticsearchCheck"
@@ -2017,6 +2023,54 @@
       },
       "additionalProperties": false,
       "type": "object"
+    },
+    "OpenSearchCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "query": {
+          "type": "string"
+        },
+        "index": {
+          "type": "string"
+        },
+        "results": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
     },
     "OwnerReference": {
       "properties": {

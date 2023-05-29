@@ -428,6 +428,40 @@ type Mongo struct {
 	MongoDBCheck `yaml:",inline" json:",inline"`
 }
 
+type OpenSearchCheck struct {
+	Description    `yaml:",inline" json:",inline"`
+	Templatable    `yaml:",inline" json:",inline"`
+	ConnectionName string          `yaml:"connection,omitempty" json:"connection,omitempty"`
+	URL            string          `yaml:"url" json:"url,omitempty" template:"true"`
+	Auth           *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
+	Query          string          `yaml:"query" json:"query,omitempty" template:"true"`
+	Index          string          `yaml:"index" json:"index,omitempty" template:"true"`
+	Results        int64           `yaml:"results" json:"results,omitempty" template:"true"`
+}
+
+func (c OpenSearchCheck) GetType() string {
+	return "opensearch"
+}
+
+func (c OpenSearchCheck) GetEndpoint() string {
+	return c.URL
+}
+
+func (c *OpenSearchCheck) HydrateConnection(ctx checkContext) error {
+	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
+	if err != nil {
+		return err
+	}
+
+	if connection != nil {
+		c.URL = connection.URL
+		c.Auth.Username.ValueStatic = connection.Username
+		c.Auth.Password.ValueStatic = connection.Password
+	}
+
+	return nil
+}
+
 /*
 [include:datasources/elasticsearch_pass.yaml]
 */
@@ -1423,6 +1457,7 @@ var AllChecks = []external.Check{
 	MssqlCheck{},
 	MysqlCheck{},
 	NamespaceCheck{},
+	OpenSearchCheck{},
 	PodCheck{},
 	PostgresCheck{},
 	PrometheusCheck{},
