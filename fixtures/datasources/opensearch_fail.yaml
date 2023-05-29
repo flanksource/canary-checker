@@ -4,6 +4,7 @@ metadata:
   name: opensearch-fail
   labels:
     canary: opensearch
+    "Expected-Fail": "true"
 spec:
   schedule: "@every 30s"
   opensearch:
