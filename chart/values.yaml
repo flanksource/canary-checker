@@ -19,7 +19,8 @@ containerdSocket: false
 # Set to true if you want to disable the postgrest service
 disablePostgrest: false
 
-serviceMonitor: true
+# Set to true to enable prometheus service monitor
+serviceMonitor: false
 
 # Turn on pprof /debug endpoint
 debug: false

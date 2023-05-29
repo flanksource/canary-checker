@@ -120,9 +120,9 @@ Canary checker comes with a built-in dashboard for displaying canary results, it
 
 ### Prometheus
 
-The helm chart by default will install a `ServiceMonitor` for the prometheus operator, it can be turned off using `--set serviceMonitor=false`
+The helm chart can install a `ServiceMonitor` for the prometheus operator, by enabling the serviceMonitor flag `--set serviceMonitor=true`
 
-Metrics exposed by. anary-checler
+Metrics exposed by canary-checker:
 
 | Metric                                         | Type      | Description                                 |
 | ---------------------------------------------- | --------- | ------------------------------------------- |
