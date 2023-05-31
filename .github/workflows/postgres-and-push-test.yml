@@ -18,6 +18,8 @@ on:
       - "**.yml"
       - "test/**"
 name: Postgres-and-Push-Test
+permissions:
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
