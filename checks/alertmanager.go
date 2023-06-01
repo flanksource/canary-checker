@@ -67,7 +67,7 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	var alertMessages []map[string]any
 	for _, alert := range alerts.Payload {
 		alertMap := map[string]any{
-			"name":        generateNameSuffix(alert.Labels["alertname"], alert.Labels),
+			"name":        generateFullName(alert.Labels["alertname"], alert.Labels),
 			"message":     extractMessage(alert.Annotations),
 			"labels":      alert.Labels,
 			"annotations": alert.Annotations,
@@ -90,24 +90,16 @@ func extractMessage(annotations map[string]string) string {
 	return ""
 }
 
-func generateNameSuffix(name string, labels map[string]string) string {
-	// Based on the type of alert, we will add alert metadata to the check name
-	// The key here is the alert type and the name will be "/".join(value)
-	nameSuffixFromLabels := map[string][]string{
-		"KubePodCrashLooping":            {"namespace", "pod"},
-		"KubePodNotReady":                {"namespace", "pod"},
-		"KubeDeploymentReplicasMismatch": {"namespace", "deployment"},
-		"KubeJobFailed":                  {"namespace", "job_name"},
-		"KubeletTooManyPods":             {"node"},
-		"KubeContainerWaiting":           {"namespace", "pod", "container"},
+func generateFullName(name string, labels map[string]string) string {
+	// We add alert metadata to the check name based on priority order
+	priorityOrder := []string{"namespace", "node", "deployment", "daemonset", "job_name", "pod", "container"}
+
+	fullName := []string{name}
+	for _, key := range priorityOrder {
+		if labels[key] != "" {
+			fullName = append(fullName, labels[key])
+		}
 	}
 
-	if val, exists := nameSuffixFromLabels[name]; exists {
-		var suffix []string
-		for _, v := range val {
-			suffix = append(suffix, labels[v])
-		}
-		return name + "-" + strings.Join(suffix, "/")
-	}
-	return name
+	return strings.Join(fullName, "/")
 }
