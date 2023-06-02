@@ -5,10 +5,10 @@ metadata:
 spec:
   interval: 30
   github:
-    - query: "SELECT * FROM github_repo_checks('flanksource/duty') where branch='master' and conclusion='FAILURE'"
+    - query: "SELECT * FROM github_repo_checks('flanksource/duty') where branch='main'"
       name: github-check
       test:
-        expr: len(results) == 0
+        expr: len(results) > 0
       githubToken:
         valueFrom:
           secretKeyRef:

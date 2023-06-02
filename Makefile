@@ -136,7 +136,7 @@ release: .bin/kustomize binaries
 
 .PHONY: lint
 lint:
-	golangci-lint run
+	golangci-lint run -v ./...
 
 .PHONY: serve-docs
 serve-docs:
