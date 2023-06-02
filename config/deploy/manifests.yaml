@@ -3273,7 +3273,10 @@ spec:
                       url:
                         type: string
                     required:
+                      - auth
+                      - index
                       - name
+                      - query
                     type: object
                   type: array
                 owner:
