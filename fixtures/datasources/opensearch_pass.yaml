@@ -22,6 +22,12 @@ spec:
       results: 1
       auth:
         username:
-          value: admin
+          valueFrom:
+            secretKeyRef:
+              name: search
+              key: OPENSEARCH_USERNAME
         password:
-          value: secret
+          valueFrom:
+            secretKeyRef:
+              name: search
+              key: OPENSEARCH_PASSWORD

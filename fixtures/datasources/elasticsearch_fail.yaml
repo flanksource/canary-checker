@@ -20,6 +20,12 @@ spec:
       name: elasticsearch-fail
       auth:
         username:
-          value: admin
+          valueFrom:
+            secretKeyRef:
+              name: search
+              key: ELASTIC_SEARCH_USERNAME
         password:
-          value: wrongpassword
+          valueFrom:
+            secretKeyRef:
+              name: search
+              key: ELASTIC_SEARCH_PASSWORD
