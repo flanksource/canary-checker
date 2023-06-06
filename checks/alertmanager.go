@@ -3,6 +3,7 @@ package checks
 import (
 	gocontext "context"
 	"fmt"
+	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -66,7 +67,7 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	var alertMessages []map[string]any
 	for _, alert := range alerts.Payload {
 		alertMap := map[string]any{
-			"name":        alert.Labels["alertname"],
+			"name":        generateFullName(alert.Labels["alertname"], alert.Labels),
 			"message":     extractMessage(alert.Annotations),
 			"labels":      alert.Labels,
 			"annotations": alert.Annotations,
@@ -87,4 +88,18 @@ func extractMessage(annotations map[string]string) string {
 		}
 	}
 	return ""
+}
+
+func generateFullName(name string, labels map[string]string) string {
+	// We add alert metadata to the check name based on priority order
+	priorityOrder := []string{"namespace", "node", "deployment", "daemonset", "job_name", "pod", "container"}
+
+	fullName := []string{name}
+	for _, key := range priorityOrder {
+		if labels[key] != "" {
+			fullName = append(fullName, labels[key])
+		}
+	}
+
+	return strings.Join(fullName, "/")
 }
