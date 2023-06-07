@@ -351,10 +351,7 @@ func (c Canary) ID() string {
 }
 
 func (c Canary) GetPersistedID() string {
-	if c.Status.PersistedID != nil {
-		return *c.Status.PersistedID
-	}
-	return ""
+	return string(c.GetUID())
 }
 
 // +kubebuilder:object:root=true
