@@ -133,18 +133,17 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 
 	// Update status
-	id := c.ID.String() // id is the uuid of the canary
 	var canaryForStatus v1.Canary
 	err = r.Get(ctx, req.NamespacedName, &canaryForStatus)
 	if err != nil {
 		logger.Error(err, "Error fetching canary for status update")
 		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 	}
+	patch := client.MergeFrom(canaryForStatus.DeepCopy())
 
-	canaryForStatus.Status.PersistedID = &id
 	canaryForStatus.Status.Checks = checks
 	canaryForStatus.Status.ObservedGeneration = canary.Generation
-	if err = r.Status().Update(ctx, &canaryForStatus); err != nil {
+	if err = r.Status().Patch(ctx, &canaryForStatus, patch); err != nil {
 		logger.Error(err, "failed to update status for canary")
 		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 	}
@@ -167,6 +166,7 @@ func (r *CanaryReconciler) Report() {
 			continue
 		}
 
+		patch := client.MergeFrom(canary.DeepCopy())
 		canary.Status.Latency1H = payload.Latency
 		canary.Status.Uptime1H = payload.Uptime
 		if payload.LastTransitionedTime != nil {
@@ -188,7 +188,7 @@ func (r *CanaryReconciler) Report() {
 			r.Events.Event(&canary, corev1.EventTypeWarning, "Failed", eventMsg)
 		}
 
-		if err := r.Status().Update(gocontext.Background(), &canary); err != nil {
+		if err := r.Status().Patch(gocontext.Background(), &canary, patch); err != nil {
 			r.Log.Error(err, "failed to update status", "canary", canary.Name)
 		}
 	}

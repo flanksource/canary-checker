@@ -172,15 +172,13 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 
 func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface{}, error) {
 	results := []interface{}{}
-	canaryCtx := &context.Context{
-		Context:     ctx,
-		Canary:      v1.NewCanaryFromSpec(name, spec),
-		Namespace:   ctx.Namespace,
-		Kommons:     ctx.Kommons,
-		Kubernetes:  ctx.Kubernetes,
-		Environment: ctx.Environment,
-		Logger:      ctx.Logger,
-	}
+
+	canaryCtx := context.New(ctx.Kommons, ctx.Kubernetes, db.Gorm, v1.NewCanaryFromSpec(name, spec))
+	canaryCtx.Context = ctx
+	canaryCtx.Namespace = ctx.Namespace
+	canaryCtx.Environment = ctx.Environment
+	canaryCtx.Logger = ctx.Logger
+
 	for _, result := range checks.RunChecks(canaryCtx) {
 		if result.Error != "" {
 			logger.Errorf("error in running checks; check: %s wouldn't be persisted: %s", name, result.Error)
