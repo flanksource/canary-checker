@@ -96,6 +96,11 @@ resources:
   limits:
     memory: 1512Mi
 
+serviceAccount: {}
+  # Configures extra annotations on the service account
+  # annotations:
+  #   some: annotation
+
 extra:
   # nodeSelector:
   #   key: value
