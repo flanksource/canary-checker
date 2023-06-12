@@ -33,7 +33,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/gobwas/glob v0.2.3
 	github.com/google/uuid v1.3.0
-	github.com/henvic/httpretty v0.0.6
+	github.com/henvic/httpretty v0.1.2
 	github.com/hirochachacha/go-smb2 v1.0.10
 	github.com/jackc/pgx/v5 v5.3.1
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
