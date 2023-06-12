@@ -59,6 +59,7 @@ func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Conne
 	if !strings.HasPrefix(connectionName, "connection://") {
 		return nil, nil
 	}
+
 	if connectionName == "" {
 		return nil, nil
 	}

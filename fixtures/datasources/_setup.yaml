@@ -358,7 +358,8 @@ data:
 ---
 apiVersion: v1
 data:
-  sampleTest.jmx: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<jmeterTestPlan version=\"1.2\"
+  sampleTest.jmx:
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<jmeterTestPlan version=\"1.2\"
     properties=\"5.0\" jmeter=\"5.4.1\">\n  <hashTree>\n    <TestPlan guiclass=\"TestPlanGui\"
     testclass=\"TestPlan\" testname=\"build-web-test-plan\" enabled=\"true\">\n      <stringProp
     name=\"TestPlan.comments\"></stringProp>\n      <boolProp name=\"TestPlan.functional_mode\">false</boolProp>\n
@@ -446,7 +447,8 @@ metadata:
 ---
 apiVersion: v1
 data:
-  http.jmx: "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<jmeterTestPlan version=\"1.2\"
+  http.jmx:
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<jmeterTestPlan version=\"1.2\"
     properties=\"5.0\" jmeter=\"5.4.1\">\n  <hashTree>\n    <TestPlan guiclass=\"TestPlanGui\"
     testclass=\"TestPlan\" testname=\"build-web-test-plan\" enabled=\"true\">\n      <stringProp
     name=\"TestPlan.comments\"></stringProp>\n      <boolProp name=\"TestPlan.functional_mode\">false</boolProp>\n
@@ -576,7 +578,17 @@ kind: ConfigMap
 metadata:
   name: jmeter-fail-test
   namespace: default
-
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: search
+  namespace: default
+stringData:
+  OPENSEARCH_USERNAME: admin
+  OPENSEARCH_PASSWORD: secret
+  ELASTIC_SEARCH_USERNAME: admin
+  ELASTIC_SEARCH_PASSWORD: secret
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -675,7 +687,7 @@ spec:
     spec:
       containers:
         - name: opensearch
-          image: opensearchproject/opensearch:2.7.0 
+          image: opensearchproject/opensearch:2.7.0
           env:
             - name: ES_JAVA_OPTS
               value: "-Xms256m -Xmx256m"
@@ -686,7 +698,7 @@ spec:
             - name: discovery.type
               value: single-node
             - name: DISABLE_SECURITY_PLUGIN
-              value: 'true'
+              value: "true"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9200
