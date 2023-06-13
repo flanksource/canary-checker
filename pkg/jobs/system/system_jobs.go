@@ -11,7 +11,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	pkgTopology "github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/types"
@@ -62,14 +61,10 @@ func SyncTopologyJobs() {
 	}
 
 	for _, topology := range topologies {
-		jobHistory := models.NewJobHistory("TopologySync", "topology", topology.GetPersistedID()).Start()
-		_ = db.PersistJobHistory(jobHistory)
 		if err := SyncTopologyJob(topology); err != nil {
 			logger.Errorf("Error syncing topology job: %v", err)
-			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
 			continue
 		}
-		_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
 	}
 	logger.Infof("Synced topology jobs %d", len(TopologyScheduler.Entries()))
 }
