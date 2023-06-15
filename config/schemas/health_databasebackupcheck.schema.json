@@ -170,10 +170,25 @@
         "javascript": {
           "type": "string"
         },
-        "high": {
+        "threshold": {
+          "$ref": "#/$defs/TestThreshold"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "TestThreshold": {
+      "properties": {
+        "info": {
           "type": "string"
         },
         "low": {
+          "type": "string"
+        },
+        "medium": {
+          "type": "string"
+        },
+        "high": {
           "type": "string"
         },
         "critical": {

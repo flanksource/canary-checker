@@ -397,8 +397,9 @@ type SystemResult struct{}
 type TestSeverity int
 
 const (
-	TestSeverityUnknown TestSeverity = iota
+	TestSeverityInfo TestSeverity = iota
 	TestSeverityLow
+	TestSeverityMedium
 	TestSeverityHigh
 	TestSeverityCritical
 )

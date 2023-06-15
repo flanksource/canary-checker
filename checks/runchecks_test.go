@@ -41,6 +41,19 @@ func Test_measureTestSeverity(t *testing.T) {
 			want: pkg.TestSeverityHigh,
 		},
 		{
+			name: "simple - medium",
+			args: args{
+				duration: 760,
+				threshold: &v1.TestThreshold{
+					Critical: "duration > 1500",
+					High:     "duration > 1000",
+					Medium:   "duration > 750",
+					Low:      "duration > 500",
+				},
+			},
+			want: pkg.TestSeverityMedium,
+		},
+		{
 			name: "simple - low",
 			args: args{
 				duration: 600,
@@ -62,14 +75,14 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "duration > 500 && duration < 1000",
 				},
 			},
-			want: pkg.TestSeverityUnknown,
+			want: pkg.TestSeverityInfo,
 		},
 		{
 			name: "no threshold defined",
 			args: args{
 				duration: 600,
 			},
-			want: pkg.TestSeverityUnknown,
+			want: pkg.TestSeverityInfo,
 		},
 		{
 			name: "no severity match",
@@ -81,7 +94,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "duration > 500",
 				},
 			},
-			want: pkg.TestSeverityUnknown,
+			want: pkg.TestSeverityInfo,
 		},
 		{
 			name: "invalid expression",
@@ -93,7 +106,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "duration > 500",
 				},
 			},
-			want: pkg.TestSeverityUnknown,
+			want: pkg.TestSeverityInfo,
 		},
 		{
 			name: "use of undefined var",
@@ -105,7 +118,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "Duration > 500",
 				},
 			},
-			want: pkg.TestSeverityUnknown,
+			want: pkg.TestSeverityInfo,
 		},
 	}
 	for _, tt := range tests {

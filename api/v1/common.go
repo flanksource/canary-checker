@@ -217,8 +217,10 @@ type Template struct {
 }
 
 type TestThreshold struct {
-	High     string `yaml:"high,omitempty" json:"high,omitempty"`
+	Info     string `yaml:"info,omitempty" json:"info,omitempty"`
 	Low      string `yaml:"low,omitempty" json:"low,omitempty"`
+	Medium   string `yaml:"medium,omitempty" json:"medium,omitempty"`
+	High     string `yaml:"high,omitempty" json:"high,omitempty"`
 	Critical string `yaml:"critical,omitempty" json:"critical,omitempty"`
 }
 
@@ -244,7 +246,7 @@ type Transformer interface {
 
 type TestTemplate struct {
 	Template       `yaml:",inline" json:",inline"`
-	*TestThreshold `yaml:",inline" json:",inline"`
+	*TestThreshold `yaml:"threshold,omitempty" json:"threshold,omitempty"`
 }
 
 type Templatable struct {

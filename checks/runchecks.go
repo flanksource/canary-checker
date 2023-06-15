@@ -129,7 +129,7 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 
 func measureTestSeverity(ctx *context.Context, threshold *v1.TestThreshold) pkg.TestSeverity {
 	if threshold == nil {
-		return pkg.TestSeverityUnknown
+		return pkg.TestSeverityInfo
 	}
 
 	thresholds := []struct {
@@ -138,16 +138,18 @@ func measureTestSeverity(ctx *context.Context, threshold *v1.TestThreshold) pkg.
 	}{
 		{pkg.TestSeverityCritical, threshold.Critical},
 		{pkg.TestSeverityHigh, threshold.High},
+		{pkg.TestSeverityMedium, threshold.Medium},
 		{pkg.TestSeverityLow, threshold.Low},
+		{pkg.TestSeverityInfo, threshold.Info},
 	}
 
 	for _, t := range thresholds {
 		if res, err := template(ctx, v1.Template{Expression: t.expr}); err != nil {
-			return pkg.TestSeverityUnknown
+			return pkg.TestSeverityInfo
 		} else if res == "true" {
 			return t.severity
 		}
 	}
 
-	return pkg.TestSeverityUnknown
+	return pkg.TestSeverityInfo
 }
