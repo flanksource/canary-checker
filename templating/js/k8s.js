@@ -219,6 +219,13 @@ k8s = {
       pod = results[i].Object
       labels = k8s.filterLabels(pod.metadata.labels)
       labels.namespace = pod.metadata.namespace
+      pod_mem_limit = ''
+      pod_cpu_limit = ''
+      if (pod.spec.containers[0].resources.limits) {
+        pod_mem_limit = pod.spec.containers[0].resources.limits.memory || ''
+        pod_cpu_limit = pod.spec.containers[0].resources.limits.cpu || ''
+      }
+
       _pod = {
         name: pod.metadata.name,
         namespace: pod.metadata.namespace,
@@ -244,12 +251,20 @@ k8s = {
             name: "cpu",
             headline: true,
             unit: "millicores"
-          }, {
+          },
+          {
             name: "memory",
             headline: true,
             unit: "bytes"
           },
-
+          {
+            name: "memory limit",
+            text: pod_mem_limit,
+          },
+          {
+            name: "cpu limit",
+            text: pod_cpu_limit,
+          },
           {
             name: "node",
             text: pod.spec.nodeName
@@ -316,9 +331,18 @@ k8s = {
             max: fromSI(node.status.allocatable.memory)
           },
           {
+            name: "memory limit",
+            unit: "gigabytes",
+            text: (fromSI(node.status.allocatable.memory) / (1024 * 1024 * 1024)).toString(),
+          },
+          {
+            name: "cpu limit",
+            unit: "cores",
+            text: (fromMillicores(node.status.allocatable.cpu) / 1000).toString(),
+          },
+          {
             name: "ephemeral-storage",
             unit: "bytes",
-
             max: fromSI(node.status.allocatable["ephemeral-storage"])
           },
           {
