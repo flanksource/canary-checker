@@ -105,7 +105,7 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 	switch v := r.Check.(type) {
 	case v1.TestFunction:
 		data := map[string]any{"duration": r.Duration}
-		r.TestSeverity = measureTestSeverity(ctx.New(data), v.GetTestThreshold())
+		r.Severity = measureTestSeverity(ctx.New(data), v.GetTestThreshold())
 
 		tpl := v.GetTestTemplate()
 		if tpl.IsEmpty() {
@@ -127,29 +127,29 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 	return r
 }
 
-func measureTestSeverity(ctx *context.Context, threshold *v1.TestThreshold) pkg.TestSeverity {
+func measureTestSeverity(ctx *context.Context, threshold *v1.TestThreshold) pkg.Severity {
 	if threshold == nil {
-		return pkg.TestSeverityInfo
+		return pkg.SeverityInfo
 	}
 
 	thresholds := []struct {
-		severity pkg.TestSeverity
+		severity pkg.Severity
 		expr     string
 	}{
-		{pkg.TestSeverityCritical, threshold.Critical},
-		{pkg.TestSeverityHigh, threshold.High},
-		{pkg.TestSeverityMedium, threshold.Medium},
-		{pkg.TestSeverityLow, threshold.Low},
-		{pkg.TestSeverityInfo, threshold.Info},
+		{pkg.SeverityCritical, threshold.Critical},
+		{pkg.SeverityHigh, threshold.High},
+		{pkg.SeverityMedium, threshold.Medium},
+		{pkg.SeverityLow, threshold.Low},
+		{pkg.SeverityInfo, threshold.Info},
 	}
 
 	for _, t := range thresholds {
 		if res, err := template(ctx, v1.Template{Expression: t.expr}); err != nil {
-			return pkg.TestSeverityInfo
+			return pkg.SeverityInfo
 		} else if res == "true" {
 			return t.severity
 		}
 	}
 
-	return pkg.TestSeverityInfo
+	return pkg.SeverityInfo
 }

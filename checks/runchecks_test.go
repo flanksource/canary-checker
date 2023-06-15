@@ -17,7 +17,7 @@ func Test_measureTestSeverity(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want pkg.TestSeverity
+		want pkg.Severity
 	}{
 		{
 			name: "simple - critical",
@@ -27,7 +27,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Critical: "duration > 1500",
 				},
 			},
-			want: pkg.TestSeverityCritical,
+			want: pkg.SeverityCritical,
 		},
 		{
 			name: "simple - high",
@@ -38,7 +38,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					High:     "duration > 1000",
 				},
 			},
-			want: pkg.TestSeverityHigh,
+			want: pkg.SeverityHigh,
 		},
 		{
 			name: "simple - medium",
@@ -51,7 +51,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "duration > 500",
 				},
 			},
-			want: pkg.TestSeverityMedium,
+			want: pkg.SeverityMedium,
 		},
 		{
 			name: "simple - low",
@@ -63,7 +63,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "duration > 500",
 				},
 			},
-			want: pkg.TestSeverityLow,
+			want: pkg.SeverityLow,
 		},
 		{
 			name: "complex expression",
@@ -75,14 +75,14 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "duration > 500 && duration < 1000",
 				},
 			},
-			want: pkg.TestSeverityInfo,
+			want: pkg.SeverityInfo,
 		},
 		{
 			name: "no threshold defined",
 			args: args{
 				duration: 600,
 			},
-			want: pkg.TestSeverityInfo,
+			want: pkg.SeverityInfo,
 		},
 		{
 			name: "no severity match",
@@ -94,7 +94,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "duration > 500",
 				},
 			},
-			want: pkg.TestSeverityInfo,
+			want: pkg.SeverityInfo,
 		},
 		{
 			name: "invalid expression",
@@ -106,7 +106,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "duration > 500",
 				},
 			},
-			want: pkg.TestSeverityInfo,
+			want: pkg.SeverityInfo,
 		},
 		{
 			name: "use of undefined var",
@@ -118,7 +118,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "Duration > 500",
 				},
 			},
-			want: pkg.TestSeverityInfo,
+			want: pkg.SeverityInfo,
 		},
 	}
 	for _, tt := range tests {

@@ -53,7 +53,7 @@ type CheckStatus struct {
 	Error        string          `json:"error,omitempty"`
 	Detail       interface{}     `json:"-"`
 	Check        *external.Check `json:"check,omitempty"`
-	TestSeverity TestSeverity    `json:"test_severity,omitempty"`
+	TestSeverity Severity        `json:"test_severity,omitempty"`
 }
 
 func (s CheckStatus) GetTime() (time.Time, error) {
@@ -235,7 +235,7 @@ func FromResult(result CheckResult) CheckStatus {
 		Error:        result.Error,
 		Detail:       result.Detail,
 		Check:        &result.Check,
-		TestSeverity: result.TestSeverity,
+		TestSeverity: result.Severity,
 	}
 }
 func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Check {
@@ -394,14 +394,14 @@ type URL struct {
 
 type SystemResult struct{}
 
-type TestSeverity int
+type Severity int
 
 const (
-	TestSeverityInfo TestSeverity = iota
-	TestSeverityLow
-	TestSeverityMedium
-	TestSeverityHigh
-	TestSeverityCritical
+	SeverityInfo Severity = iota
+	SeverityLow
+	SeverityMedium
+	SeverityHigh
+	SeverityCritical
 )
 
 type CheckResult struct {
@@ -416,10 +416,9 @@ type CheckResult struct {
 	Message     string
 	Error       string
 	Metrics     []Metric
-	// Check is the configuration
-	Check        external.Check
-	Canary       v1.Canary
-	TestSeverity TestSeverity
+	Check       external.Check // Check is the configuration
+	Canary      v1.Canary
+	Severity    Severity
 }
 
 func (result CheckResult) GetDescription() string {
