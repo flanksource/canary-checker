@@ -165,20 +165,27 @@ spec:
                         type: string
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -304,20 +311,27 @@ spec:
                         type: string
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -455,20 +469,27 @@ spec:
                         type: array
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -555,20 +576,27 @@ spec:
                         type: string
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       thresholdMillis:
                         description: ThresholdMillis the maximum duration of a Run. (Optional)
@@ -711,20 +739,27 @@ spec:
                         type: boolean
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -776,20 +811,27 @@ spec:
                         type: string
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -1004,20 +1046,27 @@ spec:
                         type: string
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -1314,20 +1363,27 @@ spec:
                         type: string
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -1559,20 +1615,27 @@ spec:
                         type: integer
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -1677,20 +1740,27 @@ spec:
                         type: string
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -2047,20 +2117,27 @@ spec:
                         type: object
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       totalSize:
                         description: TotalSize present on the filesystem
@@ -2144,20 +2221,27 @@ spec:
                         type: string
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -2434,20 +2518,27 @@ spec:
                         type: boolean
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       thresholdMillis:
                         description: Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.
@@ -2611,20 +2702,27 @@ spec:
                         x-kubernetes-preserve-unknown-fields: true
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       testResults:
                         type: string
@@ -2705,20 +2803,27 @@ spec:
                         type: object
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -3017,20 +3122,27 @@ spec:
                         type: integer
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -3147,20 +3259,27 @@ spec:
                         type: integer
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -3352,20 +3471,27 @@ spec:
                         type: integer
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -3553,20 +3679,27 @@ spec:
                         type: integer
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -3622,20 +3755,27 @@ spec:
                         type: string
                       test:
                         properties:
-                          critical:
-                            type: string
                           expr:
-                            type: string
-                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
                             type: string
-                          low:
-                            type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
