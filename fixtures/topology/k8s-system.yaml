@@ -44,15 +44,32 @@ spec:
                 name: k8s
                 display:
                   javascript: JSON.stringify(k8s.getNodeTopology(results)) 
-          properties:
-            - name: node-metrics
-              lookup:
-                kubernetes:
-                  - kind: NodeMetrics
-                    ready: false
-                    name: nodemetrics
+          forEach:
+            properties:
+              - name: CPU %
+                lookup:
+                  prometheus:
+                  - query: '100 * max(rate(container_cpu_usage_seconds_total{container!="",node="${.component.name}"}[5m])) / on() machine_cpu_cores{node="${.component.name}"}'
+                    host: 'https://prometheus.azure.lab.flanksource.com'
                     display:
-                      javascript: JSON.stringify(k8s.getNodeMetrics(results))
+                      javascript: |
+                        value = ''
+                        if (results.length > 0) {
+                          value = results[0].value
+                        }
+                        value
+              - name: Memory %
+                lookup:
+                  prometheus:
+                  - query: '100 * sum(container_memory_working_set_bytes{container!="",node="${.component.name}"}) / on() machine_memory_bytes{node="${.component.name}"}'
+                    host: 'https://prometheus.azure.lab.flanksource.com'
+                    display:
+                      javascript: |
+                        value = ''
+                        if (results.length > 0) {
+                          value = results[0].value
+                        }
+                        value
     - name: pods
       icon: pods
       type: KubernetesPods
@@ -71,49 +88,29 @@ spec:
                   - junit-pass**
                 display:
                   javascript: JSON.stringify(k8s.getPodTopology(results)) 
-          properties:
-            - name: pod-metrics
-              lookup:
-                kubernetes:
-                  - kind: PodMetrics
-                    ready: false
-                    name: podmetrics
+          forEach:
+            properties:
+              - name: CPU %
+                lookup:
+                  prometheus:
+                  - query: '100 * max(rate(container_cpu_usage_seconds_total{container!="",pod="${.component.name}"}[5m]) / on (container, pod) kube_pod_container_resource_limits{resource="cpu"}) by (pod)'
+                    host: 'https://prometheus.azure.lab.flanksource.com'
                     display:
-                      javascript: JSON.stringify(k8s.getPodMetrics(results))
-  # properties:
-  #   - name: name
-  #     lookup:
-  #       kubernetes:
-  #         - kind: ConfigMap
-  #           name: test
-  #           namespace:
-  #             name: quack
-  #           resource:
-  #             name: quack-config
-  #           display:
-  #             javascript: |+
-  #               parts =  results[0].Object.data.name.split(":")
-  #               props = [    {
-  #                 name: "dns",
-  #                 text:    results[0].Object.data.domain
-  #               },
-  #               {
-  #                 name: "id",
-  #                 text: results[0].Object.data.name,
-  #                 type: "hidden",
-  #               },
-  #               {
-  #                 name: "name",
-  #                 text:  parts[5].split("/")[1]
-  #               },
-  #               {
-  #                 name: "account",
-  #                 text: parts[4]
-  #               },
-  #               {
-  #                 name: "region",
-  #                 text: parts[3]
-  #               }
-  #               ]
-  #               JSON.stringify(props)
-
+                      javascript: |
+                        value = ''
+                        if (results.length > 0) {
+                          value = results[0].value
+                        }
+                        value
+              - name: Memory %
+                lookup:
+                  prometheus:
+                  - query: '100 * max(container_memory_working_set_bytes{pod="${.component.name}"} / on (container, pod) kube_pod_container_resource_limits{resource="memory"}) by (pod)'
+                    host: 'https://prometheus.azure.lab.flanksource.com'
+                    display:
+                      javascript: |
+                        value = ''
+                        if (results.length > 0) {
+                          value = results[0].value
+                        }
+                        value
