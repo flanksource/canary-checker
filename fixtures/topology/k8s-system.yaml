@@ -50,7 +50,7 @@ spec:
                 lookup:
                   prometheus:
                   - query: '100 * max(rate(container_cpu_usage_seconds_total{container!="",node="${.component.name}"}[5m])) / on() machine_cpu_cores{node="${.component.name}"}'
-                    host: 'https://prometheus.azure.lab.flanksource.com'
+                    host: 'http://kube-prometheus-stack-prometheus.monitoring:9090'
                     display:
                       javascript: |
                         value = ''
@@ -62,7 +62,7 @@ spec:
                 lookup:
                   prometheus:
                   - query: '100 * sum(container_memory_working_set_bytes{container!="",node="${.component.name}"}) / on() machine_memory_bytes{node="${.component.name}"}'
-                    host: 'https://prometheus.azure.lab.flanksource.com'
+                    host: 'http://kube-prometheus-stack-prometheus.monitoring:9090'
                     display:
                       javascript: |
                         value = ''
@@ -94,7 +94,7 @@ spec:
                 lookup:
                   prometheus:
                   - query: '100 * max(rate(container_cpu_usage_seconds_total{container!="",pod="${.component.name}"}[5m]) / on (container, pod) kube_pod_container_resource_limits{resource="cpu"}) by (pod)'
-                    host: 'https://prometheus.azure.lab.flanksource.com'
+                    host: 'http://kube-prometheus-stack-prometheus.monitoring:9090'
                     display:
                       javascript: |
                         value = ''
@@ -106,7 +106,7 @@ spec:
                 lookup:
                   prometheus:
                   - query: '100 * max(container_memory_working_set_bytes{pod="${.component.name}"} / on (container, pod) kube_pod_container_resource_limits{resource="memory"}) by (pod)'
-                    host: 'https://prometheus.azure.lab.flanksource.com'
+                    host: 'http://kube-prometheus-stack-prometheus.monitoring:9090'
                     display:
                       javascript: |
                         value = ''

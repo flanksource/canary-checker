@@ -206,6 +206,8 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 				results = append(results, result.Detail.([]interface{})...)
 			case interface{}:
 				results = append(results, result.Detail)
+			default:
+				return nil, fmt.Errorf("unknown type %T", result.Detail)
 			}
 		} else {
 			results = append(results, "")
