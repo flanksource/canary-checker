@@ -165,11 +165,17 @@ spec:
                         type: string
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -298,11 +304,17 @@ spec:
                         type: string
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -443,11 +455,17 @@ spec:
                         type: array
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -537,11 +555,17 @@ spec:
                         type: string
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -687,11 +711,17 @@ spec:
                         type: boolean
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -746,11 +776,17 @@ spec:
                         type: string
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -968,11 +1004,17 @@ spec:
                         type: string
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -1272,11 +1314,17 @@ spec:
                         type: string
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -1511,11 +1559,17 @@ spec:
                         type: integer
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -1623,11 +1677,17 @@ spec:
                         type: string
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -1987,11 +2047,17 @@ spec:
                         type: object
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -2078,11 +2144,17 @@ spec:
                         type: string
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -2362,11 +2434,17 @@ spec:
                         type: boolean
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -2533,11 +2611,17 @@ spec:
                         x-kubernetes-preserve-unknown-fields: true
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -2621,11 +2705,17 @@ spec:
                         type: object
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -2927,11 +3017,17 @@ spec:
                         type: integer
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -3051,11 +3147,17 @@ spec:
                         type: integer
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -3250,11 +3352,17 @@ spec:
                         type: integer
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -3445,11 +3553,17 @@ spec:
                         type: integer
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string
@@ -3508,11 +3622,17 @@ spec:
                         type: string
                       test:
                         properties:
+                          critical:
+                            type: string
                           expr:
+                            type: string
+                          high:
                             type: string
                           javascript:
                             type: string
                           jsonPath:
+                            type: string
+                          low:
                             type: string
                           template:
                             type: string

@@ -1096,7 +1096,7 @@ func (c ExecCheck) GetEndpoint() string {
 	return *c.Script
 }
 
-func (c ExecCheck) GetTestFunction() Template {
+func (c ExecCheck) GetTestTemplate() Template {
 	if c.Test.Expression == "" {
 		c.Test.Expression = "results.ExitCode == 0"
 	}

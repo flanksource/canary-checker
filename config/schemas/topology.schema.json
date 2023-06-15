@@ -48,7 +48,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -123,7 +123,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -163,7 +163,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -214,7 +214,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -561,7 +561,7 @@
           "type": "boolean"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -810,7 +810,7 @@
     "ConfigDBCheck": {
       "properties": {
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -1005,7 +1005,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -1121,7 +1121,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -1232,7 +1232,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -1307,7 +1307,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -1346,7 +1346,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -1507,7 +1507,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -1547,7 +1547,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -1762,7 +1762,7 @@
           "type": "string"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -1798,7 +1798,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -2011,7 +2011,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -2054,7 +2054,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -2271,7 +2271,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -2427,7 +2427,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -2470,7 +2470,7 @@
           "$ref": "#/$defs/Labels"
         },
         "test": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/TestTemplate"
         },
         "display": {
           "$ref": "#/$defs/Template"
@@ -2888,6 +2888,33 @@
           "type": "string"
         },
         "javascript": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "TestTemplate": {
+      "properties": {
+        "template": {
+          "type": "string"
+        },
+        "jsonPath": {
+          "type": "string"
+        },
+        "expr": {
+          "type": "string"
+        },
+        "javascript": {
+          "type": "string"
+        },
+        "high": {
+          "type": "string"
+        },
+        "low": {
+          "type": "string"
+        },
+        "critical": {
           "type": "string"
         }
       },

@@ -107,7 +107,7 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 		data := map[string]any{"duration": r.Duration}
 		r.TestSeverity = measureTestSeverity(ctx.New(data), v.GetTestThreshold())
 
-		tpl := v.GetTestFunction()
+		tpl := v.GetTestTemplate()
 		if tpl.IsEmpty() {
 			break
 		}

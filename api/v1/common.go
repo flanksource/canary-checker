@@ -233,7 +233,7 @@ type DisplayTemplate interface {
 
 // +k8s:deepcopy-gen=false
 type TestFunction interface {
-	GetTestFunction() Template
+	GetTestTemplate() Template
 	GetTestThreshold() *TestThreshold
 }
 
@@ -253,7 +253,7 @@ type Templatable struct {
 	Transform Template     `yaml:"transform,omitempty" json:"transform,omitempty"`
 }
 
-func (t Templatable) GetTestFunction() Template {
+func (t Templatable) GetTestTemplate() Template {
 	return t.Test.Template
 }
 
