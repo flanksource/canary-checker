@@ -67,12 +67,13 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 	ctx.SetCurrentComponent(component)
 
 	for _, property := range spec.ForEach.Properties {
-		prop := property
-		if err := ctx.TemplateProperty(&prop); err != nil {
+		// Create a DeepCopy for templating
+		prop := property.DeepCopy()
+		if err := ctx.TemplateProperty(prop); err != nil {
 			return err
 		}
 
-		props, err := lookupProperty(ctx, &prop)
+		props, err := lookupProperty(ctx, prop)
 		if err != nil {
 			errMsg := fmt.Sprintf("Failed to lookup property %s: %v", property.Name, err)
 			logger.Errorf(errMsg)
@@ -134,6 +135,7 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 		if lookedUpComponents, err = mergeComponentLookup(ctx, &component, component.Lookup); err != nil {
 			return nil, err
 		}
+
 		components = append(components, lookedUpComponents...)
 	} else {
 		var childComponents pkg.Components
@@ -198,17 +200,15 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 		}
 		if result.Message != "" {
 			results = append(results, result.Message)
-		} else if result.Detail == nil {
-			return nil, fmt.Errorf("no details returned by lookup, did you specify a display template?")
-		} else {
+		} else if result.Detail != nil {
 			switch result.Detail.(type) {
 			case []interface{}:
 				results = append(results, result.Detail.([]interface{})...)
 			case interface{}:
 				results = append(results, result.Detail)
-			default:
-				return nil, fmt.Errorf("unknown type %T", result.Detail)
 			}
+		} else {
+			results = append(results, "")
 		}
 	}
 	return results, nil
