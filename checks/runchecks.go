@@ -15,10 +15,12 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
 
 	// Check if canary is not marked deleted in DB
-	var deletedAt sql.NullTime
-	err := db.Gorm.Table("canaries").Select("deleted_at").Where("id = ?", ctx.Canary.GetPersistedID()).Scan(&deletedAt).Error
-	if err == nil && deletedAt.Valid {
-		return results
+	if db.Gorm != nil {
+		var deletedAt sql.NullTime
+		err := db.Gorm.Table("canaries").Select("deleted_at").Where("id = ?", ctx.Canary.GetPersistedID()).Scan(&deletedAt).Error
+		if err == nil && deletedAt.Valid {
+			return results
+		}
 	}
 
 	checks := ctx.Canary.Spec.GetAllChecks()
