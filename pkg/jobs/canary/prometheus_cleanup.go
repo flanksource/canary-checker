@@ -49,7 +49,7 @@ func CleanUpPrometheusGauges() {
 		logger.Errorf("Error finding deleted checks: %v", err)
 		return
 	}
-	logger.Infof("Found %d/%d deleted checks", len(deletedChecks), len(checkIDs))
+	logger.Debugf("Found %d/%d deleted checks", len(deletedChecks), len(checkIDs))
 
 	for _, check := range deletedChecks {
 		if metrics.Gauge.DeletePartialMatch(prometheus.Labels{"key": check.ID.String()}) > 0 {

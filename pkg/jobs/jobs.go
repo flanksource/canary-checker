@@ -3,7 +3,6 @@ package jobs
 import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/canary-checker/pkg/jobs/canary"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/system"
 	"github.com/flanksource/canary-checker/pkg/runner"
@@ -58,11 +57,11 @@ func Start() {
 	}
 
 	if runner.Prometheus != nil {
-		if _, err := ScheduleFunc(v1.PrometheusGaugeCleanupSchedule, canary.CleanUpPrometheusGauges); err != nil {
+		if _, err := ScheduleFunc(v1.PrometheusGaugeCleanupSchedule, canaryJobs.CleanUpPrometheusGauges); err != nil {
 			logger.Errorf("Failed to schedule prometheus gauge cleanup job: %v", err)
 		}
 
-		canary.CleanUpPrometheusGauges()
+		canaryJobs.CleanUpPrometheusGauges()
 	}
 
 	canaryJobs.SyncCanaryJobs()
