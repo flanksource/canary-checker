@@ -3,7 +3,6 @@ package canary
 import (
 	"fmt"
 	"path"
-	"reflect"
 	"sync"
 	"time"
 
@@ -243,13 +242,7 @@ func SyncCanaryJob(canary v1.Canary) error {
 
 	entry := findCronEntry(canary)
 	if entry != nil {
-		job := entry.Job.(CanaryJob)
-		if !reflect.DeepEqual(job.Canary.Spec, canary.Spec) {
-			logger.Infof("Rescheduling %s canary with updated specs", canary)
-			CanaryScheduler.Remove(entry.ID)
-		} else {
-			return nil
-		}
+		CanaryScheduler.Remove(entry.ID)
 	}
 
 	job := CanaryJob{
