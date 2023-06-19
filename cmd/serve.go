@@ -54,6 +54,13 @@ func setup() {
 	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 
 	push.AddServers(pushServers)
+
+	if promClient, err := prometheus.NewPrometheusAPI(prometheusURL); err != nil {
+		logger.Errorf("error creating prometheus client: %v", err)
+	} else if promClient != nil {
+		runner.Prometheus = promClient
+	}
+
 	go push.Start()
 }
 
@@ -72,8 +79,6 @@ func serve() {
 
 	push.AddServers(pushServers)
 	go push.Start()
-
-	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheusURL)
 
 	if debug {
 		logger.Infof("Starting pprof at /debug")

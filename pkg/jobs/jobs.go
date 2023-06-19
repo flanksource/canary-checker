@@ -3,8 +3,10 @@ package jobs
 import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/jobs/canary"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/system"
+	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/canary-checker/pkg/topology/checks"
 	"github.com/flanksource/canary-checker/pkg/topology/configs"
@@ -54,6 +56,15 @@ func Start() {
 	if _, err := ScheduleFunc(v1.CheckStatusesAggregate1dSchedule, db.AggregateCheckStatuses1d); err != nil {
 		logger.Errorf("Failed to schedule check statuses aggregator 1d: %v", err)
 	}
+
+	if runner.Prometheus != nil {
+		if _, err := ScheduleFunc(v1.PrometheusGaugeCleanupSchedule, canary.CleanUpPrometheusGauges); err != nil {
+			logger.Errorf("Failed to schedule prometheus gauge cleanup job: %v", err)
+		}
+
+		canary.CleanUpPrometheusGauges()
+	}
+
 	canaryJobs.SyncCanaryJobs()
 	systemJobs.SyncTopologyJobs()
 }

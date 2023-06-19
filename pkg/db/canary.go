@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -208,6 +209,12 @@ func FindCheck(canary pkg.Canary, name string) (*pkg.Check, error) {
 		return nil, err
 	}
 	return &model, nil
+}
+
+func FindDeletedChecksByIDs(ctx context.Context, ids []string) ([]models.Check, error) {
+	var checks []models.Check
+	err := Gorm.Where("id IN ?", ids).Where("deleted_at IS NOT NULL").Find(&checks).Error
+	return checks, err
 }
 
 func CreateCanary(canary *pkg.Canary) error {
