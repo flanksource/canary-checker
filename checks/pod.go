@@ -465,7 +465,8 @@ func (c *PodChecker) getHTTP(url string, timeout int64, deadline time.Time) (str
 		hardDeadline = softTimeoutDeadline
 	}
 
-	ctx, _ := gocontext.WithDeadline(gocontext.Background(), hardDeadline) // nolint: govet
+	ctx, cancelFunc := gocontext.WithDeadline(gocontext.Background(), hardDeadline)
+	defer cancelFunc()
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
