@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/cache"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/duty/models"
 	"github.com/labstack/echo/v4"
@@ -20,6 +21,7 @@ type Response struct {
 	Checks        pkg.Checks    `json:"checks"`
 	ChecksSummary models.Checks `json:"checks_summary,omitempty"`
 }
+
 type DetailResponse struct {
 	Duration   int              `json:"duration,omitempty"`
 	RunnerName string           `json:"runnerName"`
@@ -32,6 +34,25 @@ func About(c echo.Context) error {
 		"Version":   runner.Version,
 	}
 	return c.JSON(http.StatusOK, data)
+}
+
+func DeleteCanary(c echo.Context) error {
+	id := c.Param("id")
+
+	canary, err := db.FindCanaryByID(id)
+	if err != nil {
+		return errorResonse(c, err, http.StatusInternalServerError)
+	} else if canary == nil {
+		return errorMsgResponse(c, http.StatusNotFound, "canary with id=%s was not found", id)
+	}
+
+	if err := db.DeleteCanaryByID(id); err != nil {
+		return errorResonse(c, err, http.StatusInternalServerError)
+	}
+
+	// TODO: Stop the cron job
+
+	return nil
 }
 
 func CheckDetails(c echo.Context) error {

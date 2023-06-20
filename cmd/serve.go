@@ -88,13 +88,16 @@ func serve() {
 
 	e.Use(middleware.Logger())
 
-	e.GET("/api", api.CheckSummary)
-	e.GET("/api/summary", api.HealthSummary)
+	apiGroup := e.Group("/api")
+	apiGroup.GET("/", api.CheckSummary)
+	apiGroup.GET("/summary", api.HealthSummary)
+	apiGroup.GET("/graph", api.CheckDetails)
+	apiGroup.POST("/push", api.PushHandler)
+	apiGroup.GET("/details", api.DetailsHandler)
+	apiGroup.GET("/topology", api.Topology)
+	apiGroup.DELETE("/canary/:id", api.DeleteCanary)
+
 	e.GET("/about", api.About)
-	e.GET("/api/graph", api.CheckDetails)
-	e.POST("/api/push", api.PushHandler)
-	e.GET("/api/details", api.DetailsHandler)
-	e.GET("/api/topology", api.Topology)
 	e.GET("/metrics", echo.WrapHandler(promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{})))
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")

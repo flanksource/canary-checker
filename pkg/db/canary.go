@@ -137,33 +137,60 @@ func UpdateChecksStatus(ids []string, status models.CheckHealthStatus) error {
 		Error
 }
 
-func DeleteCanary(canary v1.Canary) error {
-	logger.Infof("deleting canary %s/%s", canary.Namespace, canary.Name)
-	model, err := pkg.CanaryFromV1(canary)
-	if err != nil {
+// unregisterChecksGauge unregisters all the checks of the associated with canary
+func unregisterChecksGauge(canaryID string) error {
+	var checkIDs []string
+	if err := Gorm.Model(&models.Check{}).Select("id").Where("canary_id = ?", canaryID).Pluck("id", &checkIDs).Error; err != nil {
 		return err
 	}
+
+	metrics.UnregisterGauge(checkIDs)
+	return nil
+}
+
+func deleteCanaryByID(canaryID string) error {
 	deleteTime := time.Now()
-	persistedID := canary.GetPersistedID()
+
+	if err := Gorm.Where("id = ?", canaryID).Find(&models.Canary{}).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+		return fmt.Errorf("failed to delete canary %s: %v", canaryID, err)
+	}
+
+	if err := DeleteChecksForCanary(canaryID, deleteTime); err != nil {
+		return fmt.Errorf("failed to delete checks for canary %s: %v", canaryID, err)
+	}
+
+	if err := DeleteCheckComponentRelationshipsForCanary(canaryID, deleteTime); err != nil {
+		return fmt.Errorf("failed to delete check component relationships for canary %s: %v", canaryID, err)
+	}
+
+	return nil
+}
+
+// DeleteCanaryByID deletes a canary and the associated checks and relationships.
+func DeleteCanaryByID(canaryID string) error {
+	if err := unregisterChecksGauge(canaryID); err != nil {
+		logger.Errorf("failed to unregister checks gauges: %v", err)
+	}
+
+	return deleteCanaryByID(canaryID)
+}
+
+func DeleteCanary(canary v1.Canary) error {
+	logger.Infof("deleting canary %s/%s", canary.Namespace, canary.Name)
+
 	var checkIDs []string
 	for _, checkID := range canary.Status.Checks {
 		checkIDs = append(checkIDs, checkID)
 	}
 	metrics.UnregisterGauge(checkIDs)
+
+	persistedID := canary.GetPersistedID()
 	if persistedID == "" {
 		logger.Errorf("Canary %s/%s has not been persisted", canary.Namespace, canary.Name)
 		return nil
 	}
-	if err := Gorm.Where("id = ?", persistedID).Find(&model).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
-		return err
-	}
-	if err := DeleteChecksForCanary(persistedID, deleteTime); err != nil {
-		return err
-	}
-	if err := DeleteCheckComponentRelationshipsForCanary(persistedID, deleteTime); err != nil {
-		return err
-	}
-	return nil
+
+	return deleteCanaryByID(persistedID)
 }
 
 func DeleteChecksForCanary(id string, deleteTime time.Time) error {
