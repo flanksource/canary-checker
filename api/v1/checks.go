@@ -179,6 +179,36 @@ func (c CloudWatchCheck) GetType() string {
 	return "cloudwatch"
 }
 
+type CloudWatchLogsCheck struct {
+	Description   `yaml:",inline" json:",inline"`
+	AWSConnection `yaml:",inline" json:",inline"`
+	Templatable   `yaml:",inline" json:",inline"`
+	Filter        CloudWatchLogsFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
+}
+
+type CloudWatchLogsFilter struct {
+	LogGroup            *string `yaml:"loggroup,omitempty" json:"loggroup,omitempty"`
+	Descending          *bool   `yaml:"descending,omitempty" json:"descending,omitempty"`
+	Limit               *int32  `yaml:"limit,omitempty" json:"limit,omitempty"`
+	State               string  `yaml:"state,omitempty" json:"state,omitempty"`
+	LogStreamNamePrefix *string `yaml:"logstreamnameprefix,omitempty" json:"logstreamnameprefix,omitempty"`
+}
+
+func (c CloudWatchLogsCheck) GetEndpoint() string {
+	endpoint := c.Region
+	if c.Filter.ActionPrefix != nil {
+		endpoint += "-" + *c.Filter.ActionPrefix
+	}
+	if c.Filter.AlarmPrefix != nil {
+		endpoint += "-" + *c.Filter.AlarmPrefix
+	}
+	return endpoint
+}
+
+func (c CloudWatchLogsCheck) GetType() string {
+	return "cloudwatchlogs"
+}
+
 type ResticCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	// Name of the connection used to derive restic password.
@@ -1333,6 +1363,10 @@ type CloudWatch struct {
 	CloudWatchCheck `yaml:",inline" json:",inline"`
 }
 
+type CloudWatchLogs struct {
+	CloudWatchLogsCheck `yaml:",inline" json:",inline"`
+}
+
 /*
 [include:k8s/containerd_pull_pass.yaml]
 */
@@ -1460,6 +1494,7 @@ var AllChecks = []external.Check{
 	AwsConfigRuleCheck{},
 	AzureDevopsCheck{},
 	CloudWatchCheck{},
+	CloudWatchLogsCheck{},
 	ConfigDBCheck{},
 	ContainerdPullCheck{},
 	ContainerdPushCheck{},

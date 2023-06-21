@@ -60,6 +60,7 @@ type CanarySpec struct {
 	Prometheus     []PrometheusCheck     `yaml:"prometheus,omitempty" json:"prometheus,omitempty"`
 	MongoDB        []MongoDBCheck        `yaml:"mongodb,omitempty" json:"mongodb,omitempty"`
 	CloudWatch     []CloudWatchCheck     `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
+	CloudWatchLogs []CloudWatchLogsCheck `yaml:"cloudwatchlogs,omitempty" json:"cloudwatchlogs,omitempty"`
 	GitHub         []GitHubCheck         `yaml:"github,omitempty" json:"github,omitempty"`
 	Kubernetes     []KubernetesCheck     `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
 	Folder         []FolderCheck         `yaml:"folder,omitempty" json:"folder,omitempty"`
@@ -156,6 +157,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.CloudWatch {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.CloudWatchLogs {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.GitHub {
