@@ -81,7 +81,15 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 			continue
 		}
 
-		component.Properties = append(component.Properties, props...)
+		for _, p := range props {
+			found := component.Properties.Find(p.Name)
+			if found != nil {
+				found.Merge(p)
+				continue
+			}
+			component.Properties = append(component.Properties, p)
+		}
+
 	}
 	ctx.SetCurrentComponent(component) // component properties may have changed
 
