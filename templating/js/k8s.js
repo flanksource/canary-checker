@@ -1,6 +1,6 @@
 k8s = {
   conditions: {
-    getMessage: function (v) {
+    getMessage: function(v) {
       message = ""
       if (v.status == null) {
         return "No status found"
@@ -9,7 +9,7 @@ k8s = {
       if (status.conditions == null) {
         return "no conditions found"
       }
-      status.conditions.forEach(function (state) {
+      status.conditions.forEach(function(state) {
         if (state.status != "True") {
           message += state.type
           message += " "
@@ -17,7 +17,7 @@ k8s = {
       })
       return message.trim()
     },
-    getError: function (v) {
+    getError: function(v) {
       active = []
       if (v.status == null) {
         return "No status found"
@@ -26,14 +26,14 @@ k8s = {
       if (status.conditions == null) {
         return "no conditions found"
       }
-      status.conditions.forEach(function (state) {
+      status.conditions.forEach(function(state) {
         if (state.status == "False") {
           active.push(state)
         }
       })
-      active.sort(function (a, b) { a.lastTransitionTime > b.lastTransitionTime && 1 || -1 })
+      active.sort(function(a, b) { a.lastTransitionTime > b.lastTransitionTime && 1 || -1 })
       errorMessage = ""
-      active.forEach(function (state) {
+      active.forEach(function(state) {
         if (errorMessage != "") {
           errorMessage += ', '
         }
@@ -44,7 +44,7 @@ k8s = {
       })
       return errorMessage
     },
-    isReady: function (v) {
+    isReady: function(v) {
       if (v.status == null) {
         return false
       }
@@ -53,7 +53,7 @@ k8s = {
         return false
       }
       ready = true
-      status.conditions.forEach(function (state) {
+      status.conditions.forEach(function(state) {
         if (state.type == "Ready") {
           if (state.status != "True") {
             ready = false
@@ -63,7 +63,7 @@ k8s = {
       return ready
     },
   },
-  getAlertName: function (v) {
+  getAlertName: function(v) {
     name = v.alertname
     if (startsWith(v.alertname, "KubeDeployment")) {
       return name + "/" + v.deployment
@@ -84,7 +84,7 @@ k8s = {
       return name + "/" + v.node
     }
   },
-  getAlertLabels: function (v) {
+  getAlertLabels: function(v) {
     function ignoreLabel(k) {
       return k == "severity" || k == "job" || k == "alertname" || k == "alertstate" || k == "__name__" || k == "value" || k == "namespace"
     }
@@ -113,7 +113,7 @@ k8s = {
     }
     return v
   },
-  getAlerts: function (results) {
+  getAlerts: function(results) {
     function ignoreLabel(k) {
       return k == "severity" || k == "job" || k == "alertname" || k == "alertstate" || k == "__name__" || k == "value" || k == "namespace"
     }
@@ -140,7 +140,7 @@ k8s = {
       }
       return out
     }
-    var out = _.map(results, function (v) {
+    var out = _.map(results, function(v) {
       v = k8s.getAlertLabels(v)
       return {
         pass: v.severity == "none",
@@ -152,7 +152,7 @@ k8s = {
     })
     JSON.stringify(out)
   },
-  getNodeMetrics: function (results) {
+  getNodeMetrics: function(results) {
     components = []
     for (i in results) {
       node = results[i].Object
@@ -173,7 +173,7 @@ k8s = {
     return components
   },
 
-  getPodMetrics: function (results) {
+  getPodMetrics: function(results) {
     components = []
     for (i in results) {
       node = results[i].Object
@@ -200,7 +200,7 @@ k8s = {
     return components
   },
 
-  filterLabels: function (labels) {
+  filterLabels: function(labels) {
     var filtered = {}
     for (label in labels) {
       if (endsWith(label, "-hash")) {
@@ -210,20 +210,20 @@ k8s = {
     }
     return filtered
   },
-  getNodeName: function (name) {
+  getNodeName: function(name) {
     return name.replace(".compute.internal", "")
   },
-  getPodTopology: function (results) {
+  getPodTopology: function(results) {
     var pods = []
     for (i in results) {
       pod = results[i].Object
       labels = k8s.filterLabels(pod.metadata.labels)
       labels.namespace = pod.metadata.namespace
-      pod_mem_limit = ''
-      pod_cpu_limit = ''
+      pod_mem_limit = 0
+      pod_cpu_limit = 0
       if (pod.spec.containers[0].resources.limits) {
-        pod_mem_limit = pod.spec.containers[0].resources.limits.memory || ''
-        pod_cpu_limit = pod.spec.containers[0].resources.limits.cpu || ''
+        pod_mem_limit = fromSI(pod.spec.containers[0].resources.limits.memory || 0)
+        pod_cpu_limit = fromMillicores(pod.spec.containers[0].resources.limits.cpu || 0)
       }
 
       _pod = {
@@ -232,9 +232,9 @@ k8s = {
         type: "KubernetesPod",
         labels: labels,
         logs: [
-          {name: "Kubernetes", type: "KubernetesPod"},
+          { name: "Kubernetes", type: "KubernetesPod" },
         ],
-        external_id: pod.metadata.namespace + "/"+ pod.metadata.name,
+        external_id: pod.metadata.namespace + "/" + pod.metadata.name,
         configs: [
           {
             name: pod.metadata.name,
@@ -250,20 +250,14 @@ k8s = {
           {
             name: "cpu",
             headline: true,
-            unit: "millicores"
+            unit: "millicores",
+            max: pod_cpu_limit,
           },
           {
             name: "memory",
             headline: true,
-            unit: "bytes"
-          },
-          {
-            name: "memory limit",
-            text: pod_mem_limit,
-          },
-          {
-            name: "cpu limit",
-            text: pod_cpu_limit,
+            unit: "bytes",
+            max: pod_mem_limit,
           },
           {
             name: "node",
@@ -293,7 +287,7 @@ k8s = {
   },
 
 
-  getNodeTopology: function (results) {
+  getNodeTopology: function(results) {
     var nodes = []
     for (i in results) {
       node = results[i].Object
@@ -305,10 +299,10 @@ k8s = {
         selectors: [{
           name: "",
           labelSelector: "",
-          fieldSelector: "node="+node.metadata.name
+          fieldSelector: "node=" + node.metadata.name
         }],
         logs: [
-          {name: "Kubernetes", type: "KubernetesNode"},
+          { name: "Kubernetes", type: "KubernetesNode" },
         ],
         configs: [
           {
@@ -331,16 +325,6 @@ k8s = {
             max: fromSI(node.status.allocatable.memory)
           },
           {
-            name: "memory limit",
-            unit: "gigabytes",
-            text: (fromSI(node.status.allocatable.memory) / (1024 * 1024 * 1024)).toString(),
-          },
-          {
-            name: "cpu limit",
-            unit: "cores",
-            text: (fromMillicores(node.status.allocatable.cpu) / 1000).toString(),
-          },
-          {
             name: "ephemeral-storage",
             unit: "bytes",
             max: fromSI(node.status.allocatable["ephemeral-storage"])
@@ -359,14 +343,14 @@ k8s = {
           }
         ]
       }
-      internalIP = _.find(node.status.addresses, function (a) { a.type == "InternalIP" })
+      internalIP = _.find(node.status.addresses, function(a) { a.type == "InternalIP" })
       if (internalIP != null) {
         _node.properties.push({
           name: "ip",
           text: internalIP.address
         })
       }
-      externalIP = _.find(node.status.addresses, function (a) { a.type == "ExternalIP" })
+      externalIP = _.find(node.status.addresses, function(a) { a.type == "ExternalIP" })
       if (externalIP != null) {
         _node.properties.push({
           name: "externalIp",

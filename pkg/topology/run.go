@@ -89,7 +89,6 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 			}
 			component.Properties = append(component.Properties, p)
 		}
-
 	}
 	ctx.SetCurrentComponent(component) // component properties may have changed
 

@@ -2,6 +2,7 @@ function fromMillicores(mc) {
   if (typeof (mc) == Number) {
     return mc * 1000
   }
+  mc = mc.toString()
   if (mc.substring(mc.length - 1, mc.length) == "m") {
     return Number(mc.substring(0, mc.length - 1))
   }
@@ -9,9 +10,17 @@ function fromMillicores(mc) {
 }
 
 function fromSI(si) {
+  if (typeof (si) == Number) {
+    return si
+  }
+  si = si.toString()
   unit = si.substring(si.length - 2, si.length)
   if (unit == "Ki") {
     return Number(si.substring(0, si.length - 2)) * 1024
+  } else if (unit === "Mi") {
+    return Number(si.substring(0, si.length - 2)) * 1024 * 1024
+  } else if (unit === "Gi") {
+    return Number(si.substring(0, si.length - 2)) * 1024 * 1024 * 1024
   }
   return Number(si)
 }

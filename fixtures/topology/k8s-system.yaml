@@ -46,30 +46,30 @@ spec:
                   javascript: JSON.stringify(k8s.getNodeTopology(results)) 
           forEach:
             properties:
-              - name: CPU %
+              - name: cpu
                 lookup:
                   prometheus:
-                  - query: '100 * max(rate(container_cpu_usage_seconds_total{container!="",node="${.component.name}"}[5m])) / on() machine_cpu_cores{node="${.component.name}"}'
-                    host: 'http://kube-prometheus-stack-prometheus.monitoring:9090'
+                  - query: '1000 * max(rate(container_cpu_usage_seconds_total{container!="",node="${.component.name}"}[5m]))'
+                    host: 'http://prometheus-k8s.monitoring:9090'
                     display:
                       javascript: |
                         value = ''
                         if (results.length > 0) {
                           value = results[0].value
                         }
-                        value
+                        JSON.stringify([{'name': 'cpu', 'value': parseInt(Number(value))}])
               - name: Memory %
                 lookup:
                   prometheus:
-                  - query: '100 * sum(container_memory_working_set_bytes{container!="",node="${.component.name}"}) / on() machine_memory_bytes{node="${.component.name}"}'
-                    host: 'http://kube-prometheus-stack-prometheus.monitoring:9090'
+                  - query: 'sum(avg_over_time(container_memory_working_set_bytes{container!="",node="${.component.name}"}[5m]))'
+                    host: 'http://prometheus-k8s.monitoring:9090'
                     display:
                       javascript: |
                         value = ''
                         if (results.length > 0) {
                           value = results[0].value
                         }
-                        value
+                        JSON.stringify([{'name': 'memory', 'value': parseInt(Number(value))}])
     - name: pods
       icon: pods
       type: KubernetesPods
@@ -90,27 +90,27 @@ spec:
                   javascript: JSON.stringify(k8s.getPodTopology(results)) 
           forEach:
             properties:
-              - name: CPU %
+              - name: cpu
                 lookup:
                   prometheus:
-                  - query: '100 * max(rate(container_cpu_usage_seconds_total{container!="",pod="${.component.name}"}[5m]) / on (container, pod) kube_pod_container_resource_limits{resource="cpu"}) by (pod)'
-                    host: 'http://kube-prometheus-stack-prometheus.monitoring:9090'
+                  - query: '1000 * max(rate(container_cpu_usage_seconds_total{container!="",pod="${.component.name}"}[5m]))'
+                    host: 'http://prometheus-k8s.monitoring:9090'
                     display:
                       javascript: |
                         value = ''
                         if (results.length > 0) {
                           value = results[0].value
                         }
-                        value
-              - name: Memory %
+                        JSON.stringify([{'name': 'cpu', 'value': parseInt(Number(value))}])
+              - name: memory
                 lookup:
                   prometheus:
-                  - query: '100 * max(container_memory_working_set_bytes{pod="${.component.name}"} / on (container, pod) kube_pod_container_resource_limits{resource="memory"}) by (pod)'
-                    host: 'http://kube-prometheus-stack-prometheus.monitoring:9090'
+                  - query: 'sum(avg_over_time(container_memory_working_set_bytes{pod="${.component.name}"}[5m]))'
+                    host: 'http://prometheus-k8s.monitoring:9090'
                     display:
                       javascript: |
                         value = ''
                         if (results.length > 0) {
                           value = results[0].value
                         }
-                        value
+                        JSON.stringify([{'name': 'memory', 'value': parseInt(Number(value))}])
