@@ -163,7 +163,10 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 		for _, property := range component.Properties {
 			props, err := lookupProperty(ctx.WithComponents(&components, comp), property)
 			if err != nil {
-				return nil, errors.Wrapf(err, "property lookup failed: %s", property)
+				errMsg := fmt.Sprintf("Failed to lookup property: %s. Error in lookup: %v", property, err)
+				logger.Errorf(errMsg)
+				ctx.JobHistory.AddError(errMsg)
+				continue
 			}
 			comp.Properties = append(comp.Properties, props...)
 		}
