@@ -192,15 +192,18 @@ type CloudWatchLogsFilter struct {
 	Limit               *int32  `yaml:"limit,omitempty" json:"limit,omitempty"`
 	State               string  `yaml:"state,omitempty" json:"state,omitempty"`
 	LogStreamNamePrefix *string `yaml:"logstreamnameprefix,omitempty" json:"logstreamnameprefix,omitempty"`
+	Query               *string `yaml:"query,omitempty" json:"query,omitempty"`
+	StartTime           *int64  `yaml:"startTime,omitempty" json:"startTime,omitempty"`
+	EndTime             *int64  `yaml:"endTime,omitempty" json:"endTime,omitempty"`
 }
 
 func (c CloudWatchLogsCheck) GetEndpoint() string {
 	endpoint := c.Region
-	if c.Filter.ActionPrefix != nil {
-		endpoint += "-" + *c.Filter.ActionPrefix
+	if c.Filter.LogGroup != nil {
+		endpoint += "-" + *c.Filter.LogGroup
 	}
-	if c.Filter.AlarmPrefix != nil {
-		endpoint += "-" + *c.Filter.AlarmPrefix
+	if c.Filter.LogStreamNamePrefix != nil {
+		endpoint += "-" + *c.Filter.LogStreamNamePrefix
 	}
 	return endpoint
 }

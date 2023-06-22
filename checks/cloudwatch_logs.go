@@ -47,28 +47,45 @@ func (c *CloudWatchLogsChecker) Check(ctx *context.Context, extConfig external.C
 
 	logGroupName := check.Filter.LogGroup
 
-	input := &cloudwatchlogs.DescribeLogStreamsInput{
-		LogGroupName:        logGroupName,
-		Descending:          check.Filter.Descending,
-		Limit:               check.Filter.Limit,
-		LogStreamNamePrefix: check.Filter.LogStreamNamePrefix,
-	}
-
-	streams, err := client.DescribeLogStreams(ctx, input)
+	// Perform CloudWatch Logs search
+	searchResults, err := c.searchLogs(ctx, client, *logGroupName, *check.Filter.Query, *check.Filter.Limit, *check.Filter.LogStreamNamePrefix, *check.Filter.StartTime, *check.Filter.EndTime)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
 
-	failingStreams := []string{}
-	for _, stream := range streams.LogStreams {
-		if *stream.StoredBytes == 0 {
-			failingStreams = append(failingStreams, *stream.LogStreamName)
-		}
-	}
-
-	if len(failingStreams) > 0 {
-		return results.Failf(strings.Join(failingStreams, ","))
+	if len(searchResults) > 0 {
+		return results.Failf(strings.Join(searchResults, ","))
 	}
 
 	return results
+}
+
+// searchLogs performs the CloudWatch Logs search and returns the log stream names with matching results
+func (c *CloudWatchLogsChecker) searchLogs(ctx *context.Context, client *cloudwatchlogs.Client, logGroupName string, query string, limit int32, logstreamnameprefix string, startTime int64, endTime int64) ([]string, error) {
+	input := &cloudwatchlogs.FilterLogEventsInput{
+		LogGroupName:        &logGroupName,
+		StartTime:           &startTime,
+		Limit:               &limit,
+		LogStreamNamePrefix: &logstreamnameprefix,
+		EndTime:             &endTime,
+		FilterPattern:       &query,
+	}
+
+	searchResults := []string{}
+	paginator := cloudwatchlogs.NewFilterLogEventsPaginator(client, input)
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, event := range page.Events {
+			if event.Message != nil {
+				searchResults = append(searchResults, *event.LogStreamName)
+			}
+		}
+	}
+
+	return searchResults, nil
 }
