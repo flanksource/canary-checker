@@ -114,7 +114,10 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name"
+        "name",
+        "auth",
+        "query",
+        "index"
       ]
     },
     "SecretKeySelector": {

@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 )
 
 type Endpoint struct {
@@ -139,6 +140,7 @@ func (c Canary) ToV1() (*v1.Canary, error) {
 				"source": c.Source,
 			},
 			Labels: c.Labels,
+			UID:    k8stypes.UID(c.ID.String()),
 		},
 	}
 	var deletionTimestamp metav1.Time
@@ -150,8 +152,6 @@ func (c Canary) ToV1() (*v1.Canary, error) {
 		logger.Debugf("Failed to unmarshal canary spec: %s", err)
 		return nil, err
 	}
-	id := c.ID.String()
-	canary.Status.PersistedID = &id
 	canary.Status.Checks = c.Checks
 	return &canary, nil
 }

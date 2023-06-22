@@ -9,8 +9,8 @@ sudo mv askgit /usr/bin/askgit
 sudo chmod +x /usr/bin/askgit
 rm askgit.tar.gz
 
-wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.18_amd64.deb
-sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.18_amd64.deb
+wget -O libssl.deb http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+sudo dpkg -i libssl.deb
 
 #verification
 which askgit

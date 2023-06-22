@@ -18,6 +18,7 @@ import (
 type checkContext interface {
 	context.Context
 	HydrateConnectionByURL(connectionName string) (*models.Connection, error)
+	GetEnvValueFromCache(env types.EnvVar) (string, error)
 }
 
 type Check struct {
@@ -431,12 +432,12 @@ type Mongo struct {
 type OpenSearchCheck struct {
 	Description    `yaml:",inline" json:",inline"`
 	Templatable    `yaml:",inline" json:",inline"`
-	ConnectionName string          `yaml:"connection,omitempty" json:"connection,omitempty"`
-	URL            string          `yaml:"url" json:"url,omitempty" template:"true"`
-	Auth           *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
-	Query          string          `yaml:"query" json:"query,omitempty" template:"true"`
-	Index          string          `yaml:"index" json:"index,omitempty" template:"true"`
-	Results        int64           `yaml:"results" json:"results,omitempty" template:"true"`
+	ConnectionName string         `yaml:"connection,omitempty" json:"connection,omitempty"`
+	URL            string         `yaml:"url,omitempty" json:"url,omitempty"`
+	Auth           Authentication `yaml:"auth" json:"auth"`
+	Query          string         `yaml:"query" json:"query"`
+	Index          string         `yaml:"index" json:"index"`
+	Results        int64          `yaml:"results,omitempty" json:"results,omitempty"`
 }
 
 func (c OpenSearchCheck) GetType() string {
@@ -457,6 +458,19 @@ func (c *OpenSearchCheck) HydrateConnection(ctx checkContext) error {
 		c.URL = connection.URL
 		c.Auth.Username.ValueStatic = connection.Username
 		c.Auth.Password.ValueStatic = connection.Password
+		return nil
+	}
+
+	if val, err := ctx.GetEnvValueFromCache(c.Auth.Username); err != nil {
+		return fmt.Errorf("failed to get username from cache: %w", err)
+	} else {
+		c.Auth.Username.ValueStatic = val
+	}
+
+	if val, err := ctx.GetEnvValueFromCache(c.Auth.Password); err != nil {
+		return fmt.Errorf("failed to get username from cache: %w", err)
+	} else {
+		c.Auth.Password.ValueStatic = val
 	}
 
 	return nil
@@ -499,6 +513,19 @@ func (c *ElasticsearchCheck) HydrateConnection(ctx checkContext) error {
 		c.URL = connection.URL
 		c.Auth.Username.ValueStatic = connection.Username
 		c.Auth.Password.ValueStatic = connection.Password
+		return nil
+	}
+
+	if val, err := ctx.GetEnvValueFromCache(c.Auth.Username); err != nil {
+		return fmt.Errorf("failed to get username from cache: %w", err)
+	} else {
+		c.Auth.Username.ValueStatic = val
+	}
+
+	if val, err := ctx.GetEnvValueFromCache(c.Auth.Password); err != nil {
+		return fmt.Errorf("failed to get password from cache: %w", err)
+	} else {
+		c.Auth.Password.ValueStatic = val
 	}
 
 	return nil

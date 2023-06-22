@@ -1,16 +1,28 @@
 package checks
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
 )
 
 func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
+
+	// Check if canary is not marked deleted in DB
+	if db.Gorm != nil {
+		var deletedAt sql.NullTime
+		err := db.Gorm.Table("canaries").Select("deleted_at").Where("id = ?", ctx.Canary.GetPersistedID()).Scan(&deletedAt).Error
+		if err == nil && deletedAt.Valid {
+			return results
+		}
+	}
+
 	checks := ctx.Canary.Spec.GetAllChecks()
 	ctx.Debugf("[%s] checking %d checks", ctx.Canary.Name, len(checks))
 	for _, c := range All {

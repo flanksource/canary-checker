@@ -11,7 +11,8 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - depguard
+    # Disabling depguard due to runtime errors
+    # - depguard
     - dogsled
     - errcheck
     - goconst
@@ -35,3 +36,10 @@ linters:
 linters-settings:
   gofmt:
     simplify: false
+  depguard:
+    rules:
+      main:
+        files:
+          - $all
+        deny:
+          image: Do not use image package

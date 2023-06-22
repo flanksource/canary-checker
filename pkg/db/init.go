@@ -107,15 +107,17 @@ func Init() error {
 		return err
 	}
 
-	if err := Gorm.Use(prometheus.New(prometheus.Config{
-		DBName:      Pool.Config().ConnConfig.Database,
-		StartServer: false,
-		MetricsCollector: []prometheus.MetricsCollector{
-			&prometheus.Postgres{},
-		},
-	})); err != nil {
-		logger.Warnf("Failed to register prometheus metrics: %v", err)
-	}
+	go func() {
+		if err := Gorm.Use(prometheus.New(prometheus.Config{
+			DBName:      Pool.Config().ConnConfig.Database,
+			StartServer: false,
+			MetricsCollector: []prometheus.MetricsCollector{
+				&prometheus.Postgres{},
+			},
+		})); err != nil {
+			logger.Warnf("Failed to register prometheus metrics: %v", err)
+		}
+	}()
 
 	if RunMigrations {
 		if err := duty.Migrate(ConnectionString, nil); err != nil {
