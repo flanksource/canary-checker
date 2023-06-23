@@ -70,7 +70,7 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 	check.Name = name
 	check.Description = description
 	tx := Gorm.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}},
+		Columns: []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
 		DoUpdates: clause.Assignments(
 			map[string]interface{}{
 				"spec":        check.Spec,
