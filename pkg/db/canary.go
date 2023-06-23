@@ -109,7 +109,10 @@ func UpdateChecksStatus(ids []string, status models.CheckHealthStatus) error {
 	}
 	return Gorm.Table("checks").
 		Where("id in (?)", ids).
-		Update("status", status).
+		Updates(map[string]any{
+			"status":     status,
+			"deleted_at": gorm.Expr("NOW()"),
+		}).
 		Error
 }
 
