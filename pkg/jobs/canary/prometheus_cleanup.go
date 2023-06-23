@@ -6,50 +6,21 @@ import (
 
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/metrics"
-	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/commons/logger"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/model"
 )
 
-// CleanUpPrometheusGauges removes Prometheus gauges for checks that no longer exist.
-func CleanUpPrometheusGauges() {
-	if runner.Prometheus == nil {
-		logger.Infof("Prometheus is not running")
-		return
-	}
-
+// CleanupMetricsGauges removes gauges for checks that no longer exist.
+func CleanupMetricsGauges() {
 	ctx := context.Background()
 
-	result, _, err := runner.Prometheus.Query(ctx, metrics.GaugeOpt.Name, time.Now())
-	if err != nil {
-		logger.Errorf("Error querying prometheus: %v", err)
-		return
-	}
-
-	resultVector, ok := result.(model.Vector)
-	if !ok {
-		logger.Errorf("Unexpected result type: %T", result)
-		return
-	}
-
-	if len(resultVector) == 0 {
-		return
-	}
-
-	var checkIDs []string
-	for _, r := range resultVector {
-		if canaryName, ok := r.Metric["key"]; ok {
-			checkIDs = append(checkIDs, string(canaryName))
-		}
-	}
-
-	deletedChecks, err := db.FindDeletedChecksByIDs(ctx, checkIDs)
+	sevenDaysAgo := time.Now().Add(-time.Hour * 24 * 7)
+	deletedChecks, err := db.FindDeletedChecksSince(ctx, sevenDaysAgo)
 	if err != nil {
 		logger.Errorf("Error finding deleted checks: %v", err)
 		return
 	}
-	logger.Debugf("Found %d/%d deleted checks", len(deletedChecks), len(checkIDs))
+	logger.Debugf("Found %d deleted checks since %s", len(deletedChecks), sevenDaysAgo.Format("2006-01-02 15:04:05"))
 
 	for _, check := range deletedChecks {
 		if metrics.Gauge.DeletePartialMatch(prometheus.Labels{"key": check.ID.String()}) > 0 {

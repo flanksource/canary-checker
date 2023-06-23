@@ -211,9 +211,9 @@ func FindCheck(canary pkg.Canary, name string) (*pkg.Check, error) {
 	return &model, nil
 }
 
-func FindDeletedChecksByIDs(ctx context.Context, ids []string) ([]models.Check, error) {
+func FindDeletedChecksSince(ctx context.Context, since time.Time) ([]models.Check, error) {
 	var checks []models.Check
-	err := Gorm.Where("id IN ?", ids).Where("deleted_at IS NOT NULL").Find(&checks).Error
+	err := Gorm.Where("deleted_at > ?", since).Find(&checks).Error
 	return checks, err
 }
 

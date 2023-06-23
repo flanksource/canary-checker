@@ -59,13 +59,11 @@ var (
 		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
 	)
 
-	GaugeOpt = prometheus.GaugeOpts{
-		Name: "canary_check",
-		Help: "A gauge representing the canaries success (0) or failure (1)",
-	}
-
 	Gauge = prometheus.NewGaugeVec(
-		GaugeOpt,
+		prometheus.GaugeOpts{
+			Name: "canary_check",
+			Help: "A gauge representing the canaries success (0) or failure (1)",
+		},
 		[]string{"key", "type", "canary_name", "canary_namespace", "name"},
 	)
 
