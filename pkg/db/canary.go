@@ -24,7 +24,19 @@ import (
 func GetAllCanaries() ([]pkg.Canary, error) {
 	var _canaries []pkg.Canary
 	var rawCanaries interface{}
-	query := fmt.Sprintf("SELECT json_agg(jsonb_set_lax(to_jsonb(canaries),'{checks}', %s)) :: jsonb as canaries from canaries where deleted_at is null", getChecksForCanaries())
+	query := `
+        SELECT json_agg(
+            jsonb_set_lax(to_jsonb(canaries),'{checks}', (
+                SELECT json_object_agg(checks.name, checks.id)
+                FROM checks
+                WHERE
+                    checks.canary_id = canaries.id
+                    AND checks.deleted_at IS NULL
+                GROUP BY checks.canary_id
+                ) :: jsonb
+            )
+        ) :: jsonb AS canaries
+        FROM canaries WHERE deleted_at IS NULL`
 
 	rows, err := Gorm.Raw(query).Rows()
 	if err != nil {
@@ -58,10 +70,6 @@ func GetAllChecks() ([]pkg.Check, error) {
 
 func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 	check.CanaryID = canaryID
-	if check.Spec == nil {
-		spec, _ := json.Marshal(check)
-		check.Spec = spec
-	}
 	name := check.GetName()
 	description := check.GetDescription()
 	if name == "" {
@@ -70,19 +78,31 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 	}
 	check.Name = name
 	check.Description = description
+
+	// TODO: Find root cause why pod check has these labels in check model
+	delete(check.Labels, "canary-checker.flanksource.com/podCheck")
+	delete(check.Labels, "canary-checker.flanksource.com/check")
+
+	delete(check.Labels, "controller-revision-hash")
+
+	assignments := map[string]interface{}{
+		"spec":        check.Spec,
+		"type":        check.Type,
+		"description": check.Description,
+		"owner":       check.Owner,
+		"severity":    check.Severity,
+		"icon":        check.Icon,
+		"labels":      check.Labels,
+		"deleted_at":  nil,
+	}
+
+	// Deletions for transformed checks are handled separately
+	if check.Transformed {
+		delete(assignments, "deleted_at")
+	}
 	tx := Gorm.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}},
-		DoUpdates: clause.Assignments(
-			map[string]interface{}{
-				"spec":        check.Spec,
-				"type":        check.Type,
-				"description": check.Description,
-				"owner":       check.Owner,
-				"severity":    check.Severity,
-				"icon":        check.Icon,
-				"labels":      check.Labels,
-				"deleted_at":  nil,
-			}),
+		Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
+		DoUpdates: clause.Assignments(assignments),
 	}).Create(&check)
 	if tx.Error != nil {
 		return uuid.Nil, tx.Error
@@ -95,7 +115,7 @@ func GetTransformedCheckIDs(canaryID string) ([]string, error) {
 	var ids []string
 	err := Gorm.Table("checks").
 		Select("id").
-		Where("canary_id = ? AND transformed = true", canaryID).
+		Where("canary_id = ? AND transformed = true AND deleted_at IS NULL", canaryID).
 		Find(&ids).
 		Error
 	return ids, err
@@ -110,7 +130,10 @@ func UpdateChecksStatus(ids []string, status models.CheckHealthStatus) error {
 	}
 	return Gorm.Table("checks").
 		Where("id in (?)", ids).
-		Update("status", status).
+		Updates(map[string]any{
+			"status":     status,
+			"deleted_at": gorm.Expr("NOW()"),
+		}).
 		Error
 }
 
@@ -265,6 +288,7 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 		if checkID := canary.GetCheckID(check.Name); checkID != "" {
 			check.ID, _ = uuid.Parse(checkID)
 		}
+		check.Spec, _ = json.Marshal(config)
 		id, err := PersistCheck(check, model.ID)
 		if err != nil {
 			logger.Errorf("error persisting check", err)
@@ -273,12 +297,6 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 	}
 
 	return &model, checks, changed, nil
-}
-
-func getChecksForCanaries() string {
-	return `
-	(SELECT json_object_agg(checks.name, checks.id) from checks WHERE checks.canary_id = canaries.id AND checks.deleted_at is null GROUP BY checks.canary_id) :: jsonb
-			 `
 }
 
 func RefreshCheckStatusSummary() {

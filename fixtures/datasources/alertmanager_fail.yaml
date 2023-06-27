@@ -22,6 +22,7 @@ spec:
               icon: 'alert',
               message: r.message,
               description: r.message,
+              status: 'unhealthy',
             }
           })
           JSON.stringify(out);
