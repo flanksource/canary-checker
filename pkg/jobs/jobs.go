@@ -54,6 +54,11 @@ func Start() {
 	if _, err := ScheduleFunc(v1.CheckStatusesAggregate1dSchedule, db.AggregateCheckStatuses1d); err != nil {
 		logger.Errorf("Failed to schedule check statuses aggregator 1d: %v", err)
 	}
+	if _, err := ScheduleFunc(v1.PrometheusGaugeCleanupSchedule, canaryJobs.CleanupMetricsGauges); err != nil {
+		logger.Errorf("Failed to schedule prometheus gauge cleanup job: %v", err)
+	}
+
+	canaryJobs.CleanupMetricsGauges()
 	canaryJobs.SyncCanaryJobs()
 	systemJobs.SyncTopologyJobs()
 }

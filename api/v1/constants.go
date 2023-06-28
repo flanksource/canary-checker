@@ -12,4 +12,5 @@ const (
 	CheckStatusesAggregate1hSchedule   = "@every 1h"
 	CheckStatusesAggregate1dSchedule   = "@every 24h"
 	CheckStatusDeleteSchedule          = "@every 24h"
+	PrometheusGaugeCleanupSchedule     = "@every 1h"
 )

@@ -54,6 +54,7 @@ func setup() {
 	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 
 	push.AddServers(pushServers)
+
 	go push.Start()
 }
 
