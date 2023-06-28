@@ -234,10 +234,10 @@ func FindCheck(canary pkg.Canary, name string) (*pkg.Check, error) {
 	return &model, nil
 }
 
-func FindDeletedChecksSince(ctx context.Context, since time.Time) ([]models.Check, error) {
-	var checks []models.Check
-	err := Gorm.Where("deleted_at > ?", since).Find(&checks).Error
-	return checks, err
+func FindDeletedChecksSince(ctx context.Context, since time.Time) ([]string, error) {
+	var ids []string
+	err := Gorm.Model(&models.Check{}).Where("deleted_at > ?", since).Pluck("id", &ids).Error
+	return ids, err
 }
 
 func CreateCanary(canary *pkg.Canary) error {
