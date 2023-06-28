@@ -11,9 +11,8 @@ import (
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
-	"github.com/jackc/pgx/v5"
+	"github.com/flanksource/duty/migrate"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 	"gorm.io/plugin/prometheus"
 )
@@ -120,7 +119,7 @@ func Init() error {
 	}()
 
 	if RunMigrations {
-		if err := duty.Migrate(ConnectionString, nil); err != nil {
+		if err := duty.Migrate(ConnectionString, &migrate.MigrateOptions{IgnoreFiles: []string{"012_changelog.sql"}}); err != nil {
 			return err
 		}
 	}
@@ -128,37 +127,6 @@ func Init() error {
 	return nil
 }
 
-func Cleanup() {
-	cron := cron.New()
-	cron.AddFunc("@every 1d", func() { // nolint: errcheck
-		if _, err := Pool.Exec(context.TODO(), "DELETE FROM checks WHERE updated_at < NOW() - INTERVAL '1 day' * $1;", DefaultExpiryDays); err != nil {
-			logger.Errorf("error deleting old entried from check")
-		}
-		if _, err := Pool.Exec(context.TODO(), "DELETE FROM check_statuses WHERE inserted_at < NOW() - INTERVAL '1 day' * $1;", DefaultExpiryDays); err != nil {
-			logger.Errorf("error deleting old entried from check")
-		}
-	})
-	cron.Start()
-}
-
 func GetDB() (*sql.DB, error) {
 	return duty.NewDB(ConnectionString)
-}
-
-func ConvertNamedParams(sql string, namedArgs map[string]interface{}) (string, []interface{}) {
-	i := 1
-	var args []interface{}
-	// Loop the named args and replace with placeholders
-	for pname, pval := range namedArgs {
-		sql = strings.ReplaceAll(sql, ":"+pname, fmt.Sprint(`$`, i))
-		args = append(args, pval)
-		i++
-	}
-	return sql, args
-}
-
-// TODO: Use pgx/v5 and use Pool.Query(ctx, sql, pgx.NamedArgs{})
-func QueryNamed(ctx context.Context, sql string, args map[string]interface{}) (pgx.Rows, error) {
-	sql, namedArgs := ConvertNamedParams(sql, args)
-	return Pool.Query(ctx, sql, namedArgs...)
 }
