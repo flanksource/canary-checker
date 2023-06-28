@@ -148,10 +148,10 @@ func unregisterChecksGauge(canaryID string) error {
 	return nil
 }
 
-func deleteCanaryByID(canaryID string) error {
+func deleteCanary(canaryID string, canary pkg.Canary) error {
 	deleteTime := time.Now()
 
-	if err := Gorm.Where("id = ?", canaryID).Find(&models.Canary{}).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+	if err := Gorm.Where("id = ?", canaryID).Find(&canary).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
 		return fmt.Errorf("failed to delete canary %s: %v", canaryID, err)
 	}
 
@@ -172,11 +172,17 @@ func DeleteCanaryByID(canaryID string) error {
 		logger.Errorf("failed to unregister checks gauges: %v", err)
 	}
 
-	return deleteCanaryByID(canaryID)
+	return deleteCanary(canaryID, pkg.Canary{})
 }
 
+// DeleteCanary deletes the canary by the given filter.
 func DeleteCanary(canary v1.Canary) error {
 	logger.Infof("deleting canary %s/%s", canary.Namespace, canary.Name)
+
+	model, err := pkg.CanaryFromV1(canary)
+	if err != nil {
+		return err
+	}
 
 	var checkIDs []string
 	for _, checkID := range canary.Status.Checks {
@@ -190,7 +196,7 @@ func DeleteCanary(canary v1.Canary) error {
 		return nil
 	}
 
-	return deleteCanaryByID(id)
+	return deleteCanary(id, model)
 }
 
 func DeleteChecksForCanary(id string, deleteTime time.Time) error {
