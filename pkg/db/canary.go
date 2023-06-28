@@ -184,13 +184,13 @@ func DeleteCanary(canary v1.Canary) error {
 	}
 	metrics.UnregisterGauge(checkIDs)
 
-	persistedID := canary.GetPersistedID()
-	if persistedID == "" {
+	id := canary.GetPersistedID()
+	if id == "" {
 		logger.Errorf("Canary %s/%s has not been persisted", canary.Namespace, canary.Name)
 		return nil
 	}
 
-	return deleteCanaryByID(persistedID)
+	return deleteCanaryByID(id)
 }
 
 func DeleteChecksForCanary(id string, deleteTime time.Time) error {
