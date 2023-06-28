@@ -21,6 +21,7 @@ disablePostgrest: false
 
 # Set to true to enable prometheus service monitor
 serviceMonitor: false
+grafanaDashboards: false
 
 # Turn on pprof /debug endpoint
 debug: false
