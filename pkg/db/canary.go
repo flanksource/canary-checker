@@ -328,7 +328,7 @@ func CleanupChecks() {
 	err := Gorm.Exec(`
         DELETE FROM checks
         WHERE
-            id NOT IN (SELECT check_id FROM evidences) AND
+            id NOT IN (SELECT check_id FROM evidences WHERE check_id IS NOT NULL) AND
             (NOW() - deleted_at) > INTERVAL '1 day' * ?
         `, CheckRetentionDays).Error
 	if err != nil {
