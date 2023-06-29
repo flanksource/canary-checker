@@ -36,6 +36,9 @@ var FuncScheduler = cron.New()
 
 var CanaryStatusChannel chan CanaryStatusPayload
 
+// concurrentJobLocks keeps track of the currently running jobs.
+var concurrentJobLocks sync.Map
+
 func StartScanCanaryConfigs(dataFile string, configFiles []string) {
 	DataFile = dataFile
 	CanaryConfigFiles = configFiles
@@ -62,6 +65,19 @@ var minimumTimeBetweenCanaryRuns = 10 * time.Second
 var canaryLastRuntimes = sync.Map{}
 
 func (job CanaryJob) Run() {
+	val, _ := concurrentJobLocks.LoadOrStore(job.Canary.GetPersistedID(), &sync.Mutex{})
+	lock, ok := val.(*sync.Mutex)
+	if !ok {
+		logger.Warnf("expected mutex but got %T for canary(id=%s)", lock, job.Canary.GetPersistedID())
+		return
+	}
+
+	if !lock.TryLock() {
+		logger.Debugf("config (id=%s) is already running. skipping this run ...", job.Canary.GetPersistedID())
+		return
+	}
+	defer lock.Unlock()
+
 	lastRunDelta := minimumTimeBetweenCanaryRuns
 	// Get last runtime from sync map
 	var lastRuntime time.Time
@@ -274,21 +290,23 @@ func SyncCanaryJobs() {
 
 	jobHistory := models.NewJobHistory("CanarySync", "canary", "").Start()
 	_ = db.PersistJobHistory(jobHistory)
+	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
+
 	canaries, err := db.GetAllCanaries()
 	if err != nil {
 		logger.Errorf("Failed to get canaries: %v", err)
 		jobHistory.AddError(err.Error())
-		_ = db.PersistJobHistory(jobHistory.End())
 		return
 	}
 
-	for _, _c := range canaries {
-		canary, err := _c.ToV1()
+	for _, c := range canaries {
+		canary, err := c.ToV1()
 		if err != nil {
-			logger.Errorf("Error parsing canary[%s]: %v", _c.ID, err)
+			logger.Errorf("Error parsing canary[%s]: %v", c.ID, err)
 			jobHistory.AddError(err.Error())
 			continue
 		}
+
 		if len(canary.Status.Checks) == 0 && len(canary.Spec.GetAllChecks()) > 0 {
 			logger.Infof("Persisting %s as it has no checks", canary.Name)
 			pkgCanary, _, _, err := db.PersistCanary(*canary, canary.Annotations["source"])
@@ -304,6 +322,7 @@ func SyncCanaryJobs() {
 				jobHistory.AddError(err.Error())
 				continue
 			}
+
 			if err := SyncCanaryJob(*v1canary); err != nil {
 				logger.Errorf(err.Error())
 				jobHistory.AddError(err.Error())
@@ -313,8 +332,8 @@ func SyncCanaryJobs() {
 			jobHistory.AddError(err.Error())
 		}
 	}
+
 	jobHistory.IncrSuccess()
-	_ = db.PersistJobHistory(jobHistory.End())
 	logger.Infof("Synced canary jobs %d", len(CanaryScheduler.Entries()))
 }
 
