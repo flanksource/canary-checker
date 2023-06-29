@@ -47,8 +47,7 @@ func DelayedResponseHandler(c echo.Context) error {
 	}
 
 	time.Sleep(time.Duration(delay) * time.Second)
-	c.String(http.StatusOK, "Done")
-	return nil
+	return c.String(http.StatusOK, "Done")
 }
 
 var _ = ginkgo.BeforeSuite(func() {
