@@ -89,7 +89,7 @@ func serve() {
 	e.Use(middleware.Logger())
 
 	apiGroup := e.Group("/api")
-	apiGroup.GET("/", api.CheckSummary)
+	apiGroup.GET("", api.CheckSummary)
 	apiGroup.GET("/summary", api.HealthSummary)
 	apiGroup.GET("/graph", api.CheckDetails)
 	apiGroup.POST("/push", api.PushHandler)
