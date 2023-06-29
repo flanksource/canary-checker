@@ -54,6 +54,8 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
 	flags.StringVarP(&cache.DefaultWindow, "default-window", "", "1h", "Default search window")
 	flags.IntVar(&db.CheckStatusRetentionDays, "check-status-retention-period", db.DefaultCheckStatusRetentionDays, "Check status retention period in days")
+	flags.IntVar(&db.CheckRetentionDays, "check-retention-period", db.DefaultCheckRetentionDays, "Check retention period in days")
+	flags.IntVar(&db.CanaryRetentionDays, "canary-retention-period", db.DefaultCanaryRetentionDays, "Canary retention period in days")
 }
 
 func readFromEnv(v string) string {

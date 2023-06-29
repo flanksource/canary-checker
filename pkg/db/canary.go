@@ -304,3 +304,62 @@ func RefreshCheckStatusSummary() {
 		logger.Errorf("error refreshing check_status_summary materialized view: %v", err)
 	}
 }
+
+const (
+	DefaultCheckRetentionDays  = 7
+	DefaultCanaryRetentionDays = 7
+)
+
+var (
+	CheckRetentionDays  int
+	CanaryRetentionDays int
+)
+
+func CleanupChecks() {
+	jobHistory := models.NewJobHistory("CleanupChecks", "checks", "").Start()
+	_ = PersistJobHistory(jobHistory)
+	defer func() {
+		_ = PersistJobHistory(jobHistory.End())
+	}()
+
+	if CheckRetentionDays <= 0 {
+		CheckRetentionDays = DefaultCheckRetentionDays
+	}
+	err := Gorm.Exec(`
+        DELETE FROM checks
+        WHERE
+            id NOT IN (SELECT check_id FROM evidences) AND
+            (NOW() - deleted_at) > INTERVAL '1 day' * ?
+        `, CheckRetentionDays).Error
+	if err != nil {
+		logger.Errorf("Error cleaning up checks: %v", err)
+		jobHistory.AddError(err.Error())
+	} else {
+		jobHistory.IncrSuccess()
+	}
+}
+
+func CleanupCanaries() {
+	jobHistory := models.NewJobHistory("CleanupCanaries", "canaries", "").Start()
+	_ = PersistJobHistory(jobHistory)
+	defer func() {
+		_ = PersistJobHistory(jobHistory.End())
+	}()
+
+	if CanaryRetentionDays <= 0 {
+		CanaryRetentionDays = DefaultCanaryRetentionDays
+	}
+	err := Gorm.Exec(`
+        DELETE FROM canaries
+        WHERE
+            id NOT IN (SELECT canary_id FROM checks) AND
+            (NOW() - deleted_at) > INTERVAL '1 day' * ?
+        `, CanaryRetentionDays).Error
+
+	if err != nil {
+		logger.Errorf("Error cleaning up canaries: %v", err)
+		jobHistory.AddError(err.Error())
+	} else {
+		jobHistory.IncrSuccess()
+	}
+}
