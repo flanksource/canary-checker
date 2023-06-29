@@ -242,8 +242,11 @@ func ScanCanaryConfigs() {
 	}
 }
 
+var canaryUpdateTimeCache = make(map[string]time.Time)
+
+// TODO: Refactor to use database object instead of kubernetes
 func SyncCanaryJob(canary v1.Canary) error {
-	if !canary.DeletionTimestamp.IsZero() || canary.Spec.GetSchedule() == "@never" { //nolint:goconst
+	if !canary.DeletionTimestamp.IsZero() || canary.Spec.GetSchedule() == "@never" {
 		DeleteCanaryJob(canary)
 		return nil
 	}
@@ -256,9 +259,9 @@ func SyncCanaryJob(canary v1.Canary) error {
 		}
 	}
 
-	entry := findCronEntry(canary)
-	if entry != nil {
-		CanaryScheduler.Remove(entry.ID)
+	dbCanary, err := db.GetCanary(canary.GetPersistedID())
+	if err != nil {
+		return err
 	}
 
 	job := CanaryJob{
@@ -269,15 +272,26 @@ func SyncCanaryJob(canary v1.Canary) error {
 		LogFail:    canary.IsTrace() || canary.IsDebug() || LogFail,
 	}
 
-	_, err := CanaryScheduler.AddJob(canary.Spec.GetSchedule(), job)
-	if err != nil {
-		return fmt.Errorf("failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
-	}
-	logger.Infof("Scheduled %s: %s", canary, canary.Spec.GetSchedule())
+	updateTime, exists := canaryUpdateTimeCache[dbCanary.ID.String()]
+	entry := findCronEntry(canary)
+	if !exists || dbCanary.UpdatedAt.After(updateTime) || entry == nil {
+		// Remove entry if it exists
+		if entry != nil {
+			CanaryScheduler.Remove(entry.ID)
+		}
 
-	entry = findCronEntry(canary)
-	if entry != nil && time.Until(entry.Next) < 1*time.Hour {
-		// run all regular canaries on startup
+		// Schedule canary for the first time
+		_, err = CanaryScheduler.AddJob(canary.Spec.GetSchedule(), job)
+		if err != nil {
+			return fmt.Errorf("failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
+		}
+		logger.Infof("Scheduled %s: %s", canary, canary.Spec.GetSchedule())
+
+		canaryUpdateTimeCache[dbCanary.ID.String()] = dbCanary.UpdatedAt
+	}
+
+	// Run canary on startup
+	if entry != nil && time.Until(entry.Next) < 1*time.Hour && !exists {
 		job = entry.Job.(CanaryJob)
 		go job.Run()
 	}
