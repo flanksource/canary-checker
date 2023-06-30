@@ -281,19 +281,20 @@ func SyncCanaryJob(canary v1.Canary) error {
 		}
 
 		// Schedule canary for the first time
-		_, err = CanaryScheduler.AddJob(canary.Spec.GetSchedule(), job)
+		entryID, err := CanaryScheduler.AddJob(canary.Spec.GetSchedule(), job)
 		if err != nil {
 			return fmt.Errorf("failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
 		}
+		entryPtr := CanaryScheduler.Entry(entryID)
+		entry = &entryPtr
 		logger.Infof("Scheduled %s: %s", canary, canary.Spec.GetSchedule())
 
 		canaryUpdateTimeCache[dbCanary.ID.String()] = dbCanary.UpdatedAt
 	}
 
-	//Run all regularly scheduled canaries on startup (<1h) and not daily/weekly schedules
+	// Run all regularly scheduled canaries on startup (<1h) and not daily/weekly schedules
 	if entry != nil && time.Until(entry.Next) < 1*time.Hour && !exists {
-		job = entry.Job.(CanaryJob)
-		go job.Run()
+		go entry.Job.Run()
 	}
 
 	return nil
