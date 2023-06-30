@@ -290,7 +290,7 @@ func SyncCanaryJob(canary v1.Canary) error {
 		canaryUpdateTimeCache[dbCanary.ID.String()] = dbCanary.UpdatedAt
 	}
 
-	// Run canary on startup
+	//Run all regularly scheduled canaries on startup (<1h) and not daily/weekly schedules
 	if entry != nil && time.Until(entry.Next) < 1*time.Hour && !exists {
 		job = entry.Job.(CanaryJob)
 		go job.Run()
