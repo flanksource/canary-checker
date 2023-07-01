@@ -285,8 +285,7 @@ func SyncCanaryJob(canary v1.Canary) error {
 		if err != nil {
 			return fmt.Errorf("failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
 		}
-		entryPtr := CanaryScheduler.Entry(entryID)
-		entry = &entryPtr
+		entry = utils.Ptr(CanaryScheduler.Entry(entryID))
 		logger.Infof("Scheduled %s: %s", canary, canary.Spec.GetSchedule())
 
 		canaryUpdateTimeCache[dbCanary.ID.String()] = dbCanary.UpdatedAt

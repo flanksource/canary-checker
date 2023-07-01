@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"testing"
 
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7/pipelines"
@@ -26,8 +27,8 @@ func TestMatchPipelineVariables(t *testing.T) {
 				"key2": "value2",
 			},
 			got: &map[string]pipelines.Variable{
-				"key1": {Value: ptr("value1")},
-				"key2": {Value: ptr("value2")},
+				"key1": {Value: utils.Ptr("value1")},
+				"key2": {Value: utils.Ptr("value2")},
 			},
 			wantResult: true,
 		},
@@ -38,7 +39,7 @@ func TestMatchPipelineVariables(t *testing.T) {
 				"key2": "value2",
 			},
 			got: &map[string]pipelines.Variable{
-				"key1": {Value: ptr("value1")},
+				"key1": {Value: utils.Ptr("value1")},
 			},
 			wantResult: false,
 		},
@@ -49,8 +50,8 @@ func TestMatchPipelineVariables(t *testing.T) {
 				"key2": "value2",
 			},
 			got: &map[string]pipelines.Variable{
-				"key1": {Value: ptr("value1")},
-				"key2": {Value: ptr("value3")},
+				"key1": {Value: utils.Ptr("value1")},
+				"key2": {Value: utils.Ptr("value3")},
 			},
 			wantResult: false,
 		},

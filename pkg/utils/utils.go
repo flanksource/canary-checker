@@ -66,3 +66,7 @@ func UUIDsToStrings(in []uuid.UUID) []string {
 
 	return out
 }
+
+func Ptr[T any](t T) *T {
+	return &t
+}
