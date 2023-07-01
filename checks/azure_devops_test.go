@@ -1,9 +1,9 @@
 package checks
 
 import (
-	"github.com/flanksource/canary-checker/pkg/utils"
 	"testing"
 
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7/pipelines"
 )
 
