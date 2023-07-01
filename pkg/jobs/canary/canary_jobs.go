@@ -242,7 +242,7 @@ func ScanCanaryConfigs() {
 	}
 }
 
-var canaryUpdateTimeCache = make(map[string]time.Time)
+var canaryUpdateTimeCache = sync.Map{}
 
 // TODO: Refactor to use database object instead of kubernetes
 func SyncCanaryJob(canary v1.Canary) error {
@@ -272,9 +272,9 @@ func SyncCanaryJob(canary v1.Canary) error {
 		LogFail:    canary.IsTrace() || canary.IsDebug() || LogFail,
 	}
 
-	updateTime, exists := canaryUpdateTimeCache[dbCanary.ID.String()]
+	updateTime, exists := canaryUpdateTimeCache.Load(dbCanary.ID.String())
 	entry := findCronEntry(canary)
-	if !exists || dbCanary.UpdatedAt.After(updateTime) || entry == nil {
+	if !exists || dbCanary.UpdatedAt.After(updateTime.(time.Time)) || entry == nil {
 		// Remove entry if it exists
 		if entry != nil {
 			CanaryScheduler.Remove(entry.ID)
@@ -288,7 +288,7 @@ func SyncCanaryJob(canary v1.Canary) error {
 		entry = utils.Ptr(CanaryScheduler.Entry(entryID))
 		logger.Infof("Scheduled %s: %s", canary, canary.Spec.GetSchedule())
 
-		canaryUpdateTimeCache[dbCanary.ID.String()] = dbCanary.UpdatedAt
+		canaryUpdateTimeCache.Store(dbCanary.ID.String(), dbCanary.UpdatedAt)
 	}
 
 	// Run all regularly scheduled canaries on startup (<1h) and not daily/weekly schedules
