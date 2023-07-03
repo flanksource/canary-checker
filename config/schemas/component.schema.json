@@ -610,19 +610,6 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
-        "Filter": {
-          "$ref": "#/$defs/CloudWatchFilter"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "name",
-        "Filter"
-      ]
-    },
-    "CloudWatchFilter": {
-      "properties": {
         "actionPrefix": {
           "type": "string"
         },
@@ -640,7 +627,10 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "required": [
+        "name"
+      ]
     },
     "Component": {
       "properties": {

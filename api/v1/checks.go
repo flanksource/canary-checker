@@ -144,10 +144,10 @@ func (c S3Check) GetType() string {
 }
 
 type CloudWatchCheck struct {
-	Description   `yaml:",inline" json:",inline"`
-	AWSConnection `yaml:",inline" json:",inline"`
-	Templatable   `yaml:",inline" json:",inline"`
-	Filter        CloudWatchFilter `yaml:",inline" json:",inline"`
+	Description      `yaml:",inline" json:",inline"`
+	AWSConnection    `yaml:",inline" json:",inline"`
+	Templatable      `yaml:",inline" json:",inline"`
+	CloudWatchFilter `yaml:",inline" json:",inline"`
 }
 
 type CloudWatchFilter struct {
@@ -159,11 +159,11 @@ type CloudWatchFilter struct {
 
 func (c CloudWatchCheck) GetEndpoint() string {
 	endpoint := c.Region
-	if c.Filter.ActionPrefix != nil {
-		endpoint += "-" + *c.Filter.ActionPrefix
+	if c.CloudWatchFilter.ActionPrefix != nil {
+		endpoint += "-" + *c.CloudWatchFilter.ActionPrefix
 	}
-	if c.Filter.AlarmPrefix != nil {
-		endpoint += "-" + *c.Filter.AlarmPrefix
+	if c.CloudWatchFilter.AlarmPrefix != nil {
+		endpoint += "-" + *c.CloudWatchFilter.AlarmPrefix
 	}
 	return endpoint
 }

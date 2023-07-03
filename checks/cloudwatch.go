@@ -49,10 +49,10 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 	client := cloudwatch.NewFromConfig(*cfg)
 	maxRecords := int32(100)
 	alarms, err := client.DescribeAlarms(ctx, &cloudwatch.DescribeAlarmsInput{
-		AlarmNames:      check.Filter.Alarms,
-		AlarmNamePrefix: check.Filter.AlarmPrefix,
-		ActionPrefix:    check.Filter.ActionPrefix,
-		StateValue:      types.StateValue(check.Filter.State),
+		AlarmNames:      check.CloudWatchFilter.Alarms,
+		AlarmNamePrefix: check.CloudWatchFilter.AlarmPrefix,
+		ActionPrefix:    check.CloudWatchFilter.ActionPrefix,
+		StateValue:      types.StateValue(check.CloudWatchFilter.State),
 		MaxRecords:      &maxRecords,
 	})
 	if err != nil {
