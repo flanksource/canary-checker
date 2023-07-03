@@ -897,6 +897,13 @@ func (in *ComponentSpec) DeepCopyInto(out *ComponentSpec) {
 		*out = new(Template)
 		**out = **in
 	}
+	if in.Labels != nil {
+		in, out := &in.Labels, &out.Labels
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	if in.Relationships != nil {
 		in, out := &in.Relationships, &out.Relationships
 		*out = make([]RelationshipSpec, len(*in))
@@ -980,6 +987,13 @@ func (in *ComponentSpecObject) DeepCopyInto(out *ComponentSpecObject) {
 		in, out := &in.Id, &out.Id
 		*out = new(Template)
 		**out = **in
+	}
+	if in.Labels != nil {
+		in, out := &in.Labels, &out.Labels
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 	if in.Relationships != nil {
 		in, out := &in.Relationships, &out.Relationships

@@ -267,6 +267,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Icon:            c.Icon,
 		Selectors:       c.Selectors,
 		ComponentChecks: c.ComponentChecks,
+		Labels:          c.Labels,
 		Configs:         configs,
 		LogSelectors:    c.LogSelectors,
 	}
