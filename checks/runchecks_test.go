@@ -5,14 +5,14 @@ import (
 	"testing"
 
 	"github.com/flanksource/canary-checker/api/context"
-	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/duty/types"
 )
 
 func Test_measureTestSeverity(t *testing.T) {
 	type args struct {
 		duration  int
-		threshold *v1.TestThreshold
+		threshold *types.TestThreshold
 	}
 	tests := []struct {
 		name string
@@ -23,7 +23,7 @@ func Test_measureTestSeverity(t *testing.T) {
 			name: "simple - critical",
 			args: args{
 				duration: 2000,
-				threshold: &v1.TestThreshold{
+				threshold: &types.TestThreshold{
 					Critical: "duration > 1500",
 				},
 			},
@@ -33,7 +33,7 @@ func Test_measureTestSeverity(t *testing.T) {
 			name: "simple - high",
 			args: args{
 				duration: 1200,
-				threshold: &v1.TestThreshold{
+				threshold: &types.TestThreshold{
 					Critical: "duration > 1500",
 					High:     "duration > 1000",
 				},
@@ -44,7 +44,7 @@ func Test_measureTestSeverity(t *testing.T) {
 			name: "simple - low",
 			args: args{
 				duration: 600,
-				threshold: &v1.TestThreshold{
+				threshold: &types.TestThreshold{
 					Critical: "duration > 1500",
 					High:     "duration > 1000",
 					Low:      "duration > 500",
@@ -56,7 +56,7 @@ func Test_measureTestSeverity(t *testing.T) {
 			name: "complex expression",
 			args: args{
 				duration: 2100,
-				threshold: &v1.TestThreshold{
+				threshold: &types.TestThreshold{
 					Critical: "duration > 1500 && duration < 2000",
 					High:     "duration > 1000 && duration < 1500",
 					Low:      "duration > 500 && duration < 1000",
@@ -75,7 +75,7 @@ func Test_measureTestSeverity(t *testing.T) {
 			name: "no severity match",
 			args: args{
 				duration: 400,
-				threshold: &v1.TestThreshold{
+				threshold: &types.TestThreshold{
 					Critical: "duration > 1500",
 					High:     "duration > 1000",
 					Low:      "duration > 500",
@@ -87,7 +87,7 @@ func Test_measureTestSeverity(t *testing.T) {
 			name: "invalid expression",
 			args: args{
 				duration: 400,
-				threshold: &v1.TestThreshold{
+				threshold: &types.TestThreshold{
 					Critical: "duration >>> 1500",
 					High:     "duration > 1000",
 					Low:      "duration > 500",
@@ -99,7 +99,7 @@ func Test_measureTestSeverity(t *testing.T) {
 			name: "use of undefined var",
 			args: args{
 				duration: 400,
-				threshold: &v1.TestThreshold{
+				threshold: &types.TestThreshold{
 					Critical: "Duration > 1500",
 					High:     "Duration > 1000",
 					Low:      "Duration > 500",

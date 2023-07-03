@@ -228,7 +228,7 @@ type DisplayTemplate interface {
 // +k8s:deepcopy-gen=false
 type TestFunction interface {
 	GetTestFunction() Template
-	GetTestThreshold() *TestThreshold
+	GetTestThreshold() *types.TestThreshold
 }
 
 // +k8s:deepcopy-gen=false
@@ -236,15 +236,9 @@ type Transformer interface {
 	GetTransformer() Template
 }
 
-type TestThreshold struct {
-	High     string `yaml:"high,omitempty" json:"high,omitempty"`
-	Low      string `yaml:"low,omitempty" json:"low,omitempty"`
-	Critical string `yaml:"critical,omitempty" json:"critical,omitempty"`
-}
-
 type TestTemplate struct {
-	Template       `yaml:",inline" json:",inline"`
-	*TestThreshold `yaml:",inline" json:",inline"`
+	Template             `yaml:",inline" json:",inline"`
+	*types.TestThreshold `yaml:",inline" json:",inline"`
 }
 
 type Templatable struct {
@@ -257,7 +251,7 @@ func (t Templatable) GetTestFunction() Template {
 	return t.Test.Template
 }
 
-func (t Templatable) GetTestThreshold() *TestThreshold {
+func (t Templatable) GetTestThreshold() *types.TestThreshold {
 	return t.Test.TestThreshold
 }
 

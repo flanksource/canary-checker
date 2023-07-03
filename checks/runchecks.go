@@ -9,6 +9,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/types"
 )
 
 func RunChecks(ctx *context.Context) []*pkg.CheckResult {
@@ -127,7 +128,7 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 	return r
 }
 
-func measureTestSeverity(ctx *context.Context, threshold *v1.TestThreshold) pkg.TestSeverity {
+func measureTestSeverity(ctx *context.Context, threshold *types.TestThreshold) pkg.TestSeverity {
 	if threshold == nil {
 		return pkg.TestSeverityUnknown
 	}
