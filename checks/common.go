@@ -187,7 +187,3 @@ func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) Ju
 	}
 	return testSuite
 }
-
-func ptr[T any](t T) *T {
-	return &t
-}
