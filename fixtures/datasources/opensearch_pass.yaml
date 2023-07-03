@@ -20,14 +20,13 @@ spec:
           }
         }
       results: 1
-      auth:
-        username:
-          valueFrom:
-            secretKeyRef:
-              name: search
-              key: OPENSEARCH_USERNAME
-        password:
-          valueFrom:
-            secretKeyRef:
-              name: search
-              key: OPENSEARCH_PASSWORD
+      username:
+        valueFrom:
+          secretKeyRef:
+            name: search
+            key: OPENSEARCH_USERNAME
+      password:
+        valueFrom:
+          secretKeyRef:
+            name: search
+            key: OPENSEARCH_PASSWORD

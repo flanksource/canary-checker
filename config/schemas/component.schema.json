@@ -59,11 +59,14 @@
         "connection": {
           "type": "string"
         },
-        "host": {
+        "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "alerts": {
           "items": {
@@ -102,11 +105,7 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "username",
-        "password"
-      ]
+      "type": "object"
     },
     "AwsConfigCheck": {
       "properties": {
@@ -134,8 +133,29 @@
         "query": {
           "type": "string"
         },
-        "awsConnection": {
-          "$ref": "#/$defs/AWSConnection"
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "objectPath": {
+          "type": "string"
+        },
+        "usePathStyle": {
+          "type": "boolean"
         },
         "aggregatorName": {
           "type": "string"
@@ -189,8 +209,29 @@
           },
           "type": "array"
         },
-        "awsConnection": {
-          "$ref": "#/$defs/AWSConnection"
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "objectPath": {
+          "type": "string"
+        },
+        "usePathStyle": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -569,14 +610,15 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
-        "filter": {
+        "Filter": {
           "$ref": "#/$defs/CloudWatchFilter"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name"
+        "name",
+        "Filter"
       ]
     },
     "CloudWatchFilter": {
@@ -1143,6 +1185,9 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "connection": {
+          "type": "string"
+        },
         "host": {
           "type": "string"
         },
@@ -1260,8 +1305,11 @@
         "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -1572,6 +1620,15 @@
         "connection": {
           "type": "string"
         },
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
         "endpoint": {
           "type": "string"
         },
@@ -1613,9 +1670,6 @@
             "$ref": "#/$defs/EnvVar"
           },
           "type": "array"
-        },
-        "authentication": {
-          "$ref": "#/$defs/Authentication"
         },
         "templateBody": {
           "type": "boolean"
@@ -1722,9 +1776,6 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
-        },
-        "connection": {
-          "type": "string"
         },
         "jmx": {
           "$ref": "#/$defs/EnvVar"
@@ -1863,11 +1914,14 @@
         "connection": {
           "type": "string"
         },
-        "host": {
+        "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "bindDN": {
           "type": "string"
@@ -1883,8 +1937,6 @@
       "type": "object",
       "required": [
         "name",
-        "host",
-        "auth",
         "bindDN"
       ]
     },
@@ -1999,15 +2051,20 @@
         "connection": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "connection"
+        "name"
       ]
     },
     "MssqlCheck": {
@@ -2036,8 +2093,14 @@
         "connection": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2049,8 +2112,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "connection"
+        "name"
       ]
     },
     "MysqlCheck": {
@@ -2079,8 +2141,14 @@
         "connection": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2092,8 +2160,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "connection"
+        "name"
       ]
     },
     "NamespaceCheck": {
@@ -2299,8 +2366,11 @@
         "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2316,7 +2386,6 @@
       "type": "object",
       "required": [
         "name",
-        "auth",
         "query",
         "index"
       ]
@@ -2452,8 +2521,14 @@
         "connection": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2465,8 +2540,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "connection"
+        "name"
       ]
     },
     "PrometheusCheck": {
@@ -2492,11 +2566,20 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "host": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
-        "host": {
+        "url": {
           "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2506,7 +2589,6 @@
       "type": "object",
       "required": [
         "name",
-        "host",
         "query"
       ]
     },
@@ -2599,11 +2681,17 @@
         "connection": {
           "type": "string"
         },
-        "addr": {
+        "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "addr": {
+          "type": "string"
         },
         "db": {
           "type": "integer"
@@ -2612,9 +2700,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "addr",
-        "db"
+        "name"
       ]
     },
     "RelationshipSpec": {
@@ -2760,15 +2846,17 @@
         "host": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "host",
-        "auth"
+        "host"
       ]
     },
     "SMBConnection": {
@@ -2779,27 +2867,18 @@
         "port": {
           "type": "integer"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "domain": {
-          "type": "string"
-        },
-        "workstation": {
-          "type": "string"
-        },
-        "sharename": {
-          "type": "string"
-        },
-        "searchPath": {
           "type": "string"
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "auth"
-      ]
+      "type": "object"
     },
     "SecretKeySelector": {
       "properties": {

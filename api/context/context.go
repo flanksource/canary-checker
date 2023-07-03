@@ -9,6 +9,7 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/logger"
+	ctemplate "github.com/flanksource/commons/template"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
@@ -55,12 +56,90 @@ func (ctx *Context) GetEnvValueFromCache(env types.EnvVar) (string, error) {
 	return duty.GetEnvValueFromCache(ctx.Kubernetes, env, ctx.Namespace)
 }
 
+func getDomain(username string) string {
+	parts := strings.Split(username, "@")
+	if len(parts) == 2 {
+		return parts[1]
+	}
+	return ""
+}
+
+func (ctx *Context) GetConnection(conn v1.Connection) (*models.Connection, error) {
+	var _conn *models.Connection
+	var err error
+
+	if _conn, err = ctx.HydrateConnectionByURL(conn.Connection); err != nil {
+		return nil, err
+	}
+
+	if _conn == nil {
+		_conn = &models.Connection{
+			URL: conn.URL,
+		}
+	}
+
+	if conn.URL != "" {
+		// override the url specified at the connection level
+		_conn.URL = conn.URL
+	}
+
+	if _conn.Username == "" || _conn.Password == "" {
+		// no username specified at connection level, use the one from inline connection
+		auth, err := ctx.GetAuthValues(conn.Authentication)
+		if err != nil {
+			return nil, err
+		}
+		_conn.Username = auth.Username.ValueStatic
+		_conn.Password = auth.Password.ValueStatic
+	}
+
+	data := map[string]interface{}{
+		"name":      ctx.Canary.Name,
+		"namespace": ctx.Namespace,
+		"username":  _conn.Username,
+		"password":  _conn.Password,
+		"domain":    getDomain(_conn.Username),
+	}
+	templater := ctemplate.StructTemplater{
+		Values: data,
+		// access go values in template requires prefix everything with .
+		// to support $(username) instead of $(.username) we add a function for each var
+		ValueFunctions: true,
+		DelimSets: []ctemplate.Delims{
+			{Left: "{{", Right: "}}"},
+			{Left: "$(", Right: ")"},
+		},
+		RequiredTag: "template",
+	}
+	if err := templater.Walk(_conn); err != nil {
+		return nil, err
+	}
+
+	return _conn, nil
+}
+
+func (ctx Context) GetAuthValues(auth v1.Authentication) (v1.Authentication, error) {
+	// in case nil we are sending empty string values for username and password
+	if auth.IsEmpty() {
+		return auth, nil
+	}
+	var err error
+
+	if auth.Username.ValueStatic, err = ctx.GetEnvValueFromCache(auth.Username); err != nil {
+		return auth, err
+	}
+	if auth.Password.ValueStatic, err = ctx.GetEnvValueFromCache(auth.Password); err != nil {
+		return auth, err
+	}
+	return auth, nil
+}
+
 func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Connection, error) {
-	if !strings.HasPrefix(connectionName, "connection://") {
+	if connectionName == "" {
 		return nil, nil
 	}
 
-	if connectionName == "" {
+	if !strings.HasPrefix(connectionName, "connection://") {
 		return nil, nil
 	}
 

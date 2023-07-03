@@ -59,9 +59,6 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
-        "connection": {
-          "type": "string"
-        },
         "jmx": {
           "$ref": "#/$defs/EnvVar"
         },

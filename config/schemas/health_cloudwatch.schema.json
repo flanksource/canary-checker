@@ -50,14 +50,15 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
-        "filter": {
+        "Filter": {
           "$ref": "#/$defs/CloudWatchFilter"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name"
+        "name",
+        "Filter"
       ]
     },
     "CloudWatchFilter": {
