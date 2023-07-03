@@ -15,7 +15,7 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 	var results []*pkg.CheckResult
 
 	// Check if canary is not marked deleted in DB
-	if db.Gorm != nil {
+	if db.Gorm != nil && ctx.Canary.GetPersistedID() != "" {
 		var deletedAt sql.NullTime
 		err := db.Gorm.Table("canaries").Select("deleted_at").Where("id = ?", ctx.Canary.GetPersistedID()).Scan(&deletedAt).Error
 		if err == nil && deletedAt.Valid {
