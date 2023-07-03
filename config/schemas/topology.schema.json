@@ -638,6 +638,14 @@
         "order": {
           "type": "integer"
         },
+        "labels": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
         "type": {
           "type": "string"
         },
@@ -709,6 +717,14 @@
         },
         "order": {
           "type": "integer"
+        },
+        "labels": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
         },
         "type": {
           "type": "string"

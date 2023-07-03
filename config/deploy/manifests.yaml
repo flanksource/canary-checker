@@ -4288,6 +4288,10 @@ spec:
                     template:
                       type: string
                   type: object
+                labels:
+                  additionalProperties:
+                    type: string
+                  type: object
                 lifecycle:
                   description: The lifecycle state of the component e.g. production, staging, dev, etc.
                   type: string
@@ -4578,6 +4582,10 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
                         type: object
                       lifecycle:
                         description: The lifecycle state of the component e.g. production, staging, dev, etc.
