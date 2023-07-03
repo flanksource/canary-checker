@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,7 +54,7 @@ type CheckStatus struct {
 	Error        string          `json:"error,omitempty"`
 	Detail       interface{}     `json:"-"`
 	Check        *external.Check `json:"check,omitempty"`
-	TestSeverity Severity        `json:"test_severity,omitempty"`
+	TestSeverity models.Severity `json:"severity,omitempty"`
 }
 
 func (s CheckStatus) GetTime() (time.Time, error) {
@@ -394,16 +395,6 @@ type URL struct {
 
 type SystemResult struct{}
 
-type Severity int
-
-const (
-	SeverityInfo Severity = iota
-	SeverityLow
-	SeverityMedium
-	SeverityHigh
-	SeverityCritical
-)
-
 type CheckResult struct {
 	Start       time.Time
 	Pass        bool
@@ -418,7 +409,7 @@ type CheckResult struct {
 	Metrics     []Metric
 	Check       external.Check // Check is the configuration
 	Canary      v1.Canary
-	Severity    Severity
+	Severity    models.Severity
 }
 
 func (result CheckResult) GetDescription() string {

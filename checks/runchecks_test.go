@@ -6,7 +6,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/duty/models"
 )
 
 func Test_measureTestSeverity(t *testing.T) {
@@ -17,7 +17,7 @@ func Test_measureTestSeverity(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want pkg.Severity
+		want models.Severity
 	}{
 		{
 			name: "simple - critical",
@@ -27,7 +27,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Critical: "duration > 1500",
 				},
 			},
-			want: pkg.SeverityCritical,
+			want: models.SeverityCritical,
 		},
 		{
 			name: "simple - high",
@@ -38,7 +38,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					High:     "duration > 1000",
 				},
 			},
-			want: pkg.SeverityHigh,
+			want: models.SeverityHigh,
 		},
 		{
 			name: "simple - medium",
@@ -51,7 +51,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "duration > 500",
 				},
 			},
-			want: pkg.SeverityMedium,
+			want: models.SeverityMedium,
 		},
 		{
 			name: "simple - low",
@@ -63,7 +63,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "duration > 500",
 				},
 			},
-			want: pkg.SeverityLow,
+			want: models.SeverityLow,
 		},
 		{
 			name: "complex expression",
@@ -75,14 +75,14 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "duration > 500 && duration < 1000",
 				},
 			},
-			want: pkg.SeverityInfo,
+			want: models.SeverityInfo,
 		},
 		{
 			name: "no threshold defined",
 			args: args{
 				duration: 600,
 			},
-			want: pkg.SeverityInfo,
+			want: models.SeverityInfo,
 		},
 		{
 			name: "no severity match",
@@ -94,7 +94,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "duration > 500",
 				},
 			},
-			want: pkg.SeverityInfo,
+			want: models.SeverityInfo,
 		},
 		{
 			name: "invalid expression",
@@ -106,7 +106,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "duration > 500",
 				},
 			},
-			want: pkg.SeverityInfo,
+			want: models.SeverityInfo,
 		},
 		{
 			name: "use of undefined var",
@@ -118,7 +118,7 @@ func Test_measureTestSeverity(t *testing.T) {
 					Low:      "Duration > 500",
 				},
 			},
-			want: pkg.SeverityInfo,
+			want: models.SeverityInfo,
 		},
 	}
 	for _, tt := range tests {

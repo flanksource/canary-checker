@@ -9,6 +9,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 )
 
 func RunChecks(ctx *context.Context) []*pkg.CheckResult {
@@ -127,29 +128,30 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 	return r
 }
 
-func measureTestSeverity(ctx *context.Context, threshold *v1.TestThreshold) pkg.Severity {
+func measureTestSeverity(ctx *context.Context, threshold *v1.TestThreshold) models.Severity {
 	if threshold == nil {
-		return pkg.SeverityInfo
+		return models.SeverityInfo
 	}
 
 	thresholds := []struct {
-		severity pkg.Severity
+		severity models.Severity
 		expr     string
 	}{
-		{pkg.SeverityCritical, threshold.Critical},
-		{pkg.SeverityHigh, threshold.High},
-		{pkg.SeverityMedium, threshold.Medium},
-		{pkg.SeverityLow, threshold.Low},
-		{pkg.SeverityInfo, threshold.Info},
+		{models.SeverityCritical, threshold.Critical},
+		{models.SeverityHigh, threshold.High},
+		{models.SeverityMedium, threshold.Medium},
+		{models.SeverityLow, threshold.Low},
+		{models.SeverityInfo, threshold.Info},
 	}
 
 	for _, t := range thresholds {
 		if res, err := template(ctx, v1.Template{Expression: t.expr}); err != nil {
-			return pkg.SeverityInfo
+			logger.Errorf("failed to run expression for severity: %s", t.severity)
+			continue
 		} else if res == "true" {
 			return t.severity
 		}
 	}
 
-	return pkg.SeverityInfo
+	return models.SeverityInfo
 }
