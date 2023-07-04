@@ -173,6 +173,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -306,6 +319,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -451,6 +477,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -545,6 +584,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       thresholdMillis:
                         description: ThresholdMillis the maximum duration of a Run. (Optional)
@@ -695,6 +747,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -754,6 +819,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -976,6 +1054,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -1280,6 +1371,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -1519,6 +1623,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -1631,6 +1748,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -1995,6 +2125,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       totalSize:
                         description: TotalSize present on the filesystem
@@ -2086,6 +2229,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -2370,6 +2526,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       thresholdMillis:
                         description: Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.
@@ -2541,6 +2710,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       testResults:
                         type: string
@@ -2629,6 +2811,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -2935,6 +3130,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -3059,6 +3267,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -3258,6 +3479,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -3453,6 +3687,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:
@@ -3516,6 +3763,19 @@ spec:
                             type: string
                           template:
                             type: string
+                          threshold:
+                            properties:
+                              critical:
+                                type: string
+                              high:
+                                type: string
+                              info:
+                                type: string
+                              low:
+                                type: string
+                              medium:
+                                type: string
+                            type: object
                         type: object
                       transform:
                         properties:

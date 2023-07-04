@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,14 +46,15 @@ func (t *JSONTime) UnmarshalJSON(b []byte) error {
 }
 
 type CheckStatus struct {
-	Status   bool            `json:"status"`
-	Invalid  bool            `json:"invalid,omitempty"`
-	Time     string          `json:"time"`
-	Duration int             `json:"duration"`
-	Message  string          `json:"message,omitempty"`
-	Error    string          `json:"error,omitempty"`
-	Detail   interface{}     `json:"-"`
-	Check    *external.Check `json:"check,omitempty"`
+	Status       bool            `json:"status"`
+	Invalid      bool            `json:"invalid,omitempty"`
+	Time         string          `json:"time"`
+	Duration     int             `json:"duration"`
+	Message      string          `json:"message,omitempty"`
+	Error        string          `json:"error,omitempty"`
+	Detail       interface{}     `json:"-"`
+	Check        *external.Check `json:"check,omitempty"`
+	TestSeverity models.Severity `json:"severity,omitempty"`
 }
 
 func (s CheckStatus) GetTime() (time.Time, error) {
@@ -184,6 +186,7 @@ type Check struct {
 	CanaryName         string              `json:"canary_name" gorm:"-"`
 	Namespace          string              `json:"namespace"  gorm:"-"`
 	Labels             types.JSONStringMap `json:"labels" gorm:"type:jsonstringmap"`
+	TestThreshold      *v1.TestThreshold   `json:"testThreshold,omitempty" gorm:"-"`
 	Description        string              `json:"description,omitempty"`
 	Status             string              `json:"status,omitempty"`
 	Uptime             Uptime              `json:"uptime"  gorm:"-"`
@@ -205,7 +208,7 @@ type Check struct {
 }
 
 func FromExternalCheck(canary Canary, check external.Check) Check {
-	return Check{
+	c := Check{
 		CanaryID:    canary.ID,
 		Type:        check.GetType(),
 		Icon:        check.GetIcon(),
@@ -215,18 +218,25 @@ func FromExternalCheck(canary Canary, check external.Check) Check {
 		CanaryName:  canary.Name,
 		Labels:      labels.FilterLabels(canary.Labels),
 	}
+
+	if testable, ok := check.(v1.TestFunction); ok {
+		c.TestThreshold = testable.GetTestThreshold()
+	}
+
+	return c
 }
 
 func FromResult(result CheckResult) CheckStatus {
 	return CheckStatus{
-		Status:   result.Pass,
-		Invalid:  result.Invalid,
-		Duration: int(result.Duration),
-		Time:     time.Now().UTC().Format(time.RFC3339),
-		Message:  result.Message,
-		Error:    result.Error,
-		Detail:   result.Detail,
-		Check:    &result.Check,
+		Status:       result.Pass,
+		Invalid:      result.Invalid,
+		Duration:     int(result.Duration),
+		Time:         time.Now().UTC().Format(time.RFC3339),
+		Message:      result.Message,
+		Error:        result.Error,
+		Detail:       result.Detail,
+		Check:        &result.Check,
+		TestSeverity: result.Severity,
 	}
 }
 func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Check {
@@ -384,6 +394,7 @@ type URL struct {
 }
 
 type SystemResult struct{}
+
 type CheckResult struct {
 	Start       time.Time
 	Pass        bool
@@ -396,9 +407,9 @@ type CheckResult struct {
 	Message     string
 	Error       string
 	Metrics     []Metric
-	// Check is the configuration
-	Check  external.Check
-	Canary v1.Canary
+	Check       external.Check // Check is the configuration
+	Canary      v1.Canary
+	Severity    models.Severity
 }
 
 func (result CheckResult) GetDescription() string {

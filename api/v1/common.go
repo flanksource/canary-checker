@@ -216,6 +216,14 @@ type Template struct {
 	Javascript string `yaml:"javascript,omitempty" json:"javascript,omitempty"`
 }
 
+type TestThreshold struct {
+	Info     string `yaml:"info,omitempty" json:"info,omitempty"`
+	Low      string `yaml:"low,omitempty" json:"low,omitempty"`
+	Medium   string `yaml:"medium,omitempty" json:"medium,omitempty"`
+	High     string `yaml:"high,omitempty" json:"high,omitempty"`
+	Critical string `yaml:"critical,omitempty" json:"critical,omitempty"`
+}
+
 func (t Template) IsEmpty() bool {
 	return t.Template == "" && t.JSONPath == "" && t.Expression == "" && t.Javascript == ""
 }
@@ -227,7 +235,8 @@ type DisplayTemplate interface {
 
 // +k8s:deepcopy-gen=false
 type TestFunction interface {
-	GetTestFunction() Template
+	GetTestTemplate() Template
+	GetTestThreshold() *TestThreshold
 }
 
 // +k8s:deepcopy-gen=false
@@ -235,14 +244,23 @@ type Transformer interface {
 	GetTransformer() Template
 }
 
-type Templatable struct {
-	Test      Template `yaml:"test,omitempty" json:"test,omitempty"`
-	Display   Template `yaml:"display,omitempty" json:"display,omitempty"`
-	Transform Template `yaml:"transform,omitempty" json:"transform,omitempty"`
+type TestTemplate struct {
+	Template       `yaml:",inline" json:",inline"`
+	*TestThreshold `yaml:"threshold,omitempty" json:"threshold,omitempty"`
 }
 
-func (t Templatable) GetTestFunction() Template {
-	return t.Test
+type Templatable struct {
+	Test      TestTemplate `yaml:"test,omitempty" json:"test,omitempty"`
+	Display   Template     `yaml:"display,omitempty" json:"display,omitempty"`
+	Transform Template     `yaml:"transform,omitempty" json:"transform,omitempty"`
+}
+
+func (t Templatable) GetTestTemplate() Template {
+	return t.Test.Template
+}
+
+func (t Templatable) GetTestThreshold() *TestThreshold {
+	return t.Test.TestThreshold
 }
 
 func (t Templatable) GetDisplayTemplate() Template {

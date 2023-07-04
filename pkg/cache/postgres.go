@@ -83,12 +83,12 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 		invalid,
 		message,
 		status,
+		severity,
 		time,
 		created_at
 		)
-		VALUES($1,$2,$3,$4,$5,$6,$7,$8,NOW())
-		ON CONFLICT (check_id,time) DO NOTHING;
-		`,
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
+		ON CONFLICT (check_id,time) DO NOTHING;`,
 		checks[0].ID,
 		string(jsonDetails),
 		status.Duration,
@@ -96,6 +96,7 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 		status.Invalid,
 		status.Message,
 		status.Status,
+		status.TestSeverity,
 		status.Time,
 	)
 	if err != nil {
