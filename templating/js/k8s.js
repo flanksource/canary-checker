@@ -225,6 +225,12 @@ k8s = {
         pod_mem_limit = fromSI(pod.spec.containers[0].resources.limits.memory || 0)
         pod_cpu_limit = fromMillicores(pod.spec.containers[0].resources.limits.cpu || 0)
       }
+      if (pod_mem_limit === 0) {
+        pod_mem_limit = null
+      }
+      if (pod_cpu_limit === 0) {
+        pod_cpu_limit = null
+      }
 
       _pod = {
         name: pod.metadata.name,
