@@ -73,7 +73,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dustin/gojson v0.0.0-20160307161227-2e71ec9dd5ad // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/flanksource/duty v1.0.116 // indirect
+	github.com/flanksource/duty v1.0.117 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-openapi/inflect v0.19.0 // indirect

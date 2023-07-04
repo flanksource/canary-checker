@@ -22,7 +22,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.1.0
 	github.com/fergusstrange/embedded-postgres v1.21.0
 	github.com/flanksource/commons v1.10.0
-	github.com/flanksource/duty v1.0.116
+	github.com/flanksource/duty v1.0.117
 	github.com/flanksource/kommons v0.31.1
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ldap/ldap/v3 v3.4.1

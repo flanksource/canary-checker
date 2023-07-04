@@ -1091,6 +1091,8 @@ github.com/fergusstrange/embedded-postgres v1.21.0 h1:Sups0nR31+OB4iOZ0ZU4IwUDsB
 github.com/fergusstrange/embedded-postgres v1.21.0/go.mod h1:wL562t1V+iuFwq0UcgMi2e9rp8CROY9wxWZEfP8Y874=
 github.com/flanksource/commons v1.10.0 h1:Mc+fzxq1rOJ08lapF0cc0bo9ZKNDxA7/81q2D/5jt0Q=
 github.com/flanksource/commons v1.10.0/go.mod h1:HpVjPtNe7v0UPk97kO/uUhOrYQ8yFD/mGglrTCkc9Ag=
+github.com/flanksource/duty v1.0.117 h1:vuTQi2+CV758g8pdMCZP/PbmVkqMXAgQcUayzd6hNMo=
+github.com/flanksource/duty v1.0.117/go.mod h1:RJ/kcZ7dbL8/52tem757szVIA3IomS8bOAZIK0xb4rk=
 github.com/flanksource/gomplate/v3 v3.20.1/go.mod h1:LPpzujBIg9HBXRUngDKK/zNmEjHpEUieKa/2oRjkCzI=
 github.com/flanksource/gomplate/v3 v3.20.3 h1:mnNaO37uwvv8Kvi4Xswj1tHKP5UMre3FLNaKvAwqhSw=
 github.com/flanksource/gomplate/v3 v3.20.3/go.mod h1:l4iCvp30TdhZk89eRGuNkPwlRjJLXdUSblr+VyuZfAk=
@@ -3619,5 +3621,3 @@ sigs.k8s.io/yaml v1.2.0/go.mod h1:yfXDCHCao9+ENCvLSE62v9VSji2MKu5jeNfTrofGhJc=
 sigs.k8s.io/yaml v1.3.0 h1:a2VclLzOGrwOHDiV8EfBGhvjHvP46CtW5j6POvhYGGo=
 sigs.k8s.io/yaml v1.3.0/go.mod h1:GeOyir5tyXNByN85N/dRIT9es5UQNerPYEKK56eTBm8=
 sourcegraph.com/sourcegraph/appdash v0.0.0-20190731080439-ebfcffb1b5c0/go.mod h1:hI742Nqp5OhwiqlzhgfbWU4mW4yO10fP+LoT9WOswdU=
-github.com/flanksource/duty v1.0.116 h1:BU1Go53xj/P3LfZFrusP48e3lAo1KCJk0qcp+ye/p7s=
-github.com/flanksource/duty v1.0.116/go.mod h1:RJ/kcZ7dbL8/52tem757szVIA3IomS8bOAZIK0xb4rk=
