@@ -186,7 +186,7 @@ SELECT
     checks.description,
     canaries.namespace,
     canaries.name as canaryName,
-    canaries.labels,
+    canaries.labels || checks.labels as labels,
     severity,
     owner,
     last_runtime,
