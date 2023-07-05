@@ -190,9 +190,11 @@ SELECT
     checks.created_at,
     checks.updated_at,
     checks.deleted_at,
-    status
+    status,
+		stats.max_time,
+		stats.min_time,
+		stats.total_checks
 FROM checks checks
-
 RIGHT JOIN (
   	SELECT 
         check_id,
@@ -200,7 +202,10 @@ RIGHT JOIN (
         percentile_disc(0.97) within group (order by filtered_check_status.duration) as p97,
         percentile_disc(0.05) within group (order by filtered_check_status.duration) as p95,
         COUNT(*) FILTER (WHERE filtered_check_status.status = TRUE) as passed,
-        COUNT(*) FILTER (WHERE filtered_check_status.status = FALSE) as failed
+        COUNT(*) FILTER (WHERE filtered_check_status.status = FALSE) as failed,
+				COUNT(*) total_checks,
+				MIN(filtered_check_status.time) as min_time,
+				MAX(filtered_check_status.time) as max_time
 	FROM
         filtered_check_status
     GROUP BY check_id
@@ -270,6 +275,10 @@ WHERE (stats.passed > 0 OR stats.failed > 0) %s
 			check.DeletedAt, _ = timeV(vals[20])
 		}
 		check.Status = vals[21].(string)
+		check.LatestRuntime, _ = timeV(vals[22])
+		check.EarliestRuntime, _ = timeV(vals[23])
+		check.TotalRuns = intV(vals[24])
+
 		if vals[7] != nil {
 			for _, status := range vals[7].([]interface{}) {
 				s := status.(map[string]interface{})
