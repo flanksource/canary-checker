@@ -118,14 +118,14 @@ GROUP BY time
 
 	var results []pkg.Timeseries
 	for rows.Next() {
-		var r pkg.Timeseries
-		var te time.Time
-		if err := rows.Scan(&te, &r.Status, &r.Duration); err != nil {
+		var datapoint pkg.Timeseries
+		var ts time.Time
+		if err := rows.Scan(&ts, &datapoint.Status, &datapoint.Duration); err != nil {
 			return nil, err
 		}
 
-		r.Time = te.Format(time.RFC3339)
-		results = append(results, r)
+		datapoint.Time = ts.Format(time.RFC3339)
+		results = append(results, datapoint)
 	}
 
 	return results, nil

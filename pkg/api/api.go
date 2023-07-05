@@ -63,6 +63,14 @@ func CheckDetails(c echo.Context) error {
 	} else {
 		startTime := q.GetStartTime()
 		endTime := q.GetEndTime()
+
+		// NOTE: This doesn't work well when the range has huge gaps in datapoints.
+		// Example: if the time range is 5 years and we only have data since the last week,
+		// the generated window duration would be 5years/100 ~= 19 days. This would mean
+		// all the data points since the last week would fall into the same window.
+		//
+		// Instead, we could take the duration between the earliest and the latest check statuses in the range
+		// so that the window duration is small.
 		rangeDuration := endTime.Sub(*startTime)
 		q.WindowDuration = rangeDuration / time.Duration(maxCheckStatuses)
 	}
