@@ -7,7 +7,7 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/kommons"
+	"github.com/flanksource/is-healthy/pkg/health"
 	"github.com/gobwas/glob"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -50,8 +50,6 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 	}
 	var allResources []unstructured.Unstructured
 
-	message := ""
-
 	for _, namespace := range namespaces {
 		resources, err := getResourcesFromNamespace(ctx, client, check, namespace)
 		if err != nil {
@@ -65,15 +63,10 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 			}
 		}
 		ctx.Tracef("Found %d resources in namespace %s with label=%s field=%s", len(resources), namespace, check.Resource.LabelSelector, check.Resource.FieldSelector)
-		if check.CheckReady() {
-			for _, resource := range resources {
-				ready, msg := ctx.Kommons.IsReady(&resource)
-				if !ready {
-					if message != "" {
-						message += ", "
-					}
-					message += fmt.Sprintf("%s is not ready: %v", kommons.GetName(resource), msg)
-				}
+		for _, resource := range resources {
+			resourceHealth, err := health.GetResourceHealth(&resource, nil)
+			if err == nil {
+				resource.Object["healthStatus"] = resourceHealth
 			}
 		}
 		allResources = append(allResources, resources...)
@@ -82,9 +75,6 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 		return results.Failf("no resources found")
 	}
 	result.AddDetails(allResources)
-	if message != "" {
-		return results.Failf(message)
-	}
 	return results
 }
 
