@@ -232,6 +232,10 @@ k8s = {
         pod_cpu_limit = null
       }
 
+      var status = pod.healthStatus.status;
+      if (pod.healthStatus.message !== "") {
+        status += ": " + pod.healthStatus.message;
+      }
       _pod = {
         name: pod.metadata.name,
         namespace: pod.metadata.namespace,
@@ -276,6 +280,10 @@ k8s = {
           {
             name: "ip",
             text: pod.status.IPs != null && pod.status.IPs.length > 0 ? pod.status.IPs[0].ip : ""
+          },
+          {
+            name: "status",
+            text: status,
           }
         ]
       }

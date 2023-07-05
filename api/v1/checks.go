@@ -978,13 +978,6 @@ func (c KubernetesCheck) GetEndpoint() string {
 	return fmt.Sprintf("%v/%v/%v", c.Kind, c.Description.Description, c.Namespace.Name)
 }
 
-func (c KubernetesCheck) CheckReady() bool {
-	if c.Ready == nil {
-		return true
-	}
-	return *c.Ready
-}
-
 type AWSConnection struct {
 	// ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
 	ConnectionName string       `yaml:"connection,omitempty" json:"connection,omitempty"`
