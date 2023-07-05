@@ -79,33 +79,39 @@ func (q QueryParams) GetWhereClause() (string, map[string]interface{}, error) {
 	return strings.TrimSpace(clause), args, nil
 }
 
-func (q QueryParams) ExecuteDetails(db Querier) ([]pkg.Timeseries, error) {
-	clause, namedArgs, err := q.GetWhereClause()
+func (q QueryParams) ExecuteDetails(ctx context.Context, db Querier) ([]pkg.Timeseries, error) {
+	query := `
+With grouped_by_window AS (
+	SELECT
+		duration,
+		status,
+		to_timestamp(floor((extract(epoch FROM time) + $1) / $2) * $2) AS time
+	FROM check_statuses
+	WHERE
+		time >= $3 AND
+		time <= $4 AND
+		check_id = $5
+)
+SELECT 
+  time,
+  bool_and(status),
+  AVG(duration)::integer as duration 
+FROM 
+  grouped_by_window 
+GROUP BY time
+`
+
+	dur, err := duration.ParseDuration(q.Start)
 	if err != nil {
 		return nil, err
 	}
-	namedArgs["limit"] = q.StatusCount
-	keyIndex := 3
-	messageIndex := 4
-	errorIndex := 5
 
-	sql := "SELECT time,duration,status "
-	if q.Check == "" {
-		sql += ", check_key"
-	}
-	if q.IncludeMessages {
-		sql += ", message, error"
-		if q.Check != "" {
-			messageIndex -= 1
-			errorIndex -= 1
-		}
-	}
-	sql += fmt.Sprintf(`
-	FROM check_statuses
-	WHERE %s
-	LIMIT :limit
-`, clause)
-	rows, err := exec(db, q, sql, namedArgs)
+	start := time.Now().Add(-time.Duration(dur)).Format(time.RFC3339)
+	end := time.Now().Format(time.RFC3339) // TODO: connect with the new date range picker
+
+	// TODO: Find the perfect window duration
+	windowDurationSeconds := (time.Minute * 15).Seconds()
+	rows, err := db.Query(ctx, query, windowDurationSeconds/2, windowDurationSeconds, start, end, q.Check)
 	if err != nil {
 		return nil, err
 	}
@@ -113,24 +119,16 @@ func (q QueryParams) ExecuteDetails(db Querier) ([]pkg.Timeseries, error) {
 
 	var results []pkg.Timeseries
 	for rows.Next() {
-		vals, err := rows.Values()
-		if err != nil {
+		var r pkg.Timeseries
+		var te time.Time
+		if err := rows.Scan(&te, &r.Status, &r.Duration); err != nil {
 			return nil, err
 		}
-		result := pkg.Timeseries{
-			Time:     vals[0].(time.Time).Format(time.RFC3339),
-			Duration: intV(vals[1]),
-			Status:   vals[2].(bool),
-		}
-		if q.Check == "" {
-			result.Key = vals[keyIndex].(string)
-		}
-		if q.IncludeMessages {
-			result.Message = vals[messageIndex].(string)
-			result.Error = vals[errorIndex].(string)
-		}
-		results = append(results, result)
+
+		r.Time = te.Format(time.RFC3339)
+		results = append(results, r)
 	}
+
 	return results, nil
 }
 

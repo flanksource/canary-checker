@@ -41,10 +41,11 @@ func CheckDetails(c echo.Context) error {
 	}
 
 	start := time.Now()
-	results, err := cache.PostgresCache.QueryStatus(*q)
+	results, err := cache.PostgresCache.QueryStatus(c.Request().Context(), *q)
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
+
 	apiResponse := &DetailResponse{
 		RunnerName: runner.RunnerName,
 		Status:     results,
