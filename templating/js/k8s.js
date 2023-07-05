@@ -1,21 +1,7 @@
 k8s = {
   conditions: {
     getMessage: function(v) {
-      message = ""
-      if (v.status == null) {
-        return "No status found"
-      }
-      status = v.status
-      if (status.conditions == null) {
-        return "no conditions found"
-      }
-      status.conditions.forEach(function(state) {
-        if (state.status != "True") {
-          message += state.type
-          message += " "
-        }
-      })
-      return message.trim()
+      return v.healthStatus.message.trim();
     },
     getError: function(v) {
       active = []
@@ -45,22 +31,7 @@ k8s = {
       return errorMessage
     },
     isReady: function(v) {
-      if (v.status == null) {
-        return false
-      }
-      status = v.status
-      if (status.conditions == null) {
-        return false
-      }
-      ready = true
-      status.conditions.forEach(function(state) {
-        if (state.type == "Ready") {
-          if (state.status != "True") {
-            ready = false
-          }
-        }
-      })
-      return ready
+      return v.healthStatus.status.toLowerCase() === "healthy" ? true : false;
     },
   },
   getAlertName: function(v) {
@@ -232,10 +203,6 @@ k8s = {
         pod_cpu_limit = null
       }
 
-      var status = pod.healthStatus.status;
-      if (pod.healthStatus.message !== "") {
-        status += ": " + pod.healthStatus.message;
-      }
       _pod = {
         name: pod.metadata.name,
         namespace: pod.metadata.namespace,
@@ -280,10 +247,6 @@ k8s = {
           {
             name: "ip",
             text: pod.status.IPs != null && pod.status.IPs.length > 0 ? pod.status.IPs[0].ip : ""
-          },
-          {
-            name: "status",
-            text: status,
           }
         ]
       }

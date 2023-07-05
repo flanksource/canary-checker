@@ -1096,8 +1096,8 @@ github.com/flanksource/duty v1.0.113/go.mod h1:RJ/kcZ7dbL8/52tem757szVIA3IomS8bO
 github.com/flanksource/gomplate/v3 v3.20.1/go.mod h1:LPpzujBIg9HBXRUngDKK/zNmEjHpEUieKa/2oRjkCzI=
 github.com/flanksource/gomplate/v3 v3.20.3 h1:mnNaO37uwvv8Kvi4Xswj1tHKP5UMre3FLNaKvAwqhSw=
 github.com/flanksource/gomplate/v3 v3.20.3/go.mod h1:l4iCvp30TdhZk89eRGuNkPwlRjJLXdUSblr+VyuZfAk=
-github.com/flanksource/is-healthy v0.0.0-20230705055918-e0246b8d4701 h1:koybouTEWpvg771V6kIW5+4HHYRW7CJXCFS1vVWivY8=
-github.com/flanksource/is-healthy v0.0.0-20230705055918-e0246b8d4701/go.mod h1:4pQhmF+TnVqJroQKY8wSnSp+T18oLson6YQ2M0qPHfQ=
+github.com/flanksource/is-healthy v0.0.0-20230705092916-3b4cf510c5fc h1:CPUNUw2pHnlF4ucBHx44vLTcCa4FlEEu6PkNo5rCvD4=
+github.com/flanksource/is-healthy v0.0.0-20230705092916-3b4cf510c5fc/go.mod h1:4pQhmF+TnVqJroQKY8wSnSp+T18oLson6YQ2M0qPHfQ=
 github.com/flanksource/kommons v0.31.1 h1:WZjrIYbSAR7xzIvP2uSRQcn5wPi4W9gAasuOM5CD854=
 github.com/flanksource/kommons v0.31.1/go.mod h1:kJfMnFWiqsfE8koab54W2GsmgvrlESDrcUtwvbQS9aY=
 github.com/flowstack/go-jsonschema v0.1.1/go.mod h1:yL7fNggx1o8rm9RlgXv7hTBWxdBM0rVwpMwimd3F3N0=

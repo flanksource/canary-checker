@@ -23,7 +23,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.21.0
 	github.com/flanksource/commons v1.10.0
 	github.com/flanksource/duty v1.0.113
-	github.com/flanksource/is-healthy v0.0.0-20230705055918-e0246b8d4701
+	github.com/flanksource/is-healthy v0.0.0-20230705092916-3b4cf510c5fc
 	github.com/flanksource/kommons v0.31.1
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ldap/ldap/v3 v3.4.1
