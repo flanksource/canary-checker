@@ -12,10 +12,27 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 )
 
-// The maximum data points returned by the graph API
-const maxCheckStatuses = 100
+// The number of data points that should be strived for
+// when aggregating check statuses.
+const desiredNumOfCheckStatuses = 100
 
-var DefaultWindow = "1h"
+var (
+	DefaultWindow = "1h"
+
+	// allowed list of window durations that are used when aggregating check statuses.
+	allowedWindows = []time.Duration{
+		time.Minute,        // 1m
+		time.Minute * 5,    // 5m
+		time.Minute * 15,   // 15m
+		time.Minute * 30,   // 30m
+		time.Hour,          // 1h
+		time.Hour * 3,      // 3h
+		time.Hour * 6,      // 6h
+		time.Hour * 12,     // 12h
+		time.Hour * 24,     // 24h
+		time.Hour * 24 * 7, // 1w
+	}
+)
 
 type Response struct {
 	Duration      int           `json:"duration,omitempty"`
@@ -58,23 +75,11 @@ func CheckDetails(c echo.Context) error {
 
 	checkSummary := *summary[0]
 	totalChecks := checkSummary.Uptime.Total()
-	if totalChecks <= maxCheckStatuses {
+	if totalChecks <= desiredNumOfCheckStatuses {
 		q.WindowDuration = 0 // No need to perform window aggregation
 	} else {
-		// startTime := q.GetStartTime()
-		// endTime := q.GetEndTime()
-
-		// NOTE: This doesn't work well when the range has huge gaps in datapoints.
-		// Example: if the time range is 5 years and we only have data since the last week,
-		// the generated window duration would be 5years/100 ~= 19 days. This would mean
-		// all the data points since the last week would fall into the same window.
-		//
-		// Instead, we could take the duration between the earliest and the latest check statuses in the range
-		// so that the window duration is small.
-		// rangeDuration := endTime.Sub(*startTime)
-
 		rangeDuration := checkSummary.LatestRuntime.Sub(*checkSummary.EarliestRuntime)
-		q.WindowDuration = rangeDuration / time.Duration(maxCheckStatuses)
+		q.WindowDuration = getMostSuitableWindowDuration(rangeDuration)
 	}
 
 	results, err := cache.PostgresCache.QueryStatus(c.Request().Context(), *q)
@@ -126,4 +131,29 @@ func HealthSummary(c echo.Context) error {
 		Duration:      int(time.Since(start).Milliseconds()),
 	}
 	return c.JSON(http.StatusOK, apiResponse)
+}
+
+// getMostSuitableWindowDuration returns best window duration to partition the
+// given duration such that the partition is close to the given value
+func getMostSuitableWindowDuration(rangeDuration time.Duration) time.Duration {
+	bestDelta := 1000000 // sufficiently large delta to begin with
+
+	for i, wp := range allowedWindows {
+		numWindows := int(rangeDuration / wp)
+		delta := abs(desiredNumOfCheckStatuses - numWindows)
+
+		if delta < bestDelta {
+			bestDelta = delta
+			continue
+		}
+
+		// as soon as we notice that the delta gets worse, we return the previous window
+		if i == 0 {
+			return wp
+		}
+
+		return allowedWindows[i-1]
+	}
+
+	return allowedWindows[len(allowedWindows)-1]
 }
