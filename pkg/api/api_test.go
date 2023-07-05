@@ -25,7 +25,7 @@ func Test_getMostSuitableWindowDuration(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.rangeDuration.String(), func(t *testing.T) {
-			result := getMostSuitableWindowDuration(test.rangeDuration)
+			result := getBestPartitioner(test.rangeDuration)
 			if result != test.expected {
 				t.Errorf("expected %v, but got %v", test.expected, result)
 			}

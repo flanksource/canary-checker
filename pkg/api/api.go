@@ -79,7 +79,7 @@ func CheckDetails(c echo.Context) error {
 		q.WindowDuration = 0 // No need to perform window aggregation
 	} else {
 		rangeDuration := checkSummary.LatestRuntime.Sub(*checkSummary.EarliestRuntime)
-		q.WindowDuration = getMostSuitableWindowDuration(rangeDuration)
+		q.WindowDuration = getBestPartitioner(rangeDuration)
 	}
 
 	results, err := cache.PostgresCache.QueryStatus(c.Request().Context(), *q)
@@ -133,10 +133,10 @@ func HealthSummary(c echo.Context) error {
 	return c.JSON(http.StatusOK, apiResponse)
 }
 
-// getMostSuitableWindowDuration returns best window duration to partition the
-// given duration such that the partition is close to the given value
-func getMostSuitableWindowDuration(rangeDuration time.Duration) time.Duration {
-	bestDelta := 1000000 // sufficiently large delta to begin with
+// getBestPartitioner returns best window duration to partition the
+// given duration such that the partition is close to the desired value.
+func getBestPartitioner(rangeDuration time.Duration) time.Duration {
+	bestDelta := 100000000 // sufficiently large delta to begin with
 
 	for i, wp := range allowedWindows {
 		numWindows := int(rangeDuration / wp)
