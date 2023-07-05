@@ -74,7 +74,7 @@ func CheckDetails(c echo.Context) error {
 	}
 
 	checkSummary := *summary[0]
-	totalChecks := checkSummary.Uptime.Total()
+	totalChecks := checkSummary.TotalRuns
 	if totalChecks <= desiredNumOfCheckStatuses {
 		q.WindowDuration = 0 // No need to perform window aggregation
 	} else {

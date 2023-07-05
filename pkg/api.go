@@ -91,10 +91,6 @@ type Uptime struct {
 	LastFail *time.Time `json:"last_fail,omitempty"`
 }
 
-func (u Uptime) Total() int {
-	return u.Passed + u.Failed
-}
-
 func (u Uptime) String() string {
 	if u.Passed == 0 && u.Failed == 0 {
 		return ""
