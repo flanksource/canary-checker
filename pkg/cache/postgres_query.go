@@ -101,17 +101,10 @@ FROM
 GROUP BY time
 `
 
-	dur, err := duration.ParseDuration(q.Start)
-	if err != nil {
-		return nil, err
-	}
-
-	start := time.Now().Add(-time.Duration(dur)).Format(time.RFC3339)
+	start := q.GetStartTime().Format(time.RFC3339)
 	end := time.Now().Format(time.RFC3339) // TODO: connect with the new date range picker
 
-	// TODO: Find the perfect window duration
-	windowDurationSeconds := (time.Minute * 15).Seconds()
-	rows, err := db.Query(ctx, query, windowDurationSeconds/2, windowDurationSeconds, start, end, q.Check)
+	rows, err := db.Query(ctx, query, q.WindowDuration.Seconds()/2, q.WindowDuration.Seconds(), start, end, q.Check)
 	if err != nil {
 		return nil, err
 	}

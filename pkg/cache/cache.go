@@ -28,6 +28,7 @@ type QueryParams struct {
 	StatusCount     int
 	Labels          map[string]string
 	Trace           bool
+	WindowDuration  time.Duration
 }
 
 func (q QueryParams) Validate() error {
