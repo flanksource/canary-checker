@@ -1,7 +1,6 @@
 package api
 
 import (
-	"math"
 	"net/http"
 	"time"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/duty/models"
 	"github.com/labstack/echo/v4"
-	"github.com/pkg/errors"
 
 	"github.com/flanksource/canary-checker/pkg"
 )
@@ -54,21 +52,19 @@ func CheckDetails(c echo.Context) error {
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
-	checkSummary := summary[0]
+	if len(summary) == 0 {
+		return c.JSON(http.StatusOK, DetailResponse{})
+	}
 
+	checkSummary := *summary[0]
 	totalChecks := checkSummary.Uptime.Total()
 	if totalChecks <= maxCheckStatuses {
-		q.WindowDuration = time.Second // TODO: Maybe do not window at all
+		q.WindowDuration = 0 // No need to perform window aggregation
 	} else {
 		startTime := q.GetStartTime()
-		if startTime == nil {
-			return errorResonse(c, errors.New("start time must be a duration or RFC3339 timestamp"), http.StatusBadRequest)
-		}
-
-		startDuration := time.Since(*startTime)
-
-		windowsCount := int(math.Ceil(float64(totalChecks) / float64(maxCheckStatuses)))
-		q.WindowDuration = startDuration / time.Duration(windowsCount)
+		endTime := q.GetEndTime()
+		rangeDuration := endTime.Sub(*startTime)
+		q.WindowDuration = rangeDuration / time.Duration(maxCheckStatuses)
 	}
 
 	results, err := cache.PostgresCache.QueryStatus(c.Request().Context(), *q)

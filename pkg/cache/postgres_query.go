@@ -80,6 +80,9 @@ func (q QueryParams) GetWhereClause() (string, map[string]interface{}, error) {
 }
 
 func (q QueryParams) ExecuteDetails(ctx context.Context, db Querier) ([]pkg.Timeseries, error) {
+	start := q.GetStartTime().Format(time.RFC3339)
+	end := q.GetEndTime().Format(time.RFC3339)
+
 	query := `
 With grouped_by_window AS (
 	SELECT
@@ -100,11 +103,14 @@ FROM
   grouped_by_window 
 GROUP BY time
 `
+	args := []any{q.WindowDuration.Seconds() / 2, q.WindowDuration.Seconds(), start, end, q.Check}
 
-	start := q.GetStartTime().Format(time.RFC3339)
-	end := time.Now().Format(time.RFC3339) // TODO: connect with the new date range picker
+	if q.WindowDuration == 0 {
+		query = `SELECT time, status, duration FROM check_statuses WHERE time >= $1 AND time <= $2 AND check_id = $3`
+		args = []any{start, end, q.Check}
+	}
 
-	rows, err := db.Query(ctx, query, q.WindowDuration.Seconds()/2, q.WindowDuration.Seconds(), start, end, q.Check)
+	rows, err := db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

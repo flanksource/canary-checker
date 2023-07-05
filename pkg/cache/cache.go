@@ -58,10 +58,10 @@ func (q QueryParams) GetStartTime() *time.Time {
 
 func (q QueryParams) GetEndTime() *time.Time {
 	if q._end != nil || q.End == "" {
-		return q._start
+		return q._end
 	}
-	q._start, _ = timeV(q.Start)
-	return q._start
+	q._end, _ = timeV(q.End)
+	return q._end
 }
 
 func (q QueryParams) String() string {
@@ -81,6 +81,7 @@ func ParseQuery(c echo.Context) (*QueryParams, error) {
 	} else {
 		cacheCount = int64(DefaultCacheCount)
 	}
+
 	since := queryParams.Get("since")
 	if since == "" {
 		since = queryParams.Get("start")
@@ -88,10 +89,15 @@ func ParseQuery(c echo.Context) (*QueryParams, error) {
 	if since == "" {
 		since = DefaultWindow
 	}
+
 	until := queryParams.Get("until")
 	if until == "" {
 		until = queryParams.Get("end")
 	}
+	if until == "" {
+		until = "0s"
+	}
+
 	q := QueryParams{
 		Start:           since,
 		End:             until,
