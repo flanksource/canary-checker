@@ -8,6 +8,7 @@ plugins:
         - { type: feat, release: patch }
         - { type: ci, release: false }
         - { type: style, release: false }
+        - { type: major, release: major }
       parserOpts:
         noteKeywords:
           - MAJOR RELEASE
