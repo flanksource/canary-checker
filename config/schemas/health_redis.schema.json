@@ -3,22 +3,6 @@
   "$id": "https://github.com/flanksource/canary-checker/api/v1/redis-check",
   "$ref": "#/$defs/RedisCheck",
   "$defs": {
-    "Authentication": {
-      "properties": {
-        "username": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "password": {
-          "$ref": "#/$defs/EnvVar"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "username",
-        "password"
-      ]
-    },
     "ConfigMapKeySelector": {
       "properties": {
         "name": {
@@ -86,11 +70,17 @@
         "connection": {
           "type": "string"
         },
-        "addr": {
+        "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "addr": {
+          "type": "string"
         },
         "db": {
           "type": "integer"
@@ -99,9 +89,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "addr",
-        "db"
+        "name"
       ]
     },
     "SecretKeySelector": {

@@ -8,12 +8,11 @@ metadata:
 spec:
   interval: 30
   postgres:
-    - connection: "user=$(username) dbname=pqgotest sslmode=verify-full"
+    - url: "user=$(username) dbname=pqgotest sslmode=verify-full"
       name: postgres blank password
-      auth:
-        username:
-          value: pqgotest
-        password:
-          value: ""
+      username:
+        value: pqgotest
+      password:
+        value: ""
       query: "SELECT 1"
       results: 1

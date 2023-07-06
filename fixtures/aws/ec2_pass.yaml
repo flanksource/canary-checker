@@ -7,7 +7,7 @@ spec:
   spec:
     ec2:
       - description: test instance
-        accessKeyID:
+        accessKey:
           valueFrom:
             secretKeyRef:
               name: aws-credentials

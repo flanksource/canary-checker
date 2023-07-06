@@ -40,36 +40,28 @@ func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	results = append(results, result)
 
 	var redisOpts *redis.Options
-	if check.ConnectionName != "" {
-		connection, err := ctx.HydrateConnectionByURL(check.ConnectionName)
-		if err != nil {
-			return results.Failf("failed to fetch connection %q: %v", check.ConnectionName, err)
-		}
 
-		redisOpts = &redis.Options{
-			Addr:     connection.URL,
-			Username: connection.Username,
-			Password: connection.Password,
-		}
+	//nolint:staticcheck
+	if check.Addr != "" && check.URL == "" {
+		check.URL = check.Addr
+	}
 
-		if db, ok := connection.Properties["db"]; ok {
-			if dbInt, err := strconv.Atoi(db); nil == err {
-				redisOpts.DB = dbInt
-			}
-		}
-	} else {
-		auth, err := GetAuthValues(ctx, check.Auth)
-		if err != nil {
-			return results.Failf("failed to fetch auth details: %v", err)
-		}
+	connection, err := ctx.GetConnection(check.Connection)
+	if err != nil {
+		return results.Failf("error getting connection: %v", err)
+	}
 
-		redisOpts = &redis.Options{
-			Addr: check.Addr,
-			DB:   check.DB,
-		}
-		if auth != nil {
-			redisOpts.Username = auth.GetUsername()
-			redisOpts.Password = auth.GetPassword()
+	redisOpts = &redis.Options{
+		Addr:     connection.URL,
+		Username: connection.Username,
+		Password: connection.Password,
+	}
+
+	if check.DB != nil {
+		redisOpts.DB = *check.DB
+	} else if db, ok := connection.Properties["db"]; ok {
+		if dbInt, err := strconv.Atoi(db); nil == err {
+			redisOpts.DB = dbInt
 		}
 	}
 

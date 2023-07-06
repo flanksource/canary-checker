@@ -12,65 +12,8 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/canary-checker/templating"
-	ctemplate "github.com/flanksource/commons/template"
 	"github.com/robfig/cron/v3"
 )
-
-func GetConnection(ctx *context.Context, conn *v1.Connection, namespace string) (string, error) {
-	// TODO: this function should not be necessary, each check should be templated out individual
-	// however, the walk method only support high level values, not values from siblings.
-
-	if conn.Authentication.IsEmpty() {
-		return conn.Connection, nil
-	}
-
-	auth, err := GetAuthValues(ctx, &conn.Authentication)
-	if err != nil {
-		return "", err
-	}
-
-	clone := conn.DeepCopy()
-
-	data := map[string]interface{}{
-		"name":      ctx.Canary.Name,
-		"namespace": namespace,
-		"username":  auth.GetUsername(),
-		"password":  auth.GetPassword(),
-		"domain":    auth.GetDomain(),
-	}
-	templater := ctemplate.StructTemplater{
-		Values: data,
-		// access go values in template requires prefix everything with .
-		// to support $(username) instead of $(.username) we add a function for each var
-		ValueFunctions: true,
-		DelimSets: []ctemplate.Delims{
-			{Left: "{{", Right: "}}"},
-			{Left: "$(", Right: ")"},
-		},
-		RequiredTag: "template",
-	}
-	if err := templater.Walk(clone); err != nil {
-		return "", err
-	}
-
-	return clone.Connection, nil
-}
-
-func GetAuthValues(ctx *context.Context, auth *v1.Authentication) (*v1.Authentication, error) {
-	// in case nil we are sending empty string values for username and password
-	if auth == nil {
-		return auth, nil
-	}
-	var err error
-
-	if auth.Username.ValueStatic, err = ctx.GetEnvValueFromCache(auth.Username); err != nil {
-		return nil, err
-	}
-	if auth.Password.ValueStatic, err = ctx.GetEnvValueFromCache(auth.Password); err != nil {
-		return nil, err
-	}
-	return auth, nil
-}
 
 func age(t time.Time) string {
 	return utils.Age(time.Since(t))
