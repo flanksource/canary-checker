@@ -6,21 +6,18 @@ kind: Deployment
 {{- end }}
 metadata:
   name: {{ include "canary-checker.name" . }}
-  labels:
-    {{- include "canary-checker.labels" . | nindent 4 }}
+  labels: {{- include "canary-checker.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicas }}
   selector:
-    matchLabels:
-      {{- include "canary-checker.selectorLabels" . | nindent 6 }}
+    matchLabels: {{- include "canary-checker.selectorLabels" . | nindent 6 }}
   {{- if eq .Values.db.external.enabled false }}
   {{- if eq .Values.db.embedded.persist true }}
   serviceName: {{ include "canary-checker.fullname" . }}
   volumeClaimTemplates:
     - metadata:
         name: canarychecker-database
-        labels:
-          {{- include "canary-checker.labels" . | nindent 10 }}
+        labels: {{- include "canary-checker.labels" . | nindent 10 }}
       spec:
         storageClassName: {{ .Values.db.embedded.storageClass }}
         accessModes: ["ReadWriteOnce"]
@@ -31,8 +28,7 @@ spec:
   {{- end }}
   template:
     metadata:
-      labels:
-        {{- include "canary-checker.selectorLabels" . | nindent 8 }}
+      labels: {{- include "canary-checker.selectorLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "canary-checker.fullname" . }}-sa
       volumes:
@@ -52,15 +48,9 @@ spec:
               - path: "labels"
                 fieldRef:
                   fieldPath: metadata.labels
-      securityContext:
-        fsGroup: 1000
       containers:
         - name: {{ include "canary-checker.name" . }}
-          securityContext:
-            allowPrivilegeEscalation: {{.Values.allowPrivilegeEscalation}}
-            capabilities:
-              add:
-                - CAP_NET_RAW
+          securityContext: {{- include "canary-checker.containerSecurityContext" . | nindent 12 }}
           image: {{ include "canary-checker.imageString" . }}
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           env:
@@ -105,8 +95,7 @@ spec:
             - "8080"
             - --disable-postgrest={{ .Values.disablePostgrest }}
             - --db-migrations={{ .Values.db.runMigrations }}
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+          resources: {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
             httpGet:
               path: /health
@@ -116,5 +105,5 @@ spec:
               path: /health
               port: 8080
       {{- with .Values.extra }}
-      {{- toYaml . | nindent 6 }}
+      {{- toYaml . | indent 6 }}
       {{- end }}

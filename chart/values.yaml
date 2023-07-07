@@ -27,6 +27,12 @@ grafanaDashboards: false
 debug: false
 logLevel: "-v"
 
+## Options: unprivileged | root | privileged
+## unprivileged: runs as noot root user, cannot escalate permissions
+## root: runs as root user, cannot escalate permissions.  Required to run ping checks
+## privileged: runs as root user, may escalate CAP_NET_RAW.  Required to run docker and container checks
+privilegeMode: unprivileged
+
 db:
   runMigrations: true
   embedded:
