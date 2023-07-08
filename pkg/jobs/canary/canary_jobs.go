@@ -214,9 +214,9 @@ type CanaryStatusPayload struct {
 	NamespacedName       types.NamespacedName
 }
 
-func findCronEntry(canary v1.Canary) *cron.Entry {
+func findCronEntry(id string) *cron.Entry {
 	for _, entry := range CanaryScheduler.Entries() {
-		if entry.Job.(CanaryJob).GetPersistedID() == canary.GetPersistedID() {
+		if entry.Job.(CanaryJob).GetPersistedID() == id {
 			return &entry
 		}
 	}
@@ -247,7 +247,7 @@ var canaryUpdateTimeCache = sync.Map{}
 // TODO: Refactor to use database object instead of kubernetes
 func SyncCanaryJob(canary v1.Canary) error {
 	if !canary.DeletionTimestamp.IsZero() || canary.Spec.GetSchedule() == "@never" {
-		DeleteCanaryJob(canary)
+		DeleteCanaryJob(canary.GetPersistedID())
 		return nil
 	}
 
@@ -273,7 +273,7 @@ func SyncCanaryJob(canary v1.Canary) error {
 	}
 
 	updateTime, exists := canaryUpdateTimeCache.Load(dbCanary.ID.String())
-	entry := findCronEntry(canary)
+	entry := findCronEntry(canary.GetPersistedID())
 	if !exists || dbCanary.UpdatedAt.After(updateTime.(time.Time)) || entry == nil {
 		// Remove entry if it exists
 		if entry != nil {
@@ -351,13 +351,48 @@ func SyncCanaryJobs() {
 	logger.Infof("Synced canary jobs %d", len(CanaryScheduler.Entries()))
 }
 
-func DeleteCanaryJob(canary v1.Canary) {
-	entry := findCronEntry(canary)
+func DeleteCanaryJob(id string) {
+	entry := findCronEntry(id)
 	if entry == nil {
 		return
 	}
-	logger.Tracef("deleting cron entry for canary %s/%s with entry ID: %v", canary.Name, canary.Namespace, entry.ID)
+	logger.Tracef("deleting cron entry for canary:%s with entry ID: %v", id, entry.ID)
 	CanaryScheduler.Remove(entry.ID)
+}
+
+func ReconcileDeletedCanaryChecks() {
+	jobHistory := models.NewJobHistory("ReconcileDeletedTopologyComponents", "", "").Start()
+	_ = db.PersistJobHistory(jobHistory)
+	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
+
+	var rows []struct {
+		ID        string
+		DeletedAt time.Time
+	}
+	// Select all components whose topology ID is deleted but their deleted at is not marked
+	err := db.Gorm.Raw(`
+        SELECT DISTINCT(canaries.id), canaries.deleted_at
+        FROM canaries
+        INNER JOIN checks ON canaries.id = checks.canary_id
+        WHERE
+            checks.deleted_at IS NULL AND
+            canaries.deleted_at IS NOT NULL
+        `).Scan(&rows).Error
+
+	if err != nil {
+		logger.Errorf("Error fetching deleted canary checks: %v", err)
+		jobHistory.AddError(err.Error())
+		return
+	}
+
+	for _, r := range rows {
+		if err := db.DeleteChecksForCanary(r.ID, r.DeletedAt); err != nil {
+			logger.Errorf("Error deleting checks for canary[%s]: %v", r.ID, err)
+			jobHistory.AddError(err.Error())
+		}
+		DeleteCanaryJob(r.ID)
+	}
+	jobHistory.IncrSuccess()
 }
 
 func ScheduleFunc(schedule string, fn func()) (interface{}, error) {

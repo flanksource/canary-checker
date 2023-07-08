@@ -63,7 +63,7 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 		if err := db.DeleteTopology(topology); err != nil {
 			logger.Error(err, "failed to delete topology")
 		}
-		systemJobs.DeleteTopologyJob(*topology)
+		systemJobs.DeleteTopologyJob(topology.GetPersistedID())
 		controllerutil.RemoveFinalizer(topology, TopologyFinalizerName)
 		return ctrl.Result{}, r.Update(ctx, topology)
 	}

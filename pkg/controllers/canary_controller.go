@@ -93,7 +93,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		if err := db.DeleteCanary(*canary); err != nil {
 			logger.Error(err, "failed to delete canary")
 		}
-		canaryJobs.DeleteCanaryJob(*canary)
+		canaryJobs.DeleteCanaryJob(canary.GetPersistedID())
 		controllerutil.RemoveFinalizer(canary, FinalizerName)
 		return ctrl.Result{}, r.Update(ctx, canary)
 	}
