@@ -51,7 +51,8 @@ func StartScanCanaryConfigs(dataFile string, configFiles []string) {
 type CanaryJob struct {
 	*kommons.Client
 	Kubernetes kubernetes.Interface
-	v1.Canary
+	Canary     v1.Canary
+	DBCanary   pkg.Canary
 	// model   pkg.Canary
 	LogPass bool
 	LogFail bool
@@ -216,7 +217,7 @@ type CanaryStatusPayload struct {
 
 func findCronEntry(id string) *cron.Entry {
 	for _, entry := range CanaryScheduler.Entries() {
-		if entry.Job.(CanaryJob).GetPersistedID() == id {
+		if entry.Job.(CanaryJob).Canary.GetPersistedID() == id {
 			return &entry
 		}
 	}
@@ -268,6 +269,7 @@ func SyncCanaryJob(canary v1.Canary) error {
 		Client:     Kommons,
 		Kubernetes: Kubernetes,
 		Canary:     canary,
+		DBCanary:   dbCanary,
 		LogPass:    canary.IsTrace() || canary.IsDebug() || LogPass,
 		LogFail:    canary.IsTrace() || canary.IsDebug() || LogFail,
 	}
@@ -361,7 +363,7 @@ func DeleteCanaryJob(id string) {
 }
 
 func ReconcileDeletedCanaryChecks() {
-	jobHistory := models.NewJobHistory("ReconcileDeletedTopologyComponents", "", "").Start()
+	jobHistory := models.NewJobHistory("ReconcileDeletedCanaryChecks", "", "").Start()
 	_ = db.PersistJobHistory(jobHistory)
 	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
 
