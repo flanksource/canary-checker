@@ -90,14 +90,28 @@ func extractMessage(annotations map[string]string) string {
 }
 
 func generateFullName(name string, labels map[string]string) string {
-	// We add alert metadata to the check name based on priority order
-	priorityOrder := []string{"namespace", "node", "deployment", "daemonset", "job_name", "pod", "container"}
-
 	fullName := []string{name}
-	for _, key := range priorityOrder {
+
+	// We add alert metadata to the check name
+	level1 := []string{"namespace", "node"}
+	for _, key := range level1 {
 		if labels[key] != "" {
 			fullName = append(fullName, labels[key])
 		}
+	}
+
+	// Only one of these labels must be used
+	level2 := []string{"deployment", "daemonset", "cronjob_name", "job_name", "pod"}
+	for _, key := range level2 {
+		if labels[key] != "" {
+			fullName = append(fullName, labels[key])
+			break
+		}
+	}
+
+	// Add container name if it exists
+	if labels["container"] != "" {
+		fullName = append(fullName, labels["container"])
 	}
 
 	return strings.Join(fullName, "/")
