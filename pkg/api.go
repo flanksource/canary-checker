@@ -202,6 +202,11 @@ type Check struct {
 	DeletedAt          *time.Time          `json:"deletedAt,omitempty"`
 	SilencedAt         *time.Time          `json:"silencedAt,omitempty"`
 	Canary             *v1.Canary          `json:"-" gorm:"-"`
+
+	// These are calculated for the selected date range
+	EarliestRuntime *time.Time `json:"earliestRuntime,omitempty" gorm:"-"`
+	LatestRuntime   *time.Time `json:"latestRuntime,omitempty" gorm:"-"`
+	TotalRuns       int        `json:"totalRuns,omitempty" gorm:"-"`
 }
 
 func FromExternalCheck(canary Canary, check external.Check) Check {

@@ -30,7 +30,7 @@ func (s *SMBSession) Close() error {
 	return nil
 }
 
-func smbConnect(server string, port int, share string, auth *v1.Authentication) (Filesystem, uint64, uint64, uint64, error) {
+func smbConnect(server string, port int, share string, auth v1.Authentication) (Filesystem, uint64, uint64, uint64, error) {
 	var err error
 	var smb *SMBSession
 	server = server + ":" + fmt.Sprintf("%d", port)
@@ -83,9 +83,9 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.Failf("failed to populate SMB connection: %v", err)
 	}
 
-	auth := check.SMBConnection.Auth
+	auth := check.SMBConnection.Authentication
 	if !foundConn {
-		auth, err = GetAuthValues(ctx, check.SMBConnection.Auth)
+		auth, err = ctx.GetAuthValues(check.SMBConnection.Authentication)
 		if err != nil {
 			return results.ErrorMessage(err)
 		}

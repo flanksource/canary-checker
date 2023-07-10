@@ -38,22 +38,22 @@ func (c *LdapChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	var err error
 	results = append(results, result)
 
-	if ok, err := check.HydrateConnection(ctx); err != nil {
-		return results.Failf("failed to hydrate connection: %v", err)
-	} else if !ok {
-		check.Auth, err = GetAuthValues(ctx, check.Auth)
-		if err != nil {
-			return results.Failf("failed to fetch auth details: %v", err)
-		}
+	connection, err := ctx.GetConnection(check.Connection)
+	if err != nil {
+		return results.Failf("failed to get connection: %v", err)
 	}
 
-	ld, err := ldap.DialURL(check.Host, ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: check.SkipTLSVerify}))
+	if connection.URL == "" {
+		return results.Failf("Must specify a connection or URL")
+	}
+
+	ld, err := ldap.DialURL(connection.URL, ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: check.SkipTLSVerify}))
 	if err != nil {
 		return results.Failf("Failed to connect %v", err)
 	}
 
-	if err := ld.Bind(check.Auth.Username.ValueStatic, check.Auth.Password.ValueStatic); err != nil {
-		return results.Failf("Failed to bind using %s %v", check.Auth.Username.ValueStatic, err)
+	if err := ld.Bind(connection.Username, connection.Password); err != nil {
+		return results.Failf("Failed to bind using %s %v", connection.Username, err)
 	}
 
 	req := &ldap.SearchRequest{
@@ -63,7 +63,7 @@ func (c *LdapChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	}
 	res, err := ld.Search(req)
 	if err != nil {
-		return results.Failf("Failed to search host %v error: %v", check.Host, err)
+		return results.Failf("Failed to search host %v error: %v", connection.URL, err)
 	}
 
 	if len(res.Entries) == 0 {

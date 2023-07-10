@@ -169,8 +169,8 @@ type JSONCheck struct {
 }
 
 type Authentication struct {
-	Username types.EnvVar `yaml:"username" json:"username"`
-	Password types.EnvVar `yaml:"password" json:"password"`
+	Username types.EnvVar `yaml:"username,omitempty" json:"username,omitempty"`
+	Password types.EnvVar `yaml:"password,omitempty" json:"password,omitempty"`
 }
 
 func (auth Authentication) IsEmpty() bool {
@@ -306,21 +306,15 @@ func (d Description) GetLabels() map[string]string {
 }
 
 type Connection struct {
-	Connection     string         `yaml:"connection" json:"connection" template:"true"`
-	Authentication Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
-}
-
-// +k8s:deepcopy-gen=false
-type Connectable interface {
-	GetConnection() string
-}
-
-func (c Connection) GetConnection() string {
-	return c.Connection
+	// Connection name e.g. connection://http/google
+	Connection string `yaml:"connection,omitempty" json:"connection,omitempty"`
+	// Connection url, interpolated with username,password
+	URL            string `yaml:"url,omitempty" json:"url,omitempty" template:"true"`
+	Authentication `yaml:",inline" json:",inline"`
 }
 
 func (c Connection) GetEndpoint() string {
-	return sanitizeEndpoints(c.Connection)
+	return sanitizeEndpoints(c.URL)
 }
 
 // Obfuscate passwords of the form ' password=xxxxx ' from connectionString since

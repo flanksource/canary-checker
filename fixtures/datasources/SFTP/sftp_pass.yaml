@@ -9,9 +9,8 @@ spec:
       name: sample sftp check
       sftpConnection:
         host: 192.168.1.5
-        auth:
-          username:
-            value: <username>
-          password:
-            value: <password>
+        username:
+          value: <username>
+        password:
+          value: <password>
       maxCount: 10

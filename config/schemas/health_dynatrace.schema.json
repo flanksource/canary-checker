@@ -41,6 +41,9 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "connection": {
+          "type": "string"
+        },
         "host": {
           "type": "string"
         },

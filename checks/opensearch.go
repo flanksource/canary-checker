@@ -31,14 +31,19 @@ func (t *OpenSearchChecker) check(ctx *context.Context, check v1.OpenSearchCheck
 	var results pkg.Results
 	results = append(results, result)
 
-	if err := check.HydrateConnection(ctx); err != nil {
-		return results.Failf("error hydrating connection: %v", err)
+	connection, err := ctx.GetConnection(check.Connection)
+	if err != nil {
+		return results.Failf("error getting connection: %v", err)
+	}
+
+	if connection.URL == "" {
+		return results.Failf("Must specify a URL")
 	}
 
 	cfg := opensearch.Config{
-		Username:  check.Auth.Username.ValueStatic,
-		Password:  check.Auth.Password.ValueStatic,
-		Addresses: []string{check.GetEndpoint()},
+		Username:  connection.Username,
+		Password:  connection.Password,
+		Addresses: []string{connection.URL},
 	}
 
 	osClient, err := opensearch.NewClient(cfg)

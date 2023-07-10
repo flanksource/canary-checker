@@ -3,22 +3,6 @@
   "$id": "https://github.com/flanksource/canary-checker/api/v1/elasticsearch-check",
   "$ref": "#/$defs/ElasticsearchCheck",
   "$defs": {
-    "Authentication": {
-      "properties": {
-        "username": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "password": {
-          "$ref": "#/$defs/EnvVar"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "username",
-        "password"
-      ]
-    },
     "ConfigMapKeySelector": {
       "properties": {
         "name": {
@@ -63,8 +47,11 @@
         "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"

@@ -36,20 +36,13 @@ func (c *MongoDBChecker) Check(ctx *context.Context, extConfig external.Check) p
 	results = append(results, result)
 	var err error
 
-	var dbConnectionString string
-	if connection, err := ctx.HydrateConnectionByURL(check.Connection.Connection); err != nil {
+	connection, err := ctx.GetConnection(check.Connection)
+	if err != nil {
 		return results.Failf("error getting connection: %v", err)
-	} else if connection != nil {
-		dbConnectionString = connection.URL
-	} else {
-		dbConnectionString, err = GetConnection(ctx, &check.Connection, ctx.Namespace)
-		if err != nil {
-			return results.ErrorMessage(err)
-		}
 	}
 
 	opts := options.Client().
-		ApplyURI(dbConnectionString).
+		ApplyURI(connection.URL).
 		SetConnectTimeout(3 * time.Second).
 		SetSocketTimeout(3 * time.Second)
 

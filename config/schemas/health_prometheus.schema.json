@@ -3,6 +3,48 @@
   "$id": "https://github.com/flanksource/canary-checker/api/v1/prometheus-check",
   "$ref": "#/$defs/PrometheusCheck",
   "$defs": {
+    "ConfigMapKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
+    "EnvVar": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "valueFrom": {
+          "$ref": "#/$defs/EnvVarSource"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "EnvVarSource": {
+      "properties": {
+        "configMapKeyRef": {
+          "$ref": "#/$defs/ConfigMapKeySelector"
+        },
+        "secretKeyRef": {
+          "$ref": "#/$defs/SecretKeySelector"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "Labels": {
       "patternProperties": {
         ".*": {
@@ -34,11 +76,20 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "host": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
-        "host": {
+        "url": {
           "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -48,8 +99,22 @@
       "type": "object",
       "required": [
         "name",
-        "host",
         "query"
+      ]
+    },
+    "SecretKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
       ]
     },
     "Template": {

@@ -13,11 +13,7 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "username",
-        "password"
-      ]
+      "type": "object"
     },
     "ConfigMapKeySelector": {
       "properties": {

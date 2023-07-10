@@ -111,8 +111,8 @@ func (c *postgresCache) QuerySummary() (models.Checks, error) {
 	return duty.QueryCheckSummary(context.Background(), db.Pool)
 }
 
-func (c *postgresCache) QueryStatus(q QueryParams) ([]pkg.Timeseries, error) {
-	return q.ExecuteDetails(db.Pool)
+func (c *postgresCache) QueryStatus(ctx context.Context, q QueryParams) ([]pkg.Timeseries, error) {
+	return q.ExecuteDetails(ctx, db.Pool)
 }
 
 func (c *postgresCache) GetDetails(checkkey string, time string) interface{} {
