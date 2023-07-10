@@ -28,6 +28,9 @@ const (
 	CheckCleanupSchedule               = "@every 12h"
 	CanaryCleanupSchedule              = "@every 12h"
 	PrometheusGaugeCleanupSchedule     = "@every 1h"
+
+	ReconcileDeletedTopologyComponentsSchedule = "@every 1h"
+	ReconcileDeletedCanaryChecksSchedule       = "@every 1h"
 )
 
 func Start() {
@@ -78,6 +81,12 @@ func Start() {
 	}
 	if _, err := ScheduleFunc(CanaryCleanupSchedule, db.CleanupCanaries); err != nil {
 		logger.Errorf("Failed to schedule canary cleanup job: %v", err)
+	}
+	if _, err := ScheduleFunc(ReconcileDeletedTopologyComponentsSchedule, systemJobs.ReconcileDeletedTopologyComponents); err != nil {
+		logger.Errorf("Failed to schedule ReconcileDeletedTopologyComponents: %v", err)
+	}
+	if _, err := ScheduleFunc(ReconcileDeletedCanaryChecksSchedule, canaryJobs.ReconcileDeletedCanaryChecks); err != nil {
+		logger.Errorf("Failed to schedule ReconcileDeletedCanaryChecks: %v", err)
 	}
 
 	canaryJobs.CleanupMetricsGauges()
