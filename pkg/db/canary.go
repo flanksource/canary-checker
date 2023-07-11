@@ -96,10 +96,6 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 		"deleted_at":  nil,
 	}
 
-	// Deletions for transformed checks are handled separately
-	if check.Transformed {
-		delete(assignments, "deleted_at")
-	}
 	tx := Gorm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
 		DoUpdates: clause.Assignments(assignments),
@@ -178,13 +174,10 @@ func DeleteChecks(id []string) error {
 	return Gorm.Table("checks").Where("id IN (?)", id).UpdateColumn("deleted_at", time.Now()).Error
 }
 
-func GetCanary(id string) (*pkg.Canary, error) {
-	var model *pkg.Canary
-	if err := Gorm.Where("id = ?", id).First(&model).Error; err != nil {
-		return nil, err
-	}
-
-	return model, nil
+func GetCanary(id string) (pkg.Canary, error) {
+	var model pkg.Canary
+	err := Gorm.Where("id = ?", id).First(&model).Error
+	return model, err
 }
 
 func FindCanaryByID(id string) (*pkg.Canary, error) {
