@@ -3,6 +3,7 @@ package checks
 import (
 	gocontext "context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -38,9 +39,13 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 		return results.Failf("error getting connection: %v", err)
 	}
 
+	parsedURL, err := url.Parse(connection.URL)
+	if err != nil {
+		return results.Failf("error parsing url: %v", err)
+	}
 	client := alertmanagerClient.NewHTTPClientWithConfig(nil, &alertmanagerClient.TransportConfig{
-		Host:     connection.URL,
-		Schemes:  []string{"http", "https"},
+		Host:     parsedURL.Host,
+		Schemes:  []string{parsedURL.Scheme},
 		BasePath: alertmanagerClient.DefaultBasePath,
 	})
 	var filters []string
@@ -101,7 +106,7 @@ func generateFullName(name string, labels map[string]string) string {
 	}
 
 	// Only one of these labels must be used
-	level2 := []string{"deployment", "daemonset", "cronjob_name", "job_name", "pod"}
+	level2 := []string{"deployment", "daemonset", "statefulset", "cronjob_name", "job_name", "pod"}
 	for _, key := range level2 {
 		if labels[key] != "" {
 			fullName = append(fullName, labels[key])
@@ -110,7 +115,7 @@ func generateFullName(name string, labels map[string]string) string {
 	}
 
 	// Add container name if it exists
-	if labels["container"] != "" {
+	if labels["container"] != "" && labels["job"] != labels["container"] {
 		fullName = append(fullName, labels["container"])
 	}
 
