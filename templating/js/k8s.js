@@ -255,7 +255,7 @@ k8s = {
         _pod.status = "healthy"
       } else {
         _pod.status = "unhealthy"
-        _pod.statusReason = k8s.conditions.getMessage(pod)
+        _pod.status_reason = k8s.conditions.getMessage(pod)
       }
 
       pods.push(_pod)
@@ -353,7 +353,7 @@ k8s = {
         _node.status = "healthy"
       } else {
         _node.status = "unhealthy"
-        _node.statusReason = k8s.conditions.getMessage(node)
+        _node.status_reason = k8s.conditions.getMessage(node)
       }
 
       nodes.push(_node)
