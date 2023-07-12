@@ -401,6 +401,7 @@ type CheckResult struct {
 	Message     string
 	Error       string
 	Metrics     []Metric
+	Transformed bool
 	// Check is the configuration
 	Check  external.Check
 	Canary v1.Canary

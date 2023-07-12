@@ -53,9 +53,8 @@ type CanaryJob struct {
 	Kubernetes kubernetes.Interface
 	Canary     v1.Canary
 	DBCanary   pkg.Canary
-	// model   pkg.Canary
-	LogPass bool
-	LogFail bool
+	LogPass    bool
+	LogFail    bool
 }
 
 func (job CanaryJob) GetNamespacedName() types.NamespacedName {
@@ -94,22 +93,24 @@ func (job CanaryJob) Run() {
 	}
 
 	// Get transformed checks before and after, and then delete the olds ones that are not in new set
-	existingTransformedChecks, _ := db.GetTransformedCheckIDs(job.Canary.GetPersistedID())
-	var newChecksCreated []string
+	existingTransformedChecks, _ := db.GetTransformedCheckIDs(job.DBCanary.ID.String())
+	var transformedChecksCreated []string
 	results := checks.RunChecks(job.NewContext())
 	for _, result := range results {
 		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
 			logger.Infof(result.String())
 		}
-		checkIDsAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
-		newChecksCreated = append(newChecksCreated, checkIDsAdded...)
+		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
+		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded...)
 	}
 	job.updateStatusAndEvent(results)
 
 	// Checks which are not present now should be marked as healthy
-	checksToMarkHealthy := utils.SetDifference(existingTransformedChecks, newChecksCreated)
-	if err := db.UpdateChecksStatus(checksToMarkHealthy, models.CheckStatusHealthy); err != nil {
-		logger.Errorf("error deleting transformed checks for canary %s: %v", job.Canary.GetPersistedID(), err)
+	checksToMarkHealthy := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
+	if len(checksToMarkHealthy) > 0 && len(transformedChecksCreated) > 0 {
+		if err := db.UpdateChecksStatus(checksToMarkHealthy, models.CheckStatusHealthy); err != nil {
+			logger.Errorf("error deleting transformed checks for canary %s: %v", job.Canary.GetPersistedID(), err)
+		}
 	}
 
 	// Update last runtime map
