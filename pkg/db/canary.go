@@ -284,6 +284,10 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 		Where("canary_id = ? AND deleted_at IS NULL AND transformed = false", model.ID).
 		Scan(&oldCheckIDs).
 		Error
+	if err != nil {
+		logger.Errorf("Error fetching existing checks for canary:%s", model.ID)
+		return nil, nil, changed, err
+	}
 
 	var checks = make(map[string]string)
 	var newCheckIDs []string

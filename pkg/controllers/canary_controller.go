@@ -100,11 +100,6 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		return ctrl.Result{Requeue: true}, err
 	}
 
-	var checkIDs []string
-	for _, id := range checks {
-		checkIDs = append(checkIDs, id)
-	}
-
 	// Sync jobs if canary is created or updated
 	if canary.Generation == 1 || changed {
 		if err := canaryJobs.SyncCanaryJob(*canary); err != nil {
