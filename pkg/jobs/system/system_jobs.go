@@ -55,7 +55,7 @@ func SyncTopologyJobs() {
 		}
 	}
 
-	topologies, err := db.GetAllTopologies()
+	topologies, err := db.GetAllTopologiesForSync()
 	if err != nil {
 		logger.Errorf("Failed to get topology: %v", err)
 		return

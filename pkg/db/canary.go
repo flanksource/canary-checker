@@ -21,7 +21,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func GetAllCanaries() ([]pkg.Canary, error) {
+func GetAllCanariesForSync() ([]pkg.Canary, error) {
 	var _canaries []pkg.Canary
 	var rawCanaries interface{}
 	query := `
@@ -36,7 +36,11 @@ func GetAllCanaries() ([]pkg.Canary, error) {
                 ) :: jsonb
             )
         ) :: jsonb AS canaries
-        FROM canaries WHERE deleted_at IS NULL`
+        FROM canaries
+        WHERE
+            deleted_at IS NULL AND
+            agent_id = '00000000-0000-0000-0000-000000000000'
+    `
 
 	rows, err := Gorm.Raw(query).Rows()
 	if err != nil {
