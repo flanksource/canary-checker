@@ -308,7 +308,7 @@ func SyncCanaryJobs() {
 	_ = db.PersistJobHistory(jobHistory)
 	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
 
-	canaries, err := db.GetAllCanaries()
+	canaries, err := db.GetAllCanariesForSync()
 	if err != nil {
 		logger.Errorf("Failed to get canaries: %v", err)
 		jobHistory.AddError(err.Error())
