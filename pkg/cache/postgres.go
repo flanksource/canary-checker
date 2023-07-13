@@ -7,7 +7,6 @@ import (
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/models"
@@ -16,11 +15,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-var (
-	PostgresCache = &postgresCache{}
-
-	CheckTypesToDeleteOnTransformation = []string{"alertmanager"}
-)
+var PostgresCache = &postgresCache{}
 
 type postgresCache struct {
 	*pgxpool.Pool
@@ -43,7 +38,7 @@ func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) []string
 		checkID, err := c.AddCheckFromStatus(check, status)
 		if err != nil {
 			logger.Errorf("error persisting check with canary %s: %v", check.CanaryID, err)
-		} else if collections.Contains(CheckTypesToDeleteOnTransformation, check.Type) {
+		} else {
 			checkIDs = append(checkIDs, checkID.String())
 		}
 		c.AddCheckStatus(check, status)

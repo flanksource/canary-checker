@@ -105,10 +105,9 @@ func (job CanaryJob) Run() {
 	}
 	job.updateStatusAndEvent(results)
 
-	// Checks which are not present now should be marked as healthy
-	checksToMarkHealthy := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
-	if len(checksToMarkHealthy) > 0 && len(transformedChecksCreated) > 0 {
-		if err := db.UpdateChecksStatus(checksToMarkHealthy, models.CheckStatusHealthy); err != nil {
+	checksToRemove := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
+	if len(checksToRemove) > 0 && len(transformedChecksCreated) > 0 {
+		if err := db.RemoveOldTransformedChecks(checksToRemove); err != nil {
 			logger.Errorf("error deleting transformed checks for canary %s: %v", job.Canary.GetPersistedID(), err)
 		}
 	}
@@ -265,7 +264,6 @@ func SyncCanaryJob(canary v1.Canary) error {
 	if err != nil {
 		return err
 	}
-
 	job := CanaryJob{
 		Client:     Kommons,
 		Kubernetes: Kubernetes,

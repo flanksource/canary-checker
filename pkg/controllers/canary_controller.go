@@ -138,7 +138,7 @@ func (r *CanaryReconciler) Report() {
 		var canary v1.Canary
 		err := r.Get(gocontext.Background(), payload.NamespacedName, &canary)
 		if err != nil {
-			r.Log.Error(err, "failed to get canary", "canary", canary.Name)
+			r.Log.Error(err, "failed to get canary", "canary", payload.NamespacedName)
 			continue
 		}
 

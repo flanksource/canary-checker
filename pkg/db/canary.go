@@ -100,16 +100,33 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 		"deleted_at":  nil,
 	}
 
-	var _check pkg.Check
-	tx := Gorm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
-		DoUpdates: clause.Assignments(assignments),
-	}, clause.Returning{Columns: []clause.Column{{Name: "id"}}}).Create(&check).Scan(&_check)
-	if tx.Error != nil {
-		return uuid.Nil, tx.Error
+	if err := Gorm.Clauses(
+		clause.OnConflict{
+			Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
+			DoUpdates: clause.Assignments(assignments),
+		},
+	).Create(&check).Error; err != nil {
+		return uuid.Nil, err
 	}
 
-	return _check.ID, nil
+	// There are cases where we may receive a transformed check with a nil uuid
+	// We then explicitly query for that ID using the unique fields we have
+	if check.ID == uuid.Nil {
+		var err error
+		var idStr string
+		if err := Gorm.Table("checks").Select("id").Where("canary_id = ? AND type = ? AND name = ? AND agent_id = ?", check.CanaryID, check.Type, check.Name, uuid.Nil).Find(&idStr).Error; err != nil {
+			return uuid.Nil, err
+		}
+		check.ID, err = uuid.Parse(idStr)
+		if err != nil {
+			return uuid.Nil, err
+		}
+	}
+
+	if check.ID == uuid.Nil {
+		return check.ID, fmt.Errorf("received nil check id for canary:%s", canaryID)
+	}
+	return check.ID, nil
 }
 
 func GetTransformedCheckIDs(canaryID string) ([]string, error) {
@@ -122,20 +139,21 @@ func GetTransformedCheckIDs(canaryID string) ([]string, error) {
 	return ids, err
 }
 
-func UpdateChecksStatus(ids []string, status models.CheckHealthStatus) error {
+func RemoveOldTransformedChecks(ids []string) error {
 	if len(ids) == 0 {
 		return nil
 	}
-	if !utils.Contains(models.CheckHealthStatuses, status) {
-		return fmt.Errorf("invalid check health status: %s", status)
-	}
-	return Gorm.Table("checks").
-		Where("id in (?)", ids).
-		Updates(map[string]any{
-			"status":     status,
-			"deleted_at": gorm.Expr("NOW()"),
-		}).
-		Error
+
+	// Alertmanager checks are marked as healthy on deletion
+	query := `
+        UPDATE checks
+        SET deleted_at = NOW(),
+            status = (CASE WHEN checks.type = 'alertmanager' THEN 'healthy'
+                           ELSE checks.status
+                      END)
+        WHERE id IN (?)
+    `
+	return Gorm.Exec(query, ids).Error
 }
 
 func DeleteCanary(canary v1.Canary) error {
