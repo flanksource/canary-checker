@@ -100,8 +100,9 @@ SELECT
   bool_and(status),
   AVG(duration)::integer as duration 
 FROM 
-  grouped_by_window 
+  grouped_by_window
 GROUP BY time
+ORDER BY time
 `
 	args := []any{q.WindowDuration.Seconds() / 2, q.WindowDuration.Seconds(), start, end, q.Check}
 
