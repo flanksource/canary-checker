@@ -47,6 +47,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -121,6 +124,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -181,6 +187,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -253,6 +262,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -577,6 +589,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
@@ -862,6 +877,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "query": {
           "type": "string"
         }
@@ -923,6 +941,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "image": {
           "type": "string"
         },
@@ -957,6 +978,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "image": {
           "type": "string"
         },
@@ -987,6 +1011,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "server": {
           "type": "string"
@@ -1035,6 +1062,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1090,6 +1120,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "image": {
           "type": "string"
         },
@@ -1124,6 +1157,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "image": {
           "type": "string"
         },
@@ -1151,6 +1187,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1196,6 +1235,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "connection": {
           "type": "string"
@@ -1265,6 +1307,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1344,6 +1389,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1382,6 +1430,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1544,6 +1595,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1583,6 +1637,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1671,6 +1728,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "chartmuseum": {
           "type": "string"
         },
@@ -1703,6 +1763,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "endpoint": {
           "type": "string"
@@ -1753,6 +1816,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "jmx": {
           "$ref": "#/$defs/EnvVar"
         },
@@ -1799,6 +1865,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "testResults": {
           "type": "string"
         },
@@ -1837,6 +1906,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1886,6 +1958,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "connection": {
           "type": "string"
@@ -2024,6 +2099,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
@@ -2056,6 +2134,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2105,6 +2186,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2152,6 +2236,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "namespaceNamePrefix": {
           "type": "string"
@@ -2327,6 +2414,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2410,6 +2500,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "namespace": {
           "type": "string"
         },
@@ -2485,6 +2578,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2532,6 +2628,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2654,6 +2753,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
@@ -2726,6 +2828,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
@@ -2776,6 +2881,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "connection": {
           "type": "string"
@@ -2931,6 +3039,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "endpoint": {
           "type": "string"

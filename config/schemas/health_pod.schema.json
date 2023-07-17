@@ -25,6 +25,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "namespace": {
           "type": "string"
         },

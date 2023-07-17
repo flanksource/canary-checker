@@ -89,6 +89,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
