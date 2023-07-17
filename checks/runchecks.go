@@ -36,6 +36,10 @@ func getDisabledChecks() (map[string]struct{}, error) {
 		result[name] = struct{}{}
 	}
 
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
 	disabledChecks = result
 	return disabledChecks, nil
 }
