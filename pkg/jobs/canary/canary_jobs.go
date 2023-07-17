@@ -65,15 +65,16 @@ var minimumTimeBetweenCanaryRuns = 10 * time.Second
 var canaryLastRuntimes = sync.Map{}
 
 func (job CanaryJob) Run() {
-	val, _ := concurrentJobLocks.LoadOrStore(job.Canary.GetPersistedID(), &sync.Mutex{})
+	canaryID := job.DBCanary.ID.String()
+	val, _ := concurrentJobLocks.LoadOrStore(canaryID, &sync.Mutex{})
 	lock, ok := val.(*sync.Mutex)
 	if !ok {
-		logger.Warnf("expected mutex but got %T for canary(id=%s)", lock, job.Canary.GetPersistedID())
+		logger.Warnf("expected mutex but got %T for canary(id=%s)", lock, canaryID)
 		return
 	}
 
 	if !lock.TryLock() {
-		logger.Debugf("config (id=%s) is already running. skipping this run ...", job.Canary.GetPersistedID())
+		logger.Debugf("config (id=%s) is already running. skipping this run ...", canaryID)
 		return
 	}
 	defer lock.Unlock()
@@ -81,20 +82,23 @@ func (job CanaryJob) Run() {
 	lastRunDelta := minimumTimeBetweenCanaryRuns
 	// Get last runtime from sync map
 	var lastRuntime time.Time
-	if lastRuntimeVal, exists := canaryLastRuntimes.Load(job.Canary.GetPersistedID()); exists {
+	if lastRuntimeVal, exists := canaryLastRuntimes.Load(canaryID); exists {
 		lastRuntime = lastRuntimeVal.(time.Time)
 		lastRunDelta = time.Since(lastRuntime)
 	}
 
 	// Skip run if job ran too recently
 	if lastRunDelta < minimumTimeBetweenCanaryRuns {
-		logger.Infof("Skipping Canary[%s]:%s since it last ran %.2f seconds ago", job.Canary.GetPersistedID(), job.GetNamespacedName(), lastRunDelta.Seconds())
+		logger.Infof("Skipping Canary[%s]:%s since it last ran %.2f seconds ago", canaryID, job.GetNamespacedName(), lastRunDelta.Seconds())
 		return
 	}
 
 	// Get transformed checks before and after, and then delete the olds ones that are not in new set
-	existingTransformedChecks, _ := db.GetTransformedCheckIDs(job.DBCanary.ID.String())
+	existingTransformedChecks, _ := db.GetTransformedCheckIDs(canaryID)
 	var transformedChecksCreated []string
+	// Transformed checks have a delete strategy
+	// On deletion they can either be marked healthy, unhealthy or left as is
+	checkIDDeleteStrategyMap := make(map[string]string)
 	results := checks.RunChecks(job.NewContext())
 	for _, result := range results {
 		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
@@ -102,18 +106,34 @@ func (job CanaryJob) Run() {
 		}
 		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
 		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded...)
+		for _, checkID := range transformedChecksAdded {
+			checkIDDeleteStrategyMap[checkID] = result.Check.GetTransformDeleteStrategy()
+		}
 	}
 	job.updateStatusAndEvent(results)
 
+	checkDeleteStrategyGroup := make(map[string][]string)
 	checksToRemove := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
 	if len(checksToRemove) > 0 && len(transformedChecksCreated) > 0 {
-		if err := db.RemoveOldTransformedChecks(checksToRemove); err != nil {
-			logger.Errorf("error deleting transformed checks for canary %s: %v", job.Canary.GetPersistedID(), err)
+		for _, checkID := range checksToRemove {
+			strat := checkIDDeleteStrategyMap[checkID]
+			var status string
+			if strat == "MarkHealthy" {
+				status = models.CheckStatusHealthy
+			} else if strat == "MarkUnhealthy" {
+				status = models.CheckStatusUnhealthy
+			}
+			checkDeleteStrategyGroup[status] = append(checkDeleteStrategyGroup[status], checkID)
+		}
+		for status, checkIDs := range checkDeleteStrategyGroup {
+			if err := db.RemoveTransformedChecks(checkIDs, models.CheckHealthStatus(status)); err != nil {
+				logger.Errorf("error deleting transformed checks for canary %s: %v", canaryID, err)
+			}
 		}
 	}
 
 	// Update last runtime map
-	canaryLastRuntimes.Store(job.Canary.GetPersistedID(), time.Now())
+	canaryLastRuntimes.Store(canaryID, time.Now())
 }
 
 func (job *CanaryJob) NewContext() *context.Context {
@@ -217,7 +237,7 @@ type CanaryStatusPayload struct {
 
 func findCronEntry(id string) *cron.Entry {
 	for _, entry := range CanaryScheduler.Entries() {
-		if entry.Job.(CanaryJob).Canary.GetPersistedID() == id {
+		if entry.Job.(CanaryJob).DBCanary.ID.String() == id {
 			return &entry
 		}
 	}
@@ -274,7 +294,7 @@ func SyncCanaryJob(canary v1.Canary) error {
 	}
 
 	updateTime, exists := canaryUpdateTimeCache.Load(dbCanary.ID.String())
-	entry := findCronEntry(canary.GetPersistedID())
+	entry := findCronEntry(dbCanary.ID.String())
 	if !exists || dbCanary.UpdatedAt.After(updateTime.(time.Time)) || entry == nil {
 		// Remove entry if it exists
 		if entry != nil {

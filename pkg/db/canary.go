@@ -139,6 +139,26 @@ func GetTransformedCheckIDs(canaryID string) ([]string, error) {
 	return ids, err
 }
 
+func RemoveTransformedChecks(ids []string, status models.CheckHealthStatus) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	updates := map[string]any{
+		"deleted_at": gorm.Expr("NOW()"),
+	}
+	if status != "" {
+		if !utils.Contains(models.CheckHealthStatuses, status) {
+			return fmt.Errorf("invalid check health status: %s", status)
+		}
+		updates["status"] = status
+	}
+	return Gorm.Table("checks").
+		Where("id in (?)", ids).
+		Where("transformed = true").
+		Updates(updates).
+		Error
+}
+
 func RemoveOldTransformedChecks(ids []string) error {
 	if len(ids) == 0 {
 		return nil

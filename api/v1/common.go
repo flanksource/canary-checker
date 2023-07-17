@@ -280,6 +280,8 @@ type Description struct {
 	Icon string `yaml:"icon,omitempty" json:"icon,omitempty" template:"true"`
 	// Labels for the check
 	Labels Labels `yaml:"labels,omitempty" json:"labels,omitempty"`
+	// Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+	TransformDeleteStrategy string `yaml:"transformDeleteStrategy,omitempty" json:"transformDeleteStrategy,omitempty"`
 }
 
 func (d Description) String() string {
@@ -303,6 +305,10 @@ func (d Description) GetName() string {
 
 func (d Description) GetLabels() map[string]string {
 	return d.Labels
+}
+
+func (d Description) GetTransformDeleteStrategy() string {
+	return d.TransformDeleteStrategy
 }
 
 type Connection struct {
