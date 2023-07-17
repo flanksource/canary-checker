@@ -15,18 +15,22 @@ import (
 // A list of check types that are permanently disabled.
 var disabledChecks map[string]struct{}
 
-func getDisabledChecks() (map[string]struct{}, error) {
+func getDisabledChecks(ctx *context.Context) (map[string]struct{}, error) {
 	if disabledChecks != nil {
 		return disabledChecks, nil
 	}
 
-	rows, err := db.Gorm.Raw("SELECT name FROM disabled_checks").Rows()
+	result := make(map[string]struct{})
+	if ctx.DB() == nil {
+		return result, nil
+	}
+
+	rows, err := ctx.DB().Raw("SELECT value FROM properties WHERE name = 'check'").Rows()
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	result := make(map[string]struct{})
 	for rows.Next() {
 		var name string
 		if err := rows.Scan(&name); err != nil {
@@ -47,7 +51,7 @@ func getDisabledChecks() (map[string]struct{}, error) {
 func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 	var results []*pkg.CheckResult
 
-	disabledChecks, err := getDisabledChecks()
+	disabledChecks, err := getDisabledChecks(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting disabled checks: %v", err)
 	}

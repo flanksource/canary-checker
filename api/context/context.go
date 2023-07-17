@@ -38,6 +38,14 @@ type Context struct {
 	db *gorm.DB
 }
 
+func (ctx *Context) DB() *gorm.DB {
+	if ctx.db == nil {
+		return nil
+	}
+
+	return ctx.db.WithContext(ctx.Context)
+}
+
 func (ctx *Context) String() string {
 	return fmt.Sprintf("%s/%s", ctx.Canary.Namespace, ctx.Canary.Name)
 }
