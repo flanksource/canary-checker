@@ -116,11 +116,11 @@ func (job CanaryJob) Run() {
 	checksToRemove := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
 	if len(checksToRemove) > 0 && len(transformedChecksCreated) > 0 {
 		for _, checkID := range checksToRemove {
-			strat := checkIDDeleteStrategyMap[checkID]
+			strategy := checkIDDeleteStrategyMap[checkID]
 			var status string
-			if strat == "MarkHealthy" {
+			if strategy == "MarkHealthy" {
 				status = models.CheckStatusHealthy
-			} else if strat == "MarkUnhealthy" {
+			} else if strategy == "MarkUnhealthy" {
 				status = models.CheckStatusUnhealthy
 			}
 			checkDeleteStrategyGroup[status] = append(checkDeleteStrategyGroup[status], checkID)
