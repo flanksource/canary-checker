@@ -117,16 +117,20 @@ func (job CanaryJob) Run() {
 	if len(checksToRemove) > 0 && len(transformedChecksCreated) > 0 {
 		for _, checkID := range checksToRemove {
 			strategy := checkIDDeleteStrategyMap[checkID]
+			// Empty status by default does not effect check status
 			var status string
-			if strategy == "MarkHealthy" {
+			if strategy == v1.OnTransformMarkHealthy {
 				status = models.CheckStatusHealthy
-			} else if strategy == "MarkUnhealthy" {
+			} else if strategy == v1.OnTransformMarkUnhealthy {
 				status = models.CheckStatusUnhealthy
 			}
 			checkDeleteStrategyGroup[status] = append(checkDeleteStrategyGroup[status], checkID)
 		}
 		for status, checkIDs := range checkDeleteStrategyGroup {
-			if err := db.RemoveTransformedChecks(checkIDs, models.CheckHealthStatus(status)); err != nil {
+			if err := db.AddCheckStatuses(checkIDs, models.CheckHealthStatus(status)); err != nil {
+				logger.Errorf("error adding statuses for transformed checks")
+			}
+			if err := db.RemoveTransformedChecks(checkIDs); err != nil {
 				logger.Errorf("error deleting transformed checks for canary %s: %v", canaryID, err)
 			}
 		}

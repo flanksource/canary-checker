@@ -139,41 +139,48 @@ func GetTransformedCheckIDs(canaryID string) ([]string, error) {
 	return ids, err
 }
 
-func RemoveTransformedChecks(ids []string, status models.CheckHealthStatus) error {
+func AddCheckStatuses(ids []string, status models.CheckHealthStatus) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	if status == "" || !utils.Contains(models.CheckHealthStatuses, status) {
+		return fmt.Errorf("invalid check health status: %s", status)
+	}
+	checkStatus := false
+	if status == models.CheckStatusHealthy {
+		checkStatus = true
+	}
+
+	var objs []*models.CheckStatus
+	for _, id := range ids {
+
+		if checkID, err := uuid.Parse(id); err != nil {
+			objs = append(objs, &models.CheckStatus{
+				CheckID:   checkID,
+				Time:      time.Now().UTC().Format(time.RFC3339),
+				CreatedAt: time.Now(),
+				Status:    checkStatus,
+			})
+		}
+	}
+	return Gorm.Table("check_statuses").
+		Create(objs).
+		Error
+}
+
+func RemoveTransformedChecks(ids []string) error {
 	if len(ids) == 0 {
 		return nil
 	}
 	updates := map[string]any{
 		"deleted_at": gorm.Expr("NOW()"),
 	}
-	if status != "" {
-		if !utils.Contains(models.CheckHealthStatuses, status) {
-			return fmt.Errorf("invalid check health status: %s", status)
-		}
-		updates["status"] = status
-	}
+
 	return Gorm.Table("checks").
 		Where("id in (?)", ids).
 		Where("transformed = true").
 		Updates(updates).
 		Error
-}
-
-func RemoveOldTransformedChecks(ids []string) error {
-	if len(ids) == 0 {
-		return nil
-	}
-
-	// Alertmanager checks are marked as healthy on deletion
-	query := `
-        UPDATE checks
-        SET deleted_at = NOW(),
-            status = (CASE WHEN checks.type = 'alertmanager' THEN 'healthy'
-                           ELSE checks.status
-                      END)
-        WHERE id IN (?)
-    `
-	return Gorm.Exec(query, ids).Error
 }
 
 func DeleteCanary(canary v1.Canary) error {

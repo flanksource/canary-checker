@@ -15,6 +15,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+const (
+	OnTransformMarkHealthy   = "MarkHealthy"
+	OnTransformMarkUnhealthy = "MarkUnhealthy"
+)
+
 type checkContext interface {
 	context.Context
 	HydrateConnectionByURL(connectionName string) (*models.Connection, error)
