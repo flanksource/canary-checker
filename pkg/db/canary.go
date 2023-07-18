@@ -153,7 +153,6 @@ func AddCheckStatuses(ids []string, status models.CheckHealthStatus) error {
 
 	var objs []*models.CheckStatus
 	for _, id := range ids {
-
 		if checkID, err := uuid.Parse(id); err != nil {
 			objs = append(objs, &models.CheckStatus{
 				CheckID:   checkID,
