@@ -6,8 +6,8 @@ import (
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/runner"
-	"github.com/flanksource/canary-checker/templating"
 	"github.com/flanksource/commons/logger"
+	gomplate "github.com/flanksource/gomplate/v3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -17,7 +17,7 @@ var Root = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		logger.UseZap(cmd.Flags())
 		for _, script := range sharedLibrary {
-			if err := templating.LoadSharedLibrary(script); err != nil {
+			if err := gomplate.LoadSharedLibrary(script); err != nil {
 				logger.Errorf("Failed to load shared library %s: %v", script, err)
 			}
 		}
