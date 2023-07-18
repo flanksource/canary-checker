@@ -119,7 +119,8 @@ func Init() error {
 	}()
 
 	if RunMigrations {
-		if err := duty.Migrate(ConnectionString, &migrate.MigrateOptions{IgnoreFiles: []string{"012_changelog.sql"}}); err != nil {
+		opts := &migrate.MigrateOptions{IgnoreFiles: []string{"007_events.sql", "012_changelog.sql"}}
+		if err := duty.Migrate(ConnectionString, opts); err != nil {
 			return err
 		}
 	}
