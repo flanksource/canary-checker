@@ -140,7 +140,9 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		return _uptime, _latency
 	}
 	if canary.GetCheckID(result.Check.GetName()) == "" {
-		logger.Warnf("%s/%s/%s returned a result for a check that does not exist", canary.Namespace, canary.Name, result.Check.GetName())
+		if val := result.Canary.Labels["transformed"]; val != "true" {
+			logger.Warnf("%s/%s/%s returned a result for a check that does not exist", canary.Namespace, canary.Name, result.Check.GetName())
+		}
 		return _uptime, _latency
 	}
 	canaryNamespace := canary.Namespace

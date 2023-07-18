@@ -100,14 +100,32 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 		"deleted_at":  nil,
 	}
 
-	tx := Gorm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
-		DoUpdates: clause.Assignments(assignments),
-	}).Create(&check)
-	if tx.Error != nil {
-		return uuid.Nil, tx.Error
+	if err := Gorm.Clauses(
+		clause.OnConflict{
+			Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
+			DoUpdates: clause.Assignments(assignments),
+		},
+	).Create(&check).Error; err != nil {
+		return uuid.Nil, err
 	}
 
+	// There are cases where we may receive a transformed check with a nil uuid
+	// We then explicitly query for that ID using the unique fields we have
+	if check.ID == uuid.Nil {
+		var err error
+		var idStr string
+		if err := Gorm.Table("checks").Select("id").Where("canary_id = ? AND type = ? AND name = ? AND agent_id = ?", check.CanaryID, check.Type, check.Name, uuid.Nil).Find(&idStr).Error; err != nil {
+			return uuid.Nil, err
+		}
+		check.ID, err = uuid.Parse(idStr)
+		if err != nil {
+			return uuid.Nil, err
+		}
+	}
+
+	if check.ID == uuid.Nil {
+		return check.ID, fmt.Errorf("received nil check id for canary:%s", canaryID)
+	}
 	return check.ID, nil
 }
 
@@ -121,19 +139,46 @@ func GetTransformedCheckIDs(canaryID string) ([]string, error) {
 	return ids, err
 }
 
-func UpdateChecksStatus(ids []string, status models.CheckHealthStatus) error {
+func AddCheckStatuses(ids []string, status models.CheckHealthStatus) error {
 	if len(ids) == 0 {
 		return nil
 	}
-	if !utils.Contains(models.CheckHealthStatuses, status) {
+	if status == "" || !utils.Contains(models.CheckHealthStatuses, status) {
 		return fmt.Errorf("invalid check health status: %s", status)
 	}
+	checkStatus := false
+	if status == models.CheckStatusHealthy {
+		checkStatus = true
+	}
+
+	var objs []*models.CheckStatus
+	for _, id := range ids {
+		if checkID, err := uuid.Parse(id); err != nil {
+			objs = append(objs, &models.CheckStatus{
+				CheckID:   checkID,
+				Time:      time.Now().UTC().Format(time.RFC3339),
+				CreatedAt: time.Now(),
+				Status:    checkStatus,
+			})
+		}
+	}
+	return Gorm.Table("check_statuses").
+		Create(objs).
+		Error
+}
+
+func RemoveTransformedChecks(ids []string) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	updates := map[string]any{
+		"deleted_at": gorm.Expr("NOW()"),
+	}
+
 	return Gorm.Table("checks").
 		Where("id in (?)", ids).
-		Updates(map[string]any{
-			"status":     status,
-			"deleted_at": gorm.Expr("NOW()"),
-		}).
+		Where("transformed = true").
+		Updates(updates).
 		Error
 }
 
@@ -174,8 +219,8 @@ func DeleteCheckComponentRelationshipsForCanary(id string, deleteTime time.Time)
 	return Gorm.Table("check_component_relationships").Where("canary_id = ?", id).UpdateColumn("deleted_at", deleteTime).Error
 }
 
-func DeleteChecks(id []string) error {
-	return Gorm.Table("checks").Where("id IN (?)", id).UpdateColumn("deleted_at", time.Now()).Error
+func DeleteNonTransformedChecks(id []string) error {
+	return Gorm.Table("checks").Where("id IN (?) and transformed = false", id).UpdateColumn("deleted_at", time.Now()).Error
 }
 
 func GetCanary(id string) (pkg.Canary, error) {
@@ -276,8 +321,20 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 		}
 	}
 
-	var checks = make(map[string]string)
+	var oldCheckIDs []string
+	err = Gorm.
+		Table("checks").
+		Select("id").
+		Where("canary_id = ? AND deleted_at IS NULL AND transformed = false", model.ID).
+		Scan(&oldCheckIDs).
+		Error
+	if err != nil {
+		logger.Errorf("Error fetching existing checks for canary:%s", model.ID)
+		return nil, nil, changed, err
+	}
 
+	var checks = make(map[string]string)
+	var newCheckIDs []string
 	for _, config := range canary.Spec.GetAllChecks() {
 		check := pkg.FromExternalCheck(model, config)
 		// not creating the new check if already exists in the status
@@ -290,9 +347,20 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 		if err != nil {
 			logger.Errorf("error persisting check", err)
 		}
+		newCheckIDs = append(newCheckIDs, id.String())
 		checks[config.GetName()] = id.String()
 	}
 
+	// Delete non-transformed checks which are no longer in the canary
+	// fetching the checkIds present in the db but not present on the canary
+	checkIDsToRemove := utils.SetDifference(oldCheckIDs, newCheckIDs)
+	if len(checkIDsToRemove) > 0 {
+		logger.Infof("removing checks from canary:%s with ids %v", model.ID, checkIDsToRemove)
+		if err := DeleteNonTransformedChecks(checkIDsToRemove); err != nil {
+			logger.Errorf("failed to delete non transformed checks: %v", err)
+		}
+		metrics.UnregisterGauge(checkIDsToRemove)
+	}
 	return &model, checks, changed, nil
 }
 

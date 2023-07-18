@@ -401,6 +401,7 @@ type CheckResult struct {
 	Message     string
 	Error       string
 	Metrics     []Metric
+	Transformed bool
 	// Check is the configuration
 	Check  external.Check
 	Canary v1.Canary
@@ -450,22 +451,23 @@ func (generic GenericCheck) GetEndpoint() string {
 }
 
 type TransformedCheckResult struct {
-	Start       time.Time              `json:"start,omitempty"`
-	Pass        bool                   `json:"pass,omitempty"`
-	Invalid     bool                   `json:"invalid,omitempty"`
-	Detail      interface{}            `json:"detail,omitempty"`
-	Data        map[string]interface{} `json:"data,omitempty"`
-	Duration    int64                  `json:"duration,omitempty"`
-	Description string                 `json:"description,omitempty"`
-	DisplayType string                 `json:"displayType,omitempty"`
-	Message     string                 `json:"message,omitempty"`
-	Error       string                 `json:"error,omitempty"`
-	Name        string                 `json:"name,omitempty"`
-	Labels      map[string]string      `json:"labels,omitempty"`
-	Namespace   string                 `json:"namespace,omitempty"`
-	Icon        string                 `json:"icon,omitempty"`
-	Type        string                 `json:"type,omitempty"`
-	Endpoint    string                 `json:"endpoint,omitempty"`
+	Start                   time.Time              `json:"start,omitempty"`
+	Pass                    bool                   `json:"pass,omitempty"`
+	Invalid                 bool                   `json:"invalid,omitempty"`
+	Detail                  interface{}            `json:"detail,omitempty"`
+	Data                    map[string]interface{} `json:"data,omitempty"`
+	Duration                int64                  `json:"duration,omitempty"`
+	Description             string                 `json:"description,omitempty"`
+	DisplayType             string                 `json:"displayType,omitempty"`
+	Message                 string                 `json:"message,omitempty"`
+	Error                   string                 `json:"error,omitempty"`
+	Name                    string                 `json:"name,omitempty"`
+	Labels                  map[string]string      `json:"labels,omitempty"`
+	Namespace               string                 `json:"namespace,omitempty"`
+	Icon                    string                 `json:"icon,omitempty"`
+	Type                    string                 `json:"type,omitempty"`
+	Endpoint                string                 `json:"endpoint,omitempty"`
+	TransformDeleteStrategy string                 `json:"transformDeleteStrategy,omitempty"`
 }
 
 func (t TransformedCheckResult) ToCheckResult() CheckResult {
@@ -486,10 +488,11 @@ func (t TransformedCheckResult) ToCheckResult() CheckResult {
 		Error:       t.Error,
 		Check: GenericCheck{
 			Description: v1.Description{
-				Description: t.Description,
-				Name:        t.Name,
-				Icon:        t.Icon,
-				Labels:      labels,
+				Description:             t.Description,
+				Name:                    t.Name,
+				Icon:                    t.Icon,
+				Labels:                  labels,
+				TransformDeleteStrategy: t.TransformDeleteStrategy,
 			},
 			Type:     t.Type,
 			Endpoint: t.Endpoint,

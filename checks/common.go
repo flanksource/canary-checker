@@ -84,6 +84,7 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 		t.Name = def(t.Name, in.Check.GetName())
 		t.Type = def(t.Type, in.Check.GetType())
 		t.Endpoint = def(t.Endpoint, in.Check.GetEndpoint())
+		t.TransformDeleteStrategy = def(t.TransformDeleteStrategy, in.Check.GetTransformDeleteStrategy())
 		r := t.ToCheckResult()
 		r.Canary = in.Canary
 		r.Canary.Namespace = def(t.Namespace, r.Canary.Namespace)
@@ -96,6 +97,7 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 		// We use this label to set the transformed column to true
 		// This label is used and then removed in pkg.FromV1 function
 		r.Canary.Labels["transformed"] = "true" //nolint:goconst
+		r.Transformed = true
 		results = append(results, &r)
 	}
 
