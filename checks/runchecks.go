@@ -3,6 +3,7 @@ package checks
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -25,7 +26,7 @@ func getDisabledChecks(ctx *context.Context) (map[string]struct{}, error) {
 		return result, nil
 	}
 
-	rows, err := ctx.DB().Raw("SELECT value FROM properties WHERE name = 'check'").Rows()
+	rows, err := ctx.DB().Raw("SELECT name FROM properties WHERE name LIKE 'check.disabled.%'").Rows()
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +38,7 @@ func getDisabledChecks(ctx *context.Context) (map[string]struct{}, error) {
 			return nil, err
 		}
 
-		result[name] = struct{}{}
+		result[strings.TrimPrefix(name, "check.disabled.")] = struct{}{}
 	}
 
 	if rows.Err() != nil {
