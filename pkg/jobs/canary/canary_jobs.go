@@ -1,7 +1,10 @@
 package canary
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 	"path"
 	"sync"
 	"time"
@@ -21,6 +24,7 @@ import (
 	"github.com/flanksource/kommons"
 	"github.com/google/go-cmp/cmp"
 	"github.com/robfig/cron/v3"
+	"gorm.io/gorm/clause"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -31,6 +35,15 @@ var CanaryConfigFiles []string
 var DataFile string
 var Executor bool
 var LogPass, LogFail bool
+
+type UpstreamConfig struct {
+	AgentName string
+	Host      string
+	Username  string
+	Password  string
+}
+
+var UpstreamConf UpstreamConfig
 
 var Kommons *kommons.Client
 var Kubernetes kubernetes.Interface
@@ -431,4 +444,33 @@ func ScheduleFunc(schedule string, fn func()) (interface{}, error) {
 func init() {
 	// We are adding a small buffer to prevent blocking
 	CanaryStatusChannel = make(chan CanaryStatusPayload, 64)
+}
+
+func Pull() {
+	if err := pull(UpstreamConf); err != nil {
+		logger.Errorf("Error pulling upstream: %v", err)
+	}
+}
+
+func pull(config UpstreamConfig) error {
+	endpoint, err := url.JoinPath(UpstreamConf.Host, "api", "pull")
+	if err != nil {
+		return fmt.Errorf("error creating url endpoint for host %s: %w", config.Host, err)
+	}
+
+	resp, err := http.Get(endpoint)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	var canaries []models.Canary
+	if err := json.NewDecoder(resp.Body).Decode(&canaries); err != nil {
+		return fmt.Errorf("error decoding response: %w", err)
+	}
+
+	return db.Gorm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		UpdateAll: true,
+	}).Create(&canaries).Error
 }

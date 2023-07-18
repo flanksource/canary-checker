@@ -125,6 +125,7 @@ func serve() {
 	e.GET("/api/summary", api.HealthSummary)
 	e.GET("/about", api.About)
 	e.GET("/api/graph", api.CheckDetails)
+	e.GET("/api/pull/:agent_name", api.Pull)
 	e.POST("/api/push", api.PushHandler)
 	e.GET("/api/details", api.DetailsHandler)
 	e.GET("/api/topology", api.Topology)

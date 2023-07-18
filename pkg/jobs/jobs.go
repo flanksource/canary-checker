@@ -39,6 +39,11 @@ func Start() {
 	canaryJobs.CanaryScheduler.Start()
 	FuncScheduler.Start()
 
+	if canaryJobs.UpstreamConf.AgentName != "" {
+		if _, err := ScheduleFunc(SyncCanaryJobsSchedule, canaryJobs.Pull); err != nil {
+			logger.Errorf("Failed to pull canaries from central server: %v", err)
+		}
+	}
 	if _, err := ScheduleFunc(SyncCanaryJobsSchedule, canaryJobs.SyncCanaryJobs); err != nil {
 		logger.Errorf("Failed to schedule sync jobs for canary: %v", err)
 	}
