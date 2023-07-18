@@ -26,7 +26,7 @@ func getDisabledChecks(ctx *context.Context) (map[string]struct{}, error) {
 		return result, nil
 	}
 
-	rows, err := ctx.DB().Raw("SELECT name FROM properties WHERE name LIKE 'check.disabled.%'").Rows()
+	rows, err := ctx.DB().Raw("SELECT name FROM properties WHERE name LIKE 'check.disabled.%' AND value = 'true'").Rows()
 	if err != nil {
 		return nil, err
 	}

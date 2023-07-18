@@ -52,10 +52,6 @@ var Serve = &cobra.Command{
 }
 
 func loadPropertiesToDB(db *gorm.DB, filename string) error {
-	if err := db.Exec("DELETE FROM properties WHERE name LIKE 'check.disabled.%'").Error; err != nil {
-		return err
-	}
-
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		return nil
 	}
@@ -71,7 +67,7 @@ func loadPropertiesToDB(db *gorm.DB, filename string) error {
 	}
 
 	if len(values) > 0 {
-		query := fmt.Sprintf("INSERT INTO properties (name, value) VALUES %s", strings.Join(values, ","))
+		query := fmt.Sprintf("INSERT INTO properties (name, value) VALUES %s ON CONFLICT (name) DO UPDATE SET value = excluded.value", strings.Join(values, ","))
 		if err := db.Exec(query).Error; err != nil {
 			return fmt.Errorf("failed to insert properties into DB: %w", err)
 		}
