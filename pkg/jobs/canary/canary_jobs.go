@@ -43,6 +43,10 @@ type UpstreamConfig struct {
 	Password  string
 }
 
+func (t *UpstreamConfig) Valid() bool {
+	return t.Host != "" && t.Username != "" && t.Password != "" && t.AgentName != ""
+}
+
 var UpstreamConf UpstreamConfig
 
 var Kommons *kommons.Client
@@ -453,7 +457,7 @@ func Pull() {
 }
 
 func pull(config UpstreamConfig) error {
-	endpoint, err := url.JoinPath(UpstreamConf.Host, "api", "pull")
+	endpoint, err := url.JoinPath(UpstreamConf.Host, "api", "pull", config.AgentName)
 	if err != nil {
 		return fmt.Errorf("error creating url endpoint for host %s: %w", config.Host, err)
 	}
