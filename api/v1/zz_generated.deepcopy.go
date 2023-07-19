@@ -79,6 +79,13 @@ func (in *AlertManagerCheck) DeepCopyInto(out *AlertManagerCheck) {
 			(*out)[key] = val
 		}
 	}
+	if in.ExcludeFilters != nil {
+		in, out := &in.ExcludeFilters, &out.ExcludeFilters
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	if in.Ignore != nil {
 		in, out := &in.Ignore, &out.Ignore
 		*out = make([]string, len(*in))
