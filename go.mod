@@ -22,7 +22,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.21.0
 	github.com/flanksource/commons v1.10.0
 	github.com/flanksource/duty v1.0.129
-	github.com/flanksource/gomplate/v3 v3.20.3
+	github.com/flanksource/gomplate/v3 v3.20.4
 	github.com/flanksource/is-healthy v0.0.0-20230705092916-3b4cf510c5fc
 	github.com/flanksource/kommons v0.31.1
 	github.com/friendsofgo/errors v0.9.2
@@ -159,7 +159,6 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.8.0 // indirect
-	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gosimple/slug v1.13.1 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7 // indirect
@@ -211,7 +210,6 @@ require (
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
-	github.com/smartystreets/assertions v1.0.1 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
@@ -274,8 +272,3 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.13.9 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 )
-
-replace github.com/flanksource/gomplate/v3 => ../gomplate
-replace github.com/flanksource/commons => ../commons
-replace github.com/flanksource/kommons => ../kommons
-replace gopkg.in/flanksource/yaml.v3 => ../yaml
