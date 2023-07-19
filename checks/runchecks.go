@@ -11,14 +11,14 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
+	"github.com/patrickmn/go-cache"
 )
 
-// A list of check types that are permanently disabled.
-var disabledChecks map[string]struct{}
+var checksCache = cache.New(5*time.Minute, 5*time.Minute)
 
 func getDisabledChecks(ctx *context.Context) (map[string]struct{}, error) {
-	if disabledChecks != nil {
-		return disabledChecks, nil
+	if val, ok := checksCache.Get("disabledChecks"); ok {
+		return val.(map[string]struct{}), nil
 	}
 
 	result := make(map[string]struct{})
@@ -45,8 +45,8 @@ func getDisabledChecks(ctx *context.Context) (map[string]struct{}, error) {
 		return nil, rows.Err()
 	}
 
-	disabledChecks = result
-	return disabledChecks, nil
+	checksCache.SetDefault("disabledChecks", result)
+	return result, nil
 }
 
 func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
