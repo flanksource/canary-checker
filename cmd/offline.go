@@ -17,8 +17,10 @@ var GoOffline = &cobra.Command{
 		}
 
 		// Run in embedded mode once to download the postgres binary
-		databaseDir := "/app/temp-database-dir"
-		os.Mkdir(databaseDir, 0755)
+		databaseDir := "temp-database-dir"
+		if err := os.Mkdir(databaseDir, 0755); err != nil {
+			logger.Fatalf("Failed to create database directory[%s]: %+v", err)
+		}
 		defer os.RemoveAll(databaseDir)
 
 		db.ConnectionString = "embedded://" + databaseDir
