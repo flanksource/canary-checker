@@ -2,6 +2,8 @@ package checks
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -9,17 +11,62 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
+	"github.com/patrickmn/go-cache"
 )
 
-func RunChecks(ctx *context.Context) []*pkg.CheckResult {
+var checksCache = cache.New(5*time.Minute, 5*time.Minute)
+
+func getDisabledChecks(ctx *context.Context) (map[string]struct{}, error) {
+	if val, ok := checksCache.Get("disabledChecks"); ok {
+		return val.(map[string]struct{}), nil
+	}
+
+	result := make(map[string]struct{})
+	if ctx.DB() == nil {
+		return result, nil
+	}
+
+	rows, err := ctx.DB().Raw("SELECT name FROM properties WHERE name LIKE 'check.disabled.%' AND value = 'true'").Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+
+		result[strings.TrimPrefix(name, "check.disabled.")] = struct{}{}
+	}
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
+	checksCache.SetDefault("disabledChecks", result)
+	return result, nil
+}
+
+func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 	var results []*pkg.CheckResult
+
+	disabledChecks, err := getDisabledChecks(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error getting disabled checks: %v", err)
+	}
 
 	// Check if canary is not marked deleted in DB
 	if db.Gorm != nil && ctx.Canary.GetPersistedID() != "" {
 		var deletedAt sql.NullTime
 		err := db.Gorm.Table("canaries").Select("deleted_at").Where("id = ?", ctx.Canary.GetPersistedID()).Scan(&deletedAt).Error
-		if err == nil && deletedAt.Valid {
-			return results
+		if err != nil {
+			return nil, fmt.Errorf("error getting canary: %v", err)
+		}
+
+		if deletedAt.Valid {
+			return results, nil
 		}
 	}
 
@@ -30,13 +77,18 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 		// t := GetDeadline(ctx.Canary)
 		// ctx, cancel := ctx.WithDeadline(t)
 		// defer cancel()
+
+		if _, ok := disabledChecks[c.Type()]; ok {
+			continue
+		}
+
 		if Checks(checks).Includes(c) {
 			result := c.Run(ctx)
 			results = append(results, transformResults(ctx, result)...)
 		}
 	}
 
-	return processResults(ctx, results)
+	return processResults(ctx, results), nil
 }
 
 func transformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.CheckResult) {

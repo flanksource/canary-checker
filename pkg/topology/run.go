@@ -201,7 +201,12 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 	canaryCtx.Environment = ctx.Environment
 	canaryCtx.Logger = ctx.Logger
 
-	for _, result := range checks.RunChecks(canaryCtx) {
+	checkResults, err := checks.RunChecks(canaryCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, result := range checkResults {
 		if result.Error != "" {
 			errMsg := fmt.Sprintf("Failed to lookup property: %s. Error in lookup: %s", name, result.Error)
 			logger.Errorf(errMsg)

@@ -1,7 +1,8 @@
 run:
   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 20m
-  build-tags: aws
+  build-tags:
+    - aws
   skip-dirs:
     - pkg/db/models
 
