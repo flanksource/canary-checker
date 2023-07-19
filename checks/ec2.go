@@ -389,7 +389,12 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 		if len(inner.Spec.EC2) > 0 {
 			return results.Failf("EC2 checks may not be nested to avoid potential recursion.  Skipping inner EC2")
 		}
-		innerResults := RunChecks(ctx.New(ec2Vars))
+
+		innerResults, err := RunChecks(ctx.New(ec2Vars))
+		if err != nil {
+			return results.ErrorMessage(err)
+		}
+
 		for _, result := range innerResults {
 			if !result.Pass {
 				innerFail = true

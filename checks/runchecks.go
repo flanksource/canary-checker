@@ -2,6 +2,7 @@ package checks
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -11,15 +12,52 @@ import (
 	"github.com/flanksource/commons/logger"
 )
 
-func RunChecks(ctx *context.Context) []*pkg.CheckResult {
+// A list of check types that are permanently disabled.
+var disabledChecks map[string]struct{}
+
+func getDisabledChecks() (map[string]struct{}, error) {
+	if disabledChecks != nil {
+		return disabledChecks, nil
+	}
+
+	rows, err := db.Gorm.Raw("SELECT name FROM disabled_checks").Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make(map[string]struct{})
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+
+		result[name] = struct{}{}
+	}
+
+	disabledChecks = result
+	return disabledChecks, nil
+}
+
+func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 	var results []*pkg.CheckResult
+
+	disabledChecks, err := getDisabledChecks()
+	if err != nil {
+		return nil, fmt.Errorf("error getting disabled checks: %v", err)
+	}
 
 	// Check if canary is not marked deleted in DB
 	if db.Gorm != nil && ctx.Canary.GetPersistedID() != "" {
 		var deletedAt sql.NullTime
 		err := db.Gorm.Table("canaries").Select("deleted_at").Where("id = ?", ctx.Canary.GetPersistedID()).Scan(&deletedAt).Error
-		if err == nil && deletedAt.Valid {
-			return results
+		if err != nil {
+			return nil, fmt.Errorf("error getting canary: %v", err)
+		}
+
+		if deletedAt.Valid {
+			return results, nil
 		}
 	}
 
@@ -30,13 +68,18 @@ func RunChecks(ctx *context.Context) []*pkg.CheckResult {
 		// t := GetDeadline(ctx.Canary)
 		// ctx, cancel := ctx.WithDeadline(t)
 		// defer cancel()
+
+		if _, ok := disabledChecks[c.Type()]; ok {
+			continue
+		}
+
 		if Checks(checks).Includes(c) {
 			result := c.Run(ctx)
 			results = append(results, transformResults(ctx, result)...)
 		}
 	}
 
-	return processResults(ctx, results)
+	return processResults(ctx, results), nil
 }
 
 func transformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.CheckResult) {

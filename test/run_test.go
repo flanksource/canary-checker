@@ -77,7 +77,12 @@ func runFixture(t *testing.T, name string) {
 			}
 			context := context.New(kommonsClient, k8s, db.Gorm, canary)
 
-			checkResults := checks.RunChecks(context)
+			checkResults, err := checks.RunChecks(context)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
 			for _, res := range checkResults {
 				if res == nil {
 					t.Errorf("Result in %v returned nil:\n", name)

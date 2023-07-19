@@ -74,7 +74,7 @@ func (job CanaryJob) Run() {
 	}
 
 	if !lock.TryLock() {
-		logger.Debugf("config (id=%s) is already running. skipping this run ...", canaryID)
+		logger.Debugf("canary (id=%s) is already running. skipping this run ...", canaryID)
 		return
 	}
 	defer lock.Unlock()
@@ -99,7 +99,13 @@ func (job CanaryJob) Run() {
 	// Transformed checks have a delete strategy
 	// On deletion they can either be marked healthy, unhealthy or left as is
 	checkIDDeleteStrategyMap := make(map[string]string)
-	results := checks.RunChecks(job.NewContext())
+	results, err := checks.RunChecks(job.NewContext())
+	if err != nil {
+		logger.Errorf("error running checks for canary %s: %v", job.Canary.GetPersistedID(), err)
+		job.Errorf("error running checks for canary %s: %v", job.Canary.GetPersistedID(), err)
+		return
+	}
+
 	for _, result := range results {
 		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
 			logger.Infof(result.String())
