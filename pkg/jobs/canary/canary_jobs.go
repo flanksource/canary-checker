@@ -134,7 +134,7 @@ func (job CanaryJob) Run() {
 		}
 		for status, checkIDs := range checkDeleteStrategyGroup {
 			if err := db.AddCheckStatuses(checkIDs, models.CheckHealthStatus(status)); err != nil {
-				logger.Errorf("error adding statuses for transformed checks")
+				logger.Errorf("error adding statuses for transformed checks: %v", err)
 			}
 			if err := db.RemoveTransformedChecks(checkIDs); err != nil {
 				logger.Errorf("error deleting transformed checks for canary %s: %v", canaryID, err)

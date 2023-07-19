@@ -81,12 +81,12 @@ RUN curl -L https://github.com/stern/stern/releases/download/v1.25.0/stern_1.25.
 # install CA certificates
 COPY --from=builder /app/.bin/canary-checker /app
 
-RUN /app/canary-checker go-offline
-
 RUN mkdir /opt/database
 RUN groupadd --gid 1000 canary
 RUN useradd canary --uid 1000 -g canary -m -d /var/lib/canary
 RUN chown -R 1000:1000 /opt/database
+RUN chown -R 1000:1000 /app
 USER canary:canary
 
+RUN /app/canary-checker go-offline
 ENTRYPOINT ["/app/canary-checker"]
