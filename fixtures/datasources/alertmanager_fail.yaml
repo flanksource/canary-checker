@@ -13,6 +13,8 @@ spec:
         - .*
       ignore:
         - KubeScheduler.*
+      exclude_filters:
+        namespace: elastic-system
       transform:
         javascript: |
           var out = _.map(results, function(r) {

@@ -58,6 +58,9 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	for _, ignore := range check.Ignore {
 		filters = append(filters, fmt.Sprintf("alertname!~%s", ignore))
 	}
+	for k, v := range check.ExcludeFilters {
+		filters = append(filters, fmt.Sprintf("%s!=%s", k, v))
+	}
 
 	alerts, err := client.Alert.GetAlerts(&alertmanagerAlert.GetAlertsParams{
 		Context: gocontext.Background(),
