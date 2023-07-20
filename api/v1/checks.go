@@ -466,12 +466,13 @@ type AlertManager struct {
 }
 
 type AlertManagerCheck struct {
-	Description `yaml:",inline" json:",inline"`
-	Templatable `yaml:",inline" json:",inline"`
-	Connection  `yaml:",inline" json:",inline"`
-	Alerts      []string          `yaml:"alerts" json:"alerts,omitempty" template:"true"`
-	Filters     map[string]string `yaml:"filters" json:"filters,omitempty" template:"true"`
-	Ignore      []string          `yaml:"ignore" json:"ignore,omitempty" template:"true"`
+	Description    `yaml:",inline" json:",inline"`
+	Templatable    `yaml:",inline" json:",inline"`
+	Connection     `yaml:",inline" json:",inline"`
+	Alerts         []string          `yaml:"alerts" json:"alerts,omitempty" template:"true"`
+	Filters        map[string]string `yaml:"filters" json:"filters,omitempty" template:"true"`
+	ExcludeFilters map[string]string `yaml:"exclude_filters" json:"exclude_filters,omitempty" template:"true"`
+	Ignore         []string          `yaml:"ignore" json:"ignore,omitempty" template:"true"`
 }
 
 func (c AlertManagerCheck) GetType() string {

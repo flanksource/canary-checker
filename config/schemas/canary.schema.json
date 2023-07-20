@@ -85,6 +85,14 @@
           },
           "type": "object"
         },
+        "exclude_filters": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
         "ignore": {
           "items": {
             "type": "string"

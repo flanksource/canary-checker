@@ -81,6 +81,10 @@ spec:
                           template:
                             type: string
                         type: object
+                      exclude_filters:
+                        additionalProperties:
+                          type: string
+                        type: object
                       filters:
                         additionalProperties:
                           type: string
