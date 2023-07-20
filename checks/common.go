@@ -88,10 +88,10 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 		r := t.ToCheckResult()
 		r.Canary = in.Canary
 		r.Canary.Namespace = def(t.Namespace, r.Canary.Namespace)
+		if r.Canary.Labels == nil {
+			r.Canary.Labels = make(map[string]string)
+		}
 		for k, v := range t.Labels {
-			if r.Canary.Labels == nil {
-				r.Canary.Labels = make(map[string]string)
-			}
 			r.Canary.Labels[k] = v
 		}
 		// We use this label to set the transformed column to true
