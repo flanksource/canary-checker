@@ -13,6 +13,6 @@ spec:
     - connection: 'connection://http/200'
       name: http fail test expr check
       display:
-        expr: sprint(code) + " should be 500"
+        expr: string(code) + " should be 500"
       test:
         expr: code == 500
