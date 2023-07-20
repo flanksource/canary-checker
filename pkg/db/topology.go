@@ -63,7 +63,11 @@ func GetTopology(ctx context.Context, id string) (*v1.Topology, error) {
 func GetAllTopologiesForSync() ([]v1.Topology, error) {
 	var v1topologies []v1.Topology
 	var topologies []pkg.Topology
-	if err := Gorm.Table("topologies").Find(&topologies).Where("deleted_at is NULL AND namespace != 'push'").Error; err != nil {
+	if err := Gorm.
+		Table("topologies").
+		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+		Where("deleted_at is NULL").
+		Find(&topologies).Error; err != nil {
 		return nil, err
 	}
 	for _, t := range topologies {
