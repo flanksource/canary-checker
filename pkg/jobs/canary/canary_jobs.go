@@ -1,12 +1,7 @@
 package canary
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 	"path"
 	"sync"
 	"time"
@@ -20,14 +15,12 @@ import (
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/push"
 	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
 	"github.com/google/go-cmp/cmp"
 	"github.com/robfig/cron/v3"
-	"gorm.io/gorm/clause"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -468,77 +461,4 @@ func ScheduleFunc(schedule string, fn func()) (interface{}, error) {
 func init() {
 	// We are adding a small buffer to prevent blocking
 	CanaryStatusChannel = make(chan CanaryStatusPayload, 64)
-}
-
-func Pull() {
-	if err := pull(UpstreamConf); err != nil {
-		logger.Errorf("Error pulling upstream: %v", err)
-	}
-}
-
-func pull(config UpstreamConfig) error {
-	endpoint, err := url.JoinPath(UpstreamConf.Host, "api", "pull", config.AgentName)
-	if err != nil {
-		return fmt.Errorf("error creating url endpoint for host %s: %w", config.Host, err)
-	}
-
-	resp, err := http.Get(endpoint)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	var canaries []models.Canary
-	if err := json.NewDecoder(resp.Body).Decode(&canaries); err != nil {
-		return fmt.Errorf("error decoding response: %w", err)
-	}
-
-	return db.Gorm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "id"}},
-		UpdateAll: true,
-	}).Create(&canaries).Error
-}
-
-type PushData struct {
-	AgentName     string               `json:"agent_name,omitempty"`
-	Checks        []models.Check       `json:"checks,omitempty"`
-	CheckStatuses []models.CheckStatus `json:"check_statuses,omitempty"`
-}
-
-func (t *PushData) Empty() bool {
-	return len(t.Checks) == 0 && len(t.CheckStatuses) == 0
-}
-
-func pushToUpstream(data PushData) error {
-	data.AgentName = UpstreamConf.AgentName
-	payloadBuf := new(bytes.Buffer)
-	if err := json.NewEncoder(payloadBuf).Encode(data); err != nil {
-		return fmt.Errorf("error encoding msg: %w", err)
-	}
-
-	endpoint, err := url.JoinPath(UpstreamConf.Host, "upstream", "push")
-	if err != nil {
-		return fmt.Errorf("error creating url endpoint for host %s: %w", UpstreamConf.Host, err)
-	}
-
-	req, err := http.NewRequest(http.MethodPost, endpoint, payloadBuf)
-	if err != nil {
-		return fmt.Errorf("http.NewRequest: %w", err)
-	}
-
-	req.SetBasicAuth(UpstreamConf.Username, UpstreamConf.Password)
-
-	httpClient := &http.Client{}
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("error making request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if !collections.Contains([]int{http.StatusOK, http.StatusCreated}, resp.StatusCode) {
-		respBody, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("upstream server returned error status[%d]: %s", resp.StatusCode, string(respBody))
-	}
-
-	return nil
 }
