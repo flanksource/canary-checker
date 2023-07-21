@@ -240,6 +240,7 @@ func FromResult(result CheckResult) CheckStatus {
 		Check:    &result.Check,
 	}
 }
+
 func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Check {
 	canaryID, _ := uuid.Parse(canary.GetPersistedID())
 	c := Check{

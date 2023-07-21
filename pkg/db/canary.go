@@ -22,29 +22,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func GetCanariesOfAgent(ctx context.Context, agentName string) ([]models.Canary, error) {
-	var canaries []models.Canary
-	err := Gorm.WithContext(ctx).Where("deleted_at IS NULL").Joins("LEFT JOIN agents ON canaries.agent_id = agents.id").Where("agents.name = ?", agentName).Find(&canaries).Error
-	return canaries, err
-}
-
-func InsertAgentCheckResults(ctx context.Context, req v1.PushData) error {
-	if len(req.Checks) > 0 {
-		if err := Gorm.Clauses(clause.OnConflict{UpdateAll: true}).CreateInBatches(req.Checks, 500).Error; err != nil {
-			return fmt.Errorf("error upserting checks: %w", err)
-		}
-	}
-
-	if len(req.CheckStatuses) > 0 {
-		cols := []clause.Column{{Name: "check_id"}, {Name: "time"}}
-		if err := Gorm.Clauses(clause.OnConflict{UpdateAll: true, Columns: cols}).CreateInBatches(req.CheckStatuses, 500).Error; err != nil {
-			return fmt.Errorf("error upserting check_statuses: %w", err)
-		}
-	}
-
-	return nil
-}
-
 func GetAllCanariesForSync() ([]pkg.Canary, error) {
 	var _canaries []pkg.Canary
 	var rawCanaries interface{}

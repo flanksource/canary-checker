@@ -1,8 +1,10 @@
 package canary
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -18,6 +20,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/push"
 	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	dutyTypes "github.com/flanksource/duty/types"
@@ -125,16 +128,33 @@ func (job CanaryJob) Run() {
 		return
 	}
 
+	pushData := PushData{
+		CheckStatuses: make([]models.CheckStatus, 0, len(results)),
+	}
+
 	for _, result := range results {
 		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
 			logger.Infof(result.String())
 		}
-		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
+
+		transformedChecksAdded, checkStatus := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
+
+		if UpstreamConf.Valid() {
+			pushData.CheckStatuses = append(pushData.CheckStatuses, checkStatus...)
+		}
+
 		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded...)
 		for _, checkID := range transformedChecksAdded {
 			checkIDDeleteStrategyMap[checkID] = result.Check.GetTransformDeleteStrategy()
 		}
 	}
+
+	if UpstreamConf.Valid() && !pushData.Empty() {
+		if err := pushToUpstream(pushData); err != nil {
+			logger.Errorf("failed to push check results to upstream: %v", err)
+		}
+	}
+
 	job.updateStatusAndEvent(results)
 
 	checkDeleteStrategyGroup := make(map[string][]string)
@@ -477,4 +497,48 @@ func pull(config UpstreamConfig) error {
 		Columns:   []clause.Column{{Name: "id"}},
 		UpdateAll: true,
 	}).Create(&canaries).Error
+}
+
+type PushData struct {
+	AgentName     string               `json:"agent_name,omitempty"`
+	Checks        []models.Check       `json:"checks,omitempty"`
+	CheckStatuses []models.CheckStatus `json:"check_statuses,omitempty"`
+}
+
+func (t *PushData) Empty() bool {
+	return len(t.Checks) == 0 && len(t.CheckStatuses) == 0
+}
+
+func pushToUpstream(data PushData) error {
+	data.AgentName = UpstreamConf.AgentName
+	payloadBuf := new(bytes.Buffer)
+	if err := json.NewEncoder(payloadBuf).Encode(data); err != nil {
+		return fmt.Errorf("error encoding msg: %w", err)
+	}
+
+	endpoint, err := url.JoinPath(UpstreamConf.Host, "upstream", "push")
+	if err != nil {
+		return fmt.Errorf("error creating url endpoint for host %s: %w", UpstreamConf.Host, err)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, endpoint, payloadBuf)
+	if err != nil {
+		return fmt.Errorf("http.NewRequest: %w", err)
+	}
+
+	req.SetBasicAuth(UpstreamConf.Username, UpstreamConf.Password)
+
+	httpClient := &http.Client{}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("error making request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if !collections.Contains([]int{http.StatusOK, http.StatusCreated}, resp.StatusCode) {
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("upstream server returned error status[%d]: %s", resp.StatusCode, string(respBody))
+	}
+
+	return nil
 }

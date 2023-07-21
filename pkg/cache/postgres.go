@@ -27,23 +27,41 @@ func NewPostgresCache(pool *pgxpool.Pool) *postgresCache {
 	}
 }
 
-func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) []string {
-	var checkIDs []string
+func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) ([]string, []models.CheckStatus) {
+	var (
+		checkIDs      = make([]string, 0, len(statii))
+		checkStatuses = make([]models.CheckStatus, 0, len(statii))
+	)
+
 	for _, status := range statii {
 		if status.Status {
 			check.Status = "healthy"
 		} else {
 			check.Status = "unhealthy"
 		}
+
 		checkID, err := c.AddCheckFromStatus(check, status)
 		if err != nil {
 			logger.Errorf("error persisting check with canary %s: %v", check.CanaryID, err)
 		} else {
 			checkIDs = append(checkIDs, checkID.String())
 		}
-		c.AddCheckStatus(check, status)
+
+		s := &models.CheckStatus{
+			Status:   status.Status,
+			Invalid:  status.Invalid,
+			Time:     status.Time,
+			Duration: int(status.Duration),
+			Message:  status.Message,
+			Error:    status.Error,
+			Detail:   status.Detail,
+		}
+
+		c.AddCheckStatus(check, s)
+		checkStatuses = append(checkStatuses, *s)
 	}
-	return checkIDs
+
+	return checkIDs, checkStatuses
 }
 
 func (c *postgresCache) AddCheckFromStatus(check pkg.Check, status pkg.CheckStatus) (uuid.UUID, error) {
@@ -58,11 +76,12 @@ func (c *postgresCache) AddCheckFromStatus(check pkg.Check, status pkg.CheckStat
 	return db.PersistCheck(check, check.CanaryID)
 }
 
-func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) {
+func (c *postgresCache) AddCheckStatus(check pkg.Check, status *models.CheckStatus) {
 	jsonDetails, err := json.Marshal(status.Detail)
 	if err != nil {
 		logger.Errorf("error marshalling details: %v", err)
 	}
+
 	checks := pkg.Checks{}
 	if db.Gorm.Model(&checks).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
@@ -71,10 +90,13 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 		logger.Errorf("error updating check: %v", err)
 		return
 	}
+
 	if len(checks) == 0 || checks[0].ID == uuid.Nil {
 		logger.Debugf("check not found")
 		return
 	}
+	status.CheckID = checks[0].ID
+
 	_, err = c.Exec(context.TODO(), `INSERT INTO check_statuses(
 		check_id,
 		details,
@@ -98,6 +120,7 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 		status.Status,
 		status.Time,
 	)
+
 	if err != nil {
 		logger.Errorf("error adding check status to postgres: %v", err)
 	}
