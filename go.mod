@@ -22,7 +22,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.21.0
 	github.com/flanksource/commons v1.10.2
 	github.com/flanksource/duty v1.0.129
-	github.com/flanksource/gomplate/v3 v3.20.7
+	github.com/flanksource/gomplate/v3 v3.20.9
 	github.com/flanksource/is-healthy v0.0.0-20230713150444-ad2a5ef4bb37
 	github.com/flanksource/kommons v0.31.3
 	github.com/friendsofgo/errors v0.9.2
@@ -123,6 +123,7 @@ require (
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
+	github.com/flanksource/mapstructure v1.6.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/geoffgarside/ber v1.1.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
