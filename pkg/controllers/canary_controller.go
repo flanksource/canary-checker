@@ -95,14 +95,14 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		return ctrl.Result{}, r.Update(ctx, canary)
 	}
 
-	_, checks, changed, err := db.PersistCanary(*canary, "kubernetes/"+string(canary.ObjectMeta.UID))
+	dbCanary, checks, changed, err := db.PersistCanary(*canary, "kubernetes/"+string(canary.ObjectMeta.UID))
 	if err != nil {
 		return ctrl.Result{Requeue: true}, err
 	}
 
 	// Sync jobs if canary is created or updated
 	if canary.Generation == 1 || changed {
-		if err := canaryJobs.SyncCanaryJob(*canary); err != nil {
+		if err := canaryJobs.SyncCanaryJob(*dbCanary); err != nil {
 			logger.Error(err, "failed to sync canary job")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}

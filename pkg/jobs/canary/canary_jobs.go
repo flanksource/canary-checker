@@ -276,8 +276,13 @@ func ScanCanaryConfigs() {
 var canaryUpdateTimeCache = sync.Map{}
 
 // TODO: Refactor to use database object instead of kubernetes
-func SyncCanaryJob(canary v1.Canary) error {
-	if !canary.DeletionTimestamp.IsZero() || canary.Spec.GetSchedule() == "@never" {
+func SyncCanaryJob(dbCanary pkg.Canary) error {
+	canary, err := dbCanary.ToV1()
+	if err != nil {
+		return err
+	}
+
+	if canary.Spec.GetSchedule() == "@never" {
 		DeleteCanaryJob(canary.GetPersistedID())
 		return nil
 	}
@@ -290,14 +295,10 @@ func SyncCanaryJob(canary v1.Canary) error {
 		}
 	}
 
-	dbCanary, err := db.GetCanary(canary.GetPersistedID())
-	if err != nil {
-		return err
-	}
 	job := CanaryJob{
 		Client:     Kommons,
 		Kubernetes: Kubernetes,
-		Canary:     canary,
+		Canary:     *canary,
 		DBCanary:   dbCanary,
 		LogPass:    canary.IsTrace() || canary.IsDebug() || LogPass,
 		LogFail:    canary.IsTrace() || canary.IsDebug() || LogFail,
@@ -333,52 +334,25 @@ func SyncCanaryJob(canary v1.Canary) error {
 func SyncCanaryJobs() {
 	logger.Debugf("Syncing canary jobs")
 
-	jobHistory := models.NewJobHistory("CanarySync", "canary", "").Start()
-	_ = db.PersistJobHistory(jobHistory)
-	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
-
 	canaries, err := db.GetAllCanariesForSync()
 	if err != nil {
 		logger.Errorf("Failed to get canaries: %v", err)
-		jobHistory.AddError(err.Error())
 		return
 	}
 
 	for _, c := range canaries {
-		canary, err := c.ToV1()
-		if err != nil {
-			logger.Errorf("Error parsing canary[%s]: %v", c.ID, err)
-			jobHistory.AddError(err.Error())
+		jobHistory := models.NewJobHistory("CanarySync", "canary", c.ID.String()).Start()
+		_ = db.PersistJobHistory(jobHistory)
+
+		if err := SyncCanaryJob(c); err != nil {
+			logger.Errorf("Error syncing canary[%s]: %v", c.ID, err.Error())
+			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
 			continue
 		}
-
-		if len(canary.Status.Checks) == 0 && len(canary.Spec.GetAllChecks()) > 0 {
-			logger.Infof("Persisting %s as it has no checks", canary.Name)
-			pkgCanary, _, _, err := db.PersistCanary(*canary, canary.Annotations["source"])
-			if err != nil {
-				logger.Errorf("Failed to persist canary %s: %v", canary.Name, err)
-				jobHistory.AddError(err.Error())
-				continue
-			}
-
-			v1canary, err := pkgCanary.ToV1()
-			if err != nil {
-				logger.Errorf("Failed to convert canary to V1 %s: %v", canary.Name, err)
-				jobHistory.AddError(err.Error())
-				continue
-			}
-
-			if err := SyncCanaryJob(*v1canary); err != nil {
-				logger.Errorf(err.Error())
-				jobHistory.AddError(err.Error())
-			}
-		} else if err := SyncCanaryJob(*canary); err != nil {
-			logger.Errorf(err.Error())
-			jobHistory.AddError(err.Error())
-		}
+		jobHistory.IncrSuccess()
+		_ = db.PersistJobHistory(jobHistory.End())
 	}
 
-	jobHistory.IncrSuccess()
 	logger.Infof("Synced canary jobs %d", len(CanaryScheduler.Entries()))
 }
 

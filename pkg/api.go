@@ -156,6 +156,12 @@ func (c Canary) ToV1() (*v1.Canary, error) {
 	return &canary, nil
 }
 
+func (c Canary) GetSpec() (v1.CanarySpec, error) {
+	var spec v1.CanarySpec
+	err := json.Unmarshal(c.Spec, &spec)
+	return spec, err
+}
+
 func CanaryFromV1(canary v1.Canary) (Canary, error) {
 	spec, err := json.Marshal(canary.Spec)
 	if err != nil {
