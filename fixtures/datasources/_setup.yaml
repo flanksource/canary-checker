@@ -635,7 +635,7 @@ spec:
               port: 9200
             initialDelaySeconds: 10
         - name: populate-db
-          image: debian:bookworm
+          image: ellerbrock/alpine-bash-curl-ssl
           command: ["/bin/sh", "-c"]
           readinessProbe:
             exec:
@@ -646,14 +646,23 @@ spec:
             # We install wait-for-it and wait for elasticsearch to be ready and then
             # populate it with dummy data
             - >
-              apt update && apt install -y curl;
-              curl https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh -o wait-for-it.sh;
+              echo "Starting Elasticsearch";
+              curl -s https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh -o wait-for-it.sh;
               chmod +x wait-for-it.sh; ./wait-for-it.sh localhost:9200 --timeout=0;
-              curl -X PUT localhost:9200/index;
-              curl -X GET "localhost:9200/_cluster/health?wait_for_status=green&wait_for_active_shards=all&timeout=2m" -H 'Content-Type: application/json';
-              curl -X POST localhost:9200/index/_doc -d '{"system": {"role": "api"}}' -H 'Content-Type: application/json';
+              printf "\nWaiting for cluster status to be green\n";
+              curl -s -X GET "localhost:9200/_cluster/health?wait_for_status=green&wait_for_active_shards=all&timeout=2m" -H 'Content-Type: application/json';
+              printf "\nCreating new index\n";
+              curl -s -X PUT localhost:9200/index;
+              printf "\nReducing replicas to 0\n";
+              curl -s -X PUT "localhost:9200/index/_settings" -H 'Content-Type: application/json' -d '{"index" : {"number_of_replicas" : 0}}';
+              print "\nGetting Health data\n";
+              curl -s "localhost:9200/_cluster/health" -H 'Content-Type: application/json';
+              curl -s "localhost:9200/_cluster/allocation/explain" -H 'Content-Type: application/json';
+              printf "\nInserting dummy data\n";
+              curl -s -X POST localhost:9200/index/_doc -d '{"system": {"role": "api"}}' -H 'Content-Type: application/json';
+              printf "\nCreating /tmp/done\n";
               touch /tmp/done;
-              sleep infinity
+              sleep 365d;
 ---
 apiVersion: v1
 kind: Service
