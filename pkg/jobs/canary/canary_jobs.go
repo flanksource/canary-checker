@@ -32,19 +32,6 @@ var DataFile string
 var Executor bool
 var LogPass, LogFail bool
 
-type UpstreamConfig struct {
-	AgentName string
-	Host      string
-	Username  string
-	Password  string
-}
-
-func (t *UpstreamConfig) Valid() bool {
-	return t.Host != "" && t.Username != "" && t.Password != "" && t.AgentName != ""
-}
-
-var UpstreamConf UpstreamConfig
-
 var Kommons *kommons.Client
 var Kubernetes kubernetes.Interface
 var FuncScheduler = cron.New()
@@ -121,33 +108,16 @@ func (job CanaryJob) Run() {
 		return
 	}
 
-	pushData := PushData{
-		CheckStatuses: make([]models.CheckStatus, 0, len(results)),
-	}
-
 	for _, result := range results {
 		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
 			logger.Infof(result.String())
 		}
-
-		transformedChecksAdded, checkStatus := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
-
-		if UpstreamConf.Valid() {
-			pushData.CheckStatuses = append(pushData.CheckStatuses, checkStatus...)
-		}
-
+		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
 		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded...)
 		for _, checkID := range transformedChecksAdded {
 			checkIDDeleteStrategyMap[checkID] = result.Check.GetTransformDeleteStrategy()
 		}
 	}
-
-	if UpstreamConf.Valid() && !pushData.Empty() {
-		if err := pushToUpstream(pushData); err != nil {
-			logger.Errorf("failed to push check results to upstream: %v", err)
-		}
-	}
-
 	job.updateStatusAndEvent(results)
 
 	checkDeleteStrategyGroup := make(map[string][]string)

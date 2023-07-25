@@ -27,11 +27,8 @@ func NewPostgresCache(pool *pgxpool.Pool) *postgresCache {
 	}
 }
 
-func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) ([]string, []models.CheckStatus) {
-	var (
-		checkIDs      = make([]string, 0, len(statii))
-		checkStatuses = make([]models.CheckStatus, 0, len(statii))
-	)
+func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) []string {
+	var checkIDs = make([]string, 0, len(statii))
 
 	for _, status := range statii {
 		if status.Status {
@@ -46,22 +43,10 @@ func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) ([]strin
 		} else {
 			checkIDs = append(checkIDs, checkID.String())
 		}
-
-		s := &models.CheckStatus{
-			Status:   status.Status,
-			Invalid:  status.Invalid,
-			Time:     status.Time,
-			Duration: int(status.Duration),
-			Message:  status.Message,
-			Error:    status.Error,
-			Detail:   status.Detail,
-		}
-
-		c.AddCheckStatus(check, s)
-		checkStatuses = append(checkStatuses, *s)
+		c.AddCheckStatus(check, status)
 	}
 
-	return checkIDs, checkStatuses
+	return checkIDs
 }
 
 func (c *postgresCache) AddCheckFromStatus(check pkg.Check, status pkg.CheckStatus) (uuid.UUID, error) {
@@ -76,7 +61,7 @@ func (c *postgresCache) AddCheckFromStatus(check pkg.Check, status pkg.CheckStat
 	return db.PersistCheck(check, check.CanaryID)
 }
 
-func (c *postgresCache) AddCheckStatus(check pkg.Check, status *models.CheckStatus) {
+func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) {
 	jsonDetails, err := json.Marshal(status.Detail)
 	if err != nil {
 		logger.Errorf("error marshalling details: %v", err)
@@ -95,8 +80,6 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status *models.CheckStat
 		logger.Debugf("check not found")
 		return
 	}
-	status.CheckID = checks[0].ID
-
 	_, err = c.Exec(context.TODO(), `INSERT INTO check_statuses(
 		check_id,
 		details,

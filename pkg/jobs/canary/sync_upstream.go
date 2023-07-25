@@ -1,28 +1,62 @@
 package canary
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 
+	"github.com/flanksource/canary-checker/api/context"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/upstream"
 	"gorm.io/gorm/clause"
 )
 
-func Pull() {
-	if err := pull(UpstreamConf); err != nil {
-		logger.Errorf("Error pulling upstream: %v", err)
+var UpstreamConf upstream.UpstreamConfig
+
+var tablesToReconcile = []string{
+	"canaries",
+	"checks",
+}
+
+// SyncWithUpstream coordinates with upstream and pushes any resource
+// that are missing on the upstream.
+func SyncWithUpstream() {
+	ctx := context.New(nil, nil, db.Gorm, v1.Canary{})
+
+	jobHistory := models.NewJobHistory("SyncCanaryResultsWithUpstream", "Canary", "")
+	_ = db.PersistJobHistory(jobHistory.Start())
+	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
+
+	syncer := upstream.NewUpstreamSyncer(UpstreamConf)
+	for _, table := range tablesToReconcile {
+		if err := syncer.SyncTableWithUpstream(ctx, table); err != nil {
+			jobHistory.AddError(err.Error())
+			logger.Errorf("failed to sync table %s: %w", table, err)
+		} else {
+			jobHistory.IncrSuccess()
+		}
 	}
 }
 
-func pull(config UpstreamConfig) error {
-	endpoint, err := url.JoinPath(UpstreamConf.Host, "upstream", "canary", "pull", config.AgentName)
+func Pull() {
+	jobHistory := models.NewJobHistory("PullAgentCanaries", "Canary", "")
+	_ = db.PersistJobHistory(jobHistory.Start())
+	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
+
+	if err := pull(UpstreamConf); err != nil {
+		jobHistory.AddError(err.Error())
+		logger.Errorf("Error pulling upstream: %v", err)
+	}
+
+	jobHistory.IncrSuccess()
+}
+
+func pull(config upstream.UpstreamConfig) error {
+	endpoint, err := url.JoinPath(config.Host, "upstream", "canary", "pull", config.AgentName)
 	if err != nil {
 		return fmt.Errorf("error creating url endpoint for host %s: %w", config.Host, err)
 	}
@@ -32,7 +66,7 @@ func pull(config UpstreamConfig) error {
 		return err
 	}
 
-	req.SetBasicAuth(UpstreamConf.Username, UpstreamConf.Password)
+	req.SetBasicAuth(config.Username, config.Password)
 
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
@@ -54,48 +88,4 @@ func pull(config UpstreamConfig) error {
 		Columns:   []clause.Column{{Name: "id"}},
 		UpdateAll: true,
 	}).Create(&canaries).Error
-}
-
-type PushData struct {
-	AgentName     string               `json:"agent_name,omitempty"`
-	Checks        []models.Check       `json:"checks,omitempty"`
-	CheckStatuses []models.CheckStatus `json:"check_statuses,omitempty"`
-}
-
-func (t *PushData) Empty() bool {
-	return len(t.Checks) == 0 && len(t.CheckStatuses) == 0
-}
-
-func pushToUpstream(data PushData) error {
-	data.AgentName = UpstreamConf.AgentName
-	payloadBuf := new(bytes.Buffer)
-	if err := json.NewEncoder(payloadBuf).Encode(data); err != nil {
-		return fmt.Errorf("error encoding msg: %w", err)
-	}
-
-	endpoint, err := url.JoinPath(UpstreamConf.Host, "upstream", "push")
-	if err != nil {
-		return fmt.Errorf("error creating url endpoint for host %s: %w", UpstreamConf.Host, err)
-	}
-
-	req, err := http.NewRequest(http.MethodPost, endpoint, payloadBuf)
-	if err != nil {
-		return fmt.Errorf("http.NewRequest: %w", err)
-	}
-
-	req.SetBasicAuth(UpstreamConf.Username, UpstreamConf.Password)
-
-	httpClient := &http.Client{}
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("error making request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if !collections.Contains([]int{http.StatusOK, http.StatusCreated}, resp.StatusCode) {
-		respBody, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("upstream server returned error status[%d]: %s", resp.StatusCode, string(respBody))
-	}
-
-	return nil
 }

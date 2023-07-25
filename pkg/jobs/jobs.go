@@ -41,10 +41,17 @@ func Start() {
 
 	if canaryJobs.UpstreamConf.Valid() {
 		canaryJobs.Pull()
+		canaryJobs.SyncWithUpstream()
+
 		if _, err := ScheduleFunc(SyncCanaryJobsSchedule, canaryJobs.Pull); err != nil {
-			logger.Errorf("Failed to pull canaries from central server: %v", err)
+			logger.Errorf("Failed to schedule job [canaryJobs.Pull]: %v", err)
+		}
+
+		if _, err := ScheduleFunc(SyncCanaryJobsSchedule, canaryJobs.SyncWithUpstream); err != nil {
+			logger.Errorf("Failed to schedule job [canaryJobs.SyncWithUpstream]: %v", err)
 		}
 	}
+
 	if _, err := ScheduleFunc(SyncCanaryJobsSchedule, canaryJobs.SyncCanaryJobs); err != nil {
 		logger.Errorf("Failed to schedule sync jobs for canary: %v", err)
 	}
