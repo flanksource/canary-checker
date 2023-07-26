@@ -18,8 +18,8 @@ import (
 var UpstreamConf upstream.UpstreamConfig
 
 var tablesToReconcile = []string{
-	"canaries",
 	"checks",
+	"check_statuses",
 }
 
 // SyncWithUpstream coordinates with upstream and pushes any resource
@@ -31,7 +31,7 @@ func SyncWithUpstream() {
 	_ = db.PersistJobHistory(jobHistory.Start())
 	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
 
-	syncer := upstream.NewUpstreamSyncer(UpstreamConf)
+	syncer := upstream.NewUpstreamSyncer(UpstreamConf, 500)
 	for _, table := range tablesToReconcile {
 		if err := syncer.SyncTableWithUpstream(ctx, table); err != nil {
 			jobHistory.AddError(err.Error())
