@@ -88,6 +88,9 @@ func Start() {
 	if _, err := ScheduleFunc(ReconcileDeletedCanaryChecksSchedule, canaryJobs.ReconcileDeletedCanaryChecks); err != nil {
 		logger.Errorf("Failed to schedule ReconcileDeletedCanaryChecks: %v", err)
 	}
+	if _, err := ScheduleFunc("@every 5m", canaryJobs.ReconcileCanaryChecks); err != nil {
+		logger.Errorf("Failed to schedule ReconcileCanaryChecks: %v", err)
+	}
 
 	canaryJobs.CleanupMetricsGauges()
 	canaryJobs.SyncCanaryJobs()

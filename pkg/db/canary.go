@@ -295,16 +295,9 @@ func CreateCheck(canary pkg.Canary, check *pkg.Check) error {
 	return Gorm.Create(&check).Error
 }
 
-func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]string, bool, error) {
+func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, map[string]string, bool, error) {
+	var err error
 	changed := false
-	model, err := pkg.CanaryFromV1(canary)
-	if err != nil {
-		return nil, nil, changed, err
-	}
-	if canary.GetPersistedID() != "" {
-		model.ID, _ = uuid.Parse(canary.GetPersistedID())
-	}
-	model.Source = source
 	tx := Gorm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}, {Name: "source"}},
 		UpdateAll: true,
@@ -333,15 +326,15 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 		return nil, nil, changed, err
 	}
 
+	var spec v1.CanarySpec
+	if err = json.Unmarshal(model.Spec, &spec); err != nil {
+		return nil, nil, changed, err
+	}
+
 	var checks = make(map[string]string)
 	var newCheckIDs []string
-	for _, config := range canary.Spec.GetAllChecks() {
+	for _, config := range spec.GetAllChecks() {
 		check := pkg.FromExternalCheck(model, config)
-		// not creating the new check if already exists in the status
-		// status is not patched correctly with the status id
-		if checkID := canary.GetCheckID(check.Name); checkID != "" {
-			check.ID, _ = uuid.Parse(checkID)
-		}
 		check.Spec, _ = json.Marshal(config)
 		id, err := PersistCheck(check, model.ID)
 		if err != nil {
@@ -361,7 +354,23 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 		}
 		metrics.UnregisterGauge(checkIDsToRemove)
 	}
+
+	model.Checks = checks
 	return &model, checks, changed, nil
+}
+
+func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]string, bool, error) {
+	changed := false
+	model, err := pkg.CanaryFromV1(canary)
+	if err != nil {
+		return nil, nil, changed, err
+	}
+	if canary.GetPersistedID() != "" {
+		model.ID, _ = uuid.Parse(canary.GetPersistedID())
+	}
+	model.Source = source
+
+	return PersistCanaryModel(model)
 }
 
 func RefreshCheckStatusSummary() {

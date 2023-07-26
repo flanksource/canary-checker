@@ -365,6 +365,47 @@ func DeleteCanaryJob(id string) {
 	CanaryScheduler.Remove(entry.ID)
 }
 
+func ReconcileCanaryChecks() {
+	jobHistory := models.NewJobHistory("ReconcileCanaryChecks", "", "").Start()
+	_ = db.PersistJobHistory(jobHistory)
+	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
+
+	// Get id, updateTime of all non deleted canaries
+	var rows []struct {
+		ID        string
+		UpdatedAt time.Time
+	}
+	if err := db.Gorm.Raw(`SELECT id, updated_at FROM canaries WHERE deleted_at IS NULL`).Scan(&rows); err != nil {
+		logger.Errorf("Error fetching canaries: %v", err)
+		return
+	}
+
+	var idsToPersist []string
+	for _, r := range rows {
+		updateTime, exists := canaryUpdateTimeCache.Load(r.ID)
+		if !exists {
+			idsToPersist = append(idsToPersist, r.ID)
+			canaryUpdateTimeCache.Store(r.ID, r.UpdatedAt)
+			continue
+		}
+		if r.UpdatedAt.After(updateTime.(time.Time)) {
+			idsToPersist = append(idsToPersist, r.ID)
+		}
+	}
+
+	var canaries []pkg.Canary
+	if err := db.Gorm.Table("canaries").Where("id IN ?", idsToPersist).Find(&canaries).Error; err != nil {
+		logger.Errorf("Error fetching canaries: %v", err)
+		return
+	}
+
+	for _, c := range canaries {
+		if _, _, _, err := db.PersistCanaryModel(c); err != nil {
+			logger.Errorf("Error persisting canary: %v", err)
+		}
+	}
+}
+
 func ReconcileDeletedCanaryChecks() {
 	jobHistory := models.NewJobHistory("ReconcileDeletedCanaryChecks", "", "").Start()
 	_ = db.PersistJobHistory(jobHistory)
