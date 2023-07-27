@@ -12,10 +12,10 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/flanksource/canary-checker/templating"
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/gomplate/v3"
 	"github.com/flanksource/kommons"
 	"github.com/google/uuid"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
@@ -178,7 +178,7 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 			comp.Lifecycle = component.Lifecycle
 		}
 		if comp.ExternalId == "" && component.Id != nil {
-			id, err := templating.Template(comp.GetAsEnvironment(), *component.Id)
+			id, err := gomplate.RunTemplate(comp.GetAsEnvironment(), component.Id.Gomplate())
 			if err != nil {
 				return nil, errors.Wrapf(err, "Failed to lookup id: %v", component.Id)
 			} else {
@@ -272,7 +272,7 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*pkg.Property, 
 		"config": _config.Spec.ToMapStringAny(),
 		"tags":   _config.Tags.ToMapStringAny(),
 	}
-	prop.Text, err = templating.Template(templateEnv, property.ConfigLookup.Display.Template)
+	prop.Text, err = gomplate.RunTemplate(templateEnv, property.ConfigLookup.Display.Template.Gomplate())
 	return prop, err
 }
 
@@ -431,7 +431,7 @@ func Run(opts TopologyRunOptions, t v1.Topology) []*pkg.Component {
 		component.Summary = component.Components.Summarize()
 	}
 	if component.ID.String() == "" && ctx.Topology.Spec.Id != nil {
-		id, err := templating.Template(component.GetAsEnvironment(), *ctx.Topology.Spec.Id)
+		id, err := gomplate.RunTemplate(component.GetAsEnvironment(), ctx.Topology.Spec.Id.Gomplate())
 		if err != nil {
 			errMsg := fmt.Sprintf("Failed to lookup id: %v", err)
 			logger.Errorf(errMsg)

@@ -169,9 +169,10 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		"code":    status,
 		"headers": resp.GetHeaders(),
 		"elapsed": time.Since(start),
-		"sslAge":  age,
 		"content": body,
+		"sslAge":  utils.Deref(age),
 	}
+
 	if resp.IsJSON() {
 		json, err := resp.AsJSON()
 		if err != nil {

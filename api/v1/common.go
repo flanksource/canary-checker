@@ -11,6 +11,7 @@ import (
 	"github.com/c2h5oh/datasize"
 	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/duty/types"
+	"github.com/flanksource/gomplate/v3"
 )
 
 type Duration string
@@ -218,6 +219,16 @@ type Template struct {
 
 func (t Template) IsEmpty() bool {
 	return t.Template == "" && t.JSONPath == "" && t.Expression == "" && t.Javascript == ""
+}
+
+// Convert to gomplate.Template
+func (t Template) Gomplate() gomplate.Template {
+	return gomplate.Template{
+		Template:   t.Template,
+		JSONPath:   t.JSONPath,
+		Expression: t.Expression,
+		Javascript: t.Javascript,
+	}
 }
 
 // +k8s:deepcopy-gen=false

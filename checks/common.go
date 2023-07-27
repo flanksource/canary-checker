@@ -11,7 +11,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/flanksource/canary-checker/templating"
+	"github.com/flanksource/gomplate/v3"
 	"github.com/robfig/cron/v3"
 )
 
@@ -52,7 +52,7 @@ func def(a, b string) string {
 }
 
 func template(ctx *context.Context, template v1.Template) (string, error) {
-	return templating.Template(ctx.Environment, template)
+	return gomplate.RunTemplate(ctx.Environment, template.Gomplate())
 }
 
 func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, error) {
