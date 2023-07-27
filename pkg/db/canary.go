@@ -16,6 +16,7 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/models"
+	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -182,37 +183,38 @@ func RemoveTransformedChecks(ids []string) error {
 		Error
 }
 
-func DeleteCanary(canary v1.Canary) error {
-	logger.Infof("deleting canary %s/%s", canary.Namespace, canary.Name)
-	model, err := pkg.CanaryFromV1(canary)
+func DeleteCanary(id string, deleteTime time.Time) error {
+	logger.Infof("Deleting canary[%s]", id)
+
+	if err := Gorm.Table("canaries").Where("id = ?", id).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+		return err
+	}
+	checkIDs, err := DeleteChecksForCanary(id, deleteTime)
 	if err != nil {
 		return err
 	}
-	deleteTime := time.Now()
-	persistedID := canary.GetPersistedID()
-	var checkIDs []string
-	for _, checkID := range canary.Status.Checks {
-		checkIDs = append(checkIDs, checkID)
-	}
 	metrics.UnregisterGauge(checkIDs)
-	if persistedID == "" {
-		logger.Errorf("Canary %s/%s has not been persisted", canary.Namespace, canary.Name)
-		return nil
-	}
-	if err := Gorm.Where("id = ?", persistedID).Find(&model).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
-		return err
-	}
-	if err := DeleteChecksForCanary(persistedID, deleteTime); err != nil {
-		return err
-	}
-	if err := DeleteCheckComponentRelationshipsForCanary(persistedID, deleteTime); err != nil {
+
+	if err := DeleteCheckComponentRelationshipsForCanary(id, deleteTime); err != nil {
 		return err
 	}
 	return nil
 }
 
-func DeleteChecksForCanary(id string, deleteTime time.Time) error {
-	return Gorm.Table("checks").Where("canary_id = ? and deleted_at is null", id).UpdateColumn("deleted_at", deleteTime).Error
+func DeleteChecksForCanary(id string, deleteTime time.Time) ([]string, error) {
+	var checkIDs []string
+	var checks []pkg.Check
+	err := Gorm.Model(&checks).
+		Table("checks").
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		Where("canary_id = ? and deleted_at IS NULL", id).
+		UpdateColumn("deleted_at", deleteTime).
+		Error
+
+	for _, c := range checks {
+		checkIDs = append(checkIDs, c.ID.String())
+	}
+	return checkIDs, err
 }
 
 func DeleteCheckComponentRelationshipsForCanary(id string, deleteTime time.Time) error {
@@ -285,7 +287,7 @@ func FindDeletedChecksSince(ctx context.Context, since time.Time) ([]string, err
 func CreateCanary(canary *pkg.Canary) error {
 	if canary.Spec == nil || len(canary.Spec) == 0 {
 		empty := []byte("{}")
-		canary.Spec = types.JSON(empty)
+		canary.Spec = dutyTypes.JSON(types.JSON(empty))
 	}
 
 	return Gorm.Create(canary).Error

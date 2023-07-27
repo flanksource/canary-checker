@@ -377,7 +377,7 @@ func DeleteInlineCanariesForComponent(componentID string, deleteTime time.Time) 
 		return err
 	}
 	for _, c := range canaries {
-		if err := DeleteChecksForCanary(c.ID.String(), deleteTime); err != nil {
+		if _, err := DeleteChecksForCanary(c.ID.String(), deleteTime); err != nil {
 			logger.Debugf("Error deleting checks for canary %v", c.ID)
 			continue
 		}

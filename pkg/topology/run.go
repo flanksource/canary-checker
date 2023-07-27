@@ -269,11 +269,19 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*pkg.Property, 
 	}
 
 	templateEnv := map[string]any{
-		"config": _config.Spec.ToMapStringAny(),
-		"tags":   _config.Tags.ToMapStringAny(),
+		"config": _config.Spec,
+		"tags":   toMapStringAny(_config.Tags),
 	}
 	prop.Text, err = templating.Template(templateEnv, property.ConfigLookup.Display.Template)
 	return prop, err
+}
+
+func toMapStringAny(m map[string]string) map[string]any {
+	r := make(map[string]any)
+	for k, v := range m {
+		r[k] = v
+	}
+	return r
 }
 
 func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Properties, error) {
