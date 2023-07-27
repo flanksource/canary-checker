@@ -1,0 +1,23 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: ldap-pass
+spec:
+  interval: 30
+  ldap:
+    - url: ldap://apacheds.default.svc.cluster.local:10389
+      name: ldap user login
+      username:
+        value: uid=admin,ou=system
+      password:
+        value: secret
+      bindDN: ou=users,dc=example,dc=com
+      userSearch: "(&(objectClass=organizationalPerson))"
+    - url: ldap://apacheds.default.svc.cluster.local:10389
+      name: ldap group login
+      username:
+        value: uid=admin,ou=system
+      password:
+        value: secret
+      bindDN: ou=groups,dc=example,dc=com
+      userSearch: "(&(objectClass=groupOfNames))"
