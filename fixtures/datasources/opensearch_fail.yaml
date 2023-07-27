@@ -21,13 +21,3 @@ spec:
           }
         }
       results: 100
-      username:
-        valueFrom:
-          secretKeyRef:
-            name: search
-            key: OPENSEARCH_USERNAME
-      password:
-        valueFrom:
-          secretKeyRef:
-            name: search
-            key: OPENSEARCH_PASSWORD

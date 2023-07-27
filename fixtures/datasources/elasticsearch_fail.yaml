@@ -2,6 +2,8 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: elasticsearch-fail
+  labels:
+    "Expected-Fail": "true"
 spec:
   interval: 30
   elasticsearch:
@@ -18,13 +20,3 @@ spec:
         }
       results: 1
       name: elasticsearch-fail
-      username:
-        valueFrom:
-          secretKeyRef:
-            name: search
-            key: ELASTIC_SEARCH_USERNAME
-      password:
-        valueFrom:
-          secretKeyRef:
-            name: search
-            key: ELASTIC_SEARCH_PASSWORD
