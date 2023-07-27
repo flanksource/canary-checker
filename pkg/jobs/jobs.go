@@ -14,6 +14,8 @@ import (
 var FuncScheduler = cron.New()
 
 const (
+	PullCanaryFromUpstreamSchedule     = "@every 2m"
+	PushCanaryToUpstreamSchedule       = "@every 5m"
 	SyncCanaryJobsSchedule             = "@every 2m"
 	SyncSystemsJobsSchedule            = "@every 5m"
 	ComponentRunSchedule               = "@every 2m"
@@ -41,13 +43,13 @@ func Start() {
 
 	if canaryJobs.UpstreamConf.Valid() {
 		canaryJobs.Pull()
-		canaryJobs.SyncWithUpstream()
+		canaryJobs.PushCanaryResultsToUpstream()
 
-		if _, err := ScheduleFunc(SyncCanaryJobsSchedule, canaryJobs.Pull); err != nil {
+		if _, err := ScheduleFunc(PullCanaryFromUpstreamSchedule, canaryJobs.Pull); err != nil {
 			logger.Errorf("Failed to schedule job [canaryJobs.Pull]: %v", err)
 		}
 
-		if _, err := ScheduleFunc(SyncCanaryJobsSchedule, canaryJobs.SyncWithUpstream); err != nil {
+		if _, err := ScheduleFunc(PushCanaryToUpstreamSchedule, canaryJobs.PushCanaryResultsToUpstream); err != nil {
 			logger.Errorf("Failed to schedule job [canaryJobs.SyncWithUpstream]: %v", err)
 		}
 	}

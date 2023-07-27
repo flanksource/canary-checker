@@ -28,7 +28,7 @@ func NewPostgresCache(pool *pgxpool.Pool) *postgresCache {
 }
 
 func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) []string {
-	var checkIDs = make([]string, 0, len(statii))
+	checkIDs := make([]string, 0, len(statii))
 
 	for _, status := range statii {
 		if status.Status {

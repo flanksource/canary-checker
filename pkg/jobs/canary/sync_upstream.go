@@ -22,12 +22,12 @@ var tablesToReconcile = []string{
 	"check_statuses",
 }
 
-// SyncWithUpstream coordinates with upstream and pushes any resource
+// PushCanaryResultsToUpstream coordinates with upstream and pushes any resource
 // that are missing on the upstream.
-func SyncWithUpstream() {
+func PushCanaryResultsToUpstream() {
 	ctx := context.New(nil, nil, db.Gorm, v1.Canary{})
 
-	jobHistory := models.NewJobHistory("SyncCanaryResultsWithUpstream", "Canary", "")
+	jobHistory := models.NewJobHistory("PushCanaryResultsToUpstream", "Canary", "")
 	_ = db.PersistJobHistory(jobHistory.Start())
 	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
 
@@ -43,16 +43,16 @@ func SyncWithUpstream() {
 }
 
 func Pull() {
-	jobHistory := models.NewJobHistory("PullAgentCanaries", "Canary", "")
+	jobHistory := models.NewJobHistory("PullUpstreamCanaries", "Canary", "")
 	_ = db.PersistJobHistory(jobHistory.Start())
 	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
 
 	if err := pull(UpstreamConf); err != nil {
 		jobHistory.AddError(err.Error())
 		logger.Errorf("Error pulling upstream: %v", err)
+	} else {
+		jobHistory.IncrSuccess()
 	}
-
-	jobHistory.IncrSuccess()
 }
 
 func pull(config upstream.UpstreamConfig) error {
@@ -63,7 +63,7 @@ func pull(config upstream.UpstreamConfig) error {
 
 	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating new http request: %w", err)
 	}
 
 	req.SetBasicAuth(config.Username, config.Password)
