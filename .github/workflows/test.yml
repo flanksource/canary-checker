@@ -18,6 +18,7 @@ jobs:
           - minimal --skip-all
           - k8s
           - datasources
+          - search
           - git
           # - restic
     runs-on: ubuntu-latest

@@ -14,8 +14,4 @@ resources:
   - prometheus.yaml
   - redis_fail.yaml
   - redis_pass.yaml
-  - elasticsearch_fail.yaml
-  - elasticsearch_pass.yaml
-  - opensearch_fail.yaml
-  - opensearch_pass.yaml
   - alertmanager_fail.yaml
