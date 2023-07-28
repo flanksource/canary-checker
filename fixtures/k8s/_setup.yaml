@@ -15,7 +15,6 @@ kind: ConfigMap
 data:
   pass: world
   user: hello
-
 ---
 apiVersion: v1
 metadata:
