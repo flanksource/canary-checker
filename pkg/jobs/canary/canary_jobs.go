@@ -424,41 +424,6 @@ func ReconcileCanaryChecks() {
 	}
 }
 
-func ReconcileDeletedCanaryChecks() {
-	jobHistory := models.NewJobHistory("ReconcileDeletedCanaryChecks", "", "").Start()
-	_ = db.PersistJobHistory(jobHistory)
-	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
-
-	var rows []struct {
-		ID        string
-		DeletedAt time.Time
-	}
-	// Select all components whose canary ID is deleted but their deleted at is not marked
-	err := db.Gorm.Raw(`
-        SELECT DISTINCT(canaries.id), canaries.deleted_at
-        FROM canaries
-        INNER JOIN checks ON canaries.id = checks.canary_id
-        WHERE
-            checks.deleted_at IS NULL AND
-            canaries.deleted_at IS NOT NULL
-        `).Scan(&rows).Error
-
-	if err != nil {
-		logger.Errorf("Error fetching deleted canary checks: %v", err)
-		jobHistory.AddError(err.Error())
-		return
-	}
-
-	for _, r := range rows {
-		if err := db.DeleteCanary(r.ID, r.DeletedAt); err != nil {
-			logger.Errorf("Error deleting checks for canary[%s]: %v", r.ID, err)
-			jobHistory.AddError(err.Error())
-		}
-		DeleteCanaryJob(r.ID)
-	}
-	jobHistory.IncrSuccess()
-}
-
 func ScheduleFunc(schedule string, fn func()) (interface{}, error) {
 	return FuncScheduler.AddFunc(schedule, fn)
 }
