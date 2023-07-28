@@ -47,6 +47,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -59,11 +62,14 @@
         "connection": {
           "type": "string"
         },
-        "host": {
+        "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "alerts": {
           "items": {
@@ -72,6 +78,14 @@
           "type": "array"
         },
         "filters": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "exclude_filters": {
           "patternProperties": {
             ".*": {
               "type": "string"
@@ -102,11 +116,7 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "username",
-        "password"
-      ]
+      "type": "object"
     },
     "AwsConfigCheck": {
       "properties": {
@@ -122,6 +132,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -134,8 +147,29 @@
         "query": {
           "type": "string"
         },
-        "awsConnection": {
-          "$ref": "#/$defs/AWSConnection"
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "objectPath": {
+          "type": "string"
+        },
+        "usePathStyle": {
+          "type": "boolean"
         },
         "aggregatorName": {
           "type": "string"
@@ -161,6 +195,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -189,8 +226,29 @@
           },
           "type": "array"
         },
-        "awsConnection": {
-          "$ref": "#/$defs/AWSConnection"
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "objectPath": {
+          "type": "string"
+        },
+        "usePathStyle": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -212,6 +270,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -536,6 +597,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
@@ -569,18 +633,6 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
-        "filter": {
-          "$ref": "#/$defs/CloudWatchFilter"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "name"
-      ]
-    },
-    "CloudWatchFilter": {
-      "properties": {
         "actionPrefix": {
           "type": "string"
         },
@@ -598,7 +650,10 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "required": [
+        "name"
+      ]
     },
     "ComponentCheck": {
       "properties": {
@@ -637,6 +692,14 @@
         },
         "order": {
           "type": "integer"
+        },
+        "labels": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
         },
         "type": {
           "type": "string"
@@ -709,6 +772,14 @@
         },
         "order": {
           "type": "integer"
+        },
+        "labels": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
         },
         "type": {
           "type": "string"
@@ -814,6 +885,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "query": {
           "type": "string"
         }
@@ -875,6 +949,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "image": {
           "type": "string"
         },
@@ -909,6 +986,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "image": {
           "type": "string"
         },
@@ -939,6 +1019,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "server": {
           "type": "string"
@@ -987,6 +1070,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1042,6 +1128,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "image": {
           "type": "string"
         },
@@ -1076,6 +1165,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "image": {
           "type": "string"
         },
@@ -1104,6 +1196,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1112,6 +1207,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
         },
         "host": {
           "type": "string"
@@ -1145,6 +1243,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "connection": {
           "type": "string"
@@ -1215,6 +1316,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1230,8 +1334,11 @@
         "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -1290,6 +1397,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1328,6 +1438,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1490,6 +1603,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1530,6 +1646,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1541,6 +1660,15 @@
         },
         "connection": {
           "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "endpoint": {
           "type": "string"
@@ -1584,9 +1712,6 @@
           },
           "type": "array"
         },
-        "authentication": {
-          "$ref": "#/$defs/Authentication"
-        },
         "templateBody": {
           "type": "boolean"
         }
@@ -1610,6 +1735,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "chartmuseum": {
           "type": "string"
@@ -1643,6 +1771,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "endpoint": {
           "type": "string"
@@ -1693,7 +1824,7 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
-        "connection": {
+        "transformDeleteStrategy": {
           "type": "string"
         },
         "jmx": {
@@ -1742,6 +1873,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "testResults": {
           "type": "string"
         },
@@ -1780,6 +1914,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1830,14 +1967,20 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
-        "host": {
+        "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "bindDN": {
           "type": "string"
@@ -1853,8 +1996,6 @@
       "type": "object",
       "required": [
         "name",
-        "host",
-        "auth",
         "bindDN"
       ]
     },
@@ -1966,18 +2107,26 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "connection"
+        "name"
       ]
     },
     "MssqlCheck": {
@@ -1994,6 +2143,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2006,8 +2158,14 @@
         "connection": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2019,8 +2177,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "connection"
+        "name"
       ]
     },
     "MysqlCheck": {
@@ -2037,6 +2194,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2049,8 +2209,14 @@
         "connection": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2062,8 +2228,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "connection"
+        "name"
       ]
     },
     "NamespaceCheck": {
@@ -2079,6 +2244,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "namespaceNamePrefix": {
           "type": "string"
@@ -2254,6 +2422,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2269,8 +2440,11 @@
         "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2286,7 +2460,6 @@
       "type": "object",
       "required": [
         "name",
-        "auth",
         "query",
         "index"
       ]
@@ -2334,6 +2507,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "namespace": {
           "type": "string"
@@ -2410,6 +2586,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2422,8 +2601,14 @@
         "connection": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2435,8 +2620,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "connection"
+        "name"
       ]
     },
     "PrometheusCheck": {
@@ -2453,6 +2637,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2462,11 +2649,20 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "host": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
-        "host": {
+        "url": {
           "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2476,7 +2672,6 @@
       "type": "object",
       "required": [
         "name",
-        "host",
         "query"
       ]
     },
@@ -2566,14 +2761,23 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
-        "addr": {
+        "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "addr": {
+          "type": "string"
         },
         "db": {
           "type": "integer"
@@ -2582,9 +2786,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "addr",
-        "db"
+        "name"
       ]
     },
     "RelationshipSpec": {
@@ -2633,6 +2835,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "connection": {
           "type": "string"
@@ -2685,6 +2890,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
@@ -2730,15 +2938,17 @@
         "host": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "host",
-        "auth"
+        "host"
       ]
     },
     "SMBConnection": {
@@ -2749,27 +2959,18 @@
         "port": {
           "type": "integer"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "domain": {
-          "type": "string"
-        },
-        "workstation": {
-          "type": "string"
-        },
-        "sharename": {
-          "type": "string"
-        },
-        "searchPath": {
           "type": "string"
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "auth"
-      ]
+      "type": "object"
     },
     "SecretKeySelector": {
       "properties": {
@@ -2846,6 +3047,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "endpoint": {
           "type": "string"

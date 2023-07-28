@@ -17,6 +17,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
@@ -50,18 +53,6 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
-        "filter": {
-          "$ref": "#/$defs/CloudWatchFilter"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "name"
-      ]
-    },
-    "CloudWatchFilter": {
-      "properties": {
         "actionPrefix": {
           "type": "string"
         },
@@ -79,7 +70,10 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "required": [
+        "name"
+      ]
     },
     "ConfigMapKeySelector": {
       "properties": {

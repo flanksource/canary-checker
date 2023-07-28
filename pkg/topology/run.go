@@ -12,10 +12,10 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/flanksource/canary-checker/templating"
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/gomplate/v3"
 	"github.com/flanksource/kommons"
 	"github.com/google/uuid"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
@@ -67,15 +67,27 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 	ctx.SetCurrentComponent(component)
 
 	for _, property := range spec.ForEach.Properties {
-		prop := property
-		if err := ctx.TemplateProperty(&prop); err != nil {
+		// Create a DeepCopy for templating
+		prop := property.DeepCopy()
+		if err := ctx.TemplateProperty(prop); err != nil {
 			return err
 		}
-		props, err := lookupProperty(ctx, &prop)
+
+		props, err := lookupProperty(ctx, prop)
 		if err != nil {
-			logger.Errorf("Failed to lookup property %s: %v", property.Name, err)
-		} else {
-			component.Properties = append(component.Properties, props...)
+			errMsg := fmt.Sprintf("Failed to lookup property %s: %v", property.Name, err)
+			logger.Errorf(errMsg)
+			ctx.JobHistory.AddError(errMsg)
+			continue
+		}
+
+		for _, p := range props {
+			found := component.Properties.Find(p.Name)
+			if found != nil {
+				found.Merge(p)
+				continue
+			}
+			component.Properties = append(component.Properties, p)
 		}
 	}
 	ctx.SetCurrentComponent(component) // component properties may have changed
@@ -87,7 +99,9 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 		}
 		children, err := lookupComponents(ctx, child)
 		if err != nil {
-			logger.Errorf("Failed to lookup components %s: %v", child, err)
+			errMsg := fmt.Sprintf("Failed to lookup components %s: %v", child, err)
+			logger.Errorf(errMsg)
+			ctx.JobHistory.AddError(errMsg)
 		} else {
 			component.Components = append(component.Components, children...)
 		}
@@ -96,7 +110,9 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 	for _, childConfig := range spec.ForEach.Configs {
 		child := childConfig
 		if err := ctx.TemplateConfig(&child); err != nil {
-			logger.Errorf("Failed to lookup configs %s: %v", child, err)
+			errMsg := fmt.Sprintf("Failed to lookup configs %s: %v", child, err)
+			logger.Errorf(errMsg)
+			ctx.JobHistory.AddError(errMsg)
 		} else {
 			component.Configs = append(component.Configs, pkg.NewConfig(child))
 		}
@@ -105,7 +121,9 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 	for _, _selector := range spec.ForEach.Selectors {
 		selector := _selector
 		if err := ctx.TemplateStruct(&selector); err != nil {
-			logger.Errorf("Failed to lookup selectors %s: %v", selector, err)
+			errMsg := fmt.Sprintf("Failed to lookup selectors %s: %v", selector, err)
+			logger.Errorf(errMsg)
+			ctx.JobHistory.AddError(errMsg)
 		} else {
 			component.Selectors = append(component.Selectors, selector)
 		}
@@ -124,6 +142,7 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 		if lookedUpComponents, err = mergeComponentLookup(ctx, &component, component.Lookup); err != nil {
 			return nil, err
 		}
+
 		components = append(components, lookedUpComponents...)
 	} else {
 		var childComponents pkg.Components
@@ -144,7 +163,10 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 		for _, property := range component.Properties {
 			props, err := lookupProperty(ctx.WithComponents(&components, comp), property)
 			if err != nil {
-				return nil, errors.Wrapf(err, "property lookup failed: %s", property)
+				errMsg := fmt.Sprintf("Failed to lookup property: %s. Error in lookup: %v", property, err)
+				logger.Errorf(errMsg)
+				ctx.JobHistory.AddError(errMsg)
+				continue
 			}
 			comp.Properties = append(comp.Properties, props...)
 		}
@@ -156,9 +178,9 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 			comp.Lifecycle = component.Lifecycle
 		}
 		if comp.ExternalId == "" && component.Id != nil {
-			id, err := templating.Template(comp.GetAsEnvironment(), *component.Id)
+			id, err := gomplate.RunTemplate(comp.GetAsEnvironment(), component.Id.Gomplate())
 			if err != nil {
-				logger.Errorf("Failed to lookup id: %v", err)
+				return nil, errors.Wrapf(err, "Failed to lookup id: %v", component.Id)
 			} else {
 				comp.ExternalId = id
 			}
@@ -179,16 +201,21 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 	canaryCtx.Environment = ctx.Environment
 	canaryCtx.Logger = ctx.Logger
 
-	for _, result := range checks.RunChecks(canaryCtx) {
+	checkResults, err := checks.RunChecks(canaryCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, result := range checkResults {
 		if result.Error != "" {
-			logger.Errorf("error in running checks; check: %s wouldn't be persisted: %s", name, result.Error)
+			errMsg := fmt.Sprintf("Failed to lookup property: %s. Error in lookup: %s", name, result.Error)
+			logger.Errorf(errMsg)
+			ctx.JobHistory.AddError(errMsg)
 			return nil, nil
 		}
 		if result.Message != "" {
 			results = append(results, result.Message)
-		} else if result.Detail == nil {
-			return nil, fmt.Errorf("no details returned by lookup, did you specify a display template?")
-		} else {
+		} else if result.Detail != nil {
 			switch result.Detail.(type) {
 			case []interface{}:
 				results = append(results, result.Detail.([]interface{})...)
@@ -197,6 +224,8 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 			default:
 				return nil, fmt.Errorf("unknown type %T", result.Detail)
 			}
+		} else {
+			results = append(results, "")
 		}
 	}
 	return results, nil
@@ -243,7 +272,7 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*pkg.Property, 
 		"config": _config.Spec.ToMapStringAny(),
 		"tags":   _config.Tags.ToMapStringAny(),
 	}
-	prop.Text, err = templating.Template(templateEnv, property.ConfigLookup.Display.Template)
+	prop.Text, err = gomplate.RunTemplate(templateEnv, property.ConfigLookup.Display.Template.Gomplate())
 	return prop, err
 }
 
@@ -314,12 +343,18 @@ type TopologyRunOptions struct {
 	Namespace  string
 }
 
-func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
-	if s.Namespace == "" {
-		s.Namespace = opts.Namespace
+func Run(opts TopologyRunOptions, t v1.Topology) []*pkg.Component {
+	jobHistory := models.NewJobHistory("TopologySync", "topology", t.GetPersistedID()).Start()
+	_ = db.PersistJobHistory(jobHistory)
+
+	if t.Namespace == "" {
+		t.Namespace = opts.Namespace
 	}
-	logger.Debugf("Running topology %s/%s depth=%d", s.Namespace, s.Name, opts.Depth)
-	ctx := NewComponentContext(opts.Client, opts.Kubernetes, s)
+	logger.Debugf("Running topology %s/%s depth=%d", t.Namespace, t.Name, opts.Depth)
+
+	ctx := NewComponentContext(opts.Client, opts.Kubernetes, t)
+	ctx.JobHistory = jobHistory
+
 	var results pkg.Components
 	component := &pkg.Component{
 		Name:      ctx.Topology.Spec.Text,
@@ -341,7 +376,9 @@ func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
 		for _, comp := range ctx.Topology.Spec.Components {
 			components, err := lookupComponents(ctx, comp)
 			if err != nil {
-				logger.Errorf("Error looking up component %s: %s", comp.Name, err)
+				errMsg := fmt.Sprintf("Error looking up component %s: %s", comp.Name, err)
+				logger.Errorf(errMsg)
+				jobHistory.AddError(errMsg)
 				continue
 			}
 			// add topology labels to the components
@@ -382,23 +419,29 @@ func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
 	for _, property := range ctx.Topology.Spec.Properties {
 		props, err := lookupProperty(ctx, &property)
 		if err != nil {
-			logger.Errorf("Failed to lookup property %s: %v", property.Name, err)
-		} else {
-			component.Properties = append(component.Properties, props...)
+			errMsg := fmt.Sprintf("Failed to lookup property %s: %v", property.Name, err)
+			logger.Errorf(errMsg)
+			jobHistory.AddError(errMsg)
+			continue
 		}
+		component.Properties = append(component.Properties, props...)
 	}
+
 	if len(component.Components) > 0 {
 		component.Summary = component.Components.Summarize()
 	}
 	if component.ID.String() == "" && ctx.Topology.Spec.Id != nil {
-		id, err := templating.Template(component.GetAsEnvironment(), *ctx.Topology.Spec.Id)
+		id, err := gomplate.RunTemplate(component.GetAsEnvironment(), ctx.Topology.Spec.Id.Gomplate())
 		if err != nil {
-			logger.Errorf("Failed to lookup id: %v", err)
+			errMsg := fmt.Sprintf("Failed to lookup id: %v", err)
+			logger.Errorf(errMsg)
+			jobHistory.AddError(errMsg)
 		} else {
 			component.ID, _ = uuid.Parse(id)
 		}
 	}
 
+	// TODO: Ask Moshe why we do this ?
 	if component.ID.String() == "" {
 		component.ID, _ = uuid.Parse(component.Name)
 	}
@@ -408,9 +451,9 @@ func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
 	}
 
 	component.Status = pkg.ComponentStatus(component.Summary.GetStatus())
-	// if logger.IsTraceEnabled() {
+
 	logger.Debugf(component.Components.Debug(""))
-	// }
+
 	results = append(results, component)
 	logger.Infof("%s id=%s external_id=%s status=%s", component.Name, component.ID, component.ExternalId, component.Status)
 	for _, c := range results.Walk() {
@@ -419,6 +462,8 @@ func Run(opts TopologyRunOptions, s v1.Topology) []*pkg.Component {
 		}
 		c.Schedule = ctx.Topology.Spec.Schedule
 	}
+
+	_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
 	return results
 }
 

@@ -20,9 +20,9 @@ func CheckSFTP(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.Failf("failed to populate SFTP connection: %v", err)
 	}
 
-	auth := check.SFTPConnection.Auth
+	auth := check.SFTPConnection.Authentication
 	if !foundConn {
-		auth, err = GetAuthValues(ctx, check.SFTPConnection.Auth)
+		auth, err = ctx.GetAuthValues(check.SFTPConnection.Authentication)
 		if err != nil {
 			return results.ErrorMessage(err)
 		}

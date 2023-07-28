@@ -3,6 +3,7 @@ package checks
 import (
 	gocontext "context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -33,15 +34,18 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
 
-	if connection, err := ctx.HydrateConnectionByURL(check.ConnectionName); err != nil {
-		return results.Failf("failed to find connection from %q: %v", check.ConnectionName, err)
-	} else if connection != nil {
-		check.Host = connection.URL
+	connection, err := ctx.GetConnection(check.Connection)
+	if err != nil {
+		return results.Failf("error getting connection: %v", err)
 	}
 
+	parsedURL, err := url.Parse(connection.URL)
+	if err != nil {
+		return results.Failf("error parsing url: %v", err)
+	}
 	client := alertmanagerClient.NewHTTPClientWithConfig(nil, &alertmanagerClient.TransportConfig{
-		Host:     check.GetEndpoint(),
-		Schemes:  []string{"http", "https"},
+		Host:     parsedURL.Host,
+		Schemes:  []string{parsedURL.Scheme},
 		BasePath: alertmanagerClient.DefaultBasePath,
 	})
 	var filters []string
@@ -53,6 +57,9 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	}
 	for _, ignore := range check.Ignore {
 		filters = append(filters, fmt.Sprintf("alertname!~%s", ignore))
+	}
+	for k, v := range check.ExcludeFilters {
+		filters = append(filters, fmt.Sprintf("%s!=%s", k, v))
 	}
 
 	alerts, err := client.Alert.GetAlerts(&alertmanagerAlert.GetAlertsParams{
@@ -91,14 +98,28 @@ func extractMessage(annotations map[string]string) string {
 }
 
 func generateFullName(name string, labels map[string]string) string {
-	// We add alert metadata to the check name based on priority order
-	priorityOrder := []string{"namespace", "node", "deployment", "daemonset", "job_name", "pod", "container"}
-
 	fullName := []string{name}
-	for _, key := range priorityOrder {
+
+	// We add alert metadata to the check name
+	level1 := []string{"namespace", "node"}
+	for _, key := range level1 {
 		if labels[key] != "" {
 			fullName = append(fullName, labels[key])
 		}
+	}
+
+	// Only one of these labels must be used
+	level2 := []string{"deployment", "daemonset", "statefulset", "cronjob_name", "job_name", "pod"}
+	for _, key := range level2 {
+		if labels[key] != "" {
+			fullName = append(fullName, labels[key])
+			break
+		}
+	}
+
+	// Add container name if it exists
+	if labels["container"] != "" && labels["job"] != labels["container"] {
+		fullName = append(fullName, labels["container"])
 	}
 
 	return strings.Join(fullName, "/")

@@ -2,15 +2,16 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: mysql-fail
+  labels:
+    "Expected-Fail": "true"
 spec:
   interval: 30
   mysql:
-    - connection: "$(username):$(password)@tcp(mysql.default.svc.cluster.local:3306)/mysqldb"
+    - url: "$(username):$(password)@tcp(mysql.default.svc.cluster.local:3306)/mysqldb"
       name: mysql wrong password
-      auth:
-        username:
-          value: mysqladmin
-        password:
-          value: wrongpassword
+      username:
+        value: mysqladmin
+      password:
+        value: wrongpassword
       query: "SELECT 1"
       results: 1

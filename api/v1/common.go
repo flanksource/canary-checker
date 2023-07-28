@@ -11,6 +11,7 @@ import (
 	"github.com/c2h5oh/datasize"
 	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/duty/types"
+	"github.com/flanksource/gomplate/v3"
 )
 
 type Duration string
@@ -169,8 +170,8 @@ type JSONCheck struct {
 }
 
 type Authentication struct {
-	Username types.EnvVar `yaml:"username" json:"username"`
-	Password types.EnvVar `yaml:"password" json:"password"`
+	Username types.EnvVar `yaml:"username,omitempty" json:"username,omitempty"`
+	Password types.EnvVar `yaml:"password,omitempty" json:"password,omitempty"`
 }
 
 func (auth Authentication) IsEmpty() bool {
@@ -218,6 +219,16 @@ type Template struct {
 
 func (t Template) IsEmpty() bool {
 	return t.Template == "" && t.JSONPath == "" && t.Expression == "" && t.Javascript == ""
+}
+
+// Convert to gomplate.Template
+func (t Template) Gomplate() gomplate.Template {
+	return gomplate.Template{
+		Template:   t.Template,
+		JSONPath:   t.JSONPath,
+		Expression: t.Expression,
+		Javascript: t.Javascript,
+	}
 }
 
 // +k8s:deepcopy-gen=false
@@ -280,6 +291,8 @@ type Description struct {
 	Icon string `yaml:"icon,omitempty" json:"icon,omitempty" template:"true"`
 	// Labels for the check
 	Labels Labels `yaml:"labels,omitempty" json:"labels,omitempty"`
+	// Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+	TransformDeleteStrategy string `yaml:"transformDeleteStrategy,omitempty" json:"transformDeleteStrategy,omitempty"`
 }
 
 func (d Description) String() string {
@@ -305,22 +318,20 @@ func (d Description) GetLabels() map[string]string {
 	return d.Labels
 }
 
+func (d Description) GetTransformDeleteStrategy() string {
+	return d.TransformDeleteStrategy
+}
+
 type Connection struct {
-	Connection     string         `yaml:"connection" json:"connection" template:"true"`
-	Authentication Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
-}
-
-// +k8s:deepcopy-gen=false
-type Connectable interface {
-	GetConnection() string
-}
-
-func (c Connection) GetConnection() string {
-	return c.Connection
+	// Connection name e.g. connection://http/google
+	Connection string `yaml:"connection,omitempty" json:"connection,omitempty"`
+	// Connection url, interpolated with username,password
+	URL            string `yaml:"url,omitempty" json:"url,omitempty" template:"true"`
+	Authentication `yaml:",inline" json:",inline"`
 }
 
 func (c Connection) GetEndpoint() string {
-	return sanitizeEndpoints(c.Connection)
+	return sanitizeEndpoints(c.URL)
 }
 
 // Obfuscate passwords of the form ' password=xxxxx ' from connectionString since

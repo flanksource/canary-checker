@@ -3,22 +3,6 @@
   "$id": "https://github.com/flanksource/canary-checker/api/v1/mssql-check",
   "$ref": "#/$defs/MssqlCheck",
   "$defs": {
-    "Authentication": {
-      "properties": {
-        "username": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "password": {
-          "$ref": "#/$defs/EnvVar"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "username",
-        "password"
-      ]
-    },
     "ConfigMapKeySelector": {
       "properties": {
         "name": {
@@ -83,6 +67,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -95,8 +82,14 @@
         "connection": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -108,8 +101,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "connection"
+        "name"
       ]
     },
     "SecretKeySelector": {

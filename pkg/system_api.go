@@ -151,7 +151,7 @@ type Component struct {
 	Icon         string              `json:"icon,omitempty"`
 	Owner        string              `json:"owner,omitempty"`
 	Status       ComponentStatus     `json:"status,omitempty"`
-	StatusReason string              `json:"statusReason,omitempty"`
+	StatusReason string              `json:"status_reason,omitempty"`
 	Path         string              `json:"path,omitempty"`
 	Order        int                 `json:"order,omitempty"  gorm:"-"`
 	// The type of component, e.g. service, API, website, library, database, etc.
@@ -267,6 +267,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Icon:            c.Icon,
 		Selectors:       c.Selectors,
 		ComponentChecks: c.ComponentChecks,
+		Labels:          c.Labels,
 		Configs:         configs,
 		LogSelectors:    c.LogSelectors,
 	}

@@ -45,14 +45,36 @@ spec:
                 display:
                   javascript: JSON.stringify(k8s.getNodeTopology(results)) 
           properties:
-            - name: node-metrics
+            - name: cpu
               lookup:
-                kubernetes:
-                  - kind: NodeMetrics
-                    ready: false
-                    name: nodemetrics
-                    display:
-                      javascript: JSON.stringify(k8s.getNodeMetrics(results))
+                prometheus:
+                - query: '1000 * max by (node) (rate(container_cpu_usage_seconds_total{container!=""}[5m]))'
+                  host: 'http://prometheus-k8s.monitoring:9090'
+                  display:
+                    javascript: |
+                      var components = [];
+                      for (idx in results) {
+                        components.push({
+                          name: results[idx].node,
+                          properties: [{name: 'cpu', value: parseInt(Number(results[idx].value))}],
+                        })
+                      }
+                      JSON.stringify(components)
+            - name: memory
+              lookup:
+                prometheus:
+                - query: 'max by (node) (avg_over_time(container_memory_working_set_bytes{container!=""}[5m]))'
+                  host: 'http://prometheus-k8s.monitoring:9090'
+                  display:
+                    javascript: |
+                      var components = [];
+                      for (idx in results) {
+                        components.push({
+                          name: results[idx].node,
+                          properties: [{name: 'memory', value: parseInt(Number(results[idx].value))}],
+                        })
+                      }
+                      JSON.stringify(components)
     - name: pods
       icon: pods
       type: KubernetesPods
@@ -72,48 +94,38 @@ spec:
                 display:
                   javascript: JSON.stringify(k8s.getPodTopology(results)) 
           properties:
-            - name: pod-metrics
+            - name: cpu
               lookup:
-                kubernetes:
-                  - kind: PodMetrics
-                    ready: false
-                    name: podmetrics
-                    display:
-                      javascript: JSON.stringify(k8s.getPodMetrics(results))
-  # properties:
-  #   - name: name
-  #     lookup:
-  #       kubernetes:
-  #         - kind: ConfigMap
-  #           name: test
-  #           namespace:
-  #             name: quack
-  #           resource:
-  #             name: quack-config
-  #           display:
-  #             javascript: |+
-  #               parts =  results[0].Object.data.name.split(":")
-  #               props = [    {
-  #                 name: "dns",
-  #                 text:    results[0].Object.data.domain
-  #               },
-  #               {
-  #                 name: "id",
-  #                 text: results[0].Object.data.name,
-  #                 type: "hidden",
-  #               },
-  #               {
-  #                 name: "name",
-  #                 text:  parts[5].split("/")[1]
-  #               },
-  #               {
-  #                 name: "account",
-  #                 text: parts[4]
-  #               },
-  #               {
-  #                 name: "region",
-  #                 text: parts[3]
-  #               }
-  #               ]
-  #               JSON.stringify(props)
+                prometheus:
+                - query: '1000 * max by (pod) (rate(container_cpu_usage_seconds_total{container!=""}[5m]))'
+                  host: 'http://prometheus-k8s.monitoring:9090'
+                  display:
+                    javascript: |
+                      var components = [];
+                      for (idx in results) {
+                        var value = parseInt(Number(results[idx].value))
+                        // CPU can be between 0 & 1, so take ceil for that case
+                        if (value < 1) {value = 1}
+
+                        components.push({
+                          name: results[idx].pod,
+                          properties: [{name: 'cpu', value: value}],
+                        })
+                      }
+                      JSON.stringify(components)
+            - name: memory
+              lookup:
+                prometheus:
+                - query: 'max by (pod) (avg_over_time(container_memory_working_set_bytes{container!=""}[5m]))'
+                  host: 'http://prometheus-k8s.monitoring:9090'
+                  display:
+                    javascript: |
+                      var components = [];
+                      for (idx in results) {
+                        components.push({
+                          name: results[idx].pod,
+                          properties: [{name: 'memory', value: parseInt(Number(results[idx].value))}],
+                        })
+                      }
+                      JSON.stringify(components)
 

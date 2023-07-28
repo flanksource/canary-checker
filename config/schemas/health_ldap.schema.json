@@ -3,22 +3,6 @@
   "$id": "https://github.com/flanksource/canary-checker/api/v1/ldap-check",
   "$ref": "#/$defs/LDAPCheck",
   "$defs": {
-    "Authentication": {
-      "properties": {
-        "username": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "password": {
-          "$ref": "#/$defs/EnvVar"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "username",
-        "password"
-      ]
-    },
     "ConfigMapKeySelector": {
       "properties": {
         "name": {
@@ -75,14 +59,20 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
-        "host": {
+        "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "bindDN": {
           "type": "string"
@@ -98,8 +88,6 @@
       "type": "object",
       "required": [
         "name",
-        "host",
-        "auth",
         "bindDN"
       ]
     },

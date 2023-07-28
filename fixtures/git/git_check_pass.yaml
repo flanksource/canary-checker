@@ -8,7 +8,7 @@ spec:
     - query: "SELECT * FROM github_repo_checks('flanksource/duty') where branch='main'"
       name: github-check
       test:
-        expr: len(results) > 0
+        expr: size(results) > 0
       githubToken:
         valueFrom:
           secretKeyRef:

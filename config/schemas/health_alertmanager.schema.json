@@ -17,6 +17,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -29,11 +32,14 @@
         "connection": {
           "type": "string"
         },
-        "host": {
+        "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "alerts": {
           "items": {
@@ -42,6 +48,14 @@
           "type": "array"
         },
         "filters": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "exclude_filters": {
           "patternProperties": {
             ".*": {
               "type": "string"
@@ -60,22 +74,6 @@
       "type": "object",
       "required": [
         "name"
-      ]
-    },
-    "Authentication": {
-      "properties": {
-        "username": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "password": {
-          "$ref": "#/$defs/EnvVar"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "username",
-        "password"
       ]
     },
     "ConfigMapKeySelector": {

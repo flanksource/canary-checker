@@ -13,11 +13,7 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "username",
-        "password"
-      ]
+      "type": "object"
     },
     "ConfigMapKeySelector": {
       "properties": {
@@ -74,6 +70,9 @@
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
         },
         "chartmuseum": {
           "type": "string"

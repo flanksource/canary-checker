@@ -18,14 +18,3 @@ spec:
         }
       results: 1
       name: elasticsearch_pass
-      auth:
-        username:
-          valueFrom:
-            secretKeyRef:
-              name: search
-              key: ELASTIC_SEARCH_USERNAME
-        password:
-          valueFrom:
-            secretKeyRef:
-              name: search
-              key: ELASTIC_SEARCH_PASSWORD

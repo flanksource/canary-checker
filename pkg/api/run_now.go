@@ -69,7 +69,10 @@ func RunCanaryHandler(c echo.Context) error {
 		logger.Warnf("failed to get kommons client, checks that read kubernetes configs will fail: %v", err)
 	}
 	ctx := context.New(kommonsClient, k8s, db.Gorm, *canary)
-	result := checks.RunChecks(ctx)
+	result, err := checks.RunChecks(ctx)
+	if err != nil {
+		return errorResonse(c, err, http.StatusInternalServerError)
+	}
 
 	var response RunCanaryResponse
 	response.FromCheckResults(result)

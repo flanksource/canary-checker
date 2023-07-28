@@ -31,7 +31,7 @@ type Component struct {
 	Properties   []Property `json:"properties,omitempty"`
 	Schedule     string     `json:"schedule,omitempty"`
 	Status       string     `json:"status,omitempty"`
-	StatusReason string     `json:"statusReason,omitempty"`
+	StatusReason string     `json:"status_reason,omitempty"`
 	Summary      *Summary   `json:"summary,omitempty"`
 	// nolint
 	TopologyID   string `json:"topology_id,omitempty"`

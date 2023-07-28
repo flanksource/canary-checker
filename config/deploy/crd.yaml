@@ -64,69 +64,8 @@ spec:
                         items:
                           type: string
                         type: array
-                      auth:
-                        properties:
-                          password:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          username:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                        required:
-                          - password
-                          - username
-                        type: object
                       connection:
+                        description: Connection name e.g. connection://http/google
                         type: string
                       description:
                         description: Description for the check
@@ -142,12 +81,14 @@ spec:
                           template:
                             type: string
                         type: object
+                      exclude_filters:
+                        additionalProperties:
+                          type: string
+                        type: object
                       filters:
                         additionalProperties:
                           type: string
                         type: object
-                      host:
-                        type: string
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
@@ -163,6 +104,34 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       test:
                         properties:
                           expr:
@@ -185,6 +154,40 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      url:
+                        description: Connection url, interpolated with username,password
+                        type: string
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                     required:
                       - name
                     type: object
@@ -192,83 +195,39 @@ spec:
                 awsConfig:
                   items:
                     properties:
+                      accessKey:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       aggregatorName:
                         type: string
-                      awsConnection:
-                        properties:
-                          accessKey:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          connection:
-                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
-                            type: string
-                          endpoint:
-                            type: string
-                          objectPath:
-                            description: glob path to restrict matches to a subset
-                            type: string
-                          region:
-                            type: string
-                          secretKey:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          skipTLSVerify:
-                            description: Skip TLS verify when connecting to aws
-                            type: boolean
-                          usePathStyle:
-                            description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
-                            type: boolean
-                        type: object
+                      connection:
+                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -283,6 +242,8 @@ spec:
                           template:
                             type: string
                         type: object
+                      endpoint:
+                        type: string
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
@@ -294,8 +255,44 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      objectPath:
+                        description: glob path to restrict matches to a subset
+                        type: string
                       query:
                         type: string
+                      region:
+                        type: string
+                      secretKey:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
+                      skipTLSVerify:
+                        description: Skip TLS verify when connecting to aws
+                        type: boolean
                       test:
                         properties:
                           expr:
@@ -318,6 +315,12 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      usePathStyle:
+                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                        type: boolean
                     required:
                       - name
                       - query
@@ -326,86 +329,42 @@ spec:
                 awsConfigRule:
                   items:
                     properties:
-                      awsConnection:
+                      accessKey:
                         properties:
-                          accessKey:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
                             properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
+                              configMapKeyRef:
                                 properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
                                 type: object
                             type: object
-                          connection:
-                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
-                            type: string
-                          endpoint:
-                            type: string
-                          objectPath:
-                            description: glob path to restrict matches to a subset
-                            type: string
-                          region:
-                            type: string
-                          secretKey:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          skipTLSVerify:
-                            description: Skip TLS verify when connecting to aws
-                            type: boolean
-                          usePathStyle:
-                            description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
-                            type: boolean
                         type: object
                       complianceTypes:
                         description: Filters the results by compliance. The allowed values are INSUFFICIENT_DATA, NON_COMPLIANT, NOT_APPLICABLE, COMPLIANT
                         items:
                           type: string
                         type: array
+                      connection:
+                        description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -420,6 +379,8 @@ spec:
                           template:
                             type: string
                         type: object
+                      endpoint:
+                        type: string
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
@@ -436,11 +397,47 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      objectPath:
+                        description: glob path to restrict matches to a subset
+                        type: string
+                      region:
+                        type: string
                       rules:
                         description: Specify one or more Config rule names to filter the results by rule.
                         items:
                           type: string
                         type: array
+                      secretKey:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
+                      skipTLSVerify:
+                        description: Skip TLS verify when connecting to aws
+                        type: boolean
                       test:
                         properties:
                           expr:
@@ -463,6 +460,12 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      usePathStyle:
+                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                        type: boolean
                     required:
                       - name
                     type: object
@@ -560,6 +563,9 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                       variables:
                         additionalProperties:
                           type: string
@@ -606,6 +612,14 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      actionPrefix:
+                        type: string
+                      alarmPrefix:
+                        type: string
+                      alarms:
+                        items:
+                          type: string
+                        type: array
                       connection:
                         description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                         type: string
@@ -625,19 +639,6 @@ spec:
                         type: object
                       endpoint:
                         type: string
-                      filter:
-                        properties:
-                          actionPrefix:
-                            type: string
-                          alarmPrefix:
-                            type: string
-                          alarms:
-                            items:
-                              type: string
-                            type: array
-                          state:
-                            type: string
-                        type: object
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
@@ -685,6 +686,8 @@ spec:
                       skipTLSVerify:
                         description: Skip TLS verify when connecting to aws
                         type: boolean
+                      state:
+                        type: string
                       test:
                         properties:
                           expr:
@@ -707,6 +710,9 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                       usePathStyle:
                         description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                         type: boolean
@@ -766,6 +772,9 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - name
                       - query
@@ -832,9 +841,6 @@ spec:
                                     type: object
                                 type: object
                             type: object
-                        required:
-                          - password
-                          - username
                         type: object
                       description:
                         description: Description for the check
@@ -856,6 +862,9 @@ spec:
                         type: object
                       name:
                         description: Name of the check
+                        type: string
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
                     required:
                       - image
@@ -882,6 +891,9 @@ spec:
                         description: Name of the check
                         type: string
                       password:
+                        type: string
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
                       username:
                         type: string
@@ -988,6 +1000,9 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - name
                     type: object
@@ -1027,6 +1042,9 @@ spec:
                         type: integer
                       timeout:
                         type: integer
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - name
                     type: object
@@ -1092,9 +1110,6 @@ spec:
                                     type: object
                                 type: object
                             type: object
-                        required:
-                          - password
-                          - username
                         type: object
                       description:
                         description: Description for the check
@@ -1116,6 +1131,9 @@ spec:
                         type: object
                       name:
                         description: Name of the check
+                        type: string
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
                     required:
                       - image
@@ -1183,9 +1201,6 @@ spec:
                                     type: object
                                 type: object
                             type: object
-                        required:
-                          - password
-                          - username
                         type: object
                       description:
                         description: Description for the check
@@ -1202,6 +1217,9 @@ spec:
                         type: object
                       name:
                         description: Name of the check
+                        type: string
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
                     required:
                       - image
@@ -1239,6 +1257,8 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      connection:
+                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -1292,6 +1312,9 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - name
                     type: object
@@ -1400,6 +1423,9 @@ spec:
                         type: boolean
                       timeOut:
                         type: integer
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                       usePathStyle:
                         description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                         type: boolean
@@ -1414,69 +1440,8 @@ spec:
                 elasticsearch:
                   items:
                     properties:
-                      auth:
-                        properties:
-                          password:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          username:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                        required:
-                          - password
-                          - username
-                        type: object
                       connection:
+                        description: Connection name e.g. connection://http/google
                         type: string
                       description:
                         description: Description for the check
@@ -1505,6 +1470,34 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       query:
                         type: string
                       results:
@@ -1531,8 +1524,40 @@ spec:
                           template:
                             type: string
                         type: object
-                      url:
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
+                      url:
+                        description: Connection url, interpolated with username,password
+                        type: string
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                     required:
                       - name
                     type: object
@@ -1643,6 +1668,9 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - name
                       - script
@@ -1826,164 +1854,140 @@ spec:
                         type: string
                       sftpConnection:
                         properties:
-                          auth:
-                            properties:
-                              password:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueFrom:
-                                    properties:
-                                      configMapKeyRef:
-                                        properties:
-                                          key:
-                                            type: string
-                                          name:
-                                            type: string
-                                        required:
-                                          - key
-                                        type: object
-                                      secretKeyRef:
-                                        properties:
-                                          key:
-                                            type: string
-                                          name:
-                                            type: string
-                                        required:
-                                          - key
-                                        type: object
-                                    type: object
-                                type: object
-                              username:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueFrom:
-                                    properties:
-                                      configMapKeyRef:
-                                        properties:
-                                          key:
-                                            type: string
-                                          name:
-                                            type: string
-                                        required:
-                                          - key
-                                        type: object
-                                      secretKeyRef:
-                                        properties:
-                                          key:
-                                            type: string
-                                          name:
-                                            type: string
-                                        required:
-                                          - key
-                                        type: object
-                                    type: object
-                                type: object
-                            required:
-                              - password
-                              - username
-                            type: object
                           connection:
                             description: ConnectionName of the connection. It'll be used to populate the connection fields.
                             type: string
                           host:
                             type: string
+                          password:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
                           port:
                             description: Port for the SSH server. Defaults to 22
                             type: integer
+                          username:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
                         required:
-                          - auth
                           - host
                         type: object
                       smbConnection:
                         properties:
-                          auth:
-                            properties:
-                              password:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueFrom:
-                                    properties:
-                                      configMapKeyRef:
-                                        properties:
-                                          key:
-                                            type: string
-                                          name:
-                                            type: string
-                                        required:
-                                          - key
-                                        type: object
-                                      secretKeyRef:
-                                        properties:
-                                          key:
-                                            type: string
-                                          name:
-                                            type: string
-                                        required:
-                                          - key
-                                        type: object
-                                    type: object
-                                type: object
-                              username:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueFrom:
-                                    properties:
-                                      configMapKeyRef:
-                                        properties:
-                                          key:
-                                            type: string
-                                          name:
-                                            type: string
-                                        required:
-                                          - key
-                                        type: object
-                                      secretKeyRef:
-                                        properties:
-                                          key:
-                                            type: string
-                                          name:
-                                            type: string
-                                        required:
-                                          - key
-                                        type: object
-                                    type: object
-                                type: object
-                            required:
-                              - password
-                              - username
-                            type: object
                           connection:
                             description: ConnectionName of the connection. It'll be used to populate the connection fields.
                             type: string
                           domain:
                             description: Domain...
                             type: string
+                          password:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
                           port:
                             description: Port on which smb server is running. Defaults to 445
                             type: integer
-                          searchPath:
-                            description: SearchPath sub-path inside the mount location
-                            type: string
-                          sharename:
-                            description: Sharename to mount from the samba server
-                            type: string
-                          workstation:
-                            description: Workstation...
-                            type: string
-                        required:
-                          - auth
+                          username:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
                         type: object
                       test:
                         properties:
@@ -2010,6 +2014,9 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - name
                       - path
@@ -2098,6 +2105,9 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - name
                       - query
@@ -2164,9 +2174,6 @@ spec:
                                     type: object
                                 type: object
                             type: object
-                        required:
-                          - password
-                          - username
                         type: object
                       cafile:
                         type: string
@@ -2188,6 +2195,9 @@ spec:
                         type: string
                       project:
                         type: string
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - name
                     type: object
@@ -2195,74 +2205,11 @@ spec:
                 http:
                   items:
                     properties:
-                      authentication:
-                        description: Credentials for authentication headers
-                        properties:
-                          password:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          username:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                        required:
-                          - password
-                          - username
-                        type: object
                       body:
                         description: Request Body Contents
                         type: string
                       connection:
-                        description: Name of the connection that'll be used to derive the endpoint.
+                        description: Connection name e.g. connection://http/google
                         type: string
                       description:
                         description: Description for the check
@@ -2279,7 +2226,7 @@ spec:
                             type: string
                         type: object
                       endpoint:
-                        description: HTTP endpoint to check.  Mutually exclusive with Namespace
+                        description: 'Deprecated: Use url instead'
                         type: string
                       headers:
                         description: Header fields to be used in the query
@@ -2338,6 +2285,34 @@ spec:
                       ntlmv2:
                         description: NTLM when set to true will do authentication using NTLM v2 protocol
                         type: boolean
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       responseCodes:
                         description: Expected response codes for the HTTP Request.
                         items:
@@ -2385,6 +2360,40 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      url:
+                        description: Connection url, interpolated with username,password
+                        type: string
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                     required:
                       - name
                     type: object
@@ -2416,6 +2425,9 @@ spec:
                       thresholdMillis:
                         format: int64
                         type: integer
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - name
                     type: object
@@ -2429,9 +2441,6 @@ spec:
                 jmeter:
                   items:
                     properties:
-                      connection:
-                        description: Name of the connection that'll be used to derive host and other connection details.
-                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -2495,6 +2504,9 @@ spec:
                         items:
                           type: string
                         type: array
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - jmx
                       - name
@@ -2558,6 +2570,9 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - name
                       - spec
@@ -2641,6 +2656,9 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - kind
                       - name
@@ -2649,76 +2667,13 @@ spec:
                 ldap:
                   items:
                     properties:
-                      auth:
-                        properties:
-                          password:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          username:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                        required:
-                          - password
-                          - username
-                        type: object
                       bindDN:
                         type: string
                       connection:
+                        description: Connection name e.g. connection://http/google
                         type: string
                       description:
                         description: Description for the check
-                        type: string
-                      host:
                         type: string
                       icon:
                         description: Icon for overwriting default icon on the dashboard
@@ -2731,83 +2686,82 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       skipTLSVerify:
                         type: boolean
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      url:
+                        description: Connection url, interpolated with username,password
+                        type: string
                       userSearch:
                         type: string
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                     required:
-                      - auth
                       - bindDN
-                      - host
                       - name
                     type: object
                   type: array
                 mongodb:
                   items:
                     properties:
-                      auth:
-                        properties:
-                          password:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          username:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                        required:
-                          - password
-                          - username
-                        type: object
                       connection:
+                        description: Connection name e.g. connection://http/google
                         type: string
                       description:
                         description: Description for the check
@@ -2823,77 +2777,77 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      url:
+                        description: Connection url, interpolated with username,password
+                        type: string
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                     required:
-                      - connection
                       - name
                     type: object
                   type: array
                 mssql:
                   items:
                     properties:
-                      auth:
-                        properties:
-                          password:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          username:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                        required:
-                          - password
-                          - username
-                        type: object
                       connection:
+                        description: Connection name e.g. connection://http/google
                         type: string
                       description:
                         description: Description for the check
@@ -2920,6 +2874,34 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       query:
                         type: string
                       results:
@@ -2947,77 +2929,49 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      url:
+                        description: Connection url, interpolated with username,password
+                        type: string
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                     required:
-                      - connection
                       - name
                     type: object
                   type: array
                 mysql:
                   items:
                     properties:
-                      auth:
-                        properties:
-                          password:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          username:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                        required:
-                          - password
-                          - username
-                        type: object
                       connection:
+                        description: Connection name e.g. connection://http/google
                         type: string
                       description:
                         description: Description for the check
@@ -3044,6 +2998,34 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       query:
                         type: string
                       results:
@@ -3071,8 +3053,41 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      url:
+                        description: Connection url, interpolated with username,password
+                        type: string
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                     required:
-                      - connection
                       - name
                     type: object
                   type: array
@@ -3144,6 +3159,9 @@ spec:
                       schedule_timeout:
                         format: int64
                         type: integer
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - name
                       - podSpec
@@ -3152,69 +3170,8 @@ spec:
                 opensearch:
                   items:
                     properties:
-                      auth:
-                        properties:
-                          password:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          username:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                        required:
-                          - password
-                          - username
-                        type: object
                       connection:
+                        description: Connection name e.g. connection://http/google
                         type: string
                       description:
                         description: Description for the check
@@ -3243,6 +3200,34 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       query:
                         type: string
                       results:
@@ -3270,10 +3255,41 @@ spec:
                           template:
                             type: string
                         type: object
-                      url:
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
+                      url:
+                        description: Connection url, interpolated with username,password
+                        type: string
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                     required:
-                      - auth
                       - index
                       - name
                       - query
@@ -3342,6 +3358,9 @@ spec:
                         type: integer
                       spec:
                         type: string
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - name
                     type: object
@@ -3349,69 +3368,8 @@ spec:
                 postgres:
                   items:
                     properties:
-                      auth:
-                        properties:
-                          password:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          username:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                        required:
-                          - password
-                          - username
-                        type: object
                       connection:
+                        description: Connection name e.g. connection://http/google
                         type: string
                       description:
                         description: Description for the check
@@ -3438,6 +3396,34 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       query:
                         type: string
                       results:
@@ -3465,8 +3451,41 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      url:
+                        description: Connection url, interpolated with username,password
+                        type: string
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                     required:
-                      - connection
                       - name
                     type: object
                   type: array
@@ -3474,6 +3493,7 @@ spec:
                   items:
                     properties:
                       connection:
+                        description: Connection name e.g. connection://http/google
                         type: string
                       description:
                         description: Description for the check
@@ -3490,7 +3510,7 @@ spec:
                             type: string
                         type: object
                       host:
-                        description: Address of the prometheus server
+                        description: 'Deprecated: use `url` instead'
                         type: string
                       icon:
                         description: Icon for overwriting default icon on the dashboard
@@ -3503,6 +3523,34 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       query:
                         description: PromQL query
                         type: string
@@ -3528,8 +3576,41 @@ spec:
                           template:
                             type: string
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      url:
+                        description: Connection url, interpolated with username,password
+                        type: string
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                     required:
-                      - host
                       - name
                       - query
                     type: object
@@ -3538,71 +3619,10 @@ spec:
                   items:
                     properties:
                       addr:
+                        description: 'Deprecated: Use url instead'
                         type: string
-                      auth:
-                        properties:
-                          password:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                          username:
-                            properties:
-                              name:
-                                type: string
-                              value:
-                                type: string
-                              valueFrom:
-                                properties:
-                                  configMapKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                  secretKeyRef:
-                                    properties:
-                                      key:
-                                        type: string
-                                      name:
-                                        type: string
-                                    required:
-                                      - key
-                                    type: object
-                                type: object
-                            type: object
-                        required:
-                          - password
-                          - username
-                        type: object
                       connection:
-                        description: ConnectionName is the name of the connection. It is used to populate addr, db and auth.
+                        description: Connection name e.g. connection://http/google
                         type: string
                       db:
                         type: integer
@@ -3620,9 +3640,69 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      url:
+                        description: Connection url, interpolated with username,password
+                        type: string
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                     required:
-                      - addr
-                      - db
                       - name
                     type: object
                   type: array
@@ -3748,6 +3828,9 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - maxAge
                       - name
@@ -3845,6 +3928,9 @@ spec:
                       skipTLSVerify:
                         description: Skip TLS verify when connecting to aws
                         type: boolean
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                       usePathStyle:
                         description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                         type: boolean
@@ -3879,6 +3965,9 @@ spec:
                       thresholdMillis:
                         format: int64
                         type: integer
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
                     required:
                       - name
                     type: object
@@ -4018,6 +4107,10 @@ spec:
                       type: string
                     template:
                       type: string
+                  type: object
+                labels:
+                  additionalProperties:
+                    type: string
                   type: object
                 lifecycle:
                   description: The lifecycle state of the component e.g. production, staging, dev, etc.
@@ -4309,6 +4402,10 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
                         type: object
                       lifecycle:
                         description: The lifecycle state of the component e.g. production, staging, dev, etc.

@@ -59,7 +59,7 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
-        "connection": {
+        "transformDeleteStrategy": {
           "type": "string"
         },
         "jmx": {

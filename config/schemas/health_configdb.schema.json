@@ -26,6 +26,9 @@
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
         "query": {
           "type": "string"
         }

@@ -55,28 +55,24 @@ func SyncTopologyJobs() {
 		}
 	}
 
-	topologies, err := db.GetAllTopologies()
+	topologies, err := db.GetAllTopologiesForSync()
 	if err != nil {
 		logger.Errorf("Failed to get topology: %v", err)
 		return
 	}
 
 	for _, topology := range topologies {
-		jobHistory := models.NewJobHistory("TopologySync", "topology", topology.GetPersistedID()).Start()
-		_ = db.PersistJobHistory(jobHistory)
 		if err := SyncTopologyJob(topology); err != nil {
 			logger.Errorf("Error syncing topology job: %v", err)
-			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
 			continue
 		}
-		_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
 	}
 	logger.Infof("Synced topology jobs %d", len(TopologyScheduler.Entries()))
 }
 
 func SyncTopologyJob(t v1.Topology) error {
 	if !t.DeletionTimestamp.IsZero() || t.Spec.GetSchedule() == "@never" {
-		DeleteTopologyJob(t)
+		DeleteTopologyJob(t.GetPersistedID())
 		return nil
 	}
 	if Kommons == nil {
@@ -86,7 +82,7 @@ func SyncTopologyJob(t v1.Topology) error {
 			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
 		}
 	}
-	entry := findTopologyCronEntry(t)
+	entry := findTopologyCronEntry(t.GetPersistedID())
 	if entry != nil {
 		job := entry.Job.(TopologyJob)
 		if !reflect.DeepEqual(job.Topology.Spec, t.Spec) {
@@ -109,7 +105,7 @@ func SyncTopologyJob(t v1.Topology) error {
 		logger.Infof("Scheduled %s/%s: %s", t.Namespace, t.Name, t.Spec.GetSchedule())
 	}
 
-	entry = findTopologyCronEntry(t)
+	entry = findTopologyCronEntry(t.GetPersistedID())
 	if entry != nil && time.Until(entry.Next) < 1*time.Hour {
 		// run all regular topologies on startup
 		job = entry.Job.(TopologyJob)
@@ -118,20 +114,55 @@ func SyncTopologyJob(t v1.Topology) error {
 	return nil
 }
 
-func findTopologyCronEntry(t v1.Topology) *cron.Entry {
+func findTopologyCronEntry(id string) *cron.Entry {
 	for _, entry := range TopologyScheduler.Entries() {
-		if entry.Job.(TopologyJob).GetPersistedID() == t.GetPersistedID() {
+		if entry.Job.(TopologyJob).GetPersistedID() == id {
 			return &entry
 		}
 	}
 	return nil
 }
 
-func DeleteTopologyJob(t v1.Topology) {
-	entry := findTopologyCronEntry(t)
+func DeleteTopologyJob(id string) {
+	entry := findTopologyCronEntry(id)
 	if entry == nil {
 		return
 	}
-	logger.Tracef("deleting cron entry for topology %s/%s with entry ID: %v", t.Name, t.Namespace, entry.ID)
+	logger.Tracef("deleting cron entry for topology:%s with entry ID: %v", id, entry.ID)
 	TopologyScheduler.Remove(entry.ID)
+}
+
+func ReconcileDeletedTopologyComponents() {
+	jobHistory := models.NewJobHistory("ReconcileDeletedTopologyComponents", "", "").Start()
+	_ = db.PersistJobHistory(jobHistory)
+	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
+
+	var rows []struct {
+		ID        string
+		DeletedAt time.Time
+	}
+	// Select all components whose topology ID is deleted but their deleted at is not marked
+	err := db.Gorm.Raw(`
+        SELECT DISTINCT(topologies.id), topologies.deleted_at as deleted_at
+        FROM topologies
+        INNER JOIN components ON topologies.id = components.topology_id
+        WHERE
+            components.deleted_at IS NULL AND
+            topologies.deleted_at IS NOT NULL
+        `).Scan(&rows).Error
+
+	if err != nil {
+		logger.Errorf("Error fetching deleted topology components: %v", err)
+		jobHistory.AddError(err.Error())
+		return
+	}
+
+	for _, r := range rows {
+		if err := db.DeleteComponentsOfTopology(r.ID, r.DeletedAt); err != nil {
+			logger.Errorf("Error deleting components for topology[%s]: %v", r.ID, err)
+			jobHistory.AddError(err.Error())
+		}
+		DeleteTopologyJob(r.ID)
+	}
+	jobHistory.IncrSuccess()
 }

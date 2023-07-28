@@ -4,6 +4,7 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
 	"github.com/flanksource/kommons/ktemplate"
 	"github.com/pkg/errors"
@@ -21,6 +22,7 @@ type ComponentContext struct {
 	// Properties can either be looked up on an individual component, or act as a summary across all components
 	CurrentComponent *pkg.Component
 	templater        *ktemplate.StructTemplater
+	JobHistory       *models.JobHistory
 }
 
 func (c *ComponentContext) GetTemplater() ktemplate.StructTemplater {
@@ -101,6 +103,7 @@ func (c *ComponentContext) Clone() *ComponentContext {
 		Topology:          c.Topology,
 		ComponentAPI:      c.ComponentAPI,
 		Components:        c.Components,
+		JobHistory:        c.JobHistory,
 	}
 }
 func (c *ComponentContext) WithComponents(components *pkg.Components, current *pkg.Component) *ComponentContext {

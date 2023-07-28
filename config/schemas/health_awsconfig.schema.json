@@ -3,8 +3,35 @@
   "$id": "https://github.com/flanksource/canary-checker/api/v1/aws-config-check",
   "$ref": "#/$defs/AwsConfigCheck",
   "$defs": {
-    "AWSConnection": {
+    "AwsConfigCheck": {
       "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "query": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
@@ -28,39 +55,6 @@
         },
         "usePathStyle": {
           "type": "boolean"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
-    "AwsConfigCheck": {
-      "properties": {
-        "description": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "icon": {
-          "type": "string"
-        },
-        "labels": {
-          "$ref": "#/$defs/Labels"
-        },
-        "test": {
-          "$ref": "#/$defs/Template"
-        },
-        "display": {
-          "$ref": "#/$defs/Template"
-        },
-        "transform": {
-          "$ref": "#/$defs/Template"
-        },
-        "query": {
-          "type": "string"
-        },
-        "awsConnection": {
-          "$ref": "#/$defs/AWSConnection"
         },
         "aggregatorName": {
           "type": "string"

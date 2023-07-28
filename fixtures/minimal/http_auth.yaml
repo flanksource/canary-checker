@@ -8,8 +8,7 @@ spec:
       responseCodes: [401]
     - endpoint: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
       responseCodes: [200]
-      authentication:
-        username:
-          value: hello
-        password:
-          value: world
+      username:
+        value: hello
+      password:
+        value: world
