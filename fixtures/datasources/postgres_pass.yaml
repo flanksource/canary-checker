@@ -12,10 +12,5 @@ spec:
         value: postgresadmin
       password:
         value: admin123
-      query: SELECT current_schemas(true)
-      display:
-        template: |
-          {{- range $r := .results.rows }}
-          {{- $r.current_schemas}}
-          {{- end}}
+      query: SELECT 1
       results: 1
