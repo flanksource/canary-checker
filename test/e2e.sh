@@ -65,6 +65,13 @@ if [[ "$_DOMAIN" != "" ]]; then
   export DOMAIN=$_DOMAIN
 fi
 
+cat > /tmp/namespace.yml <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: canaries
+EOF
+
 if [ "$SKIP_SETUP" != "true" ]; then
   echo "::group::Setting up"
 
@@ -74,6 +81,10 @@ if [ "$SKIP_SETUP" != "true" ]; then
 
   if [ -e $TEST_FOLDER/_setup.sh ]; then
     bash $TEST_FOLDER/_setup.sh || echo Setup failed, attempting tests anyway
+  fi
+
+  if [ -e $TEST_FOLDER/../namespace.yml ]; then
+    $KARINA apply /tmp/namespace.yml -v
   fi
 
   if [ -e $TEST_FOLDER/_setup.yaml ]; then

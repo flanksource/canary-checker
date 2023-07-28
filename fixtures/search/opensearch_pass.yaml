@@ -2,6 +2,7 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: opensearch-pass
+  namespace: canaries
   labels:
     canary: opensearch
 spec:
@@ -9,7 +10,7 @@ spec:
   opensearch:
     - name: opensearch_pass
       description: OpenSearch checker
-      url: http://opensearch.default.svc.cluster.local:9200
+      url: http://opensearch.canaries.svc.cluster.local:9200
       index: index
       query: |
         {
