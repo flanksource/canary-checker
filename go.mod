@@ -72,7 +72,7 @@ require (
 	gorm.io/gorm v1.25.0
 	gorm.io/plugin/prometheus v0.0.0-20220517015831-ca6bfaf20bf4
 	k8s.io/api v0.26.4
-	k8s.io/apimachinery v0.26.4
+	k8s.io/apimachinery v0.27.4
 	k8s.io/client-go v0.26.4
 	sigs.k8s.io/controller-runtime v0.14.1
 	sigs.k8s.io/yaml v1.3.0
