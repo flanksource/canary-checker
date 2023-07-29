@@ -2,10 +2,11 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: mssql-pass
+  namespace: canaries
 spec:
   interval: 30
   mssql:
-    - url: "server=mssql.default.svc.cluster.local;user id=$(username);password=$(password);port=1433;database=master"
+    - url: "server=mssql.canaries.svc.cluster.local;user id=$(username);password=$(password);port=1433;database=master"
       name: mssql pass
       username:
         value: sa

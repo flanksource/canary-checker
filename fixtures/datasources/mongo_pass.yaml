@@ -2,10 +2,11 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: mongo
+  namespace: canaries
 spec:
   interval: 30
   mongodb:
-    - url: mongodb://$(username):$(password)@mongo.default.svc.cluster.local:27017/?authSource=admin
+    - url: mongodb://$(username):$(password)@mongo.canaries.svc.cluster.local:27017/?authSource=admin
       name: mongo ping check
       username:
         value: mongoadmin

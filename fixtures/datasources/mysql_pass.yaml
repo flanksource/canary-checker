@@ -2,10 +2,11 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: mysql-pass
+  namespace: canaries
 spec:
   interval: 30
   mysql:
-    - url: "$(username):$(password)@tcp(mysql.default.svc.cluster.local:3306)/mysqldb"
+    - url: "$(username):$(password)@tcp(mysql.canaries.svc.cluster.local:3306)/mysqldb"
       name: mysql ping check
       username:
         value: mysqladmin

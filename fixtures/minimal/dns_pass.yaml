@@ -2,7 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: dns-pass
-  namespace: default
 spec:
   schedule: "@every 1m"
   dns:

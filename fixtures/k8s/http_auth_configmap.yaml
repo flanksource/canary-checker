@@ -2,6 +2,7 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: http-basic-auth-configmap
+  namespace: canaries
 spec:
   http:
     - endpoint: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world

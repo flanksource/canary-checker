@@ -2,12 +2,13 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: mongo-fail
+  namespace: canaries
   labels:
     "Expected-Fail": "true"
 spec:
   interval: 30
   mongodb:
-    - url: mongodb://mongo2.default.svc.cluster.local:27017/?authSource=admin
+    - url: mongodb://mongo2.canaries.svc.cluster.local:27017/?authSource=admin
       name: mongo wrong password
       description: test mongo instance
       username:

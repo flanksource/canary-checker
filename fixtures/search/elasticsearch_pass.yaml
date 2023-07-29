@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 30
   elasticsearch:
-    - url: http://elasticsearch.default.svc.cluster.local:9200
+    - url: http://elasticsearch.canaries.svc.cluster.local:9200
       description: Elasticsearch checker
       index: index
       query: |
