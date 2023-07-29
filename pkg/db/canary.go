@@ -16,6 +16,7 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/models"
+	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -182,37 +183,38 @@ func RemoveTransformedChecks(ids []string) error {
 		Error
 }
 
-func DeleteCanary(canary v1.Canary) error {
-	logger.Infof("deleting canary %s/%s", canary.Namespace, canary.Name)
-	model, err := pkg.CanaryFromV1(canary)
+func DeleteCanary(id string, deleteTime time.Time) error {
+	logger.Infof("Deleting canary[%s]", id)
+
+	if err := Gorm.Table("canaries").Where("id = ?", id).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+		return err
+	}
+	checkIDs, err := DeleteChecksForCanary(id, deleteTime)
 	if err != nil {
 		return err
 	}
-	deleteTime := time.Now()
-	persistedID := canary.GetPersistedID()
-	var checkIDs []string
-	for _, checkID := range canary.Status.Checks {
-		checkIDs = append(checkIDs, checkID)
-	}
 	metrics.UnregisterGauge(checkIDs)
-	if persistedID == "" {
-		logger.Errorf("Canary %s/%s has not been persisted", canary.Namespace, canary.Name)
-		return nil
-	}
-	if err := Gorm.Where("id = ?", persistedID).Find(&model).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
-		return err
-	}
-	if err := DeleteChecksForCanary(persistedID, deleteTime); err != nil {
-		return err
-	}
-	if err := DeleteCheckComponentRelationshipsForCanary(persistedID, deleteTime); err != nil {
+
+	if err := DeleteCheckComponentRelationshipsForCanary(id, deleteTime); err != nil {
 		return err
 	}
 	return nil
 }
 
-func DeleteChecksForCanary(id string, deleteTime time.Time) error {
-	return Gorm.Table("checks").Where("canary_id = ? and deleted_at is null", id).UpdateColumn("deleted_at", deleteTime).Error
+func DeleteChecksForCanary(id string, deleteTime time.Time) ([]string, error) {
+	var checkIDs []string
+	var checks []pkg.Check
+	err := Gorm.Model(&checks).
+		Table("checks").
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		Where("canary_id = ? and deleted_at IS NULL", id).
+		UpdateColumn("deleted_at", deleteTime).
+		Error
+
+	for _, c := range checks {
+		checkIDs = append(checkIDs, c.ID.String())
+	}
+	return checkIDs, err
 }
 
 func DeleteCheckComponentRelationshipsForCanary(id string, deleteTime time.Time) error {
@@ -285,7 +287,7 @@ func FindDeletedChecksSince(ctx context.Context, since time.Time) ([]string, err
 func CreateCanary(canary *pkg.Canary) error {
 	if canary.Spec == nil || len(canary.Spec) == 0 {
 		empty := []byte("{}")
-		canary.Spec = types.JSON(empty)
+		canary.Spec = dutyTypes.JSON(types.JSON(empty))
 	}
 
 	return Gorm.Create(canary).Error
@@ -295,16 +297,9 @@ func CreateCheck(canary pkg.Canary, check *pkg.Check) error {
 	return Gorm.Create(&check).Error
 }
 
-func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]string, bool, error) {
+func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, map[string]string, bool, error) {
+	var err error
 	changed := false
-	model, err := pkg.CanaryFromV1(canary)
-	if err != nil {
-		return nil, nil, changed, err
-	}
-	if canary.GetPersistedID() != "" {
-		model.ID, _ = uuid.Parse(canary.GetPersistedID())
-	}
-	model.Source = source
 	tx := Gorm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}, {Name: "source"}},
 		UpdateAll: true,
@@ -333,15 +328,15 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 		return nil, nil, changed, err
 	}
 
+	var spec v1.CanarySpec
+	if err = json.Unmarshal(model.Spec, &spec); err != nil {
+		return nil, nil, changed, err
+	}
+
 	var checks = make(map[string]string)
 	var newCheckIDs []string
-	for _, config := range canary.Spec.GetAllChecks() {
+	for _, config := range spec.GetAllChecks() {
 		check := pkg.FromExternalCheck(model, config)
-		// not creating the new check if already exists in the status
-		// status is not patched correctly with the status id
-		if checkID := canary.GetCheckID(check.Name); checkID != "" {
-			check.ID, _ = uuid.Parse(checkID)
-		}
 		check.Spec, _ = json.Marshal(config)
 		id, err := PersistCheck(check, model.ID)
 		if err != nil {
@@ -361,7 +356,23 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]str
 		}
 		metrics.UnregisterGauge(checkIDsToRemove)
 	}
+
+	model.Checks = checks
 	return &model, checks, changed, nil
+}
+
+func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]string, bool, error) {
+	changed := false
+	model, err := pkg.CanaryFromV1(canary)
+	if err != nil {
+		return nil, nil, changed, err
+	}
+	if canary.GetPersistedID() != "" {
+		model.ID, _ = uuid.Parse(canary.GetPersistedID())
+	}
+	model.Source = source
+
+	return PersistCanaryModel(model)
 }
 
 func RefreshCheckStatusSummary() {

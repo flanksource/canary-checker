@@ -30,7 +30,6 @@ const (
 	PrometheusGaugeCleanupSchedule     = "@every 1h"
 
 	ReconcileDeletedTopologyComponentsSchedule = "@every 1h"
-	ReconcileDeletedCanaryChecksSchedule       = "@every 1h"
 )
 
 func Start() {
@@ -85,10 +84,11 @@ func Start() {
 	if _, err := ScheduleFunc(ReconcileDeletedTopologyComponentsSchedule, systemJobs.ReconcileDeletedTopologyComponents); err != nil {
 		logger.Errorf("Failed to schedule ReconcileDeletedTopologyComponents: %v", err)
 	}
-	if _, err := ScheduleFunc(ReconcileDeletedCanaryChecksSchedule, canaryJobs.ReconcileDeletedCanaryChecks); err != nil {
-		logger.Errorf("Failed to schedule ReconcileDeletedCanaryChecks: %v", err)
+	if _, err := ScheduleFunc("@every 5m", canaryJobs.ReconcileCanaryChecks); err != nil {
+		logger.Errorf("Failed to schedule ReconcileCanaryChecks: %v", err)
 	}
 
+	canaryJobs.ReconcileCanaryChecks()
 	canaryJobs.CleanupMetricsGauges()
 	canaryJobs.SyncCanaryJobs()
 	systemJobs.SyncTopologyJobs()
