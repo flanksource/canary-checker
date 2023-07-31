@@ -68,6 +68,19 @@ var _ = ginkgo.Describe("Test component relationship sync job", ginkgo.Ordered, 
 
 		// Child-1 and Child-3 should be present but not Child-2
 		Expect(len(relationships)).To(Equal(2))
+	})
 
+	ginkgo.It("should handle component label updates", func() {
+		childComponent3.Labels = map[string]string{"service": "logistics"}
+		err := db.Gorm.Save(&childComponent3).Error
+		Expect(err).To(BeNil())
+
+		ComponentRun()
+		relationships, err := db.GetChildRelationshipsForParentComponent(parentComponent.ID)
+		Expect(err).To(BeNil())
+
+		// Only child 1 should be present as we updated the labels
+		// and old relationship should be deleted
+		Expect(len(relationships)).To(Equal(1))
 	})
 })
