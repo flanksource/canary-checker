@@ -39,7 +39,11 @@ func GetComponentsWithLabelSelector(labelSelector string) (components pkg.Compon
 		}
 	}
 	var comps pkg.Components
-	if err := Gorm.Table("components").Where("labels @> ? and deleted_at is null", types.JSONStringMap(labels)).Find(&comps).Error; err != nil {
+	if err := Gorm.Table("components").
+		Where("labels @> ?", types.JSONStringMap(labels)).
+		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+		Where("deleted_at IS NULL").
+		Find(&comps).Error; err != nil {
 		return nil, err
 	}
 	for _, c := range comps {
@@ -47,7 +51,11 @@ func GetComponentsWithLabelSelector(labelSelector string) (components pkg.Compon
 	}
 	for _, k := range onlyKeys {
 		var comps pkg.Components
-		if err := Gorm.Table("components").Where("labels ?? ? and deleted_at is null", k).Find(&comps).Error; err != nil {
+		if err := Gorm.Table("components").
+			Where("labels ?? ?", k).
+			Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+			Where("deleted_at IS NULL").
+			Find(&comps).Error; err != nil {
 			continue
 		}
 		for _, c := range comps {

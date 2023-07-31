@@ -78,7 +78,11 @@ func GetAllTopologiesForSync() ([]v1.Topology, error) {
 
 // Get all the components from table which has not null selectors
 func GetAllComponentsWithSelectors() (components pkg.Components, err error) {
-	if err := Gorm.Table("components").Where("deleted_at is NULL and selectors != 'null'").Find(&components).Error; err != nil {
+	if err := Gorm.Table("components").
+		Where("deleted_at is NULL").
+		Where("selectors != 'null'").
+		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+		Find(&components).Error; err != nil {
 		return nil, err
 	}
 	return
@@ -139,6 +143,7 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 		if resourceSelector.LabelSelector != "" {
 			labelComponents, err := GetComponentsWithLabelSelector(resourceSelector.LabelSelector)
 			if err != nil {
+				logger.Errorf("Error getting components with label selectors[%s]: %v", resourceSelector.LabelSelector, err)
 				continue
 			}
 
@@ -165,14 +170,22 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 }
 
 func GetAllComponentsWithConfigs() (components pkg.Components, err error) {
-	if err := Gorm.Table("components").Where("deleted_at is NULL and configs != 'null'").Find(&components).Error; err != nil {
+	if err := Gorm.Table("components").
+		Where("configs != 'null'").
+		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+		Where("deleted_at IS NULL").
+		Find(&components).Error; err != nil {
 		return nil, err
 	}
 	return
 }
 
 func GetAllComponentWithCanaries() (components pkg.Components, err error) {
-	if err := Gorm.Table("components").Where("deleted_at is NULL and component_checks != 'null'").Find(&components).Error; err != nil {
+	if err := Gorm.Table("components").
+		Where("component_checks != 'null'").
+		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+		Where("deleted_at IS NULL").
+		Find(&components).Error; err != nil {
 		return nil, err
 	}
 	return
@@ -198,11 +211,11 @@ func GetChildRelationshipsForParentComponent(componentID uuid.UUID) ([]pkg.Compo
 	return relationships, nil
 }
 
-func PersistComponentRelationship(relationship *pkg.ComponentRelationship) error {
+func PersistComponentRelationships(relationships []*pkg.ComponentRelationship) error {
 	tx := Gorm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "component_id"}, {Name: "relationship_id"}, {Name: "selector_id"}},
 		UpdateAll: true,
-	}).Create(relationship)
+	}).Create(relationships)
 	return tx.Error
 }
 
@@ -390,7 +403,6 @@ func DeleteInlineCanariesForComponent(componentID string, deleteTime time.Time) 
 }
 
 func GetActiveComponentsIDsOfTopology(topologyID string) (compIDs []uuid.UUID, err error) {
-	logger.Tracef("Finding components with topology id: %s", topologyID)
 	if err := Gorm.Table("components").Where("deleted_at is NULL and topology_id = ?", topologyID).Select("id").Find(&compIDs).Error; err != nil {
 		return nil, err
 	}
