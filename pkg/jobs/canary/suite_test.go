@@ -3,9 +3,7 @@ package canary
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -15,11 +13,10 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/flanksource/duty/testutils"
 	"github.com/labstack/echo/v4"
 	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"gorm.io/gorm"
 )
 
 var (
@@ -51,15 +48,19 @@ func DelayedResponseHandler(c echo.Context) error {
 }
 
 var _ = ginkgo.BeforeSuite(func() {
+	var err error
+
 	port := 9881
-	config := GetPGConfig("test", port)
+	config, dbString := testutils.GetEmbeddedPGConfig("test_canary_job", port)
 	postgresServer = embeddedPG.NewDatabase(config)
-	if err := postgresServer.Start(); err != nil {
+	if err = postgresServer.Start(); err != nil {
 		ginkgo.Fail(err.Error())
 	}
 	logger.Infof("Started postgres on port: %d", port)
 
-	db.Gorm, db.Pool = setupDB(fmt.Sprintf("postgres://postgres:postgres@localhost:%d/test?sslmode=disable", port))
+	if db.Gorm, db.Pool, err = duty.SetupDB(dbString, nil); err != nil {
+		ginkgo.Fail(err.Error())
+	}
 	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 
 	testEchoServer = echo.New()
@@ -89,53 +90,3 @@ var _ = ginkgo.AfterSuite(func() {
 		ginkgo.Fail(err.Error())
 	}
 })
-
-func setupDB(connectionString string) (*gorm.DB, *pgxpool.Pool) {
-	pgxpool, err := duty.NewPgxPool(connectionString)
-	if err != nil {
-		ginkgo.Fail(err.Error())
-	}
-
-	conn, err := pgxpool.Acquire(context.Background())
-	if err != nil {
-		ginkgo.Fail(err.Error())
-	}
-	defer conn.Release()
-
-	gormDB, err := duty.NewGorm(connectionString, duty.DefaultGormConfig())
-	if err != nil {
-		ginkgo.Fail(err.Error())
-	}
-
-	if err = duty.Migrate(connectionString, nil); err != nil {
-		ginkgo.Fail(err.Error())
-	}
-
-	return gormDB, pgxpool
-}
-
-func GetPGConfig(database string, port int) embeddedPG.Config {
-	// We are firing up multiple instances of the embedded postgres server at once when running tests in parallel.
-	//
-	// By default fergusstrange/embedded-postgres directly extracts the Postgres binary to a set location
-	// (/home/runner/.embedded-postgres-go/extracted/bin/initdb) and starts it.
-	// If two instances try to do this at the same time, they conflict, and throw the error
-	// "unable to extract postgres archive: open /home/runner/.embedded-postgres-go/extracted/bin/initdb: text file busy."
-	//
-	// This is a way to have separate instances of the running postgres servers.
-
-	var runTimePath string
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		logger.Errorf("error getting user home dir: %v", err)
-		runTimePath = fmt.Sprintf("/tmp/.embedded-postgres-go/extracted-%d", port)
-	} else {
-		runTimePath = fmt.Sprintf("%s/.embedded-postgres-go/extracted-%d", homeDir, port)
-	}
-
-	return embeddedPG.DefaultConfig().
-		Database(database).
-		Port(uint32(port)).
-		RuntimePath(runTimePath).
-		Logger(io.Discard)
-}
