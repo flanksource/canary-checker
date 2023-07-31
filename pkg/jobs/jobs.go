@@ -1,6 +1,8 @@
 package jobs
 
 import (
+	"time"
+
 	"github.com/flanksource/canary-checker/pkg/db"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/system"
@@ -15,7 +17,8 @@ var FuncScheduler = cron.New()
 
 const (
 	PullCanaryFromUpstreamSchedule     = "@every 2m"
-	PushCanaryToUpstreamSchedule       = "@every 5m"
+	PushCanaryToUpstreamSchedule       = "@every 10s"
+	ReconcileCanaryToUpstreamSchedule  = "@every 3h"
 	SyncCanaryJobsSchedule             = "@every 2m"
 	SyncSystemsJobsSchedule            = "@every 5m"
 	ComponentRunSchedule               = "@every 2m"
@@ -42,15 +45,22 @@ func Start() {
 	FuncScheduler.Start()
 
 	if canaryJobs.UpstreamConf.Valid() {
-		canaryJobs.Pull()
-		canaryJobs.PushCanaryResultsToUpstream()
+		pushJob := &canaryJobs.UpstreamPushJob{MaxAge: time.Minute * 5}
+		pushJob.Run()
 
-		if _, err := ScheduleFunc(PullCanaryFromUpstreamSchedule, canaryJobs.Pull); err != nil {
-			logger.Errorf("Failed to schedule job [canaryJobs.Pull]: %v", err)
+		pullJob := &canaryJobs.UpstreamPullJob{}
+		pullJob.Run()
+
+		if _, err := FuncScheduler.AddJob(PullCanaryFromUpstreamSchedule, pullJob); err != nil {
+			logger.Fatalf("Failed to schedule job [canaryJobs.Pull]: %v", err)
 		}
 
-		if _, err := ScheduleFunc(PushCanaryToUpstreamSchedule, canaryJobs.PushCanaryResultsToUpstream); err != nil {
-			logger.Errorf("Failed to schedule job [canaryJobs.SyncWithUpstream]: %v", err)
+		if _, err := FuncScheduler.AddJob(PushCanaryToUpstreamSchedule, pushJob); err != nil {
+			logger.Fatalf("Failed to schedule job [canaryJobs.UpstreamPushJob]: %v", err)
+		}
+
+		if _, err := ScheduleFunc(ReconcileCanaryToUpstreamSchedule, canaryJobs.ReconcileCanaryResults); err != nil {
+			logger.Fatalf("Failed to schedule job [canaryJobs.SyncWithUpstream]: %v", err)
 		}
 	}
 
