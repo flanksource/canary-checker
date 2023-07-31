@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm/clause"
 
 	"github.com/flanksource/canary-checker/pkg"
-	//"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/commons/logger"
 )
 
@@ -22,7 +21,7 @@ type ConfigComponentRelationship struct {
 }
 
 func configQuery(config pkg.Config) *gorm.DB {
-	query := Gorm.Table("config_items")
+	query := Gorm.Table("config_items").Where("agent_id = '00000000-0000-0000-0000-000000000000'")
 	if config.ConfigClass != "" {
 		query = query.Where("config_class = ?", config.ConfigClass)
 	}
@@ -67,7 +66,9 @@ func FindConfig(config pkg.Config) (*pkg.Config, error) {
 
 func FindConfigForComponent(componentID, configType string) ([]pkg.Config, error) {
 	var dbConfigObjects []pkg.Config
-	relationshipQuery := Gorm.Table("config_component_relationships").Select("config_id").Where("component_id = ? AND deleted_at IS NULL", componentID)
+	relationshipQuery := Gorm.Table("config_component_relationships").
+		Select("config_id").
+		Where("component_id = ? AND deleted_at IS NULL", componentID)
 	query := Gorm.Table("config_items").Where("id IN (?)", relationshipQuery)
 	if configType != "" {
 		query = query.Where("type = @config_type OR config_class = @config_type", sql.Named("config_type", configType))
