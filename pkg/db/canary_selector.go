@@ -27,7 +27,11 @@ func GetChecksWithLabelSelector(labelSelector string) (selectedChecks pkg.Checks
 		}
 	}
 	var checks pkg.Checks
-	if err := Gorm.Table("checks").Where("labels @> ?", types.JSONStringMap(labels)).Find(&checks).Error; err != nil {
+	if err := Gorm.Table("checks").
+		Where("labels @> ?", types.JSONStringMap(labels)).
+		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+		Where("deleted_at IS NULL").
+		Find(&checks).Error; err != nil {
 		return nil, err
 	}
 	for _, c := range checks {
@@ -35,7 +39,11 @@ func GetChecksWithLabelSelector(labelSelector string) (selectedChecks pkg.Checks
 	}
 	for _, k := range onlyKeys {
 		var canaries pkg.Checks
-		if err := Gorm.Table("checks").Where("labels ?? ?", k).Find(&canaries).Error; err != nil {
+		if err := Gorm.Table("checks").
+			Where("labels ?? ?", k).
+			Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+			Where("deleted_at IS NULL").
+			Find(&canaries).Error; err != nil {
 			continue
 		}
 		for _, c := range canaries {

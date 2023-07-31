@@ -65,14 +65,6 @@ func GetAllCanariesForSync() ([]pkg.Canary, error) {
 	return _canaries, nil
 }
 
-func GetAllChecks() ([]pkg.Check, error) {
-	var checks []pkg.Check
-	if err := Gorm.Find(&checks).Error; err != nil {
-		return nil, err
-	}
-	return checks, nil
-}
-
 func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 	check.CanaryID = canaryID
 	name := check.GetName()
@@ -257,7 +249,10 @@ func GetCheck(id string) (*pkg.Check, error) {
 
 func FindCanary(namespace, name string) (*pkg.Canary, error) {
 	var model pkg.Canary
-	if err := Gorm.Where("namespace = ? AND name = ?", namespace, name).First(&model).Error; err != nil {
+	if err := Gorm.
+		Where("namespace = ? AND name = ?", namespace, name).
+		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+		First(&model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -269,7 +264,9 @@ func FindCanary(namespace, name string) (*pkg.Canary, error) {
 
 func FindCheck(canary pkg.Canary, name string) (*pkg.Check, error) {
 	var model pkg.Check
-	if err := Gorm.Where("canary_id = ? AND name = ?", canary.ID.String(), name).First(&model).Error; err != nil {
+	if err := Gorm.Where("canary_id = ? AND name = ?", canary.ID.String(), name).
+		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+		First(&model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
