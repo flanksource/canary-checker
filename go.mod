@@ -21,7 +21,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.1.0
 	github.com/fergusstrange/embedded-postgres v1.21.0
 	github.com/flanksource/commons v1.10.2
-	github.com/flanksource/duty v1.0.140
+	github.com/flanksource/duty v1.0.141
 	github.com/flanksource/gomplate/v3 v3.20.9
 	github.com/flanksource/is-healthy v0.0.0-20230713150444-ad2a5ef4bb37
 	github.com/flanksource/kommons v0.31.3
@@ -33,6 +33,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/gobwas/glob v0.2.3
+	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
 	github.com/henvic/httpretty v0.1.2
 	github.com/hirochachacha/go-smb2 v1.0.10
@@ -153,7 +154,6 @@ require (
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/cel-go v0.17.1 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20230323073829-e72429f035bd // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
