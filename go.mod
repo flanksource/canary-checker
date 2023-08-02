@@ -12,12 +12,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.30
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.35.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.109.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.109.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.37.0
 	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b
 	github.com/dynatrace-ace/dynatrace-go-api-client/api/v2/environment/dynatrace v0.0.0-20210816162345-de2eacc8ac9a
-	github.com/eko/gocache v4.1.1+incompatible
+	github.com/eko/gocache/lib/v4 v4.1.1
+	github.com/eko/gocache/store/bigcache/v4 v4.1.2
 	github.com/elastic/go-elasticsearch/v8 v8.9.0
 	github.com/fergusstrange/embedded-postgres v1.23.0
 	github.com/flanksource/commons v1.10.2
@@ -91,7 +92,6 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/PaesslerAG/gval v1.2.2 // indirect
 	github.com/TomOnTime/utfutil v0.0.0-20230223141146-125e65197b36 // indirect
-	github.com/XiaoMi/pegasus-go-client v0.0.0-20210427083443-f3b6b08bc4c2 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230305170008-8188dc5388df // indirect
 	github.com/antonmedv/expr v1.12.7 // indirect
@@ -114,14 +114,10 @@ require (
 	github.com/aws/smithy-go v1.14.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
-	github.com/bradfitz/gomemcache v0.0.0-20230611145640-acc696258285 // indirect
-	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/eko/gocache/lib/v4 v4.1.1 // indirect
-	github.com/eko/gocache/store/bigcache/v4 v4.1.2 // indirect
 	github.com/elastic/elastic-transport-go/v8 v8.3.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
@@ -207,7 +203,6 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
-	github.com/pegasus-kv/thrift v0.14.1 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/prometheus/client_model v0.4.0 // indirect
 	github.com/prometheus/procfs v0.11.1 // indirect
@@ -215,7 +210,6 @@ require (
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/spf13/cast v1.5.1 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/tidwall/gjson v1.15.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
@@ -258,9 +252,7 @@ require (
 	google.golang.org/grpc v1.57.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
-	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
-	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/postgres v1.5.2 // indirect
