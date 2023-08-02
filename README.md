@@ -1,12 +1,17 @@
-
-<div align="center"> <img src="https://canarychecker.io/images/canary-checker.svg" height="64px"></img></div>
-  <p align="center">Kubernetes operator for executing synthetic tests</p>
-<p align="center">
-<a href="https://github.com/flanksource/canary-checker/actions"><img src="https://github.com/flanksource/canary-checker/workflows/Test/badge.svg"></a>
-<a href="https://goreportcard.com/report/github.com/flanksource/canary-checker"><img src="https://goreportcard.com/badge/github.com/flanksource/canary-checker"></a>
-<img src="https://img.shields.io/github/license/flanksource/canary-checker.svg?style=flat-square"/>
-<a href="https://canarychecker.io"> <img src="https://img.shields.io/badge/☰-Docs-lightgrey.svg"/> </a>
-</p>
+<div align="center">
+  <picture>
+    <source srcset="https://canarychecker.io/img/canary-checker-white.svg" media="(prefers-color-scheme: dark)">
+    <img src="https://canarychecker.io/img/canary-checker.svg">
+  </picture>
+  
+  <p>Kubernetes operator for executing synthetic tests</p>
+  <p>
+    <a href="https://github.com/flanksource/canary-checker/actions"><img src="https://github.com/flanksource/canary-checker/workflows/Test/badge.svg"></a>
+    <a href="https://goreportcard.com/report/github.com/flanksource/canary-checker"><img src="https://goreportcard.com/badge/github.com/flanksource/canary-checker"></a>
+    <img src="https://img.shields.io/github/license/flanksource/canary-checker.svg?style=flat-square"/>
+    <a href="https://canarychecker.io"> <img src="https://img.shields.io/badge/☰-Docs-lightgrey.svg"/> </a>
+  </p>
+</div>
 
 ---
 Canary checker is a kubernetes-native platform for monitoring health across application and infrastructure using both passive and active (synthetic) mechanisms.
