@@ -4,15 +4,17 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
 	"github.com/flanksource/kommons/ktemplate"
 	"github.com/pkg/errors"
+	"k8s.io/client-go/kubernetes"
 )
 
 type ComponentContext struct {
 	*context.KubernetesContext
-	SystemTemplate v1.SystemTemplate
-	ComponentAPI   v1.Component
+	Topology     v1.Topology
+	ComponentAPI v1.Component
 	// Components keep track of the components that properties can apply to,
 	// properties can return a map of component names to properties to facilitate
 	// queries that are more efficient to perform for all components rather than a component at a time
@@ -20,6 +22,7 @@ type ComponentContext struct {
 	// Properties can either be looked up on an individual component, or act as a summary across all components
 	CurrentComponent *pkg.Component
 	templater        *ktemplate.StructTemplater
+	JobHistory       *models.JobHistory
 }
 
 func (c *ComponentContext) GetTemplater() ktemplate.StructTemplater {
@@ -97,9 +100,10 @@ func (c *ComponentContext) TemplateComponent(component *v1.ComponentSpec) error 
 func (c *ComponentContext) Clone() *ComponentContext {
 	return &ComponentContext{
 		KubernetesContext: c.KubernetesContext.Clone(),
-		SystemTemplate:    c.SystemTemplate,
+		Topology:          c.Topology,
 		ComponentAPI:      c.ComponentAPI,
 		Components:        c.Components,
+		JobHistory:        c.JobHistory,
 	}
 }
 func (c *ComponentContext) WithComponents(components *pkg.Components, current *pkg.Component) *ComponentContext {
@@ -109,9 +113,9 @@ func (c *ComponentContext) WithComponents(components *pkg.Components, current *p
 	return cloned
 }
 
-func NewComponentContext(client *kommons.Client, system v1.SystemTemplate) *ComponentContext {
+func NewComponentContext(client *kommons.Client, kubernetes kubernetes.Interface, system v1.Topology) *ComponentContext {
 	return &ComponentContext{
-		KubernetesContext: context.NewKubernetesContext(client, system.Namespace),
-		SystemTemplate:    system,
+		KubernetesContext: context.NewKubernetesContext(client, kubernetes, system.Namespace),
+		Topology:          system,
 	}
 }

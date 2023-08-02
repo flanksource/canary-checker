@@ -19,6 +19,7 @@ import (
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8sTypes "k8s.io/apimachinery/pkg/types"
 )
 
 var json = jsontime.ConfigWithCustomTimeFormat
@@ -53,7 +54,7 @@ func (status ComponentStatus) Compare(other ComponentStatus) int {
 
 const ComponentType = "component"
 
-type SystemTemplate struct {
+type Topology struct {
 	ID        uuid.UUID `gorm:"default:generate_ulid()"`
 	Name      string
 	Namespace string
@@ -65,36 +66,34 @@ type SystemTemplate struct {
 	DeletedAt *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
 }
 
-func SystemTemplateFromV1(systemTemplate *v1.SystemTemplate) *SystemTemplate {
-	spec, _ := json.Marshal(systemTemplate.Spec)
-	return &SystemTemplate{
-		Name:      systemTemplate.GetName(),
-		Namespace: systemTemplate.GetNamespace(),
-		Labels:    types.JSONStringMap(systemTemplate.GetLabels()),
+func TopologyFromV1(topology *v1.Topology) *Topology {
+	spec, _ := json.Marshal(topology.Spec)
+	return &Topology{
+		Name:      topology.GetName(),
+		Namespace: topology.GetNamespace(),
+		Labels:    types.JSONStringMap(topology.GetLabels()),
 		Spec:      spec,
 	}
 }
 
-func (s *SystemTemplate) ToV1() v1.SystemTemplate {
-	var systemTemplateSpec v1.SystemTemplateSpec
+func (s *Topology) ToV1() v1.Topology {
+	var topologySpec v1.TopologySpec
 	id := s.ID.String()
-	if err := json.Unmarshal(s.Spec, &systemTemplateSpec); err != nil {
-		logger.Errorf("error unmarshalling system template spec %s", err)
+	if err := json.Unmarshal(s.Spec, &topologySpec); err != nil {
+		logger.Errorf("error unmarshalling topology spec %s", err)
 	}
-	return v1.SystemTemplate{
+	return v1.Topology{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "SystemTemplate",
+			Kind:       "Topology",
 			APIVersion: "canaries.flanksource.com/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      s.Name,
 			Namespace: s.Namespace,
 			Labels:    s.Labels,
+			UID:       k8sTypes.UID(id),
 		},
-		Spec: systemTemplateSpec,
-		Status: v1.SystemTemplateStatus{
-			PersistedID: &id,
-		},
+		Spec: topologySpec,
 	}
 }
 
@@ -152,35 +151,35 @@ type Component struct {
 	Icon         string              `json:"icon,omitempty"`
 	Owner        string              `json:"owner,omitempty"`
 	Status       ComponentStatus     `json:"status,omitempty"`
-	StatusReason string              `json:"statusReason,omitempty"`
+	StatusReason string              `json:"status_reason,omitempty"`
 	Path         string              `json:"path,omitempty"`
 	Order        int                 `json:"order,omitempty"  gorm:"-"`
 	// The type of component, e.g. service, API, website, library, database, etc.
 	Type    string     `json:"type,omitempty"`
 	Summary v1.Summary `json:"summary,omitempty" gorm:"type:summary"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
-	Lifecycle        string                   `json:"lifecycle,omitempty"`
-	Properties       Properties               `json:"properties,omitempty" gorm:"type:properties"`
-	Components       Components               `json:"components,omitempty" gorm:"-"`
-	ParentId         *uuid.UUID               `json:"parent_id,omitempty"` //nolint
-	Selectors        v1.ResourceSelectors     `json:"selectors,omitempty" gorm:"resourceSelectors" swaggerignore:"true"`
-	ComponentChecks  v1.ComponentChecks       `json:"-" gorm:"componentChecks" swaggerignore:"true"`
-	Checks           Checks                   `json:"checks,omitempty" gorm:"-"`
-	Configs          Configs                  `json:"configs,omitempty" gorm:"type:configs"`
-	SystemTemplateID *uuid.UUID               `json:"system_template_id,omitempty"` //nolint
-	CreatedAt        time.Time                `json:"created_at,omitempty" time_format:"postgres_timestamp"`
-	UpdatedAt        time.Time                `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
-	DeletedAt        *time.Time               `json:"deleted_at,omitempty" time_format:"postgres_timestamp" swaggerignore:"true"`
-	ExternalId       string                   `json:"external_id,omitempty"` //nolint
-	IsLeaf           bool                     `json:"is_leaf"`
-	SelectorID       string                   `json:"-" gorm:"-"`
-	Incidents        []Incident               `json:"incidents,omitempty" gorm:"-"`
-	ConfigInsights   []map[string]interface{} `json:"insights,omitempty" gorm:"-"`
-	CostPerMinute    float64                  `json:"cost_per_minute,omitempty" gorm:"column:cost_per_minute"`
-	CostTotal1d      float64                  `json:"cost_total_1d,omitempty" gorm:"column:cost_total_1d"`
-	CostTotal7d      float64                  `json:"cost_total_7d,omitempty" gorm:"column:cost_total_7d"`
-	CostTotal30d     float64                  `json:"cost_total_30d,omitempty" gorm:"column:cost_total_30d"`
-	LogSelectors     dutyTypes.LogSelectors   `json:"logs,omitempty" gorm:"column:log_selectors"`
+	Lifecycle       string                   `json:"lifecycle,omitempty"`
+	Properties      Properties               `json:"properties,omitempty" gorm:"type:properties"`
+	Components      Components               `json:"components,omitempty" gorm:"-"`
+	ParentId        *uuid.UUID               `json:"parent_id,omitempty"` //nolint
+	Selectors       v1.ResourceSelectors     `json:"selectors,omitempty" gorm:"resourceSelectors" swaggerignore:"true"`
+	ComponentChecks v1.ComponentChecks       `json:"-" gorm:"componentChecks" swaggerignore:"true"`
+	Checks          Checks                   `json:"checks,omitempty" gorm:"-"`
+	Configs         Configs                  `json:"configs,omitempty" gorm:"type:configs"`
+	TopologyID      *uuid.UUID               `json:"topology_id,omitempty"` //nolint
+	CreatedAt       time.Time                `json:"created_at,omitempty" time_format:"postgres_timestamp"`
+	UpdatedAt       time.Time                `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt       *time.Time               `json:"deleted_at,omitempty" time_format:"postgres_timestamp" swaggerignore:"true"`
+	ExternalId      string                   `json:"external_id,omitempty"` //nolint
+	IsLeaf          bool                     `json:"is_leaf"`
+	SelectorID      string                   `json:"-" gorm:"-"`
+	Incidents       []Incident               `json:"incidents,omitempty" gorm:"-"`
+	ConfigInsights  []map[string]interface{} `json:"insights,omitempty" gorm:"-"`
+	CostPerMinute   float64                  `json:"cost_per_minute,omitempty" gorm:"column:cost_per_minute"`
+	CostTotal1d     float64                  `json:"cost_total_1d,omitempty" gorm:"column:cost_total_1d"`
+	CostTotal7d     float64                  `json:"cost_total_7d,omitempty" gorm:"column:cost_total_7d"`
+	CostTotal30d    float64                  `json:"cost_total_30d,omitempty" gorm:"column:cost_total_30d"`
+	LogSelectors    dutyTypes.LogSelectors   `json:"logs,omitempty" gorm:"column:log_selectors"`
 }
 
 type ComponentRelationship struct {
@@ -268,6 +267,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Icon:            c.Icon,
 		Selectors:       c.Selectors,
 		ComponentChecks: c.ComponentChecks,
+		Labels:          c.Labels,
 		Configs:         configs,
 		LogSelectors:    c.LogSelectors,
 	}

@@ -43,11 +43,16 @@ echo "::group::Operator"
 go run main.go operator --db-migrations -vvv --db="postgres://postgres:mysecretpassword@localhost:5432/postgres?sslmode=disable" --maxStatusCheckCount=1 &
 PROC_ID=$!
 
+echo "Started operator with PID $PROC_ID"
+
 ## sleeping for a bit to let the operator start and statuses to be present
-sleep 240
+sleep 120
 
-curl http://0.0.0.0:8080/api
+echo "Waiting for server to accept connections"
+curl https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh -o wait-for-it.sh;
+chmod +x wait-for-it.sh; ./wait-for-it.sh 0.0.0.0:8080 --timeout=0;
 
+echo "Server is ready now"
 
 i=0
 while [ $i -lt 5 ]

@@ -36,26 +36,29 @@ func (c *MongoDBChecker) Check(ctx *context.Context, extConfig external.Check) p
 	results = append(results, result)
 	var err error
 
-	connection, err := GetConnection(ctx, &check.Connection, ctx.Namespace)
+	connection, err := ctx.GetConnection(check.Connection)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Failf("error getting connection: %v", err)
 	}
 
 	opts := options.Client().
-		ApplyURI(connection).
+		ApplyURI(connection.URL).
 		SetConnectTimeout(3 * time.Second).
 		SetSocketTimeout(3 * time.Second)
 
 	_ctx, cancel := gocontext.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
+
 	client, err := mongo.Connect(_ctx, opts)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
 	defer client.Disconnect(ctx) //nolint: errcheck
+
 	err = client.Ping(_ctx, readpref.Primary())
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
+
 	return results
 }

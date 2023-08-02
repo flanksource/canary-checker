@@ -29,9 +29,5 @@ func Topology(c echo.Context) error {
 		return errorResonse(c, err, http.StatusBadRequest)
 	}
 
-	if len(results) == 0 {
-		c.Response().Header().Set("Content-Type", "application/json")
-		return c.String(http.StatusOK, "{}")
-	}
 	return c.JSON(http.StatusOK, results)
 }

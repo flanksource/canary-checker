@@ -37,6 +37,11 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
+
+	if err := check.AWSConnection.Populate(ctx, ctx.Kubernetes, ctx.Namespace); err != nil {
+		return results.Failf("failed to populate aws connection: %v", err)
+	}
+
 	cfg, err := awsUtil.NewSession(ctx, check.AWSConnection)
 	if err != nil {
 		return results.ErrorMessage(err)
@@ -44,10 +49,10 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 	client := cloudwatch.NewFromConfig(*cfg)
 	maxRecords := int32(100)
 	alarms, err := client.DescribeAlarms(ctx, &cloudwatch.DescribeAlarmsInput{
-		AlarmNames:      check.Filter.Alarms,
-		AlarmNamePrefix: check.Filter.AlarmPrefix,
-		ActionPrefix:    check.Filter.ActionPrefix,
-		StateValue:      types.StateValue(check.Filter.State),
+		AlarmNames:      check.CloudWatchFilter.Alarms,
+		AlarmNamePrefix: check.CloudWatchFilter.AlarmPrefix,
+		ActionPrefix:    check.CloudWatchFilter.ActionPrefix,
+		StateValue:      types.StateValue(check.CloudWatchFilter.State),
 		MaxRecords:      &maxRecords,
 	})
 	if err != nil {

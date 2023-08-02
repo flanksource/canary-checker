@@ -68,8 +68,11 @@ type CanarySpec struct {
 	AwsConfigRule  []AwsConfigRuleCheck  `yaml:"awsConfigRule,omitempty" json:"awsConfigRule,omitempty"`
 	DatabaseBackup []DatabaseBackupCheck `yaml:"databaseBackup,omitempty" json:"databaseBackup,omitempty"`
 	ConfigDB       []ConfigDBCheck       `yaml:"configDB,omitempty" json:"configDB,omitempty"`
+	Opensearch     []OpenSearchCheck     `yaml:"opensearch,omitempty" json:"opensearch,omitempty"`
 	Elasticsearch  []ElasticsearchCheck  `yaml:"elasticsearch,omitempty" json:"elasticsearch,omitempty"`
 	AlertManager   []AlertManagerCheck   `yaml:"alertmanager,omitempty" json:"alertmanager,omitempty"`
+	Dynatrace      []DynatraceCheck      `yaml:"dynatrace,omitempty" json:"dynatrace,omitempty"`
+	AzureDevops    []AzureDevopsCheck    `yaml:"azureDevops,omitempty" json:"azureDevops,omitempty"`
 	// interval (in seconds) to run checks on Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
 	// Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
@@ -185,6 +188,15 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	for _, check := range spec.AlertManager {
 		checks = append(checks, check)
 	}
+	for _, check := range spec.AzureDevops {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.Dynatrace {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.Opensearch {
+		checks = append(checks, check)
+	}
 	return checks
 }
 
@@ -199,7 +211,7 @@ func (spec CanarySpec) GetSchedule() string {
 }
 
 func (c Canary) IsTrace() bool {
-	return c.Annotations != nil && c.Annotations["debug"] == "true" //nolint
+	return c.Annotations != nil && c.Annotations["trace"] == "true" //nolint
 }
 
 func (c Canary) IsDebug() bool {
@@ -339,10 +351,7 @@ func (c Canary) ID() string {
 }
 
 func (c Canary) GetPersistedID() string {
-	if c.Status.PersistedID != nil {
-		return *c.Status.PersistedID
-	}
-	return ""
+	return string(c.GetUID())
 }
 
 // +kubebuilder:object:root=true

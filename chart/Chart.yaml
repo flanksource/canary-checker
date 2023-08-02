@@ -1,15 +1,15 @@
 apiVersion: v2
 name: canary-checker
-description: a Kubernetes native, multi-tenant synthetic monitoring system
+description: Kubernetes native, multi-tenant synthetic monitoring system
 type: application
 version: 0.0.0
 appVersion: "master"
 maintainers:
   - name: Flanksource
     url: https://www.flanksource.com
-icon: https://avatars.githubusercontent.com/u/58787470
+icon: https://github.com/flanksource/docs/blob/main/docs/canary-checker/images/canary-checker-icon.svg
 dependencies:
   - name: flanksource-ui
-    version: "1.0.143"
+    version: "1.0.395"
     repository: https://flanksource.github.io/charts
     condition: flanksource-ui.enabled

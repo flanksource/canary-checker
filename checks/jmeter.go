@@ -39,11 +39,14 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
+
 	namespace := ctx.Canary.Namespace
-	_, value, err := ctx.Kommons.GetEnvValue(check.Jmx, namespace)
+	//FIXME: the jmx file should not be cached
+	value, err := ctx.GetEnvValueFromCache(check.Jmx)
 	if err != nil {
 		return results.Failf("Failed to parse the jmx plan: %v", err)
 	}
+
 	testPlanFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jmx", namespace, check.Jmx.Name, rand.Int())
 	logFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jtl", namespace, check.Jmx.Name, rand.Int())
 	err = os.WriteFile(testPlanFilename, []byte(value), 0755)
@@ -51,6 +54,7 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	if err != nil {
 		return results.Failf("unable to write test plan file")
 	}
+
 	var host string
 	var port string
 	if check.Host != "" {
@@ -83,6 +87,7 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 			return results.Failf("the response took %v longer than specified", (totalDuration - resDuration).String())
 		}
 	}
+
 	return results
 }
 

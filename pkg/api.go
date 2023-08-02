@@ -7,14 +7,15 @@ import (
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 )
 
 type Endpoint struct {
@@ -114,13 +115,13 @@ type Timeseries struct {
 
 type Canary struct {
 	ID        uuid.UUID `gorm:"default:generate_ulid()"`
+	AgentID   uuid.UUID
 	Spec      types.JSON
 	Labels    types.JSONStringMap
 	Source    string
 	Name      string
 	Namespace string
 	Checks    types.JSONStringMap `gorm:"-"`
-	Schedule  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
@@ -139,6 +140,7 @@ func (c Canary) ToV1() (*v1.Canary, error) {
 				"source": c.Source,
 			},
 			Labels: c.Labels,
+			UID:    k8stypes.UID(c.ID.String()),
 		},
 	}
 	var deletionTimestamp metav1.Time
@@ -150,10 +152,14 @@ func (c Canary) ToV1() (*v1.Canary, error) {
 		logger.Debugf("Failed to unmarshal canary spec: %s", err)
 		return nil, err
 	}
-	id := c.ID.String()
-	canary.Status.PersistedID = &id
 	canary.Status.Checks = c.Checks
 	return &canary, nil
+}
+
+func (c Canary) GetSpec() (v1.CanarySpec, error) {
+	var spec v1.CanarySpec
+	err := json.Unmarshal(c.Spec, &spec)
+	return spec, err
 }
 
 func CanaryFromV1(canary v1.Canary) (Canary, error) {
@@ -171,7 +177,6 @@ func CanaryFromV1(canary v1.Canary) (Canary, error) {
 		Name:      canary.Name,
 		Namespace: canary.Namespace,
 		Source:    canary.Annotations["source"],
-		Schedule:  canary.Spec.GetSchedule(),
 		Checks:    types.JSONStringMap(checks),
 	}, nil
 }
@@ -203,6 +208,11 @@ type Check struct {
 	DeletedAt          *time.Time          `json:"deletedAt,omitempty"`
 	SilencedAt         *time.Time          `json:"silencedAt,omitempty"`
 	Canary             *v1.Canary          `json:"-" gorm:"-"`
+
+	// These are calculated for the selected date range
+	EarliestRuntime *time.Time `json:"earliestRuntime,omitempty" gorm:"-"`
+	LatestRuntime   *time.Time `json:"latestRuntime,omitempty" gorm:"-"`
+	TotalRuns       int        `json:"totalRuns,omitempty" gorm:"-"`
 }
 
 func FromExternalCheck(canary Canary, check external.Check) Check {
@@ -299,18 +309,18 @@ type Checker interface {
 }
 
 type Config struct {
-	ID           *uuid.UUID          `json:"id,omitempty"`
-	ConfigType   string              `json:"config_type,omitempty"`
-	Name         string              `json:"name,omitempty"`
-	Namespace    string              `json:"namespace,omitempty"`
-	Spec         *types.JSONMap      `json:"spec,omitempty" gorm:"column:config"`
-	Tags         types.JSONStringMap `json:"tags,omitempty"  gorm:"type:jsonstringmap"`
-	ExternalID   pq.StringArray      `json:"external_id,omitempty" gorm:"type:text[]"`
-	ExternalType string              `json:"external_type,omitempty"`
+	ID          *uuid.UUID          `json:"id,omitempty"`
+	ConfigClass string              `json:"config_class,omitempty"`
+	Name        string              `json:"name,omitempty"`
+	Namespace   string              `json:"namespace,omitempty"`
+	Spec        *types.JSONMap      `json:"spec,omitempty" gorm:"column:config"`
+	Tags        types.JSONStringMap `json:"tags,omitempty"  gorm:"type:jsonstringmap"`
+	ExternalID  pq.StringArray      `json:"external_id,omitempty" gorm:"type:text[]"`
+	Type        string              `json:"type,omitempty"`
 }
 
 func (c Config) String() string {
-	s := c.ConfigType
+	s := c.ConfigClass
 	if c.Namespace != "" {
 		s += "/" + c.Namespace
 	}
@@ -334,11 +344,11 @@ func NewConfigs(configs []v1.Config) Configs {
 
 func NewConfig(config v1.Config) *Config {
 	return &Config{
-		Name:         config.Name,
-		Namespace:    config.Namespace,
-		Tags:         types.JSONStringMap(config.Tags),
-		ExternalID:   pq.StringArray(config.ID),
-		ExternalType: config.Type,
+		Name:       config.Name,
+		Namespace:  config.Namespace,
+		Tags:       types.JSONStringMap(config.Tags),
+		ExternalID: pq.StringArray(config.ID),
+		Type:       config.Type,
 	}
 }
 
@@ -347,7 +357,7 @@ func ToV1Config(config Config) v1.Config {
 		Name:      config.Name,
 		Namespace: config.Namespace,
 		ID:        config.ExternalID,
-		Type:      config.ExternalType,
+		Type:      config.Type,
 	}
 }
 
@@ -397,6 +407,7 @@ type CheckResult struct {
 	Message     string
 	Error       string
 	Metrics     []Metric
+	Transformed bool
 	// Check is the configuration
 	Check  external.Check
 	Canary v1.Canary
@@ -446,22 +457,23 @@ func (generic GenericCheck) GetEndpoint() string {
 }
 
 type TransformedCheckResult struct {
-	Start       time.Time              `json:"start,omitempty"`
-	Pass        bool                   `json:"pass,omitempty"`
-	Invalid     bool                   `json:"invalid,omitempty"`
-	Detail      interface{}            `json:"detail,omitempty"`
-	Data        map[string]interface{} `json:"data,omitempty"`
-	Duration    int64                  `json:"duration,omitempty"`
-	Description string                 `json:"description,omitempty"`
-	DisplayType string                 `json:"displayType,omitempty"`
-	Message     string                 `json:"message,omitempty"`
-	Error       string                 `json:"error,omitempty"`
-	Name        string                 `json:"name,omitempty"`
-	Labels      map[string]string      `json:"labels,omitempty"`
-	Namespace   string                 `json:"namespace,omitempty"`
-	Icon        string                 `json:"icon,omitempty"`
-	Type        string                 `json:"type,omitempty"`
-	Endpoint    string                 `json:"endpoint,omitempty"`
+	Start                   time.Time              `json:"start,omitempty"`
+	Pass                    bool                   `json:"pass,omitempty"`
+	Invalid                 bool                   `json:"invalid,omitempty"`
+	Detail                  interface{}            `json:"detail,omitempty"`
+	Data                    map[string]interface{} `json:"data,omitempty"`
+	Duration                int64                  `json:"duration,omitempty"`
+	Description             string                 `json:"description,omitempty"`
+	DisplayType             string                 `json:"displayType,omitempty"`
+	Message                 string                 `json:"message,omitempty"`
+	Error                   string                 `json:"error,omitempty"`
+	Name                    string                 `json:"name,omitempty"`
+	Labels                  map[string]string      `json:"labels,omitempty"`
+	Namespace               string                 `json:"namespace,omitempty"`
+	Icon                    string                 `json:"icon,omitempty"`
+	Type                    string                 `json:"type,omitempty"`
+	Endpoint                string                 `json:"endpoint,omitempty"`
+	TransformDeleteStrategy string                 `json:"transformDeleteStrategy,omitempty"`
 }
 
 func (t TransformedCheckResult) ToCheckResult() CheckResult {
@@ -482,10 +494,11 @@ func (t TransformedCheckResult) ToCheckResult() CheckResult {
 		Error:       t.Error,
 		Check: GenericCheck{
 			Description: v1.Description{
-				Description: t.Description,
-				Name:        t.Name,
-				Icon:        t.Icon,
-				Labels:      labels,
+				Description:             t.Description,
+				Name:                    t.Name,
+				Icon:                    t.Icon,
+				Labels:                  labels,
+				TransformDeleteStrategy: t.TransformDeleteStrategy,
 			},
 			Type:     t.Type,
 			Endpoint: t.Endpoint,

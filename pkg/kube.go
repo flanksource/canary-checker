@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 
 	"github.com/flanksource/commons/logger"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/flanksource/commons/files"
@@ -31,30 +32,22 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-func NewK8sClient() (*kubernetes.Clientset, error) {
-	Client, err := NewKommonsClient()
-	if err != nil {
-		return nil, errors.Wrap(err, "Could not create kommons client")
-	}
-	clientset, err := Client.GetClientset()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create k8s client")
-	}
-
-	return clientset, nil
-}
-
-func NewKommonsClient() (*kommons.Client, error) {
+func NewKommonsClient() (*kommons.Client, kubernetes.Interface, error) {
 	kubeConfig := GetKubeconfig()
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to generate rest config")
+		return nil, fake.NewSimpleClientset(), errors.Wrap(err, "Failed to generate rest config")
 	}
 	Client := kommons.NewClient(config, logger.StandardLogger())
 	if Client == nil {
-		return nil, errors.New("could not create kommons client")
+		return nil, fake.NewSimpleClientset(), errors.New("could not create kommons client")
 	}
-	return Client, nil
+
+	k8s, err := Client.GetClientset()
+	if err == nil {
+		return Client, k8s, nil
+	}
+	return nil, fake.NewSimpleClientset(), errors.Wrap(err, "failed to create k8s client")
 }
 
 func GetClusterName(config *rest.Config) string {

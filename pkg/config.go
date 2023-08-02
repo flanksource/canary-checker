@@ -56,7 +56,7 @@ func template(content string, data interface{}) (string, error) {
 	return strings.TrimSpace(buf.String()), nil
 }
 
-func ParseSystems(configFile, datafile string) ([]v1.SystemTemplate, error) {
+func ParseSystems(configFile, datafile string) ([]v1.Topology, error) {
 	configs, err := readFile(configFile)
 	if err != nil {
 		return nil, err
@@ -73,13 +73,13 @@ func ParseSystems(configFile, datafile string) ([]v1.SystemTemplate, error) {
 		}
 	}
 
-	var systems []v1.SystemTemplate
+	var systems []v1.Topology
 	re := regexp.MustCompile(`(?m)^---\n`)
 	for _, chunk := range re.Split(configs, -1) {
 		if strings.TrimSpace(chunk) == "" {
 			continue
 		}
-		config := v1.SystemTemplate{}
+		config := v1.Topology{}
 		decoder := yamlutil.NewYAMLOrJSONDecoder(strings.NewReader(chunk), 1024)
 
 		if err := decoder.Decode(&config); err != nil {
@@ -88,7 +88,7 @@ func ParseSystems(configFile, datafile string) ([]v1.SystemTemplate, error) {
 
 		if config.IsEmpty() {
 			// try just the specs:
-			spec := v1.SystemTemplateSpec{}
+			spec := v1.TopologySpec{}
 
 			if yamlerr := yaml.Unmarshal([]byte(chunk), &spec); yamlerr != nil {
 				return nil, yamlerr

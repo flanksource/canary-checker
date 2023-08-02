@@ -34,10 +34,15 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 	var results pkg.Results
 	results = append(results, result)
 
+	connection, err := ctx.GetConnection(check.Connection)
+	if err != nil {
+		return results.Failf("error getting connection: %v", err)
+	}
+
 	cfg := elasticsearch.Config{
-		Addresses: []string{check.GetEndpoint()},
-		Username:  check.Auth.GetUsername(),
-		Password:  check.Auth.GetPassword(),
+		Addresses: []string{connection.URL},
+		Username:  connection.Username,
+		Password:  connection.Password,
 	}
 
 	es, err := elasticsearch.NewClient(cfg)
@@ -63,7 +68,7 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 				fmt.Errorf("Error parsing the response body: %s", err),
 			)
 		} else {
-			return results.ErrorMessage(fmt.Errorf("Error from elasticsearch.[%s]: %v, %v",
+			return results.ErrorMessage(fmt.Errorf("Error from elasticsearch [%s]: %v, %v",
 				res.Status(),
 				e["error"].(map[string]interface{})["type"],
 				e["error"].(map[string]interface{})["reason"],

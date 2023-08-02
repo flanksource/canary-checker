@@ -21,9 +21,6 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/canary-checker/pkg/metrics"
-	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/google/uuid"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -90,61 +87,39 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 
 	if !canary.DeletionTimestamp.IsZero() {
-		if err := db.DeleteCanary(*canary); err != nil {
+		if err := db.DeleteCanary(canary.GetPersistedID(), canary.DeletionTimestamp.Time); err != nil {
 			logger.Error(err, "failed to delete canary")
 		}
-		canaryJobs.DeleteCanaryJob(*canary)
+		canaryJobs.DeleteCanaryJob(canary.GetPersistedID())
 		controllerutil.RemoveFinalizer(canary, FinalizerName)
 		return ctrl.Result{}, r.Update(ctx, canary)
 	}
 
-	c, checks, changed, err := db.PersistCanary(*canary, "kubernetes/"+string(canary.ObjectMeta.UID))
+	dbCanary, checks, changed, err := db.PersistCanary(*canary, "kubernetes/"+canary.GetPersistedID())
 	if err != nil {
 		return ctrl.Result{Requeue: true}, err
 	}
 
-	var checkIDs []string
-	for _, id := range checks {
-		checkIDs = append(checkIDs, id)
-	}
-
-	dbCheckIds := getCheckIDsForCanary(c.ID)
-	// delete checks which are no longer in the canary
-	// fetching the checkIds present in the db but not present on the canary
-	toRemoveCheckIDs := utils.SetDifference(dbCheckIds, checkIDs)
-	// delete the check and update the cron for now
-	if len(toRemoveCheckIDs) > 0 {
-		logger.Info("removing checks from canary", "checkIDs", toRemoveCheckIDs)
-		if err := db.DeleteChecks(toRemoveCheckIDs); err != nil {
-			logger.Error(err, "failed to delete checks")
-		}
-		metrics.UnregisterGauge(toRemoveCheckIDs)
-		if err := canaryJobs.SyncCanaryJob(*canary); err != nil {
-			logger.Error(err, "failed to sync canary job")
-		}
-	}
-
 	// Sync jobs if canary is created or updated
 	if canary.Generation == 1 || changed {
-		if err := canaryJobs.SyncCanaryJob(*canary); err != nil {
+		if err := canaryJobs.SyncCanaryJob(*dbCanary); err != nil {
 			logger.Error(err, "failed to sync canary job")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}
 	}
 
 	// Update status
-	id := c.ID.String() // id is the uuid of the canary
 	var canaryForStatus v1.Canary
 	err = r.Get(ctx, req.NamespacedName, &canaryForStatus)
 	if err != nil {
 		logger.Error(err, "Error fetching canary for status update")
 		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 	}
+	patch := client.MergeFrom(canaryForStatus.DeepCopy())
 
-	canaryForStatus.Status.PersistedID = &id
 	canaryForStatus.Status.Checks = checks
 	canaryForStatus.Status.ObservedGeneration = canary.Generation
-	if err = r.Status().Update(ctx, &canaryForStatus); err != nil {
+	if err = r.Status().Patch(ctx, &canaryForStatus, patch); err != nil {
 		logger.Error(err, "failed to update status for canary")
 		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 	}
@@ -163,10 +138,11 @@ func (r *CanaryReconciler) Report() {
 		var canary v1.Canary
 		err := r.Get(gocontext.Background(), payload.NamespacedName, &canary)
 		if err != nil {
-			r.Log.Error(err, "failed to get canary", "canary", canary.Name)
+			r.Log.Error(err, "failed to get canary", "canary", payload.NamespacedName)
 			continue
 		}
 
+		patch := client.MergeFrom(canary.DeepCopy())
 		canary.Status.Latency1H = payload.Latency
 		canary.Status.Uptime1H = payload.Uptime
 		if payload.LastTransitionedTime != nil {
@@ -188,7 +164,7 @@ func (r *CanaryReconciler) Report() {
 			r.Events.Event(&canary, corev1.EventTypeWarning, "Failed", eventMsg)
 		}
 
-		if err := r.Status().Update(gocontext.Background(), &canary); err != nil {
+		if err := r.Status().Patch(gocontext.Background(), &canary, patch); err != nil {
 			r.Log.Error(err, "failed to update status", "canary", canary.Name)
 		}
 	}
@@ -201,13 +177,4 @@ func (r *CanaryReconciler) includeNamespace(namespace string) bool {
 		}
 	}
 	return false
-}
-
-func getCheckIDsForCanary(canaryID uuid.UUID) []string {
-	checks, _ := db.GetAllActiveChecksForCanary(canaryID)
-	var checkIDs []string
-	for _, check := range checks {
-		checkIDs = append(checkIDs, check.ID.String())
-	}
-	return checkIDs
 }

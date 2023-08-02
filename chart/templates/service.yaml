@@ -9,5 +9,6 @@ spec:
     - port: 8080
       targetPort: 8080
       protocol: TCP
+      name: http
   selector:
     {{- include "canary-checker.selectorLabels" . | nindent 4 }}

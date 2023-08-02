@@ -11,86 +11,9 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/flanksource/canary-checker/templating"
-	"github.com/flanksource/kommons"
-	"github.com/flanksource/kommons/ktemplate"
+	"github.com/flanksource/gomplate/v3"
 	"github.com/robfig/cron/v3"
 )
-
-func GetConnection(ctx *context.Context, conn *v1.Connection, namespace string) (string, error) {
-	// TODO: this function should not be necessary, each check should be templated out individual
-	// however, the walk method only support high level values, not values from siblings.
-
-	if conn.Authentication.IsEmpty() {
-		return conn.Connection, nil
-	}
-	client, err := ctx.Kommons.GetClientset()
-	if err != nil {
-		return "", err
-	}
-
-	auth, err := GetAuthValues(&conn.Authentication, ctx.Kommons, namespace)
-	if err != nil {
-		return "", err
-	}
-
-	clone := conn.DeepCopy()
-
-	data := map[string]interface{}{
-		"name":      ctx.Canary.Name,
-		"namespace": namespace,
-		"username":  auth.GetUsername(),
-		"password":  auth.GetPassword(),
-		"domain":    auth.GetDomain(),
-	}
-	templater := ktemplate.StructTemplater{
-		Clientset: client,
-		Values:    data,
-		// access go values in template requires prefix everything with .
-		// to support $(username) instead of $(.username) we add a function for each var
-		ValueFunctions: true,
-		DelimSets: []ktemplate.Delims{
-			{Left: "{{", Right: "}}"},
-			{Left: "$(", Right: ")"},
-		},
-		RequiredTag: "template",
-	}
-	if err := templater.Walk(clone); err != nil {
-		return "", err
-	}
-
-	return clone.Connection, nil
-}
-
-func GetAuthValues(auth *v1.Authentication, client *kommons.Client, namespace string) (*v1.Authentication, error) {
-	authentication := &v1.Authentication{
-		Username: kommons.EnvVar{
-			Value: "",
-		},
-		Password: kommons.EnvVar{
-			Value: "",
-		},
-	}
-	// in case nil we are sending empty string values for username and password
-	if auth == nil {
-		return authentication, nil
-	}
-	_, username, err := client.GetEnvValueFromCache(auth.Username, namespace, 5*time.Minute)
-	if err != nil {
-		return nil, err
-	}
-	authentication.Username = kommons.EnvVar{
-		Value: username,
-	}
-	_, password, err := client.GetEnvValueFromCache(auth.Password, namespace, 120*time.Second)
-	if err != nil {
-		return nil, err
-	}
-	authentication.Password = kommons.EnvVar{
-		Value: password,
-	}
-	return authentication, err
-}
 
 func age(t time.Time) string {
 	return utils.Age(time.Since(t))
@@ -129,7 +52,7 @@ func def(a, b string) string {
 }
 
 func template(ctx *context.Context, template v1.Template) (string, error) {
-	return templating.Template(ctx.Environment, template)
+	return gomplate.RunTemplate(ctx.Environment, template.Gomplate())
 }
 
 func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, error) {
@@ -161,18 +84,20 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 		t.Name = def(t.Name, in.Check.GetName())
 		t.Type = def(t.Type, in.Check.GetType())
 		t.Endpoint = def(t.Endpoint, in.Check.GetEndpoint())
+		t.TransformDeleteStrategy = def(t.TransformDeleteStrategy, in.Check.GetTransformDeleteStrategy())
 		r := t.ToCheckResult()
 		r.Canary = in.Canary
 		r.Canary.Namespace = def(t.Namespace, r.Canary.Namespace)
+		if r.Canary.Labels == nil {
+			r.Canary.Labels = make(map[string]string)
+		}
 		for k, v := range t.Labels {
-			if r.Canary.Labels == nil {
-				r.Canary.Labels = make(map[string]string)
-			}
 			r.Canary.Labels[k] = v
 		}
 		// We use this label to set the transformed column to true
 		// This label is used and then removed in pkg.FromV1 function
 		r.Canary.Labels["transformed"] = "true" //nolint:goconst
+		r.Transformed = true
 		results = append(results, &r)
 	}
 

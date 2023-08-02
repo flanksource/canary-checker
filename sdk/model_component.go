@@ -9,36 +9,36 @@
 package swagger
 
 type Component struct {
-	Checks []Check `json:"checks,omitempty"`
+	Checks     []Check      `json:"checks,omitempty"`
 	Components *[]Component `json:"components,omitempty"`
-	Configs []Config `json:"configs,omitempty"`
-	CreatedAt string `json:"created_at,omitempty"`
+	Configs    []Config     `json:"configs,omitempty"`
+	CreatedAt  string       `json:"created_at,omitempty"`
 	// nolint
 	ExternalId string `json:"external_id,omitempty"`
-	Icon string `json:"icon,omitempty"`
+	Icon       string `json:"icon,omitempty"`
 	// nolint
-	Id string `json:"id,omitempty"`
+	Id     string       `json:"id,omitempty"`
 	Labels *interface{} `json:"labels,omitempty"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
 	Lifecycle string `json:"lifecycle,omitempty"`
-	Name string `json:"name,omitempty"`
+	Name      string `json:"name,omitempty"`
 	Namespace string `json:"namespace,omitempty"`
-	Order int32 `json:"order,omitempty"`
-	Owner string `json:"owner,omitempty"`
+	Order     int32  `json:"order,omitempty"`
+	Owner     string `json:"owner,omitempty"`
 	// nolint
-	ParentId string `json:"parent_id,omitempty"`
-	Path string `json:"path,omitempty"`
-	Properties []Property `json:"properties,omitempty"`
-	Schedule string `json:"schedule,omitempty"`
-	Status string `json:"status,omitempty"`
-	StatusReason string `json:"statusReason,omitempty"`
-	Summary *Summary `json:"summary,omitempty"`
+	ParentId     string     `json:"parent_id,omitempty"`
+	Path         string     `json:"path,omitempty"`
+	Properties   []Property `json:"properties,omitempty"`
+	Schedule     string     `json:"schedule,omitempty"`
+	Status       string     `json:"status,omitempty"`
+	StatusReason string     `json:"status_reason,omitempty"`
+	Summary      *Summary   `json:"summary,omitempty"`
 	// nolint
-	SystemTemplateId string `json:"system_template_id,omitempty"`
-	Text string `json:"text,omitempty"`
-	Tooltip string `json:"tooltip,omitempty"`
+	TopologyID   string `json:"topology_id,omitempty"`
+	Text         string `json:"text,omitempty"`
+	Tooltip      string `json:"tooltip,omitempty"`
 	TopologyType string `json:"topology_type,omitempty"`
 	// The type of component, e.g. service, API, website, library, database, etc.
-	Type_ string `json:"type,omitempty"`
+	Type_     string `json:"type,omitempty"`
 	UpdatedAt string `json:"updated_at,omitempty"`
 }

@@ -13,6 +13,7 @@ else
 endif
 
 # Image URL to use all building/pushing image targets
+IMG_F ?= docker.io/flanksource/canary-checker-full:${VERSION_TAG}
 IMG ?= docker.io/flanksource/canary-checker:${VERSION_TAG}
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
@@ -56,11 +57,16 @@ static: .bin/kustomize generate manifests .bin/yq
 	.bin/kustomize build ./config | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/manifests.yaml
 	.bin/kustomize build ./config/base | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/base.yaml
 
+# Generate OpenAPI schema
+.PHONY: gen-schemas
+gen-schemas:
+	cd hack/generate-schemas && go run ./main.go
+
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: .bin/controller-gen .bin/yq
 	schemaPath=.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties
 	.bin/controller-gen crd paths="./api/..." output:stdout | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/crd.yaml
-	cd hack/generate-schemas && go run ./main.go
+	$(MAKE) gen-schemas
 	cd config/deploy && $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.checks.items.properties)' crd.yaml | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.forEach.properties)' /dev/stdin  | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.lookup.properties)'  /dev/stdin | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.properties.items.properties.lookup.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.forEach.properties)' /dev/stdin |  $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.lookup.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.checks.items.properties.inline.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.properties.items.properties.lookup.properties)' /dev/stdin > crd.slim.yaml
 	cd config/deploy && mv crd.slim.yaml crd.yaml
 
@@ -78,21 +84,26 @@ generate: .bin/controller-gen
 
 # Build the docker image
 docker:
-	docker build . -t ${IMG}
+	docker build . -f build/full/Dockerfile -t ${IMG_F}
+	docker build . -f build/minimal/Dockerfile -t ${IMG}
 
 # Build the docker image
 docker-dev: linux
-	docker build ./ -f ./Dockerfile.dev -t ${IMG}
+	docker build ./ -f build/dev/Dockerfile -t ${IMG}
 
 
 docker-push-%:
-	docker build ./ -f ./Dockerfile.dev -t ${IMG}
+	docker build . -f build/full/Dockerfile -t ${IMG_F}
+	docker build . -f build/minimal/Dockerfile -t ${IMG}
+	docker tag $(IMG_F) $*/$(IMG_F)
 	docker tag $(IMG) $*/$(IMG)
+	docker push  $*/$(IMG_F)
 	docker push  $*/$(IMG)
-	kubectl set image deployment/$(NAME) $(NAME)=$*/$(IMG)
+	kubectl set image deployment/$(NAME) $(NAME)=$*/$(IMG_F)
 
 # Push the docker image
 docker-push:
+	docker push ${IMG_F}
 	docker push ${IMG}
 
 .PHONY: compress
@@ -125,7 +136,7 @@ release: .bin/kustomize binaries
 
 .PHONY: lint
 lint:
-	golangci-lint run
+	golangci-lint run -v ./...
 
 .PHONY: serve-docs
 serve-docs:
@@ -201,16 +212,16 @@ endif
 		ln -s apache-jmeter-5.4.3/bin/jmeter .bin/jmeter
 
 .bin/restic:
-	wget -nv  https://github.com/restic/restic/releases/download/v0.12.1/restic_0.12.1_$(OS)_$(ARCH).bz2 -O .bin/restic.bz2 && \
-    bunzip2  .bin/restic.bz2 && \
-    chmod +x .bin/restic
+	curl -sSLo /usr/local/bin/restic.bz2  https://github.com/restic/restic/releases/download/v0.12.1/restic_0.12.1_$(OS)_$(ARCH).bz2   && \
+    bunzip2  /usr/local/bin/restic.bz2  && \
+    chmod +x /usr/local/bin/restic
 
 .bin/wait4x:
 	wget -nv https://github.com/atkrad/wait4x/releases/download/v0.3.0/wait4x-$(OS)-$(ARCH) -O .bin/wait4x && \
   chmod +x .bin/wait4x
 
 .bin/karina:
-	wget -q https://github.com/flanksource/karina/releases/download/v0.50.0/karina_$(OS)-$(ARCH) -O .bin/karina && \
+	curl -sSLo .bin/karina https://github.com/flanksource/karina/releases/download/v0.50.0/karina_$(OS)-$(ARCH) && \
 	chmod +x .bin/karina
 
 .bin/yq: .bin
@@ -224,8 +235,11 @@ ifeq ($(OS), darwin)
 	brew install --cask macfuse
 	brew install datawire/blackbird/telepresence-legacy
 else
-	sudo curl -fL https://app.getambassador.io/download/tel2/linux/amd64/latest/telepresence -o /usr/local/bin/telepresence
-	sudo chmod a+x /usr/local/bin/telepresence
+	sudo apt-get install -y conntrack
+	wget https://s3.amazonaws.com/datawire-static-files/telepresence/telepresence-0.109.tar.gz
+	tar xzf telepresence-0.109.tar.gz
+	sudo mv telepresence-0.109/bin/telepresence /usr/local/bin/
+	sudo mv telepresence-0.109/libexec/sshuttle-telepresence /usr/local/bin/
 endif
 endif
 

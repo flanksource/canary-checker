@@ -34,13 +34,20 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
+
 	if check.AWSConnection == nil {
 		check.AWSConnection = &v1.AWSConnection{}
+	} else {
+		if err := check.AWSConnection.Populate(ctx, ctx.Kubernetes, ctx.Namespace); err != nil {
+			return results.Failf("failed to populate aws connection: %v", err)
+		}
 	}
+
 	cfg, err := awsUtil.NewSession(ctx, *check.AWSConnection)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
+
 	client := configservice.NewFromConfig(*cfg)
 	if check.AggregatorName != nil {
 		output, err := client.SelectAggregateResourceConfig(ctx, &configservice.SelectAggregateResourceConfigInput{
@@ -60,5 +67,6 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 		}
 		result.AddDetails(output.Results)
 	}
+
 	return results
 }

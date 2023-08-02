@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/flanksource/canary-checker/api/v1/pod-check",
+  "$ref": "#/$defs/PodCheck",
+  "$defs": {
+    "Labels": {
+      "patternProperties": {
+        ".*": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PodCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "spec": {
+          "type": "string"
+        },
+        "scheduleTimeout": {
+          "type": "integer"
+        },
+        "readyTimeout": {
+          "type": "integer"
+        },
+        "httpTimeout": {
+          "type": "integer"
+        },
+        "deleteTimeout": {
+          "type": "integer"
+        },
+        "ingressTimeout": {
+          "type": "integer"
+        },
+        "httpRetryInterval": {
+          "type": "integer"
+        },
+        "deadline": {
+          "type": "integer"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "path": {
+          "type": "string"
+        },
+        "ingressName": {
+          "type": "string"
+        },
+        "ingressHost": {
+          "type": "string"
+        },
+        "ingressClass": {
+          "type": "string"
+        },
+        "expectedContent": {
+          "type": "string"
+        },
+        "expectedHttpStatuses": {
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "priorityClass": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    }
+  }
+}

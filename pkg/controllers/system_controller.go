@@ -31,8 +31,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-// SystemReconciler reconciles a Canary object
-type SystemReconciler struct {
+// TopologyReconciler reconciles a Canary object
+type TopologyReconciler struct {
 	client.Client
 	Log        logr.Logger
 	Scheme     *runtime.Scheme
@@ -40,70 +40,52 @@ type SystemReconciler struct {
 	RunnerName string
 }
 
-const SystemTemplateFinalizerName = "systemTemplate.canaries.flanksource.com"
+const TopologyFinalizerName = "topology.canaries.flanksource.com"
 
-// +kubebuilder:rbac:groups=canaries.flanksource.com,resources=systemtemplates,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=canaries.flanksource.com,resources=systemtemplates/status,verbs=get;update;patch
-func (r *SystemReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := r.Log.WithValues("system", req.NamespacedName)
-	systemTemplate := &v1.SystemTemplate{}
-	err := r.Get(ctx, req.NamespacedName, systemTemplate)
+// +kubebuilder:rbac:groups=canaries.flanksource.com,resources=topologies,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=canaries.flanksource.com,resources=topologies/status,verbs=get;update;patch
+func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (ctrl.Result, error) {
+	logger := r.Log.WithValues("topology", req.NamespacedName)
+	topology := &v1.Topology{}
+	err := r.Get(ctx, req.NamespacedName, topology)
 	if errors.IsNotFound(err) {
-		logger.V(1).Info("System not found")
+		logger.V(1).Info("Topology not found")
 		return ctrl.Result{}, nil
 	}
-	if !controllerutil.ContainsFinalizer(systemTemplate, SystemTemplateFinalizerName) {
-		controllerutil.AddFinalizer(systemTemplate, SystemTemplateFinalizerName)
-		if err := r.Client.Update(ctx, systemTemplate); err != nil {
+	if !controllerutil.ContainsFinalizer(topology, TopologyFinalizerName) {
+		controllerutil.AddFinalizer(topology, TopologyFinalizerName)
+		if err := r.Client.Update(ctx, topology); err != nil {
 			logger.Error(err, "failed to update finalizers")
 		}
 	}
 
-	if !systemTemplate.DeletionTimestamp.IsZero() {
-		if err := db.DeleteSystemTemplate(systemTemplate); err != nil {
-			logger.Error(err, "failed to delete system template")
+	if !topology.DeletionTimestamp.IsZero() {
+		if err := db.DeleteTopology(topology); err != nil {
+			logger.Error(err, "failed to delete topology")
 		}
-		systemJobs.DeleteSystemJob(*systemTemplate)
-		controllerutil.RemoveFinalizer(systemTemplate, SystemTemplateFinalizerName)
-		return ctrl.Result{}, r.Update(ctx, systemTemplate)
+		systemJobs.DeleteTopologyJob(topology.GetPersistedID())
+		controllerutil.RemoveFinalizer(topology, TopologyFinalizerName)
+		return ctrl.Result{}, r.Update(ctx, topology)
 	}
 
-	id, changed, err := db.PersistSystemTemplate(systemTemplate)
+	changed, err := db.PersistTopology(topology)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	// If template does not have a PersistedID, update its status to set one
-	if systemTemplate.GetPersistedID() == "" {
-		var systemTemplateForStatus v1.SystemTemplate
-		// We have to fetch the object again to avoid client caching old object
-		err = r.Get(ctx, req.NamespacedName, &systemTemplateForStatus)
-		if err != nil {
-			logger.Error(err, "Error fetching system template for status update")
-			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
-		}
-
-		systemTemplateForStatus.Status.PersistedID = &id
-		err = r.Status().Update(ctx, &systemTemplateForStatus)
-		if err != nil {
-			logger.Error(err, "failed to update status for system template")
-			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
-		}
-	}
-
-	// Sync jobs if system template is created or updated
-	if changed || systemTemplate.Generation == 1 {
-		if err := systemJobs.SyncSystemJob(*systemTemplate); err != nil {
-			logger.Error(err, "failed to sync system template job")
+	// Sync jobs if topology is created or updated
+	if changed || topology.Generation == 1 {
+		if err := systemJobs.SyncTopologyJob(*topology); err != nil {
+			logger.Error(err, "failed to sync topology job")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}
 	}
 	return ctrl.Result{}, nil
 }
 
-func (r *SystemReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *TopologyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.Events = mgr.GetEventRecorderFor("canary-checker")
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1.SystemTemplate{}).
+		For(&v1.Topology{}).
 		Complete(r)
 }

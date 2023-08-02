@@ -2,6 +2,7 @@ package topology
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -11,12 +12,15 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/flanksource/canary-checker/templating"
+	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
+	"github.com/flanksource/gomplate/v3"
 	"github.com/flanksource/kommons"
 	"github.com/google/uuid"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
 	"github.com/pkg/errors"
+	"k8s.io/client-go/kubernetes"
 )
 
 var json = jsontime.ConfigWithCustomTimeFormat
@@ -63,15 +67,27 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 	ctx.SetCurrentComponent(component)
 
 	for _, property := range spec.ForEach.Properties {
-		prop := property
-		if err := ctx.TemplateProperty(&prop); err != nil {
+		// Create a DeepCopy for templating
+		prop := property.DeepCopy()
+		if err := ctx.TemplateProperty(prop); err != nil {
 			return err
 		}
-		props, err := lookupProperty(ctx, &prop)
+
+		props, err := lookupProperty(ctx, prop)
 		if err != nil {
-			logger.Errorf("Failed to lookup property %s: %v", property.Name, err)
-		} else {
-			component.Properties = append(component.Properties, props...)
+			errMsg := fmt.Sprintf("Failed to lookup property %s: %v", property.Name, err)
+			logger.Errorf(errMsg)
+			ctx.JobHistory.AddError(errMsg)
+			continue
+		}
+
+		for _, p := range props {
+			found := component.Properties.Find(p.Name)
+			if found != nil {
+				found.Merge(p)
+				continue
+			}
+			component.Properties = append(component.Properties, p)
 		}
 	}
 	ctx.SetCurrentComponent(component) // component properties may have changed
@@ -83,7 +99,9 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 		}
 		children, err := lookupComponents(ctx, child)
 		if err != nil {
-			logger.Errorf("Failed to lookup components %s: %v", child, err)
+			errMsg := fmt.Sprintf("Failed to lookup components %s: %v", child, err)
+			logger.Errorf(errMsg)
+			ctx.JobHistory.AddError(errMsg)
 		} else {
 			component.Components = append(component.Components, children...)
 		}
@@ -92,7 +110,9 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 	for _, childConfig := range spec.ForEach.Configs {
 		child := childConfig
 		if err := ctx.TemplateConfig(&child); err != nil {
-			logger.Errorf("Failed to lookup configs %s: %v", child, err)
+			errMsg := fmt.Sprintf("Failed to lookup configs %s: %v", child, err)
+			logger.Errorf(errMsg)
+			ctx.JobHistory.AddError(errMsg)
 		} else {
 			component.Configs = append(component.Configs, pkg.NewConfig(child))
 		}
@@ -101,7 +121,9 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 	for _, _selector := range spec.ForEach.Selectors {
 		selector := _selector
 		if err := ctx.TemplateStruct(&selector); err != nil {
-			logger.Errorf("Failed to lookup selectors %s: %v", selector, err)
+			errMsg := fmt.Sprintf("Failed to lookup selectors %s: %v", selector, err)
+			logger.Errorf(errMsg)
+			ctx.JobHistory.AddError(errMsg)
 		} else {
 			component.Selectors = append(component.Selectors, selector)
 		}
@@ -120,6 +142,7 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 		if lookedUpComponents, err = mergeComponentLookup(ctx, &component, component.Lookup); err != nil {
 			return nil, err
 		}
+
 		components = append(components, lookedUpComponents...)
 	} else {
 		var childComponents pkg.Components
@@ -140,7 +163,10 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 		for _, property := range component.Properties {
 			props, err := lookupProperty(ctx.WithComponents(&components, comp), property)
 			if err != nil {
-				return nil, errors.Wrapf(err, "property lookup failed: %s", property)
+				errMsg := fmt.Sprintf("Failed to lookup property: %s. Error in lookup: %v", property, err)
+				logger.Errorf(errMsg)
+				ctx.JobHistory.AddError(errMsg)
+				continue
 			}
 			comp.Properties = append(comp.Properties, props...)
 		}
@@ -152,9 +178,9 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 			comp.Lifecycle = component.Lifecycle
 		}
 		if comp.ExternalId == "" && component.Id != nil {
-			id, err := templating.Template(comp.GetAsEnvironment(), *component.Id)
+			id, err := gomplate.RunTemplate(comp.GetAsEnvironment(), component.Id.Gomplate())
 			if err != nil {
-				logger.Errorf("Failed to lookup id: %v", err)
+				return nil, errors.Wrapf(err, "Failed to lookup id: %v", component.Id)
 			} else {
 				comp.ExternalId = id
 			}
@@ -168,24 +194,28 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 
 func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface{}, error) {
 	results := []interface{}{}
-	canaryCtx := &context.Context{
-		Context:     ctx,
-		Canary:      v1.NewCanaryFromSpec(name, spec),
-		Namespace:   ctx.Namespace,
-		Kommons:     ctx.Kommons,
-		Environment: ctx.Environment,
-		Logger:      ctx.Logger,
+
+	canaryCtx := context.New(ctx.Kommons, ctx.Kubernetes, db.Gorm, v1.NewCanaryFromSpec(name, spec))
+	canaryCtx.Context = ctx
+	canaryCtx.Namespace = ctx.Namespace
+	canaryCtx.Environment = ctx.Environment
+	canaryCtx.Logger = ctx.Logger
+
+	checkResults, err := checks.RunChecks(canaryCtx)
+	if err != nil {
+		return nil, err
 	}
-	for _, result := range checks.RunChecks(canaryCtx) {
+
+	for _, result := range checkResults {
 		if result.Error != "" {
-			logger.Errorf("error in running checks; check: %s wouldn't be persisted: %s", name, result.Error)
+			errMsg := fmt.Sprintf("Failed to lookup property: %s. Error in lookup: %s", name, result.Error)
+			logger.Errorf(errMsg)
+			ctx.JobHistory.AddError(errMsg)
 			return nil, nil
 		}
 		if result.Message != "" {
 			results = append(results, result.Message)
-		} else if result.Detail == nil {
-			return nil, fmt.Errorf("no details returned by lookup, did you specify a display template?")
-		} else {
+		} else if result.Detail != nil {
 			switch result.Detail.(type) {
 			case []interface{}:
 				results = append(results, result.Detail.([]interface{})...)
@@ -194,6 +224,8 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 			default:
 				return nil, fmt.Errorf("unknown type %T", result.Detail)
 			}
+		} else {
+			results = append(results, "")
 		}
 	}
 	return results, nil
@@ -237,11 +269,19 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*pkg.Property, 
 	}
 
 	templateEnv := map[string]any{
-		"config": _config.Spec.ToMapStringAny(),
-		"tags":   _config.Tags.ToMapStringAny(),
+		"config": _config.Spec,
+		"tags":   toMapStringAny(_config.Tags),
 	}
-	prop.Text, err = templating.Template(templateEnv, property.ConfigLookup.Display.Template)
+	prop.Text, err = gomplate.RunTemplate(templateEnv, property.ConfigLookup.Display.Template.Gomplate())
 	return prop, err
+}
+
+func toMapStringAny(m map[string]string) map[string]any {
+	r := make(map[string]any)
+	for k, v := range m {
+		r[k] = v
+	}
+	return r
 }
 
 func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Properties, error) {
@@ -306,45 +346,61 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) (pkg.Propertie
 
 type TopologyRunOptions struct {
 	*kommons.Client
-	Depth     int
-	Namespace string
+	Kubernetes kubernetes.Interface
+	Depth      int
+	Namespace  string
 }
 
-func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
-	if s.Namespace == "" {
-		s.Namespace = opts.Namespace
+func Run(opts TopologyRunOptions, t v1.Topology) []*pkg.Component {
+	jobHistory := models.NewJobHistory("TopologySync", "topology", t.GetPersistedID()).Start()
+	_ = db.PersistJobHistory(jobHistory)
+
+	if t.Namespace == "" {
+		t.Namespace = opts.Namespace
 	}
-	logger.Debugf("Running topology %s/%s depth=%d", s.Namespace, s.Name, opts.Depth)
-	ctx := NewComponentContext(opts.Client, s)
+	logger.Debugf("Running topology %s/%s depth=%d", t.Namespace, t.Name, opts.Depth)
+
+	ctx := NewComponentContext(opts.Client, opts.Kubernetes, t)
+	ctx.JobHistory = jobHistory
+
 	var results pkg.Components
 	component := &pkg.Component{
-		Name:      ctx.SystemTemplate.Spec.Text,
-		Namespace: ctx.SystemTemplate.GetNamespace(),
-		Labels:    ctx.SystemTemplate.Labels,
-		Tooltip:   ctx.SystemTemplate.Spec.Tooltip,
-		Icon:      ctx.SystemTemplate.Spec.Icon,
-		Text:      ctx.SystemTemplate.Spec.Text,
-		Type:      ctx.SystemTemplate.Spec.Type,
-		Schedule:  ctx.SystemTemplate.Spec.Schedule,
+		Name:      ctx.Topology.Spec.Text,
+		Namespace: ctx.Topology.GetNamespace(),
+		Labels:    ctx.Topology.Labels,
+		Tooltip:   ctx.Topology.Spec.Tooltip,
+		Icon:      ctx.Topology.Spec.Icon,
+		Text:      ctx.Topology.Spec.Text,
+		Type:      ctx.Topology.Spec.Type,
+		Schedule:  ctx.Topology.Spec.Schedule,
 	}
 
 	if component.Name == "" {
-		component.Name = ctx.SystemTemplate.Name
+		component.Name = ctx.Topology.Name
 	}
 
+	ignoreLabels := []string{"kustomize.toolkit.fluxcd.io/name", "kustomize.toolkit.fluxcd.io/namespace"}
 	if opts.Depth > 0 {
-		for _, comp := range ctx.SystemTemplate.Spec.Components {
+		for _, comp := range ctx.Topology.Spec.Components {
 			components, err := lookupComponents(ctx, comp)
 			if err != nil {
-				logger.Errorf("Error looking up component %s: %s", comp.Name, err)
+				errMsg := fmt.Sprintf("Error looking up component %s: %s", comp.Name, err)
+				logger.Errorf(errMsg)
+				jobHistory.AddError(errMsg)
 				continue
 			}
-			// add systemTemplates labels to the components
+			// add topology labels to the components
 			for _, component := range components {
 				if component.Labels == nil {
 					component.Labels = make(types.JSONStringMap)
 				}
-				for key, value := range ctx.SystemTemplate.Labels {
+				for key, value := range ctx.Topology.Labels {
+					// Workaround for avoiding a recursive loop
+					// If resource is added via flux kustomize the label gets added to top level Pods and Nodes
+					if strings.HasPrefix(component.Type, "Kubernetes") && collections.Contains(ignoreLabels, key) {
+						continue
+					}
+
 					// don't overwrite the component labels
 					if _, isPresent := component.Labels[key]; !isPresent {
 						component.Labels[key] = value
@@ -368,26 +424,32 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 
 	ctx.Components = &component.Components
 
-	for _, property := range ctx.SystemTemplate.Spec.Properties {
+	for _, property := range ctx.Topology.Spec.Properties {
 		props, err := lookupProperty(ctx, &property)
 		if err != nil {
-			logger.Errorf("Failed to lookup property %s: %v", property.Name, err)
-		} else {
-			component.Properties = append(component.Properties, props...)
+			errMsg := fmt.Sprintf("Failed to lookup property %s: %v", property.Name, err)
+			logger.Errorf(errMsg)
+			jobHistory.AddError(errMsg)
+			continue
 		}
+		component.Properties = append(component.Properties, props...)
 	}
+
 	if len(component.Components) > 0 {
 		component.Summary = component.Components.Summarize()
 	}
-	if component.ID.String() == "" && ctx.SystemTemplate.Spec.Id != nil {
-		id, err := templating.Template(component.GetAsEnvironment(), *ctx.SystemTemplate.Spec.Id)
+	if component.ID.String() == "" && ctx.Topology.Spec.Id != nil {
+		id, err := gomplate.RunTemplate(component.GetAsEnvironment(), ctx.Topology.Spec.Id.Gomplate())
 		if err != nil {
-			logger.Errorf("Failed to lookup id: %v", err)
+			errMsg := fmt.Sprintf("Failed to lookup id: %v", err)
+			logger.Errorf(errMsg)
+			jobHistory.AddError(errMsg)
 		} else {
 			component.ID, _ = uuid.Parse(id)
 		}
 	}
 
+	// TODO: Ask Moshe why we do this ?
 	if component.ID.String() == "" {
 		component.ID, _ = uuid.Parse(component.Name)
 	}
@@ -397,31 +459,48 @@ func Run(opts TopologyRunOptions, s v1.SystemTemplate) []*pkg.Component {
 	}
 
 	component.Status = pkg.ComponentStatus(component.Summary.GetStatus())
-	// if logger.IsTraceEnabled() {
+
 	logger.Debugf(component.Components.Debug(""))
-	// }
+
 	results = append(results, component)
 	logger.Infof("%s id=%s external_id=%s status=%s", component.Name, component.ID, component.ExternalId, component.Status)
 	for _, c := range results.Walk() {
-		c.Namespace = ctx.SystemTemplate.GetNamespace()
-		c.Schedule = ctx.SystemTemplate.Spec.Schedule
+		if c.Namespace == "" {
+			c.Namespace = ctx.Topology.GetNamespace()
+		}
+		c.Schedule = ctx.Topology.Spec.Schedule
 	}
+
+	_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
 	return results
 }
 
-func SyncComponents(opts TopologyRunOptions, systemTemplate v1.SystemTemplate) error {
-	components := Run(opts, systemTemplate)
-	systemTemplateID, err := uuid.Parse(systemTemplate.GetPersistedID())
+func SyncComponents(opts TopologyRunOptions, topology v1.Topology) error {
+	logger.Tracef("Running sync for components with topology: %s", topology.GetPersistedID())
+	// Check if deleted
+	var dbTopology models.Topology
+	if err := db.Gorm.Where("id = ?", topology.GetPersistedID()).First(&dbTopology).Error; err != nil {
+		return fmt.Errorf("failed to query topology id: %s: %w", topology.GetPersistedID(), err)
+	}
+
+	if dbTopology.DeletedAt != nil {
+		logger.Infof("Skipping topology[%s] as its deleted", topology.GetPersistedID())
+		// TODO: Should we run the db.DeleteTopology function always in this scenario
+		return nil
+	}
+
+	components := Run(opts, topology)
+	topologyID, err := uuid.Parse(topology.GetPersistedID())
 	if err != nil {
-		return fmt.Errorf("failed to parse system template id: %w", err)
+		return fmt.Errorf("failed to parse topology id: %w", err)
 	}
 
 	var compIDs []uuid.UUID
 	for _, component := range components {
-		component.Name = systemTemplate.Name
-		component.Namespace = systemTemplate.Namespace
-		component.Labels = systemTemplate.Labels
-		component.SystemTemplateID = &systemTemplateID
+		component.Name = topology.Name
+		component.Namespace = topology.Namespace
+		component.Labels = topology.Labels
+		component.TopologyID = &topologyID
 		componentsIDs, err := db.PersistComponent(component)
 		if err != nil {
 			return fmt.Errorf("failed to persist component(id=%s, name=%s): %w", component.ID, component.Name, err)
@@ -430,9 +509,9 @@ func SyncComponents(opts TopologyRunOptions, systemTemplate v1.SystemTemplate) e
 		compIDs = append(compIDs, componentsIDs...)
 	}
 
-	dbCompsIDs, err := db.GetActiveComponentsIDsWithSystemTemplateID(systemTemplateID.String())
+	dbCompsIDs, err := db.GetActiveComponentsIDsOfTopology(topologyID.String())
 	if err != nil {
-		logger.Errorf("error getting components for system(id=%s): %v", systemTemplateID.String(), err)
+		logger.Errorf("error getting components for system(id=%s): %v", topologyID.String(), err)
 	}
 
 	deleteCompIDs := utils.SetDifference(dbCompsIDs, compIDs)

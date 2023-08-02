@@ -1,6 +1,8 @@
 package checks
 
 import (
+	"strconv"
+
 	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -36,29 +38,42 @@ func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	namespace := ctx.Canary.Namespace
-	var err error
-	auth, err := GetAuthValues(check.Auth, ctx.Kommons, namespace)
-	if err != nil {
-		return results.Failf("failed to fetch auth details: %v", err)
-	}
-	opts := &redis.Options{
-		Addr: check.Addr,
-		DB:   check.DB,
-	}
-	if auth != nil {
-		opts.Username = auth.GetUsername()
-		opts.Password = auth.GetPassword()
+
+	var redisOpts *redis.Options
+
+	//nolint:staticcheck
+	if check.Addr != "" && check.URL == "" {
+		check.URL = check.Addr
 	}
 
-	rdb := redis.NewClient(opts)
+	connection, err := ctx.GetConnection(check.Connection)
+	if err != nil {
+		return results.Failf("error getting connection: %v", err)
+	}
+
+	redisOpts = &redis.Options{
+		Addr:     connection.URL,
+		Username: connection.Username,
+		Password: connection.Password,
+	}
+
+	if check.DB != nil {
+		redisOpts.DB = *check.DB
+	} else if db, ok := connection.Properties["db"]; ok {
+		if dbInt, err := strconv.Atoi(db); nil == err {
+			redisOpts.DB = dbInt
+		}
+	}
+
+	rdb := redis.NewClient(redisOpts)
 	queryResult, err := rdb.Ping(ctx).Result()
-
 	if err != nil {
-		return results.Failf("failed to execute query %s", err)
+		return results.Failf("failed to execute query %v", err)
 	}
+
 	if queryResult != "PONG" {
 		return results.Failf("expected PONG as result, got %s", result)
 	}
+
 	return results
 }

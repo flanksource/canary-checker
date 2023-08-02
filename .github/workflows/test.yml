@@ -7,6 +7,8 @@ on:
   pull_request:
   merge_group:
 name: Test
+permissions:
+  contents: read
 jobs:
   test:
     strategy:
@@ -16,16 +18,18 @@ jobs:
           - minimal --skip-all
           - k8s
           - datasources
+          - search
           - git
+          # - restic
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2.2.0
         with:
           go-version: 1.19.x
       - name: Checkout code
-        uses: actions/checkout@v2
-      - uses: actions/cache@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/cache@8492260343ad570701412c2f464a5877dc76bace # v2
         with:
           path: |
             ~/go/pkg/mod
@@ -35,17 +39,13 @@ jobs:
           restore-keys: |
             cache-
       - run: make bin
-      - name: Install restic
-        run: |
-          sudo apt-get install restic
-          sudo restic self-update
       - name: Test
         env:
           KUBERNETES_VERSION: v1.20.7
           GH_TOKEN: ${{ secrets.CHECKRUNS_TOKEN }}
         run: ./test/e2e.sh fixtures/${{matrix.suite}}
       - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
+        uses: EnricoMi/publish-unit-test-result-action@b9f6c61d965bcaa18acc02d6daf706373a448f02 # v1.40
         if: always() &&  github.event.repository.fork == 'false'
         with:
           files: test/test-results.xml

@@ -10,29 +10,33 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
-func PersistSystemTemplate(system *v1.SystemTemplate) (string, bool, error) {
-	model := pkg.SystemTemplateFromV1(system)
-	if system.GetPersistedID() != "" {
-		model.ID, _ = uuid.Parse(system.GetPersistedID())
-	}
+func PersistTopology(t *v1.Topology) (bool, error) {
+	var err error
 	var changed bool
-	tx := Gorm.Table("templates").Clauses(clause.OnConflict{
+
+	model := pkg.TopologyFromV1(t)
+	model.ID, err = uuid.Parse(t.GetPersistedID())
+	if err != nil {
+		return changed, err
+	}
+	tx := Gorm.Table("topologies").Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "name"}, {Name: "namespace"}},
 		UpdateAll: true,
 	}).Create(model)
 	if tx.Error != nil {
-		return "", changed, tx.Error
+		return changed, tx.Error
 	}
 	if tx.RowsAffected > 0 {
 		changed = true
 	}
-	return model.ID.String(), changed, nil
+	return changed, nil
 }
 
 func PersistComponents(results []*pkg.Component) error {
@@ -46,31 +50,39 @@ func PersistComponents(results []*pkg.Component) error {
 	return nil
 }
 
-func GetSystemTemplate(ctx context.Context, id string) (*v1.SystemTemplate, error) {
-	var _systemTemplate pkg.SystemTemplate
-	if err := Gorm.WithContext(ctx).Table("templates").Where("id = ? AND deleted_at is NULL", id).First(&_systemTemplate).Error; err != nil {
+func GetTopology(ctx context.Context, id string) (*v1.Topology, error) {
+	var t pkg.Topology
+	if err := Gorm.WithContext(ctx).Table("topologies").Where("id = ? AND deleted_at is NULL", id).First(&t).Error; err != nil {
 		return nil, err
 	}
 
-	systemTemplate := _systemTemplate.ToV1()
-	return &systemTemplate, nil
+	tv1 := t.ToV1()
+	return &tv1, nil
 }
 
-func GetAllSystemTemplates() ([]v1.SystemTemplate, error) {
-	var systemTemplates []v1.SystemTemplate
-	var _systemTemplates []pkg.SystemTemplate
-	if err := Gorm.Table("templates").Find(&_systemTemplates).Where("deleted_at is NULL").Error; err != nil {
+func GetAllTopologiesForSync() ([]v1.Topology, error) {
+	var v1topologies []v1.Topology
+	var topologies []pkg.Topology
+	if err := Gorm.
+		Table("topologies").
+		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+		Where("deleted_at is NULL").
+		Find(&topologies).Error; err != nil {
 		return nil, err
 	}
-	for _, _systemTemplate := range _systemTemplates {
-		systemTemplates = append(systemTemplates, _systemTemplate.ToV1())
+	for _, t := range topologies {
+		v1topologies = append(v1topologies, t.ToV1())
 	}
-	return systemTemplates, nil
+	return v1topologies, nil
 }
 
 // Get all the components from table which has not null selectors
 func GetAllComponentsWithSelectors() (components pkg.Components, err error) {
-	if err := Gorm.Table("components").Where("deleted_at is NULL and selectors != 'null'").Find(&components).Error; err != nil {
+	if err := Gorm.Table("components").
+		Where("deleted_at is NULL").
+		Where("selectors != 'null'").
+		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+		Find(&components).Error; err != nil {
 		return nil, err
 	}
 	return
@@ -131,6 +143,7 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 		if resourceSelector.LabelSelector != "" {
 			labelComponents, err := GetComponentsWithLabelSelector(resourceSelector.LabelSelector)
 			if err != nil {
+				logger.Errorf("Error getting components with label selectors[%s]: %v", resourceSelector.LabelSelector, err)
 				continue
 			}
 
@@ -157,14 +170,22 @@ func GetComponentsWithSelectors(resourceSelectors v1.ResourceSelectors) (compone
 }
 
 func GetAllComponentsWithConfigs() (components pkg.Components, err error) {
-	if err := Gorm.Table("components").Where("deleted_at is NULL and configs != 'null'").Find(&components).Error; err != nil {
+	if err := Gorm.Table("components").
+		Where("configs != 'null'").
+		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+		Where("deleted_at IS NULL").
+		Find(&components).Error; err != nil {
 		return nil, err
 	}
 	return
 }
 
 func GetAllComponentWithCanaries() (components pkg.Components, err error) {
-	if err := Gorm.Table("components").Where("deleted_at is NULL and component_checks != 'null'").Find(&components).Error; err != nil {
+	if err := Gorm.Table("components").
+		Where("component_checks != 'null'").
+		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
+		Where("deleted_at IS NULL").
+		Find(&components).Error; err != nil {
 		return nil, err
 	}
 	return
@@ -190,11 +211,11 @@ func GetChildRelationshipsForParentComponent(componentID uuid.UUID) ([]pkg.Compo
 	return relationships, nil
 }
 
-func PersistComponentRelationship(relationship *pkg.ComponentRelationship) error {
+func PersistComponentRelationships(relationships []*pkg.ComponentRelationship) error {
 	tx := Gorm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "component_id"}, {Name: "relationship_id"}, {Name: "selector_id"}},
 		UpdateAll: true,
-	}).Create(relationship)
+	}).Create(relationships)
 	return tx.Error
 }
 
@@ -219,7 +240,7 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 	existing := &pkg.Component{}
 	var persisted []uuid.UUID
 	var tx *gorm.DB
-	if component.SystemTemplateID == nil {
+	if component.TopologyID == nil {
 		if component.ParentId == nil {
 			tx = Gorm.Find(existing, "name = ? AND type = ? and parent_id is NULL", component.Name, component.Type)
 		} else {
@@ -227,9 +248,9 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 		}
 	} else {
 		if component.ParentId == nil {
-			tx = Gorm.Find(existing, "system_template_id = ? AND name = ? AND type = ? and parent_id is NULL", component.SystemTemplateID, component.Name, component.Type)
+			tx = Gorm.Find(existing, "topology_id = ? AND name = ? AND type = ? and parent_id is NULL", component.TopologyID, component.Name, component.Type)
 		} else {
-			tx = Gorm.Find(existing, "system_template_id = ? AND name = ? AND type = ? and parent_id = ?", component.SystemTemplateID, component.Name, component.Type, component.ParentId)
+			tx = Gorm.Find(existing, "topology_id = ? AND name = ? AND type = ? and parent_id = ?", component.TopologyID, component.Name, component.Type, component.ParentId)
 		}
 	}
 	if tx.Error != nil {
@@ -240,7 +261,7 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 		component.ID = existing.ID
 		tx = Gorm.Table("components").Clauses(
 			clause.OnConflict{
-				Columns:   []clause.Column{{Name: "system_template_id"}, {Name: "name"}, {Name: "type"}, {Name: "parent_id"}},
+				Columns:   []clause.Column{{Name: "topology_id"}, {Name: "name"}, {Name: "type"}, {Name: "parent_id"}},
 				UpdateAll: true,
 			},
 		).UpdateColumns(component)
@@ -250,7 +271,7 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 	} else {
 		tx = Gorm.Table("components").Clauses(
 			clause.OnConflict{
-				Columns:   []clause.Column{{Name: "system_template_id"}, {Name: "name"}, {Name: "type"}, {Name: "parent_id"}},
+				Columns:   []clause.Column{{Name: "topology_id"}, {Name: "name"}, {Name: "type"}, {Name: "parent_id"}},
 				UpdateAll: true,
 			},
 		).Create(component)
@@ -261,7 +282,7 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 
 	persisted = append(persisted, component.ID)
 	for _, child := range component.Components {
-		child.SystemTemplateID = component.SystemTemplateID
+		child.TopologyID = component.TopologyID
 		if component.Path != "" {
 			child.Path = component.Path + "." + component.ID.String()
 		} else {
@@ -279,31 +300,28 @@ func PersistComponent(component *pkg.Component) ([]uuid.UUID, error) {
 	return persisted, tx.Error
 }
 
-func UpdateStatusAndSummaryForComponent(id uuid.UUID, status models.ComponentStatus, summary models.Summary) (int64, error) {
+func UpdateStatusAndSummaryForComponent(id uuid.UUID, status types.ComponentStatus, summary types.Summary) (int64, error) {
 	tx := Gorm.Table("components").Where("id = ? and (status != ? or summary != ?)", id, status, summary).UpdateColumns(models.Component{Status: status, Summary: summary})
 	return tx.RowsAffected, tx.Error
 }
 
-func DeleteSystemTemplate(systemTemplate *v1.SystemTemplate) error {
-	logger.Infof("Deleting system template %s/%s", systemTemplate.Namespace, systemTemplate.Name)
-	model := pkg.SystemTemplateFromV1(systemTemplate)
+func DeleteTopology(t *v1.Topology) error {
+	logger.Infof("Deleting topology %s/%s", t.Namespace, t.Name)
+	model := pkg.TopologyFromV1(t)
 	deleteTime := time.Now()
-	if systemTemplate.GetPersistedID() == "" {
-		logger.Errorf("System template %s/%s has not been persisted", systemTemplate.Namespace, systemTemplate.Name)
-		return nil
-	}
-	tx := Gorm.Table("templates").Find(model, "id = ?", systemTemplate.GetPersistedID()).UpdateColumn("deleted_at", deleteTime)
+
+	tx := Gorm.Table("topologies").Find(model, "id = ?", t.GetPersistedID()).UpdateColumn("deleted_at", deleteTime)
 	if tx.Error != nil {
 		return tx.Error
 	}
-	return DeleteComponentsWithSystemTemplate(systemTemplate.GetPersistedID(), deleteTime)
+	return DeleteComponentsOfTopology(t.GetPersistedID(), deleteTime)
 }
 
-// DeleteComponents deletes all components associated with a systemTemplate
-func DeleteComponentsWithSystemTemplate(systemTemplateID string, deleteTime time.Time) error {
-	logger.Infof("Deleting all components associated with system: %s", systemTemplateID)
+// DeleteComponents deletes all components associated with a topology
+func DeleteComponentsOfTopology(topologyID string, deleteTime time.Time) error {
+	logger.Infof("Deleting all components associated with topology: %s", topologyID)
 	componentsModel := &[]pkg.Component{}
-	if err := Gorm.Where("system_template_id = ?", systemTemplateID).Find(componentsModel).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+	if err := Gorm.Where("topology_id = ?", topologyID).Find(componentsModel).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
 		return err
 	}
 	for _, component := range *componentsModel {
@@ -372,7 +390,7 @@ func DeleteInlineCanariesForComponent(componentID string, deleteTime time.Time) 
 		return err
 	}
 	for _, c := range canaries {
-		if err := DeleteChecksForCanary(c.ID.String(), deleteTime); err != nil {
+		if _, err := DeleteChecksForCanary(c.ID.String(), deleteTime); err != nil {
 			logger.Debugf("Error deleting checks for canary %v", c.ID)
 			continue
 		}
@@ -384,9 +402,8 @@ func DeleteInlineCanariesForComponent(componentID string, deleteTime time.Time) 
 	return nil
 }
 
-func GetActiveComponentsIDsWithSystemTemplateID(systemID string) (compIDs []uuid.UUID, err error) {
-	logger.Tracef("Finding components with system id: %s", systemID)
-	if err := Gorm.Table("components").Where("deleted_at is NULL and system_template_id = ?", systemID).Select("id").Find(&compIDs).Error; err != nil {
+func GetActiveComponentsIDsOfTopology(topologyID string) (compIDs []uuid.UUID, err error) {
+	if err := Gorm.Table("components").Where("deleted_at is NULL and topology_id = ?", topologyID).Select("id").Find(&compIDs).Error; err != nil {
 		return nil, err
 	}
 	return

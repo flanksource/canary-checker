@@ -40,7 +40,7 @@ const (
 
 type PodChecker struct {
 	lock *semaphore.Weighted
-	k8s  *kubernetes.Clientset
+	k8s  kubernetes.Interface
 	ng   *NameGenerator
 
 	latestNodeIndex int
@@ -51,15 +51,6 @@ func NewPodChecker() *PodChecker {
 		lock: semaphore.NewWeighted(1),
 		ng:   &NameGenerator{PodsCount: 20},
 	}
-
-	k8sClient, err := pkg.NewK8sClient()
-	if err != nil {
-		logger.Errorf("Failed to create kubernetes config %v", err)
-		return pc
-	}
-
-	pc.k8s = k8sClient
-
 	return pc
 }
 
@@ -69,12 +60,7 @@ func (c *PodChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
 	if len(ctx.Canary.Spec.Pod) > 0 {
 		if c.k8s == nil {
-			k8sClient, err := pkg.NewK8sClient()
-			if err != nil {
-				results = append(results, unexpectedErrorf(ctx.Canary.Spec.Pod[0], err, "Could not initialise k8s client"))
-				return results
-			}
-			c.k8s = k8sClient
+			c.k8s = ctx.Kubernetes
 		}
 		for _, conf := range ctx.Canary.Spec.Pod {
 			results = append(results, c.Check(ctx, conf)...)
@@ -177,7 +163,7 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 		return results.Failf("invalid pod spec: %v", err)
 	}
 
-	if err := ctx.Kommons.Apply(podCheck.Namespace, pod); err != nil {
+	if _, err := c.k8s.CoreV1().Pods(podCheck.Namespace).Create(ctx, pod, metav1.CreateOptions{}); err != nil {
 		return results.ErrorMessage(err)
 	}
 
@@ -204,7 +190,11 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 
 	deadline := time.Now().Add(time.Duration(podCheck.Deadline) * time.Millisecond)
 
-	ingressTime, requestTime, ingressResult := c.httpCheck(podCheck, deadline)
+	host := podCheck.IngressHost
+	if host == "" {
+		host = fmt.Sprintf("%s.%s:%d", pod.Name, pod.Namespace, podCheck.Port)
+	}
+	ingressTime, requestTime, ingressResult := c.httpCheck(podCheck, deadline, host)
 
 	message := ingressResult.Message
 
@@ -212,15 +202,18 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 		podFailMessage, err := c.podFailMessage(pod)
 		if err != nil {
 			logger.Errorf("failed to get pod fail message: %v", err)
-		} else if podFailMessage != "" {
-			message = message + " " + podFailMessage
 		}
+		if podFailMessage != "" {
+			return results.Failf(message + " " + podFailMessage)
+		}
+		return results.Failf(message)
 	}
 
 	deletion := NewTimer()
 	if err := pods.Delete(ctx, pod.Name, metav1.DeleteOptions{}); err != nil {
 		return results.Failf("failed to delete pod: %v", err)
 	}
+
 	result.ResultMessage(message)
 
 	result.Metrics = []pkg.Metric{
@@ -264,24 +257,24 @@ func (c *PodChecker) Cleanup(ctx *context.Context, podCheck canaryv1.PodCheck) {
 	if c.k8s == nil {
 		logger.Warnf("connection to k8s not established")
 	}
-	err := c.k8s.CoreV1().Pods(podCheck.Namespace).DeleteCollection(gocontext.TODO(), metav1.DeleteOptions{}, listOptions)
+	err := c.k8s.CoreV1().Pods(podCheck.Namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, listOptions)
 	if err != nil && !errors.IsNotFound(err) {
 		logger.Warnf("Failed to delete pods for check %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
 	}
 
-	services, err := c.k8s.CoreV1().Services(podCheck.Namespace).List(gocontext.TODO(), listOptions)
+	services, err := c.k8s.CoreV1().Services(podCheck.Namespace).List(ctx, listOptions)
 	if err != nil {
 		logger.Warnf("Failed to get services to cleanup %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
 	}
 
 	for _, s := range services.Items {
-		if err := ctx.Kommons.DeleteByKind("Service", podCheck.Namespace, s.Name); err != nil && !errors.IsNotFound(err) {
+		if err := ctx.Kubernetes.CoreV1().Services(podCheck.Namespace).Delete(ctx, s.Name, metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
 			logger.Warnf("Failed delete services %s in namespace %s : %v", s.Name, podCheck.Namespace, err)
 		}
 	}
 }
 
-func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (ingressTime float64, requestTime float64, result *pkg.CheckResult) {
+func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time, host string) (ingressTime float64, requestTime float64, result *pkg.CheckResult) {
 	httpTimeout := podCheck.HTTPTimeout
 	if httpTimeout == 0 {
 		httpTimeout = 5000
@@ -302,9 +295,9 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 	}
 
 	timer := NewTimer()
+	url := fmt.Sprintf("http://%s%s", host, podCheck.Path)
 
 	for {
-		url := fmt.Sprintf("http://%s%s", podCheck.IngressHost, podCheck.Path)
 		if _, err := http.NewRequest("GET", url, nil); err != nil {
 			return 0, 0, Failf(podCheck, "invalid url: %v", err)
 		}
@@ -315,10 +308,10 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time) (
 				logger.Tracef("[%s] request completed in %s, above threshold of %d", podCheck, httpTimer, httpTimeout)
 				time.Sleep(retry)
 				continue
-			} else if timer.Millis() > httpTimeout && time.Now().After(deadline) {
-				return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %s > %d", httpTimer, httpTimeout)
+			} else if httpTimer.Millis() > httpTimeout && time.Now().After(deadline) {
+				return timer.Elapsed(), httpTimer.Elapsed(), Failf(podCheck, "request timeout exceeded %d > %d", httpTimer.Millis(), httpTimeout)
 			} else if time.Now().After(deadline) {
-				return timer.Elapsed(), 0, Failf(podCheck, "ingress timeout exceeded %s > %d", timer, podCheck.IngressTimeout)
+				return timer.Elapsed(), 0, Failf(podCheck, "hard deadline timeout %s", time.Since(deadline))
 			} else {
 				continue
 			}
@@ -388,6 +381,9 @@ func (c *PodChecker) createServiceAndIngress(podCheck canaryv1.PodCheck, pod *v1
 		return perrors.Wrapf(err, "Failed to create service for pod %s in namespace %s", pod.Name, pod.Namespace)
 	}
 
+	if podCheck.IngressHost == "" || podCheck.IngressName == "" {
+		return nil
+	}
 	ingress, err := c.k8s.NetworkingV1().Ingresses(podCheck.Namespace).Get(gocontext.TODO(), podCheck.IngressName, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return perrors.Wrapf(err, "Failed to get ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
@@ -469,7 +465,8 @@ func (c *PodChecker) getHTTP(url string, timeout int64, deadline time.Time) (str
 		hardDeadline = softTimeoutDeadline
 	}
 
-	ctx, _ := gocontext.WithDeadline(gocontext.Background(), hardDeadline) // nolint: govet
+	ctx, cancelFunc := gocontext.WithDeadline(gocontext.Background(), hardDeadline)
+	defer cancelFunc()
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

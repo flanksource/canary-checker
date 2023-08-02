@@ -110,27 +110,22 @@ type AWS struct {
 }
 
 func NewAWS(ctx *context.Context, check v1.EC2Check) (*AWS, error) {
-	namespace := ctx.Canary.GetNamespace()
-	_, accessKey, err := ctx.Kommons.GetEnvValue(check.AccessKey, namespace)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse EC2 access key: %v", err)
-	}
-	_, secretKey, err := ctx.Kommons.GetEnvValue(check.SecretKey, namespace)
-	if err != nil {
-		return nil, fmt.Errorf(fmt.Sprintf("Could not parse EC2 secret key: %v", err))
+	if err := check.AWSConnection.Populate(ctx, ctx.Kubernetes, ctx.Canary.GetNamespace()); err != nil {
+		return nil, fmt.Errorf("failed to populate AWS connection: %v", err)
 	}
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: check.SkipTLSVerify},
 	}
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(check.AWSConnection.AccessKey.ValueStatic, check.AWSConnection.SecretKey.ValueStatic, "")),
 		config.WithRegion(check.Region),
 		config.WithHTTPClient(&http.Client{Transport: tr}),
 	)
 	if err != nil {
 		return nil, fmt.Errorf(fmt.Sprintf("failed to load AWS credentials: %v", err))
 	}
+
 	return &AWS{
 		EC2:    ec2.NewFromConfig(cfg),
 		Config: cfg,
@@ -319,10 +314,9 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	results = append(results, result)
 	prometheusCount.WithLabelValues(check.Region).Inc()
 	namespace := ctx.Canary.Namespace
-
 	kommonsClient := ctx.Kommons
 	if kommonsClient == nil {
-		return results.Failf("commons client not configured for ec2 checker")
+		return results.Failf("Kubernetes is not initialized")
 	}
 
 	aws, err := NewAWS(ctx, check)
@@ -395,7 +389,12 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 		if len(inner.Spec.EC2) > 0 {
 			return results.Failf("EC2 checks may not be nested to avoid potential recursion.  Skipping inner EC2")
 		}
-		innerResults := RunChecks(ctx.New(ec2Vars))
+
+		innerResults, err := RunChecks(ctx.New(ec2Vars))
+		if err != nil {
+			return results.ErrorMessage(err)
+		}
+
 		for _, result := range innerResults {
 			if !result.Pass {
 				innerFail = true

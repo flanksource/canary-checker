@@ -11,8 +11,8 @@ func NewSession(ctx *context.Context, conn *v1.GCPConnection) (*gcs.Client, erro
 	conn = conn.Validate()
 	var client *gcs.Client
 	var err error
-	if conn.Credentials != nil {
-		_, credential, err := ctx.Kommons.GetEnvValue(*conn.Credentials, ctx.Canary.GetNamespace())
+	if !conn.Credentials.IsEmpty() {
+		credential, err := ctx.GetEnvValueFromCache(*conn.Credentials)
 		if err != nil {
 			return nil, err
 		}

@@ -1,190 +1,144 @@
-
-
-<div align="center"> <img src="docs/canary-checker.png" height="64px"></img></div>
-  <p align="center">Kubernetes operator for executing synthetic tests</p>
-<p align="center">
-<a href="https://github.com/flanksource/canary-checker/actions"><img src="https://github.com/flanksource/canary-checker/workflows/Test/badge.svg"></a>
-<a href="https://goreportcard.com/report/github.com/flanksource/canary-checker"><img src="https://goreportcard.com/badge/github.com/flanksource/canary-checker"></a>
-<img src="https://img.shields.io/github/license/flanksource/canary-checker.svg?style=flat-square"/>
-<a href="https://canary-checker.docs.flanksource.com"> <img src="https://img.shields.io/badge/☰-Docs-lightgrey.svg"/> </a>
-</p>
-
-
+<div align="center">
+  <picture>
+    <source srcset="https://canarychecker.io/img/canary-checker-white.svg" media="(prefers-color-scheme: dark)">
+    <img src="https://canarychecker.io/img/canary-checker.svg">
+  </picture>
+  
+  <p>Kubernetes operator for executing synthetic tests</p>
+  <p>
+    <a href="https://github.com/flanksource/canary-checker/actions"><img src="https://github.com/flanksource/canary-checker/workflows/Test/badge.svg"></a>
+    <a href="https://goreportcard.com/report/github.com/flanksource/canary-checker"><img src="https://goreportcard.com/badge/github.com/flanksource/canary-checker"></a>
+    <img src="https://img.shields.io/github/license/flanksource/canary-checker.svg?style=flat-square"/>
+    <a href="https://canarychecker.io"> <img src="https://img.shields.io/badge/☰-Docs-lightgrey.svg"/> </a>
+  </p>
+</div>
 
 ---
+Canary checker is a kubernetes-native platform for monitoring health across application and infrastructure using both passive and active (synthetic) mechanisms.
 
+## Features
 
-# Introduction
+* **Batteries Included** - 35+ built-in check types
+* **Kubernetes Native** - Health checks (or canaries) are CRD's that reflect health via the `status` field, making them compatible with GitOps, [Flux Health Checks](https://fluxcd.io/flux/components/kustomize/kustomization/#health-checks), Argo, Helm, etc..
+* **Secret Management** - Leverage K8S secrets and configmaps for authentication and connection details
+* **Prometheus** - Prometheus compatible metrics are exposed at `/metrics`.  A Grafana Dashboard is also available.
+* **Dependency Free** - Runs an embedded postgres instance by default,  can also be configured to use an external database.
+* **JUnit Export (CI/CD)**  - Export health check results to JUnit format for integration into CI/CD pipelines
+* **JUnit Import (k6/newman/puppeter/etc)** - Use any container that creates JUnit test results
+* **Scriptable** - Go templates, Javascript and [Expr](https://github.com/antonmedv/expr) can be used to:
+  * Evaluate whether a check is passing and severity to use when failing
+  * Extract a user friendly error message
+  * Transform and filter check responses into individual check results
+* **Multi-Modal** - While designed as a Kubernetes Operator, canary checker can also run as a CLI and a server without K8s
 
-Canary Checker is a Kubernetes native multi-tenant synthetic monitoring system.  To learn more, please see the [official documentation](https://canary-checker.docs.flanksource.com).
+## Getting Started
 
-# Features
+1. Install canary checker:
 
-* Built-in UI/Dashboard with multi-cluster aggregation
-* CRD based configuration and status reporting
-* Prometheus Integration
-* Runnable as a CLI for once-off checks or as a standalone server outside kubernetes
-* Many built-in check types
-
-
-# Quick Start
-
-Before installing the Canary Checker, please ensure you have the [prerequisites installed](docs/prereqs.md) on your Kubernetes cluster.
-
-The recommended method for installing Canary Checker is using [helm](https://helm.sh/)
-
-## Install Helm
-
-The following steps will install the latest version of helm
-
-```bash
-curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-chmod 700 get_helm.sh
-./get_helm.sh
-```
-
-## Add the Flanksource helm repository
-
-```bash
+  ```shell
 helm repo add flanksource https://flanksource.github.io/charts
 helm repo update
-```
+helm install canary-checker
+  ```
 
-## Configurable fields
+2. Create a new check:
 
-See the [values file](chart/values.yaml) for the full list of configurable fields.  Mandatory configuration values are for the configuration of the database, and it is recommended to also configure the UI ingress.
-
-## DB
-
-Canary Checker should optimally be run connected to a dedicated Postgres Server, but can run an embedded postgres instance for development and testing.
-
-### Embedded database (default):
-
-|                     |                   |
-|---------------------|-------------------|
-| db.external.enabled | `false` (default) |
-| db.embedded.storageClass | Set to name of a storageclass available in the cluster |
-| db.embedded.storage | Set to volume of storage to request |
-
-The Canary Checker statefulset will be configured to start an embedded postgres server in the pod, which stores data to a PVC
-
-To connect to the embedded database: 
-
-```shell
-kubectl port-forward canary-checker-0 6432:6432 
-psql -U postgres localhost -p 6432 canary with password postgres #password will be postgres
-```
-
-
-
-### Fully automatic Postgres Server creation
-
-|                     |                   |
-|---------------------|-------------------|
-| db.external.enabled | `true` |
-| db.external.create  | `true` |
-| db.external.storageClass | Set to name of a storageclass available in the cluster |
-| db.external.storage | Set to volume of storage to request |
-
-The helm chart will create a postgres server statefulset, with a random password and default port, along with a canarychecker database hosted on the server.
-
-To specify a username and password for the chart-managed Postgres server, create a secret in the namespace that the chart will install to, named `postgres-connection`, which contains `POSTGRES_USER` and `POSTGRES_PASSWORD` keys.
-
-### External Postgres Server
-
-In order to connect to an existing Postgres server, a database must be created on the server, along with a user that has administrator permissions for the database.git 
-
-|                     |                   |
-|---------------------|-------------------|
-| db.external.enabled | `true` |
-| db.external.create  | `false` |
-| db.external.secretKeyRef.name | Set to name of name of secret that contains a key containging the postgres connection URI |
-| db.external.secretKeyRef.key | Set to the name of the key in the secret that contains the postgres connection URI |
-
-The connection URI must be specified in the format `postgresql://"$user":"$password"@"$host"/"$database"`
-
-## Flanksource UI
-
-The canary checker itself only presents an API.  To view the data graphically, the Flanksource UI is required, and is installed by default. The UI should be configured to allow external access to via ingress
-
-|                     |                   |
-|---------------------|-------------------|
-| flanksource-ui.ingress.host | URL at which the UI will be accessed |
-| flanksource-ui.ingress.annotations | Map of annotations required by the ingress controller or certificate issuer |
-| flanksource-ui.ingress.tls | Map of configuration options for TLS |
-
-More details regarding ingress configuration can be found in the [kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/)
-
-|                     |                   |
-|---------------------|-------------------|
-| flanksource-ui.backendURL | Required to be set to the name of the canary-checker service.  The name will default to 'canary-checker' unless `nameOverride` is specified.  If `nameOverride is set, `backendURL` must be set to the same value |
-
-Due to a limitation in Helm, there is no way to automatically propogate the generated service name to a child chart, and it must be aligned by the user.
-
-## Deploy using Helm
-
-To install into a new `canary-checker` namespace, run
-
-```bash
-helm install canary-checker-demo --wait -n canary-checker --create-namespace flanksource/canary-checker -f values.yaml
-```
-
-where `values.yaml` contains the configuration options detailed above.  eg
-
-```yaml
-db:
-  external: true
-  create: true
-  storageClass: default
-  storage: 30Gi
-flanksource-ui:
-  ingress:
-    host: canary-checker.flanksource.com
-    annotations:
-      kubernetes.io/ingress.class: nginx
-      kubernetes.io/tls-acme: "true"
-    tls:
-      - secretName: canary-checker-tls
-        hosts:
-        - canary-checker.flanksource.com
-```
-
-### Deploy a sample Canary
-
-```bash
-kubectl apply -f https://raw.githubusercontent.com/flanksource/canary-checker/master/fixtures-crd/http_pass.yaml
-```
-
-### Check the results of the Canary
-
-```bash
-kubectl get canary
-```
-
-`sample output`
-
-```
-NAMESPACE         NAME   INTERVAL   STATUS   MESSAGE   UPTIME 1H      LATENCY 1H   LAST TRANSITIONED   LAST CHECK
-platform-system   dns    30         Passed             0/2 (0%)                                        6s
-platform-system   lan    30         Passed             12/12 (100%)   1033         139m                6s
-platform-system   ldap   30         Passed             5/5 (100%)     323                              1s
-platform-system   pod    120        Passed             1/2 (50%)      10904        45m                 24s
-platform-system   s3     30         Passed             5/5 (100%)     1091         5m35s               5s
-```
-
-`http_pass.yaml`
-
-```yaml
+  ```yaml title="canary.yaml"
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
-  name: http-pass
+  name: http-check
 spec:
   interval: 30
   http:
-    - endpoint: https://httpstat.us/200
-      thresholdMillis: 3000
-      responseCodes: [201, 200, 301]
-      responseContent: ""
-      maxSSLExpiry: 7
+    - name: basic-check
+      url: https://httpbin.demo.aws.flanksource.com/status/200
+    - name: failing-check
+      url: https://httpbin.demo.aws.flanksource.com/status/500
+  ```
+
+2a. Run the check locally (Optional)
+
+```shell
+canary-checker run canary.yaml
 ```
+
+[![asciicast](https://asciinema.org/a/cYS6hlmX516JQeECHH7za3IDG.svg)](https://asciinema.org/a/cYS6hlmX516JQeECHH7za3IDG)
+
+  ```shell
+ kubectl apply -f canary.yaml
+  ```
+
+3. Check the status of the health check:
+
+  ```shell
+kubectl get canary
+  ```
+
+``` title="sample output"
+NAME               INTERVAL   STATUS   LAST CHECK   UPTIME 1H        LATENCY 1H   LAST TRANSITIONED
+http-check.        30         Passed   13s          18/18 (100.0%)   480ms        13s
+```
+
+## Getting Help
+
+If you have any questions about canary checker:
+
+* Read the [docs](https://canarychecker.io)
+* Invite yourself to the [CNCF community slack](https://slack.cncf.io/)and join the [#canary-checker](https://cloud-native.slack.com/messages/canary-checker/) channel.
+* Check out the [Youtube Playlist](https://www.youtube.com/playlist?list=PLz4F_KggvA58D6krlw433TNr8qMbu1aIU).
+* File an [issue](https://github.com/flanksource/canary-checker/issues/new) - (We do provide user support via Github Issues, so don't worry  if your issue a real bug or not)
+
+Your feedback is always welcome!
+
+## Check Types
+
+| Protocol                                                     | Status     | Checks                                                       |
+| ------------------------------------------------------------ | ---------- | ------------------------------------------------------------ |
+| [HTTP(s)](https://canarychecker.io/reference/http)                                 | GA         | Response body, headers and duration                          |
+| [DNS](https://canarychecker.io/reference/dns)                                      | GA         | Response and duration                                        |
+| [Ping/ICMP](https://canarychecker.io/reference/icmp)                               | GA         | Duration and packet loss                                     |
+| [TCP](https://canarychecker.io/reference/tcp)                                      | GA         | Port is open and connectable                                 |
+| **Data Sources**                                             |            |                                                              |
+| SQL ([MySQL](https://canarychecker.io/reference/mysql), [Postgres](https://canarychecker.io/reference/postgres), [SQL Server](https://canarychecker.io/reference/mssql)) | GA         | Ability to login, results, duration, health exposed via stored procedures |
+| [LDAP](https://canarychecker.io/reference/ldap)                                    | GA         | Ability to login, response time                              |
+| [ElasticSearch / Opensearch](https://canarychecker.io/reference/elasticsearch)     | GA         | Ability to login, response time, size of search results      |
+| [Mongo](https://canarychecker.io/reference/mongo)                                  | Beta       | Ability to login, results, duration,                         |
+| [Redis](https://canarychecker.io/reference/redis)                                  | GA         | Ability to login, results, duration,                         |
+| [Prometheus](https://canarychecker.io/reference/prometheus)                        | GA         | Ability to login, results, duration,                         |
+| **Alerts**                                                   |            | Prometheus                                                   |
+| [Prometheus Alert Manager](https://canarychecker.io/reference/alert-manager)       | GA         | Pending and firing alerts                                    |
+| [AWS Cloudwatch Alarms](https://canarychecker.io/reference/cloudwatch)             | GA         | Pending and firing alarms                                    |
+| [Dynatrace Problems](./reference/dynatrace.md)               | Beta       | Problems deteced                                             |
+| **DevOps**                                                   |            |                                                              |
+| [Git](https://canarychecker.io/reference/git)                                      | GA         | Query Git and Github repositories via SQL                    |
+| [Azure Devops](https://canarychecker.io/reference)                                 |            |                                                              |
+| **Integration Testing**                                      |            |                                                              |
+| [JMeter](https://canarychecker.io/reference/jmeter)                                | Beta       | Runs and checks the result of a JMeter test                  |
+| [JUnit / BYO](https://canarychecker.io/reference/junit)                            | Beta       | Run a pod that saves Junit test results                      |
+| **File Systems / Batch**                                     |            |                                                              |
+| [Local Disk / NFS](https://canarychecker.io/reference/folder)                      | GA         | Check folders for files that are:  too few/many, too old/new, too small/large |
+| [S3](https://canarychecker.io/reference/s3-bucket)                                 | GA         | Check contents of AWS S3 Buckets                             |
+| [GCS](https://canarychecker.io/reference/gcs-bucket)                               | GA         | Check contents of Google Cloud Storage Buckets               |
+| [SFTP](https://canarychecker.io/reference/sftp)                                    | GA         | Check contents of folders over SFTP                          |
+| [SMB / CIFS](../smb)                                         | GA         | Check contents of folders over SMB/CIFS                      |
+| **Config**                                                   |            |                                                              |
+| [AWS Config](https://canarychecker.io/reference/aws-config)                        | GA         | Query AWS config using SQL                                   |
+| [AWS Config Rule](https://canarychecker.io/reference/aws-config-rule)              | GA         | AWS Config Rules that are firing, Custom AWS Config queries  |
+| [Config DB](https://canarychecker.io/reference/configdb)                           | GA         | Custom config queries for Mission Control Config D           |
+| [Kubernetes Resources](https://canarychecker.io/reference/kubernetes)              | GA         | Kubernetes resources that are missing or are in a non-ready state |
+| **Backups**                                                  |            |                                                              |
+| [GCP Databases](..refere)                                    | GA         | Backup freshness                                             |
+| [Restic](https://canarychecker.io/reference/restic)                                | Beta       | Backup freshness and integrity                               |
+| **Infrastructure**                                           |            |                                                              |
+| [EC2](https://canarychecker.io/reference/ec2)                                      | GA         | Ability to launch new EC2 instances                          |
+| [Kubernetes Ingress](https://canarychecker.io/reference/pod)                       | GA         | Ability to schedule and then route traffic via an ingress to a pod |
+| [Docker/Containerd](https://canarychecker.io/reference/containerd)                 | Deprecated | Ability to push and pull containers via docker/containerd    |
+| [Helm](https://canarychecker.io/reference/helm)                                    | Deprecated | Ability to push and pull helm charts                         |
+| [S3 Protocol](https://canarychecker.io/reference/s3-protocol)                      | GA         | Ability to read/write/list objects on an S3 compatible object store |
+
+## License
+
+Canary Checker core (the code in this repository) is licensed under [Apache 2.0](https://raw.githubusercontent.com/flanksource/canary-checker/main/LICENSE) and accepts contributions via GitHub pull requests after signing a CLA.
+
+The UI (Dashboard) is free to use with canary checker under a license exception of [Flanksource UI](https://github.com/flanksource/flanksource-ui/blob/main/LICENSE#L7)

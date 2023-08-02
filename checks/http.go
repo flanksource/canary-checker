@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -9,7 +8,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/commons/text"
-	"github.com/flanksource/kommons"
+	"github.com/flanksource/duty/models"
 	"github.com/pkg/errors"
 
 	"github.com/flanksource/canary-checker/api/external"
@@ -62,24 +61,17 @@ func (c *HTTPChecker) Run(ctx *context.Context) pkg.Results {
 	return results
 }
 
-func (c *HTTPChecker) configure(req *http.HTTPRequest, ctx *context.Context, check v1.HTTPCheck, kommons *kommons.Client) error {
+func (c *HTTPChecker) configure(req *http.HTTPRequest, ctx *context.Context, check v1.HTTPCheck, connection *models.Connection) error {
 	for _, header := range check.Headers {
-		if kommons == nil {
-			return fmt.Errorf("HTTP headers are not supported outside k8s")
-		}
-		key, value, err := kommons.GetEnvValueFromCache(header, ctx.Canary.GetNamespace(), 5*time.Minute)
+		value, err := ctx.GetEnvValueFromCache(header)
 		if err != nil {
 			return errors.WithMessagef(err, "failed getting header: %v", header)
 		}
-		req.Header(key, value)
+		req.Header(header.Name, value)
 	}
 
-	auth, err := GetAuthValues(check.Authentication, kommons, ctx.Canary.GetNamespace())
-	if err != nil {
-		return err
-	}
-	if auth != nil {
-		req.Auth(auth.Username.Value, auth.Password.Value)
+	if connection.Username != "" || connection.Password != "" {
+		req.Auth(connection.Username, connection.Password)
 	}
 
 	req.NTLM(check.NTLM)
@@ -101,19 +93,42 @@ func truncate(text string, max int) string {
 	return text[0:max]
 }
 
-// CheckConfig : Check every record of DNS name against config information
-// Returns check result and metrics
-
 func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.HTTPCheck)
 	var results pkg.Results
+	var err error
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
-	if _, err := url.Parse(check.Endpoint); err != nil {
-		return results.ErrorMessage(err)
+
+	//nolint:staticcheck
+	if check.Endpoint != "" && check.URL != "" {
+		return results.Failf("cannot specify both endpoint and url")
 	}
-	var err error
-	endpoint := check.Endpoint
+
+	//nolint:staticcheck
+	if check.Endpoint != "" && check.URL == "" {
+		check.URL = check.Endpoint
+	}
+
+	connection, err := ctx.GetConnection(check.Connection)
+	if err != nil {
+		return results.Failf("error getting connection  %v", err)
+	}
+
+	if connection.URL == "" {
+		return results.Failf("no url or connection specified")
+	}
+
+	if ntlm, ok := connection.Properties["ntlm"]; ok {
+		check.NTLM = ntlm == "true"
+	} else if ntlm, ok := connection.Properties["ntlmv2"]; ok {
+		check.NTLMv2 = ntlm == "true"
+	}
+
+	if _, err := url.Parse(connection.URL); err != nil {
+		return results.Failf("failed to parse url: %v", err)
+	}
+
 	body := check.Body
 	if check.TemplateBody {
 		body, err = text.Template(body, ctx.Canary)
@@ -122,9 +137,9 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		}
 	}
 
-	req := http.NewRequest(check.Endpoint).Method(check.GetMethod())
+	req := http.NewRequest(connection.URL).Method(check.GetMethod())
 
-	if err := c.configure(req, ctx, check, ctx.Kommons); err != nil {
+	if err := c.configure(req, ctx, check, connection); err != nil {
 		return results.ErrorMessage(err)
 	}
 
@@ -137,15 +152,15 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		Name: "response_code",
 		Type: metrics.CounterType,
 		Labels: map[string]string{
-			"code":     strconv.Itoa(status),
-			"endpoint": endpoint,
+			"code": strconv.Itoa(status),
+			"url":  check.URL,
 		},
 	})
 	result.Duration = elapsed.Milliseconds()
-	responseStatus.WithLabelValues(strconv.Itoa(status), statusCodeToClass(status), endpoint).Inc()
+	responseStatus.WithLabelValues(strconv.Itoa(status), statusCodeToClass(status), check.URL).Inc()
 	age := resp.GetSSLAge()
 	if age != nil {
-		sslExpiration.WithLabelValues(endpoint).Set(age.Hours() * 24)
+		sslExpiration.WithLabelValues(check.URL).Set(age.Hours() * 24)
 	}
 
 	body, _ = resp.AsString()
@@ -154,9 +169,10 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		"code":    status,
 		"headers": resp.GetHeaders(),
 		"elapsed": time.Since(start),
-		"sslAge":  age,
 		"content": body,
+		"sslAge":  utils.Deref(age),
 	}
+
 	if resp.IsJSON() {
 		json, err := resp.AsJSON()
 		if err != nil {

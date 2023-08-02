@@ -50,3 +50,10 @@ app.kubernetes.io/name: {{ include "canary-checker.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 control-plane: canary-checker
 {{- end }}
+
+{{/*
+Image Name
+*/}}
+{{- define "canary-checker.imageString" -}}
+{{ .Values.image.repository }}{{- if eq (lower .Values.image.type) "full" }}-full{{- end }}:{{ .Values.image.tag }} 
+{{- end }}

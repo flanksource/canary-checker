@@ -10,7 +10,7 @@ import (
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/canary-checker/pkg/topology"
+	pkgTopology "github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -64,13 +64,15 @@ func RunCanaryHandler(c echo.Context) error {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 
-	kommonsClient, err := pkg.NewKommonsClient()
+	kommonsClient, k8s, err := pkg.NewKommonsClient()
 	if err != nil {
 		logger.Warnf("failed to get kommons client, checks that read kubernetes configs will fail: %v", err)
 	}
-
-	ctx := context.New(kommonsClient, *canary)
-	result := checks.RunChecks(ctx)
+	ctx := context.New(kommonsClient, k8s, db.Gorm, *canary)
+	result, err := checks.RunChecks(ctx)
+	if err != nil {
+		return errorResonse(c, err, http.StatusInternalServerError)
+	}
 
 	var response RunCanaryResponse
 	response.FromCheckResults(result)
@@ -95,7 +97,7 @@ func RunTopologyHandler(c echo.Context) error {
 		topologyRunDepth = num
 	}
 
-	systemTemplate, err := db.GetSystemTemplate(c.Request().Context(), id)
+	topology, err := db.GetTopology(c.Request().Context(), id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errorResonse(c, fmt.Errorf("topology with id=%s was not found", id), http.StatusNotFound)
@@ -104,17 +106,18 @@ func RunTopologyHandler(c echo.Context) error {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 
-	kommonsClient, err := pkg.NewKommonsClient()
+	kommonsClient, k8s, err := pkg.NewKommonsClient()
 	if err != nil {
 		logger.Warnf("failed to get kommons client, checks that read kubernetes configs will fail: %v", err)
 	}
 
-	opts := topology.TopologyRunOptions{
-		Client:    kommonsClient,
-		Depth:     topologyRunDepth,
-		Namespace: systemTemplate.Namespace,
+	opts := pkgTopology.TopologyRunOptions{
+		Client:     kommonsClient,
+		Kubernetes: k8s,
+		Depth:      topologyRunDepth,
+		Namespace:  topology.Namespace,
 	}
-	if err := topology.SyncComponents(opts, *systemTemplate); err != nil {
+	if err := pkgTopology.SyncComponents(opts, *topology); err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 

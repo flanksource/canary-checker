@@ -1,0 +1,17 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: azure-devops
+spec:
+  interval: 300
+  azureDevops:
+    - project: Demo1
+      pipeline: ^windows-
+      personalAccessToken:
+        value: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      organization: flanksource
+      variable:
+        env: prod
+      branch:
+        - main
+      thresholdMillis: 60000 # 60 seconds

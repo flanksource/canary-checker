@@ -6,13 +6,13 @@ spec:
   interval: 30
   kubernetes:
    - namespace:
-       name: default
+       name: canaries
      name: k8s-ready pods
      kind: Pod
      resource:
       labelSelector: app=k8s-ready
    - namespace:
-       name: default
+       name: canaries
      kind: Pod
      name: k8s-ready pods
      ready: false

@@ -11,6 +11,7 @@ type Describable interface {
 	GetIcon() string
 	GetName() string
 	GetLabels() map[string]string
+	GetTransformDeleteStrategy() string
 }
 
 type WithType interface {

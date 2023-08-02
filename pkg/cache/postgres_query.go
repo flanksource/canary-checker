@@ -79,57 +79,56 @@ func (q QueryParams) GetWhereClause() (string, map[string]interface{}, error) {
 	return strings.TrimSpace(clause), args, nil
 }
 
-func (q QueryParams) ExecuteDetails(db Querier) ([]pkg.Timeseries, error) {
-	clause, namedArgs, err := q.GetWhereClause()
-	if err != nil {
-		return nil, err
-	}
-	namedArgs["limit"] = q.StatusCount
-	keyIndex := 3
-	messageIndex := 4
-	errorIndex := 5
+func (q QueryParams) ExecuteDetails(ctx context.Context, db Querier) ([]pkg.Timeseries, error) {
+	start := q.GetStartTime().Format(time.RFC3339)
+	end := q.GetEndTime().Format(time.RFC3339)
 
-	sql := "SELECT time,duration,status "
-	if q.Check == "" {
-		sql += ", check_key"
-	}
-	if q.IncludeMessages {
-		sql += ", message, error"
-		if q.Check != "" {
-			messageIndex -= 1
-			errorIndex -= 1
-		}
-	}
-	sql += fmt.Sprintf(`
+	query := `
+With grouped_by_window AS (
+	SELECT
+		duration,
+		status,
+		to_timestamp(floor((extract(epoch FROM time) + $1) / $2) * $2) AS time
 	FROM check_statuses
-	WHERE %s
-	LIMIT :limit
-`, clause)
-	rows, err := exec(db, q, sql, namedArgs)
+	WHERE
+		time >= $3 AND
+		time <= $4 AND
+		check_id = $5
+)
+SELECT 
+  time,
+  bool_and(status),
+  AVG(duration)::integer as duration 
+FROM 
+  grouped_by_window
+GROUP BY time
+ORDER BY time
+`
+	args := []any{q.WindowDuration.Seconds() / 2, q.WindowDuration.Seconds(), start, end, q.Check}
+
+	if q.WindowDuration == 0 {
+		query = `SELECT time, status, duration FROM check_statuses WHERE time >= $1 AND time <= $2 AND check_id = $3`
+		args = []any{start, end, q.Check}
+	}
+
+	rows, err := db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var results []pkg.Timeseries
 	for rows.Next() {
-		vals, err := rows.Values()
-		if err != nil {
+		var datapoint pkg.Timeseries
+		var ts time.Time
+		if err := rows.Scan(&ts, &datapoint.Status, &datapoint.Duration); err != nil {
 			return nil, err
 		}
-		result := pkg.Timeseries{
-			Time:     vals[0].(time.Time).Format(time.RFC3339),
-			Duration: intV(vals[1]),
-			Status:   vals[2].(bool),
-		}
-		if q.Check == "" {
-			result.Key = vals[keyIndex].(string)
-		}
-		if q.IncludeMessages {
-			result.Message = vals[messageIndex].(string)
-			result.Error = vals[errorIndex].(string)
-		}
-		results = append(results, result)
+
+		datapoint.Time = ts.Format(time.RFC3339)
+		results = append(results, datapoint)
 	}
+
 	return results, nil
 }
 
@@ -185,16 +184,18 @@ SELECT
     checks.description,
     canaries.namespace,
     canaries.name as canaryName,
-    canaries.labels,
+    canaries.labels || checks.labels as labels,
     severity,
     owner,
     last_runtime,
     checks.created_at,
     checks.updated_at,
     checks.deleted_at,
-    status
+    status,
+		stats.max_time,
+		stats.min_time,
+		stats.total_checks
 FROM checks checks
-
 RIGHT JOIN (
   	SELECT 
         check_id,
@@ -202,7 +203,10 @@ RIGHT JOIN (
         percentile_disc(0.97) within group (order by filtered_check_status.duration) as p97,
         percentile_disc(0.05) within group (order by filtered_check_status.duration) as p95,
         COUNT(*) FILTER (WHERE filtered_check_status.status = TRUE) as passed,
-        COUNT(*) FILTER (WHERE filtered_check_status.status = FALSE) as failed
+        COUNT(*) FILTER (WHERE filtered_check_status.status = FALSE) as failed,
+				COUNT(*) total_checks,
+				MIN(filtered_check_status.time) as min_time,
+				MAX(filtered_check_status.time) as max_time
 	FROM
         filtered_check_status
     GROUP BY check_id
@@ -240,6 +244,7 @@ WHERE (stats.passed > 0 OR stats.failed > 0) %s
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	checks := pkg.Checks{}
 	for rows.Next() {
@@ -271,6 +276,10 @@ WHERE (stats.passed > 0 OR stats.failed > 0) %s
 			check.DeletedAt, _ = timeV(vals[20])
 		}
 		check.Status = vals[21].(string)
+		check.LatestRuntime, _ = timeV(vals[22])
+		check.EarliestRuntime, _ = timeV(vals[23])
+		check.TotalRuns = intV(vals[24])
+
 		if vals[7] != nil {
 			for _, status := range vals[7].([]interface{}) {
 				s := status.(map[string]interface{})

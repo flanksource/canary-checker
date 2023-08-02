@@ -64,12 +64,12 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 		r = net.Resolver{}
 	}
 
-	resultCh := make(chan *pkg.CheckResult, 1)
-
 	queryType := check.QueryType
 	if queryType == "" {
 		queryType = "A"
 	}
+
+	resultCh := make(chan *pkg.CheckResult, 1)
 	if fn, ok := resolvers[strings.ToUpper(queryType)]; !ok {
 		return results.Failf("unknown query type: %s", queryType)
 	} else {
@@ -202,7 +202,8 @@ func getDialer(check v1.DNSCheck, timeout int) (func(ctx context.Context, networ
 }
 
 func checkResult(got []string, check v1.DNSCheck) (result bool, message string) {
-	expected := check.ExactReply
+	expected := make([]string, len(check.ExactReply))
+	copy(expected, check.ExactReply)
 	count := len(got)
 	var pass = true
 	var errMessage string

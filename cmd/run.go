@@ -28,6 +28,7 @@ var Run = &cobra.Command{
 	Use:   "run <canary.yaml>",
 	Short: "Execute checks and return",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		logger.ParseFlags(cmd.Flags())
 		db.ConnectionString = readFromEnv(db.ConnectionString)
 		if err := db.Init(); err != nil {
 			logger.Fatalf("error connecting with postgres %v", err)
@@ -38,9 +39,9 @@ var Run = &cobra.Command{
 		if len(configFiles) == 0 {
 			log.Fatalln("Must specify at least one canary")
 		}
-		kommonsClient, err := pkg.NewKommonsClient()
+		kommonsClient, k8s, err := pkg.NewKommonsClient()
 		if err != nil {
-			logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
+			logger.Warnf("Failed to get kubernetes client: %v", err)
 		}
 		var results = []*pkg.CheckResult{}
 
@@ -64,8 +65,15 @@ var Run = &cobra.Command{
 				wg.Add(1)
 				_config := config
 				go func() {
-					queue <- checks.RunChecks(context.New(kommonsClient, _config))
-					wg.Done()
+					defer wg.Done()
+
+					res, err := checks.RunChecks(context.New(kommonsClient, k8s, db.Gorm, _config))
+					if err != nil {
+						logger.Errorf("error running checks: %v", err)
+						return
+					}
+
+					queue <- res
 				}()
 			}
 		}

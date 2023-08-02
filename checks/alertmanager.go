@@ -3,6 +3,8 @@ package checks
 import (
 	gocontext "context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -32,9 +34,18 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
 
+	connection, err := ctx.GetConnection(check.Connection)
+	if err != nil {
+		return results.Failf("error getting connection: %v", err)
+	}
+
+	parsedURL, err := url.Parse(connection.URL)
+	if err != nil {
+		return results.Failf("error parsing url: %v", err)
+	}
 	client := alertmanagerClient.NewHTTPClientWithConfig(nil, &alertmanagerClient.TransportConfig{
-		Host:     check.GetEndpoint(),
-		Schemes:  []string{"http", "https"},
+		Host:     parsedURL.Host,
+		Schemes:  []string{parsedURL.Scheme},
 		BasePath: alertmanagerClient.DefaultBasePath,
 	})
 	var filters []string
@@ -46,6 +57,9 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	}
 	for _, ignore := range check.Ignore {
 		filters = append(filters, fmt.Sprintf("alertname!~%s", ignore))
+	}
+	for k, v := range check.ExcludeFilters {
+		filters = append(filters, fmt.Sprintf("%s!=%s", k, v))
 	}
 
 	alerts, err := client.Alert.GetAlerts(&alertmanagerAlert.GetAlertsParams{
@@ -60,7 +74,7 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 	var alertMessages []map[string]any
 	for _, alert := range alerts.Payload {
 		alertMap := map[string]any{
-			"name":        alert.Labels["alertname"],
+			"name":        generateFullName(alert.Labels["alertname"], alert.Labels),
 			"message":     extractMessage(alert.Annotations),
 			"labels":      alert.Labels,
 			"annotations": alert.Annotations,
@@ -81,4 +95,32 @@ func extractMessage(annotations map[string]string) string {
 		}
 	}
 	return ""
+}
+
+func generateFullName(name string, labels map[string]string) string {
+	fullName := []string{name}
+
+	// We add alert metadata to the check name
+	level1 := []string{"namespace", "node"}
+	for _, key := range level1 {
+		if labels[key] != "" {
+			fullName = append(fullName, labels[key])
+		}
+	}
+
+	// Only one of these labels must be used
+	level2 := []string{"deployment", "daemonset", "statefulset", "cronjob_name", "job_name", "pod"}
+	for _, key := range level2 {
+		if labels[key] != "" {
+			fullName = append(fullName, labels[key])
+			break
+		}
+	}
+
+	// Add container name if it exists
+	if labels["container"] != "" && labels["job"] != labels["container"] {
+		fullName = append(fullName, labels["container"])
+	}
+
+	return strings.Join(fullName, "/")
 }

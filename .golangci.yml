@@ -1,7 +1,8 @@
 run:
   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 20m
-  build-tags: aws
+  build-tags:
+    - aws
   skip-dirs:
     - pkg/db/models
 
@@ -11,8 +12,8 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - deadcode
-    - depguard
+    # Disabling depguard due to runtime errors
+    # - depguard
     - dogsled
     - errcheck
     - goconst
@@ -26,15 +27,20 @@ linters:
     - nakedret
     - rowserrcheck
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
 
 linters-settings:
   gofmt:
     simplify: false
+  depguard:
+    rules:
+      main:
+        files:
+          - $all
+        deny:
+          image: Do not use image package

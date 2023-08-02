@@ -11,9 +11,8 @@ import (
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
-	"github.com/jackc/pgx/v5"
+	"github.com/flanksource/duty/migrate"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 	"gorm.io/plugin/prometheus"
 )
@@ -107,18 +106,21 @@ func Init() error {
 		return err
 	}
 
-	if err := Gorm.Use(prometheus.New(prometheus.Config{
-		DBName:      Pool.Config().ConnConfig.Database,
-		StartServer: false,
-		MetricsCollector: []prometheus.MetricsCollector{
-			&prometheus.Postgres{},
-		},
-	})); err != nil {
-		logger.Warnf("Failed to register prometheus metrics: %v", err)
-	}
+	go func() {
+		if err := Gorm.Use(prometheus.New(prometheus.Config{
+			DBName:      Pool.Config().ConnConfig.Database,
+			StartServer: false,
+			MetricsCollector: []prometheus.MetricsCollector{
+				&prometheus.Postgres{},
+			},
+		})); err != nil {
+			logger.Warnf("Failed to register prometheus metrics: %v", err)
+		}
+	}()
 
 	if RunMigrations {
-		if err := duty.Migrate(ConnectionString); err != nil {
+		opts := &migrate.MigrateOptions{IgnoreFiles: []string{"007_events.sql", "012_changelog.sql"}}
+		if err := duty.Migrate(ConnectionString, opts); err != nil {
 			return err
 		}
 	}
@@ -126,37 +128,6 @@ func Init() error {
 	return nil
 }
 
-func Cleanup() {
-	cron := cron.New()
-	cron.AddFunc("@every 1d", func() { // nolint: errcheck
-		if _, err := Pool.Exec(context.TODO(), "DELETE FROM checks WHERE updated_at < NOW() - INTERVAL '1 day' * $1;", DefaultExpiryDays); err != nil {
-			logger.Errorf("error deleting old entried from check")
-		}
-		if _, err := Pool.Exec(context.TODO(), "DELETE FROM check_statuses WHERE inserted_at < NOW() - INTERVAL '1 day' * $1;", DefaultExpiryDays); err != nil {
-			logger.Errorf("error deleting old entried from check")
-		}
-	})
-	cron.Start()
-}
-
 func GetDB() (*sql.DB, error) {
 	return duty.NewDB(ConnectionString)
-}
-
-func ConvertNamedParams(sql string, namedArgs map[string]interface{}) (string, []interface{}) {
-	i := 1
-	var args []interface{}
-	// Loop the named args and replace with placeholders
-	for pname, pval := range namedArgs {
-		sql = strings.ReplaceAll(sql, ":"+pname, fmt.Sprint(`$`, i))
-		args = append(args, pval)
-		i++
-	}
-	return sql, args
-}
-
-// TODO: Use pgx/v5 and use Pool.Query(ctx, sql, pgx.NamedArgs{})
-func QueryNamed(ctx context.Context, sql string, args map[string]interface{}) (pgx.Rows, error) {
-	sql, namedArgs := ConvertNamedParams(sql, args)
-	return Pool.Query(ctx, sql, namedArgs...)
 }

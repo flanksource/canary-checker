@@ -137,11 +137,13 @@ func GetMetrics(key string) (uptime pkg.Uptime, latency pkg.Latency) {
 func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _latency pkg.Latency) {
 	if result == nil || result.Check == nil {
 		logger.Warnf("%s/%s returned a nil result", canary.Namespace, canary.Name)
-		return
+		return _uptime, _latency
 	}
 	if canary.GetCheckID(result.Check.GetName()) == "" {
-		logger.Warnf("%s/%s/%s returned a result for a check that does not exist", canary.Namespace, canary.Name, result.Check.GetName())
-		return
+		if val := result.Canary.Labels["transformed"]; val != "true" {
+			logger.Warnf("%s/%s/%s returned a result for a check that does not exist", canary.Namespace, canary.Name, result.Check.GetName())
+		}
+		return _uptime, _latency
 	}
 	canaryNamespace := canary.Namespace
 	canaryName := canary.Name

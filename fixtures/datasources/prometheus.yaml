@@ -5,10 +5,8 @@ metadata:
 spec:
   interval: 30
   prometheus:
-    - host: https://prometheus.canary.lab.flanksource.com/
+    - url: https://prometheus.demo.aws.flanksource.com/
       name: prometheus-check
       query: kubernetes_build_info{job!~"kube-dns|coredns"}
       display:
-        template: "{{ (index .results 0).git_version }}"
-      test:
-        template: "true"
+        expr: results[0].git_version

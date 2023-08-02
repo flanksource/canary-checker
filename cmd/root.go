@@ -6,8 +6,8 @@ import (
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/runner"
-	"github.com/flanksource/canary-checker/templating"
 	"github.com/flanksource/commons/logger"
+	gomplate "github.com/flanksource/gomplate/v3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -17,7 +17,7 @@ var Root = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		logger.UseZap(cmd.Flags())
 		for _, script := range sharedLibrary {
-			if err := templating.LoadSharedLibrary(script); err != nil {
+			if err := gomplate.LoadSharedLibrary(script); err != nil {
 				logger.Errorf("Failed to load shared library %s: %v", script, err)
 			}
 		}
@@ -54,6 +54,8 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
 	flags.StringVarP(&cache.DefaultWindow, "default-window", "", "1h", "Default search window")
 	flags.IntVar(&db.CheckStatusRetentionDays, "check-status-retention-period", db.DefaultCheckStatusRetentionDays, "Check status retention period in days")
+	flags.IntVar(&db.CheckRetentionDays, "check-retention-period", db.DefaultCheckRetentionDays, "Check retention period in days")
+	flags.IntVar(&db.CanaryRetentionDays, "canary-retention-period", db.DefaultCanaryRetentionDays, "Canary retention period in days")
 }
 
 func readFromEnv(v string) string {

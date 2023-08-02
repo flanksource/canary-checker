@@ -18,12 +18,13 @@ type Component struct {
 }
 
 type ComponentSpec struct {
-	Name    string    `json:"name,omitempty"`
-	Tooltip string    `json:"tooltip,omitempty"`
-	Icon    string    `json:"icon,omitempty"`
-	Owner   string    `json:"owner,omitempty"`
-	Id      *Template `json:"id,omitempty"` //nolint
-	Order   int       `json:"order,omitempty"`
+	Name    string            `json:"name,omitempty"`
+	Tooltip string            `json:"tooltip,omitempty"`
+	Icon    string            `json:"icon,omitempty"`
+	Owner   string            `json:"owner,omitempty"`
+	Id      *Template         `json:"id,omitempty"` //nolint
+	Order   int               `json:"order,omitempty"`
+	Labels  map[string]string `json:"labels,omitempty"`
 	// The type of component, e.g. service, API, website, library, database, etc.
 	Type string `json:"type,omitempty"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.

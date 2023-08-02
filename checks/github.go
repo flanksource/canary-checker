@@ -36,16 +36,26 @@ func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	_, githubToken, err := ctx.Kommons.GetEnvValue(*check.GithubToken, ctx.Canary.GetNamespace())
-	if err != nil {
-		return results.Failf("error fetching github token: %v", err)
+
+	var githubToken string
+	if connection, err := ctx.HydrateConnectionByURL(check.ConnectionName); err != nil {
+		return results.Failf("failed to find connection for github token %q: %v", check.ConnectionName, err)
+	} else if connection != nil {
+		githubToken = connection.Password
+	} else {
+		githubToken, err = ctx.GetEnvValueFromCache(check.GithubToken)
+		if err != nil {
+			return results.Failf("error fetching github token from env cache: %v", err)
+		}
 	}
+
 	askGitCmd := fmt.Sprintf("GITHUB_TOKEN=%v askgit \"%v\" --format json", githubToken, check.Query)
 	cmd := osExec.Command("bash", "-c", askGitCmd)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return results.Failf("error executing askgit command: %v", err)
+		return results.Failf("error executing askgit command. output=%q: %v", output, err)
 	}
+
 	rows := string(output)
 	var rowResults = make([]map[string]string, 0)
 	for _, row := range strings.Split(rows, "\n") {

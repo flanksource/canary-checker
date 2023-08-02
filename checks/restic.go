@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	osExec "os/exec"
+	"strconv"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/kommons"
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -45,18 +45,71 @@ func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	envVars, err := c.getEnvVars(check, ctx.Canary.Namespace, ctx.Kommons)
-	if err != nil {
-		return results.Failf("error getting envVars %v", err)
+
+	var envVars = make(map[string]string)
+	if check.ConnectionName != "" {
+		connection, err := ctx.HydrateConnectionByURL(check.ConnectionName)
+		if err != nil {
+			return results.Failf("error getting restic connection: %v", err)
+		}
+		envVars[resticPasswordEnvKey] = connection.Password
+
+		check.Repository = connection.URL
+		check.CaCert = connection.Certificate
+
+		if checkIntegrity, ok := connection.Properties["checkIntegrity"]; ok {
+			if val, err := strconv.ParseBool(checkIntegrity); err != nil {
+				check.CheckIntegrity = val
+			}
+		}
+
+		if maxAge, ok := connection.Properties["maxAge"]; ok {
+			check.MaxAge = maxAge
+		}
+	} else {
+		password, err := ctx.GetEnvValueFromCache(*check.Password)
+		if err != nil {
+			return results.Failf("error getting restic password from env: %v", err)
+		}
+		envVars[resticPasswordEnvKey] = password
 	}
+
+	if check.AWSConnectionName != "" {
+		connection, err := ctx.HydrateConnectionByURL(check.AWSConnectionName)
+		if err != nil {
+			return results.Failf("error getting aws connection: %v", err)
+		}
+
+		envVars[resticAwsAccessKeyIDEnvKey] = connection.Username
+		envVars[resticAwsSecretAccessKey] = connection.Password
+	} else {
+		if !check.AccessKey.IsEmpty() {
+			accessKey, err := ctx.GetEnvValueFromCache(*check.AccessKey)
+			if err != nil {
+				return results.Failf("error getting aws access key from env: %v", err)
+			}
+			envVars[resticAwsAccessKeyIDEnvKey] = accessKey
+		}
+
+		if !check.SecretKey.IsEmpty() {
+			secretKey, err := ctx.GetEnvValueFromCache(*check.SecretKey)
+			if err != nil {
+				return results.Failf("error getting aws secret key from env: %v", err)
+			}
+			envVars[resticAwsSecretAccessKey] = secretKey
+		}
+	}
+
 	if check.CheckIntegrity {
 		if err := checkIntegrity(check.Repository, check.CaCert, envVars); err != nil {
 			return results.Failf("integrity check failed %v", err)
 		}
 	}
+
 	if err := checkBackupFreshness(check.Repository, check.MaxAge, check.CaCert, envVars); err != nil {
 		return results.Failf("backup freshness check failed: %v", err)
 	}
+
 	return results
 }
 
@@ -101,30 +154,4 @@ func checkBackupFreshness(repository, maxAge, caCert string, envVars map[string]
 		return fmt.Errorf("backup is %s older than allowd maxAge for backup", (backupDuration - maxAllowedBackupDuration).String())
 	}
 	return nil
-}
-
-func (c *ResticChecker) getEnvVars(r v1.ResticCheck, namespace string, kommons *kommons.Client) (map[string]string, error) {
-	var password, secretKey, accessKey string
-	var err error
-	_, password, err = kommons.GetEnvValue(*r.Password, namespace)
-	if err != nil {
-		return nil, err
-	}
-	if r.SecretKey != nil {
-		_, secretKey, err = kommons.GetEnvValue(*r.SecretKey, namespace)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if r.AccessKey != nil {
-		_, accessKey, err = kommons.GetEnvValue(*r.AccessKey, namespace)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return map[string]string{
-		resticPasswordEnvKey:       password,
-		resticAwsSecretAccessKey:   secretKey,
-		resticAwsAccessKeyIDEnvKey: accessKey,
-	}, nil
 }
