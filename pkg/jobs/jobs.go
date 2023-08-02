@@ -16,7 +16,7 @@ import (
 var FuncScheduler = cron.New()
 
 const (
-	PullCanaryFromUpstreamSchedule     = "@every 2m"
+	PullCanaryFromUpstreamSchedule     = "@every 30s"
 	PushCanaryToUpstreamSchedule       = "@every 10s"
 	ReconcileCanaryToUpstreamSchedule  = "@every 3h"
 	SyncCanaryJobsSchedule             = "@every 2m"

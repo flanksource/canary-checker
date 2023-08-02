@@ -44,6 +44,11 @@ func ReconcileCanaryResults() {
 	}
 }
 
+type CanaryPullResponse struct {
+	Before   time.Time       `json:"before"`
+	Canaries []models.Canary `json:"canaries,omitempty"`
+}
+
 // UpstreamPullJob pulls canaries from the upstream
 type UpstreamPullJob struct {
 	lastRuntime time.Time
@@ -88,23 +93,23 @@ func (t *UpstreamPullJob) pull(config upstream.UpstreamConfig) error {
 	}
 	defer resp.Body.Close()
 
-	var canaries []models.Canary
-	if err := json.NewDecoder(resp.Body).Decode(&canaries); err != nil {
+	var response CanaryPullResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return fmt.Errorf("error decoding response: %w", err)
 	}
 
-	t.lastRuntime = time.Now()
+	t.lastRuntime = response.Before
 
-	if len(canaries) == 0 {
+	if len(response.Canaries) == 0 {
 		return nil
 	}
 
-	logger.Tracef("fetched %d canaries from upstream", len(canaries))
+	logger.Tracef("fetched %d canaries from upstream", len(response.Canaries))
 
 	return db.Gorm.Omit("agent_id").Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
 		UpdateAll: true,
-	}).Create(&canaries).Error
+	}).Create(&response.Canaries).Error
 }
 
 type UpstreamPushJob struct {
