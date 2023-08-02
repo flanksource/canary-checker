@@ -35,7 +35,20 @@ func NewSession(ctx *context.Context, conn v1.AWSConnection) (*aws.Config, error
 		}
 		tr = logger.RoundTripper(tr)
 	}
-	cfg, err := config.LoadDefaultConfig(ctx, config.WithHTTPClient(&http.Client{Transport: tr}))
+
+	loadOptions := []func(*config.LoadOptions) error{
+		config.WithHTTPClient(&http.Client{Transport: tr}),
+	}
+	if conn.Endpoint != "" {
+		loadOptions = append(loadOptions,
+			config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(
+				func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+					return aws.Endpoint{URL: conn.Endpoint}, nil
+				}),
+			),
+		)
+	}
+	cfg, err := config.LoadDefaultConfig(ctx, loadOptions...)
 
 	if !conn.AccessKey.IsEmpty() {
 		accessKey, err := ctx.GetEnvValueFromCache(conn.AccessKey)
@@ -51,12 +64,6 @@ func NewSession(ctx *context.Context, conn v1.AWSConnection) (*aws.Config, error
 	}
 	if conn.Region != "" {
 		cfg.Region = conn.Region
-	}
-	if conn.Endpoint != "" {
-		cfg.EndpointResolverWithOptions = aws.EndpointResolverWithOptionsFunc(
-			func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-				return aws.Endpoint{URL: conn.Endpoint}, nil
-			})
 	}
 
 	return &cfg, err
