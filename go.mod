@@ -9,7 +9,7 @@ require (
 	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/aws/aws-sdk-go-v2 v1.20.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.31
-	github.com/aws/aws-sdk-go-v2/credentials v1.13.30
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.31
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.109.1
@@ -108,9 +108,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.32 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.31 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.15.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.13.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.15.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.21.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.13.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.15.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.21.1 // indirect
 	github.com/aws/smithy-go v1.14.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
