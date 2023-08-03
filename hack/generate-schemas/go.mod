@@ -42,7 +42,7 @@ require (
 	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/flanksource/duty v1.0.141 // indirect
+	github.com/flanksource/duty v1.0.142 // indirect
 	github.com/flanksource/is-healthy v0.0.0-20230713150444-ad2a5ef4bb37 // indirect
 	github.com/flanksource/mapstructure v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
