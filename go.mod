@@ -66,7 +66,7 @@ require (
 	github.com/vadimi/go-http-ntlm/v2 v2.4.1
 	go.mongodb.org/mongo-driver v1.12.0
 	golang.org/x/crypto v0.11.0
-	golang.org/x/net v0.12.0
+	golang.org/x/net v0.13.0
 	golang.org/x/sync v0.3.0
 	google.golang.org/api v0.134.0
 	google.golang.org/genproto v0.0.0-20230731193218-e0aa005b6bdf
