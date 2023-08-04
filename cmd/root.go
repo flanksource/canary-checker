@@ -5,6 +5,7 @@ import (
 
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/commons/logger"
 	gomplate "github.com/flanksource/gomplate/v3"
@@ -56,6 +57,12 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&db.CheckStatusRetentionDays, "check-status-retention-period", db.DefaultCheckStatusRetentionDays, "Check status retention period in days")
 	flags.IntVar(&db.CheckRetentionDays, "check-retention-period", db.DefaultCheckRetentionDays, "Check retention period in days")
 	flags.IntVar(&db.CanaryRetentionDays, "canary-retention-period", db.DefaultCanaryRetentionDays, "Canary retention period in days")
+
+	// Flags for push/pull
+	flags.StringVar(&canary.UpstreamConf.Host, "upstream-host", "", "central canary checker instance to push/pull canaries")
+	flags.StringVar(&canary.UpstreamConf.Username, "upstream-user", "", "upstream username")
+	flags.StringVar(&canary.UpstreamConf.Password, "upstream-password", "", "upstream password")
+	flags.StringVar(&canary.UpstreamConf.AgentName, "agent-name", "", "name of this agent")
 }
 
 func readFromEnv(v string) string {
