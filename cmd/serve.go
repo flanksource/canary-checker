@@ -8,18 +8,15 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echopprof "github.com/sevennt/echo-pprof"
-	"gorm.io/gorm"
 
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
-	"github.com/flanksource/canary-checker/pkg/utils"
 
 	"github.com/flanksource/canary-checker/pkg/runner"
 
@@ -29,6 +26,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -51,31 +49,6 @@ var Serve = &cobra.Command{
 	},
 }
 
-func loadPropertiesToDB(db *gorm.DB, filename string) error {
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		return nil
-	}
-
-	props, err := utils.ParsePropertiesFile(filename)
-	if err != nil {
-		return err
-	}
-
-	var values []string
-	for k, v := range props {
-		values = append(values, fmt.Sprintf("('%s', '%s')", k, v))
-	}
-
-	if len(values) > 0 {
-		query := fmt.Sprintf("INSERT INTO properties (name, value) VALUES %s ON CONFLICT (name) DO UPDATE SET value = excluded.value", strings.Join(values, ","))
-		if err := db.Exec(query).Error; err != nil {
-			return fmt.Errorf("failed to insert properties into DB: %w", err)
-		}
-	}
-
-	return nil
-}
-
 func setup() {
 	if err := db.Init(); err != nil {
 		logger.Fatalf("error connecting to db %v", err)
@@ -84,8 +57,8 @@ func setup() {
 
 	push.AddServers(pushServers)
 
-	if err := loadPropertiesToDB(db.Gorm, propertiesFile); err != nil {
-		logger.Fatalf("%v", err)
+	if err := models.SetPropertiesInDBFromFile(db.Gorm, propertiesFile); err != nil {
+		logger.Fatalf("Error setting properties in database: %v", err)
 	}
 
 	go push.Start()
