@@ -921,12 +921,18 @@ func (c FolderCheck) GetEndpoint() string {
 	return c.Path
 }
 
+type ExecConnections struct {
+	AWS *AWSConnection `yaml:"aws,omitempty" json:"aws,omitempty"`
+	// TODO: GCP and Azure connections
+}
+
 type ExecCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 	// Script can be a inline script or a path to a script that needs to be executed
 	// On windows executed via powershell and in darwin and linux executed using bash
-	Script *string `yaml:"script" json:"script"`
+	Script      string          `yaml:"script" json:"script"`
+	Connections ExecConnections `yaml:"connections,omitempty" json:"connections,omitempty"`
 }
 
 func (c ExecCheck) GetType() string {
@@ -934,7 +940,7 @@ func (c ExecCheck) GetType() string {
 }
 
 func (c ExecCheck) GetEndpoint() string {
-	return *c.Script
+	return c.Script
 }
 
 func (c ExecCheck) GetTestFunction() Template {

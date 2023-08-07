@@ -49,14 +49,14 @@ func execPowershell(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 	if err != nil {
 		result.Failf("powershell not found")
 	}
-	args := []string{*check.Script}
+	args := []string{check.Script}
 	cmd := osExec.Command(ps, args...)
 	return runCmd(cmd, result)
 }
 
 func execBash(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
-	cmd := osExec.Command("bash", "-c", *check.Script)
+	cmd := osExec.Command("bash", "-c", check.Script)
 	return runCmd(cmd, result)
 }
 

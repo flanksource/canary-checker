@@ -19,6 +19,27 @@ RUN apt-get update && \
   rm -Rf /usr/share/doc && rm -Rf /usr/share/man  && \
   apt-get clean
 
+# Install alexellis/arkade & other CLI tools with it
+RUN curl -sLS https://get.arkade.dev | sh
+RUN arkade get kubectl
+RUN arkade get stern
+RUN arkade get jq
+RUN arkade get yq
+ENV PATH="${PATH}:/root/.arkade/bin/"
+
+# Install AWS CLI
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+RUN	unzip awscliv2.zip && ./aws/install
+
+# Install Azure CLI
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
+# Install GCP CLI
+RUN curl -sL -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-441.0.0-linux-x86_64.tar.gz
+RUN tar -xf google-cloud-cli-441.0.0-linux-x86_64.tar.gz
+RUN ./google-cloud-sdk/install.sh --help
+RUN ./google-cloud-sdk/bin/gcloud version
+
 COPY --from=builder /app/.bin/canary-checker /app
 
 RUN mkdir /opt/database
