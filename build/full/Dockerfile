@@ -20,22 +20,22 @@ RUN apt-get update && \
   apt-get clean
 
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-     echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list && \
-     apt-get update && apt-get install -y \
-      google-chrome-stable \
-      fontconfig \
-      fonts-ipafont-gothic \
-      fonts-wqy-zenhei \
-      fonts-thai-tlwg \
-      fonts-kacst \
-      fonts-symbola \
-      fonts-noto \
-      fonts-freefont-ttf \
-      --no-install-recommends
+  echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list && \
+  apt-get update && apt-get install -y \
+  google-chrome-stable \
+  fontconfig \
+  fonts-ipafont-gothic \
+  fonts-wqy-zenhei \
+  fonts-thai-tlwg \
+  fonts-kacst \
+  fonts-symbola \
+  fonts-noto \
+  fonts-freefont-ttf \
+  --no-install-recommends
 
-  RUN apt-get update && apt-get upgrade -y && \
-      rm -Rf /var/lib/apt/lists/* && \
-      apt-get clean
+RUN apt-get update && apt-get upgrade -y && \
+  rm -Rf /var/lib/apt/lists/* && \
+  apt-get clean
 
 ENV RESTIC_VERSION=0.15.2
 RUN curl -L https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_amd64.bz2 -o restic.bz2 && \
@@ -51,32 +51,29 @@ RUN curl -L https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-${JMETER_VER
 
 ENV PATH /opt/apache-jmeter-${JMETER_VERSION}/bin/:$PATH
 
-
 RUN curl -L https://github.com/flanksource/askgit/releases/download/v0.4.8-flanksource/askgit-linux-amd64.tar.gz -o askgit.tar.gz && \
-    tar xf askgit.tar.gz && \
-    mv askgit /usr/local/bin/askgit && \
-    rm askgit.tar.gz && \
-    wget http://mirrors.kernel.org/ubuntu/pool/main/o/openssl/openssl_1.1.1f-1ubuntu2.19_amd64.deb && \
-    dpkg -i openssl_1.1.1f-1ubuntu2.19_amd64.deb && \
-    rm openssl_1.1.1f-1ubuntu2.19_amd64.deb
+  tar xf askgit.tar.gz && \
+  mv askgit /usr/local/bin/askgit && \
+  rm askgit.tar.gz && \
+  wget http://mirrors.kernel.org/ubuntu/pool/main/o/openssl/openssl_1.1.1f-1ubuntu2.19_amd64.deb && \
+  dpkg -i openssl_1.1.1f-1ubuntu2.19_amd64.deb && \
+  rm openssl_1.1.1f-1ubuntu2.19_amd64.deb
 
+# The best developer experience for load testing
 ENV K6_VERSION=v0.44.0
 RUN curl -L https://github.com/grafana/k6/releases/download/${K6_VERSION}/k6-${K6_VERSION}-linux-amd64.tar.gz -o k6.tar.gz && \
-    tar xvf k6.tar.gz && \
-    mv k6-${K6_VERSION}-linux-amd64/k6 /usr/local/bin/k6 && \
-    rm k6.tar.gz
+  tar xvf k6.tar.gz && \
+  mv k6-${K6_VERSION}-linux-amd64/k6 /usr/local/bin/k6 && \
+  rm k6.tar.gz
 
+# Benthos is a high performance and resilient stream processor
 RUN curl -Lsf https://sh.benthos.dev | bash -s -- 4.15.0
 
+# Commandline tool for running SQL queries against JSON, CSV, Excel, Parquet, and more
 RUN curl -L https://github.com/multiprocessio/dsq/releases/download/v0.23.0/dsq-linux-x64-v0.23.0.zip -o dsq.zip && \
-    unzip dsq.zip && \
-    mv dsq /usr/local/bin/dsq && \
-    rm dsq.zip
-
-RUN curl -L https://github.com/stern/stern/releases/download/v1.25.0/stern_1.25.0_linux_amd64.tar.gz -o stern.tar.gz && \
-    tar xvf stern.tar.gz && \
-    mv stern /usr/local/bin/stern && \
-    rm stern.tar.gz
+  unzip dsq.zip && \
+  mv dsq /usr/local/bin/dsq && \
+  rm dsq.zip
 
 # Install alexellis/arkade & other CLI tools with it
 RUN curl -sLS https://get.arkade.dev | sh
