@@ -1618,6 +1618,84 @@ spec:
                 exec:
                   items:
                     properties:
+                      connections:
+                        properties:
+                          aws:
+                            properties:
+                              accessKey:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              connection:
+                                description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                                type: string
+                              endpoint:
+                                type: string
+                              objectPath:
+                                description: glob path to restrict matches to a subset
+                                type: string
+                              region:
+                                type: string
+                              secretKey:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              skipTLSVerify:
+                                description: Skip TLS verify when connecting to aws
+                                type: boolean
+                              usePathStyle:
+                                description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                                type: boolean
+                            type: object
+                        type: object
                       description:
                         description: Description for the check
                         type: string

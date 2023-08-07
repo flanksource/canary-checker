@@ -3,6 +3,78 @@
   "$id": "https://github.com/flanksource/canary-checker/api/v1/exec-check",
   "$ref": "#/$defs/ExecCheck",
   "$defs": {
+    "AWSConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "objectPath": {
+          "type": "string"
+        },
+        "usePathStyle": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ConfigMapKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
+    "EnvVar": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "valueFrom": {
+          "$ref": "#/$defs/EnvVarSource"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "EnvVarSource": {
+      "properties": {
+        "configMapKeyRef": {
+          "$ref": "#/$defs/ConfigMapKeySelector"
+        },
+        "secretKeyRef": {
+          "$ref": "#/$defs/SecretKeySelector"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "ExecCheck": {
       "properties": {
         "description": {
@@ -31,6 +103,9 @@
         },
         "script": {
           "type": "string"
+        },
+        "connections": {
+          "$ref": "#/$defs/ExecConnections"
         }
       },
       "additionalProperties": false,
@@ -40,6 +115,15 @@
         "script"
       ]
     },
+    "ExecConnections": {
+      "properties": {
+        "aws": {
+          "$ref": "#/$defs/AWSConnection"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "Labels": {
       "patternProperties": {
         ".*": {
@@ -47,6 +131,21 @@
         }
       },
       "type": "object"
+    },
+    "SecretKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
     },
     "Template": {
       "properties": {

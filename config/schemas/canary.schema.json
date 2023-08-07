@@ -1262,6 +1262,9 @@
         },
         "script": {
           "type": "string"
+        },
+        "connections": {
+          "$ref": "#/$defs/ExecConnections"
         }
       },
       "additionalProperties": false,
@@ -1270,6 +1273,15 @@
         "name",
         "script"
       ]
+    },
+    "ExecConnections": {
+      "properties": {
+        "aws": {
+          "$ref": "#/$defs/AWSConnection"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "FieldsV1": {
       "properties": {},
