@@ -65,8 +65,8 @@ require (
 	github.com/vadimi/go-http-ntlm v1.0.3
 	github.com/vadimi/go-http-ntlm/v2 v2.4.1
 	go.mongodb.org/mongo-driver v1.12.0
-	golang.org/x/crypto v0.11.0
-	golang.org/x/net v0.12.0
+	golang.org/x/crypto v0.12.0
+	golang.org/x/net v0.14.0
 	golang.org/x/sync v0.3.0
 	google.golang.org/api v0.134.0
 	google.golang.org/genproto v0.0.0-20230731193218-e0aa005b6bdf
@@ -239,9 +239,9 @@ require (
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691 // indirect
 	golang.org/x/oauth2 v0.10.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/term v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/term v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.9.1 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
