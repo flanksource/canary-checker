@@ -945,7 +945,7 @@ func (c ExecCheck) GetEndpoint() string {
 
 func (c ExecCheck) GetTestFunction() Template {
 	if c.Test.Expression == "" {
-		c.Test.Expression = "results.ExitCode == 0"
+		c.Test.Expression = "results.exitCode == 0"
 	}
 	return c.Test
 }

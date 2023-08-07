@@ -2,14 +2,18 @@ package checks
 
 import (
 	"bytes"
+	"fmt"
+	"os"
 	osExec "os/exec"
 	"runtime"
 	"strings"
+	textTemplate "text/template"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/commons/logger"
 )
 
 type ExecChecker struct {
@@ -56,7 +60,30 @@ func execPowershell(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 
 func execBash(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
+	fields := strings.Fields(check.Script)
+	if len(fields) == 0 {
+		return []*pkg.CheckResult{result.Failf("no script provided")}
+	}
+
 	cmd := osExec.Command("bash", "-c", check.Script)
+
+	// Setup connection details
+	switch strings.ToLower(fields[0]) {
+	case "aws":
+		configPath, err := createAWSCredentialsFile(ctx, check.Connections.AWS)
+		defer os.RemoveAll(configPath)
+		if err != nil {
+			return []*pkg.CheckResult{result.Failf(err.Error())}
+		}
+
+		cmd.Env = os.Environ()
+		cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_SHARED_CREDENTIALS_FILE=%s", configPath))
+
+	case "az":
+
+	case "gcloud":
+	}
+
 	return runCmd(cmd, result)
 }
 
@@ -77,4 +104,45 @@ func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
 	}
 	results = append(results, result)
 	return results
+}
+
+func createAWSCredentialsFile(ctx *context.Context, conn *v1.AWSConnection) (string, error) {
+	if err := conn.Populate(ctx, ctx.Kubernetes, ctx.Namespace); err != nil {
+		return "", err
+	}
+
+	dirPath, err := os.MkdirTemp("", "aws-*")
+	if err != nil {
+		return "", err
+	}
+
+	configPath := fmt.Sprintf("%s/credentials", dirPath)
+	logger.Tracef("Creating AWS credentials file: %s", configPath)
+
+	file, err := os.Create(configPath)
+	if err != nil {
+		return configPath, err
+	}
+	defer file.Close()
+
+	if err := awsConfigTemplate.Execute(file, conn); err != nil {
+		return configPath, err
+	}
+
+	return configPath, nil
+}
+
+var (
+	awsConfigTemplate *textTemplate.Template
+)
+
+func init() {
+	const (
+		awsConfigTpl = `[default]
+aws_access_key_id = {{.AccessKey}}
+aws_secret_access_key = {{.SecretKey}}
+{{if .Region}}region = {{.Region}}{{end}}`
+	)
+
+	awsConfigTemplate = textTemplate.Must(textTemplate.New("").Parse(awsConfigTpl))
 }
