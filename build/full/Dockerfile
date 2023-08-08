@@ -75,29 +75,14 @@ RUN curl -L https://github.com/multiprocessio/dsq/releases/download/v0.23.0/dsq-
   mv dsq /usr/local/bin/dsq && \
   rm dsq.zip
 
-# Install alexellis/arkade & other CLI tools with it
-RUN curl -sLS https://get.arkade.dev | sh
-RUN arkade get kubectl
-RUN arkade get stern
-RUN arkade get jq
-RUN arkade get yq
-ENV PATH="${PATH}:/root/.arkade/bin/"
-
-# Install AWS CLI
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-RUN	unzip awscliv2.zip && ./aws/install
-
-# Install Azure CLI
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
-
-# Install GCP CLI
-RUN curl -sL -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-441.0.0-linux-x86_64.tar.gz
-RUN tar -xf google-cloud-cli-441.0.0-linux-x86_64.tar.gz
-RUN ./google-cloud-sdk/install.sh --help
-RUN ./google-cloud-sdk/bin/gcloud version
-
 # install CA certificates
 COPY --from=builder /app/.bin/canary-checker /app
+
+# Install alexellis/arkade as root
+RUN curl -sLS https://get.arkade.dev | sh
+
+# Install Azure CLI (need to install as root)
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
 RUN mkdir /opt/database
 RUN groupadd --gid 1000 canary
@@ -105,6 +90,23 @@ RUN useradd canary --uid 1000 -g canary -m -d /var/lib/canary
 RUN chown -R 1000:1000 /opt/database
 RUN chown -R 1000:1000 /app
 USER canary:canary
+
+# Install CLIs with arkade as canary user
+RUN arkade get kubectl
+RUN arkade get stern
+RUN arkade get jq
+RUN arkade get yq
+ENV PATH="${PATH}:/var/lib/canary/.arkade/bin/"
+ENV PATH="${PATH}:/var/lib/canary/bin/"
+
+# Install AWS CLI
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+RUN	unzip awscliv2.zip && ./aws/install -i ${HOME}/aws -b ${HOME}/bin/
+
+# Install GCP CLI
+RUN curl -sL -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-441.0.0-linux-x86_64.tar.gz
+RUN tar -xf google-cloud-cli-441.0.0-linux-x86_64.tar.gz
+RUN ln -sf /app/google-cloud-sdk/bin/gcloud ${HOME}/bin/gcloud
 
 RUN /app/canary-checker go-offline
 ENTRYPOINT ["/app/canary-checker"]
