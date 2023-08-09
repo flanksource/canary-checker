@@ -893,7 +893,7 @@ func (g *GCPConnection) HydrateConnection(ctx checkContext) error {
 	}
 
 	if connection != nil {
-		g.Credentials.ValueStatic = connection.Password
+		g.Credentials = &types.EnvVar{ValueStatic: connection.Certificate}
 		g.Endpoint = connection.URL
 	}
 
@@ -923,7 +923,8 @@ func (c FolderCheck) GetEndpoint() string {
 
 type ExecConnections struct {
 	AWS *AWSConnection `yaml:"aws,omitempty" json:"aws,omitempty"`
-	// TODO: GCP and Azure connections
+	GCP *GCPConnection `yaml:"gcp,omitempty" json:"gcp,omitempty"`
+	// TODO: Azure connections
 }
 
 type ExecCheck struct {

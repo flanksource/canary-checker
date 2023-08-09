@@ -8,6 +8,6 @@ spec:
     - name: exec-pass-check
       description: "exec dummy check"
       script: |
-        echo '{"hello": "world"}' | jq -r .hello
+        echo "hello"
       test:
         expr: 'results.stdout == "hello"'
