@@ -33,6 +33,24 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "AzureConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "clientID": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "clientSecret": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "tenantID": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "ConfigMapKeySelector": {
       "properties": {
         "name": {
@@ -119,6 +137,27 @@
       "properties": {
         "aws": {
           "$ref": "#/$defs/AWSConnection"
+        },
+        "gcp": {
+          "$ref": "#/$defs/GCPConnection"
+        },
+        "azure": {
+          "$ref": "#/$defs/AzureConnection"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "GCPConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/EnvVar"
         }
       },
       "additionalProperties": false,

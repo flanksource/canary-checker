@@ -1695,6 +1695,105 @@ spec:
                                 description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                                 type: boolean
                             type: object
+                          azure:
+                            properties:
+                              clientID:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              clientSecret:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              connection:
+                                type: string
+                              tenantID:
+                                type: string
+                            type: object
+                          gcp:
+                            properties:
+                              connection:
+                                description: ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
+                                type: string
+                              credentials:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              endpoint:
+                                type: string
+                            type: object
                         type: object
                       description:
                         description: Description for the check
