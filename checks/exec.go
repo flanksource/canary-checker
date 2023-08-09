@@ -88,6 +88,7 @@ func execBash(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 		cmd.Env = os.Environ()
 		cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_SHARED_CREDENTIALS_FILE=%s", configPath))
 		cmd.Env = append(cmd.Env, "AWS_EC2_METADATA_DISABLED=true") // https://github.com/aws/aws-cli/issues/5262#issuecomment-705832151
+		cmd.Env = append(cmd.Env, "AWS_SESSION_TOKEN=''")
 
 	case "az":
 		if check.Connections.Azure == nil {
