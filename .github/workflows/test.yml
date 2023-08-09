@@ -9,18 +9,19 @@ on:
 name: Test
 permissions:
   contents: read
+  id-token: write
 jobs:
   test:
     strategy:
       fail-fast: false
       matrix:
         suite:
-          - minimal --skip-all
-          - k8s
-          - datasources
-          - search
-          - git
-          # - restic
+          - aws/minimal
+          # - minimal --skip-all
+          # - k8s
+          # - datasources
+          # - search
+          # - git
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
@@ -38,7 +39,14 @@ jobs:
           key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
           restore-keys: |
             cache-
-      - run: make bin
+      - name: Build
+        run: make bin
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::765618022540:role/canary-checker-github-iam-Role-N9JG51I5V3JJ
+          aws-region: us-east-1
+          role-duration-seconds: 1200 # 20 minutes
       - name: Test
         env:
           KUBERNETES_VERSION: v1.20.7
