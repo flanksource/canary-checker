@@ -85,6 +85,21 @@ func execBash(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_SHARED_CREDENTIALS_FILE=%s", configPath))
 
 	case "az":
+		if check.Connections.Azure == nil {
+			return []*pkg.CheckResult{result.Failf("no Azure connection provided")}
+		}
+
+		if err := check.Connections.Azure.HydrateConnection(ctx); err != nil {
+			return []*pkg.CheckResult{result.Failf("failed to hydrate connection")}
+		}
+
+		conn := check.Connections.Azure
+
+		// login with service principal
+		runCmd := osExec.Command("az", "login", "--service-principal", "--username", conn.ClientID.ValueStatic, "--password", conn.ClientSecret.ValueStatic, "--tenant", conn.TenantID)
+		if err := runCmd.Run(); err != nil {
+			return []*pkg.CheckResult{result.Failf("failed to login: %v", err.Error())}
+		}
 
 	case "gcloud":
 		if check.Connections.GCP == nil {
