@@ -2,10 +2,10 @@ package checks
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	osExec "os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	textTemplate "text/template"
@@ -75,8 +75,12 @@ func execBash(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 			return []*pkg.CheckResult{result.Failf("no AWS connection provided")}
 		}
 
-		configPath, err := createAWSCredentialsFile(ctx, check.Connections.AWS)
-		defer os.RemoveAll(configPath)
+		if err := check.Connections.AWS.Populate(ctx, ctx.Kubernetes, ctx.Namespace); err != nil {
+			return []*pkg.CheckResult{result.Failf("failed to hydrate aws connection")}
+		}
+
+		configPath, err := saveConfig("aws-*", awsConfigTemplate, check.Connections.AWS)
+		defer os.RemoveAll(filepath.Dir(configPath))
 		if err != nil {
 			return []*pkg.CheckResult{result.Failf("failed to store AWS credentials: %v", err.Error())}
 		}
@@ -107,8 +111,12 @@ func execBash(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 			return []*pkg.CheckResult{result.Failf("no GCP connection provided")}
 		}
 
-		configPath, err := createGCloudCredentialsFile(ctx, check.Connections.GCP)
-		defer os.RemoveAll(configPath)
+		if err := check.Connections.GCP.HydrateConnection(ctx); err != nil {
+			return []*pkg.CheckResult{result.Failf("failed to hydrate connection")}
+		}
+
+		configPath, err := saveConfig("gcloud-*", gcloudConfigTemplate, check.Connections.GCP)
+		defer os.RemoveAll(filepath.Dir(configPath))
 		if err != nil {
 			return []*pkg.CheckResult{result.Failf("failed to store gcloud credentials: %v", err.Error())}
 		}
@@ -147,26 +155,6 @@ func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
 	return results
 }
 
-func createGCloudCredentialsFile(ctx *context.Context, conn *v1.GCPConnection) (string, error) {
-	if err := conn.HydrateConnection(ctx); err != nil {
-		return "", err
-	}
-
-	if conn.Credentials.ValueStatic == "" {
-		return "", errors.New("gcp credentials is empty")
-	}
-
-	return saveConfig("gcloud-*", gcloudConfigTemplate, conn)
-}
-
-func createAWSCredentialsFile(ctx *context.Context, conn *v1.AWSConnection) (string, error) {
-	if err := conn.Populate(ctx, ctx.Kubernetes, ctx.Namespace); err != nil {
-		return "", err
-	}
-
-	return saveConfig("aws-*", awsConfigTemplate, conn)
-}
-
 func saveConfig(dirPrefix string, configTemplate *textTemplate.Template, view any) (string, error) {
 	dirPath, err := os.MkdirTemp("", dirPrefix)
 	if err != nil {
@@ -196,8 +184,8 @@ var (
 
 func init() {
 	awsConfigTemplate = textTemplate.Must(textTemplate.New("").Parse(`[default]
-aws_access_key_id = {{.AccessKey}}
-aws_secret_access_key = {{.SecretKey}}
+aws_access_key_id = {{.AccessKey.ValueStatic}}
+aws_secret_access_key = {{.SecretKey.ValueStatic}}
 {{if .Region}}region = {{.Region}}{{end}}`))
 
 	gcloudConfigTemplate = textTemplate.Must(textTemplate.New("").Parse(`{{.Credentials}}`))
