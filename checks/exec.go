@@ -83,6 +83,7 @@ func execBash(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 
 		cmd.Env = os.Environ()
 		cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_SHARED_CREDENTIALS_FILE=%s", configPath))
+		cmd.Env = append(cmd.Env, "AWS_EC2_METADATA_DISABLED=true") // https://github.com/aws/aws-cli/issues/5262#issuecomment-705832151
 
 	case "az":
 		if check.Connections.Azure == nil {
@@ -139,8 +140,9 @@ func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
 	}
 	result.AddDetails(details)
 	if details.ExitCode != 0 {
-		return result.Failf("non-zero exit-code: %d: %s %s", details.ExitCode, details.Stdout, details.Stderr).ToSlice()
+		return result.Failf("non-zero exit-code: %d. (stdout=%s) (stderr=%s)", details.ExitCode, details.Stdout, details.Stderr).ToSlice()
 	}
+
 	results = append(results, result)
 	return results
 }

@@ -17,11 +17,11 @@ jobs:
       matrix:
         suite:
           - aws/minimal
-          # - minimal --skip-all
-          # - k8s
-          # - datasources
-          # - search
-          # - git
+          - datasources
+          - git
+          - k8s
+          - minimal --skip-all
+          - search
     runs-on: ubuntu-latest
     steps:
       - name: Install Go

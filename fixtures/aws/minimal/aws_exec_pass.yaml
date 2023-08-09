@@ -10,6 +10,7 @@ spec:
       script: aws sts get-caller-identity
       connections:
         aws:
+          region: us-east-1
           accessKey:
             valueFrom:
               secretKeyRef:
