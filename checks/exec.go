@@ -79,18 +79,18 @@ func execBash(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 			return []*pkg.CheckResult{result.Failf("failed to hydrate aws connection: %v", err)}
 		}
 
-		configPath, err := saveConfig("aws-*", awsConfigTemplate, check.Connections.AWS)
-		defer os.RemoveAll(filepath.Dir(configPath))
-		if err != nil {
-			return []*pkg.CheckResult{result.Failf("failed to store AWS credentials: %v", err.Error())}
-		}
+		// configPath, err := saveConfig("aws-*", awsConfigTemplate, check.Connections.AWS)
+		// defer os.RemoveAll(filepath.Dir(configPath))
+		// if err != nil {
+		// 	return []*pkg.CheckResult{result.Failf("failed to store AWS credentials: %v", err.Error())}
+		// }
 
-		cmd.Env = os.Environ()
-		cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_SHARED_CREDENTIALS_FILE=%s", configPath))
-		cmd.Env = append(cmd.Env, "AWS_EC2_METADATA_DISABLED=true") // https://github.com/aws/aws-cli/issues/5262#issuecomment-705832151
-		if check.Connections.AWS.Region != "" {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_DEFAULT_REGION=%s", check.Connections.AWS.Region))
-		}
+		// cmd.Env = os.Environ()
+		// cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_SHARED_CREDENTIALS_FILE=%s", configPath))
+		// cmd.Env = append(cmd.Env, "AWS_EC2_METADATA_DISABLED=true") // https://github.com/aws/aws-cli/issues/5262#issuecomment-705832151
+		// if check.Connections.AWS.Region != "" {
+		// 	cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_DEFAULT_REGION=%s", check.Connections.AWS.Region))
+		// }
 
 	case "az":
 		if check.Connections.Azure == nil {
