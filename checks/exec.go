@@ -185,8 +185,7 @@ var (
 func init() {
 	awsConfigTemplate = textTemplate.Must(textTemplate.New("").Parse(`[default]
 aws_access_key_id = {{.AccessKey.ValueStatic}}
-aws_secret_access_key = {{.SecretKey.ValueStatic}}
-{{if .Region}}region = {{.Region}}{{end}}`))
+aws_secret_access_key = {{.SecretKey.ValueStatic}}`))
 
 	gcloudConfigTemplate = textTemplate.Must(textTemplate.New("").Parse(`{{.Credentials}}`))
 }
