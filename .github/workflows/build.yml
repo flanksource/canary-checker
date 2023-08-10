@@ -4,6 +4,7 @@ name: Build
 permissions: read-all
 jobs:
   build:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

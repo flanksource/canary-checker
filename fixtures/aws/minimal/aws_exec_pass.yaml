@@ -5,9 +5,9 @@ metadata:
 spec:
   interval: 30
   exec:
-    - name: aws-exec-pass-check
-      description: aws sts get-caller-identity
-      script: aws sts get-caller-identity
+    - name: aws-exec-list-s3-buckets-pass-check
+      description: List s3 buckets
+      script: aws s3 ls
       connections:
         aws:
           region: us-east-1

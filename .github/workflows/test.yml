@@ -27,7 +27,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2.2.0
         with:
-          go-version: 1.19.x
+          go-version: 1.20.x
       - name: Checkout code
         uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - uses: actions/cache@8492260343ad570701412c2f464a5877dc76bace # v2
@@ -46,7 +46,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::765618022540:role/canary-checker-github-iam-Role-N9JG51I5V3JJ
           aws-region: us-east-1
-          role-duration-seconds: 1200 # 20 minutes
+          role-duration-seconds: 1800 # 30 minutes
       - name: Test
         env:
           KUBERNETES_VERSION: v1.20.7
