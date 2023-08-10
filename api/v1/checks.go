@@ -822,6 +822,7 @@ type AWSConnection struct {
 	ConnectionName string       `yaml:"connection,omitempty" json:"connection,omitempty"`
 	AccessKey      types.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
 	SecretKey      types.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
+	SessionToken   types.EnvVar `yaml:"sessionToken,omitempty" json:"sessionToken,omitempty"`
 	Region         string       `yaml:"region,omitempty" json:"region,omitempty"`
 	Endpoint       string       `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
 	// Skip TLS verify when connecting to aws
@@ -856,15 +857,21 @@ func (t *AWSConnection) Populate(ctx checkContext, k8s kubernetes.Interface, nam
 	}
 
 	if accessKey, err := duty.GetEnvValueFromCache(k8s, t.AccessKey, namespace); err != nil {
-		return fmt.Errorf("could not parse EC2 access key: %v", err)
+		return fmt.Errorf("could not parse AWS access key id: %v", err)
 	} else {
 		t.AccessKey.ValueStatic = accessKey
 	}
 
 	if secretKey, err := duty.GetEnvValueFromCache(k8s, t.SecretKey, namespace); err != nil {
-		return fmt.Errorf(fmt.Sprintf("Could not parse EC2 secret key: %v", err))
+		return fmt.Errorf(fmt.Sprintf("Could not parse AWS secret access key: %v", err))
 	} else {
 		t.SecretKey.ValueStatic = secretKey
+	}
+
+	if sessionToken, err := duty.GetEnvValueFromCache(k8s, t.SessionToken, namespace); err != nil {
+		return fmt.Errorf(fmt.Sprintf("Could not parse AWS session token: %v", err))
+	} else {
+		t.SessionToken.ValueStatic = sessionToken
 	}
 
 	return nil
