@@ -41,6 +41,9 @@
         "secretKey": {
           "$ref": "#/$defs/EnvVar"
         },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
         "region": {
           "type": "string"
         },

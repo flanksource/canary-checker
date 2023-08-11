@@ -14,6 +14,9 @@
         "secretKey": {
           "$ref": "#/$defs/EnvVar"
         },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
         "region": {
           "type": "string"
         },
@@ -156,6 +159,9 @@
         "secretKey": {
           "$ref": "#/$defs/EnvVar"
         },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
         "region": {
           "type": "string"
         },
@@ -233,6 +239,9 @@
           "$ref": "#/$defs/EnvVar"
         },
         "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
           "$ref": "#/$defs/EnvVar"
         },
         "region": {
@@ -625,6 +634,9 @@
           "$ref": "#/$defs/EnvVar"
         },
         "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
           "$ref": "#/$defs/EnvVar"
         },
         "region": {
@@ -1302,6 +1314,9 @@
           "$ref": "#/$defs/EnvVar"
         },
         "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
           "$ref": "#/$defs/EnvVar"
         },
         "region": {
@@ -2966,6 +2981,9 @@
           "$ref": "#/$defs/EnvVar"
         },
         "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
           "$ref": "#/$defs/EnvVar"
         },
         "region": {
