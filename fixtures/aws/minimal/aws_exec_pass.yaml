@@ -10,7 +10,6 @@ spec:
       script: aws s3 ls
       connections:
         aws:
-          region: us-east-1
           accessKey:
             valueFrom:
               secretKeyRef:

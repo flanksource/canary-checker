@@ -13,7 +13,6 @@ jobs:
       contents: read  # for actions/checkout to fetch code
       pull-requests: read  # for golangci/golangci-lint-action to fetch pull requests
     name: lint
-    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
@@ -39,7 +38,6 @@ jobs:
           changed_files=$(git status -s)
           [[ -z "$changed_files" ]] ||  (printf "Change is detected in some files: \n$changed_files\n Did you run 'make resources' before sending the PR?" && exit 1)
   helm:
-    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
