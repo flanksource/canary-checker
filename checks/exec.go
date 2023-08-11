@@ -3,6 +3,7 @@ package checks
 import (
 	"bytes"
 	"fmt"
+	"math/rand"
 	"os"
 	osExec "os/exec"
 	"path/filepath"
@@ -65,7 +66,7 @@ func setupConnection(ctx *context.Context, check v1.ExecCheck, cmd *osExec.Cmd) 
 			return fmt.Errorf("failed to hydrate aws connection: %w", err)
 		}
 
-		configPath, err := saveConfig("aws-*", awsConfigTemplate, check.Connections.AWS)
+		configPath, err := saveConfig(awsConfigTemplate, check.Connections.AWS)
 		defer os.RemoveAll(filepath.Dir(configPath))
 		if err != nil {
 			return fmt.Errorf("failed to store AWS credentials: %w", err)
@@ -96,7 +97,7 @@ func setupConnection(ctx *context.Context, check v1.ExecCheck, cmd *osExec.Cmd) 
 			return fmt.Errorf("failed to hydrate connection %w", err)
 		}
 
-		configPath, err := saveConfig("gcloud-*", gcloudConfigTemplate, check.Connections.GCP)
+		configPath, err := saveConfig(gcloudConfigTemplate, check.Connections.GCP)
 		defer os.RemoveAll(filepath.Dir(configPath))
 		if err != nil {
 			return fmt.Errorf("failed to store gcloud credentials: %w", err)
@@ -151,9 +152,9 @@ func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
 	return results
 }
 
-func saveConfig(dirPrefix string, configTemplate *textTemplate.Template, view any) (string, error) {
-	dirPath, err := os.MkdirTemp("", dirPrefix)
-	if err != nil {
+func saveConfig(configTemplate *textTemplate.Template, view any) (string, error) {
+	dirPath := filepath.Join(".creds", fmt.Sprintf("cred-%d", rand.Intn(10000000)))
+	if err := os.MkdirAll(dirPath, 0700); err != nil {
 		return "", err
 	}
 
