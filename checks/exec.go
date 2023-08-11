@@ -59,30 +59,16 @@ func execPowershell(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 	return runCmd(cmd, result)
 }
 
-func execBash(check v1.ExecCheck, ctx *context.Context) pkg.Results {
-	result := pkg.Success(check, ctx.Canary)
-	fields := strings.Fields(check.Script)
-	if len(fields) == 0 {
-		return []*pkg.CheckResult{result.Failf("no script provided")}
-	}
-
-	cmd := osExec.Command("bash", "-c", check.Script)
-
-	// Setup connection details
-	switch strings.ToLower(fields[0]) {
-	case "aws":
-		if check.Connections.AWS == nil {
-			return []*pkg.CheckResult{result.Failf("no AWS connection provided")}
-		}
-
+func setupConnection(ctx *context.Context, check v1.ExecCheck, cmd *osExec.Cmd) error {
+	if check.Connections.AWS != nil {
 		if err := check.Connections.AWS.Populate(ctx, ctx.Kubernetes, ctx.Namespace); err != nil {
-			return []*pkg.CheckResult{result.Failf("failed to hydrate aws connection: %v", err)}
+			return fmt.Errorf("failed to hydrate aws connection: %w", err)
 		}
 
 		configPath, err := saveConfig("aws-*", awsConfigTemplate, check.Connections.AWS)
 		defer os.RemoveAll(filepath.Dir(configPath))
 		if err != nil {
-			return []*pkg.CheckResult{result.Failf("failed to store AWS credentials: %v", err.Error())}
+			return fmt.Errorf("failed to store AWS credentials: %w", err)
 		}
 
 		cmd.Env = os.Environ()
@@ -91,48 +77,55 @@ func execBash(check v1.ExecCheck, ctx *context.Context) pkg.Results {
 		if check.Connections.AWS.Region != "" {
 			cmd.Env = append(cmd.Env, fmt.Sprintf("AWS_DEFAULT_REGION=%s", check.Connections.AWS.Region))
 		}
+	}
 
-	case "az":
-		if check.Connections.Azure == nil {
-			return []*pkg.CheckResult{result.Failf("no Azure connection provided")}
-		}
-
+	if check.Connections.Azure != nil {
 		if err := check.Connections.Azure.HydrateConnection(ctx); err != nil {
-			return []*pkg.CheckResult{result.Failf("failed to hydrate connection %v", err)}
+			return fmt.Errorf("failed to hydrate connection %w", err)
 		}
-
-		conn := check.Connections.Azure
 
 		// login with service principal
-		runCmd := osExec.Command("az", "login", "--service-principal", "--username", conn.ClientID.ValueStatic, "--password", conn.ClientSecret.ValueStatic, "--tenant", conn.TenantID)
+		runCmd := osExec.Command("az", "login", "--service-principal", "--username", check.Connections.Azure.ClientID.ValueStatic, "--password", check.Connections.Azure.ClientSecret.ValueStatic, "--tenant", check.Connections.Azure.TenantID)
 		if err := runCmd.Run(); err != nil {
-			return []*pkg.CheckResult{result.Failf("failed to login: %v", err.Error())}
+			return fmt.Errorf("failed to login: %w", err)
 		}
+	}
 
-	case "gcloud":
-		if check.Connections.GCP == nil {
-			return []*pkg.CheckResult{result.Failf("no GCP connection provided")}
-		}
-
+	if check.Connections.GCP != nil {
 		if err := check.Connections.GCP.HydrateConnection(ctx); err != nil {
-			return []*pkg.CheckResult{result.Failf("failed to hydrate connection %v", err)}
+			return fmt.Errorf("failed to hydrate connection %w", err)
 		}
 
 		configPath, err := saveConfig("gcloud-*", gcloudConfigTemplate, check.Connections.GCP)
 		defer os.RemoveAll(filepath.Dir(configPath))
 		if err != nil {
-			return []*pkg.CheckResult{result.Failf("failed to store gcloud credentials: %v", err.Error())}
+			return fmt.Errorf("failed to store gcloud credentials: %w", err)
 		}
 
 		// to configure gcloud CLI to use the service account specified in GOOGLE_APPLICATION_CREDENTIALS,
 		// we need to explicitly activate it
 		runCmd := osExec.Command("gcloud", "auth", "activate-service-account", "--key-file", configPath)
 		if err := runCmd.Run(); err != nil {
-			return []*pkg.CheckResult{result.Failf("failed to activate GCP service account: %v", err.Error())}
+			return fmt.Errorf("failed to activate GCP service account: %w", err)
 		}
 
 		cmd.Env = os.Environ()
 		cmd.Env = append(cmd.Env, fmt.Sprintf("GOOGLE_APPLICATION_CREDENTIALS=%s", configPath))
+	}
+
+	return nil
+}
+
+func execBash(check v1.ExecCheck, ctx *context.Context) pkg.Results {
+	result := pkg.Success(check, ctx.Canary)
+	fields := strings.Fields(check.Script)
+	if len(fields) == 0 {
+		return []*pkg.CheckResult{result.Failf("no script provided")}
+	}
+
+	cmd := osExec.Command("bash", "-c", check.Script)
+	if err := setupConnection(ctx, check, cmd); err != nil {
+		return []*pkg.CheckResult{result.Failf("failed to setup connection: %v", err)}
 	}
 
 	return runCmd(cmd, result)
