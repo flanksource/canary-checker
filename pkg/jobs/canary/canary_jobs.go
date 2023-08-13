@@ -256,6 +256,14 @@ func findCronEntry(id string) *cron.Entry {
 	return nil
 }
 
+func getAllCanaryIDsInCron() []string {
+	var ids []string
+	for _, entry := range CanaryScheduler.Entries() {
+		ids = append(ids, entry.Job.(CanaryJob).DBCanary.ID.String())
+	}
+	return ids
+}
+
 func ScanCanaryConfigs() {
 	logger.Infof("Syncing canary specs: %v", CanaryConfigFiles)
 	for _, configfile := range CanaryConfigFiles {
@@ -342,10 +350,13 @@ func SyncCanaryJobs() {
 		return
 	}
 
+	existingIDsInCron := getAllCanaryIDsInCron()
+	var idsInNewFetch []string
 	for _, c := range canaries {
 		jobHistory := models.NewJobHistory("CanarySync", "canary", c.ID.String()).Start()
 		_ = db.PersistJobHistory(jobHistory)
 
+		idsInNewFetch = append(idsInNewFetch, c.ID.String())
 		if err := SyncCanaryJob(c); err != nil {
 			logger.Errorf("Error syncing canary[%s]: %v", c.ID, err.Error())
 			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
@@ -353,6 +364,11 @@ func SyncCanaryJobs() {
 		}
 		jobHistory.IncrSuccess()
 		_ = db.PersistJobHistory(jobHistory.End())
+	}
+
+	idsToRemoveFromCron := utils.SetDifference(existingIDsInCron, idsInNewFetch)
+	for _, id := range idsToRemoveFromCron {
+		DeleteCanaryJob(id)
 	}
 
 	logger.Infof("Synced canary jobs %d", len(CanaryScheduler.Entries()))

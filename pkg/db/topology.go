@@ -27,7 +27,7 @@ func PersistTopology(t *v1.Topology) (bool, error) {
 		return changed, err
 	}
 	tx := Gorm.Table("topologies").Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "name"}, {Name: "namespace"}},
+		Columns:   []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}},
 		UpdateAll: true,
 	}).Create(model)
 	if tx.Error != nil {
@@ -212,11 +212,14 @@ func GetChildRelationshipsForParentComponent(componentID uuid.UUID) ([]pkg.Compo
 }
 
 func PersistComponentRelationships(relationships []*pkg.ComponentRelationship) error {
-	tx := Gorm.Clauses(clause.OnConflict{
+	if len(relationships) == 0 {
+		return nil
+	}
+
+	return Gorm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "component_id"}, {Name: "relationship_id"}, {Name: "selector_id"}},
 		UpdateAll: true,
-	}).Create(relationships)
-	return tx.Error
+	}).Create(relationships).Error
 }
 
 func GetCheckRelationshipsForComponent(componentID uuid.UUID) ([]pkg.CheckComponentRelationship, error) {
