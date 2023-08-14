@@ -299,7 +299,7 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, map[string]string, bool,
 	changed := false
 	tx := Gorm.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}, {Name: "source"}},
-		UpdateAll: true,
+		DoUpdates: clause.AssignmentColumns([]string{"labels", "spec"}),
 	}).Create(&model)
 	if tx.RowsAffected > 0 {
 		changed = true
