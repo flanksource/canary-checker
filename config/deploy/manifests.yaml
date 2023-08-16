@@ -290,6 +290,34 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      sessionToken:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       skipTLSVerify:
                         description: Skip TLS verify when connecting to aws
                         type: boolean
@@ -408,6 +436,34 @@ spec:
                           type: string
                         type: array
                       secretKey:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
+                      sessionToken:
                         properties:
                           name:
                             type: string
@@ -656,6 +712,34 @@ spec:
                       region:
                         type: string
                       secretKey:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
+                      sessionToken:
                         properties:
                           name:
                             type: string
@@ -1418,6 +1502,34 @@ spec:
                         type: object
                       securityGroup:
                         type: string
+                      sessionToken:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
                       skipTLSVerify:
                         description: Skip TLS verify when connecting to aws
                         type: boolean
@@ -1618,6 +1730,211 @@ spec:
                 exec:
                   items:
                     properties:
+                      connections:
+                        properties:
+                          aws:
+                            properties:
+                              accessKey:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              connection:
+                                description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                                type: string
+                              endpoint:
+                                type: string
+                              objectPath:
+                                description: glob path to restrict matches to a subset
+                                type: string
+                              region:
+                                type: string
+                              secretKey:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              sessionToken:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              skipTLSVerify:
+                                description: Skip TLS verify when connecting to aws
+                                type: boolean
+                              usePathStyle:
+                                description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                                type: boolean
+                            type: object
+                          azure:
+                            properties:
+                              clientID:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              clientSecret:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              connection:
+                                type: string
+                              tenantID:
+                                type: string
+                            type: object
+                          gcp:
+                            properties:
+                              connection:
+                                description: ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
+                                type: string
+                              credentials:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueFrom:
+                                    properties:
+                                      configMapKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      secretKeyRef:
+                                        properties:
+                                          key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                    type: object
+                                type: object
+                              endpoint:
+                                type: string
+                            type: object
+                        type: object
                       description:
                         description: Description for the check
                         type: string
@@ -1723,6 +2040,34 @@ spec:
                           region:
                             type: string
                           secretKey:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                type: object
+                            type: object
+                          sessionToken:
                             properties:
                               name:
                                 type: string
@@ -3898,6 +4243,34 @@ spec:
                       region:
                         type: string
                       secretKey:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                            type: object
+                        type: object
+                      sessionToken:
                         properties:
                           name:
                             type: string

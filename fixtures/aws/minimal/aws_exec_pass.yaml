@@ -1,0 +1,22 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: aws-exec-pass
+spec:
+  interval: 30
+  exec:
+    - name: aws-exec-list-s3-buckets-pass-check
+      description: List s3 buckets
+      script: aws s3 ls
+      connections:
+        aws:
+          accessKey:
+            valueFrom:
+              secretKeyRef:
+                name: aws-credentials
+                key: AWS_ACCESS_KEY_ID
+          secretKey:
+            valueFrom:
+              secretKeyRef:
+                name: aws-credentials
+                key: AWS_SECRET_ACCESS_KEY

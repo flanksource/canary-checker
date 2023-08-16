@@ -822,6 +822,7 @@ type AWSConnection struct {
 	ConnectionName string       `yaml:"connection,omitempty" json:"connection,omitempty"`
 	AccessKey      types.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
 	SecretKey      types.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
+	SessionToken   types.EnvVar `yaml:"sessionToken,omitempty" json:"sessionToken,omitempty"`
 	Region         string       `yaml:"region,omitempty" json:"region,omitempty"`
 	Endpoint       string       `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
 	// Skip TLS verify when connecting to aws
@@ -856,15 +857,21 @@ func (t *AWSConnection) Populate(ctx checkContext, k8s kubernetes.Interface, nam
 	}
 
 	if accessKey, err := duty.GetEnvValueFromCache(k8s, t.AccessKey, namespace); err != nil {
-		return fmt.Errorf("could not parse EC2 access key: %v", err)
+		return fmt.Errorf("could not parse AWS access key id: %v", err)
 	} else {
 		t.AccessKey.ValueStatic = accessKey
 	}
 
 	if secretKey, err := duty.GetEnvValueFromCache(k8s, t.SecretKey, namespace); err != nil {
-		return fmt.Errorf(fmt.Sprintf("Could not parse EC2 secret key: %v", err))
+		return fmt.Errorf(fmt.Sprintf("Could not parse AWS secret access key: %v", err))
 	} else {
 		t.SecretKey.ValueStatic = secretKey
+	}
+
+	if sessionToken, err := duty.GetEnvValueFromCache(k8s, t.SessionToken, namespace); err != nil {
+		return fmt.Errorf(fmt.Sprintf("Could not parse AWS session token: %v", err))
+	} else {
+		t.SessionToken.ValueStatic = sessionToken
 	}
 
 	return nil
@@ -893,8 +900,32 @@ func (g *GCPConnection) HydrateConnection(ctx checkContext) error {
 	}
 
 	if connection != nil {
-		g.Credentials.ValueStatic = connection.Password
+		g.Credentials = &types.EnvVar{ValueStatic: connection.Certificate}
 		g.Endpoint = connection.URL
+	}
+
+	return nil
+}
+
+type AzureConnection struct {
+	ConnectionName string        `yaml:"connection,omitempty" json:"connection,omitempty"`
+	ClientID       *types.EnvVar `yaml:"clientID,omitempty" json:"clientID,omitempty"`
+	ClientSecret   *types.EnvVar `yaml:"clientSecret,omitempty" json:"clientSecret,omitempty"`
+	TenantID       string        `yaml:"tenantID,omitempty" json:"tenantID,omitempty"`
+}
+
+// HydrateConnection attempts to find the connection by name
+// and populate the endpoint and credentials.
+func (g *AzureConnection) HydrateConnection(ctx checkContext) error {
+	connection, err := ctx.HydrateConnectionByURL(g.ConnectionName)
+	if err != nil {
+		return err
+	}
+
+	if connection != nil {
+		g.ClientID = &types.EnvVar{ValueStatic: connection.Username}
+		g.ClientSecret = &types.EnvVar{ValueStatic: connection.Password}
+		g.TenantID = connection.Properties["tenantID"]
 	}
 
 	return nil
@@ -921,12 +952,19 @@ func (c FolderCheck) GetEndpoint() string {
 	return c.Path
 }
 
+type ExecConnections struct {
+	AWS   *AWSConnection   `yaml:"aws,omitempty" json:"aws,omitempty"`
+	GCP   *GCPConnection   `yaml:"gcp,omitempty" json:"gcp,omitempty"`
+	Azure *AzureConnection `yaml:"azure,omitempty" json:"azure,omitempty"`
+}
+
 type ExecCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 	// Script can be a inline script or a path to a script that needs to be executed
 	// On windows executed via powershell and in darwin and linux executed using bash
-	Script *string `yaml:"script" json:"script"`
+	Script      string          `yaml:"script" json:"script"`
+	Connections ExecConnections `yaml:"connections,omitempty" json:"connections,omitempty"`
 }
 
 func (c ExecCheck) GetType() string {
@@ -934,12 +972,12 @@ func (c ExecCheck) GetType() string {
 }
 
 func (c ExecCheck) GetEndpoint() string {
-	return *c.Script
+	return c.Script
 }
 
 func (c ExecCheck) GetTestFunction() Template {
 	if c.Test.Expression == "" {
-		c.Test.Expression = "results.ExitCode == 0"
+		c.Test.Expression = "results.exitCode == 0"
 	}
 	return c.Test
 }
