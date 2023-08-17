@@ -11,6 +11,14 @@ spec:
       name: http-deprecated-endpoint
     - name: http-minimal-check
       url: https://httpbin.demo.aws.flanksource.com/status/200
+      metrics:
+        name: httpbin_2xx_count
+        type: counter
+        labels:
+          name: httpbin_2xx_count
+          check_name: "{{ .check.name }}"
+          statusClass: "{{ .result.code | conv.ToString | strings.Trunc 1}}xx"
+        value: "{{if eq .result.code 200 }}1{{else}}0{{end}}"
     - name: http-param-tests
       url: https://httpbin.demo.aws.flanksource.com/status/200
       responseCodes: [201, 200, 301]

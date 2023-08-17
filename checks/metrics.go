@@ -45,7 +45,7 @@ func addPrometheusMetric(name, metricType string, labels map[string]string) prom
 			prometheus.CounterOpts{Name: name},
 			promLabelsOrderedKeys(labels),
 		)
-	case "guage":
+	case "gauge":
 		collector = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{Name: name},
 			promLabelsOrderedKeys(labels),
@@ -69,7 +69,6 @@ func exportCheckMetrics(ctx *context.Context, c external.Check, results pkg.Resu
 	var exists bool
 	if collector, exists = collectorMap[metricsSpec.Name]; !exists {
 		collector = addPrometheusMetric(metricsSpec.Name, metricsSpec.Type, metricsSpec.Labels)
-		prometheus.MustRegister()
 		if collector == nil {
 			logger.Errorf("Invalid type for check.metrics %s for check[%s]", metricsSpec.Type, c.GetName())
 			return
@@ -78,39 +77,45 @@ func exportCheckMetrics(ctx *context.Context, c external.Check, results pkg.Resu
 
 	tplValue := v1.Template{Template: metricsSpec.Value}
 	for _, r := range results {
-		valRaw, err := template(ctx.New(r.Data), tplValue)
+		templateInput := map[string]any{
+			"result": r.Data,
+			"check": map[string]any{
+				"name":        c.GetName(),
+				"description": c.GetDescription(),
+				"labels":      c.GetLabels(),
+				"endpoint":    c.GetEndpoint(),
+			},
+		}
+		valRaw, err := template(ctx.New(templateInput), tplValue)
 		if err != nil {
-			logger.Errorf("Error templating type for check.metrics %s for check[%s]", metricsSpec.Type, c.GetName())
+			logger.Errorf("Error templating value for check.metrics template %s for check[%s]", metricsSpec.Value, c.GetName())
 		}
 		val, err := strconv.ParseFloat(valRaw, 64)
 		if err != nil {
-			// TODO Yash
+			logger.Errorf("Error converting value %s to float for check.metrics template %s for check[%s]", valRaw, metricsSpec.Value, c.GetName())
 		}
 		tplLabels := make(map[string]string)
 		for labelKey, labelVals := range metricsSpec.Labels {
-			label, err := template(ctx.New(r.Data), v1.Template{Template: labelVals})
+			label, err := template(ctx.New(templateInput), v1.Template{Template: labelVals})
 			if err != nil {
-				// TODO Yash
+				logger.Errorf("Error templating label %s:%s for check.metrics for check[%s]", labelKey, labelVals, c.GetName())
 			}
 			tplLabels[labelKey] = label
 		}
 		orderedLabelVals := promLabelsOrderedVals(tplLabels)
 
-		switch collector.(type) {
-		case prometheus.HistogramVec:
-			h := collector.(prometheus.HistogramVec)
-			// TODO Val to float64, log error
-			h.WithLabelValues(orderedLabelVals...).Observe(val)
-		case prometheus.GaugeVec:
-			g := collector.(prometheus.GaugeVec)
-			// TODO How to distinguish between gauge set vs add/sub
-			g.WithLabelValues(orderedLabelVals...).Set(val)
-		case prometheus.CounterVec:
-			c := collector.(prometheus.CounterVec)
+		switch collector := collector.(type) {
+		case *prometheus.HistogramVec:
+			collector.WithLabelValues(orderedLabelVals...).Observe(val)
+		case *prometheus.GaugeVec:
+			collector.WithLabelValues(orderedLabelVals...).Set(val)
+		case *prometheus.CounterVec:
 			if val <= 0 {
 				continue
 			}
-			c.WithLabelValues(orderedLabelVals...).Add(val)
+			collector.WithLabelValues(orderedLabelVals...).Add(val)
+		default:
+			logger.Errorf("Got unknown type for check.metrics %T", collector)
 		}
 	}
 }

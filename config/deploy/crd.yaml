@@ -102,7 +102,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -267,7 +267,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -451,7 +451,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -600,7 +600,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -760,7 +760,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -900,7 +900,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -1029,7 +1029,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -1070,7 +1070,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -1172,7 +1172,7 @@ spec:
                       maxAge:
                         type: string
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -1236,7 +1236,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -1354,7 +1354,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -1454,7 +1454,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -1536,7 +1536,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -1647,7 +1647,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -1776,7 +1776,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -2168,7 +2168,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -2407,7 +2407,7 @@ spec:
                         description: MaxSize of the files inside the searchPath
                         type: string
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -2661,7 +2661,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -2788,7 +2788,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -2885,7 +2885,7 @@ spec:
                         description: Method to use - defaults to GET
                         type: string
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -3040,7 +3040,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -3124,7 +3124,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -3191,7 +3191,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -3279,7 +3279,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -3365,7 +3365,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -3470,7 +3470,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -3581,7 +3581,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -3719,7 +3719,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -3869,7 +3869,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -3949,7 +3949,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -4104,7 +4104,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -4173,7 +4173,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -4314,7 +4314,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -4445,7 +4445,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -4586,7 +4586,7 @@ spec:
                         description: MaxAge for backup freshness
                         type: string
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -4725,7 +4725,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
@@ -4837,7 +4837,7 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics Spec
+                        description: Metrics to expose from check results
                         properties:
                           labels:
                             additionalProperties:
