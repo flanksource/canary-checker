@@ -20,6 +20,9 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "$ref": "#/$defs/Metrics"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -129,6 +132,29 @@
           "type": "string"
         }
       },
+      "type": "object"
+    },
+    "Metrics": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
       "type": "object"
     },
     "SecretKeySelector": {

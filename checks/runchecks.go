@@ -81,10 +81,16 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 		if _, ok := disabledChecks[c.Type()]; ok {
 			continue
 		}
+		if !Checks(checks).Includes(c) {
+			continue
+		}
 
-		if Checks(checks).Includes(c) {
-			result := c.Run(ctx)
-			results = append(results, transformResults(ctx, result)...)
+		result := c.Run(ctx)
+		transformedResults := transformResults(ctx, result)
+		results = append(results, transformedResults...)
+
+		if len(result) > 0 {
+			exportCheckMetrics(ctx, result[0].Check, transformedResults)
 		}
 	}
 

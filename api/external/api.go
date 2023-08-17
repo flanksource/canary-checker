@@ -1,7 +1,5 @@
 package external
 
-// +kubebuilder:skip
-
 type Endpointer interface {
 	GetEndpoint() string
 }
@@ -12,6 +10,7 @@ type Describable interface {
 	GetName() string
 	GetLabels() map[string]string
 	GetTransformDeleteStrategy() string
+	GetMetricsSpec() Metrics
 }
 
 type WithType interface {
