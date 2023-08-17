@@ -89,9 +89,7 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 		transformedResults := transformResults(ctx, result)
 		results = append(results, transformedResults...)
 
-		if len(result) > 0 {
-			exportCheckMetrics(ctx, result[0].Check, transformedResults)
-		}
+		exportCheckMetrics(ctx, result[0].Check, transformedResults)
 	}
 
 	return processResults(ctx, results), nil

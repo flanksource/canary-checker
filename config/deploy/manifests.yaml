@@ -101,6 +101,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -251,6 +265,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -422,6 +450,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -556,6 +598,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -703,6 +759,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -829,6 +899,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -944,6 +1028,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -970,6 +1068,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -1059,6 +1171,20 @@ spec:
                         type: object
                       maxAge:
                         type: string
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -1108,6 +1234,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       minrecords:
                         type: integer
@@ -1213,6 +1353,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -1299,6 +1453,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -1366,6 +1534,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -1463,6 +1645,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -1578,6 +1774,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -1957,6 +2167,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2182,6 +2406,20 @@ spec:
                       maxSize:
                         description: MaxSize of the files inside the searchPath
                         type: string
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       minAge:
                         description: MinAge the latest object should be older than defined age
                         type: string
@@ -2422,6 +2660,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2535,6 +2787,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2618,6 +2884,20 @@ spec:
                       method:
                         description: Method to use - defaults to GET
                         type: string
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2759,6 +3039,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2829,6 +3123,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -2881,6 +3189,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -2956,6 +3278,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -3027,6 +3363,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -3118,6 +3468,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -3215,6 +3579,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -3339,6 +3717,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -3476,6 +3868,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -3541,6 +3947,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -3683,6 +4103,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -3737,6 +4171,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -3865,6 +4313,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -3981,6 +4443,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check
@@ -4109,6 +4585,20 @@ spec:
                       maxAge:
                         description: MaxAge for backup freshness
                         type: string
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -4234,6 +4724,20 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
                       name:
                         description: Name of the check
                         type: string
@@ -4331,6 +4835,20 @@ spec:
                         additionalProperties:
                           type: string
                         description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        properties:
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
                         type: object
                       name:
                         description: Name of the check

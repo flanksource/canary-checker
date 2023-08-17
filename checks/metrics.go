@@ -60,6 +60,10 @@ func addPrometheusMetric(name, metricType string, labels map[string]string) prom
 }
 
 func exportCheckMetrics(ctx *context.Context, c external.Check, results pkg.Results) {
+	if len(results) == 0 {
+		return
+	}
+
 	metricsSpec := c.GetMetricsSpec()
 	if metricsSpec.Name == "" || metricsSpec.Value == "" {
 		return
