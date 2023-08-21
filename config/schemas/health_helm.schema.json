@@ -75,7 +75,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "chartmuseum": {
           "type": "string"

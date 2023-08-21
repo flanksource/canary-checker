@@ -54,7 +54,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -142,7 +145,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -212,7 +218,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -311,7 +320,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -734,7 +746,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -821,7 +836,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "query": {
           "type": "string"
@@ -870,7 +888,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "image": {
           "type": "string"
@@ -910,7 +931,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "image": {
           "type": "string"
@@ -947,7 +971,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "server": {
           "type": "string"
@@ -1001,7 +1028,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1043,7 +1073,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "image": {
           "type": "string"
@@ -1083,7 +1116,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "image": {
           "type": "string"
@@ -1117,7 +1153,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1168,7 +1207,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -1246,7 +1288,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1330,7 +1375,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1393,7 +1441,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1527,7 +1578,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1573,7 +1627,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1666,7 +1723,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "chartmuseum": {
           "type": "string"
@@ -1705,7 +1765,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "endpoint": {
           "type": "string"
@@ -1760,7 +1823,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "jmx": {
           "$ref": "#/$defs/EnvVar"
@@ -1812,7 +1878,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "testResults": {
           "type": "string"
@@ -1857,7 +1926,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1912,7 +1984,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -2028,7 +2103,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -2067,7 +2145,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2121,7 +2202,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2175,7 +2259,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "namespaceNamePrefix": {
           "type": "string"
@@ -2355,7 +2442,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2444,7 +2534,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "namespace": {
           "type": "string"
@@ -2525,7 +2618,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2579,7 +2675,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2634,7 +2733,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -2694,7 +2796,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -2751,7 +2856,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -2871,7 +2979,10 @@
           "type": "string"
         },
         "metrics": {
-          "$ref": "#/$defs/Metrics"
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "endpoint": {
           "type": "string"

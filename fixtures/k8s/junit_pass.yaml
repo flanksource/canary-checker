@@ -22,3 +22,22 @@ spec:
           - name: jes
             image: docker.io/tarun18/junit-test-pass
             command: ["/start.sh"]
+      metrics:
+        - name: junit_check_pass_count
+          type: gauge
+          value: "{{.result.results.Passed}}"
+          labels:
+            name: junit_check_pass_count
+            check_name: "{{ .check.name }}"
+        - name: junit_check_failed_count
+          type: gauge
+          value: "{{.result.results.Failed}}"
+          labels:
+            name: junit_check_fail_count
+            check_name: "{{ .check.name }}"
+        - name: junit_check_duration_ms
+          type: histogram
+          value: "{{.check.duration}}"
+          labels:
+            name: junit_check_duration_ms
+            check_name: "{{ .check.name }}"

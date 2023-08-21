@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
@@ -59,67 +58,73 @@ func addPrometheusMetric(name, metricType string, labels map[string]string) prom
 	return collector
 }
 
-func exportCheckMetrics(ctx *context.Context, c external.Check, results pkg.Results) {
+func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 	if len(results) == 0 {
 		return
 	}
 
-	metricsSpec := c.GetMetricsSpec()
-	if metricsSpec.Name == "" || metricsSpec.Value == "" {
-		return
-	}
-
-	var collector prometheus.Collector
-	var exists bool
-	if collector, exists = collectorMap[metricsSpec.Name]; !exists {
-		collector = addPrometheusMetric(metricsSpec.Name, metricsSpec.Type, metricsSpec.Labels)
-		if collector == nil {
-			logger.Errorf("Invalid type for check.metrics %s for check[%s]", metricsSpec.Type, c.GetName())
-			return
-		}
-	}
-
-	tplValue := v1.Template{Template: metricsSpec.Value}
 	for _, r := range results {
-		templateInput := map[string]any{
-			"result": r.Data,
-			"check": map[string]any{
-				"name":        c.GetName(),
-				"description": c.GetDescription(),
-				"labels":      c.GetLabels(),
-				"endpoint":    c.GetEndpoint(),
-			},
-		}
-		valRaw, err := template(ctx.New(templateInput), tplValue)
-		if err != nil {
-			logger.Errorf("Error templating value for check.metrics template %s for check[%s]", metricsSpec.Value, c.GetName())
-		}
-		val, err := strconv.ParseFloat(valRaw, 64)
-		if err != nil {
-			logger.Errorf("Error converting value %s to float for check.metrics template %s for check[%s]", valRaw, metricsSpec.Value, c.GetName())
-		}
-		tplLabels := make(map[string]string)
-		for labelKey, labelVals := range metricsSpec.Labels {
-			label, err := template(ctx.New(templateInput), v1.Template{Template: labelVals})
-			if err != nil {
-				logger.Errorf("Error templating label %s:%s for check.metrics for check[%s]", labelKey, labelVals, c.GetName())
-			}
-			tplLabels[labelKey] = label
-		}
-		orderedLabelVals := promLabelsOrderedVals(tplLabels)
-
-		switch collector := collector.(type) {
-		case *prometheus.HistogramVec:
-			collector.WithLabelValues(orderedLabelVals...).Observe(val)
-		case *prometheus.GaugeVec:
-			collector.WithLabelValues(orderedLabelVals...).Set(val)
-		case *prometheus.CounterVec:
-			if val <= 0 {
+		for _, spec := range r.Check.GetMetricsSpec() {
+			if spec.Name == "" || spec.Value == "" {
 				continue
 			}
-			collector.WithLabelValues(orderedLabelVals...).Add(val)
-		default:
-			logger.Errorf("Got unknown type for check.metrics %T", collector)
+
+			var collector prometheus.Collector
+			var exists bool
+			if collector, exists = collectorMap[spec.Name]; !exists {
+				collector = addPrometheusMetric(spec.Name, spec.Type, spec.Labels)
+				if collector == nil {
+					logger.Errorf("Invalid type for check.metrics %s for check[%s]", spec.Type, r.Check.GetName())
+					continue
+				}
+			}
+
+			tplValue := v1.Template{Template: spec.Value}
+			templateInput := map[string]any{
+				"result": r.Data,
+				"check": map[string]any{
+					"name":        r.Check.GetName(),
+					"description": r.Check.GetDescription(),
+					"labels":      r.Check.GetLabels(),
+					"endpoint":    r.Check.GetEndpoint(),
+					"duration":    r.GetDuration(),
+				},
+			}
+
+			valRaw, err := template(ctx.New(templateInput), tplValue)
+			if err != nil {
+				logger.Errorf("Error templating value for check.metrics template %s for check[%s]: %v", spec.Value, r.Check.GetName(), err)
+				continue
+			}
+			val, err := strconv.ParseFloat(valRaw, 64)
+			if err != nil {
+				logger.Errorf("Error converting value %s to float for check.metrics template %s for check[%s]: %v", valRaw, spec.Value, r.Check.GetName(), err)
+				continue
+			}
+			tplLabels := make(map[string]string)
+			for labelKey, labelVals := range spec.Labels {
+				label, err := template(ctx.New(templateInput), v1.Template{Template: labelVals})
+				if err != nil {
+					logger.Errorf("Error templating label %s:%s for check.metrics for check[%s]: %v", labelKey, labelVals, r.Check.GetName(), err)
+					continue
+				}
+				tplLabels[labelKey] = label
+			}
+			orderedLabelVals := promLabelsOrderedVals(tplLabels)
+
+			switch collector := collector.(type) {
+			case *prometheus.HistogramVec:
+				collector.WithLabelValues(orderedLabelVals...).Observe(val)
+			case *prometheus.GaugeVec:
+				collector.WithLabelValues(orderedLabelVals...).Set(val)
+			case *prometheus.CounterVec:
+				if val <= 0 {
+					continue
+				}
+				collector.WithLabelValues(orderedLabelVals...).Add(val)
+			default:
+				logger.Errorf("Got unknown type for check.metrics %T", collector)
+			}
 		}
 	}
 }

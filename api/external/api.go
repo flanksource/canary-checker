@@ -10,7 +10,7 @@ type Describable interface {
 	GetName() string
 	GetLabels() map[string]string
 	GetTransformDeleteStrategy() string
-	GetMetricsSpec() Metrics
+	GetMetricsSpec() []Metrics
 }
 
 type WithType interface {

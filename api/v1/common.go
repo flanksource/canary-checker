@@ -295,7 +295,7 @@ type Description struct {
 	// Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
 	TransformDeleteStrategy string `yaml:"transformDeleteStrategy,omitempty" json:"transformDeleteStrategy,omitempty"`
 	// Metrics to expose from check results
-	Metrics external.Metrics `json:"metrics,omitempty" yaml:"metrics,omitempty"`
+	Metrics []external.Metrics `json:"metrics,omitempty" yaml:"metrics,omitempty"`
 }
 
 func (d Description) String() string {
@@ -313,7 +313,7 @@ func (d Description) GetIcon() string {
 	return d.Icon
 }
 
-func (d Description) GetMetricsSpec() external.Metrics {
+func (d Description) GetMetricsSpec() []external.Metrics {
 	return d.Metrics
 }
 
