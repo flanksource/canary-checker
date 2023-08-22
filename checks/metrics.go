@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"encoding/json"
 	"sort"
 	"strconv"
 
@@ -79,9 +80,21 @@ func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 				}
 			}
 
-			tplValue := v1.Template{Template: spec.Value}
+			// Convert result Data into JSON for templating
+			var rData map[string]any
+			resultBytes, err := json.Marshal(r.Data)
+			if err != nil {
+				logger.Errorf("Error converting check result data into json: %v", err)
+				continue
+			}
+			if err := json.Unmarshal(resultBytes, &rData); err != nil {
+				logger.Errorf("Error converting check result data into json: %v", err)
+				continue
+			}
+
+			tplValue := v1.Template{Expression: spec.Value}
 			templateInput := map[string]any{
-				"result": r.Data,
+				"result": rData,
 				"check": map[string]any{
 					"name":        r.Check.GetName(),
 					"description": r.Check.GetDescription(),
@@ -102,10 +115,10 @@ func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 				continue
 			}
 			tplLabels := make(map[string]string)
-			for labelKey, labelVals := range spec.Labels {
-				label, err := template(ctx.New(templateInput), v1.Template{Template: labelVals})
+			for labelKey, labelVal := range spec.Labels {
+				label, err := template(ctx.New(templateInput), v1.Template{Expression: labelVal})
 				if err != nil {
-					logger.Errorf("Error templating label %s:%s for check.metrics for check[%s]: %v", labelKey, labelVals, r.Check.GetName(), err)
+					logger.Errorf("Error templating label %s:%s for check.metrics for check[%s]: %v", labelKey, labelVal, r.Check.GetName(), err)
 					continue
 				}
 				tplLabels[labelKey] = label

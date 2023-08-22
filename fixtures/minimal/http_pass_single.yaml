@@ -14,11 +14,11 @@ spec:
       metrics:
         - name: httpbin_2xx_count
           type: counter
-          value: "{{if eq .result.code 200 }}1{{else}}0{{end}}"
+          value: "result.code == 200 ? 1 : 0"
           labels:
-            name: httpbin_2xx_count
-            check_name: "{{ .check.name }}"
-            statusClass: "{{ .result.code | conv.ToString | strings.Trunc 1}}xx"
+            name: '"httpbin_2xx_count"'
+            check_name: "check.name"
+            statusClass: "string(result.code).charAt(0)"
     - name: http-param-tests
       url: https://httpbin.demo.aws.flanksource.com/status/200
       responseCodes: [201, 200, 301]
