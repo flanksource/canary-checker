@@ -35,6 +35,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "connection": {
           "type": "string"
         },
@@ -131,6 +137,29 @@
     "LocalObjectReference": {
       "properties": {
         "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Metrics": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
           "type": "string"
         }
       },

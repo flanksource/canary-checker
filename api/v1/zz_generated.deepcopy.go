@@ -23,6 +23,7 @@ package v1
 
 import (
 	"encoding/json"
+	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/duty/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -1376,6 +1377,13 @@ func (in *Description) DeepCopyInto(out *Description) {
 		*out = make(Labels, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
+		}
+	}
+	if in.Metrics != nil {
+		in, out := &in.Metrics, &out.Metrics
+		*out = make([]external.Metrics, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 }

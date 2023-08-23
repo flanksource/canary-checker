@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/c2h5oh/datasize"
+	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/gomplate/v3"
@@ -293,6 +294,8 @@ type Description struct {
 	Labels Labels `yaml:"labels,omitempty" json:"labels,omitempty"`
 	// Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
 	TransformDeleteStrategy string `yaml:"transformDeleteStrategy,omitempty" json:"transformDeleteStrategy,omitempty"`
+	// Metrics to expose from check results
+	Metrics []external.Metrics `json:"metrics,omitempty" yaml:"metrics,omitempty"`
 }
 
 func (d Description) String() string {
@@ -308,6 +311,10 @@ func (d Description) GetDescription() string {
 
 func (d Description) GetIcon() string {
 	return d.Icon
+}
+
+func (d Description) GetMetricsSpec() []external.Metrics {
+	return d.Metrics
 }
 
 func (d Description) GetName() string {

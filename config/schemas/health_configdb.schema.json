@@ -29,6 +29,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "query": {
           "type": "string"
         }
@@ -46,6 +52,29 @@
           "type": "string"
         }
       },
+      "type": "object"
+    },
+    "Metrics": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
       "type": "object"
     },
     "Template": {

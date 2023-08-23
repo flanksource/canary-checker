@@ -53,6 +53,29 @@
       },
       "type": "object"
     },
+    "Metrics": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "PrometheusCheck": {
       "properties": {
         "description": {
@@ -69,6 +92,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"

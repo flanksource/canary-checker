@@ -53,6 +53,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -138,6 +144,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -204,6 +216,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -300,6 +318,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -627,6 +651,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "connection": {
           "type": "string"
         },
@@ -918,6 +948,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "query": {
           "type": "string"
         }
@@ -982,6 +1018,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "image": {
           "type": "string"
         },
@@ -1019,6 +1061,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "image": {
           "type": "string"
         },
@@ -1052,6 +1100,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "server": {
           "type": "string"
@@ -1103,6 +1157,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1161,6 +1221,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "image": {
           "type": "string"
         },
@@ -1198,6 +1264,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "image": {
           "type": "string"
         },
@@ -1228,6 +1300,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1276,6 +1354,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -1351,6 +1435,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1433,6 +1523,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1492,6 +1588,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1657,6 +1759,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1699,6 +1807,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1790,6 +1904,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "chartmuseum": {
           "type": "string"
         },
@@ -1825,6 +1945,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "endpoint": {
           "type": "string"
@@ -1878,6 +2004,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "jmx": {
           "$ref": "#/$defs/EnvVar"
         },
@@ -1927,6 +2059,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "testResults": {
           "type": "string"
         },
@@ -1968,6 +2106,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2020,6 +2164,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -2144,6 +2294,29 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "Metrics": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "MongoDBCheck": {
       "properties": {
         "description": {
@@ -2160,6 +2333,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -2196,6 +2375,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2248,6 +2433,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2298,6 +2489,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "namespaceNamePrefix": {
           "type": "string"
@@ -2476,6 +2673,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2562,6 +2765,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "namespace": {
           "type": "string"
         },
@@ -2640,6 +2849,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2690,6 +2905,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2815,6 +3036,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "connection": {
           "type": "string"
         },
@@ -2890,6 +3117,12 @@
         "transformDeleteStrategy": {
           "type": "string"
         },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "connection": {
           "type": "string"
         },
@@ -2943,6 +3176,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -3104,6 +3343,12 @@
         },
         "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "endpoint": {
           "type": "string"
