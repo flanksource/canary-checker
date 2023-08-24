@@ -32,23 +32,23 @@ func promLabelsOrderedVals(labels map[string]string) []string {
 	return vals
 }
 
-func addPrometheusMetric(name, metricType string, labels map[string]string) prometheus.Collector {
+func addPrometheusMetric(name, metricType string, labelNames []string) prometheus.Collector {
 	var collector prometheus.Collector
 	switch metricType {
 	case "histogram":
 		collector = prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{Name: name},
-			promLabelsOrderedKeys(labels),
+			labelNames,
 		)
 	case "counter":
 		collector = prometheus.NewCounterVec(
 			prometheus.CounterOpts{Name: name},
-			promLabelsOrderedKeys(labels),
+			labelNames,
 		)
 	case "gauge":
 		collector = prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{Name: name},
-			promLabelsOrderedKeys(labels),
+			labelNames,
 		)
 	default:
 		return nil
@@ -73,7 +73,7 @@ func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 			var collector prometheus.Collector
 			var exists bool
 			if collector, exists = collectorMap[spec.Name]; !exists {
-				collector = addPrometheusMetric(spec.Name, spec.Type, spec.Labels)
+				collector = addPrometheusMetric(spec.Name, spec.Type, spec.Labels.Names())
 				if collector == nil {
 					logger.Errorf("Invalid type for check.metrics %s for check[%s]", spec.Type, r.Check.GetName())
 					continue
@@ -114,16 +114,19 @@ func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 				logger.Errorf("Error converting value %s to float for check.metrics template %s for check[%s]: %v", valRaw, spec.Value, r.Check.GetName(), err)
 				continue
 			}
-			tplLabels := make(map[string]string)
-			for labelKey, labelVal := range spec.Labels {
-				label, err := template(ctx.New(templateInput), v1.Template{Expression: labelVal})
-				if err != nil {
-					logger.Errorf("Error templating label %s:%s for check.metrics for check[%s]: %v", labelKey, labelVal, r.Check.GetName(), err)
-					continue
+
+			var orderedLabelVals []string
+			for _, label := range spec.Labels {
+				val := label.Value
+				if label.ValueExpr != "" {
+					var err error
+					val, err = template(ctx.New(templateInput), v1.Template{Expression: label.ValueExpr})
+					if err != nil {
+						logger.Errorf("Error templating label %s:%s for check.metrics for check[%s]: %v", label.Name, label.ValueExpr, r.Check.GetName(), err)
+					}
 				}
-				tplLabels[labelKey] = label
+				orderedLabelVals = append(orderedLabelVals, val)
 			}
-			orderedLabelVals := promLabelsOrderedVals(tplLabels)
 
 			switch collector := collector.(type) {
 			case *prometheus.HistogramVec:

@@ -27,17 +27,24 @@ spec:
           type: gauge
           value: "result.results.passed"
           labels:
-            name: '"junit_check_pass_count"'
-            check_name: "check.name"
+            - name: name
+              value: junit_check_pass_count
+            - name: check_name
+              valueExpr: check.name
         - name: junit_check_failed_count
           type: gauge
           value: "result.results.failed"
           labels:
-            name: '"junit_check_fail_count"'
-            check_name: "check.name"
+            - name: name
+              value: junit_check_fail_count
+            - name: check_name
+              valueExpr: check.name
         - name: junit_check_duration_ms
           type: histogram
           value: "check.duration"
           labels:
-            name: '"junit_check_duration_ms"'
-            check_name: "check.name"
+            - name: name
+              value: junit_check_duration_ms
+            - name: check_name
+              valueExpr: check.name
+

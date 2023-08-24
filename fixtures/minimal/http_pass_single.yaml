@@ -16,9 +16,12 @@ spec:
           type: counter
           value: "result.code == 200 ? 1 : 0"
           labels:
-            name: '"httpbin_2xx_count"'
-            check_name: "check.name"
-            statusClass: "string(result.code).charAt(0)"
+            - name: name
+              value: httpbin_2xx_count
+            - name: check_name
+              valueExpr: check.name
+            - name: status_class
+              valueExpr: string(result.code).charAt(0)
     - name: http-param-tests
       url: https://httpbin.demo.aws.flanksource.com/status/200
       responseCodes: [201, 200, 301]
