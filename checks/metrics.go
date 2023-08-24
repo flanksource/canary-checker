@@ -2,7 +2,6 @@ package checks
 
 import (
 	"encoding/json"
-	"sort"
 	"strconv"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -13,24 +12,6 @@ import (
 )
 
 var collectorMap = make(map[string]prometheus.Collector)
-
-func promLabelsOrderedKeys(labels map[string]string) []string {
-	var keys []string
-	for k := range labels {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
-}
-
-func promLabelsOrderedVals(labels map[string]string) []string {
-	var vals []string
-	keys := promLabelsOrderedKeys(labels)
-	for _, k := range keys {
-		vals = append(vals, labels[k])
-	}
-	return vals
-}
 
 func addPrometheusMetric(name, metricType string, labelNames []string) prometheus.Collector {
 	var collector prometheus.Collector
