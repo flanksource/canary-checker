@@ -106,9 +106,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -273,9 +282,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -459,9 +477,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -610,9 +637,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -772,9 +808,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -914,9 +959,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -1045,9 +1099,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -1088,9 +1151,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -1192,9 +1264,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -1258,9 +1339,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -1378,9 +1468,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -1480,9 +1579,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -1564,9 +1672,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -1677,9 +1794,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -1808,9 +1934,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -2202,9 +2337,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -2443,9 +2587,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -2699,9 +2852,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -2828,9 +2990,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -2927,9 +3098,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -3084,9 +3264,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -3170,9 +3359,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -3239,9 +3437,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -3329,9 +3536,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -3417,9 +3633,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -3524,9 +3749,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -3637,9 +3871,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -3777,9 +4020,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -3929,9 +4181,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -4011,9 +4272,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -4168,9 +4438,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -4239,9 +4518,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -4382,9 +4670,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -4515,9 +4812,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -4658,9 +4964,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -4799,9 +5114,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
@@ -4913,9 +5237,18 @@ spec:
                         items:
                           properties:
                             labels:
-                              additionalProperties:
-                                type: string
-                              type: object
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
                             name:
                               type: string
                             type:
