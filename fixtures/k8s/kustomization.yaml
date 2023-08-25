@@ -8,3 +8,4 @@ resources:
   - namespace_pass.yaml
   - pod_fail.yaml
   - pod_pass.yaml
+  - kubernetes_bundle.yaml
