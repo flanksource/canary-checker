@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -39,7 +40,7 @@ func TestPrometheusExportedMetrics(t *testing.T) {
 						{
 							Name:  "histogram_metric",
 							Type:  "histogram",
-							Value: "check.duration",
+							Value: "result.code",
 							Labels: []external.MetricLabel{
 								{Name: "name", Value: "2xx_count"},
 								{Name: "check_name", ValueExpr: "check.name"},
@@ -76,4 +77,26 @@ func TestPrometheusExportedMetrics(t *testing.T) {
 	// Test the expected values using the ToFloat64 function
 	assert.Equal(float64(5), testutil.ToFloat64(counter.WithLabelValues("2xx_count", "http-metrics-test")))
 	assert.Equal(float64(200), testutil.ToFloat64(gauge.WithLabelValues("2xx_count", "http-metrics-test")))
+
+	histogramExpectedOutput := `
+        # HELP histogram_metric histogram_metric
+        # TYPE histogram_metric histogram
+
+        histogram_metric_bucket{check_name="http-metrics-test",name="2xx_count",le="0.005"} 0
+        histogram_metric_bucket{check_name="http-metrics-test",name="2xx_count",le="0.01"} 0
+        histogram_metric_bucket{check_name="http-metrics-test",name="2xx_count",le="0.025"} 0
+        histogram_metric_bucket{check_name="http-metrics-test",name="2xx_count",le="0.05"} 0
+        histogram_metric_bucket{check_name="http-metrics-test",name="2xx_count",le="0.1"} 0
+        histogram_metric_bucket{check_name="http-metrics-test",name="2xx_count",le="0.25"} 0
+        histogram_metric_bucket{check_name="http-metrics-test",name="2xx_count",le="0.5"} 0
+        histogram_metric_bucket{check_name="http-metrics-test",name="2xx_count",le="1"} 0
+        histogram_metric_bucket{check_name="http-metrics-test",name="2xx_count",le="2.5"} 0
+        histogram_metric_bucket{check_name="http-metrics-test",name="2xx_count",le="5"} 0
+        histogram_metric_bucket{check_name="http-metrics-test",name="2xx_count",le="10"} 0
+        histogram_metric_bucket{check_name="http-metrics-test",name="2xx_count",le="+Inf"} 5
+        histogram_metric_sum{check_name="http-metrics-test",name="2xx_count"} 1000
+        histogram_metric_count{check_name="http-metrics-test",name="2xx_count"} 5
+    `
+
+	assert.NoError(testutil.CollectAndCompare(histogram, strings.NewReader(histogramExpectedOutput)))
 }

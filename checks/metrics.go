@@ -18,7 +18,7 @@ func addPrometheusMetric(name, metricType string, labelNames []string) prometheu
 	switch metricType {
 	case "histogram":
 		collector = prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{Name: name},
+			prometheus.HistogramOpts{Name: name, Help: name},
 			labelNames,
 		)
 	case "counter":
