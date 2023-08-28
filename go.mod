@@ -54,7 +54,7 @@ require (
 	github.com/phf/go-queue v0.0.0-20170504031614-9abe38d0371d
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.5
-	github.com/prometheus/alertmanager v0.25.0
+	github.com/prometheus/alertmanager v0.25.1
 	github.com/prometheus/client_golang v1.16.0
 	github.com/prometheus/common v0.44.0
 	github.com/robertkrimen/otto v0.2.1
