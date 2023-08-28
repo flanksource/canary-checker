@@ -10,22 +10,22 @@ spec:
       name: node-bundle
       transform:
         expr: |
-          data.JSONArrayDump(dyn(results).map(r, {
-              'name': r.Object.metadata.name,
-              'labels': r.Object.metadata.labels,
-              'pass': k8s.is_healthy(r.Object),
-              'message': k8s.health(r.Object).message,
-              'error': k8s.health(r.Object).message,
-            }))
+          dyn(results).map(r, {
+            'name': r.Object.metadata.name,
+            'labels': r.Object.metadata.labels,
+            'pass': k8s.is_healthy(r.Object),
+            'message': k8s.health(r.Object).message,
+            'error': k8s.health(r.Object).message,
+          }).toJSONArray()
     - kind: Pod
       ready: true
       name: pod-bundle
       transform:
         expr: |
-          data.JSONArrayDump(dyn(results).map(r, {
-              'name': r.Object.metadata.name,
-              'labels': r.Object.metadata.labels,
-              'pass': k8s.is_healthy(r.Object),
-              'message': k8s.health(r.Object).message,
-              'error': k8s.health(r.Object).message,
-            }))
+          dyn(results).map(r, {
+            'name': r.Object.metadata.name,
+            'labels': r.Object.metadata.labels,
+            'pass': k8s.is_healthy(r.Object),
+            'message': k8s.health(r.Object).message,
+            'error': k8s.health(r.Object).message,
+          }).toJSONArray()
