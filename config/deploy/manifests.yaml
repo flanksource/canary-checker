@@ -4473,6 +4473,8 @@ spec:
                       readyTimeout:
                         format: int64
                         type: integer
+                      roundRobinNodes:
+                        type: boolean
                       scheduleTimeout:
                         format: int64
                         type: integer

@@ -19,9 +19,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
+
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/commons/logger"
+
 	perrors "github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -89,9 +91,13 @@ func (c *PodChecker) newPod(podCheck canaryv1.PodCheck, nodeName string) (*v1.Po
 	pod.Labels[nameLabel] = pod.Name
 	pod.Labels[podCheckSelector] = c.podCheckSelectorValue(podCheck)
 	pod.Labels[podGeneralSelector] = "true"
-	pod.Spec.NodeSelector = map[string]string{
-		"kubernetes.io/hostname": nodeName,
+
+	if podCheck.RoundRobinNodes {
+		pod.Spec.NodeSelector = map[string]string{
+			"kubernetes.io/hostname": nodeName,
+		}
 	}
+
 	if podCheck.PriorityClass != "" {
 		pod.Spec.PriorityClassName = podCheck.PriorityClass
 	}
