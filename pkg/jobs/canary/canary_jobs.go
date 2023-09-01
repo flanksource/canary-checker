@@ -349,20 +349,20 @@ func SyncCanaryJobs() {
 		logger.Errorf("Failed to get canaries: %v", err)
 
 		jobHistory := models.NewJobHistory("SyncCanaries", "canary", "").Start()
-		logIfError(db.PersistJobHistory(jobHistory.AddError(err.Error()).End()), "failed to persist job history")
+		logIfError(db.PersistJobHistory(jobHistory.AddError(err.Error()).End()), "failed to persist job history [SyncCanaries]")
 
 		return
 	}
 
 	existingIDsInCron := getAllCanaryIDsInCron()
-	var idsInNewFetch []string
+	idsInNewFetch := make([]string, 0, len(canaries))
 	for _, c := range canaries {
 		jobHistory := models.NewJobHistory("CanarySync", "canary", c.ID.String()).Start()
 
 		idsInNewFetch = append(idsInNewFetch, c.ID.String())
 		if err := SyncCanaryJob(c); err != nil {
 			logger.Errorf("Error syncing canary[%s]: %v", c.ID, err.Error())
-			logIfError(db.PersistJobHistory(jobHistory.AddError(err.Error()).End()), "failed to persist job history")
+			logIfError(db.PersistJobHistory(jobHistory.AddError(err.Error()).End()), "failed to persist job history [CanarySync]")
 			continue
 		}
 	}
@@ -388,9 +388,9 @@ func ReconcileCanaryChecks() {
 	logger.Infof("Reconciling Canary Checks")
 
 	jobHistory := models.NewJobHistory("ReconcileCanaryChecks", "", "").Start()
-	logIfError(db.PersistJobHistory(jobHistory), "failed to persist job history")
+	logIfError(db.PersistJobHistory(jobHistory), "failed to persist job history [ReconcileCanaryChecks start]")
 	defer func() {
-		logIfError(db.PersistJobHistory(jobHistory.End()), "failed to persist job history")
+		logIfError(db.PersistJobHistory(jobHistory.End()), "failed to persist job history [ReconcileCanaryChecks end]")
 	}()
 
 	canaries, err := db.GetAllCanariesForSync()
