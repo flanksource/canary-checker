@@ -347,6 +347,10 @@ func SyncCanaryJobs() {
 	canaries, err := db.GetAllCanariesForSync()
 	if err != nil {
 		logger.Errorf("Failed to get canaries: %v", err)
+
+		jobHistory := models.NewJobHistory("SyncCanaries", "canary", "").Start()
+		logIfError(db.PersistJobHistory(jobHistory.AddError(err.Error()).End()), "failed to persist job history")
+
 		return
 	}
 
@@ -354,16 +358,13 @@ func SyncCanaryJobs() {
 	var idsInNewFetch []string
 	for _, c := range canaries {
 		jobHistory := models.NewJobHistory("CanarySync", "canary", c.ID.String()).Start()
-		_ = db.PersistJobHistory(jobHistory)
 
 		idsInNewFetch = append(idsInNewFetch, c.ID.String())
 		if err := SyncCanaryJob(c); err != nil {
 			logger.Errorf("Error syncing canary[%s]: %v", c.ID, err.Error())
-			_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
+			logIfError(db.PersistJobHistory(jobHistory.AddError(err.Error()).End()), "failed to persist job history")
 			continue
 		}
-		jobHistory.IncrSuccess()
-		_ = db.PersistJobHistory(jobHistory.End())
 	}
 
 	idsToRemoveFromCron := utils.SetDifference(existingIDsInCron, idsInNewFetch)
@@ -385,9 +386,12 @@ func DeleteCanaryJob(id string) {
 
 func ReconcileCanaryChecks() {
 	logger.Infof("Reconciling Canary Checks")
+
 	jobHistory := models.NewJobHistory("ReconcileCanaryChecks", "", "").Start()
-	_ = db.PersistJobHistory(jobHistory)
-	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
+	logIfError(db.PersistJobHistory(jobHistory), "failed to persist job history")
+	defer func() {
+		logIfError(db.PersistJobHistory(jobHistory.End()), "failed to persist job history")
+	}()
 
 	canaries, err := db.GetAllCanariesForSync()
 	if err != nil {
@@ -447,4 +451,10 @@ func ScheduleFunc(schedule string, fn func()) (interface{}, error) {
 func init() {
 	// We are adding a small buffer to prevent blocking
 	CanaryStatusChannel = make(chan CanaryStatusPayload, 64)
+}
+
+func logIfError(err error, description string) {
+	if err != nil {
+		logger.Errorf("%s: %v", description, err)
+	}
 }

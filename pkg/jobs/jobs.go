@@ -113,6 +113,8 @@ func Start() {
 		logger.Errorf("Failed to schedule ReconcileCanaryChecks: %v", err)
 	}
 
+	time.Sleep(time.Second * 3)
+
 	canaryJobs.ReconcileCanaryChecks()
 	canaryJobs.CleanupMetricsGauges()
 	canaryJobs.SyncCanaryJobs()
