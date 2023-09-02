@@ -86,7 +86,7 @@ func CreateComponentCanaryFromInline(id, name, namespace, schedule, owner string
 		},
 		Spec: *spec,
 	}
-	canary, _, _, err := PersistCanary(obj, fmt.Sprintf("component/%s", id))
+	canary, _, err := PersistCanary(obj, fmt.Sprintf("component/%s", id))
 	if err != nil {
 		logger.Debugf("error persisting component inline canary: %v", err)
 		return nil, err

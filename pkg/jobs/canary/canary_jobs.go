@@ -273,7 +273,7 @@ func ScanCanaryConfigs() {
 		}
 
 		for _, canary := range configs {
-			_, _, _, err := db.PersistCanary(canary, path.Base(configfile))
+			_, _, err := db.PersistCanary(canary, path.Base(configfile))
 			if err != nil {
 				logger.Errorf("could not persist %s: %v", canary.Name, err)
 			} else {
@@ -437,7 +437,7 @@ func ReconcileCanaryChecks() {
 	}
 
 	for _, c := range canaries {
-		if _, _, _, err := db.PersistCanaryModel(c); err != nil {
+		if _, _, err := db.PersistCanaryModel(c); err != nil {
 			logger.Errorf("Error persisting canary: %v", err)
 			jobHistory.AddError(err.Error())
 		}

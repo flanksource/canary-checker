@@ -23,8 +23,6 @@ import (
 )
 
 func GetAllCanariesForSync() ([]pkg.Canary, error) {
-	var _canaries []pkg.Canary
-	var rawCanaries interface{}
 	query := `
         SELECT json_agg(
             jsonb_set_lax(to_jsonb(canaries),'{checks}', (
@@ -43,24 +41,20 @@ func GetAllCanariesForSync() ([]pkg.Canary, error) {
             agent_id = '00000000-0000-0000-0000-000000000000'
     `
 
-	rows, err := Gorm.Raw(query).Rows()
+	rows, err := Pool.Query(context.Background(), query)
 	if err != nil {
 		return nil, err
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+
+	var _canaries []pkg.Canary
 	for rows.Next() {
-		if err := rows.Scan(&rawCanaries); err != nil {
-			return nil, err
+		if rows.RawValues()[0] == nil {
+			continue
 		}
-	}
-	if rawCanaries == nil {
-		return nil, nil
-	}
-	if err := json.Unmarshal(rawCanaries.([]byte), &_canaries); err != nil {
-		return nil, err
+
+		if err := json.Unmarshal(rows.RawValues()[0], &_canaries); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal canaries:%w for %s", err, rows.RawValues()[0])
+		}
 	}
 	return _canaries, nil
 }
@@ -294,22 +288,20 @@ func CreateCheck(canary pkg.Canary, check *pkg.Check) error {
 	return Gorm.Create(&check).Error
 }
 
-func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, map[string]string, bool, error) {
-	var err error
-	changed := false
-	tx := Gorm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}, {Name: "source"}},
-		DoUpdates: clause.AssignmentColumns([]string{"labels", "spec"}),
-	}).Create(&model)
-	if tx.RowsAffected > 0 {
-		changed = true
-	}
+func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, map[string]string, error) {
+	err := Gorm.Clauses(
+		clause.OnConflict{
+			Columns:   []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}, {Name: "source"}},
+			DoUpdates: clause.AssignmentColumns([]string{"labels", "spec"}),
+		},
+		clause.Returning{},
+	).Create(&model).Error
 
 	// Duplicate key happens when an already created canary is persisted
 	// We will ignore this error but act on other errors
 	if err != nil {
-		if !errors.Is(tx.Error, gorm.ErrDuplicatedKey) {
-			return nil, map[string]string{}, changed, tx.Error
+		if !errors.Is(err, gorm.ErrDuplicatedKey) {
+			return nil, map[string]string{}, err
 		}
 	}
 
@@ -322,12 +314,12 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, map[string]string, bool,
 		Error
 	if err != nil {
 		logger.Errorf("Error fetching existing checks for canary:%s", model.ID)
-		return nil, nil, changed, err
+		return nil, nil, err
 	}
 
 	var spec v1.CanarySpec
 	if err = json.Unmarshal(model.Spec, &spec); err != nil {
-		return nil, nil, changed, err
+		return nil, nil, err
 	}
 
 	var checks = make(map[string]string)
@@ -355,14 +347,13 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, map[string]string, bool,
 	}
 
 	model.Checks = checks
-	return &model, checks, changed, nil
+	return &model, checks, nil
 }
 
-func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]string, bool, error) {
-	changed := false
+func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]string, error) {
 	model, err := pkg.CanaryFromV1(canary)
 	if err != nil {
-		return nil, nil, changed, err
+		return nil, nil, err
 	}
 	if canary.GetPersistedID() != "" {
 		model.ID, _ = uuid.Parse(canary.GetPersistedID())
