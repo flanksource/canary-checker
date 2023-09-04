@@ -288,7 +288,7 @@ func CreateCheck(canary pkg.Canary, check *pkg.Check) error {
 	return Gorm.Create(&check).Error
 }
 
-func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, map[string]string, error) {
+func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, error) {
 	err := Gorm.Clauses(
 		clause.OnConflict{
 			Columns:   []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}, {Name: "source"}},
@@ -301,7 +301,7 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, map[string]string, error
 	// We will ignore this error but act on other errors
 	if err != nil {
 		if !errors.Is(err, gorm.ErrDuplicatedKey) {
-			return nil, map[string]string{}, err
+			return nil, err
 		}
 	}
 
@@ -314,12 +314,12 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, map[string]string, error
 		Error
 	if err != nil {
 		logger.Errorf("Error fetching existing checks for canary:%s", model.ID)
-		return nil, nil, err
+		return nil, err
 	}
 
 	var spec v1.CanarySpec
 	if err = json.Unmarshal(model.Spec, &spec); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	var checks = make(map[string]string)
@@ -347,13 +347,13 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, map[string]string, error
 	}
 
 	model.Checks = checks
-	return &model, checks, nil
+	return &model, nil
 }
 
-func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, map[string]string, error) {
+func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, error) {
 	model, err := pkg.CanaryFromV1(canary)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	if canary.GetPersistedID() != "" {
 		model.ID, _ = uuid.Parse(canary.GetPersistedID())

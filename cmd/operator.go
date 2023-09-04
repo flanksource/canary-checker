@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/runner"
+	gocache "github.com/patrickmn/go-cache"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -115,6 +117,7 @@ func run(cmd *cobra.Command, args []string) {
 		Log:               ctrl.Log.WithName("controllers").WithName("canary"),
 		Scheme:            mgr.GetScheme(),
 		RunnerName:        runner.RunnerName,
+		CanaryCache:       gocache.New(7*24*time.Hour, 1*time.Hour),
 	}
 
 	systemReconciler := &controllers.TopologyReconciler{

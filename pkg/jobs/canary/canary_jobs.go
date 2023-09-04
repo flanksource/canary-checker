@@ -17,9 +17,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
-	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
-	"github.com/google/go-cmp/cmp"
 	"github.com/robfig/cron/v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -273,7 +271,7 @@ func ScanCanaryConfigs() {
 		}
 
 		for _, canary := range configs {
-			_, _, err := db.PersistCanary(canary, path.Base(configfile))
+			_, err := db.PersistCanary(canary, path.Base(configfile))
 			if err != nil {
 				logger.Errorf("could not persist %s: %v", canary.Name, err)
 			} else {
@@ -382,66 +380,6 @@ func DeleteCanaryJob(id string) {
 	}
 	logger.Tracef("deleting cron entry for canary:%s with entry ID: %v", id, entry.ID)
 	CanaryScheduler.Remove(entry.ID)
-}
-
-func ReconcileCanaryChecks() {
-	logger.Infof("Reconciling Canary Checks")
-
-	jobHistory := models.NewJobHistory("ReconcileCanaryChecks", "", "").Start()
-	logIfError(db.PersistJobHistory(jobHistory), "failed to persist job history [ReconcileCanaryChecks start]")
-	defer func() {
-		logIfError(db.PersistJobHistory(jobHistory.End()), "failed to persist job history [ReconcileCanaryChecks end]")
-	}()
-
-	canaries, err := db.GetAllCanariesForSync()
-	if err != nil {
-		logger.Errorf("Error fetching canaries: %v", err)
-		jobHistory.AddError(err.Error())
-		return
-	}
-	canaryCheckMapping := make(map[string]dutyTypes.JSONStringMap)
-	for _, c := range canaries {
-		canaryCheckMapping[c.ID.String()] = c.Checks
-	}
-
-	var rows []struct {
-		CanaryID string
-		Checks   dutyTypes.JSONStringMap
-	}
-	db.Gorm.Raw(`
-        SELECT json_object_agg(checks.name, checks.id) as checks, canary_id
-        FROM checks
-        WHERE
-            deleted_at IS NULL AND
-            agent_id = '00000000-0000-0000-0000-000000000000'
-        GROUP BY canary_id
-    `).Scan(&rows)
-
-	var idsToPersist []string
-	for _, r := range rows {
-		if checks, exists := canaryCheckMapping[r.CanaryID]; exists {
-			if !cmp.Equal(r.Checks, checks) {
-				idsToPersist = append(idsToPersist, r.CanaryID)
-			}
-		} else {
-			// If the canaryID is not found in map, that means
-			// check is not deleted but the canary is
-			logger.Errorf("Canary[%s] is marked deleted but has active checks")
-		}
-	}
-
-	var canariesToPersist []pkg.Canary
-	if err := db.Gorm.Table("canaries").Where("id IN ?", idsToPersist).Find(&canariesToPersist).Error; err != nil {
-		logger.Errorf("Error fetching canaries: %v", err)
-		return
-	}
-
-	for _, c := range canaries {
-		if _, _, err := db.PersistCanaryModel(c); err != nil {
-			logger.Errorf("Error persisting canary: %v", err)
-			jobHistory.AddError(err.Error())
-		}
-	}
 }
 
 func ScheduleFunc(schedule string, fn func()) (interface{}, error) {

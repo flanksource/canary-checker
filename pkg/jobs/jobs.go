@@ -109,11 +109,7 @@ func Start() {
 	if _, err := ScheduleFunc(ReconcileDeletedTopologyComponentsSchedule, systemJobs.ReconcileDeletedTopologyComponents); err != nil {
 		logger.Errorf("Failed to schedule ReconcileDeletedTopologyComponents: %v", err)
 	}
-	if _, err := ScheduleFunc("@every 5m", canaryJobs.ReconcileCanaryChecks); err != nil {
-		logger.Errorf("Failed to schedule ReconcileCanaryChecks: %v", err)
-	}
 
-	canaryJobs.ReconcileCanaryChecks()
 	canaryJobs.CleanupMetricsGauges()
 	canaryJobs.SyncCanaryJobs()
 	systemJobs.SyncTopologyJobs()
