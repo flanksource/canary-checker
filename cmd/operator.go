@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/jobs"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/runner"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	gocache "github.com/patrickmn/go-cache"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
@@ -23,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	ctrlCache "sigs.k8s.io/controller-runtime/pkg/cache"
 	ctrlzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -91,6 +93,9 @@ func run(cmd *cobra.Command, args []string) {
 		LeaderElection:          enableLeaderElection,
 		LeaderElectionNamespace: operatorNamespace,
 		LeaderElectionID:        "bc88107d.flanksource.com",
+		Cache: ctrlCache.Options{
+			SyncPeriod: utils.Ptr(1 * time.Hour),
+		},
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
