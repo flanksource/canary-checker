@@ -2843,6 +2843,9 @@
         },
         "priorityClass": {
           "type": "string"
+        },
+        "roundRobinNodes": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,

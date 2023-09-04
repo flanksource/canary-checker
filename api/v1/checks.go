@@ -498,6 +498,7 @@ type PodCheck struct {
 	ExpectedContent      string `yaml:"expectedContent,omitempty" json:"expectedContent,omitempty" template:"true"`
 	ExpectedHTTPStatuses []int  `yaml:"expectedHttpStatuses,omitempty" json:"expectedHttpStatuses,omitempty"`
 	PriorityClass        string `yaml:"priorityClass,omitempty" json:"priorityClass,omitempty"`
+	RoundRobinNodes      bool   `yaml:"roundRobinNodes,omitempty" json:"roundRobinNodes,omitempty"`
 }
 
 func (c PodCheck) GetEndpoint() string {
