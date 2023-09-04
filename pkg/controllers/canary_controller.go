@@ -29,6 +29,9 @@ import (
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/kommons"
 	"github.com/go-logr/logr"
+	jsontime "github.com/liamylian/jsontime/v2/v2"
+	"github.com/nsf/jsondiff"
+	"github.com/patrickmn/go-cache"
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -39,20 +42,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+var json = jsontime.ConfigWithCustomTimeFormat
+
 // CanaryReconciler reconciles a Canary object
 type CanaryReconciler struct {
 	IncludeCheck      string
 	IncludeNamespaces []string
 	LogPass, LogFail  bool
 	client.Client
-	Kubernetes kubernetes.Interface
-	Kommons    *kommons.Client
-	Log        logr.Logger
-	Scheme     *runtime.Scheme
-	Events     record.EventRecorder
-	Cron       *cron.Cron
-	RunnerName string
-	Done       chan *pkg.CheckResult
+	Kubernetes  kubernetes.Interface
+	Kommons     *kommons.Client
+	Log         logr.Logger
+	Scheme      *runtime.Scheme
+	Events      record.EventRecorder
+	Cron        *cron.Cron
+	RunnerName  string
+	Done        chan *pkg.CheckResult
+	CanaryCache *cache.Cache
 }
 
 const FinalizerName = "canary.canaries.flanksource.com"
@@ -95,13 +101,13 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		return ctrl.Result{}, r.Update(ctx, canary)
 	}
 
-	dbCanary, checks, changed, err := db.PersistCanary(*canary, "kubernetes/"+canary.GetPersistedID())
+	dbCanary, err := r.updateCanaryInDB(canary)
 	if err != nil {
 		return ctrl.Result{Requeue: true}, err
 	}
 
 	// Sync jobs if canary is created or updated
-	if canary.Generation == 1 || changed {
+	if canary.Generation == 1 {
 		if err := canaryJobs.SyncCanaryJob(*dbCanary); err != nil {
 			logger.Error(err, "failed to sync canary job")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
@@ -117,7 +123,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 	patch := client.MergeFrom(canaryForStatus.DeepCopy())
 
-	canaryForStatus.Status.Checks = checks
+	canaryForStatus.Status.Checks = dbCanary.Checks
 	canaryForStatus.Status.ObservedGeneration = canary.Generation
 	if err = r.Status().Patch(ctx, &canaryForStatus, patch); err != nil {
 		logger.Error(err, "failed to update status for canary")
@@ -131,6 +137,50 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1.Canary{}).
 		Complete(r)
+}
+
+func (r *CanaryReconciler) persistAndCacheCanary(canary *v1.Canary) (*pkg.Canary, error) {
+	dbCanary, err := db.PersistCanary(*canary, "kubernetes/"+canary.GetPersistedID())
+	if err != nil {
+		return nil, err
+	}
+	r.CanaryCache.Set(dbCanary.ID.String(), dbCanary, cache.DefaultExpiration)
+
+	if err := canaryJobs.SyncCanaryJob(*dbCanary); err != nil {
+		return nil, err
+	}
+	return dbCanary, nil
+}
+
+func (r *CanaryReconciler) updateCanaryInDB(canary *v1.Canary) (*pkg.Canary, error) {
+	var dbCanary *pkg.Canary
+	var err error
+
+	// Get DBCanary from cache if exists else persist in database and update cache
+	if cacheObj, exists := r.CanaryCache.Get(canary.GetPersistedID()); !exists {
+		dbCanary, err = r.persistAndCacheCanary(canary)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		dbCanary = cacheObj.(*pkg.Canary)
+	}
+
+	// Compare canary spec and spec in database
+	// If they do not match, persist the canary in database
+	canarySpecJSON, err := json.Marshal(canary.Spec)
+	if err != nil {
+		return nil, err
+	}
+	opts := jsondiff.DefaultJSONOptions()
+	if diff, _ := jsondiff.Compare(canarySpecJSON, dbCanary.Spec, &opts); diff != jsondiff.FullMatch {
+		dbCanary, err = r.persistAndCacheCanary(canary)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return dbCanary, nil
 }
 
 func (r *CanaryReconciler) Report() {

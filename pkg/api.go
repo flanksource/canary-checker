@@ -116,14 +116,14 @@ type Timeseries struct {
 type Canary struct {
 	ID        uuid.UUID `gorm:"default:generate_ulid()"`
 	AgentID   uuid.UUID
-	Spec      types.JSON
-	Labels    types.JSONStringMap
+	Spec      types.JSON          `json:"spec"`
+	Labels    types.JSONStringMap `json:"labels"`
 	Source    string
 	Name      string
 	Namespace string
 	Checks    types.JSONStringMap `gorm:"-"`
 	CreatedAt time.Time
-	UpdatedAt time.Time
+	UpdatedAt time.Time  `json:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
 }
 
