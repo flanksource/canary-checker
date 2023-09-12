@@ -7,12 +7,12 @@ require (
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/allegro/bigcache v1.2.1
 	github.com/asecurityteam/rolling v2.0.4+incompatible
-	github.com/aws/aws-sdk-go-v2 v1.20.0
+	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.31
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.30
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.35.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.109.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.118.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.37.1
 	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b
@@ -34,7 +34,6 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/gobwas/glob v0.2.3
-	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
 	github.com/henvic/httpretty v0.1.2
 	github.com/hirochachacha/go-smb2 v1.1.0
@@ -46,6 +45,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0
 	github.com/microsoft/go-mssqldb v1.4.0
+	github.com/nsf/jsondiff v0.0.0-20230430225905-43f6cf3098c1
 	github.com/onsi/ginkgo/v2 v2.9.5
 	github.com/onsi/gomega v1.27.7
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
@@ -100,18 +100,18 @@ require (
 	github.com/aws/aws-sdk-go v1.44.313 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.11 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.7 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.37 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.31 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.41 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.35 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.38 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.1.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.32 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.31 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.35 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.15.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.15.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.21.0 // indirect
-	github.com/aws/smithy-go v1.14.0 // indirect
+	github.com/aws/smithy-go v1.14.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -153,6 +153,7 @@ require (
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/cel-go v0.17.1 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20230323073829-e72429f035bd // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
@@ -201,7 +202,6 @@ require (
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/nsf/jsondiff v0.0.0-20230430225905-43f6cf3098c1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
