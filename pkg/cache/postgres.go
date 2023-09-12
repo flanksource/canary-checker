@@ -54,7 +54,7 @@ func (c *postgresCache) AddCheckFromStatus(check pkg.Check, status pkg.CheckStat
 		return uuid.Nil, nil
 	}
 
-	if !check.Transformed {
+	if check.ID != uuid.Nil {
 		return uuid.Nil, nil
 	}
 
