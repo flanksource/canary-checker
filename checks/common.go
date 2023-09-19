@@ -91,9 +91,7 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 		if r.Canary.Labels == nil {
 			r.Canary.Labels = make(map[string]string)
 		}
-		for k, v := range t.Labels {
-			r.Canary.Labels[k] = v
-		}
+
 		// We use this label to set the transformed column to true
 		// This label is used and then removed in pkg.FromV1 function
 		r.Canary.Labels["transformed"] = "true" //nolint:goconst

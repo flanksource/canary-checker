@@ -76,9 +76,6 @@ RUN curl -L https://github.com/multiprocessio/dsq/releases/download/v0.23.0/dsq-
   mv dsq /usr/local/bin/dsq && \
   rm dsq.zip
 
-# install CA certificates
-COPY --from=builder /app/.bin/canary-checker /app
-
 # Install alexellis/arkade as root
 RUN curl -sLS https://get.arkade.dev | sh
 
@@ -106,6 +103,8 @@ RUN curl -sL -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/googl
   tar -xf google-cloud-cli-441.0.0-linux-x86_64.tar.gz && \
   ln -sf /app/google-cloud-sdk/bin/gcloud ${HOME}/bin/gcloud && \
   rm google-cloud-cli-441.0.0-linux-x86_64.tar.gz
+
+COPY --from=builder /app/.bin/canary-checker /app
 
 RUN /app/canary-checker go-offline
 ENTRYPOINT ["/app/canary-checker"]
