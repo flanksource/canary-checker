@@ -151,6 +151,10 @@ func (job *CanaryJob) NewContext() *context.Context {
 }
 
 func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
+	if CanaryStatusChannel == nil {
+		return
+	}
+
 	var checkStatus = make(map[string]*v1.CheckStatus)
 	var duration int64
 	var messages, errors []string
@@ -384,11 +388,6 @@ func DeleteCanaryJob(id string) {
 
 func ScheduleFunc(schedule string, fn func()) (interface{}, error) {
 	return FuncScheduler.AddFunc(schedule, fn)
-}
-
-func init() {
-	// We are adding a small buffer to prevent blocking
-	CanaryStatusChannel = make(chan CanaryStatusPayload, 64)
 }
 
 func logIfError(err error, description string) {

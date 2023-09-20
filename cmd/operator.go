@@ -138,6 +138,11 @@ func run(cmd *cobra.Command, args []string) {
 		setupLog.Error(err, "unable to create controller", "controller", "Canary")
 		os.Exit(1)
 	}
+
+	// Instantiate the canary status channel so the canary job can send updates on it.
+	// We are adding a small buffer to prevent blocking
+	canaryJobs.CanaryStatusChannel = make(chan canaryJobs.CanaryStatusPayload, 64)
+
 	// Listen for status updates
 	go canaryReconciler.Report()
 
