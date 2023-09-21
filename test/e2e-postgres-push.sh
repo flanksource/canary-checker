@@ -19,7 +19,7 @@ $KARINA ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.
 fi
 
 ## starting the postgres as docker container
-docker run --rm -p 5432:5432  --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d  postgres
+docker run --rm -p 5432:5432  --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres:14.1
 if $KARINA provision kind-cluster -e name=$CLUSTER_NAME -v ; then
 echo "::endgroup::"
 else
