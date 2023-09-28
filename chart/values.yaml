@@ -27,6 +27,9 @@ grafanaDashboards: false
 debug: false
 logLevel: "-v"
 
+# restrict canary-checker to monitor single namespace for canaries.  Leave blank to monitor all namespaces
+canaryNamespace: ""
+
 db:
   runMigrations: true
   embedded:

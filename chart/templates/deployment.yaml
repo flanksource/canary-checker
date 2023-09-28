@@ -105,6 +105,9 @@ spec:
             - "8080"
             - --disable-postgrest={{ .Values.disablePostgrest }}
             - --db-migrations={{ .Values.db.runMigrations }}
+            {{- if ne .Values.canaryNamespace "" }}
+            - --namespace={{ .Values.canaryNamespace }}
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
