@@ -112,8 +112,7 @@ resources:
     cpu: 200m
     memory: 200Mi
   limits:
-    cpu: 500m
-    memory: 512Mi
+    memory: 2Gi
 
 serviceAccount: {}
   # Configures extra annotations on the service account
