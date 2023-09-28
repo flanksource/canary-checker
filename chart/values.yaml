@@ -27,6 +27,9 @@ grafanaDashboards: false
 debug: false
 logLevel: "-v"
 
+# restrict canary-checker to monitor single namespace for canaries.  Leave blank to monitor all namespaces
+canaryNamespace: ""
+
 db:
   runMigrations: true
   embedded:
@@ -57,6 +60,20 @@ db:
 nameOverride: ""
 
 allowPrivilegeEscalation: true
+
+data:
+  defaultSearchWindow: 1h
+  cacheTimeoutDays: 90
+  checkStatusRetentionDays: 180
+  checkRetentionDays: 7
+  canaryRetentionDays: 7
+
+upstream:
+  enabled: false
+  host: ""
+  agentName: ""
+  username: ""
+  password: ""
 
 ingress:
   enabled: false
@@ -95,12 +112,15 @@ resources:
     cpu: 200m
     memory: 200Mi
   limits:
-    memory: 1512Mi
+    cpu: 500m
+    memory: 512Mi
 
 serviceAccount: {}
   # Configures extra annotations on the service account
   # annotations:
   #   some: annotation
+
+disableChecks: {}
 
 extra:
   # nodeSelector:

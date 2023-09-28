@@ -52,6 +52,9 @@ spec:
               - path: "labels"
                 fieldRef:
                   fieldPath: metadata.labels
+        - name: config
+          configMap:
+            name: {{ include "canary-checker.name" . }}
       securityContext:
         fsGroup: 1000
       containers:
@@ -74,11 +77,16 @@ spec:
               {{- if eq .Values.db.external.enabled true }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.db.external.secretKeyRef.name }}
+                  name: {{ .Values.db.external.secretKeyRef.name  }}
                   key: {{ .Values.db.external.secretKeyRef.key }}
               {{- else }}
               value: "embedded:///opt/database/"
               {{- end }}
+          {{- if .Values.upstream.enabled }}
+          envFrom:
+            - secretRef:
+                name: {{ include "canary-checker.name" . }}
+          {{- end }}
           volumeMounts:
             {{- if eq .Values.dockerSocket true }}
             - name: dockersock
@@ -96,6 +104,9 @@ spec:
             {{- end }}
             - mountPath: /etc/podinfo
               name: podinfo
+            - mountPath: /app/canary-checker.properties
+              name: config
+              subpath: canary-checker.properties
           command:
             - /app/canary-checker
           args:
@@ -105,6 +116,23 @@ spec:
             - "8080"
             - --disable-postgrest={{ .Values.disablePostgrest }}
             - --db-migrations={{ .Values.db.runMigrations }}
+            - --cache-timeout={{ .Values.data.cacheTimeoutDays }}
+            - --default-window={{ .Values.data.defaultSearchWindow }}
+            - --check-status-retention-period={{ .Values.data.checkStatusRetentionDays }}
+            - --check-retention-period={{ .Values.data.checkRetentionDays }}
+            - --canary-retention-period={{ .Values.data.canaryRetentionDays }}
+            {{- if ne .Values.canaryNamespace "" }}
+            - --namespace={{ .Values.canaryNamespace }}
+            {{- end }}
+            {{- if gt (int .Values.replicas) 1 }}
+            - --enable-leader-election=true
+            {{- end }}
+            {{- if .Values.upstream.enabled }}
+            - --agent-name={{ .Values.upstream.agentName }}
+            - --upstream-host={{ .Values.upstream.host }}
+            - --upstream-user=$UPSTREAM_USER
+            - --upstream-password=$UPSTREAM_PASSWORD
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
