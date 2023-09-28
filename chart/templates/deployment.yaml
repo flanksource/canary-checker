@@ -99,7 +99,7 @@ spec:
             {{- end }}
             - mountPath: /etc/podinfo
               name: podinfo
-            - mountPath: /canary-checker.properties
+            - mountPath: /app/canary-checker.properties
               name: config
               subpath: canary-checker.properties
           command:
