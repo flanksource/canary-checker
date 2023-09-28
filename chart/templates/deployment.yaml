@@ -108,6 +108,9 @@ spec:
             {{- if ne .Values.canaryNamespace "" }}
             - --namespace={{ .Values.canaryNamespace }}
             {{- end }}
+            {{- if gt (int .Values.replicas) 1 }}
+            - --enable-leader-election=true
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
