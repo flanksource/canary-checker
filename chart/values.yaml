@@ -61,6 +61,14 @@ nameOverride: ""
 
 allowPrivilegeEscalation: true
 
+data:
+  defaultSearchWindow: 1h
+  cacheTimeoutDays: 90
+  checkStatusRetentionDays: 180
+  checkRetentionDays: 7
+  canaryRetentionDays: 7
+
+
 ingress:
   enabled: false
   className: ""
