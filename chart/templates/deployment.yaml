@@ -82,6 +82,18 @@ spec:
               {{- else }}
               value: "embedded:///opt/database/"
               {{- end }}
+            {{- if .Values.upstream.enabled }}
+            - name: UPSTREAM_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.upstream.usernameSecretRef.name }}
+                  key: {{ .Values.upstream.usernameSecretRef.key  }}
+            - name: UPSTREAM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.upstream.passwordSecretRef.name  }}
+                  key: {{ .Values.upstream.passwordSecretRef.key }}
+            {{- end }}
           volumeMounts:
             {{- if eq .Values.dockerSocket true }}
             - name: dockersock
@@ -121,6 +133,12 @@ spec:
             {{- end }}
             {{- if gt (int .Values.replicas) 1 }}
             - --enable-leader-election=true
+            {{- end }}
+            {{- if .Values.upstream.enabled }}
+            - --agent-name={{ include "canary-checker.agentName" . }}
+            - --upstream-host={{ .Values.upstream.host }}
+            - --upstream-user=$UPSTREAM_USER
+            - --upstream-password=$UPSTREAM_PASSWORD
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

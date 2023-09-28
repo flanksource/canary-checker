@@ -68,6 +68,16 @@ data:
   checkRetentionDays: 7
   canaryRetentionDays: 7
 
+upstream:
+  enabled: false
+  host: ""
+  agentName: ""
+  usernameSecretRef:
+    name: ""
+    key: ""
+  passwordSecretRef:
+    name: ""
+    key: ""
 
 ingress:
   enabled: false
