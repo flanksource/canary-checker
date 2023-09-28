@@ -77,23 +77,16 @@ spec:
               {{- if eq .Values.db.external.enabled true }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.db.external.secretKeyRef.name }}
+                  name: {{ .Values.db.external.secretKeyRef.name  }}
                   key: {{ .Values.db.external.secretKeyRef.key }}
               {{- else }}
               value: "embedded:///opt/database/"
               {{- end }}
-            {{- if .Values.upstream.enabled }}
-            - name: UPSTREAM_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.upstream.usernameSecretRef.name }}
-                  key: {{ .Values.upstream.usernameSecretRef.key  }}
-            - name: UPSTREAM_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.upstream.passwordSecretRef.name  }}
-                  key: {{ .Values.upstream.passwordSecretRef.key }}
-            {{- end }}
+          {{- if .Values.upstream.enabled }}
+          envFrom:
+            - secretRef:
+                name: {{ include "canary-checker.name" . }}
+          {{- end }}
           volumeMounts:
             {{- if eq .Values.dockerSocket true }}
             - name: dockersock
@@ -135,7 +128,7 @@ spec:
             - --enable-leader-election=true
             {{- end }}
             {{- if .Values.upstream.enabled }}
-            - --agent-name={{ include "canary-checker.agentName" . }}
+            - --agent-name={{ .Values.upstream.agentName }}
             - --upstream-host={{ .Values.upstream.host }}
             - --upstream-user=$UPSTREAM_USER
             - --upstream-password=$UPSTREAM_PASSWORD

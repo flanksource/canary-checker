@@ -57,14 +57,3 @@ Image Name
 {{- define "canary-checker.imageString" -}}
 {{ .Values.image.repository }}{{- if eq (lower .Values.image.type) "full" }}-full{{- end }}:{{ .Values.image.tag }} 
 {{- end }}
-
-{{/*
-Agent Name
-*/}}
-{{- define "canary-checker.agentName" -}}
-{{- if .Values.upstream.agentName -}}
-{{- .Values.upstream.agentName -}}
-{{- else }}
-{{- include "canary-checker.fullname" . -}}
-{{- end }}
-{{- end }}

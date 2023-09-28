@@ -72,12 +72,8 @@ upstream:
   enabled: false
   host: ""
   agentName: ""
-  usernameSecretRef:
-    name: ""
-    key: ""
-  passwordSecretRef:
-    name: ""
-    key: ""
+  username: ""
+  password: ""
 
 ingress:
   enabled: false
