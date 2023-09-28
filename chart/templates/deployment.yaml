@@ -52,6 +52,9 @@ spec:
               - path: "labels"
                 fieldRef:
                   fieldPath: metadata.labels
+        - name: config
+          configMap:
+            name: {{ include "canary-checker.name" . }}
       securityContext:
         fsGroup: 1000
       containers:
@@ -96,6 +99,9 @@ spec:
             {{- end }}
             - mountPath: /etc/podinfo
               name: podinfo
+            - mountPath: /canary-checker.properties
+              name: config
+              subpath: canary-checker.properties
           command:
             - /app/canary-checker
           args:

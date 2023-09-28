@@ -106,6 +106,44 @@ serviceAccount: {}
   # annotations:
   #   some: annotation
 
+disableChecks:
+  dns: false
+  docker: false
+  dockerPush: false
+  containerd: false
+  containerdPush: false
+  s3: false
+  tcp: false
+  pod: false
+  ldap: false
+  icmp: false
+  postgres: false
+  mssql: false
+  mysql: false
+  restic: false
+  jmeter: false
+  junit: false
+  helm: false
+  namespace: false
+  redis: false
+  ec2: false
+  prometheus: false
+  mongodb: false
+  cloudwatch: false
+  github: false
+  kubernetes: false
+  folder: false
+  exec: false
+  awsConfig: false
+  awsConfigRule: false
+  databaseBackup: false
+  configDB: false
+  opensearch: false
+  elasticsearch: false
+  alertmanager: false
+  dynatrace: false
+  azureDevops: false
+
 extra:
   # nodeSelector:
   #   key: value
