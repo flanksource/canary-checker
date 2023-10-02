@@ -112,17 +112,17 @@ compress: .bin/upx
 
 .PHONY: linux
 linux:
-	GOOS=linux GOARCH=amd64 go build  -o ./.bin/$(NAME)_linux_amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
-	GOOS=linux GOARCH=arm64 go build  -o ./.bin/$(NAME)_linux_arm64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=linux GOARCH=amd64 go build  -o ./.bin/$(NAME)_linux_amd64 -ldflags "-w -s -X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=linux GOARCH=arm64 go build  -o ./.bin/$(NAME)_linux_arm64 -ldflags "-w -s -X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: darwin
 darwin:
-	GOOS=darwin GOARCH=amd64 go build -o ./.bin/$(NAME)_darwin_amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
-	GOOS=darwin GOARCH=arm64 go build -o ./.bin/$(NAME)_darwin_arm64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=darwin GOARCH=amd64 go build -o ./.bin/$(NAME)_darwin_amd64 -ldflags "-w -s -X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=darwin GOARCH=arm64 go build -o ./.bin/$(NAME)_darwin_arm64 -ldflags "-w -s -X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: windows
 windows:
-	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe -ldflags "-w -s -X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: binaries
 binaries: linux darwin windows compress
@@ -162,11 +162,11 @@ dev:
 
 .PHONY: build
 build:
-	go build -o ./.bin/$(NAME) -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	go build -o ./.bin/$(NAME) -ldflags "-w -s -X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: fast-build
 fast-build:
-	go build --tags fast -o ./.bin/$(NAME) -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	go build --tags fast -o ./.bin/$(NAME) -ldflags "-w -s -X \"main.version=$(VERSION_TAG)\""  main.go
 
 .PHONY: install
 install:

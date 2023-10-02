@@ -61,6 +61,7 @@ type CanarySpec struct {
 	MongoDB        []MongoDBCheck        `yaml:"mongodb,omitempty" json:"mongodb,omitempty"`
 	CloudWatch     []CloudWatchCheck     `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
 	GitHub         []GitHubCheck         `yaml:"github,omitempty" json:"github,omitempty"`
+	GitLab         []GitLabCheck         `yaml:"gitlab,omitempty" json:"gitlab,omitempty"`
 	Kubernetes     []KubernetesCheck     `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
 	Folder         []FolderCheck         `yaml:"folder,omitempty" json:"folder,omitempty"`
 	Exec           []ExecCheck           `yaml:"exec,omitempty" json:"exec,omitempty"`
@@ -159,6 +160,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.GitHub {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.GitLab {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Kubernetes {
