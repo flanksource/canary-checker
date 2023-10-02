@@ -212,7 +212,7 @@ func New(client *kommons.Client, kubernetes kubernetes.Interface, db *gorm.DB, c
 }
 
 func (ctx *Context) IsDebug() bool {
-	return ctx.Canary.IsDebug()
+	return ctx.Canary.IsDebug() || ctx.IsTrace()
 }
 
 func (ctx *Context) IsTrace() bool {

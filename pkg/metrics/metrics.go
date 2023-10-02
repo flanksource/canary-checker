@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"strconv"
+	"fmt"
 	"time"
 
 	"github.com/asecurityteam/rolling"
@@ -17,6 +17,10 @@ var (
 	CounterType   pkg.MetricType = "counter"
 	GaugeType     pkg.MetricType = "gauge"
 	HistogramType pkg.MetricType = "histogram"
+
+	CustomGauges     map[string]*prometheus.GaugeVec
+	CustomCounters   map[string]*prometheus.CounterVec
+	CustomHistograms map[string]*prometheus.HistogramVec
 
 	OpsCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -99,6 +103,9 @@ var latencies = cmap.New()
 
 func init() {
 	prometheus.MustRegister(Gauge, CanaryCheckInfo, OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency, GenericGauge, GenericCounter, GenericHistogram)
+	CustomCounters = make(map[string]*prometheus.CounterVec)
+	CustomGauges = make(map[string]*prometheus.GaugeVec)
+	CustomHistograms = make(map[string]*prometheus.HistogramVec)
 }
 
 func RemoveCheck(checks v1.Canary) {
@@ -199,11 +206,20 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		for _, m := range result.Metrics {
 			switch m.Type {
 			case CounterType:
-				GenericCounter.WithLabelValues(checkType, endpoint, m.Name, strconv.Itoa(int(m.Value)), canaryNamespace, owner, severity, key, name).Inc()
+				if err := getOrCreateCounter(m); err != nil {
+					result.ErrorMessage(fmt.Errorf("cannot create counter %s with labels %v", m.Name, m.Labels))
+				}
+
 			case GaugeType:
-				GenericGauge.WithLabelValues(checkType, endpoint, m.Name, canaryNamespace, owner, severity, key, name).Set(m.Value)
+				getOrCreateGauge(m)
+				if err := getOrCreateGauge(m); err != nil {
+					result.ErrorMessage(fmt.Errorf("cannot create gauge %s with labels %v", m.Name, m.Labels))
+				}
+
 			case HistogramType:
-				GenericHistogram.WithLabelValues(checkType, endpoint, m.Name, canaryNamespace, owner, severity, key, name).Observe(m.Value)
+				if err := getOrCreateHistogram(m); err != nil {
+					result.ErrorMessage(fmt.Errorf("cannot create histogram %s with labels %v", m.Name, m.Labels))
+				}
 			}
 		}
 	} else {
@@ -220,6 +236,62 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		_latency = pkg.Latency{}
 	}
 	return _uptime, _latency
+}
+
+func getOrCreateGauge(m pkg.Metric) (e any) {
+	defer func() {
+		e = recover()
+	}()
+
+	var gauge *prometheus.GaugeVec
+	var ok bool
+	if gauge, ok = CustomGauges[m.Name]; !ok {
+		gauge = prometheus.V2.NewGaugeVec(prometheus.GaugeVecOpts{
+			GaugeOpts: prometheus.GaugeOpts{
+				Name: m.Name,
+			},
+		})
+		CustomGauges[m.Name] = gauge
+	}
+
+	gauge.With(m.Labels).Set(m.Value)
+	return nil
+}
+
+func getOrCreateCounter(m pkg.Metric) (e any) {
+	defer func() {
+		e = recover()
+	}()
+	var counter *prometheus.CounterVec
+	var ok bool
+	if counter, ok = CustomCounters[m.Name]; !ok {
+		counter = prometheus.V2.NewCounterVec(prometheus.CounterVecOpts{
+			CounterOpts: prometheus.CounterOpts{
+				Name: m.Name,
+			},
+		})
+		CustomCounters[m.Name] = counter
+	}
+	counter.With(m.Labels).Add(m.Value)
+	return nil
+}
+
+func getOrCreateHistogram(m pkg.Metric) (e any) {
+	defer func() {
+		e = recover()
+	}()
+	var histogram *prometheus.HistogramVec
+	var ok bool
+	if histogram, ok = CustomHistograms[m.Name]; !ok {
+		histogram = prometheus.V2.NewHistogramVec(prometheus.HistogramVecOpts{
+			HistogramOpts: prometheus.HistogramOpts{
+				Name: m.Name,
+			},
+		})
+		CustomHistograms[m.Name] = histogram
+	}
+	histogram.With(m.Labels).Observe(m.Value)
+	return nil
 }
 
 func FillLatencies(checkKey string, duration string, latency *pkg.Latency) error {

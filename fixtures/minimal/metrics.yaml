@@ -1,0 +1,26 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-pass-single
+  annotations:
+    trace: "true"
+spec:
+  interval: 30
+  http:
+    - name: http-minimal-check
+      url: https://httpbin.demo.aws.flanksource.com/status/200
+      metrics:
+        - name: httpbin_count
+          type: counter
+          value: "1"
+          labels:
+            - name: check_name
+              valueExpr: check.name
+            - name: code
+              valueExpr: result.code
+        - name: httpbin_2xx_duration
+          type: counter
+          value: result.elapsed.getMilliseconds()
+          labels:
+            - name: check_name
+              valueExpr: check.name
