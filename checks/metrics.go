@@ -40,7 +40,7 @@ func getOrAddPrometheusMetric(name, metricType string, labelNames []string) (pro
 	return collector, prometheus.Register(collector)
 }
 
-func getWithEnvironment(ctx *context.Context, r *pkg.CheckResult) (*context.Context, error) {
+func getWithEnvironment(ctx *context.Context, r *pkg.CheckResult) *context.Context {
 	templateInput := map[string]any{
 		"result": r.Data,
 		"canary": map[string]any{
@@ -58,7 +58,7 @@ func getWithEnvironment(ctx *context.Context, r *pkg.CheckResult) (*context.Cont
 			"duration":    time.Millisecond * time.Duration(r.GetDuration()),
 		},
 	}
-	return ctx.New(templateInput), nil
+	return ctx.New(templateInput)
 }
 
 func getLabels(ctx *context.Context, metric external.Metrics) (map[string]string, []string, error) {
@@ -104,11 +104,9 @@ func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 				continue
 			}
 
+			ctx = getWithEnvironment(ctx, r)
+
 			var err error
-			if ctx, err = getWithEnvironment(ctx, r); err != nil {
-				r.ErrorMessage(err)
-				continue
-			}
 			var labels map[string]string
 			var labelNames []string
 			if labels, labelNames, err = getLabels(ctx, spec); err != nil {
@@ -123,7 +121,7 @@ func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 			}
 
 			var val float64
-			if val, err = getMetricValue(ctx, spec, r); err != nil {
+			if val, err = getMetricValue(ctx, spec); err != nil {
 				r.ErrorMessage(err)
 				continue
 			}
@@ -147,7 +145,7 @@ func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 	}
 }
 
-func getMetricValue(ctx *context.Context, spec external.Metrics, r *pkg.CheckResult) (float64, error) {
+func getMetricValue(ctx *context.Context, spec external.Metrics) (float64, error) {
 	tplValue := v1.Template{Expression: spec.Value}
 
 	valRaw, err := template(ctx, tplValue)
