@@ -524,7 +524,18 @@ type Metric struct {
 }
 
 func (m Metric) String() string {
-	return fmt.Sprintf("%s=%d", m.Name, int(m.Value))
+	labels := ""
+	if len(m.Labels) > 0 {
+		labels = "{"
+		for k, v := range m.Labels {
+			if labels != "{" {
+				labels += ", "
+			}
+			labels += fmt.Sprintf("%s=%s", k, v)
+		}
+		labels += "}"
+	}
+	return fmt.Sprintf("%s%s=%d", m.Name, labels, int(m.Value))
 }
 
 func (e Endpoint) GetEndpoint() string {
