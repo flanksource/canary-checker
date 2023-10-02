@@ -1,43 +1,96 @@
 package checks
 
 import (
-	"encoding/json"
+	"fmt"
+	"sort"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/logger"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 var collectorMap = make(map[string]prometheus.Collector)
 
-func addPrometheusMetric(name, metricType string, labelNames []string) prometheus.Collector {
+func getOrAddPrometheusMetric(name, metricType string, labelNames []string) (prometheus.Collector, error) {
+	key := name + metricType + strings.Join(labelNames, ",")
+	if collector, exists := collectorMap[key]; exists {
+		return collector, nil
+	}
 	var collector prometheus.Collector
 	switch metricType {
 	case "histogram":
 		collector = prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{Name: name},
-			labelNames,
-		)
+			prometheus.HistogramOpts{Name: name}, labelNames)
 	case "counter":
 		collector = prometheus.NewCounterVec(
-			prometheus.CounterOpts{Name: name},
-			labelNames,
-		)
+			prometheus.CounterOpts{Name: name}, labelNames)
 	case "gauge":
 		collector = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{Name: name},
-			labelNames,
-		)
+			prometheus.GaugeOpts{Name: name}, labelNames)
 	default:
-		return nil
+		return nil, fmt.Errorf("unknown metric type %s", metricType)
 	}
 
-	collectorMap[name] = collector
-	prometheus.MustRegister(collector)
-	return collector
+	collectorMap[key] = collector
+	return collector, prometheus.Register(collector)
+}
+
+func getWithEnvironment(ctx *context.Context, r *pkg.CheckResult) (*context.Context, error) {
+	templateInput := map[string]any{
+		"result": r.Data,
+		"canary": map[string]any{
+			"name":      r.Canary.GetName(),
+			"namespace": r.Canary.GetNamespace(),
+			"labels":    r.Canary.GetLabels(),
+			"id":        r.Canary.GetPersistedID(),
+		},
+		"check": map[string]any{
+			"name":        r.Check.GetName(),
+			"id":          r.Canary.GetCheckID(r.Check.GetName()),
+			"description": r.Check.GetDescription(),
+			"labels":      r.Check.GetLabels(),
+			"endpoint":    r.Check.GetEndpoint(),
+			"duration":    time.Millisecond * time.Duration(r.GetDuration()),
+		},
+	}
+	return ctx.New(templateInput), nil
+}
+
+func getLabels(ctx *context.Context, metric external.Metrics) (map[string]string, []string, error) {
+	var labels = make(map[string]string)
+	var names = []string{}
+	for _, label := range metric.Labels {
+		val := label.Value
+		if label.ValueExpr != "" {
+			var err error
+			val, err = template(ctx, v1.Template{Expression: label.ValueExpr})
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+		labels[label.Name] = val
+		names = append(names, label.Name)
+	}
+	sort.Strings(names)
+	return labels, names, nil
+}
+
+func getLabelString(labels map[string]string) string {
+	s := "{"
+	for k, v := range labels {
+		if s != "{" {
+			s += ", "
+		}
+		s += fmt.Sprintf("%s=%s", k, v)
+	}
+	s += "}"
+
+	return s
 }
 
 func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
@@ -51,77 +104,59 @@ func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 				continue
 			}
 
+			var err error
+			if ctx, err = getWithEnvironment(ctx, r); err != nil {
+				r.ErrorMessage(err)
+				continue
+			}
+			var labels map[string]string
+			var labelNames []string
+			if labels, labelNames, err = getLabels(ctx, spec); err != nil {
+				r.ErrorMessage(err)
+				continue
+			}
+
 			var collector prometheus.Collector
-			var exists bool
-			if collector, exists = collectorMap[spec.Name]; !exists {
-				collector = addPrometheusMetric(spec.Name, spec.Type, spec.Labels.Names())
-				if collector == nil {
-					logger.Errorf("Invalid type for check.metrics %s for check[%s]", spec.Type, r.Check.GetName())
-					continue
-				}
-			}
-
-			// Convert result Data into JSON for templating
-			var rData map[string]any
-			resultBytes, err := json.Marshal(r.Data)
-			if err != nil {
-				logger.Errorf("Error converting check result data into json: %v", err)
-				continue
-			}
-			if err := json.Unmarshal(resultBytes, &rData); err != nil {
-				logger.Errorf("Error converting check result data into json: %v", err)
+			if collector, err = getOrAddPrometheusMetric(spec.Name, spec.Type, labelNames); err != nil {
+				r.ErrorMessage(err)
 				continue
 			}
 
-			tplValue := v1.Template{Expression: spec.Value}
-			templateInput := map[string]any{
-				"result": rData,
-				"check": map[string]any{
-					"name":        r.Check.GetName(),
-					"description": r.Check.GetDescription(),
-					"labels":      r.Check.GetLabels(),
-					"endpoint":    r.Check.GetEndpoint(),
-					"duration":    r.GetDuration(),
-				},
-			}
-
-			valRaw, err := template(ctx.New(templateInput), tplValue)
-			if err != nil {
-				logger.Errorf("Error templating value for check.metrics template %s for check[%s]: %v", spec.Value, r.Check.GetName(), err)
-				continue
-			}
-			val, err := strconv.ParseFloat(valRaw, 64)
-			if err != nil {
-				logger.Errorf("Error converting value %s to float for check.metrics template %s for check[%s]: %v", valRaw, spec.Value, r.Check.GetName(), err)
+			var val float64
+			if val, err = getMetricValue(ctx, spec, r); err != nil {
+				r.ErrorMessage(err)
 				continue
 			}
 
-			var orderedLabelVals []string
-			for _, label := range spec.Labels {
-				val := label.Value
-				if label.ValueExpr != "" {
-					var err error
-					val, err = template(ctx.New(templateInput), v1.Template{Expression: label.ValueExpr})
-					if err != nil {
-						logger.Errorf("Error templating label %s:%s for check.metrics for check[%s]: %v", label.Name, label.ValueExpr, r.Check.GetName(), err)
-					}
-				}
-				orderedLabelVals = append(orderedLabelVals, val)
+			if ctx.IsDebug() {
+				ctx.Debugf("%s%v=%0.3f", spec.Name, getLabelString(labels), val)
 			}
 
 			switch collector := collector.(type) {
 			case *prometheus.HistogramVec:
-				collector.WithLabelValues(orderedLabelVals...).Observe(val)
+				collector.With(labels).Observe(val)
 			case *prometheus.GaugeVec:
-				collector.WithLabelValues(orderedLabelVals...).Set(val)
+				collector.With(labels).Set(val)
 			case *prometheus.CounterVec:
 				if val <= 0 {
 					continue
 				}
-				collector.WithLabelValues(orderedLabelVals...).Add(val)
-			default:
-				logger.Errorf("Got unknown type for check.metrics %T", collector)
+				collector.With(labels).Add(val)
 			}
 		}
 	}
+}
+
+func getMetricValue(ctx *context.Context, spec external.Metrics, r *pkg.CheckResult) (float64, error) {
+	tplValue := v1.Template{Expression: spec.Value}
+
+	valRaw, err := template(ctx, tplValue)
+	if err != nil {
+		return 0, err
+	}
+	val, err := strconv.ParseFloat(valRaw, 64)
+	if err != nil {
+		return 0, fmt.Errorf("%s is not a number", valRaw)
+	}
+	return val, nil
 }
