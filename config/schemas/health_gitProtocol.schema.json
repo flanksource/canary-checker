@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/flanksource/canary-checker/api/v1/git-lab-check",
-  "$ref": "#/$defs/GitLabCheck",
+  "$id": "https://github.com/flanksource/canary-checker/api/v1/git-protocol-check",
+  "$ref": "#/$defs/GitProtocolCheck",
   "$defs": {
     "ConfigMapKeySelector": {
       "properties": {
@@ -45,7 +45,7 @@
       "additionalProperties": false,
       "type": "object"
     },
-    "GitLabCheck": {
+    "GitProtocolCheck": {
       "properties": {
         "description": {
           "type": "string"
@@ -77,14 +77,14 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
-        "connection": {
+        "filename": {
           "type": "string"
         },
         "repository": {
           "type": "string"
         },
         "username": {
-          "type": "string"
+          "$ref": "#/$defs/EnvVar"
         },
         "password": {
           "$ref": "#/$defs/EnvVar"

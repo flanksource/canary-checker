@@ -16,24 +16,24 @@ import (
 )
 
 const (
-	TestFileName = "test.txt"
+	DefaultFileName = "test.txt"
 )
 
-type GitLabChecker struct{}
+type GitProtocolChecker struct{}
 
-func (c *GitLabChecker) Type() string {
-	return "gitlab"
+func (c *GitProtocolChecker) Type() string {
+	return "gitProtocol"
 }
 
-func (c *GitLabChecker) Run(ctx *context.Context) pkg.Results {
+func (c *GitProtocolChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
-	for _, conf := range ctx.Canary.Spec.GitLab {
+	for _, conf := range ctx.Canary.Spec.GitProtocol {
 		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
 }
 
-func pushChanges(repoURL, username, password string) error {
+func pushChanges(repoURL, username, password, filename string) error {
 	dir, err := os.MkdirTemp("", "repo-clone-")
 	if err != nil {
 		return fmt.Errorf("failed to create temp directory: %v", err)
@@ -53,7 +53,7 @@ func pushChanges(repoURL, username, password string) error {
 		return fmt.Errorf("failed to get worktree: %v", err)
 	}
 
-	filePath := path.Join(dir, TestFileName)
+	filePath := path.Join(dir, filename)
 	currentTime := time.Now().Format("2006-01-02-04-05")
 
 	// Check if the file exists and if not we will create it
@@ -70,11 +70,11 @@ func pushChanges(repoURL, username, password string) error {
 		return fmt.Errorf("failed to update file: %v", err)
 	}
 
-	if _, err := w.Add(TestFileName); err != nil {
+	if _, err := w.Add(filename); err != nil {
 		return fmt.Errorf("failed to add changes to staging area: %v", err)
 	}
 
-	commitMsg := fmt.Sprintf("Updated %s with time %s", TestFileName, currentTime)
+	commitMsg := fmt.Sprintf("Updated %s with time %s", filename, currentTime)
 	if _, err := w.Commit(commitMsg, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  username,
@@ -94,20 +94,31 @@ func pushChanges(repoURL, username, password string) error {
 	return nil
 }
 
-func (c *GitLabChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
-	check := extConfig.(v1.GitLabCheck)
+func (c *GitProtocolChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
+	check := extConfig.(v1.GitProtocolCheck)
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
 
-	// Fetching GitLab Token
+	filename := check.FileName
+
+	// Fetching Git Username
+	username, err := ctx.GetEnvValueFromCache(check.Username)
+	if err != nil {
+		return results.Failf("error fetching git user from env cache: %v", err)
+	}
+	// Fetching Git Password
 	password, err := ctx.GetEnvValueFromCache(check.Password)
 	if err != nil {
-		return results.Failf("error fetching gitlab token from env cache: %v", err)
+		return results.Failf("error fetching git password from env cache: %v", err)
+	}
+
+	if len(filename) == 0 {
+		filename = DefaultFileName
 	}
 
 	// Push Changes
-	if err := pushChanges(check.Repository, check.Username, password); err != nil {
+	if err := pushChanges(check.Repository, username, password, filename); err != nil {
 		return results.Failf("error pushing changes: %v", err)
 	}
 

@@ -47,10 +47,10 @@ spec:
           description: Canary is the Schema for the canaries API
           properties:
             apiVersion:
-              description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
               type: string
             kind:
-              description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
               type: string
             metadata:
               type: object
@@ -397,7 +397,7 @@ spec:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
                       usePathStyle:
-                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                        description: "Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY"
                         type: boolean
                     required:
                       - name
@@ -595,7 +595,7 @@ spec:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
                       usePathStyle:
-                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                        description: "Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY"
                         type: boolean
                     required:
                       - name
@@ -923,7 +923,7 @@ spec:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
                       usePathStyle:
-                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                        description: "Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY"
                         type: boolean
                     required:
                       - name
@@ -1766,7 +1766,7 @@ spec:
                           description: LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.
                           properties:
                             name:
-                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                              description: "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?"
                               type: string
                           type: object
                           x-kubernetes-map-type: atomic
@@ -1889,7 +1889,7 @@ spec:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
                       usePathStyle:
-                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                        description: "Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY"
                         type: boolean
                       userData:
                         type: string
@@ -2060,7 +2060,7 @@ spec:
                             description: The key to select.
                             type: string
                           name:
-                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                            description: "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?"
                             type: string
                           optional:
                             description: Specify whether the ConfigMap or its key must be defined
@@ -2070,7 +2070,7 @@ spec:
                         type: object
                         x-kubernetes-map-type: atomic
                       fieldRef:
-                        description: 'Selects a field of the pod: supports metadata.name, metadata.namespace, metadata.labels, metadata.annotations, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.'
+                        description: "Selects a field of the pod: supports metadata.name, metadata.namespace, metadata.labels, metadata.annotations, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs."
                         properties:
                           apiVersion:
                             description: Version of the schema the FieldPath is written in terms of, defaults to "v1".
@@ -2089,7 +2089,7 @@ spec:
                             description: The key of the secret to select from.  Must be a valid secret key.
                             type: string
                           name:
-                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                            description: "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?"
                             type: string
                           optional:
                             description: Specify whether the Secret or its key must be defined
@@ -2207,7 +2207,7 @@ spec:
                                 description: Skip TLS verify when connecting to aws
                                 type: boolean
                               usePathStyle:
-                                description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                                description: "Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY"
                                 type: boolean
                             type: object
                           azure:
@@ -2499,7 +2499,7 @@ spec:
                             description: Skip TLS verify when connecting to aws
                             type: boolean
                           usePathStyle:
-                            description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                            description: "Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY"
                             type: boolean
                         type: object
                       description:
@@ -2908,11 +2908,9 @@ spec:
                       - query
                     type: object
                   type: array
-                gitlab:
+                gitProtocol:
                   items:
                     properties:
-                      connection:
-                        type: string
                       description:
                         description: Description for the check
                         type: string
@@ -3017,6 +3015,8 @@ spec:
                         type: object
                       transformDeleteStrategy:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      filename:
                         type: string
                       username:
                         type: string
@@ -3165,7 +3165,7 @@ spec:
                             type: string
                         type: object
                       endpoint:
-                        description: 'Deprecated: Use url instead'
+                        description: "Deprecated: Use url instead"
                         type: string
                       headers:
                         description: Header fields to be used in the query
@@ -4776,7 +4776,7 @@ spec:
                             type: string
                         type: object
                       host:
-                        description: 'Deprecated: use `url` instead'
+                        description: "Deprecated: use `url` instead"
                         type: string
                       icon:
                         description: Icon for overwriting default icon on the dashboard
@@ -4910,7 +4910,7 @@ spec:
                   items:
                     properties:
                       addr:
-                        description: 'Deprecated: Use url instead'
+                        description: "Deprecated: Use url instead"
                         type: string
                       connection:
                         description: Connection name e.g. connection://http/google
@@ -5138,7 +5138,7 @@ spec:
                             type: object
                         type: object
                       repository:
-                        description: 'Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name'
+                        description: "Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name"
                         type: string
                       secretKey:
                         description: SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss
@@ -5326,14 +5326,14 @@ spec:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
                       usePathStyle:
-                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                        description: "Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY"
                         type: boolean
                     required:
                       - name
                     type: object
                   type: array
                 schedule:
-                  description: 'Schedule to run checks on. Supports all cron expression, example: ''30 3-6,20-23 * * *''. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron Also supports golang duration, can be set as ''@every 1m30s'' which runs the check every 1 minute and 30 seconds.'
+                  description: "Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds."
                   type: string
                 severity:
                   type: string
@@ -5472,10 +5472,10 @@ spec:
         openAPIV3Schema:
           properties:
             apiVersion:
-              description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
               type: string
             kind:
-              description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
               type: string
             metadata:
               type: object
@@ -5750,10 +5750,10 @@ spec:
         openAPIV3Schema:
           properties:
             apiVersion:
-              description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
               type: string
             kind:
-              description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
               type: string
             metadata:
               type: object

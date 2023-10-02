@@ -561,9 +561,9 @@
           },
           "type": "array"
         },
-        "gitlab": {
+        "gitProtocol": {
           "items": {
-            "$ref": "#/$defs/GitLabCheck"
+            "$ref": "#/$defs/GitProtocolCheck"
           },
           "type": "array"
         },
@@ -1615,7 +1615,7 @@
         "query"
       ]
     },
-    "GitLabCheck": {
+    "GitProtocolCheck": {
       "properties": {
         "description": {
           "type": "string"
@@ -1647,14 +1647,14 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
-        "connection": {
+        "filename": {
           "type": "string"
         },
         "repository": {
           "type": "string"
         },
         "username": {
-          "type": "string"
+          "$ref": "#/$defs/EnvVar"
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
