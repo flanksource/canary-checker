@@ -14,6 +14,7 @@ import (
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"gorm.io/gorm"
 	"k8s.io/client-go/kubernetes"
 )
@@ -28,6 +29,9 @@ type KubernetesContext struct {
 }
 
 type Context struct {
+	db     *gorm.DB
+	pgpool *pgxpool.Pool
+
 	gocontext.Context
 	Kubernetes  kubernetes.Interface
 	Kommons     *kommons.Client
@@ -35,7 +39,6 @@ type Context struct {
 	Canary      v1.Canary
 	Environment map[string]interface{}
 	logger.Logger
-	db *gorm.DB
 }
 
 func (ctx *Context) DB() *gorm.DB {
@@ -44,6 +47,10 @@ func (ctx *Context) DB() *gorm.DB {
 	}
 
 	return ctx.db.WithContext(ctx.Context)
+}
+
+func (ctx *Context) Pool() *pgxpool.Pool {
+	return ctx.pgpool
 }
 
 func (ctx *Context) String() string {
