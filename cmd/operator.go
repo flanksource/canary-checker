@@ -110,6 +110,7 @@ func run(cmd *cobra.Command, args []string) {
 	includeNamespaces := []string{}
 	if operatorNamespace != "" {
 		includeNamespaces = strings.Split(operatorNamespace, ",")
+		canaryJobs.CanaryNamespaces = includeNamespaces
 	}
 	runner.RunnerLabels = labels.LoadFromFile("/etc/podinfo/labels")
 
