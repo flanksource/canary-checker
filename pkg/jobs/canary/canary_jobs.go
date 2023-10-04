@@ -30,6 +30,10 @@ var DataFile string
 var Executor bool
 var LogPass, LogFail bool
 
+// List of namespaces whose canary specs should be synced.
+// If empty, all namespaces will be synced
+var SyncCanaryNamspaces []string
+
 var Kommons *kommons.Client
 var Kubernetes kubernetes.Interface
 var FuncScheduler = cron.New()
@@ -346,7 +350,7 @@ func SyncCanaryJob(dbCanary pkg.Canary) error {
 func SyncCanaryJobs() {
 	logger.Debugf("Syncing canary jobs")
 
-	canaries, err := db.GetAllCanariesForSync()
+	canaries, err := db.GetAllCanariesForSync(SyncCanaryNamspaces...)
 	if err != nil {
 		logger.Errorf("Failed to get canaries: %v", err)
 

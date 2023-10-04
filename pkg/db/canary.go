@@ -18,11 +18,12 @@ import (
 	"github.com/flanksource/duty/models"
 	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
-func GetAllCanariesForSync() ([]pkg.Canary, error) {
+func GetAllCanariesForSync(namespaces ...string) ([]pkg.Canary, error) {
 	query := `
         SELECT json_agg(
             jsonb_set_lax(to_jsonb(canaries),'{checks}', (
@@ -41,7 +42,14 @@ func GetAllCanariesForSync() ([]pkg.Canary, error) {
             agent_id = '00000000-0000-0000-0000-000000000000'
     `
 
-	rows, err := Pool.Query(context.Background(), query)
+	args := make(pgx.NamedArgs)
+
+	if namespaces != nil {
+		query += " AND namespace = ANY(@namespaces)"
+		args["namespaces"] = namespaces
+	}
+
+	rows, err := Pool.Query(context.Background(), query, args)
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +64,7 @@ func GetAllCanariesForSync() ([]pkg.Canary, error) {
 			return nil, fmt.Errorf("failed to unmarshal canaries:%w for %s", err, rows.RawValues()[0])
 		}
 	}
+
 	return _canaries, nil
 }
 
