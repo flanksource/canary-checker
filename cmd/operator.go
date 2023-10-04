@@ -9,7 +9,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs"
-	"github.com/flanksource/canary-checker/pkg/jobs/canary"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/utils"
@@ -111,7 +110,7 @@ func run(cmd *cobra.Command, args []string) {
 	includeNamespaces := []string{}
 	if operatorNamespace != "" {
 		includeNamespaces = strings.Split(operatorNamespace, ",")
-		canary.SyncCanaryNamspaces = includeNamespaces
+		canaryJobs.CanaryNamespaces = includeNamespaces
 	}
 	runner.RunnerLabels = labels.LoadFromFile("/etc/podinfo/labels")
 
