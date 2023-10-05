@@ -19,12 +19,11 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2.2.0
         with:
-          go-version: 1.19.x
+          go-version: 1.20.x
       - name: golangci-lint
         with:
-          version: v1.52.2 # TODO: Catching new linter errors now. Need to fix those and upgrade to v1.53.0
-        uses: golangci/golangci-lint-action@08e2f20817b15149a52b5b3ebe7de50aff2ba8c5 # v3.4.0
-        
+          version: v1.54.2
+        uses: golangci/golangci-lint-action@v3
       - name: setup node
         uses: actions/setup-node@7c12f8017d5436eb855f1ed4399f037a36fbd9e8 # v2.5.2
         with:
