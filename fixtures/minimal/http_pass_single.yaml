@@ -14,14 +14,14 @@ spec:
       metrics:
         - name: httpbin_2xx_count
           type: counter
-          value: "result.code == 200 ? 1 : 0"
+          value: "code == 200 ? 1 : 0"
           labels:
             - name: name
               value: httpbin_2xx_count
             - name: check_name
               valueExpr: check.name
             - name: status_class
-              valueExpr: string(result.code).charAt(0)
+              valueExpr: string(code).charAt(0)
     - name: http-param-tests
       url: https://httpbin.demo.aws.flanksource.com/status/200
       responseCodes: [201, 200, 301]
