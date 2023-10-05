@@ -9,3 +9,6 @@ data:
     {{- range $k, $v := .Values.disableChecks }}
     check.disabled.{{ $k }}={{ $v }}
     {{- end }}
+    {{- range $k, $v := .Values.properties }}
+    {{ $k }}={{ $v }}
+    {{- end }}
