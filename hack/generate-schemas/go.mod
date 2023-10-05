@@ -36,12 +36,12 @@ require (
 	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230305170008-8188dc5388df // indirect
 	github.com/antonmedv/expr v1.15.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.45.19 // indirect
+	github.com/aws/aws-sdk-go v1.45.22 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/flanksource/duty v1.0.190 // indirect
+	github.com/flanksource/duty v1.0.191 // indirect
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7 // indirect
 	github.com/flanksource/mapstructure v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
@@ -106,19 +106,19 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.15.0 // indirect
 	golang.org/x/oauth2 v0.12.0 // indirect
-	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
-	golang.org/x/term v0.12.0 // indirect
+	golang.org/x/sync v0.4.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
-	google.golang.org/api v0.143.0 // indirect
+	google.golang.org/api v0.144.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto v0.0.0-20230920204549-e6e6cdab5c13 // indirect
+	google.golang.org/genproto v0.0.0-20231002182017-d307bd883b97 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231002182017-d307bd883b97 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231002182017-d307bd883b97 // indirect
 	google.golang.org/grpc v1.58.2 // indirect

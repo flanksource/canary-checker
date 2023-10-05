@@ -22,7 +22,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.9.0
 	github.com/fergusstrange/embedded-postgres v1.23.0
 	github.com/flanksource/commons v1.12.0
-	github.com/flanksource/duty v1.0.190
+	github.com/flanksource/duty v1.0.191
 	github.com/flanksource/gomplate/v3 v3.20.14
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
 	github.com/flanksource/kommons v0.31.4
@@ -65,11 +65,11 @@ require (
 	github.com/vadimi/go-http-ntlm v1.0.3
 	github.com/vadimi/go-http-ntlm/v2 v2.4.1
 	go.mongodb.org/mongo-driver v1.12.0
-	golang.org/x/crypto v0.13.0
+	golang.org/x/crypto v0.14.0
 	golang.org/x/net v0.15.0
-	golang.org/x/sync v0.3.0
-	google.golang.org/api v0.143.0
-	google.golang.org/genproto v0.0.0-20230920204549-e6e6cdab5c13
+	golang.org/x/sync v0.4.0
+	google.golang.org/api v0.144.0
+	google.golang.org/genproto v0.0.0-20231002182017-d307bd883b97
 	gopkg.in/flanksource/yaml.v3 v3.2.3
 	gorm.io/gorm v1.25.4
 	gorm.io/plugin/prometheus v0.0.0-20230504115745-1aec2356381b
@@ -97,7 +97,7 @@ require (
 	github.com/antonmedv/expr v1.15.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
-	github.com/aws/aws-sdk-go v1.45.19 // indirect
+	github.com/aws/aws-sdk-go v1.45.22 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.11 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.7 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.37 // indirect
@@ -240,8 +240,8 @@ require (
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/oauth2 v0.12.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
-	golang.org/x/term v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
@@ -270,5 +270,3 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.14.3 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.3.0 // indirect
 )
-
-replace github.com/flanksource/duty => ../duty
