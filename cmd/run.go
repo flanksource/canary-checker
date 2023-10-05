@@ -67,7 +67,7 @@ var Run = &cobra.Command{
 				go func() {
 					defer wg.Done()
 
-					res, err := checks.RunChecks(context.New(kommonsClient, k8s, db.Gorm, _config))
+					res, err := checks.RunChecks(context.New(kommonsClient, k8s, db.Gorm, db.Pool, _config))
 					if err != nil {
 						logger.Errorf("error running checks: %v", err)
 						return

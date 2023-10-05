@@ -27,7 +27,7 @@ var tablesToReconcile = []string{
 // ReconcileCanaryResults coordinates with upstream and pushes any resource
 // that are missing on the upstream.
 func ReconcileCanaryResults() {
-	ctx := context.New(nil, nil, db.Gorm, v1.Canary{})
+	ctx := context.New(nil, nil, db.Gorm, db.Pool, v1.Canary{})
 
 	jobHistory := models.NewJobHistory("PushCanaryResultsToUpstream", "Canary", "")
 	_ = db.PersistJobHistory(jobHistory.Start())
