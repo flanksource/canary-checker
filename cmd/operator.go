@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -87,9 +86,6 @@ func run(cmd *cobra.Command, args []string) {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  scheme,
-		MetricsBindAddress:      fmt.Sprintf("0.0.0.0:%d", metricsPort),
-		Namespace:               operatorNamespace,
-		Port:                    webhookPort,
 		LeaderElection:          enableLeaderElection,
 		LeaderElectionNamespace: operatorNamespace,
 		LeaderElectionID:        "bc88107d.flanksource.com",
