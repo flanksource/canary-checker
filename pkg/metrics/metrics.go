@@ -1,13 +1,13 @@
 package metrics
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/asecurityteam/rolling"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/runner"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/prometheus/client_golang/prometheus"
@@ -146,12 +146,14 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		logger.Warnf("%s/%s returned a nil result", canary.Namespace, canary.Name)
 		return _uptime, _latency
 	}
+
 	if canary.GetCheckID(result.Check.GetName()) == "" {
 		if val := result.Canary.Labels["transformed"]; val != "true" {
 			logger.Warnf("%s/%s/%s returned a result for a check that does not exist", canary.Namespace, canary.Name, result.Check.GetName())
 		}
 		return _uptime, _latency
 	}
+
 	canaryNamespace := canary.Namespace
 	canaryName := canary.Name
 	name := result.Check.GetName()
@@ -195,6 +197,7 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		RequestLatency.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Observe(float64(result.Duration))
 		latency.Append(float64(result.Duration))
 	}
+
 	if result.Pass {
 		pass.Append(1)
 		Gauge.WithLabelValues(key, checkType, canaryName, canaryNamespace, name).Set(0)
@@ -207,18 +210,17 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 			switch m.Type {
 			case CounterType:
 				if err := getOrCreateCounter(m); err != nil {
-					result.ErrorMessage(fmt.Errorf("cannot create counter %s with labels %v", m.Name, m.Labels))
+					logger.Errorf("cannot create counter %s with labels %v: %w", m.Name, m.Labels, err)
 				}
 
 			case GaugeType:
-				getOrCreateGauge(m)
 				if err := getOrCreateGauge(m); err != nil {
-					result.ErrorMessage(fmt.Errorf("cannot create gauge %s with labels %v", m.Name, m.Labels))
+					logger.Errorf("cannot create gauge %s with labels %v: %w", m.Name, m.Labels, err)
 				}
 
 			case HistogramType:
 				if err := getOrCreateHistogram(m); err != nil {
-					result.ErrorMessage(fmt.Errorf("cannot create histogram %s with labels %v", m.Name, m.Labels))
+					logger.Errorf("cannot create histogram %s with labels %v: %w", m.Name, m.Labels, err)
 				}
 			}
 		}
@@ -264,12 +266,12 @@ func getOrCreateCounter(m pkg.Metric) (e any) {
 	}()
 	var counter *prometheus.CounterVec
 	var ok bool
+
 	if counter, ok = CustomCounters[m.Name]; !ok {
-		counter = prometheus.V2.NewCounterVec(prometheus.CounterVecOpts{
-			CounterOpts: prometheus.CounterOpts{
-				Name: m.Name,
-			},
-		})
+		counter = prometheus.NewCounterVec(
+			prometheus.CounterOpts{Name: m.Name},
+			utils.MapKeys(m.Labels),
+		)
 		CustomCounters[m.Name] = counter
 	}
 	counter.With(m.Labels).Add(m.Value)
