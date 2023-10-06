@@ -137,7 +137,7 @@ func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-	_ = cmd.Run()
+	err := cmd.Run()
 	details := ExecDetails{
 		Stdout:   strings.TrimSpace(stdout.String()),
 		Stderr:   strings.TrimSpace(stderr.String()),
@@ -145,7 +145,7 @@ func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
 	}
 	result.AddDetails(details)
 	if details.ExitCode != 0 {
-		return result.Failf("non-zero exit-code: %d. (stdout=%s) (stderr=%s)", details.ExitCode, details.Stdout, details.Stderr).ToSlice()
+		return result.Failf("non-zero exit-code: %d stdout=%s, stderr=%s, error=%v", details.ExitCode, details.Stdout, details.Stderr, err).ToSlice()
 	}
 
 	results = append(results, result)

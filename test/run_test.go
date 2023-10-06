@@ -75,7 +75,7 @@ func runFixture(t *testing.T, name string) {
 			if canary.Name == "" {
 				canary.Name = cmd.CleanupFilename(name)
 			}
-			context := context.New(kommonsClient, k8s, db.Gorm, canary)
+			context := context.New(kommonsClient, k8s, db.Gorm, db.Pool, canary)
 
 			checkResults, err := checks.RunChecks(context)
 			if err != nil {

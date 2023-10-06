@@ -57,22 +57,33 @@ spec:
             name: {{ include "canary-checker.name" . }}
       securityContext:
         fsGroup: 1000
+        {{- if eq .Values.pingMode "unprivileged" }}
+        sysctls:
+          - name: net.ipv4.ping_group_range
+            value: "0 2147483647"
+        {{- end }}
       containers:
         - name: {{ include "canary-checker.name" . }}
+          {{- if eq .Values.allowPrivilegeEscalation true }}
           securityContext:
-            allowPrivilegeEscalation: {{.Values.allowPrivilegeEscalation}}
+            allowPrivilegeEscalation: true
             capabilities:
               add:
                 - CAP_NET_RAW
+          {{- end }}
           image: {{ include "canary-checker.imageString" . }}
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           env:
+            - name: PING_MODE
+              value:  {{ .Values.pingMode | quote }}
             {{- if eq .Values.debug true }}
             - name: DEBUG
               value: "true"
             {{- end }}
+            {{- if eq .Values.dockerSocket true }}
             - name: DOCKER_API_VERSION
               value: "1.39"
+            {{- end }}
             - name: DB_URL
               {{- if eq .Values.db.external.enabled true }}
               valueFrom:
@@ -106,7 +117,7 @@ spec:
               name: podinfo
             - mountPath: /app/canary-checker.properties
               name: config
-              subpath: canary-checker.properties
+              subPath: canary-checker.properties
           command:
             - /app/canary-checker
           args:

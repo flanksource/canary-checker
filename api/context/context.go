@@ -14,6 +14,7 @@ import (
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"gorm.io/gorm"
 	"k8s.io/client-go/kubernetes"
 )
@@ -35,7 +36,8 @@ type Context struct {
 	Canary      v1.Canary
 	Environment map[string]interface{}
 	logger.Logger
-	db *gorm.DB
+	db   *gorm.DB
+	pool *pgxpool.Pool
 }
 
 func (ctx *Context) DB() *gorm.DB {
@@ -46,6 +48,9 @@ func (ctx *Context) DB() *gorm.DB {
 	return ctx.db.WithContext(ctx.Context)
 }
 
+func (ctx *Context) Pool() *pgxpool.Pool {
+	return ctx.pool
+}
 func (ctx *Context) String() string {
 	return fmt.Sprintf("%s/%s", ctx.Canary.Namespace, ctx.Canary.Name)
 }
@@ -194,13 +199,14 @@ func (ctx *KubernetesContext) Clone() *KubernetesContext {
 	}
 }
 
-func New(client *kommons.Client, kubernetes kubernetes.Interface, db *gorm.DB, canary v1.Canary) *Context {
+func New(client *kommons.Client, kubernetes kubernetes.Interface, db *gorm.DB, pool *pgxpool.Pool, canary v1.Canary) *Context {
 	if canary.Namespace == "" {
 		canary.Namespace = "default"
 	}
 
 	return &Context{
 		db:          db,
+		pool:        pool,
 		Context:     gocontext.Background(),
 		Kommons:     client,
 		Kubernetes:  kubernetes,

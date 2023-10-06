@@ -13,7 +13,7 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
-dockerSocket: true
+dockerSocket: false
 containerdSocket: false
 
 # Set to true if you want to disable the postgrest service
@@ -59,7 +59,9 @@ db:
 
 nameOverride: ""
 
-allowPrivilegeEscalation: true
+# set the mechanism for pings - either privileged, privileged or none
+pingMode: "unprivileged"
+allowPrivilegeEscalation: false
 
 data:
   defaultSearchWindow: 1h
@@ -93,7 +95,13 @@ flanksource-ui:
   nameOverride: "canary-checker-ui"
   fullnameOverride: "canary-checker-ui"
   oryKratosURL: ""
-  # Mandatory.  Set to the name of the service installed by the chart (RFC1035 formatted $RELEASE_NAME)
+  resources:
+    requests:
+      cpu: 10m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 512Mi
   backendURL: "http://canary-checker:8080"
   ingress:
     enabled: true
@@ -114,12 +122,16 @@ resources:
   limits:
     memory: 2Gi
 
-serviceAccount: {}
+serviceAccount:
+  {}
   # Configures extra annotations on the service account
   # annotations:
   #   some: annotation
 
 disableChecks: {}
+
+# a list of db properties to update on startup
+properties: {}
 
 extra:
   # nodeSelector:

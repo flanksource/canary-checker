@@ -29,10 +29,8 @@ var Root = &cobra.Command{
 	},
 }
 
-var dev bool
 var httpPort = 8080
 var publicEndpoint = "http://localhost:8080"
-var metricsPort, devGuiPort int
 var includeCheck, prometheusURL string
 var pushServers, pullServers []string
 var sharedLibrary []string
@@ -41,10 +39,16 @@ var logPass, logFail bool
 
 func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&httpPort, "httpPort", httpPort, "Port to expose a health dashboard ")
-	flags.IntVar(&devGuiPort, "devGuiPort", 3004, "Port used by a local npm server in development mode")
-	flags.IntVar(&metricsPort, "metricsPort", 8081, "Port to expose a health dashboard ")
+
+	flags.Bool("dev", false, "")
+	flags.Int("devGuiPort", 3004, "Port used by a local npm server in development mode")
+	flags.Int("metricsPort", 8081, "Port to expose a health dashboard ")
+
+	_ = flags.MarkDeprecated("devGuiPort", "")
+	_ = flags.MarkDeprecated("metricsPort", "Extra metrics server removed")
+	_ = flags.MarkDeprecated("dev", "")
+
 	flags.StringVar(&publicEndpoint, "public-endpoint", publicEndpoint, "Host on which the health dashboard is exposed. Could be used for generting-links, redirects etc.")
-	flags.BoolVar(&dev, "dev", false, "Run in development mode")
 	flags.StringVar(&includeCheck, "include-check", "", "Run matching canaries - useful for debugging")
 	flags.IntVar(&cache.DefaultCacheCount, "maxStatusCheckCount", 5, "Maximum number of past checks in the in memory cache")
 	flags.StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
