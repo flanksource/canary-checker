@@ -2,6 +2,11 @@
 
 set -e
 
+curl -sSLo /usr/local/bin/restic.bz2  https://github.com/restic/restic/releases/download/v0.12.1/restic_0.12.1_$(OS)_$(ARCH).bz2   && \
+  bunzip2  /usr/local/bin/restic.bz2  && \
+  chmod +x /usr/local/bin/restic
+
+
 restic version
 # Initialize Restic Repo
 # Do not fail if it already exists
