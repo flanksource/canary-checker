@@ -66,6 +66,7 @@ jobs:
           key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
           restore-keys: |
             cache-
+      - run: make bin
       - name: Test
         env:
           KUBERNETES_VERSION: v1.20.7
