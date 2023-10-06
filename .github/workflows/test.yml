@@ -10,8 +10,46 @@ name: Test
 permissions:
   contents: read
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  # build:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Install Go
+  #       uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2.2.0
+  #       with:
+  #         go-version: 1.20.x
+  #     - name: Checkout code
+  #       uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+  #     - uses: actions/cache@8492260343ad570701412c2f464a5877dc76bace # v2
+  #       with:
+  #         path: |
+  #           ~/go/pkg/mod
+  #           ~/.cache/go-build
+  #           .bin
+  #         key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
+  #         restore-keys: |
+  #           cache-
+  #     - run: make  build
+  #     - run: cd test && make build
+  #     - run: make compress-build
+  #     - uses: actions/upload-artifact@v3
+  #       with:
+  #         name: bin
+  #         path: |
+  #           .bin/canary-checker
+  #           .bin/canary-checker.test
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        suite:
+          - { name: minimal --skip-all, on: ubuntu-latest }
+          - { name: k8s, on: ubuntu-latest }
+          - { name: datasources, on: ubuntu-latest }
+          - { name: opensearch, on: ubuntu-latest }
+          - { name: elasticsearch, on: ubuntu-latest }
+          - { name: git, on: ubuntu-latest }
+          # - restic
+    runs-on: ${{ matrix.suite.on }}
     steps:
       - name: Install Go
         uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2.2.0
@@ -28,37 +66,6 @@ jobs:
           key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
           restore-keys: |
             cache-
-      - run: make  build
-      - run: cd test && make build
-      - run: make compress-build
-      - uses: actions/upload-artifact@v3
-        with:
-          name: bin
-          path: |
-            .bin/canary-checker
-            .bin/canary-checker.test
-  test:
-    strategy:
-      fail-fast: false
-      matrix:
-        suite:
-          - { name: minimal --skip-all, on: ubuntu-latest }
-          - { name: k8s, on: ubuntu-4vcpu }
-          - { name: datasources, on: ubuntu-4vcpu }
-          - { name: search, on: ubuntu-4vcpu }
-          - { name: git, on: ubuntu-latest }
-          # - restic
-    runs-on: ${{ matrix.suite.on }}
-    needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
-      - uses: actions/download-artifact@v3
-        with:
-          name: bin
-          path: .bin
-      - run: ls -R
-      - run: chmod +x .bin/* && make bin
       - name: Test
         env:
           KUBERNETES_VERSION: v1.20.7
