@@ -4,8 +4,7 @@ CRD_OPTIONS ?= ""
 NAME=canary-checker
 OS   = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH = $(shell uname -m | sed 's/x86_64/amd64/')
-KUSTOMIZE=$(PWD)/.bin/kustomize
-
+LD_FLAGS=-ldflags "-w -s -X \"main.version=$(VERSION_TAG)\""
 ifeq ($(VERSION),)
   VERSION_TAG=$(shell git describe --abbrev=0 --tags || echo latest)
 else
@@ -49,13 +48,13 @@ uninstall: manifests
 	kubectl delete -f config/deploy/crd.yaml
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: .bin/kustomize manifests
-	cd config && .bin/kustomize edit set image controller=${IMG}
-	kubectl $(KUSTOMIZE) config | kubectl apply -f -
+deploy: manifests
+	cd config && kustomize edit set image controller=${IMG}
+	kustomize build config | kubectl apply -f -
 
-static: .bin/kustomize generate manifests .bin/yq
-	.bin/kustomize build ./config | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/manifests.yaml
-	.bin/kustomize build ./config/base | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/base.yaml
+static:  generate manifests
+	kustomize build ./config | yq ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/manifests.yaml
+	kustomize build ./config/base | yq ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/base.yaml
 
 # Generate OpenAPI schema
 .PHONY: gen-schemas
@@ -63,11 +62,11 @@ gen-schemas:
 	cd hack/generate-schemas && go run ./main.go
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests: .bin/controller-gen .bin/yq
+manifests: .bin/controller-gen
 	schemaPath=.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties
-	.bin/controller-gen crd paths="./api/..." output:stdout | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/crd.yaml
+	.bin/controller-gen crd paths="./api/..." output:stdout | yq ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/crd.yaml
 	$(MAKE) gen-schemas
-	cd config/deploy && $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.checks.items.properties)' crd.yaml | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.forEach.properties)' /dev/stdin  | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.lookup.properties)'  /dev/stdin | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.properties.items.properties.lookup.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.forEach.properties)' /dev/stdin |  $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.lookup.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.checks.items.properties.inline.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.properties.items.properties.lookup.properties)' /dev/stdin > crd.slim.yaml
+	cd config/deploy && yq ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.checks.items.properties)' crd.yaml | yq ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.forEach.properties)' /dev/stdin  | yq ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.lookup.properties)'  /dev/stdin | yq ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.properties.items.properties.lookup.properties)' /dev/stdin | yq ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.forEach.properties)' /dev/stdin |  yq ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.lookup.properties)' /dev/stdin | yq ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.checks.items.properties.inline.properties)' /dev/stdin | yq ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.properties.items.properties.lookup.properties)' /dev/stdin > crd.slim.yaml
 	cd config/deploy && mv crd.slim.yaml crd.yaml
 
 # Run go fmt against code
@@ -108,53 +107,43 @@ docker-push:
 
 .PHONY: compress
 compress: .bin/upx
-	upx -5 ./.bin/$(NAME)_linux_amd64 ./.bin/$(NAME)_linux_arm64 ./.bin/$(NAME)_darwin_amd64 ./.bin/$(NAME)_darwin_arm64 ./.bin/$(NAME).exe
+	upx -5 ./.bin/$(NAME)_linux_amd64 ./.bin/$(NAME)_linux_arm64 ./.bin/$(NAME)_darwin_amd64 ./.bin/$(NAME)_darwin_arm64 ./.bin/$(NAME).exe ./.bin/$(NAME) ./.bin/$(NAME).test
+
+.PHONY: compress-build
+compress-build: .bin/upx
+	upx -5 ./.bin/$(NAME) ./.bin/$(NAME).test
 
 .PHONY: linux
 linux:
-	GOOS=linux GOARCH=amd64 go build  -o ./.bin/$(NAME)_linux_amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
-	GOOS=linux GOARCH=arm64 go build  -o ./.bin/$(NAME)_linux_arm64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=linux GOARCH=amd64 go build  -o ./.bin/$(NAME)_linux_amd64 $(LD_FLAGS)  main.go
+	GOOS=linux GOARCH=arm64 go build  -o ./.bin/$(NAME)_linux_arm64 $(LD_FLAGS)  main.go
 
 .PHONY: darwin
 darwin:
-	GOOS=darwin GOARCH=amd64 go build -o ./.bin/$(NAME)_darwin_amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
-	GOOS=darwin GOARCH=arm64 go build -o ./.bin/$(NAME)_darwin_arm64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=darwin GOARCH=amd64 go build -o ./.bin/$(NAME)_darwin_amd64 $(LD_FLAGS)  main.go
+	GOOS=darwin GOARCH=arm64 go build -o ./.bin/$(NAME)_darwin_arm64 $(LD_FLAGS)  main.go
 
 .PHONY: windows
 windows:
-	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe $(LD_FLAGS)  main.go
 
 .PHONY: binaries
 binaries: linux darwin windows compress
 
 .PHONY: release
-release: .bin/kustomize binaries
+release: binaries
 	mkdir -p .release
-	cd config/base && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/ > .release/release.yaml
+	cd config/base && kustomize edit set image controller=${IMG}
+	kustomize build config/ > .release/release.yaml
 	cp .bin/canary-checker* .release/
 
 .PHONY: lint
 lint:
 	golangci-lint run -v ./...
 
-.PHONY: serve-docs
-serve-docs:
-	docker run --rm -it -p 8000:8000 -v $(PWD):/docs -w /docs squidfunk/mkdocs-material
-
 .PHONY: build-api-docs
 build-api-docs:
 	go run main.go docs  api/v1/*.go --output-file docs/api.md
-
-.PHONY: build-docs
-build-docs:
-	pip3 install $(MKDOCS_INSIDERS)
-	mkdocs build -d build/docs
-
-.PHONY: deploy-docs
-deploy-docs:
-	which netlify 2>&1 > /dev/null || sudo npm install -g netlify-cli
-	netlify deploy --site cfe8c6b7-79b7-4a88-9e13-ff792126717f --prod --dir build/docs
 
 .PHONY: dev
 dev:
@@ -162,11 +151,16 @@ dev:
 
 .PHONY: build
 build:
-	go build -o ./.bin/$(NAME) -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	go build -o ./.bin/$(NAME) $(LD_FLAGS)  main.go
+
+.PHONY: test-build
+test-build:
+	go test  test/...  -o ./.bin/$(NAME).test $(LD_FLAGS)  main.go
+
 
 .PHONY: fast-build
 fast-build:
-	go build --tags fast -o ./.bin/$(NAME) -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	go build --tags fast -o ./.bin/$(NAME) $(LD_FLAGS)  main.go
 
 .PHONY: install
 install:
@@ -197,11 +191,6 @@ endif
 		GOBIN=$(PWD)/.bin go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.11.1
 		CONTROLLER_GEN=$(GOBIN)/controller-gen
 
-.bin/kustomize: .bin
-	curl -L https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv4.3.0/kustomize_v4.3.0_$(OS)_$(ARCH).tar.gz -o kustomize.tar.gz && \
-	tar xf kustomize.tar.gz -C .bin/ && \
-	rm kustomize.tar.gz
-
 .bin/go-junit-report: .bin
 	GOBIN=$(PWD)/.bin GOFLAGS="-mod=mod"  go install github.com/jstemmer/go-junit-report
 
@@ -211,11 +200,6 @@ endif
     rm apache-jmeter-5.4.3.tgz && \
 		ln -s apache-jmeter-5.4.3/bin/jmeter .bin/jmeter
 
-.bin/restic:
-	curl -sSLo /usr/local/bin/restic.bz2  https://github.com/restic/restic/releases/download/v0.12.1/restic_0.12.1_$(OS)_$(ARCH).bz2   && \
-    bunzip2  /usr/local/bin/restic.bz2  && \
-    chmod +x /usr/local/bin/restic
-
 .bin/wait4x:
 	wget -nv https://github.com/atkrad/wait4x/releases/download/v0.3.0/wait4x-$(OS)-$(ARCH) -O .bin/wait4x && \
   chmod +x .bin/wait4x
@@ -223,10 +207,6 @@ endif
 .bin/karina:
 	curl -sSLo .bin/karina https://github.com/flanksource/karina/releases/download/v0.50.0/karina_$(OS)-$(ARCH) && \
 	chmod +x .bin/karina
-
-.bin/yq: .bin
-	curl -sSLo .bin/yq https://github.com/mikefarah/yq/releases/download/v4.16.1/yq_$(OS)_$(ARCH) && chmod +x .bin/yq
-YQ = $(realpath ./.bin/yq)
 
 .PHONY: telepresence
 telepresence:
@@ -246,12 +226,7 @@ endif
 .bin:
 	mkdir -p .bin
 
-.bin/octopilot:
-	curl -sSLo .bin/octopilot https://github.com/dailymotion-oss/octopilot/releases/download/v1.0.7/octopilot_1.0.7_$(OS)_$(ARCH) && \
-	chmod +x .bin/octopilot
-
-bin: .bin .bin/wait4x .bin/yq .bin/karina .bin/go-junit-report .bin/restic .bin/jmeter telepresence .bin/octopilot .bin/kustomize
-
+bin: .bin .bin/wait4x .bin/karina .bin/go-junit-report  telepresence
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources

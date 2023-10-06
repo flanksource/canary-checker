@@ -12,7 +12,7 @@ spec:
       metrics:
         - name: exchange_rate
           type: gauge
-          value: result.json.rates.GBP
+          value: json.rates.GBP
           labels:
             - name: "from"
               value: "USD"
@@ -21,7 +21,7 @@ spec:
 
         - name: exchange_rate
           type: gauge
-          value: result.json.rates.EUR
+          value: json.rates.EUR
           labels:
             - name: "from"
               value: "USD"
@@ -30,7 +30,7 @@ spec:
 
         - name: exchange_rate
           type: gauge
-          value: result.json.rates.ILS
+          value: json.rates.ILS
           labels:
             - name: "from"
               value: "USD"
@@ -38,4 +38,4 @@ spec:
               value: ILS
         - name: exchange_rate_api
           type: histogram
-          value: result.elapsed.getMilliseconds()
+          value: elapsed.getMilliseconds()

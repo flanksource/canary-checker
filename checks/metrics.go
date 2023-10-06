@@ -41,24 +41,21 @@ func getOrAddPrometheusMetric(name, metricType string, labelNames []string) (pro
 }
 
 func getWithEnvironment(ctx *context.Context, r *pkg.CheckResult) *context.Context {
-	templateInput := map[string]any{
-		"result": r.Data,
-		"canary": map[string]any{
-			"name":      r.Canary.GetName(),
-			"namespace": r.Canary.GetNamespace(),
-			"labels":    r.Canary.GetLabels(),
-			"id":        r.Canary.GetPersistedID(),
-		},
-		"check": map[string]any{
-			"name":        r.Check.GetName(),
-			"id":          r.Canary.GetCheckID(r.Check.GetName()),
-			"description": r.Check.GetDescription(),
-			"labels":      r.Check.GetLabels(),
-			"endpoint":    r.Check.GetEndpoint(),
-			"duration":    time.Millisecond * time.Duration(r.GetDuration()),
-		},
+	r.Data["canary"] = map[string]any{
+		"name":      r.Canary.GetName(),
+		"namespace": r.Canary.GetNamespace(),
+		"labels":    r.Canary.GetLabels(),
+		"id":        r.Canary.GetPersistedID(),
 	}
-	return ctx.New(templateInput)
+	r.Data["check"] = map[string]any{
+		"name":        r.Check.GetName(),
+		"id":          r.Canary.GetCheckID(r.Check.GetName()),
+		"description": r.Check.GetDescription(),
+		"labels":      r.Check.GetLabels(),
+		"endpoint":    r.Check.GetEndpoint(),
+		"duration":    time.Millisecond * time.Duration(r.GetDuration()),
+	}
+	return ctx.New(r.Data)
 }
 
 func getLabels(ctx *context.Context, metric external.Metrics) (map[string]string, []string, error) {

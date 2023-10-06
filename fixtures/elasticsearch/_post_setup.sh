@@ -7,5 +7,7 @@ echo "Fetching elastic search health";
 curl -s "http://elasticsearch.canaries.svc.cluster.local:9200/_cluster/health" -H 'Content-Type: application/json';
 curl -s "http://elasticsearch.canaries.svc.cluster.local:9200/_cluster/allocation/explain" -H 'Content-Type: application/json';
 
+kubectl get pods --all-namespaces
+
 echo "Fetching populate-db logs from elasticsearch pod";
-kubectl logs -n canaries -l app=elasticsearch -c populate-db
+kubectl logs -n canaries -l app=elasticsearch

@@ -2,13 +2,14 @@ package checks
 
 import (
 	"net"
+	"os"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/canary-checker/pkg/dns"
-	"github.com/go-ping/ping"
+	ping "github.com/prometheus-community/pro-bing"
 	"github.com/prometheus/client_golang/prometheus"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -24,6 +25,8 @@ var (
 		[]string{"endpoint", "ip"},
 	)
 )
+
+var PRIVILEGED = os.Getenv("PING_MODE") == "privileged"
 
 func init() {
 	prometheus.MustRegister(packetLoss)
@@ -95,10 +98,8 @@ func (c *IcmpChecker) checkICMP(ip net.IP, packetCount int) (*ping.Statistics, e
 	if err != nil {
 		return nil, err
 	}
-	// this requires running as root or with NET_RAW privileges, this is easier than the alternative
-	// sysctl -w net.ipv4.ping_group_range="0   2147483647" which doesn't require root, but does require kubelet changes
-	// whitelist the sysctl's for use
-	pinger.SetPrivileged(true)
+	pinger.SetNetwork("ip4")
+	pinger.SetPrivileged(PRIVILEGED)
 	if packetCount == 0 {
 		packetCount = 5
 	}

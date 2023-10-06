@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -27,6 +26,7 @@ import (
 	ctrlCache "sigs.k8s.io/controller-runtime/pkg/cache"
 	ctrlzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	ctrlMetrics "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
 
 var webhookPort int
@@ -87,12 +87,11 @@ func run(cmd *cobra.Command, args []string) {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  scheme,
-		MetricsBindAddress:      fmt.Sprintf("0.0.0.0:%d", metricsPort),
-		Namespace:               operatorNamespace,
-		Port:                    webhookPort,
 		LeaderElection:          enableLeaderElection,
 		LeaderElectionNamespace: operatorNamespace,
-		LeaderElectionID:        "bc88107d.flanksource.com",
+		Metrics: ctrlMetrics.Options{
+			BindAddress: ":0",
+		},
 		Cache: ctrlCache.Options{
 			SyncPeriod: utils.Ptr(1 * time.Hour),
 		},

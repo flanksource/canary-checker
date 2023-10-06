@@ -17,10 +17,10 @@ spec:
             - name: check_name
               valueExpr: check.name
             - name: code
-              valueExpr: result.code
+              valueExpr: code
         - name: httpbin_2xx_duration
           type: counter
-          value: result.elapsed.getMilliseconds()
+          value: elapsed.getMilliseconds()
           labels:
             - name: check_name
               valueExpr: check.name
