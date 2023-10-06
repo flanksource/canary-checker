@@ -5,7 +5,7 @@ NAME=canary-checker
 OS   = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH = $(shell uname -m | sed 's/x86_64/amd64/')
 KUSTOMIZE=$(PWD)/.bin/kustomize
-
+LD_FLAGS=-ldflags "-w -s -X \"main.version=$(VERSION_TAG)\""
 ifeq ($(VERSION),)
   VERSION_TAG=$(shell git describe --abbrev=0 --tags || echo latest)
 else
@@ -108,21 +108,25 @@ docker-push:
 
 .PHONY: compress
 compress: .bin/upx
-	upx -5 ./.bin/$(NAME)_linux_amd64 ./.bin/$(NAME)_linux_arm64 ./.bin/$(NAME)_darwin_amd64 ./.bin/$(NAME)_darwin_arm64 ./.bin/$(NAME).exe
+	upx -5 ./.bin/$(NAME)_linux_amd64 ./.bin/$(NAME)_linux_arm64 ./.bin/$(NAME)_darwin_amd64 ./.bin/$(NAME)_darwin_arm64 ./.bin/$(NAME).exe ./.bin/$(NAME) ./.bin/$(NAME).test
+
+.PHONY: compress-build
+compress-build: .bin/upx
+	upx -5 ./.bin/$(NAME) ./.bin/$(NAME).test
 
 .PHONY: linux
 linux:
-	GOOS=linux GOARCH=amd64 go build  -o ./.bin/$(NAME)_linux_amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
-	GOOS=linux GOARCH=arm64 go build  -o ./.bin/$(NAME)_linux_arm64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=linux GOARCH=amd64 go build  -o ./.bin/$(NAME)_linux_amd64 $(LD_FLAGS)  main.go
+	GOOS=linux GOARCH=arm64 go build  -o ./.bin/$(NAME)_linux_arm64 $(LD_FLAGS)  main.go
 
 .PHONY: darwin
 darwin:
-	GOOS=darwin GOARCH=amd64 go build -o ./.bin/$(NAME)_darwin_amd64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
-	GOOS=darwin GOARCH=arm64 go build -o ./.bin/$(NAME)_darwin_arm64 -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=darwin GOARCH=amd64 go build -o ./.bin/$(NAME)_darwin_amd64 $(LD_FLAGS)  main.go
+	GOOS=darwin GOARCH=arm64 go build -o ./.bin/$(NAME)_darwin_arm64 $(LD_FLAGS)  main.go
 
 .PHONY: windows
 windows:
-	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe $(LD_FLAGS)  main.go
 
 .PHONY: binaries
 binaries: linux darwin windows compress
@@ -162,11 +166,16 @@ dev:
 
 .PHONY: build
 build:
-	go build -o ./.bin/$(NAME) -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	go build -o ./.bin/$(NAME) $(LD_FLAGS)  main.go
+
+.PHONY: test-build
+test-build:
+	go test  test/...  -o ./.bin/$(NAME).test $(LD_FLAGS)  main.go
+
 
 .PHONY: fast-build
 fast-build:
-	go build --tags fast -o ./.bin/$(NAME) -ldflags "-X \"main.version=$(VERSION_TAG)\""  main.go
+	go build --tags fast -o ./.bin/$(NAME) $(LD_FLAGS)  main.go
 
 .PHONY: install
 install:
@@ -246,11 +255,7 @@ endif
 .bin:
 	mkdir -p .bin
 
-.bin/octopilot:
-	curl -sSLo .bin/octopilot https://github.com/dailymotion-oss/octopilot/releases/download/v1.0.7/octopilot_1.0.7_$(OS)_$(ARCH) && \
-	chmod +x .bin/octopilot
-
-bin: .bin .bin/wait4x .bin/yq .bin/karina .bin/go-junit-report .bin/restic .bin/jmeter telepresence .bin/octopilot .bin/kustomize
+bin: .bin .bin/wait4x .bin/yq .bin/karina .bin/go-junit-report .bin/restic .bin/jmeter telepresence .bin/kustomize
 
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static

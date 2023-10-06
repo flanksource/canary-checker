@@ -10,17 +10,7 @@ name: Test
 permissions:
   contents: read
 jobs:
-  test:
-    strategy:
-      fail-fast: false
-      matrix:
-        suite:
-          - minimal --skip-all
-          - k8s
-          - datasources
-          - search
-          - git
-          # - restic
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Install Go
@@ -38,15 +28,45 @@ jobs:
           key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
           restore-keys: |
             cache-
-      - run: make bin
+      - run: make  build
+      - run: cd test && make build
+      - run: make compress-build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: bin
+          path: |
+            .bin/canary-checker
+            .bin/canary-checker.test
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        suite:
+          - { name: minimal --skip-all, on: ubuntu-latest }
+          - { name: k8s, on: ubuntu-4vcpu }
+          - { name: datasources, on: ubuntu-4vcpu }
+          - { name: search, on: ubuntu-4vcpu }
+          - { name: git, on: ubuntu-latest }
+          # - restic
+    runs-on: ${{ matrix.suite.on }}
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/download-artifact@v3
+        with:
+          name: bin
+          path: .bin
+      - run: ls -R
+      - run: chmod +x .bin/* && make bin
       - name: Test
         env:
           KUBERNETES_VERSION: v1.20.7
           GH_TOKEN: ${{ secrets.CHECKRUNS_TOKEN }}
-        run: ./test/e2e.sh fixtures/${{matrix.suite}}
+        run: ./test/e2e.sh fixtures/${{matrix.suite.name}}
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@b9f6c61d965bcaa18acc02d6daf706373a448f02 # v1.40
         if: always() &&  github.event.repository.fork == 'false'
         with:
           files: test/test-results.xml
-          check_name: E2E - ${{matrix.suite}}
+          check_name: E2E - ${{matrix.suite.name}}

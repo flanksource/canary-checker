@@ -158,7 +158,7 @@ spec:
               chmod +x wait-for-it.sh; ./wait-for-it.sh localhost:9200 --timeout=0;
               curl -X PUT localhost:9200/index;
               curl -X POST localhost:9200/index/_doc -d '{"system": {"role": "api", "version": "v1.0"}}' -H 'Content-Type: application/json';
-              touch /tmp/done; 
+              touch /tmp/done;
               sleep infinity
 ---
 apiVersion: v1
