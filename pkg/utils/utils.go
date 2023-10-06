@@ -79,3 +79,11 @@ func Deref[T any](v *T) T {
 
 	return *v
 }
+
+func MapKeys[T any](m map[string]T) []string {
+	var keys []string
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
