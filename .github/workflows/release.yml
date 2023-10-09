@@ -24,7 +24,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2.2.0
         with:
-          go-version: v1.19.x
+          go-version: v1.20.x
       - uses: actions/cache@8492260343ad570701412c2f464a5877dc76bace # v2
         with:
           path: |
@@ -75,21 +75,6 @@ jobs:
           dockerfile: build/full/Dockerfile
           tags: "latest,v${{ env.RELEASE_VERSION }}"
 
-  # docs:
-  #   runs-on: ubuntu-latest
-  #   needs: semantic-release
-  #   container:
-  #     image: flanksource/build-tools:v0.15.1
-  #   steps:
-  #     - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
-  #     - name: setup node
-  #       uses: actions/setup-node@v2
-  #       with:
-  #         node-version: "16"
-  #     - run: make build-api-docs build-docs deploy-docs
-  #       env:
-  #         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-  #         MKDOCS_INSIDERS: ${{secrets.MKDOCS_INSIDERS}}
   helm:
     runs-on: ubuntu-latest
     needs: [semantic-release, docker]
@@ -134,7 +119,7 @@ jobs:
           commit_message: "Release ${{ needs.semantic-release.outputs.release-version }} of ${{ github.repository }}"
           branch: gh-pages
           repository: ./charts
-  
+
   update-incident-commander-chart:
     runs-on: ubuntu-latest
     needs: [helm, semantic-release]
