@@ -36,7 +36,7 @@ db:
     # If the database is embedded, setting this to true will persist the contents of the database
     # through a persistent volume
     persist: false
-    storageClass:
+    storageClass: ""
     storage: 20Gi
   external:
     # Setting enabled to true will use a external postgres DB, disabling the embedded DB
@@ -54,7 +54,7 @@ db:
       # this is the key it will look for in the secret(if secretRefKey is
       # mentioned). The name of the key is mandatory to set.
       key: DB_URL
-    storageClass:
+    storageClass: ""
     storage: 20Gi
 
 nameOverride: ""
@@ -72,10 +72,9 @@ data:
 
 upstream:
   enabled: false
-  host: ""
-  agentName: ""
-  username: ""
-  password: ""
+  agentName: default-agent
+  secretKeyRef:
+    name: canary-checker-upstream # Must contain: UPSTREAM_USER, UPSTREAM_PASS & UPSTREAM_HOST
 
 ingress:
   enabled: false

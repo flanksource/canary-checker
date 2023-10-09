@@ -58,8 +58,7 @@ func embeddedDB() error {
 	embeddedPath := strings.TrimSuffix(strings.TrimPrefix(ConnectionString, "embedded://"), "/")
 	err := os.Chmod(embeddedPath, 0750)
 	if err != nil {
-		logger.Errorf("Error changing permission of dataPath: %v, Error: %v", embeddedPath, err)
-		return err
+		logger.Warnf("Error changing permission of dataPath: %v, Error: %v", embeddedPath, err)
 	}
 
 	logger.Infof("Starting embedded postgres server at %s", embeddedPath)
