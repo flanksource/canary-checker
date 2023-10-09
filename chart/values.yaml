@@ -73,8 +73,9 @@ data:
 upstream:
   enabled: false
   agentName: default-agent
+  # Must contain: UPSTREAM_USER, UPSTREAM_PASS & UPSTREAM_HOST
   secretKeyRef:
-    name: canary-checker-upstream # Must contain: UPSTREAM_USER, UPSTREAM_PASS & UPSTREAM_HOST
+    name: canary-checker-upstream
 
 ingress:
   enabled: false

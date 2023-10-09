@@ -142,7 +142,7 @@ spec:
             {{- end }}
             {{- if .Values.upstream.enabled }}
             - --agent-name={{ .Values.upstream.agentName }}
-            - --upstream-host={{ .Values.upstream.host }}
+            - --upstream-host=$UPSTREAM_HOST
             - --upstream-user=$UPSTREAM_USER
             - --upstream-password=$UPSTREAM_PASSWORD
             {{- end }}
