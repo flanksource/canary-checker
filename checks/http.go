@@ -175,9 +175,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	if resp.IsJSON() {
 		json, err := resp.AsJSON()
-		if err != nil {
-			return results.ErrorMessage(err)
-		} else {
+		if err == nil {
 			data["json"] = json.Value
 			if check.ResponseJSONContent != nil && check.ResponseJSONContent.Path != "" {
 				err := resp.CheckJSONContent(json.Value, check.ResponseJSONContent)
@@ -185,6 +183,10 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 					return results.ErrorMessage(err)
 				}
 			}
+		} else if check.Test.IsEmpty() {
+			return results.Failf("invalid json response: %v", err)
+		} else {
+			ctx.Tracef("ignoring invalid json response %v", err)
 		}
 	}
 
