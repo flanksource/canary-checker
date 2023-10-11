@@ -171,6 +171,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		"elapsed": time.Since(start),
 		"content": body,
 		"sslAge":  utils.Deref(age),
+		"json":    make(map[string]any),
 	}
 
 	if resp.IsJSON() {
