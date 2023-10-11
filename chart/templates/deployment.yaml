@@ -22,7 +22,9 @@ spec:
         labels:
           {{- include "canary-checker.labels" . | nindent 10 }}
       spec:
+        {{- if not (eq .Values.db.embedded.storageClass "") }}
         storageClassName: {{ .Values.db.embedded.storageClass }}
+        {{- end }}
         accessModes: ["ReadWriteOnce"]
         resources:
           requests:
@@ -96,7 +98,7 @@ spec:
           {{- if .Values.upstream.enabled }}
           envFrom:
             - secretRef:
-                name: {{ include "canary-checker.name" . }}
+                name: {{ .Values.upstream.secretKeyRef.name }}
           {{- end }}
           volumeMounts:
             {{- if eq .Values.dockerSocket true }}
@@ -140,7 +142,7 @@ spec:
             {{- end }}
             {{- if .Values.upstream.enabled }}
             - --agent-name={{ .Values.upstream.agentName }}
-            - --upstream-host={{ .Values.upstream.host }}
+            - --upstream-host=$UPSTREAM_HOST
             - --upstream-user=$UPSTREAM_USER
             - --upstream-password=$UPSTREAM_PASSWORD
             {{- end }}
