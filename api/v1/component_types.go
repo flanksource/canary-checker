@@ -189,7 +189,7 @@ type Property struct {
 	Unit           string `json:"unit,omitempty"`
 	Value          int64  `json:"value,omitempty"`
 	Max            *int64 `json:"max,omitempty"`
-	Min            int64  `json:"min,omitempty"`
+	Min            *int64 `json:"min,omitempty"`
 	Status         string `json:"status,omitempty"`
 	LastTransition string `json:"lastTransition,omitempty"`
 	Links          []Link `json:"links,omitempty"`

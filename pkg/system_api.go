@@ -355,7 +355,7 @@ type Property struct {
 	// e.g. milliseconds, bytes, millicores, epoch etc.
 	Unit string `json:"unit,omitempty"`
 	Max  *int64 `json:"max,omitempty"`
-	Min  int64  `json:"min,omitempty"`
+	Min  *int64 `json:"min,omitempty"`
 
 	Status         string    `json:"status,omitempty"`
 	LastTransition string    `json:"lastTransition,omitempty"`
@@ -416,8 +416,8 @@ func (p *Property) String() string {
 	if p.Max != nil {
 		s += fmt.Sprintf("max=%d ", *p.Max)
 	}
-	if p.Min != 0 {
-		s += fmt.Sprintf("min=%d ", p.Min)
+	if p.Min != nil {
+		s += fmt.Sprintf("min=%d ", *p.Min)
 	}
 	if p.Status != "" {
 		s += fmt.Sprintf("status=%s ", p.Status)
@@ -442,7 +442,7 @@ func (p *Property) Merge(other *Property) {
 	if other.Max != nil {
 		p.Max = other.Max
 	}
-	if other.Min != 0 {
+	if other.Min != nil {
 		p.Min = other.Min
 	}
 	if other.Order > 0 {
