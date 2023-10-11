@@ -12,7 +12,7 @@ RUN go mod download
 COPY ./ ./
 RUN make build
 
-FROM eclipse-temurin:11.0.18_10-jdk-focal@sha256:509043cc38d37a5bd44720b471c38bef40fb34de67c03baaa67a5a9d8cda52a0
+FROM eclipse-temurin:19.0.2_7-jdk-focal@sha256:6804cd56a346f7e899e872a06823634e55c32ac3eb2e157b06cffe743b0e1e72
 WORKDIR /app
 RUN apt-get update && \
   apt-get install -y curl unzip ca-certificates jq wget gnupg2 bzip2 --no-install-recommends && \
