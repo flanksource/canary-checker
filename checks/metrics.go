@@ -16,12 +16,15 @@ import (
 
 var collectorMap = make(map[string]prometheus.Collector)
 
-func getOrAddPrometheusMetric(name, metricType string, labelNames []string) (prometheus.Collector, error) {
+func getOrAddPrometheusMetric(name, metricType string, labelNames []string) (collector prometheus.Collector, e any) {
+	defer func() {
+		e = recover()
+	}()
 	key := name + metricType + strings.Join(labelNames, ",")
 	if collector, exists := collectorMap[key]; exists {
 		return collector, nil
 	}
-	var collector prometheus.Collector
+
 	switch metricType {
 	case "histogram":
 		collector = prometheus.NewHistogramVec(
@@ -35,7 +38,6 @@ func getOrAddPrometheusMetric(name, metricType string, labelNames []string) (pro
 	default:
 		return nil, fmt.Errorf("unknown metric type %s", metricType)
 	}
-
 	collectorMap[key] = collector
 	return collector, prometheus.Register(collector)
 }
@@ -112,8 +114,9 @@ func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 			}
 
 			var collector prometheus.Collector
-			if collector, err = getOrAddPrometheusMetric(spec.Name, spec.Type, labelNames); err != nil {
-				r.ErrorMessage(err)
+			var e any
+			if collector, e = getOrAddPrometheusMetric(spec.Name, spec.Type, labelNames); e != nil {
+				r.ErrorMessage(fmt.Errorf("failed to create metric %s (%s) %s: %s", spec.Name, spec.Type, labelNames, e))
 				continue
 			}
 
