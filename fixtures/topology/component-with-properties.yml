@@ -1,4 +1,3 @@
-#yaml-language-server: $schema=../../generate-schemas/schemas/system.schema.json
 apiVersion: canaries.flanksource.com/v1
 kind: Topology
 metadata:
@@ -31,7 +30,7 @@ spec:
                   'type': 'Database',
                   'properties': [{'name': 'error_percentage', 'min': 0, 'max': 100}, {'name': 'owner'}]
                 },
-              ].marshalJSON()
+              ].toJSON()
     properties:
       # Test property lookup merge as components
       - name: error_percentage
@@ -54,7 +53,7 @@ spec:
                     'name': 'component-c',
                     'properties': [{'name': 'error_percentage', 'value': 50}]
                   },
-                ].marshalJSON()
+                ].toJSON()
       # Test property lookup merge as components
       - name: owner
         lookup:
@@ -76,7 +75,7 @@ spec:
                     'name': 'component-c',
                     'properties': [{'name': 'owner', 'text': 'team-b'}]
                   },
-                ].marshalJSON()
+                ].toJSON()
       # Test property lookup merge as properties
       - name: generic
         lookup:
@@ -88,4 +87,4 @@ spec:
                 [
                   {'name': 'company', 'text': 'Acme'},
                   {'name': 'location', 'text': 'Mars'},
-                ].marshalJSON()
+                ].toJSON()

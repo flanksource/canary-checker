@@ -53,4 +53,49 @@ var _ = ginkgo.Describe("Test topology run", ginkgo.Ordered, func() {
 		Expect(string(componentB.Properties.AsJSON())).To(MatchJSON(`[{"name":"error_percentage","value":10,"min":0,"max":100},{"name":"owner","text":"team-b"},{"name":"company","text":"Acme"},{"name":"location","text":"Mars"}]`))
 		Expect(string(componentC.Properties.AsJSON())).To(MatchJSON(`[{"name":"error_percentage","value":50,"min":0,"max":100},{"name":"owner","text":"team-b"},{"name":"company","text":"Acme"},{"name":"location","text":"Mars"}]`))
 	})
+
+	ginkgo.It("should create component with forEach functionality", func() {
+		t, err := yamlFileToTopology("../../fixtures/topology/component-with-for-each.yml")
+		if err != nil {
+			ginkgo.Fail("Error converting yaml to v1.Topology:" + err.Error())
+		}
+
+		rootComponent := Run(opts, t)
+		Expect(len(rootComponent[0].Components)).To(Equal(3))
+
+		componentA := rootComponent[0].Components[0]
+		componentB := rootComponent[0].Components[1]
+		componentC := rootComponent[0].Components[2]
+
+		// Test correct merging of properties
+		Expect(string(componentA.Properties.AsJSON())).To(MatchJSON(`[{"name":"owner","text":"team-a"},{"name":"processor","text":"intel"},{"name":"company","text":"Acme"},{"name":"location","text":"Mars"}]`))
+		Expect(string(componentB.Properties.AsJSON())).To(MatchJSON(`[{"name":"owner","text":"team-b"},{"name":"processor","text":"intel"},{"name":"company","text":"Acme"},{"name":"location","text":"Mars"}]`))
+		Expect(string(componentC.Properties.AsJSON())).To(MatchJSON(`[{"name":"owner","text":"team-b"},{"name":"processor","text":"amd"},{"name":"company","text":"Acme"},{"name":"location","text":"Mars"}]`))
+
+		// Each component should have 2 children named Child-A and Child-B
+		Expect(len(componentA.Components)).To(Equal(2))
+		Expect(componentA.Components[0].Name).To(Equal("Child-A"))
+		Expect(componentA.Components[1].Name).To(Equal("Child-B"))
+
+		Expect(len(componentB.Components)).To(Equal(2))
+		Expect(componentB.Components[0].Name).To(Equal("Child-A"))
+		Expect(componentB.Components[1].Name).To(Equal("Child-B"))
+
+		Expect(len(componentC.Components)).To(Equal(2))
+		Expect(componentC.Components[0].Name).To(Equal("Child-A"))
+		Expect(componentC.Components[1].Name).To(Equal("Child-B"))
+
+		// Each component should have a templated config linked
+		Expect(len(componentA.Configs)).To(Equal(1))
+		Expect(componentA.Configs[0].Name).To(Equal(componentA.Name))
+		Expect(componentA.Configs[0].Type).To(Equal("Service"))
+
+		Expect(len(componentB.Configs)).To(Equal(1))
+		Expect(componentB.Configs[0].Name).To(Equal(componentB.Name))
+		Expect(componentB.Configs[0].Type).To(Equal("Service"))
+
+		Expect(len(componentC.Configs)).To(Equal(1))
+		Expect(componentC.Configs[0].Name).To(Equal(componentC.Name))
+		Expect(componentC.Configs[0].Type).To(Equal("Service"))
+	})
 })

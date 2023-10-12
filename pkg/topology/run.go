@@ -85,19 +85,6 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 		if err := mergeComponentProperties(pkg.Components{component}, props); err != nil {
 			continue
 		}
-
-		var properties pkg.Properties
-		if err := json.Unmarshal(props, &properties); err != nil {
-			return err
-		}
-		for _, p := range properties {
-			found := component.Properties.Find(p.Name)
-			if found != nil {
-				found.Merge(p)
-				continue
-			}
-			component.Properties = append(component.Properties, p)
-		}
 	}
 	ctx.SetCurrentComponent(component) // component properties may have changed
 

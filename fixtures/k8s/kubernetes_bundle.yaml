@@ -16,7 +16,7 @@ spec:
             'pass': k8s.is_healthy(r.Object),
             'message': k8s.health(r.Object).message,
             'error': k8s.health(r.Object).message,
-          }).marshalJSON()
+          }).toJSON()
     - kind: Pod
       ready: true
       name: pod-bundle
@@ -28,4 +28,4 @@ spec:
             'pass': k8s.is_healthy(r.Object),
             'message': k8s.health(r.Object).message,
             'error': k8s.health(r.Object).message,
-          }).marshalJSON()
+          }).toJSON()
