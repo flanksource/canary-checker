@@ -1,0 +1,34 @@
+on:
+  pull_request:
+permissions:
+  contents: read
+  checks: write
+  issues: write
+  pull-requests: write
+name: Go Test
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3.5.0
+        with:
+          go-version: 1.20.x
+      - name: Checkout code
+        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
+      - uses: actions/cache@8492260343ad570701412c2f464a5877dc76bace # v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: cache-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            cache-
+      - name: Test
+        run: make test
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@b9f6c61d965bcaa18acc02d6daf706373a448f02 # v1.40
+        if: always() && github.event.repository.fork == 'false'
+        with:
+          files: test/test-results.xml
+          check_name: E2E - ${{matrix.suite}}

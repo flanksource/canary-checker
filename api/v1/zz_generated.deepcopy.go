@@ -2493,6 +2493,11 @@ func (in *Property) DeepCopyInto(out *Property) {
 		*out = new(int64)
 		**out = **in
 	}
+	if in.Min != nil {
+		in, out := &in.Min, &out.Min
+		*out = new(int64)
+		**out = **in
+	}
 	if in.Links != nil {
 		in, out := &in.Links, &out.Links
 		*out = make([]Link, len(*in))

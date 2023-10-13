@@ -13,7 +13,7 @@ require (
 	cloud.google.com/go/compute v1.23.0 // indirect
 	cloud.google.com/go/iam v1.1.2 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
-	github.com/flanksource/gomplate/v3 v3.20.14 // indirect
+	github.com/flanksource/gomplate/v3 v3.20.16 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.1 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect

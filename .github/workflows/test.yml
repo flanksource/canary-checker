@@ -62,8 +62,7 @@ jobs:
           path: |
             ~/go/pkg/mod
             ~/.cache/go-build
-            .bin
-          key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
+          key: cache-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             cache-
       - run: make bin
