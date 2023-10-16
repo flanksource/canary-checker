@@ -195,19 +195,17 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		sslExpiration.WithLabelValues(check.URL).Set(age.Hours() * 24)
 	}
 
-	body, _ = response.AsString()
-
 	data := map[string]interface{}{
 		"code":    status,
 		"headers": response.Header,
 		"elapsed": time.Since(start),
-		"content": body,
 		"sslAge":  utils.Deref(age),
 		"json":    make(map[string]any),
 	}
 
 	if response.IsJSON() {
 		json, err := response.AsJSON()
+		data["json"] = json
 		if err == nil {
 			data["json"] = json
 			if check.ResponseJSONContent != nil && check.ResponseJSONContent.Path != "" {
@@ -221,6 +219,9 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		} else {
 			ctx.Tracef("ignoring invalid json response %v", err)
 		}
+	} else {
+		responseBody, _ := response.AsString()
+		data["content"] = responseBody
 	}
 
 	result.AddData(data)
