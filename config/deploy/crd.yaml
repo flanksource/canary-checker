@@ -3048,6 +3048,37 @@ spec:
                       endpoint:
                         description: 'Deprecated: Use url instead'
                         type: string
+                      envVar:
+                        description: EnvVars are the environment variables that are accesible to templated body & headers
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            value:
+                              type: string
+                            valueFrom:
+                              properties:
+                                configMapKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
+                                secretKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
+                              type: object
+                          type: object
+                        type: array
                       headers:
                         description: Header fields to be used in the query
                         items:

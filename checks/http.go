@@ -11,9 +11,8 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/commons/http"
 	"github.com/flanksource/commons/http/middlewares"
-	"github.com/flanksource/commons/text"
 	"github.com/flanksource/duty/models"
-	"github.com/pkg/errors"
+	gomplate "github.com/flanksource/gomplate/v3"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
@@ -70,7 +69,7 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 	for _, header := range check.Headers {
 		value, err := ctx.GetEnvValueFromCache(header)
 		if err != nil {
-			return nil, errors.WithMessagef(err, "failed getting header: %v", header)
+			return nil, fmt.Errorf("failed getting header (%v): %w", header, err)
 		}
 
 		client.Header(header.Name, value)
@@ -140,9 +139,20 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		return results.Failf("failed to parse url: %v", err)
 	}
 
+	templateEnv := map[string]any{
+		"canary": ctx.Canary,
+	}
+	for _, env := range check.EnvVars {
+		if val, err := ctx.GetEnvValueFromCache(env); err != nil {
+			return results.Failf("failed to get env value: %v", err)
+		} else {
+			templateEnv[env.Name] = val
+		}
+	}
+
 	body := check.Body
 	if check.TemplateBody {
-		body, err = text.Template(body, ctx.Canary)
+		body, err = gomplate.RunTemplate(templateEnv, gomplate.Template{Template: body})
 		if err != nil {
 			return results.ErrorMessage(err)
 		}

@@ -1909,6 +1909,12 @@
         },
         "templateBody": {
           "type": "boolean"
+        },
+        "envVar": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
