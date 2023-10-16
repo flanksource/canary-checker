@@ -114,7 +114,6 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 			ctx.Tracef("transformed %s into %v", in, results)
 		}
 		return results, nil
-
 	} else if len(transformed) == 1 && t.Name == "" {
 		if ctx.IsTrace() {
 			ctx.Tracef("merging %v into %v", t, in)
@@ -158,7 +157,6 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 	}
 
 	return []*pkg.CheckResult{in}, nil
-
 }
 
 func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) JunitTestSuite {

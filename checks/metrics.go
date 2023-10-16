@@ -72,7 +72,6 @@ func getLabels(ctx *context.Context, metric external.Metrics) (map[string]string
 			}
 		}
 		labels[label.Name] = val
-
 	}
 
 	return labels, nil
