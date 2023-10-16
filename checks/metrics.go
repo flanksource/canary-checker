@@ -60,23 +60,33 @@ func getWithEnvironment(ctx *context.Context, r *pkg.CheckResult) *context.Conte
 	return ctx.New(r.Data)
 }
 
-func getLabels(ctx *context.Context, metric external.Metrics) (map[string]string, []string, error) {
+func getLabels(ctx *context.Context, metric external.Metrics) (map[string]string, error) {
 	var labels = make(map[string]string)
-	var names = []string{}
 	for _, label := range metric.Labels {
 		val := label.Value
 		if label.ValueExpr != "" {
 			var err error
 			val, err = template(ctx, v1.Template{Expression: label.ValueExpr})
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		}
 		labels[label.Name] = val
-		names = append(names, label.Name)
+
 	}
-	sort.Strings(names)
-	return labels, names, nil
+
+	return labels, nil
+}
+
+func getLabelNames(labels map[string]string) []string {
+	var s []string
+
+	for k := range labels {
+		s = append(s, k)
+	}
+	sort.Strings(s)
+
+	return s
 }
 
 func getLabelString(labels map[string]string) string {
@@ -98,6 +108,11 @@ func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 	}
 
 	for _, r := range results {
+		for _, metric := range r.Metrics {
+			if err := exportMetric(ctx, metric); err != nil {
+				r.ErrorMessage(err)
+			}
+		}
 		for _, spec := range r.Check.GetMetricsSpec() {
 			if spec.Name == "" || spec.Value == "" {
 				continue
@@ -105,44 +120,59 @@ func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 
 			ctx = getWithEnvironment(ctx, r)
 
-			var err error
-			var labels map[string]string
-			var labelNames []string
-			if labels, labelNames, err = getLabels(ctx, spec); err != nil {
+			if metric, err := templateMetrics(ctx, spec); err != nil {
 				r.ErrorMessage(err)
-				continue
-			}
-
-			var collector prometheus.Collector
-			var e any
-			if collector, e = getOrAddPrometheusMetric(spec.Name, spec.Type, labelNames); e != nil {
-				r.ErrorMessage(fmt.Errorf("failed to create metric %s (%s) %s: %s", spec.Name, spec.Type, labelNames, e))
-				continue
-			}
-
-			var val float64
-			if val, err = getMetricValue(ctx, spec); err != nil {
+			} else if err := exportMetric(ctx, *metric); err != nil {
 				r.ErrorMessage(err)
-				continue
-			}
-
-			if ctx.IsDebug() {
-				ctx.Debugf("%s%v=%0.3f", spec.Name, getLabelString(labels), val)
-			}
-
-			switch collector := collector.(type) {
-			case *prometheus.HistogramVec:
-				collector.With(labels).Observe(val)
-			case *prometheus.GaugeVec:
-				collector.With(labels).Set(val)
-			case *prometheus.CounterVec:
-				if val <= 0 {
-					continue
-				}
-				collector.With(labels).Add(val)
 			}
 		}
 	}
+}
+
+func templateMetrics(ctx *context.Context, spec external.Metrics) (*pkg.Metric, error) {
+	var val float64
+	var err error
+	var labels map[string]string
+	if val, err = getMetricValue(ctx, spec); err != nil {
+		return nil, err
+	}
+
+	if labels, err = getLabels(ctx, spec); err != nil {
+		return nil, err
+	}
+
+	return &pkg.Metric{
+		Name:   spec.Name,
+		Type:   pkg.MetricType(spec.Type),
+		Value:  val,
+		Labels: labels,
+	}, nil
+}
+
+func exportMetric(ctx *context.Context, spec pkg.Metric) error {
+	var collector prometheus.Collector
+	labelNames := getLabelNames(spec.Labels)
+	var e any
+	if collector, e = getOrAddPrometheusMetric(spec.Name, string(spec.Type), labelNames); e != nil {
+		return fmt.Errorf("failed to create metric %s (%s) %s: %s", spec.Name, spec.Type, labelNames, e)
+	}
+
+	if ctx.IsDebug() {
+		ctx.Debugf("%s%v=%0.3f", spec.Name, getLabelString(spec.Labels), spec.Value)
+	}
+
+	switch collector := collector.(type) {
+	case *prometheus.HistogramVec:
+		collector.With(spec.Labels).Observe(spec.Value)
+	case *prometheus.GaugeVec:
+		collector.With(spec.Labels).Set(spec.Value)
+	case *prometheus.CounterVec:
+		if spec.Value <= 0 {
+			return nil
+		}
+		collector.With(spec.Labels).Add(spec.Value)
+	}
+	return nil
 }
 
 func getMetricValue(ctx *context.Context, spec external.Metrics) (float64, error) {

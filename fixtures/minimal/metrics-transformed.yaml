@@ -1,0 +1,28 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: exchange-rates
+  annotations:
+    trace: "true"
+spec:
+  schedule: "every 30 @minutes"
+  http:
+    - name: exchange-rates
+      url: https://api.frankfurter.app/latest?from=USD&to=GBP,EUR,ILS
+      transform:
+        expr: |
+          {
+            'metrics': json.rates.keys().map(k,  {
+              'name': "exchange_rate",
+              'type': "gauge",
+              'value': json.rates[k],
+              'labels': {
+                "from": json.base,
+                "to": k
+              }
+            })
+          }.toJSON()
+      metrics:
+        - name: exchange_rate_api
+          type: histogram
+          value: elapsed.getMilliseconds()

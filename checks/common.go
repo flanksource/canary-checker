@@ -73,37 +73,92 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 
 	var transformed []pkg.TransformedCheckResult
 	if err := json.Unmarshal([]byte(out), &transformed); err != nil {
-		return nil, err
+		var t pkg.TransformedCheckResult
+		if errSingle := json.Unmarshal([]byte(out), &t); errSingle != nil {
+			return nil, err
+		}
+		transformed = []pkg.TransformedCheckResult{t}
 	}
 
 	var results []*pkg.CheckResult
+	if len(transformed) == 0 {
+		ctx.Tracef("transformation returned empty array")
+		return nil, nil
+	}
 
-	for _, t := range transformed {
-		t.Icon = def(t.Icon, in.Check.GetIcon())
-		t.Description = def(t.Description, in.Check.GetDescription())
-		t.Name = def(t.Name, in.Check.GetName())
-		t.Type = def(t.Type, in.Check.GetType())
-		t.Endpoint = def(t.Endpoint, in.Check.GetEndpoint())
-		t.TransformDeleteStrategy = def(t.TransformDeleteStrategy, in.Check.GetTransformDeleteStrategy())
-		r := t.ToCheckResult()
-		r.Canary = in.Canary
-		r.Canary.Namespace = def(t.Namespace, r.Canary.Namespace)
-		if r.Canary.Labels == nil {
-			r.Canary.Labels = make(map[string]string)
+	t := transformed[0]
+
+	if t.Name != "" && t.Name != in.Check.GetName() {
+		// new check result created with a new name
+		for _, t := range transformed {
+			t.Icon = def(t.Icon, in.Check.GetIcon())
+			t.Description = def(t.Description, in.Check.GetDescription())
+			t.Name = def(t.Name, in.Check.GetName())
+			t.Type = def(t.Type, in.Check.GetType())
+			t.Endpoint = def(t.Endpoint, in.Check.GetEndpoint())
+			t.TransformDeleteStrategy = def(t.TransformDeleteStrategy, in.Check.GetTransformDeleteStrategy())
+			r := t.ToCheckResult()
+			r.Canary = in.Canary
+			r.Canary.Namespace = def(t.Namespace, r.Canary.Namespace)
+			if r.Canary.Labels == nil {
+				r.Canary.Labels = make(map[string]string)
+			}
+
+			// We use this label to set the transformed column to true
+			// This label is used and then removed in pkg.FromV1 function
+			r.Canary.Labels["transformed"] = "true" //nolint:goconst
+			r.Transformed = true
+			results = append(results, &r)
+		}
+		if ctx.IsTrace() {
+			ctx.Tracef("transformed %s into %v", in, results)
+		}
+		return results, nil
+
+	} else if len(transformed) == 1 && t.Name == "" {
+		if ctx.IsTrace() {
+			ctx.Tracef("merging %v into %v", t, in)
+		}
+		in.Metrics = append(in.Metrics, t.Metrics...)
+		if t.Start != nil {
+			in.Start = *t.Start
 		}
 
-		// We use this label to set the transformed column to true
-		// This label is used and then removed in pkg.FromV1 function
-		r.Canary.Labels["transformed"] = "true" //nolint:goconst
-		r.Transformed = true
-		results = append(results, &r)
+		if t.Pass != nil {
+			in.Pass = *t.Pass
+		}
+		if t.Invalid != nil {
+			in.Invalid = *t.Invalid
+		}
+		if t.Duration != nil {
+			in.Duration = *t.Duration
+		}
+		if t.Message != "" {
+			in.Message = t.Message
+		}
+		if t.Description != "" {
+			in.Description = t.Description
+		}
+		if t.Error != "" {
+			in.Error = t.Error
+		}
+		if t.Detail != nil {
+			in.Detail = t.Detail
+		}
+		if t.DisplayType != "" {
+			in.DisplayType = t.DisplayType
+		}
+		if len(t.Data) > 0 {
+			for k, v := range t.Data {
+				in.Data[k] = v
+			}
+		}
+	} else {
+		return nil, fmt.Errorf("transformation returned more than 1 entry without a name")
 	}
 
-	if ctx.IsTrace() {
-		ctx.Tracef("transformed %s into %v", in, results)
-	}
+	return []*pkg.CheckResult{in}, nil
 
-	return results, nil
 }
 
 func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) JunitTestSuite {
