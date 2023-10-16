@@ -59,7 +59,7 @@ static:  generate manifests
 # Generate OpenAPI schema
 .PHONY: gen-schemas
 gen-schemas:
-	cd hack/generate-schemas && go run ./main.go
+	cd hack/generate-schemas &&  go mod tidy && go run ./main.go
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: .bin/controller-gen

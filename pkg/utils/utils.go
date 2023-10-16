@@ -71,8 +71,11 @@ func Ptr[T any](t T) *T {
 	return &t
 }
 
-func Deref[T any](v *T) T {
+func Deref[T any](v *T, zeroVal ...T) T {
 	if v == nil {
+		if len(zeroVal) > 0 {
+			return zeroVal[0]
+		}
 		var zero T
 		return zero
 	}

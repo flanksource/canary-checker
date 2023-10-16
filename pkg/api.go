@@ -461,12 +461,12 @@ func (generic GenericCheck) GetEndpoint() string {
 }
 
 type TransformedCheckResult struct {
-	Start                   time.Time              `json:"start,omitempty"`
-	Pass                    bool                   `json:"pass,omitempty"`
-	Invalid                 bool                   `json:"invalid,omitempty"`
+	Start                   *time.Time             `json:"start,omitempty"`
+	Pass                    *bool                  `json:"pass,omitempty"`
+	Invalid                 *bool                  `json:"invalid,omitempty"`
 	Detail                  interface{}            `json:"detail,omitempty"`
 	Data                    map[string]interface{} `json:"data,omitempty"`
-	Duration                int64                  `json:"duration,omitempty"`
+	Duration                *int64                 `json:"duration,omitempty"`
 	Description             string                 `json:"description,omitempty"`
 	DisplayType             string                 `json:"displayType,omitempty"`
 	Message                 string                 `json:"message,omitempty"`
@@ -474,6 +474,7 @@ type TransformedCheckResult struct {
 	Name                    string                 `json:"name,omitempty"`
 	Labels                  map[string]string      `json:"labels,omitempty"`
 	Namespace               string                 `json:"namespace,omitempty"`
+	Metrics                 []Metric               `json:"metrics,omitempty"`
 	Icon                    string                 `json:"icon,omitempty"`
 	Type                    string                 `json:"type,omitempty"`
 	Endpoint                string                 `json:"endpoint,omitempty"`
@@ -486,16 +487,17 @@ func (t TransformedCheckResult) ToCheckResult() CheckResult {
 		labels = make(map[string]string)
 	}
 	return CheckResult{
-		Start:       t.Start,
-		Pass:        t.Pass,
-		Invalid:     t.Invalid,
+		Start:       utils.Deref(t.Start, time.Now()),
+		Pass:        utils.Deref(t.Pass, false),
+		Invalid:     utils.Deref(t.Invalid, false),
 		Detail:      t.Detail,
 		Data:        t.Data,
-		Duration:    t.Duration,
+		Duration:    utils.Deref(t.Duration, 0),
 		Description: t.Description,
 		DisplayType: t.DisplayType,
 		Message:     t.Message,
 		Error:       t.Error,
+		Metrics:     t.Metrics,
 		Check: GenericCheck{
 			Description: v1.Description{
 				Description:             t.Description,
@@ -517,10 +519,10 @@ func (t TransformedCheckResult) GetDescription() string {
 type MetricType string
 
 type Metric struct {
-	Name   string
-	Type   MetricType
-	Labels map[string]string
-	Value  float64
+	Name   string            `json:"name,omitempty"`
+	Type   MetricType        `json:"type,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
+	Value  float64           `json:"value,omitempty"`
 }
 
 func (m Metric) String() string {
