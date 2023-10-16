@@ -3048,8 +3048,8 @@ spec:
                       endpoint:
                         description: 'Deprecated: Use url instead'
                         type: string
-                      envVar:
-                        description: EnvVars are the environment variables that are accesible to templated body & headers
+                      env:
+                        description: EnvVars are the environment variables that are accesible to templated body
                         items:
                           properties:
                             name:

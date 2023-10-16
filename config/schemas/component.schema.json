@@ -1910,7 +1910,7 @@
         "templateBody": {
           "type": "boolean"
         },
-        "envVar": {
+        "env": {
           "items": {
             "$ref": "#/$defs/EnvVar"
           },

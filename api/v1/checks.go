@@ -86,7 +86,7 @@ type HTTPCheck struct {
 	//Template the request body
 	TemplateBody bool `yaml:"templateBody,omitempty" json:"templateBody,omitempty"`
 	// EnvVars are the environment variables that are accesible to templated body
-	EnvVars []types.EnvVar `yaml:"envVar,omitempty" json:"envVar,omitempty"`
+	EnvVars []types.EnvVar `yaml:"env,omitempty" json:"env,omitempty"`
 }
 
 func (c HTTPCheck) GetType() string {
