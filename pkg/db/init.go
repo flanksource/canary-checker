@@ -22,6 +22,7 @@ var Gorm *gorm.DB
 var ConnectionString string
 var DefaultExpiryDays int
 var RunMigrations bool
+var DbMetrics bool
 var PostgresServer *embeddedpostgres.EmbeddedPostgres
 var HTTPEndpoint = "http://localhost:8080/db"
 
@@ -101,17 +102,19 @@ func Init() error {
 		return err
 	}
 
-	go func() {
-		if err := Gorm.Use(prometheus.New(prometheus.Config{
-			DBName:      Pool.Config().ConnConfig.Database,
-			StartServer: false,
-			MetricsCollector: []prometheus.MetricsCollector{
-				&prometheus.Postgres{},
-			},
-		})); err != nil {
-			logger.Warnf("Failed to register prometheus metrics: %v", err)
-		}
-	}()
+	if DbMetrics {
+		go func() {
+			if err := Gorm.Use(prometheus.New(prometheus.Config{
+				DBName:      Pool.Config().ConnConfig.Database,
+				StartServer: false,
+				MetricsCollector: []prometheus.MetricsCollector{
+					&prometheus.Postgres{},
+				},
+			})); err != nil {
+				logger.Warnf("Failed to register prometheus metrics: %v", err)
+			}
+		}()
+	}
 
 	if RunMigrations {
 		opts := &migrate.MigrateOptions{IgnoreFiles: []string{"007_events.sql", "012_changelog.sql"}}
