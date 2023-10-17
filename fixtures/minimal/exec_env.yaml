@@ -1,0 +1,18 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: exec-env
+spec:
+  interval: 30
+  exec:
+    - name: exec-env
+      description: "exec with env"
+      script: |
+        echo -n ${FL_HELLO} ${FL_WORLD}
+      env:
+        - name: FL_HELLO
+          value: "hello"
+        - name: FL_WORLD
+          value: "world"
+      test:
+        expr: 'results.stdout == "hello world"'
