@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"os"
-	"strings"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/cache"
@@ -31,7 +30,6 @@ import (
 
 var webhookPort int
 var enableLeaderElection bool
-var operatorNamespace string
 var operatorExecutor bool
 var disablePostgrest bool
 var Operator = &cobra.Command{
@@ -42,7 +40,7 @@ var Operator = &cobra.Command{
 
 func init() {
 	ServerFlags(Operator.Flags())
-	Operator.Flags().StringVarP(&operatorNamespace, "namespace", "n", "", "Watch only specified namespaces, otherwise watch all")
+	Operator.Flags().StringVarP(&runner.WatchNamespace, "namespace", "n", "", "Watch only specified namespaces, otherwise watch all")
 	Operator.Flags().BoolVar(&operatorExecutor, "executor", true, "If false, only serve the UI and sync the configs")
 	Operator.Flags().IntVar(&webhookPort, "webhookPort", 8082, "Port for webhooks ")
 	Operator.Flags().BoolVar(&enableLeaderElection, "enable-leader-election", false, "Enabling this will ensure there is only one active controller manager")
@@ -88,7 +86,7 @@ func run(cmd *cobra.Command, args []string) {
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  scheme,
 		LeaderElection:          enableLeaderElection,
-		LeaderElectionNamespace: operatorNamespace,
+		LeaderElectionNamespace: runner.WatchNamespace,
 		Metrics: ctrlMetrics.Options{
 			BindAddress: ":0",
 		},
@@ -106,23 +104,16 @@ func run(cmd *cobra.Command, args []string) {
 	}
 	loggr.Sugar().Infof("Using runner name: %s", runner.RunnerName)
 
-	includeNamespaces := []string{}
-	if operatorNamespace != "" {
-		includeNamespaces = strings.Split(operatorNamespace, ",")
-		canaryJobs.CanaryNamespaces = includeNamespaces
-	}
 	runner.RunnerLabels = labels.LoadFromFile("/etc/podinfo/labels")
 
 	canaryReconciler := &controllers.CanaryReconciler{
-		IncludeCheck:      includeCheck,
-		IncludeNamespaces: includeNamespaces,
-		Client:            mgr.GetClient(),
-		LogPass:           logPass,
-		LogFail:           logFail,
-		Log:               ctrl.Log.WithName("controllers").WithName("canary"),
-		Scheme:            mgr.GetScheme(),
-		RunnerName:        runner.RunnerName,
-		CanaryCache:       gocache.New(7*24*time.Hour, 1*time.Hour),
+		Client:      mgr.GetClient(),
+		LogPass:     logPass,
+		LogFail:     logFail,
+		Log:         ctrl.Log.WithName("controllers").WithName("canary"),
+		Scheme:      mgr.GetScheme(),
+		RunnerName:  runner.RunnerName,
+		CanaryCache: gocache.New(7*24*time.Hour, 1*time.Hour),
 	}
 
 	systemReconciler := &controllers.TopologyReconciler{
