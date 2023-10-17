@@ -4,11 +4,11 @@ set -e
 
 if ! which mergestat  > /dev/null; then
     if $(uname -a | grep -q Darwin); then
-    curl -L https://github.com/mergestat/mergestat-lite/releases/download/v0.6.1/mergestat-macos-amd64.tar.gz -o mergestat.tar.gz
+    curl -L https://github.com/flanksource/askgit/releases/download/v0.61.0-flanksource.1/mergestat-macos-amd64.tar.gz  -o mergestat.tar.gz
     sudo tar xf mergestat.tar.gz -C /usr/local/bin/
 
     else
-    curl -L https://github.com/mergestat/mergestat-lite/releases/download/v0.6.1/mergestat-linux-amd64.tar.gz -o mergestat.tar.gz
+    curl -L https://github.com/flanksource/askgit/releases/download/v0.61.0-flanksource.1/mergestat-linux-amd64.tar.gz -o mergestat.tar.gz
     sudo tar xf mergestat.tar.gz -C  /usr/local/bin/
     fi
 fi
