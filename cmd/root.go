@@ -84,7 +84,7 @@ func init() {
 
 	Root.PersistentFlags().StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database")
 	Root.PersistentFlags().BoolVar(&db.RunMigrations, "db-migrations", false, "Run database migrations")
-	Root.PersistentFlags().BoolVar(&db.DbMetrics, "db-metrics", false, "Expose db metrics")
+	Root.PersistentFlags().BoolVar(&db.DBMetrics, "db-metrics", false, "Expose db metrics")
 	Root.PersistentFlags().BoolVar(&logFail, "log-fail", true, "Log every failing check")
 	Root.PersistentFlags().BoolVar(&logPass, "log-pass", false, "Log every passing check")
 	Root.PersistentFlags().StringArrayVar(&sharedLibrary, "shared-library", []string{}, "Add javascript files to be shared by all javascript templates")

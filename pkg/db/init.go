@@ -22,7 +22,7 @@ var Gorm *gorm.DB
 var ConnectionString string
 var DefaultExpiryDays int
 var RunMigrations bool
-var DbMetrics bool
+var DBMetrics bool
 var PostgresServer *embeddedpostgres.EmbeddedPostgres
 var HTTPEndpoint = "http://localhost:8080/db"
 
@@ -102,7 +102,7 @@ func Init() error {
 		return err
 	}
 
-	if DbMetrics {
+	if DBMetrics {
 		go func() {
 			if err := Gorm.Use(prometheus.New(prometheus.Config{
 				DBName:      Pool.Config().ConnConfig.Database,
