@@ -115,9 +115,6 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 		}
 		return results, nil
 	} else if len(transformed) == 1 && t.Name == "" {
-		if ctx.IsTrace() {
-			ctx.Tracef("merging %v into %v", t, in)
-		}
 		in.Metrics = append(in.Metrics, t.Metrics...)
 		if t.Start != nil {
 			in.Start = *t.Start
