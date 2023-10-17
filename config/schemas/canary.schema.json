@@ -1703,6 +1703,9 @@
             "$ref": "#/$defs/EnvVar"
           },
           "type": "array"
+        },
+        "oauth2": {
+          "$ref": "#/$defs/Oauth2Config"
         }
       },
       "additionalProperties": false,
@@ -2362,6 +2365,25 @@
       "required": [
         "name",
         "podSpec"
+      ]
+    },
+    "Oauth2Config": {
+      "properties": {
+        "Scopes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "TokenURL": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "Scopes",
+        "TokenURL"
       ]
     },
     "ObjectFieldSelector": {

@@ -3161,6 +3161,9 @@ spec:
                       ntlmv2:
                         description: NTLM when set to true will do authentication using NTLM v2 protocol
                         type: boolean
+                      oauth2:
+                        description: Oauth2 Configuration. The client ID & Client secret should go to username & password respectively.
+                        type: object
                       password:
                         properties:
                           name:

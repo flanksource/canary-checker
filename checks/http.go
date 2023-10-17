@@ -10,7 +10,6 @@ import (
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/commons/http"
-	"github.com/flanksource/commons/http/middlewares"
 	"github.com/flanksource/duty/models"
 	gomplate "github.com/flanksource/gomplate/v3"
 
@@ -79,6 +78,10 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 		client.Auth(connection.Username, connection.Password)
 	}
 
+	if check.Oauth2 != nil {
+		client.OAuth(connection.Username, connection.Password, check.Oauth2.TokenURL, check.Oauth2.Scopes...)
+	}
+
 	client.NTLM(check.NTLM)
 	client.NTLMV2(check.NTLMv2)
 
@@ -88,8 +91,7 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 
 	// TODO: Add finer controls over tracing to the canary
 	if ctx.IsTrace() {
-		tracedTransport := middlewares.NewTracedTransport().TraceAll(true).MaxBodyLength(512)
-		client.Use(tracedTransport.RoundTripper)
+		client.Trace(http.TraceConfig{MaxBodyLength: 512, Body: true, Headers: true, ResponseHeaders: true})
 	}
 
 	return client.R(ctx), nil

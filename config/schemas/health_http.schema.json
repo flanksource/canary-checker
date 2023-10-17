@@ -139,6 +139,9 @@
             "$ref": "#/$defs/EnvVar"
           },
           "type": "array"
+        },
+        "oauth2": {
+          "$ref": "#/$defs/Oauth2Config"
         }
       },
       "additionalProperties": false,
@@ -212,6 +215,25 @@
       },
       "additionalProperties": false,
       "type": "object"
+    },
+    "Oauth2Config": {
+      "properties": {
+        "Scopes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "TokenURL": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "Scopes",
+        "TokenURL"
+      ]
     },
     "SecretKeySelector": {
       "properties": {

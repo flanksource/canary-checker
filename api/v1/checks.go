@@ -55,6 +55,11 @@ func (c Check) GetLabels() map[string]string {
 	return c.Labels
 }
 
+type Oauth2Config struct {
+	Scopes   []string
+	TokenURL string
+}
+
 type HTTPCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
@@ -87,6 +92,8 @@ type HTTPCheck struct {
 	TemplateBody bool `yaml:"templateBody,omitempty" json:"templateBody,omitempty"`
 	// EnvVars are the environment variables that are accesible to templated body
 	EnvVars []types.EnvVar `yaml:"env,omitempty" json:"env,omitempty"`
+	// Oauth2 Configuration. The client ID & Client secret should go to username & password respectively.
+	Oauth2 *Oauth2Config `yaml:"oauth2,omitempty" json:"oauth2,omitempty"`
 }
 
 func (c HTTPCheck) GetType() string {
