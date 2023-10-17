@@ -31,7 +31,7 @@ var Root = &cobra.Command{
 
 var httpPort = 8080
 var publicEndpoint = "http://localhost:8080"
-var includeCheck, prometheusURL string
+var prometheusURL string
 var pushServers, pullServers []string
 var sharedLibrary []string
 var exposeEnv bool
@@ -49,7 +49,9 @@ func ServerFlags(flags *pflag.FlagSet) {
 	_ = flags.MarkDeprecated("dev", "")
 
 	flags.StringVar(&publicEndpoint, "public-endpoint", publicEndpoint, "Host on which the health dashboard is exposed. Could be used for generting-links, redirects etc.")
-	flags.StringVar(&includeCheck, "include-check", "", "Run matching canaries - useful for debugging")
+	flags.StringSliceVar(&runner.IncludeCanaries, "include-check", []string{}, "Run matching canaries - useful for debugging")
+	flags.StringSliceVar(&runner.IncludeTypes, "include-type", []string{}, "Check type to disable")
+	flags.StringSliceVar(&runner.IncludeNamespaces, "include-namespace", []string{}, "Check type to disable")
 	flags.IntVar(&cache.DefaultCacheCount, "maxStatusCheckCount", 5, "Maximum number of past checks in the in memory cache")
 	flags.StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
 	flags.StringSliceVar(&pullServers, "pull-servers", []string{}, "push check results to multiple canary servers")
