@@ -3163,6 +3163,13 @@ spec:
                         type: boolean
                       oauth2:
                         description: Oauth2 Configuration. The client ID & Client secret should go to username & password respectively.
+                        properties:
+                          scope:
+                            items:
+                              type: string
+                            type: array
+                          tokenURL:
+                            type: string
                         type: object
                       password:
                         properties:

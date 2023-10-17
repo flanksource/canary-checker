@@ -2631,22 +2631,18 @@
     },
     "Oauth2Config": {
       "properties": {
-        "Scopes": {
+        "scope": {
           "items": {
             "type": "string"
           },
           "type": "array"
         },
-        "TokenURL": {
+        "tokenURL": {
           "type": "string"
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "Scopes",
-        "TokenURL"
-      ]
+      "type": "object"
     },
     "ObjectFieldSelector": {
       "properties": {

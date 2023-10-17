@@ -56,8 +56,8 @@ func (c Check) GetLabels() map[string]string {
 }
 
 type Oauth2Config struct {
-	Scopes   []string
-	TokenURL string
+	Scopes   []string `json:"scope,omitempty" yaml:"scope,omitempty"`
+	TokenURL string   `json:"tokenURL,omitempty" yaml:"tokenURL,omitempty"`
 }
 
 type HTTPCheck struct {
