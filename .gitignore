@@ -20,3 +20,4 @@ postgres-db/
 ui/scripts/
 Chart.lock
 chart/charts/
+.downloads

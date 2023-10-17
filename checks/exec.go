@@ -15,8 +15,9 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/commons/files"
+	"github.com/flanksource/commons/hash"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/duty/types"
 )
 
 type ExecChecker struct {
@@ -41,26 +42,65 @@ func (c *ExecChecker) Run(ctx *context.Context) pkg.Results {
 	return results
 }
 
-func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
-	check := extConfig.(v1.ExecCheck)
-	for i, env := range check.EnvVars {
+type execEnv struct {
+	envs       []string
+	mountPoint string
+}
+
+func (c *ExecChecker) prepareEnvironment(ctx *context.Context, check v1.ExecCheck) (*execEnv, error) {
+	var result execEnv
+
+	for _, env := range check.EnvVars {
 		val, err := ctx.GetEnvValueFromCache(env)
 		if err != nil {
-			return []*pkg.CheckResult{pkg.Fail(check, ctx.Canary).Failf("error fetching env value (name=%s): %v", env.Name, err)}
+			return nil, fmt.Errorf("error fetching env value (name=%s): %w", env.Name, err)
 		}
 
-		check.EnvVars[i].ValueStatic = val
+		result.envs = append(result.envs, fmt.Sprintf("%s=%s", env.Name, val))
+	}
+
+	if check.Checkout != nil {
+		if connection, err := ctx.HydrateConnectionByURL(check.Checkout.Connection); err != nil {
+			return nil, fmt.Errorf("error hydrating connection: %w", err)
+		} else if connection != nil {
+			check.Checkout.URL = connection.URL
+		}
+
+		if check.Checkout.URL == "" {
+			return nil, fmt.Errorf("error checking out. missing URL")
+		}
+
+		result.mountPoint = check.Checkout.Destination
+		if check.Checkout.Destination == "" {
+			pwd, _ := os.Getwd()
+			result.mountPoint = filepath.Join(pwd, ".downloads", hash.Sha256Hex(check.Checkout.URL))
+		}
+
+		if err := files.Getter(check.Checkout.URL, result.mountPoint); err != nil {
+			return nil, fmt.Errorf("error checking out %s: %w", check.Checkout.URL, err)
+		}
+	}
+
+	return &result, nil
+}
+
+func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
+	check := extConfig.(v1.ExecCheck)
+
+	env, err := c.prepareEnvironment(ctx, check)
+	if err != nil {
+		return []*pkg.CheckResult{pkg.Fail(check, ctx.Canary).Failf("something went wrong while preparing exec env: %v", err)}
 	}
 
 	switch runtime.GOOS {
 	case "windows":
-		return execPowershell(ctx, check)
+		return execPowershell(ctx, check, env)
 	default:
-		return execBash(ctx, check)
+		return execBash(ctx, check, env)
 	}
 }
 
-func execPowershell(ctx *context.Context, check v1.ExecCheck) pkg.Results {
+func execPowershell(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	ps, err := osExec.LookPath("powershell.exe")
 	if err != nil {
@@ -69,11 +109,17 @@ func execPowershell(ctx *context.Context, check v1.ExecCheck) pkg.Results {
 
 	args := []string{check.Script}
 	cmd := osExec.CommandContext(ctx, ps, args...)
-	cmd.Env = append(os.Environ(), envVarSlice(check.EnvVars)...)
+	if len(envParams.envs) != 0 {
+		cmd.Env = append(os.Environ(), envParams.envs...)
+	}
+	if envParams.mountPoint != "" {
+		cmd.Dir = envParams.mountPoint
+	}
+
 	return runCmd(cmd, result)
 }
 
-func execBash(ctx *context.Context, check v1.ExecCheck) pkg.Results {
+func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	fields := strings.Fields(check.Script)
 	if len(fields) == 0 {
@@ -81,7 +127,13 @@ func execBash(ctx *context.Context, check v1.ExecCheck) pkg.Results {
 	}
 
 	cmd := osExec.CommandContext(ctx, "bash", "-c", check.Script)
-	cmd.Env = append(os.Environ(), envVarSlice(check.EnvVars)...)
+	if len(envParams.envs) != 0 {
+		cmd.Env = append(os.Environ(), envParams.envs...)
+	}
+	if envParams.mountPoint != "" {
+		cmd.Dir = envParams.mountPoint
+	}
+
 	if err := setupConnection(ctx, check, cmd); err != nil {
 		return []*pkg.CheckResult{result.Failf("failed to setup connection: %v", err)}
 	}
@@ -186,15 +238,6 @@ func saveConfig(configTemplate *textTemplate.Template, view any) (string, error)
 	}
 
 	return configPath, nil
-}
-
-func envVarSlice(envs []types.EnvVar) []string {
-	result := make([]string, len(envs))
-	for i, env := range envs {
-		result[i] = fmt.Sprintf("%s=%s", env.Name, env.ValueStatic)
-	}
-
-	return result
 }
 
 var (

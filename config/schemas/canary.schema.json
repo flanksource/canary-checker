@@ -1585,6 +1585,9 @@
         },
         "certificate": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "destination": {
+          "type": "string"
         }
       },
       "additionalProperties": false,

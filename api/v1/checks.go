@@ -974,6 +974,9 @@ type GitCheckout struct {
 	Username    types.EnvVar `yaml:"username,omitempty" json:"username,omitempty"`
 	Password    types.EnvVar `yaml:"password,omitempty" json:"password,omitempty"`
 	Certificate types.EnvVar `yaml:"certificate,omitempty" json:"certificate,omitempty"`
+	// Destination is the full path to where the contents of the URL should be downloaded to.
+	// If left empty, the sha256 hash of the URL will be used as the dir name.
+	Destination string `yaml:"destination,omitempty" json:"destination,omitempty"`
 }
 
 type ExecCheck struct {
