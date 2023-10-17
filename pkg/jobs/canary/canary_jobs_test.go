@@ -42,7 +42,7 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 		err = db.Gorm.Create(canaryM).Error
 		Expect(err).To(BeNil())
 
-		response, err := db.GetAllCanariesForSync()
+		response, err := db.GetAllCanariesForSync("")
 		Expect(err).To(BeNil())
 		Expect(len(response)).To(Equal(1))
 	})
