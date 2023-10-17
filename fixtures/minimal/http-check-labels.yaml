@@ -13,7 +13,6 @@ spec:
         check: http-200
       responseCodes: [201, 200, 301]
       responseContent: ""
-      maxSSLExpiry: 7
     - endpoint: http://status.savanttools.com/?code=202
       name: http-pass-multiple
       labels:

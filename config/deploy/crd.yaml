@@ -3048,6 +3048,37 @@ spec:
                       endpoint:
                         description: 'Deprecated: Use url instead'
                         type: string
+                      env:
+                        description: EnvVars are the environment variables that are accesible to templated body
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            value:
+                              type: string
+                            valueFrom:
+                              properties:
+                                configMapKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
+                                secretKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
+                              type: object
+                          type: object
+                        type: array
                       headers:
                         description: Header fields to be used in the query
                         items:
@@ -3130,6 +3161,16 @@ spec:
                       ntlmv2:
                         description: NTLM when set to true will do authentication using NTLM v2 protocol
                         type: boolean
+                      oauth2:
+                        description: Oauth2 Configuration. The client ID & Client secret should go to username & password respectively.
+                        properties:
+                          scope:
+                            items:
+                              type: string
+                            type: array
+                          tokenURL:
+                            type: string
+                        type: object
                       password:
                         properties:
                           name:

@@ -133,6 +133,15 @@
         },
         "templateBody": {
           "type": "boolean"
+        },
+        "env": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
+        },
+        "oauth2": {
+          "$ref": "#/$defs/Oauth2Config"
         }
       },
       "additionalProperties": false,
@@ -201,6 +210,21 @@
           "type": "string"
         },
         "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Oauth2Config": {
+      "properties": {
+        "scope": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tokenURL": {
           "type": "string"
         }
       },

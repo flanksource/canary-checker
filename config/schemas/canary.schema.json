@@ -1697,6 +1697,15 @@
         },
         "templateBody": {
           "type": "boolean"
+        },
+        "env": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
+        },
+        "oauth2": {
+          "$ref": "#/$defs/Oauth2Config"
         }
       },
       "additionalProperties": false,
@@ -2357,6 +2366,21 @@
         "name",
         "podSpec"
       ]
+    },
+    "Oauth2Config": {
+      "properties": {
+        "scope": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tokenURL": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "ObjectFieldSelector": {
       "properties": {
