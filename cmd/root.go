@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"time"
 
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -69,6 +70,8 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringVar(&canary.UpstreamConf.Username, "upstream-user", "", "upstream username")
 	flags.StringVar(&canary.UpstreamConf.Password, "upstream-password", "", "upstream password")
 	flags.StringVar(&canary.UpstreamConf.AgentName, "agent-name", "", "name of this agent")
+	flags.IntVar(&canary.ReconcilePageSize, "upstream-page-size", 500, "upstream reconciliation page size")
+	flags.DurationVar(&canary.ReconcileMaxAge, "upstream-max-age", time.Hour*48, "upstream reconciliation max age")
 }
 
 func readFromEnv(v string) string {
