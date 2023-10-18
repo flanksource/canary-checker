@@ -5,10 +5,16 @@ permissions: read-all
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - docker-full
+          - docker-minimal
     steps:
       - name: Checkout code
         uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
       - name: Build Container
-        run: make docker
+        run: make ${{matrix.target}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

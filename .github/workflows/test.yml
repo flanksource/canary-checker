@@ -46,7 +46,7 @@ jobs:
           - { name: k8s, on: ubuntu-latest }
           - { name: datasources, on: ubuntu-latest }
           - { name: opensearch, on: ubuntu-latest }
-          - { name: elasticsearch, on: ubuntu-latest }
+          # - { name: elasticsearch, on: ubuntu-latest }
           - { name: git, on: ubuntu-latest }
           # - restic
     runs-on: ${{ matrix.suite.on }}

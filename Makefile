@@ -82,14 +82,17 @@ generate: .bin/controller-gen
 	.bin/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./api/..."
 
 # Build the docker image
-docker:
-	docker build . -f build/full/Dockerfile -t ${IMG_F}
+docker: docker-minimal docker-full
+
+docker-full:
+	docker build . -f build/full/Dockerfile -t ${IMG}
+
+docker-minimal:
 	docker build . -f build/minimal/Dockerfile -t ${IMG}
 
 # Build the docker image
 docker-dev: linux
 	docker build ./ -f build/dev/Dockerfile -t ${IMG}
-
 
 docker-push-%:
 	docker build . -f build/full/Dockerfile -t ${IMG_F}
