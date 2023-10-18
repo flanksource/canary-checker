@@ -3208,7 +3208,7 @@ spec:
                         description: Exact response content expected to be returned by the endpoint.
                         type: string
                       responseJSONContent:
-                        description: Path and value to of expect JSON response by the endpoint
+                        description: Deprecated, use expr and jsonpath function
                         properties:
                           path:
                             type: string
