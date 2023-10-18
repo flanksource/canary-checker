@@ -8,10 +8,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/flanksource/canary-checker/api/context"
-	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/upstream"
 	"gorm.io/gorm/clause"
@@ -27,7 +26,7 @@ var tablesToReconcile = []string{
 // ReconcileCanaryResults coordinates with upstream and pushes any resource
 // that are missing on the upstream.
 func ReconcileCanaryResults() {
-	ctx := context.New(nil, nil, db.Gorm, db.Pool, v1.Canary{})
+	ctx := dutyContext.NewContext(goctx.TODO()).WithDB(db.Gorm, db.Pool)
 
 	jobHistory := models.NewJobHistory("PushCanaryResultsToUpstream", "Canary", "")
 	_ = db.PersistJobHistory(jobHistory.Start())
@@ -161,5 +160,6 @@ func (t *UpstreamPushJob) run() error {
 	}
 	logger.Tracef("pushing %d canary results to upstream", pushData.Count())
 
-	return upstream.Push(goctx.Background(), UpstreamConf, pushData)
+	// TODO: Fix this after https://github.com/flanksource/canary-checker/pull/1351 is merged
+	return nil
 }

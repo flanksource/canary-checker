@@ -60,24 +60,30 @@ func (c *ExecChecker) prepareEnvironment(ctx *context.Context, check v1.ExecChec
 	}
 
 	if check.Checkout != nil {
+		sourceURL := check.Checkout.URL
+
 		if connection, err := ctx.HydrateConnectionByURL(check.Checkout.Connection); err != nil {
 			return nil, fmt.Errorf("error hydrating connection: %w", err)
 		} else if connection != nil {
-			check.Checkout.URL = connection.URL
+			goGetterURL, err := connection.AsGoGetterURL()
+			if err != nil {
+				return nil, fmt.Errorf("error getting go getter URL: %w", err)
+			}
+			sourceURL = goGetterURL
 		}
 
-		if check.Checkout.URL == "" {
+		if sourceURL == "" {
 			return nil, fmt.Errorf("error checking out. missing URL")
 		}
 
 		result.mountPoint = check.Checkout.Destination
-		if check.Checkout.Destination == "" {
+		if result.mountPoint == "" {
 			pwd, _ := os.Getwd()
-			result.mountPoint = filepath.Join(pwd, ".downloads", hash.Sha256Hex(check.Checkout.URL))
+			result.mountPoint = filepath.Join(pwd, ".downloads", hash.Sha256Hex(sourceURL))
 		}
 
-		if err := files.Getter(check.Checkout.URL, result.mountPoint); err != nil {
-			return nil, fmt.Errorf("error checking out %s: %w", check.Checkout.URL, err)
+		if err := files.Getter(sourceURL, result.mountPoint); err != nil {
+			return nil, fmt.Errorf("error checking out %s: %w", sourceURL, err)
 		}
 	}
 
