@@ -64,7 +64,7 @@ func (c *HTTPChecker) Run(ctx *context.Context) pkg.Results {
 }
 
 func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPCheck, connection *models.Connection) (*http.Request, error) {
-	client := http.NewClient().UserAgent("canary-checker/" + runner.Version)
+	client := http.NewClient().UserAgent("canary-checker/" + runner.Version).InsecureSkipVerify(true)
 
 	for _, header := range check.Headers {
 		value, err := ctx.GetEnvValueFromCache(header)
