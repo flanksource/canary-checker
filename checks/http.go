@@ -1,13 +1,13 @@
 package checks
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/PaesslerAG/jsonpath"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/commons/http"
 	"github.com/flanksource/duty/models"
@@ -210,28 +210,28 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		"json":    make(map[string]any),
 	}
 
+	responseBody, err := response.AsString()
+	if err != nil {
+		return results.ErrorMessage(err)
+	}
+	data["content"] = responseBody
+
 	if response.IsJSON() {
-		json, err := response.AsJSON()
-		data["json"] = json
-		if err == nil {
-			data["json"] = json
-			if check.ResponseJSONContent != nil && check.ResponseJSONContent.Path != "" {
-				err := checkJSONContent(json, check.ResponseJSONContent)
-				if err != nil {
-					return results.ErrorMessage(err)
-				}
-			}
+		var jsonContent interface{}
+		if err := json.Unmarshal([]byte(responseBody), &jsonContent); err == nil {
+			data["json"] = jsonContent
 		} else if check.Test.IsEmpty() {
 			return results.Failf("invalid json response: %v", err)
 		} else {
 			ctx.Tracef("ignoring invalid json response %v", err)
 		}
-	} else {
-		responseBody, _ := response.AsString()
-		data["content"] = responseBody
 	}
 
 	result.AddData(data)
+
+	if check.ResponseJSONContent != nil {
+		ctx.Tracef("jsonContent is deprecated")
+	}
 
 	if ok := response.IsOK(check.ResponseCodes...); !ok {
 		return results.Failf("response code invalid %d != %v", status, check.ResponseCodes)
@@ -271,30 +271,4 @@ func statusCodeToClass(statusCode int) string {
 	} else {
 		return "unknown"
 	}
-}
-
-func checkJSONContent(jsonContent map[string]any, jsonCheck *v1.JSONCheck) error {
-	if jsonCheck == nil {
-		return nil
-	}
-
-	jsonResult, err := jsonpath.Get(jsonCheck.Path, jsonContent)
-	if err != nil {
-		return fmt.Errorf("error getting jsonPath: %w", err)
-	}
-
-	switch s := jsonResult.(type) {
-	case string:
-		if s != jsonCheck.Value {
-			return fmt.Errorf("%v not equal to %v", s, jsonCheck.Value)
-		}
-	case fmt.Stringer:
-		if s.String() != jsonCheck.Value {
-			return fmt.Errorf("%v not equal to %v", s.String(), jsonCheck.Value)
-		}
-	default:
-		return fmt.Errorf("json response could not be parsed back to string")
-	}
-
-	return nil
 }
