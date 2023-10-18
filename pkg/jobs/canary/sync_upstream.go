@@ -1,6 +1,7 @@
 package canary
 
 import (
+	gocontext "context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -8,9 +9,9 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
-	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/upstream"
 	"github.com/flanksource/postq/pg"
@@ -35,12 +36,11 @@ const (
 // ReconcileChecks coordinates with upstream and pushes any resource
 // that are missing on the upstream.
 func ReconcileChecks() {
-	ctx := context.New(nil, nil, db.Gorm, db.Pool, v1.Canary{})
-
 	jobHistory := models.NewJobHistory("PushChecksToUpstream", "Canary", "")
 	_ = db.PersistJobHistory(jobHistory.Start())
 	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
 
+	ctx := dutyContext.NewContext(gocontext.TODO()).WithDB(db.Gorm, db.Pool)
 	reconciler := upstream.NewUpstreamReconciler(UpstreamConf, 5)
 	if err := reconciler.SyncAfter(ctx, "checks", ReconcileMaxAge); err != nil {
 		jobHistory.AddError(err.Error())
@@ -57,7 +57,7 @@ func SyncCheckStatuses() {
 	_ = db.PersistJobHistory(jobHistory.Start())
 	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
 
-	ctx := context.New(nil, nil, db.Gorm, db.Pool, v1.Canary{})
+	ctx := dutyContext.NewContext(gocontext.TODO()).WithDB(db.Gorm, db.Pool)
 	if err := upstream.SyncCheckStatuses(ctx, UpstreamConf, ReconcilePageSize); err != nil {
 		logger.Errorf("failed to run checkstatus sync job: %v", err)
 		jobHistory.AddError(err.Error())
@@ -65,7 +65,6 @@ func SyncCheckStatuses() {
 	}
 
 	jobHistory.IncrSuccess()
-	return
 }
 
 type CanaryPullResponse struct {
