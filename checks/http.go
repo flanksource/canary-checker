@@ -19,6 +19,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/metrics"
+	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/utils"
 )
 
@@ -63,7 +64,7 @@ func (c *HTTPChecker) Run(ctx *context.Context) pkg.Results {
 }
 
 func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPCheck, connection *models.Connection) (*http.Request, error) {
-	client := http.NewClient()
+	client := http.NewClient().UserAgent("canary-checker/" + runner.Version)
 
 	for _, header := range check.Headers {
 		value, err := ctx.GetEnvValueFromCache(header)
@@ -91,7 +92,11 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 
 	// TODO: Add finer controls over tracing to the canary
 	if ctx.IsTrace() {
-		client.Trace(http.TraceConfig{MaxBodyLength: 512, Body: true, Headers: true, ResponseHeaders: true})
+		client.TraceToStdout(http.TraceAll)
+		client.Trace(http.TraceAll)
+	} else if ctx.IsDebug() {
+		client.TraceToStdout(http.TraceHeaders)
+		client.Trace(http.TraceHeaders)
 	}
 
 	return client.R(ctx), nil
@@ -199,7 +204,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	data := map[string]interface{}{
 		"code":    status,
-		"headers": response.Header,
+		"headers": response.GetHeaders(),
 		"elapsed": time.Since(start),
 		"sslAge":  utils.Deref(age),
 		"json":    make(map[string]any),
