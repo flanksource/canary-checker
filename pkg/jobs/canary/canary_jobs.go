@@ -14,6 +14,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/push"
+	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
@@ -29,10 +30,6 @@ var CanaryConfigFiles []string
 var DataFile string
 var Executor bool
 var LogPass, LogFail bool
-
-// CanaryNamespaces is a list of namespaces whose canary specs should be synced.
-// If empty, all namespaces will be synced
-var CanaryNamespaces []string
 
 var Kommons *kommons.Client
 var Kubernetes kubernetes.Interface
@@ -69,6 +66,9 @@ var minimumTimeBetweenCanaryRuns = 10 * time.Second
 var canaryLastRuntimes = sync.Map{}
 
 func (job CanaryJob) Run() {
+	if runner.IsCanaryIgnored(&job.Canary.ObjectMeta) {
+		return
+	}
 	canaryID := job.DBCanary.ID.String()
 	val, _ := concurrentJobLocks.LoadOrStore(canaryID, &sync.Mutex{})
 	lock, ok := val.(*sync.Mutex)
@@ -279,6 +279,9 @@ func ScanCanaryConfigs() {
 		}
 
 		for _, canary := range configs {
+			if runner.IsCanaryIgnored(&canary.ObjectMeta) {
+				continue
+			}
 			_, err := db.PersistCanary(canary, path.Base(configfile))
 			if err != nil {
 				logger.Errorf("could not persist %s: %v", canary.Name, err)
@@ -300,6 +303,10 @@ func SyncCanaryJob(dbCanary pkg.Canary) error {
 
 	if canary.Spec.GetSchedule() == "@never" {
 		DeleteCanaryJob(canary.GetPersistedID())
+		return nil
+	}
+
+	if runner.IsCanaryIgnored(&canary.ObjectMeta) {
 		return nil
 	}
 
@@ -350,7 +357,7 @@ func SyncCanaryJob(dbCanary pkg.Canary) error {
 func SyncCanaryJobs() {
 	logger.Debugf("Syncing canary jobs")
 
-	canaries, err := db.GetAllCanariesForSync(CanaryNamespaces...)
+	canaries, err := db.GetAllCanariesForSync(runner.WatchNamespace)
 	if err != nil {
 		logger.Errorf("Failed to get canaries: %v", err)
 

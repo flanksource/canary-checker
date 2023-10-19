@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -523,6 +524,19 @@ type Metric struct {
 	Type   MetricType        `json:"type,omitempty"`
 	Labels map[string]string `json:"labels,omitempty"`
 	Value  float64           `json:"value,omitempty"`
+}
+
+func (m Metric) ID() string {
+	return fmt.Sprintf("%s-%s", m.Name, strings.Join(m.LabelNames(), "-"))
+}
+
+func (m Metric) LabelNames() []string {
+	var names []string
+	for k := range m.Labels {
+		names = append(names, k)
+	}
+	sort.Strings(names)
+	return names
 }
 
 func (m Metric) String() string {

@@ -74,7 +74,7 @@ type HTTPCheck struct {
 	ResponseCodes []int `yaml:"responseCodes,omitempty" json:"responseCodes,omitempty"`
 	// Exact response content expected to be returned by the endpoint.
 	ResponseContent string `yaml:"responseContent,omitempty" json:"responseContent,omitempty"`
-	// Path and value to of expect JSON response by the endpoint
+	// Deprecated, use expr and jsonpath function
 	ResponseJSONContent *JSONCheck `yaml:"responseJSONContent,omitempty" json:"responseJSONContent,omitempty"`
 	// Maximum number of days until the SSL Certificate expires.
 	MaxSSLExpiry int `yaml:"maxSSLExpiry,omitempty" json:"maxSSLExpiry,omitempty"`

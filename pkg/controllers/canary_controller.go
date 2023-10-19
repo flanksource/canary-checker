@@ -27,6 +27,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
+	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/kommons"
 	"github.com/go-logr/logr"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
@@ -46,9 +47,7 @@ var json = jsontime.ConfigWithCustomTimeFormat
 
 // CanaryReconciler reconciles a Canary object
 type CanaryReconciler struct {
-	IncludeCheck      string
-	IncludeNamespaces []string
-	LogPass, LogFail  bool
+	LogPass, LogFail bool
 	client.Client
 	Kubernetes  kubernetes.Interface
 	Kommons     *kommons.Client
@@ -68,21 +67,19 @@ const FinalizerName = "canary.canaries.flanksource.com"
 // +kubebuilder:rbac:groups="",resources=pods/exec,verbs=*
 // +kubebuilder:rbac:groups="",resources=pods/logs,verbs=*
 func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (ctrl.Result, error) {
-	if len(r.IncludeNamespaces) > 0 && !r.includeNamespace(req.Namespace) {
-		r.Log.V(2).Info("namespace not included, skipping")
-		return ctrl.Result{}, nil
-	}
-	if r.IncludeCheck != "" && r.IncludeCheck != req.Name {
-		r.Log.V(2).Info("check not included, skipping")
-		return ctrl.Result{}, nil
-	}
-
 	logger := r.Log.WithValues("canary", req.NamespacedName)
 	canary := &v1.Canary{}
 	err := r.Get(ctx, req.NamespacedName, canary)
 	if errors.IsNotFound(err) {
 		return ctrl.Result{}, nil
+	} else if err != nil {
+		return ctrl.Result{RequeueAfter: 10 * time.Minute}, corev1.ErrUnexpectedEndOfGroupGenerated
 	}
+
+	if runner.IsCanaryIgnored(&canary.ObjectMeta) {
+		return ctrl.Result{}, nil
+	}
+
 	canary.SetRunnerName(r.RunnerName)
 	// Add finalizer first if not exist to avoid the race condition between init and delete
 	if !controllerutil.ContainsFinalizer(canary, FinalizerName) {
@@ -218,13 +215,4 @@ func (r *CanaryReconciler) Report() {
 			r.Log.Error(err, "failed to update status", "canary", canary.Name)
 		}
 	}
-}
-
-func (r *CanaryReconciler) includeNamespace(namespace string) bool {
-	for _, n := range r.IncludeNamespaces {
-		if n == namespace {
-			return true
-		}
-	}
-	return false
 }

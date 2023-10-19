@@ -23,7 +23,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func GetAllCanariesForSync(namespaces ...string) ([]pkg.Canary, error) {
+func GetAllCanariesForSync(namespace string) ([]pkg.Canary, error) {
 	query := `
         SELECT json_agg(
             jsonb_set_lax(to_jsonb(canaries),'{checks}', (
@@ -44,9 +44,9 @@ func GetAllCanariesForSync(namespaces ...string) ([]pkg.Canary, error) {
 
 	args := make(pgx.NamedArgs)
 
-	if namespaces != nil {
-		query += " AND namespace = ANY(@namespaces)"
-		args["namespaces"] = namespaces
+	if namespace != "" {
+		query += " AND namespace = @namespace"
+		args["namespace"] = namespace
 	}
 
 	rows, err := Pool.Query(context.Background(), query, args)

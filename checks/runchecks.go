@@ -16,6 +16,8 @@ import (
 
 var checksCache = cache.New(5*time.Minute, 5*time.Minute)
 
+var DisabledChecks []string
+
 func getDisabledChecks(ctx *context.Context) (map[string]struct{}, error) {
 	if val, ok := checksCache.Get("disabledChecks"); ok {
 		return val.(map[string]struct{}), nil
@@ -39,6 +41,10 @@ func getDisabledChecks(ctx *context.Context) (map[string]struct{}, error) {
 		}
 
 		result[strings.TrimPrefix(name, "check.disabled.")] = struct{}{}
+	}
+
+	for _, check := range DisabledChecks {
+		result[check] = struct{}{}
 	}
 
 	if rows.Err() != nil {

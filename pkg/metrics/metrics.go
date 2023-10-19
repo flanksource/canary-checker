@@ -7,7 +7,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/runner"
-	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/prometheus/client_golang/prometheus"
@@ -142,6 +141,12 @@ func GetMetrics(key string) (uptime pkg.Uptime, latency pkg.Latency) {
 }
 
 func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _latency pkg.Latency) {
+	defer func() {
+		e := recover()
+		if e != nil {
+			logger.Errorf("panic recording metrics for %s/%s/%s ==> %s", canary.Namespace, canary.Name, result, e)
+		}
+	}()
 	if result == nil || result.Check == nil {
 		logger.Warnf("%s/%s returned a nil result", canary.Namespace, canary.Name)
 		return _uptime, _latency
@@ -240,60 +245,67 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 	return _uptime, _latency
 }
 
-func getOrCreateGauge(m pkg.Metric) (e any) {
-	defer func() {
-		e = recover()
-	}()
-
+func getOrCreateGauge(m pkg.Metric) error {
 	var gauge *prometheus.GaugeVec
 	var ok bool
-	if gauge, ok = CustomGauges[m.Name]; !ok {
+	if gauge, ok = CustomGauges[m.ID()]; !ok {
 		gauge = prometheus.V2.NewGaugeVec(prometheus.GaugeVecOpts{
+			VariableLabels: prometheus.UnconstrainedLabels(m.LabelNames()),
 			GaugeOpts: prometheus.GaugeOpts{
 				Name: m.Name,
 			},
 		})
-		CustomGauges[m.Name] = gauge
+		CustomGauges[m.ID()] = gauge
 	}
 
-	gauge.With(m.Labels).Set(m.Value)
-	return nil
+	if metric, err := gauge.GetMetricWith(m.Labels); err != nil {
+		return err
+	} else {
+		metric.Set(m.Value)
+		return nil
+	}
 }
 
-func getOrCreateCounter(m pkg.Metric) (e any) {
-	defer func() {
-		e = recover()
-	}()
+func getOrCreateCounter(m pkg.Metric) error {
 	var counter *prometheus.CounterVec
 	var ok bool
 
-	if counter, ok = CustomCounters[m.Name]; !ok {
-		counter = prometheus.NewCounterVec(
-			prometheus.CounterOpts{Name: m.Name},
-			utils.MapKeys(m.Labels),
-		)
-		CustomCounters[m.Name] = counter
+	if counter, ok = CustomCounters[m.ID()]; !ok {
+		counter = prometheus.V2.NewCounterVec(prometheus.CounterVecOpts{
+			VariableLabels: prometheus.UnconstrainedLabels(m.LabelNames()),
+			CounterOpts: prometheus.CounterOpts{
+				Name: m.Name,
+			},
+		})
+		CustomCounters[m.ID()] = counter
 	}
-	counter.With(m.Labels).Add(m.Value)
-	return nil
+
+	if metric, err := counter.GetMetricWith(m.Labels); err != nil {
+		return err
+	} else {
+		metric.Add(m.Value)
+		return nil
+	}
 }
 
-func getOrCreateHistogram(m pkg.Metric) (e any) {
-	defer func() {
-		e = recover()
-	}()
+func getOrCreateHistogram(m pkg.Metric) error {
 	var histogram *prometheus.HistogramVec
 	var ok bool
-	if histogram, ok = CustomHistograms[m.Name]; !ok {
+	if histogram, ok = CustomHistograms[m.ID()]; !ok {
 		histogram = prometheus.V2.NewHistogramVec(prometheus.HistogramVecOpts{
+			VariableLabels: prometheus.UnconstrainedLabels(m.LabelNames()),
 			HistogramOpts: prometheus.HistogramOpts{
 				Name: m.Name,
 			},
 		})
-		CustomHistograms[m.Name] = histogram
+		CustomHistograms[m.ID()] = histogram
 	}
-	histogram.With(m.Labels).Observe(m.Value)
-	return nil
+	if metric, err := histogram.GetMetricWith(m.Labels); err != nil {
+		return err
+	} else {
+		metric.Observe(m.Value)
+		return nil
+	}
 }
 
 func FillLatencies(checkKey string, duration string, latency *pkg.Latency) error {
