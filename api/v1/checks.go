@@ -968,6 +968,17 @@ type ExecConnections struct {
 	Azure *AzureConnection `yaml:"azure,omitempty" json:"azure,omitempty"`
 }
 
+type GitCheckout struct {
+	URL         string       `yaml:"url,omitempty" json:"url,omitempty"`
+	Connection  string       `yaml:"connection,omitempty" json:"connection,omitempty"`
+	Username    types.EnvVar `yaml:"username,omitempty" json:"username,omitempty"`
+	Password    types.EnvVar `yaml:"password,omitempty" json:"password,omitempty"`
+	Certificate types.EnvVar `yaml:"certificate,omitempty" json:"certificate,omitempty"`
+	// Destination is the full path to where the contents of the URL should be downloaded to.
+	// If left empty, the sha256 hash of the URL will be used as the dir name.
+	Destination string `yaml:"destination,omitempty" json:"destination,omitempty"`
+}
+
 type ExecCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
@@ -975,6 +986,10 @@ type ExecCheck struct {
 	// On windows executed via powershell and in darwin and linux executed using bash
 	Script      string          `yaml:"script" json:"script"`
 	Connections ExecConnections `yaml:"connections,omitempty" json:"connections,omitempty"`
+	// EnvVars are the environment variables that are accesible to exec processes
+	EnvVars []types.EnvVar `yaml:"env,omitempty" json:"env,omitempty"`
+	// Checkout details the git repository that should be mounted to the process
+	Checkout *GitCheckout `yaml:"checkout,omitempty" json:"checkout,omitempty"`
 }
 
 func (c ExecCheck) GetType() string {

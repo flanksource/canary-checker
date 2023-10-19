@@ -1573,6 +1573,15 @@
         },
         "connections": {
           "$ref": "#/$defs/ExecConnections"
+        },
+        "env": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
+        },
+        "checkout": {
+          "$ref": "#/$defs/GitCheckout"
         }
       },
       "additionalProperties": false,
@@ -1771,6 +1780,30 @@
         "project",
         "instance"
       ]
+    },
+    "GitCheckout": {
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "certificate": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "destination": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "GitHubCheck": {
       "properties": {

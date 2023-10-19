@@ -1,0 +1,15 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: exec-checkout
+spec:
+  interval: 30
+  exec:
+    - name: exec-checkout
+      description: "exec with git"
+      script: |
+        cat go.mod | head -n 1
+      checkout:
+        url: github.com/flanksource/duty
+      test:
+        expr: 'results.stdout == "module github.com/flanksource/duty"'
