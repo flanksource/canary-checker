@@ -2,6 +2,8 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: aws-exec
+  labels:
+    "Expected-Fail": "true"
 spec:
   interval: 30
   exec:
