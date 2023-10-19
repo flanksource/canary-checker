@@ -10,6 +10,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/commons/http"
+	"github.com/flanksource/commons/http/middlewares"
 	"github.com/flanksource/duty/models"
 	gomplate "github.com/flanksource/gomplate/v3"
 
@@ -80,7 +81,12 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 	}
 
 	if check.Oauth2 != nil {
-		client.OAuth(connection.Username, connection.Password, check.Oauth2.TokenURL, check.Oauth2.Scopes...)
+		client.OAuth(middlewares.OauthConfig{
+			ClientID:     connection.Username,
+			ClientSecret: connection.Password,
+			TokenURL:     check.Oauth2.TokenURL,
+			Scopes:       check.Oauth2.Scopes,
+		})
 	}
 
 	client.NTLM(check.NTLM)
