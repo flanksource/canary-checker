@@ -1,0 +1,15 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: aws-exec
+spec:
+  interval: 30
+  exec:
+    - name: aws-exec-check
+      description: "exec s3 list"
+      script: aws s3 ls | head -n 1
+      connections:
+        aws:
+          connection: connection://AWS/flanksource
+      test:
+        expr: results.stdout == '2023-05-25 11:49:22 cf-templates-3ci8g0qv95rq-eu-west-1'

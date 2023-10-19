@@ -20,8 +20,8 @@ require (
 	github.com/eko/gocache/store/bigcache/v4 v4.2.1
 	github.com/elastic/go-elasticsearch/v8 v8.10.0
 	github.com/fergusstrange/embedded-postgres v1.24.0
-	github.com/flanksource/commons v1.16.0
-	github.com/flanksource/duty v1.0.197
+	github.com/flanksource/commons v1.17.0
+	github.com/flanksource/duty v1.0.201
 	github.com/flanksource/gomplate/v3 v3.20.18
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
 	github.com/flanksource/kommons v0.31.4
@@ -94,7 +94,7 @@ require (
 	github.com/antonmedv/expr v1.15.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
-	github.com/aws/aws-sdk-go v1.45.27 // indirect
+	github.com/aws/aws-sdk-go v1.45.28 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.13 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.11 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.41 // indirect
@@ -166,7 +166,7 @@ require (
 	github.com/hashicorp/go-getter v1.7.3 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
-	github.com/hashicorp/hcl/v2 v2.19.0 // indirect
+	github.com/hashicorp/hcl/v2 v2.19.1 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/itchyny/gojq v0.12.13 // indirect
