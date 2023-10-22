@@ -27,6 +27,10 @@ var Root = &cobra.Command{
 		if db.ConnectionString == "DB_URL" {
 			db.ConnectionString = ""
 		}
+
+		if canary.UpstreamConf.Valid() {
+			logger.Infof("Pushing checks to %s with name=%s user=%s", canary.UpstreamConf.Host, canary.UpstreamConf.AgentName, canary.UpstreamConf.Username)
+		}
 	},
 }
 
@@ -65,13 +69,12 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&db.CheckRetentionDays, "check-retention-period", db.DefaultCheckRetentionDays, "Check retention period in days")
 	flags.IntVar(&db.CanaryRetentionDays, "canary-retention-period", db.DefaultCanaryRetentionDays, "Canary retention period in days")
 
-	// Flags for push/pull
-	flags.StringVar(&canary.UpstreamConf.Host, "upstream-host", "", "central canary checker instance to push/pull canaries")
-	flags.StringVar(&canary.UpstreamConf.Username, "upstream-user", "", "upstream username")
-	flags.StringVar(&canary.UpstreamConf.Password, "upstream-password", "", "upstream password")
-	flags.StringVar(&canary.UpstreamConf.AgentName, "agent-name", "", "name of this agent")
 	flags.IntVar(&canary.ReconcilePageSize, "upstream-page-size", 500, "upstream reconciliation page size")
 	flags.DurationVar(&canary.ReconcileMaxAge, "upstream-max-age", time.Hour*48, "upstream reconciliation max age")
+	flags.StringVar(&canary.UpstreamConf.Host, "upstream-host", os.Getenv("UPSTREAM_HOST"), "central canary checker instance to push/pull canaries")
+	flags.StringVar(&canary.UpstreamConf.Username, "upstream-user", os.Getenv("UPSTREAM_USER"), "upstream username")
+	flags.StringVar(&canary.UpstreamConf.Password, "upstream-password", os.Getenv("UPSTREAM_PASSWORD"), "upstream password")
+	flags.StringVar(&canary.UpstreamConf.AgentName, "agent-name", os.Getenv("UPSTREAM_NAME"), "name of this agent")
 }
 
 func readFromEnv(v string) string {
