@@ -140,6 +140,9 @@ spec:
             {{- if gt (int .Values.replicas) 1 }}
             - --enable-leader-election=true
             {{- end }}
+            {{- range $k, $v := .Values.extraArgs}}
+            - --{{$k}}={{$v}}
+            {{- end }}
             {{- if .Values.upstream.enabled }}
             - --agent-name={{ .Values.upstream.agentName }}
             - --upstream-host=$UPSTREAM_HOST

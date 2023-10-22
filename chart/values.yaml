@@ -133,6 +133,8 @@ disableChecks: {}
 # a list of db properties to update on startup
 properties: {}
 
+# a map of extra arguments to the canary-checker cli
+extraArgs: {}
 extra:
   # nodeSelector:
   #   key: value
