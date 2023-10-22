@@ -58,7 +58,11 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
-	result.AddDetails(alarms)
+	if o, err := unstructure(alarms); err != nil {
+		return results.ErrorMessage(err)
+	} else {
+		result.AddDetails(o)
+	}
 	firing := []string{}
 	for _, alarm := range alarms.MetricAlarms {
 		if alarm.StateValue == types.StateValueAlarm {
