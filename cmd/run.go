@@ -126,7 +126,7 @@ var Run = &cobra.Command{
 			if err != nil {
 				logger.Fatalf("Failed to marshall json: %s", err)
 			}
-			output.HandleOutput(string(data), outputFile)
+			_ = output.HandleOutput(string(data), outputFile)
 		}
 
 		logger.Infof("%d passed, %d failed in %s", passed, failed, timer)

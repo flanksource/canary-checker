@@ -53,7 +53,6 @@ func def(a, b string) string {
 
 // unstructure marshalls a struct to and from JSON to remove any type details
 func unstructure(o any) (out interface{}, err error) {
-
 	data, err := json.Marshal(o)
 	if err != nil {
 		return nil, err
