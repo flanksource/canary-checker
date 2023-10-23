@@ -401,21 +401,23 @@ type URL struct {
 
 type SystemResult struct{}
 type CheckResult struct {
-	Start       time.Time
-	Pass        bool
-	Invalid     bool
-	Detail      interface{}
-	Data        map[string]interface{}
-	Duration    int64
-	Description string
-	DisplayType string
-	Message     string
-	Error       string
-	Metrics     []Metric
-	Transformed bool
+	Name        string                 `json:"name,omitempty"`
+	Start       time.Time              `json:"start,omitempty"`
+	Pass        bool                   `json:"pass,omitempty"`
+	Invalid     bool                   `json:"invalid,omitempty"`
+	Detail      interface{}            `json:"detail,omitempty"`
+	Data        map[string]interface{} `json:"data,omitempty"`
+	Labels      map[string]string      `json:"labels,omitempty"`
+	Duration    int64                  `json:"duration,omitempty"`
+	Description string                 `json:"description,omitempty"`
+	DisplayType string                 `json:"display_type,omitempty"`
+	Message     string                 `json:"message,omitempty"`
+	Error       string                 `json:"error,omitempty"`
+	Metrics     []Metric               `json:"metrics,omitempty"`
+	Transformed bool                   `json:"transformed,omitempty"`
 	// Check is the configuration
-	Check  external.Check
-	Canary v1.Canary
+	Check  external.Check `json:"-"`
+	Canary v1.Canary      `json:"-"`
 }
 
 func (result CheckResult) GetDescription() string {

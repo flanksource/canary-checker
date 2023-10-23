@@ -62,8 +62,7 @@ RUN curl -L https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-${JMETER_VER
 
 ENV PATH /opt/apache-jmeter-${JMETER_VERSION}/bin/:$PATH
 
-
-RUN curl -L  https://github.com/mergestat/mergestat-lite/releases/download/v0.6.1/mergestat-linux-amd64.tar.gz -o mergestat.tar.gz && \
+RUN curl -L https://github.com/flanksource/askgit/releases/download/v0.61.0-flanksource.1/mergestat-linux-amd64.tar.gz  -o mergestat.tar.gz && \
   tar zxf mergestat.tar.gz -C /usr/local/bin/ && \
   rm mergestat.tar.gz
 

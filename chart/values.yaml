@@ -73,9 +73,12 @@ data:
 upstream:
   enabled: false
   agentName: default-agent
-  # Must contain: UPSTREAM_USER, UPSTREAM_PASS & UPSTREAM_HOST
+  host: ""
+  user: ""
+  password: ""
+  # Alternative to inlining values, secret must contain: UPSTREAM_NAME, UPSTREAM_USER, UPSTREAM_PASSWORD & UPSTREAM_HOST
   secretKeyRef:
-    name: canary-checker-upstream
+    name:
 
 ingress:
   enabled: false
@@ -133,6 +136,8 @@ disableChecks: {}
 # a list of db properties to update on startup
 properties: {}
 
+# a map of extra arguments to the canary-checker cli
+extraArgs: {}
 extra:
   # nodeSelector:
   #   key: value

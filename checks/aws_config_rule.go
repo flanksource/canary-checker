@@ -3,8 +3,8 @@
 package checks
 
 import (
-	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
@@ -65,44 +65,82 @@ func (c *AwsConfigRuleChecker) Check(ctx *context.Context, extConfig external.Ch
 	if err != nil {
 		return results.Failf("failed to describe compliance rules: %v", err)
 	}
-	var complianceResults pkg.Results
+
+	type ConfigRuleResource struct {
+		ID         string    `json:"id"`
+		Annotation string    `json:"annotation"`
+		Type       string    `json:"type"`
+		Recorded   time.Time `json:"recorded"`
+		Mode       string    `json:"mode"`
+	}
+
+	type ComplianceResult struct {
+
+		// Supplementary information about how the evaluation determined the compliance.
+		Annotation string `json:"annotation"`
+
+		ConfigRule string `json:"rule"`
+
+		Description string `json:"description"`
+		// Indicates whether the Amazon Web Services resource complies with the Config
+		// rule that evaluated it. For the EvaluationResult data type, Config supports
+		// only the COMPLIANT , NON_COMPLIANT , and NOT_APPLICABLE values. Config does not
+		// support the INSUFFICIENT_DATA value for the EvaluationResult data type.
+		ComplianceType string `json:"type"`
+
+		Resources []ConfigRuleResource `json:"resources"`
+	}
+
+	var complianceResults []ComplianceResult
+	var failures []string
 	for _, complianceRule := range output.ComplianceByConfigRules {
 		if configRuleInRules(check.IgnoreRules, *complianceRule.ConfigRuleName) || complianceRule.Compliance.ComplianceType == "INSUFFICIENT_DATA" || complianceRule.Compliance.ComplianceType == "NOT_APPLICABLE" {
 			continue
 		}
-		if complianceRule.Compliance != nil {
-			var complianceResult *pkg.CheckResult
-			complianceCheck := check
-			complianceCheck.Description.Description = fmt.Sprintf("%s - checking compliance for config rule: %s", check.Description.Description, *complianceRule.ConfigRuleName)
-			if complianceRule.Compliance.ComplianceType != "COMPLIANT" {
-				complianceResult = pkg.Fail(complianceCheck, ctx.Canary)
-				complianceDetailsOutput, err := client.GetComplianceDetailsByConfigRule(ctx, &configservice.GetComplianceDetailsByConfigRuleInput{
-					ComplianceTypes: []types.ComplianceType{
-						"NON_COMPLIANT",
-					},
-					ConfigRuleName: complianceRule.ConfigRuleName,
-				})
-				if err != nil {
-					complianceResult.Failf("failed to get compliance details: %v", err)
-					continue
-				}
-				var resources []string
-				for _, result := range complianceDetailsOutput.EvaluationResults {
-					if result.EvaluationResultIdentifier.EvaluationResultQualifier.ResourceId != nil {
-						resources = append(resources, *result.EvaluationResultIdentifier.EvaluationResultQualifier.ResourceId)
-					}
-				}
-				complianceResult.AddDetails(resources)
-				complianceResult.ResultMessage(strings.Join(resources, ","))
-			} else {
-				complianceResult = pkg.Success(complianceCheck, ctx.Canary)
-				complianceResult.AddDetails(complianceRule)
-				complianceResult.ResultMessage(fmt.Sprintf("%s rule is %v", *complianceRule.ConfigRuleName, complianceRule.Compliance.ComplianceType))
-			}
-			complianceResults = append(complianceResults, complianceResult)
+
+		if complianceRule.Compliance == nil {
+			continue
 		}
+		var data = ComplianceResult{
+			ConfigRule:     *complianceRule.ConfigRuleName,
+			ComplianceType: string(complianceRule.Compliance.ComplianceType),
+		}
+
+		if complianceRule.Compliance.ComplianceType != "COMPLIANT" {
+			failures = append(failures, *complianceRule.ConfigRuleName)
+			complianceDetailsOutput, err := client.GetComplianceDetailsByConfigRule(ctx, &configservice.GetComplianceDetailsByConfigRuleInput{
+				ComplianceTypes: []types.ComplianceType{
+					"NON_COMPLIANT",
+				},
+				ConfigRuleName: complianceRule.ConfigRuleName,
+			})
+			if err != nil {
+				result.Failf("failed to get compliance details: %v", err)
+				continue
+			}
+			for _, result := range complianceDetailsOutput.EvaluationResults {
+				id := *result.EvaluationResultIdentifier.EvaluationResultQualifier
+				data.Resources = append(data.Resources, ConfigRuleResource{
+					ID:         *id.ResourceId,
+					Type:       *id.ResourceType,
+					Mode:       string(id.EvaluationMode),
+					Recorded:   *result.ResultRecordedTime,
+					Annotation: *result.Annotation,
+				})
+			}
+		}
+		complianceResults = append(complianceResults, data)
 	}
-	return complianceResults
+
+	if check.Test.IsEmpty() && len(failures) > 0 {
+		result.Failf(strings.Join(failures, ", "))
+	}
+	if r, err := unstructure(map[string]interface{}{"rules": complianceResults}); err != nil {
+		result.Failf(err.Error())
+	} else {
+		result.AddDetails(r)
+	}
+	return results
 }
 
 func configRuleInRules(rules []string, ruleName string) bool {

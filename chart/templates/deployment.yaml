@@ -95,7 +95,7 @@ spec:
               {{- else }}
               value: "embedded:///opt/database/"
               {{- end }}
-          {{- if .Values.upstream.enabled }}
+          {{- if .Values.upstream.secretKeyRef.name }}
           envFrom:
             - secretRef:
                 name: {{ .Values.upstream.secretKeyRef.name }}
@@ -140,11 +140,21 @@ spec:
             {{- if gt (int .Values.replicas) 1 }}
             - --enable-leader-election=true
             {{- end }}
+            {{- range $k, $v := .Values.extraArgs}}
+            - --{{$k}}={{$v}}
+            {{- end }}
+
             {{- if .Values.upstream.enabled }}
             - --agent-name={{ .Values.upstream.agentName }}
-            - --upstream-host=$UPSTREAM_HOST
-            - --upstream-user=$UPSTREAM_USER
-            - --upstream-password=$UPSTREAM_PASSWORD
+            {{- if .Values.upstream.host }}
+            - --upstream-host={{ .Values.upstream.host }}
+            {{- end}}
+            {{- if .Values.upstream.user }}
+            - --upstream-user={{ .Values.upstream.user }}
+            {{- end}}
+            {{- if .Values.upstream.password }}
+            - --upstream-password={{ .Values.upstream.password }}
+            {{- end}}
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

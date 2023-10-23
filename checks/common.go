@@ -51,6 +51,16 @@ func def(a, b string) string {
 	return b
 }
 
+// unstructure marshalls a struct to and from JSON to remove any type details
+func unstructure(o any) (out interface{}, err error) {
+	data, err := json.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(data, &out)
+	return out, err
+}
+
 func template(ctx *context.Context, template v1.Template) (string, error) {
 	return gomplate.RunTemplate(ctx.Environment, template.Gomplate())
 }
@@ -107,6 +117,7 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 			// We use this label to set the transformed column to true
 			// This label is used and then removed in pkg.FromV1 function
 			r.Canary.Labels["transformed"] = "true" //nolint:goconst
+			r.Labels = t.Labels
 			r.Transformed = true
 			results = append(results, &r)
 		}
@@ -144,6 +155,9 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 		if t.DisplayType != "" {
 			in.DisplayType = t.DisplayType
 		}
+		if len(t.Labels) > 0 {
+			in.Labels = t.Labels
+		}
 		if len(t.Data) > 0 {
 			for k, v := range t.Data {
 				in.Data[k] = v
@@ -166,6 +180,7 @@ func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) Ju
 		test.Name = result.Check.GetDescription()
 		test.Message = result.Message
 		test.Duration = float64(result.Duration) / 1000
+		test.Properties = result.Labels
 		testSuite.Duration += float64(result.Duration) / 1000
 		if result.Pass {
 			testSuite.Passed++

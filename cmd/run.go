@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -22,7 +23,7 @@ import (
 )
 
 var outputFile, dataFile, runNamespace string
-var junit, csv bool
+var junit, csv, jsonExport bool
 
 var Run = &cobra.Command{
 	Use:   "run <canary.yaml>",
@@ -112,6 +113,21 @@ var Run = &cobra.Command{
 				logger.Fatalf("error writing output file: %v", err)
 			}
 		}
+		if jsonExport {
+
+			for _, result := range results {
+				result.Name = def(result.Name, result.Check.GetName(), result.Canary.Name)
+				result.Description = def(result.Description, result.Check.GetDescription())
+				result.Labels = merge(result.Check.GetLabels(), result.Labels)
+				fmt.Println(result.Name)
+			}
+
+			data, err := json.Marshal(results)
+			if err != nil {
+				logger.Fatalf("Failed to marshall json: %s", err)
+			}
+			_ = output.HandleOutput(string(data), outputFile)
+		}
 
 		logger.Infof("%d passed, %d failed in %s", passed, failed, timer)
 
@@ -121,11 +137,32 @@ var Run = &cobra.Command{
 	},
 }
 
+func merge(m1, m2 map[string]string) map[string]string {
+	out := make(map[string]string)
+	for k, v := range m1 {
+		out[k] = v
+	}
+	for k, v := range m2 {
+		out[k] = v
+	}
+	return out
+}
+
+func def(a ...string) string {
+	for _, s := range a {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
 func init() {
 	Run.PersistentFlags().StringVarP(&dataFile, "data", "d", "", "Template out each spec using the JSON or YAML data in this file")
 	Run.PersistentFlags().StringVarP(&outputFile, "output-file", "o", "", "file to output the results in")
 	Run.Flags().StringVarP(&runNamespace, "namespace", "n", "", "Namespace to run canary checks in")
-	Run.Flags().BoolVarP(&junit, "junit", "j", false, "output results in junit format")
+	Run.Flags().BoolVar(&junit, "junit", false, "output results in junit format")
+	Run.Flags().BoolVarP(&jsonExport, "json", "j", false, "output results in json format")
 	Run.Flags().BoolVar(&csv, "csv", false, "output results in csv format")
 }
 

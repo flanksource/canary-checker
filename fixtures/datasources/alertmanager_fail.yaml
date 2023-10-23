@@ -16,17 +16,13 @@ spec:
       exclude_filters:
         namespace: elastic-system
       transform:
-        javascript: |
-          var out = _.map(results, function(r) {
-            return {
-              name: r.name,
-              labels: r.labels,
-              icon: 'alert',
-              message: r.message,
-              description: r.message,
-              status: 'unhealthy',
+        expr: |
+          results.alerts.map(r,
+              {
+              'name': r.name + r.fingerprint,
+              'labels': r.labels,
+              'icon': 'alert',
+              'message': r.message,
+              'description': r.message,
             }
-          })
-          JSON.stringify(out);
-      test:
-        template: "true"
+          ).toJSON()
