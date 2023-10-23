@@ -15,14 +15,14 @@ spec:
         - KubeScheduler.*
       exclude_filters:
         namespace: elastic-system
-        transform:
-          expr: |
-            results.alerts.map(r,
-               {
-                'name': r.name + r.fingerprint,
-                'labels': r.labels,
-                'icon': 'alert',
-                'message': r.message,
-                'description': r.message,
-              }
-            ).toJSON()
+      transform:
+        expr: |
+          results.alerts.map(r,
+              {
+              'name': r.name + r.fingerprint,
+              'labels': r.labels,
+              'icon': 'alert',
+              'message': r.message,
+              'description': r.message,
+            }
+          ).toJSON()
