@@ -13,7 +13,7 @@ require (
 	cloud.google.com/go/compute v1.23.1 // indirect
 	cloud.google.com/go/iam v1.1.3 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
-	github.com/flanksource/gomplate/v3 v3.20.18 // indirect
+	github.com/flanksource/gomplate/v3 v3.20.19 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.1 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
@@ -41,7 +41,7 @@ require (
 	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/flanksource/duty v1.0.201 // indirect
+	github.com/flanksource/duty v1.0.204 // indirect
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7 // indirect
 	github.com/flanksource/mapstructure v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
