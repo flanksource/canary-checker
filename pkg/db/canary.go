@@ -1,7 +1,7 @@
 package db
 
 import (
-	"context"
+	gocontext "context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +15,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/google/uuid"
@@ -23,7 +24,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func GetAllCanariesForSync(namespace string) ([]pkg.Canary, error) {
+func GetAllCanariesForSync(ctx context.Context, namespace string) ([]pkg.Canary, error) {
 	query := `
         SELECT json_agg(
             jsonb_set_lax(to_jsonb(canaries),'{checks}', (
@@ -49,7 +50,7 @@ func GetAllCanariesForSync(namespace string) ([]pkg.Canary, error) {
 		args["namespace"] = namespace
 	}
 
-	rows, err := Pool.Query(context.Background(), query, args)
+	rows, err := ctx.Pool().Query(ctx, query, args)
 	if err != nil {
 		return nil, err
 	}
@@ -125,9 +126,9 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 	return check.ID, nil
 }
 
-func GetTransformedCheckIDs(canaryID string) ([]string, error) {
+func GetTransformedCheckIDs(ctx context.Context, canaryID string) ([]string, error) {
 	var ids []string
-	err := Gorm.Table("checks").
+	err := ctx.DB().Table("checks").
 		Select("id").
 		Where("canary_id = ? AND transformed = true AND deleted_at IS NULL", canaryID).
 		Find(&ids).
@@ -135,7 +136,7 @@ func GetTransformedCheckIDs(canaryID string) ([]string, error) {
 	return ids, err
 }
 
-func AddCheckStatuses(ids []string, status models.CheckHealthStatus) error {
+func AddCheckStatuses(ctx context.Context, ids []string, status models.CheckHealthStatus) error {
 	if len(ids) == 0 {
 		return nil
 	}
@@ -158,12 +159,12 @@ func AddCheckStatuses(ids []string, status models.CheckHealthStatus) error {
 			})
 		}
 	}
-	return Gorm.Table("check_statuses").
+	return ctx.DB().Table("check_statuses").
 		Create(objs).
 		Error
 }
 
-func RemoveTransformedChecks(ids []string) error {
+func RemoveTransformedChecks(ctx context.Context, ids []string) error {
 	if len(ids) == 0 {
 		return nil
 	}
@@ -171,7 +172,7 @@ func RemoveTransformedChecks(ids []string) error {
 		"deleted_at": gorm.Expr("NOW()"),
 	}
 
-	return Gorm.Table("checks").
+	return ctx.DB().Table("checks").
 		Where("id in (?)", ids).
 		Where("transformed = true").
 		Updates(updates).
@@ -278,7 +279,7 @@ func FindCheck(canary pkg.Canary, name string) (*pkg.Check, error) {
 	return &model, nil
 }
 
-func FindDeletedChecksSince(ctx context.Context, since time.Time) ([]string, error) {
+func FindDeletedChecksSince(ctx gocontext.Context, since time.Time) ([]string, error) {
 	var ids []string
 	err := Gorm.Model(&models.Check{}).Where("deleted_at > ?", since).Pluck("id", &ids).Error
 	return ids, err

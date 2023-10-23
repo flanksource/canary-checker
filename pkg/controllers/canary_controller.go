@@ -24,6 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
@@ -105,7 +106,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 
 	// Sync jobs if canary is created or updated
 	if canary.Generation == 1 {
-		if err := canaryJobs.SyncCanaryJob(*dbCanary); err != nil {
+		if err := canaryJobs.SyncCanaryJob(context.DefaultContext, *dbCanary); err != nil {
 			logger.Error(err, "failed to sync canary job")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}
@@ -143,7 +144,7 @@ func (r *CanaryReconciler) persistAndCacheCanary(canary *v1.Canary) (*pkg.Canary
 	}
 	r.CanaryCache.Set(dbCanary.ID.String(), dbCanary, cache.DefaultExpiration)
 
-	if err := canaryJobs.SyncCanaryJob(*dbCanary); err != nil {
+	if err := canaryJobs.SyncCanaryJob(context.DefaultContext, *dbCanary); err != nil {
 		return nil, err
 	}
 	return dbCanary, nil
