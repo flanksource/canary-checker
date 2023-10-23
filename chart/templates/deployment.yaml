@@ -155,6 +155,9 @@ spec:
             {{- if .Values.upstream.password }}
             - --upstream-password={{ .Values.upstream.password }}
             {{- end}}
+            {{- if .Values.upstream.insecureSkipVerify}}
+            - --upstream-insecure-skip-verify=true
+            {{- end}}
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
