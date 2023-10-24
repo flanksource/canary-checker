@@ -10,6 +10,9 @@ spec:
   endpoints:
     - port: http
       interval: 30s
+      metricRelabelings:
+      - action: labeldrop
+        regex: (pod|instance)
   selector:
     matchLabels:
       {{- include "canary-checker.selectorLabels" . | nindent 6 }}
