@@ -1,6 +1,7 @@
 package canary
 
 import (
+	gocontext "context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -8,6 +9,8 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
@@ -26,6 +29,8 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 		},
 	}
 
+	ctx := context.NewContext(gocontext.Background()).WithDB(db.Gorm, db.Pool)
+
 	ginkgo.It("should save a canary spec", func() {
 		b, err := json.Marshal(canarySpec)
 		Expect(err).To(BeNil())
@@ -42,7 +47,7 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 		err = db.Gorm.Create(canaryM).Error
 		Expect(err).To(BeNil())
 
-		response, err := db.GetAllCanariesForSync("")
+		response, err := db.GetAllCanariesForSync(ctx, "")
 		Expect(err).To(BeNil())
 		Expect(len(response)).To(Equal(1))
 	})
@@ -50,7 +55,10 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 	ginkgo.It("schedule the canary job", func() {
 		CanaryScheduler.Start()
 		minimumTimeBetweenCanaryRuns = 0 // reset this for now so it doesn't hinder test with small schedules
-		SyncCanaryJobs()
+		jobCtx := job.JobRuntime{
+			Context: ctx,
+		}
+		SyncCanaryJobs(jobCtx)
 	})
 
 	ginkgo.It("should verify that the endpoint wasn't called more than once after 3 seconds", func() {
