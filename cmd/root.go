@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/runner"
+	"github.com/flanksource/canary-checker/pkg/telemetry"
 	"github.com/flanksource/commons/logger"
 	gomplate "github.com/flanksource/gomplate/v3"
 	"github.com/spf13/cobra"
@@ -31,16 +32,25 @@ var Root = &cobra.Command{
 		if canary.UpstreamConf.Valid() {
 			logger.Infof("Pushing checks to %s with name=%s user=%s", canary.UpstreamConf.Host, canary.UpstreamConf.AgentName, canary.UpstreamConf.Username)
 		}
+
+		if otelcollectorURL != "" {
+			telemetry.InitTracer(otelServiceName, otelcollectorURL, true)
+		}
 	},
 }
 
-var httpPort = 8080
-var publicEndpoint = "http://localhost:8080"
-var prometheusURL string
-var pushServers, pullServers []string
-var sharedLibrary []string
-var exposeEnv bool
-var logPass, logFail bool
+var (
+	httpPort                 = 8080
+	publicEndpoint           = "http://localhost:8080"
+	prometheusURL            string
+	pushServers, pullServers []string
+	sharedLibrary            []string
+	exposeEnv                bool
+	logPass, logFail         bool
+
+	otelcollectorURL string
+	otelServiceName  string
+)
 
 func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&httpPort, "httpPort", httpPort, "Port to expose a health dashboard ")
@@ -76,6 +86,9 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringVar(&canary.UpstreamConf.Password, "upstream-password", os.Getenv("UPSTREAM_PASSWORD"), "upstream password")
 	flags.StringVar(&canary.UpstreamConf.AgentName, "agent-name", os.Getenv("UPSTREAM_NAME"), "name of this agent")
 	flags.BoolVar(&canary.UpstreamConf.InsecureSkipVerify, "upstream-insecure-skip-verify", os.Getenv("UPSTREAM_INSECURE_SKIP_VERIFY") == "true", "Skip TLS verification on the upstream servers certificate")
+
+	flags.StringVar(&otelcollectorURL, "otel-collector-url", "", "OpenTelemetry gRPC Collector URL in host:port format")
+	flags.StringVar(&otelServiceName, "otel-service-name", "canary-checker", "OpenTelemetry service name for the resource")
 }
 
 func readFromEnv(v string) string {

@@ -1,6 +1,7 @@
 package canary
 
 import (
+	gocontext "context"
 	"fmt"
 	"path"
 	"sync"
@@ -21,7 +22,10 @@ import (
 	dutyjob "github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/robfig/cron/v3"
+	"go.opentelemetry.io/otel/attribute"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -52,21 +56,21 @@ func StartScanCanaryConfigs(dataFile string, configFiles []string) {
 }
 
 type CanaryJob struct {
-	dutyjob.Job
 	Canary   v1.Canary
 	DBCanary pkg.Canary
 	LogPass  bool
 	LogFail  bool
 }
 
-func (job CanaryJob) GetNamespacedName() types.NamespacedName {
-	return types.NamespacedName{Name: job.Canary.Name, Namespace: job.Canary.Namespace}
+func (j CanaryJob) GetNamespacedName() types.NamespacedName {
+	return types.NamespacedName{Name: j.Canary.Name, Namespace: j.Canary.Namespace}
 }
 
 var minimumTimeBetweenCanaryRuns = 10 * time.Second
 var canaryLastRuntimes = sync.Map{}
 
 func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
+	ctx.GetSpan().SetAttributes(attribute.String("canary-id", j.DBCanary.ID.String()))
 	if runner.IsCanaryIgnored(&j.Canary.ObjectMeta) {
 		return nil
 	}
@@ -99,18 +103,22 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		return nil
 	}
 
+	canaryCtx := canarycontext.New(ctx.Kommons(), ctx.Kubernetes(), ctx.DB(), ctx.Pool(), j.Canary)
+	var span trace.Span
+	ctx.Context, span = ctx.StartSpan("RunCanaryChecks")
+	results, err := checks.RunChecks(canaryCtx)
+	if err != nil {
+		logger.Errorf("error running checks for canary %s: %v", canaryID, err)
+		return nil
+	}
+	span.End()
+
 	// Get transformed checks before and after, and then delete the olds ones that are not in new set
 	existingTransformedChecks, _ := db.GetTransformedCheckIDs(ctx.Context, canaryID)
 	var transformedChecksCreated []string
 	// Transformed checks have a delete strategy
 	// On deletion they can either be marked healthy, unhealthy or left as is
 	checkIDDeleteStrategyMap := make(map[string]string)
-	canaryCtx := canarycontext.New(ctx.Kommons(), ctx.Kubernetes(), ctx.DB(), ctx.Pool(), j.Canary)
-	results, err := checks.RunChecks(canaryCtx)
-	if err != nil {
-		logger.Errorf("error running checks for canary %s: %v", canaryID, err)
-		return nil
-	}
 
 	// TODO: Use ctx with object here
 	logPass := j.Canary.IsTrace() || j.Canary.IsDebug() || LogPass
@@ -324,16 +332,14 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 	}
 
 	updateTime, exists := canaryUpdateTimeCache.Load(dbCanary.ID.String())
-	newJob := CanaryJob{
-		Job: dutyjob.Job{
-			Context:  ctx,
-			Name:     "SyncCanaryJob",
-			Schedule: canary.Spec.GetSchedule(),
-			ID:       dbCanary.ID.String(),
-		},
+	cj := CanaryJob{
 		Canary:   *canary,
 		DBCanary: dbCanary,
 	}
+
+	// Create new job context from empty context to create root spans for jobs
+	jobCtx := ctx.Wrap(gocontext.Background()).WithObject(canary.ObjectMeta)
+	newJob := dutyjob.NewJob(jobCtx, "SyncCanaryJob", canary.Spec.GetSchedule(), cj.Run).SetID(dbCanary.ID.String())
 	entry := findCronEntry(dbCanary.ID.String())
 	if !exists || dbCanary.UpdatedAt.After(updateTime.(time.Time)) || entry == nil {
 		// Remove entry if it exists
