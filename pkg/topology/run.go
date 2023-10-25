@@ -305,6 +305,13 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) ([]byte, error
 			return nil, fmt.Errorf("unknown property type %T", results)
 		}
 		data := []byte(dataStr)
+		// When the lookup returns just a value
+		// set the current property's text as that value
+		if !isComponentList(data) && !isPropertyList(data) {
+			prop := pkg.NewProperty(*property)
+			prop.Text = dataStr
+			return json.Marshal(pkg.Properties{prop})
+		}
 		return data, nil
 	}
 

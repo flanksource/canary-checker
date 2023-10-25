@@ -88,3 +88,11 @@ spec:
                   {'name': 'company', 'text': 'Acme'},
                   {'name': 'location', 'text': 'Mars'},
                 ].toJSON()
+      # Test property as direct value
+      - name: key
+        lookup:
+          http:
+          - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
+            name: value_lookup
+            display:
+              expr: '"value"'
