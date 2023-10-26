@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: search
+  name: elasticsearch
   namespace: canaries
 stringData:
   ELASTIC_SEARCH_USERNAME: admin
