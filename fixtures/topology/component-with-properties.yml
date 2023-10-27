@@ -96,3 +96,15 @@ spec:
             name: value_lookup
             display:
               expr: '"value"'
+      # Test property with config lookup
+      - name: config-key
+        configLookup:
+          config:
+            name: config-item
+            tags:
+              tag-1: a
+              tag-2: b
+            type: Config::Dummy
+          display:
+            javascript: |
+              config.spec.container.version

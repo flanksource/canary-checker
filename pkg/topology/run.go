@@ -264,7 +264,7 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*pkg.Property, 
 	}
 
 	templateEnv := map[string]any{
-		"config": _config.Spec,
+		"config": *_config.Spec,
 		"tags":   toMapStringAny(_config.Tags),
 	}
 	prop.Text, err = gomplate.RunTemplate(templateEnv, property.ConfigLookup.Display.Template.Gomplate())

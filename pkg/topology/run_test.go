@@ -4,6 +4,10 @@ import (
 	"os"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	ginkgo "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -42,6 +46,20 @@ var _ = ginkgo.Describe("Test topology run", ginkgo.Ordered, func() {
 			ginkgo.Fail("Error converting yaml to v1.Topology:" + err.Error())
 		}
 
+		ci := models.ConfigItem{
+			Name: utils.Ptr("config-item"),
+			Tags: &types.JSONStringMap{
+				"tag-1": "a",
+				"tag-2": "b",
+			},
+			Config:      utils.Ptr(`{"spec": {"container": {"name": "hello", "version": "v3"}}}`),
+			Type:        utils.Ptr("Config::Dummy"),
+			ConfigClass: "Dummy",
+		}
+
+		err = db.Gorm.Create(&ci).Error
+		Expect(err).To(BeNil())
+
 		rootComponent := Run(opts, t)
 		Expect(len(rootComponent[0].Components)).To(Equal(3))
 
@@ -49,9 +67,9 @@ var _ = ginkgo.Describe("Test topology run", ginkgo.Ordered, func() {
 		componentB := rootComponent[0].Components[1]
 		componentC := rootComponent[0].Components[2]
 
-		Expect(string(componentA.Properties.AsJSON())).To(MatchJSON(`[{"name":"error_percentage","value":1,"min":0,"max":100},{"name":"owner","text":"team-a"},{"name":"company","text":"Acme"},{"name":"location","text":"Mars"},{"name":"key","text":"value"}]`))
-		Expect(string(componentB.Properties.AsJSON())).To(MatchJSON(`[{"name":"error_percentage","value":10,"min":0,"max":100},{"name":"owner","text":"team-b"},{"name":"company","text":"Acme"},{"name":"location","text":"Mars"},{"name":"key","text":"value"}]`))
-		Expect(string(componentC.Properties.AsJSON())).To(MatchJSON(`[{"name":"error_percentage","value":50,"min":0,"max":100},{"name":"owner","text":"team-b"},{"name":"company","text":"Acme"},{"name":"location","text":"Mars"},{"name":"key","text":"value"}]`))
+		Expect(string(componentA.Properties.AsJSON())).To(MatchJSON(`[{"name":"error_percentage","value":1,"min":0,"max":100},{"name":"owner","text":"team-a"},{"name":"company","text":"Acme"},{"name":"location","text":"Mars"},{"name":"key","text":"value"},{"name":"config-key","text":"v3"}]`))
+		Expect(string(componentB.Properties.AsJSON())).To(MatchJSON(`[{"name":"error_percentage","value":10,"min":0,"max":100},{"name":"owner","text":"team-b"},{"name":"company","text":"Acme"},{"name":"location","text":"Mars"},{"name":"key","text":"value"},{"name":"config-key","text":"v3"}]`))
+		Expect(string(componentC.Properties.AsJSON())).To(MatchJSON(`[{"name":"error_percentage","value":50,"min":0,"max":100},{"name":"owner","text":"team-b"},{"name":"company","text":"Acme"},{"name":"location","text":"Mars"},{"name":"key","text":"value"},{"name":"config-key","text":"v3"}]`))
 	})
 
 	ginkgo.It("should create component with forEach functionality", func() {
