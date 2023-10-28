@@ -7,6 +7,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs/canary"
+	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/commons/logger"
 	gomplate "github.com/flanksource/gomplate/v3"
@@ -36,7 +37,6 @@ var Root = &cobra.Command{
 
 var httpPort = 8080
 var publicEndpoint = "http://localhost:8080"
-var prometheusURL string
 var pushServers, pullServers []string
 var sharedLibrary []string
 var exposeEnv bool
@@ -61,7 +61,7 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
 	flags.StringSliceVar(&pullServers, "pull-servers", []string{}, "push check results to multiple canary servers")
 	flags.StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
-	flags.StringVar(&prometheusURL, "prometheus", "", "URL of the prometheus server that is scraping this instance")
+	flags.StringVar(&prometheus.PrometheusURL, "prometheus", "", "URL of the prometheus server that is scraping this instance")
 	flags.StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database. Use embedded:///path/to/dir to use the embedded database")
 	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
 	flags.StringVarP(&cache.DefaultWindow, "default-window", "", "1h", "Default search window")
