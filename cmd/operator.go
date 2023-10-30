@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	gocontext "context"
 	"os"
 	"time"
 
+	apicontext "github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs"
@@ -16,9 +18,12 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/controllers"
 	"github.com/flanksource/canary-checker/pkg/labels"
+	commonsCtx "github.com/flanksource/commons/context"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/context"
 	"github.com/go-logr/zapr"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -73,6 +78,17 @@ func run(cmd *cobra.Command, args []string) {
 	if err := db.Init(); err != nil {
 		logger.Fatalf("error connecting with postgres: %v", err)
 	}
+	kommonsClient, k8s, err := pkg.NewKommonsClient()
+	if err != nil {
+		logger.Warnf("failed to get kommons client, checks that read kubernetes configs will fail: %v", err)
+	}
+
+	apicontext.DefaultContext = context.NewContext(gocontext.Background(), commonsCtx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))).
+		WithDB(db.Gorm, db.Pool).
+		WithKubernetes(k8s).
+		WithKommons(kommonsClient).
+		WithNamespace(runner.WatchNamespace)
+
 	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 	if operatorExecutor {
 		logger.Infof("Starting executors")

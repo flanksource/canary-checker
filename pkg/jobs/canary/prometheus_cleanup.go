@@ -1,9 +1,9 @@
 package canary
 
 import (
-	"context"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/commons/logger"
@@ -12,10 +12,8 @@ import (
 
 // CleanupMetricsGauges removes gauges for checks that no longer exist.
 func CleanupMetricsGauges() {
-	ctx := context.Background()
-
 	sevenDaysAgo := time.Now().Add(-time.Hour * 24 * 7)
-	deletedCheckIDs, err := db.FindDeletedChecksSince(ctx, sevenDaysAgo)
+	deletedCheckIDs, err := db.FindDeletedChecksSince(context.DefaultContext, sevenDaysAgo)
 	if err != nil {
 		logger.Errorf("Error finding deleted checks: %v", err)
 		return

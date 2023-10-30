@@ -3,6 +3,7 @@ package checks
 import (
 	"time"
 
+	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
@@ -70,7 +71,7 @@ func GetCheckComponentRelationshipsForComponent(component *pkg.Component) (relat
 				logger.Debugf("error creating canary from inline: %v", err)
 			}
 
-			if err := canaryJobs.SyncCanaryJob(*canary); err != nil {
+			if err := canaryJobs.SyncCanaryJob(context.DefaultContext, *canary); err != nil {
 				logger.Debugf("error creating canary job: %v", err)
 			}
 

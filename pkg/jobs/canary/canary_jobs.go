@@ -1,12 +1,13 @@
 package canary
 
 import (
+	gocontext "context"
 	"fmt"
 	"path"
 	"sync"
 	"time"
 
-	"github.com/flanksource/canary-checker/api/context"
+	canarycontext "github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
@@ -17,9 +18,14 @@ import (
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/context"
+	dutyjob "github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/robfig/cron/v3"
+	"go.opentelemetry.io/otel/attribute"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -50,36 +56,36 @@ func StartScanCanaryConfigs(dataFile string, configFiles []string) {
 }
 
 type CanaryJob struct {
-	*kommons.Client
-	Kubernetes kubernetes.Interface
-	Canary     v1.Canary
-	DBCanary   pkg.Canary
-	LogPass    bool
-	LogFail    bool
+	Canary   v1.Canary
+	DBCanary pkg.Canary
+	LogPass  bool
+	LogFail  bool
 }
 
-func (job CanaryJob) GetNamespacedName() types.NamespacedName {
-	return types.NamespacedName{Name: job.Canary.Name, Namespace: job.Canary.Namespace}
+func (j CanaryJob) GetNamespacedName() types.NamespacedName {
+	return types.NamespacedName{Name: j.Canary.Name, Namespace: j.Canary.Namespace}
 }
 
 var minimumTimeBetweenCanaryRuns = 10 * time.Second
 var canaryLastRuntimes = sync.Map{}
 
-func (job CanaryJob) Run() {
-	if runner.IsCanaryIgnored(&job.Canary.ObjectMeta) {
-		return
+func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
+	ctx.GetSpan().SetAttributes(attribute.String("canary-id", j.DBCanary.ID.String()))
+	if runner.IsCanaryIgnored(&j.Canary.ObjectMeta) {
+		return nil
 	}
-	canaryID := job.DBCanary.ID.String()
+
+	canaryID := j.DBCanary.ID.String()
 	val, _ := concurrentJobLocks.LoadOrStore(canaryID, &sync.Mutex{})
 	lock, ok := val.(*sync.Mutex)
 	if !ok {
 		logger.Warnf("expected mutex but got %T for canary(id=%s)", lock, canaryID)
-		return
+		return nil
 	}
 
 	if !lock.TryLock() {
 		logger.Debugf("canary (id=%s) is already running. skipping this run ...", canaryID)
-		return
+		return nil
 	}
 	defer lock.Unlock()
 
@@ -93,25 +99,32 @@ func (job CanaryJob) Run() {
 
 	// Skip run if job ran too recently
 	if lastRunDelta < minimumTimeBetweenCanaryRuns {
-		logger.Infof("Skipping Canary[%s]:%s since it last ran %.2f seconds ago", canaryID, job.GetNamespacedName(), lastRunDelta.Seconds())
-		return
+		logger.Infof("Skipping Canary[%s]:%s since it last ran %.2f seconds ago", canaryID, j.Canary.GetNamespacedName(), lastRunDelta.Seconds())
+		return nil
 	}
 
+	canaryCtx := canarycontext.New(ctx.Kommons(), ctx.Kubernetes(), ctx.DB(), ctx.Pool(), j.Canary)
+	var span trace.Span
+	ctx.Context, span = ctx.StartSpan("RunCanaryChecks")
+	results, err := checks.RunChecks(canaryCtx)
+	if err != nil {
+		logger.Errorf("error running checks for canary %s: %v", canaryID, err)
+		return nil
+	}
+	span.End()
+
 	// Get transformed checks before and after, and then delete the olds ones that are not in new set
-	existingTransformedChecks, _ := db.GetTransformedCheckIDs(canaryID)
+	existingTransformedChecks, _ := db.GetTransformedCheckIDs(ctx.Context, canaryID)
 	var transformedChecksCreated []string
 	// Transformed checks have a delete strategy
 	// On deletion they can either be marked healthy, unhealthy or left as is
 	checkIDDeleteStrategyMap := make(map[string]string)
-	results, err := checks.RunChecks(job.NewContext())
-	if err != nil {
-		logger.Errorf("error running checks for canary %s: %v", job.Canary.GetPersistedID(), err)
-		job.Errorf("error running checks for canary %s: %v", job.Canary.GetPersistedID(), err)
-		return
-	}
 
+	// TODO: Use ctx with object here
+	logPass := j.Canary.IsTrace() || j.Canary.IsDebug() || LogPass
+	logFail := j.Canary.IsTrace() || j.Canary.IsDebug() || LogFail
 	for _, result := range results {
-		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
+		if logPass && result.Pass || logFail && !result.Pass {
 			logger.Infof(result.String())
 		}
 		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
@@ -120,7 +133,7 @@ func (job CanaryJob) Run() {
 			checkIDDeleteStrategyMap[checkID] = result.Check.GetTransformDeleteStrategy()
 		}
 	}
-	job.updateStatusAndEvent(results)
+	updateCanaryStatusAndEvent(j.Canary, results)
 
 	checkDeleteStrategyGroup := make(map[string][]string)
 	checksToRemove := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
@@ -137,10 +150,10 @@ func (job CanaryJob) Run() {
 			checkDeleteStrategyGroup[status] = append(checkDeleteStrategyGroup[status], checkID)
 		}
 		for status, checkIDs := range checkDeleteStrategyGroup {
-			if err := db.AddCheckStatuses(checkIDs, models.CheckHealthStatus(status)); err != nil {
+			if err := db.AddCheckStatuses(ctx.Context, checkIDs, models.CheckHealthStatus(status)); err != nil {
 				logger.Errorf("error adding statuses for transformed checks: %v", err)
 			}
-			if err := db.RemoveTransformedChecks(checkIDs); err != nil {
+			if err := db.RemoveTransformedChecks(ctx.Context, checkIDs); err != nil {
 				logger.Errorf("error deleting transformed checks for canary %s: %v", canaryID, err)
 			}
 		}
@@ -148,13 +161,10 @@ func (job CanaryJob) Run() {
 
 	// Update last runtime map
 	canaryLastRuntimes.Store(canaryID, time.Now())
+	return nil
 }
 
-func (job *CanaryJob) NewContext() *context.Context {
-	return context.New(job.Client, job.Kubernetes, db.Gorm, db.Pool, job.Canary)
-}
-
-func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
+func updateCanaryStatusAndEvent(canary v1.Canary, results []*pkg.CheckResult) {
 	if CanaryStatusChannel == nil {
 		return
 	}
@@ -175,11 +185,12 @@ func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
 		duration += result.Duration
 
 		// Set uptime and latency
-		uptime, latency := metrics.Record(job.Canary, result)
-		checkKey := job.Canary.GetKey(result.Check)
-		checkStatus[checkKey] = &v1.CheckStatus{}
-		checkStatus[checkKey].Uptime1H = uptime.String()
-		checkStatus[checkKey].Latency1H = latency.String()
+		uptime, latency := metrics.Record(canary, result)
+		checkKey := canary.GetKey(result.Check)
+		checkStatus[checkKey] = &v1.CheckStatus{
+			Uptime1H:  uptime.String(),
+			Latency1H: latency.String(),
+		}
 
 		// Increment aggregate uptime
 		uptimeAgg.Passed += uptime.Passed
@@ -192,8 +203,8 @@ func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
 
 		// Transition
 		q := cache.QueryParams{Check: checkKey, StatusCount: 1}
-		if job.Canary.Status.LastTransitionedTime != nil {
-			q.Start = job.Canary.Status.LastTransitionedTime.Format(time.RFC3339)
+		if canary.Status.LastTransitionedTime != nil {
+			q.Start = canary.Status.LastTransitionedTime.Format(time.RFC3339)
 		}
 		lastStatus, err := cache.PostgresCache.Query(q)
 		if err != nil || len(lastStatus) == 0 || len(lastStatus[0].Statuses) == 0 {
@@ -206,7 +217,8 @@ func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
 			lastTransitionedTime = &metav1.Time{Time: time.Now()}
 		}
 
-		push.Queue(pkg.FromV1(job.Canary, result.Check), pkg.FromResult(*result))
+		// TODO Why is this here ?
+		push.Queue(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
 
 		// Update status message
 		if len(messages) == 1 {
@@ -235,7 +247,7 @@ func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
 		ErrorMessage:         errorMsg,
 		Uptime:               uptimeAgg.String(),
 		Latency:              utils.Age(time.Duration(highestLatency) * time.Millisecond),
-		NamespacedName:       job.GetNamespacedName(),
+		NamespacedName:       canary.GetNamespacedName(),
 	}
 
 	CanaryStatusChannel <- payload
@@ -255,7 +267,7 @@ type CanaryStatusPayload struct {
 
 func findCronEntry(id string) *cron.Entry {
 	for _, entry := range CanaryScheduler.Entries() {
-		if entry.Job.(CanaryJob).DBCanary.ID.String() == id {
+		if entry.Job.(*dutyjob.Job).ID == id {
 			return &entry
 		}
 	}
@@ -265,7 +277,7 @@ func findCronEntry(id string) *cron.Entry {
 func getAllCanaryIDsInCron() []string {
 	var ids []string
 	for _, entry := range CanaryScheduler.Entries() {
-		ids = append(ids, entry.Job.(CanaryJob).DBCanary.ID.String())
+		ids = append(ids, entry.Job.(*dutyjob.Job).ID)
 	}
 	return ids
 }
@@ -295,7 +307,7 @@ func ScanCanaryConfigs() {
 var canaryUpdateTimeCache = sync.Map{}
 
 // TODO: Refactor to use database object instead of kubernetes
-func SyncCanaryJob(dbCanary pkg.Canary) error {
+func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 	canary, err := dbCanary.ToV1()
 	if err != nil {
 		return err
@@ -313,21 +325,21 @@ func SyncCanaryJob(dbCanary pkg.Canary) error {
 	if Kommons == nil {
 		var err error
 		Kommons, Kubernetes, err = pkg.NewKommonsClient()
+		ctx = ctx.WithKommons(Kommons).WithKubernetes(Kubernetes)
 		if err != nil {
 			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
 		}
 	}
 
-	job := CanaryJob{
-		Client:     Kommons,
-		Kubernetes: Kubernetes,
-		Canary:     *canary,
-		DBCanary:   dbCanary,
-		LogPass:    canary.IsTrace() || canary.IsDebug() || LogPass,
-		LogFail:    canary.IsTrace() || canary.IsDebug() || LogFail,
+	updateTime, exists := canaryUpdateTimeCache.Load(dbCanary.ID.String())
+	cj := CanaryJob{
+		Canary:   *canary,
+		DBCanary: dbCanary,
 	}
 
-	updateTime, exists := canaryUpdateTimeCache.Load(dbCanary.ID.String())
+	// Create new job context from empty context to create root spans for jobs
+	jobCtx := ctx.Wrap(gocontext.Background()).WithObject(canary.ObjectMeta)
+	newJob := dutyjob.NewJob(jobCtx, "SyncCanaryJob", canary.Spec.GetSchedule(), cj.Run).SetID(dbCanary.ID.String())
 	entry := findCronEntry(dbCanary.ID.String())
 	if !exists || dbCanary.UpdatedAt.After(updateTime.(time.Time)) || entry == nil {
 		// Remove entry if it exists
@@ -336,11 +348,11 @@ func SyncCanaryJob(dbCanary pkg.Canary) error {
 		}
 
 		// Schedule canary for the first time
-		entryID, err := CanaryScheduler.AddJob(canary.Spec.GetSchedule(), job)
-		if err != nil {
+		if err := newJob.AddToScheduler(CanaryScheduler); err != nil {
 			return fmt.Errorf("failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
 		}
-		entry = utils.Ptr(CanaryScheduler.Entry(entryID))
+
+		entry = newJob.GetEntry(CanaryScheduler)
 		logger.Infof("Scheduled %s: %s", canary, canary.Spec.GetSchedule())
 
 		canaryUpdateTimeCache.Store(dbCanary.ID.String(), dbCanary.UpdatedAt)
@@ -354,17 +366,17 @@ func SyncCanaryJob(dbCanary pkg.Canary) error {
 	return nil
 }
 
-func SyncCanaryJobs() {
-	logger.Debugf("Syncing canary jobs")
+func SyncCanaryJobs(ctx dutyjob.JobRuntime) error {
+	ctx.Debugf("Syncing canary jobs")
 
-	canaries, err := db.GetAllCanariesForSync(runner.WatchNamespace)
+	canaries, err := db.GetAllCanariesForSync(ctx.Context, runner.WatchNamespace)
 	if err != nil {
 		logger.Errorf("Failed to get canaries: %v", err)
 
 		jobHistory := models.NewJobHistory("SyncCanaries", "canary", "").Start()
 		logIfError(db.PersistJobHistory(jobHistory.AddError(err.Error()).End()), "failed to persist job history [SyncCanaries]")
 
-		return
+		return err
 	}
 
 	existingIDsInCron := getAllCanaryIDsInCron()
@@ -373,7 +385,7 @@ func SyncCanaryJobs() {
 		jobHistory := models.NewJobHistory("CanarySync", "canary", c.ID.String()).Start()
 
 		idsInNewFetch = append(idsInNewFetch, c.ID.String())
-		if err := SyncCanaryJob(c); err != nil {
+		if err := SyncCanaryJob(ctx.Context, c); err != nil {
 			logger.Errorf("Error syncing canary[%s]: %v", c.ID, err.Error())
 			logIfError(db.PersistJobHistory(jobHistory.AddError(err.Error()).End()), "failed to persist job history [CanarySync]")
 			continue
@@ -386,6 +398,7 @@ func SyncCanaryJobs() {
 	}
 
 	logger.Infof("Synced canary jobs %d", len(CanaryScheduler.Entries()))
+	return nil
 }
 
 func DeleteCanaryJob(id string) {
