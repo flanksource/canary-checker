@@ -1,7 +1,6 @@
 package db
 
 import (
-	gocontext "context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -279,9 +278,9 @@ func FindCheck(canary pkg.Canary, name string) (*pkg.Check, error) {
 	return &model, nil
 }
 
-func FindDeletedChecksSince(ctx gocontext.Context, since time.Time) ([]string, error) {
+func FindDeletedChecksSince(ctx context.Context, since time.Time) ([]string, error) {
 	var ids []string
-	err := Gorm.Model(&models.Check{}).Where("deleted_at > ?", since).Pluck("id", &ids).Error
+	err := ctx.DB().Model(&models.Check{}).Where("deleted_at > ?", since).Pluck("id", &ids).Error
 	return ids, err
 }
 
