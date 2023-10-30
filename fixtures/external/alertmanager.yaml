@@ -7,4 +7,4 @@ metadata:
 spec:
   schedule: "@every 1m" # Disregarded
   webhook:
-    - name: my-webhook
+    name: my-webhook

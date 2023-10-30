@@ -279,7 +279,7 @@ func FindCheck(canary pkg.Canary, name string) (*pkg.Check, error) {
 }
 
 func FindChecks(ctx context.Context, idOrName, checkType string) ([]models.Check, error) {
-	query := Gorm.
+	query := ctx.DB().
 		Where("agent_id = ?", uuid.Nil.String()).
 		Where("type = ?", checkType).
 		Where("deleted_at IS NULL")

@@ -17,6 +17,7 @@ type HTTPSuccess struct {
 	Payload any    `json:"payload,omitempty"`
 }
 
+// WriteError writes the error to the HTTP response with appropriate status code
 func WriteError(c echo.Context, err error) error {
 	code, message := ErrorCode(err), ErrorMessage(err)
 
