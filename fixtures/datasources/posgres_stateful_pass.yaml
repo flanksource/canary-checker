@@ -6,8 +6,8 @@ metadata:
 spec:
   interval: 30
   postgres:
-    - url: "postgres://$(username):$(password)@postgres.canaries.svc.cluster.local:5432/postgres?sslmode=disable"
-      name: postgres processes new
+    - name: postgres processes new
+      url: "postgres://$(username):$(password)@postgres.canaries.svc.cluster.local:5432/postgres?sslmode=disable"
       username:
         value: postgresadmin
       password:
@@ -17,7 +17,7 @@ spec:
         {{-  if last_result.results.rows }}
         '{{- (index last_result.results.rows 0).max }}'
         {{- else}}
-          now() - interval * '1 hour'
+          now() - interval '1 hour'
         {{- end}}
       metrics:
         - name: postgres_process_new
