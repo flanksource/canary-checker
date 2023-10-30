@@ -96,7 +96,7 @@ func serve() {
 	push.AddServers(pushServers)
 	go push.Start()
 
-	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheusURL)
+	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheus.PrometheusURL)
 
 	if debug {
 		logger.Infof("Starting pprof at /debug")

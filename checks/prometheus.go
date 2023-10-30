@@ -34,8 +34,13 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	results = append(results, result)
 
 	//nolint:staticcheck
-	if check.Host != "" && check.URL == "" {
-		check.URL = check.Host
+	if check.Host != "" {
+		return results.Failf("host field is deprecated, use url field instead")
+	}
+
+	// Use global prometheus url if check's url is empty
+	if check.URL == "" {
+		check.URL = prometheus.PrometheusURL
 	}
 
 	connection, err := ctx.GetConnection(check.Connection)
