@@ -95,7 +95,21 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 		return results.Failf("error getting connection: %v", err)
 	}
 
-	details, err := querySQL(checker.GetDriver(), connection.URL, check.GetQuery())
+	query := check.GetQuery()
+
+	if ctx.Canary.Annotations["template"] != "false" {
+		query, err = template(ctx.WithCheck(checker.GetCheck()), v1.Template{
+			Template: query,
+		})
+		if err != nil {
+			return results.ErrorMessage(err)
+		}
+		if ctx.IsDebug() {
+			ctx.Infof("query: %s", query)
+		}
+	}
+
+	details, err := querySQL(checker.GetDriver(), connection.URL, query)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

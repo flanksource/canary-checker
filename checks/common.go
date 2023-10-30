@@ -62,7 +62,11 @@ func unstructure(o any) (out interface{}, err error) {
 }
 
 func template(ctx *context.Context, template v1.Template) (string, error) {
-	return gomplate.RunTemplate(ctx.Environment, template.Gomplate())
+	tpl := template.Gomplate()
+
+	ctx.InjectFunctions(&tpl)
+
+	return gomplate.RunTemplate(ctx.Environment, tpl)
 }
 
 func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, error) {
@@ -76,7 +80,7 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 		return []*pkg.CheckResult{in}, nil
 	}
 
-	out, err := template(ctx.New(in.Data), tpl)
+	out, err := template(ctx, tpl)
 	if err != nil {
 		return nil, err
 	}

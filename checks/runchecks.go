@@ -103,13 +103,14 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 
 func transformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.CheckResult) {
 	for _, r := range in {
-		transformed, err := transform(ctx, r)
+		checkCtx := ctx.WithCheckResult(r)
+		transformed, err := transform(checkCtx, r)
 		if err != nil {
 			r.Failf("transformation failure: %v", err)
 			out = append(out, r)
 		} else {
 			for _, t := range transformed {
-				out = append(out, processTemplates(ctx, t))
+				out = append(out, processTemplates(checkCtx, t))
 			}
 		}
 	}
@@ -151,11 +152,10 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 	if r.Duration == 0 && r.GetDuration() > 0 {
 		r.Duration = r.GetDuration()
 	}
-
 	switch v := r.Check.(type) {
 	case v1.DisplayTemplate:
 		if !v.GetDisplayTemplate().IsEmpty() {
-			message, err := template(ctx.New(r.Data), v.GetDisplayTemplate())
+			message, err := template(ctx, v.GetDisplayTemplate())
 			if err != nil {
 				r.ErrorMessage(err)
 			} else {
@@ -170,7 +170,7 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 		if tpl.IsEmpty() {
 			break
 		}
-		message, err := template(ctx.New(r.Data), tpl)
+		message, err := template(ctx, tpl)
 		if err != nil {
 			r.ErrorMessage(err)
 		} else if message != "true" {
