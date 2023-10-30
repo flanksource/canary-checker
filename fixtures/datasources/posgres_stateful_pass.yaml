@@ -17,7 +17,7 @@ spec:
         {{-  if last_result.results.rows }}
         '{{- (index last_result.results.rows 0).max }}'
         {{- else}}
-          now() - interval * '1 hour'
+          now() - interval '1 hour'
         {{- end}}
       metrics:
         - name: postgres_process_new
