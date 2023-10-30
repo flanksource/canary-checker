@@ -111,8 +111,6 @@ func webhookHandler(ctx goctx.Context, id, authToken string, data CheckData) err
 	results = append(results, transformedResults...)
 
 	checks.ExportCheckMetrics(scrapeCtx, transformedResults)
-	_ = checks.ProcessResults(scrapeCtx, results)
-
-	// TODO: persist these results
+	checks.PersistCheckResults(context.DefaultContext, string(canary.GetUID()), *canary, results)
 	return nil
 }

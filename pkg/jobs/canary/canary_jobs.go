@@ -113,65 +113,8 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	}
 	span.End()
 
-	// Get transformed checks before and after, and then delete the olds ones that are not in new set
-	existingTransformedChecks, _ := db.GetTransformedCheckIDs(ctx.Context, canaryID)
-	var transformedChecksCreated []string
-	// Transformed checks have a delete strategy
-	// On deletion they can either be marked healthy, unhealthy or left as is
-	checkIDDeleteStrategyMap := make(map[string]string)
-
-	// TODO: Use ctx with object here
-	logPass := j.Canary.IsTrace() || j.Canary.IsDebug() || LogPass
-	logFail := j.Canary.IsTrace() || j.Canary.IsDebug() || LogFail
-	for _, result := range results {
-		if logPass && result.Pass || logFail && !result.Pass {
-			logger.Infof(result.String())
-		}
-
-		// For webhook check result, simply save the check directly as it doesn't really produce any result.
-		if result.Check.GetType() == checks.WebhookCheckType {
-			check := pkg.FromV1(result.Canary, result.Check)
-
-			savedID, err := db.PersistCheck(check, check.CanaryID)
-			if err != nil {
-				logger.Errorf("error persisting check with canary %s: %v", check.CanaryID, err)
-			}
-			check.ID = savedID
-
-			continue
-		}
-
-		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
-		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded...)
-		for _, checkID := range transformedChecksAdded {
-			checkIDDeleteStrategyMap[checkID] = result.Check.GetTransformDeleteStrategy()
-		}
-	}
+	checks.PersistCheckResults(ctx.Context, canaryID, j.Canary, results)
 	updateCanaryStatusAndEvent(j.Canary, results)
-
-	checkDeleteStrategyGroup := make(map[string][]string)
-	checksToRemove := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
-	if len(checksToRemove) > 0 && len(transformedChecksCreated) > 0 {
-		for _, checkID := range checksToRemove {
-			strategy := checkIDDeleteStrategyMap[checkID]
-			// Empty status by default does not effect check status
-			var status string
-			if strategy == v1.OnTransformMarkHealthy {
-				status = models.CheckStatusHealthy
-			} else if strategy == v1.OnTransformMarkUnhealthy {
-				status = models.CheckStatusUnhealthy
-			}
-			checkDeleteStrategyGroup[status] = append(checkDeleteStrategyGroup[status], checkID)
-		}
-		for status, checkIDs := range checkDeleteStrategyGroup {
-			if err := db.AddCheckStatuses(ctx.Context, checkIDs, models.CheckHealthStatus(status)); err != nil {
-				logger.Errorf("error adding statuses for transformed checks: %v", err)
-			}
-			if err := db.RemoveTransformedChecks(ctx.Context, checkIDs); err != nil {
-				logger.Errorf("error deleting transformed checks for canary %s: %v", canaryID, err)
-			}
-		}
-	}
 
 	// Update last runtime map
 	canaryLastRuntimes.Store(canaryID, time.Now())

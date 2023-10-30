@@ -5,6 +5,17 @@ metadata:
   labels:
     "Expected-Fail": "true"
 spec:
-  schedule: "@every 1m" # Disregarded
+  schedule: "@every 1m"
   webhook:
     name: my-webhook
+    transform:
+      expr: |
+        results.json.alerts.map(r,
+          {
+            'name': r.name + r.fingerprint,
+            'labels': r.labels,
+            'icon': 'alert',
+            'message': r.annotations.summary,
+            'description': r.annotations.description,
+          }
+        ).toJSON()

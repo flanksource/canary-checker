@@ -9,12 +9,16 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
-	"github.com/patrickmn/go-cache"
+	dutyContext "github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/models"
+	gocache "github.com/patrickmn/go-cache"
 )
 
-var checksCache = cache.New(5*time.Minute, 5*time.Minute)
+var checksCache = gocache.New(5*time.Minute, 5*time.Minute)
 
 var DisabledChecks []string
 
@@ -183,4 +187,56 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 	}
 
 	return r
+}
+
+func PersistCheckResults(ctx dutyContext.Context, canaryID string, canary v1.Canary, results []*pkg.CheckResult) {
+	// Get transformed checks before and after, and then delete the olds ones that are not in new set
+	existingTransformedChecks, _ := db.GetTransformedCheckIDs(ctx, canaryID)
+	var transformedChecksCreated []string
+	// Transformed checks have a delete strategy
+	// On deletion they can either be marked healthy, unhealthy or left as is
+	checkIDDeleteStrategyMap := make(map[string]string)
+
+	// TODO: Use ctx with object here
+	logPass := canary.IsTrace() || canary.IsDebug()
+	logFail := canary.IsTrace() || canary.IsDebug()
+
+	for _, result := range results {
+		if logPass && result.Pass || logFail && !result.Pass {
+			logger.Infof(result.String())
+		}
+
+		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
+		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded...)
+		for _, checkID := range transformedChecksAdded {
+			checkIDDeleteStrategyMap[checkID] = result.Check.GetTransformDeleteStrategy()
+		}
+	}
+
+	checkDeleteStrategyGroup := make(map[string][]string)
+	checksToRemove := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
+	if len(checksToRemove) > 0 && len(transformedChecksCreated) > 0 {
+		for _, checkID := range checksToRemove {
+			strategy := checkIDDeleteStrategyMap[checkID]
+			// Empty status by default does not effect check status
+			var status string
+			if strategy == v1.OnTransformMarkHealthy {
+				status = models.CheckStatusHealthy
+			} else if strategy == v1.OnTransformMarkUnhealthy {
+				status = models.CheckStatusUnhealthy
+			}
+
+			checkDeleteStrategyGroup[status] = append(checkDeleteStrategyGroup[status], checkID)
+		}
+
+		for status, checkIDs := range checkDeleteStrategyGroup {
+			if err := db.AddCheckStatuses(ctx, checkIDs, models.CheckHealthStatus(status)); err != nil {
+				logger.Errorf("error adding statuses for transformed checks: %v", err)
+			}
+
+			if err := db.RemoveTransformedChecks(ctx, checkIDs); err != nil {
+				logger.Errorf("error deleting transformed checks for canary %s: %v", canaryID, err)
+			}
+		}
+	}
 }
