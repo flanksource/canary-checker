@@ -92,16 +92,16 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 		}
 
 		result := c.Run(ctx)
-		transformedResults := transformResults(ctx, result)
+		transformedResults := TransformResults(ctx, result)
 		results = append(results, transformedResults...)
 
-		exportCheckMetrics(ctx, transformedResults)
+		ExportCheckMetrics(ctx, transformedResults)
 	}
 
-	return processResults(ctx, results), nil
+	return ProcessResults(ctx, results), nil
 }
 
-func transformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.CheckResult) {
+func TransformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.CheckResult) {
 	for _, r := range in {
 		checkCtx := ctx.WithCheckResult(r)
 		transformed, err := transform(checkCtx, r)
@@ -117,7 +117,7 @@ func transformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.C
 	return out
 }
 
-func processResults(ctx *context.Context, results []*pkg.CheckResult) []*pkg.CheckResult {
+func ProcessResults(ctx *context.Context, results []*pkg.CheckResult) []*pkg.CheckResult {
 	if ctx.Canary.Spec.ResultMode == "" {
 		return results
 	}

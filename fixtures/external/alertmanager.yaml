@@ -1,0 +1,10 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: alert-manager-webhook-check
+  labels:
+    "Expected-Fail": "true"
+spec:
+  schedule: "@every 1m" # Disregarded
+  webhook:
+    - name: my-webhook

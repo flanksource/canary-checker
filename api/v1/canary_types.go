@@ -74,6 +74,7 @@ type CanarySpec struct {
 	AlertManager   []AlertManagerCheck   `yaml:"alertmanager,omitempty" json:"alertmanager,omitempty"`
 	Dynatrace      []DynatraceCheck      `yaml:"dynatrace,omitempty" json:"dynatrace,omitempty"`
 	AzureDevops    []AzureDevopsCheck    `yaml:"azureDevops,omitempty" json:"azureDevops,omitempty"`
+	Webhook        []WebhookCheck        `yaml:"webhook,omitempty" json:"webhook,omitempty"`
 	// interval (in seconds) to run checks on Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
 	// Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron

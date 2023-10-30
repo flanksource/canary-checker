@@ -82,7 +82,7 @@ func getLabelString(labels map[string]string) string {
 	return s
 }
 
-func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
+func ExportCheckMetrics(ctx *context.Context, results pkg.Results) {
 	if len(results) == 0 {
 		return
 	}

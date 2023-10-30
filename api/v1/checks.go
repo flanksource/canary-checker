@@ -1358,6 +1358,22 @@ func (c AzureDevopsCheck) GetEndpoint() string {
 	return c.Project
 }
 
+type WebhookCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+
+	// Token is an optional authorization token to run this check
+	Token *types.EnvVar `yaml:"token,omitempty" json:"token,omitempty"`
+}
+
+func (c WebhookCheck) GetType() string {
+	return "webhook"
+}
+
+func (c WebhookCheck) GetEndpoint() string {
+	return ""
+}
+
 var AllChecks = []external.Check{
 	AlertManagerCheck{},
 	AwsConfigCheck{},
@@ -1396,4 +1412,5 @@ var AllChecks = []external.Check{
 	ResticCheck{},
 	S3Check{},
 	TCPCheck{},
+	WebhookCheck{},
 }
