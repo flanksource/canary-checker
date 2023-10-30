@@ -52,6 +52,7 @@ var All = []Checker{
 	&RedisChecker{},
 	&ResticChecker{},
 	&S3Checker{},
+	&WebhookChecker{},
 	NewNamespaceChecker(),
 	NewPodChecker(),
 	NewTCPChecker(),

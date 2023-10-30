@@ -7,10 +7,9 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	checksPkg "github.com/flanksource/canary-checker/checks"
+	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/models"
 	"github.com/labstack/echo/v4"
@@ -19,7 +18,7 @@ import (
 func WebhookHandler(c echo.Context) error {
 	id := c.Param("id")
 
-	var body map[string]any
+	body := make(map[string]any)
 	if err := c.Bind(&body); err != nil {
 		return WriteError(c, Errorf(EINVALID, "invalid request body: %v", err))
 	}
@@ -37,20 +36,19 @@ func WebhookHandler(c echo.Context) error {
 }
 
 func webhookHandler(ctx goctx.Context, id, authToken string, body map[string]any) error {
-	checks, err := db.FindChecks(ctx, id, "exec")
+	webhookChecks, err := db.FindChecks(context.DefaultContext.Wrap(ctx), id, checks.WebhookCheckType)
 	if err != nil {
 		return err
 	}
 
 	var check models.Check
-	if len(checks) == 0 {
+	if len(webhookChecks) == 0 {
 		return Errorf(ENOTFOUND, "check (%s) not found", id)
-	} else if len(checks) > 1 {
+	} else if len(webhookChecks) > 1 {
 		return Errorf(EINVALID, "multiple checks with name: %s were found. Please use the check id or modify the check to have a unique name", id)
 	} else {
-		check = checks[0]
+		check = webhookChecks[0]
 	}
-	logger.Infof("%v", check)
 
 	var canary *v1.Canary
 	if c, err := db.FindCanaryByID(check.CanaryID.String()); err != nil {
@@ -61,11 +59,10 @@ func webhookHandler(ctx goctx.Context, id, authToken string, body map[string]any
 		return err
 	}
 
-	// Use the first webhook check
-	if len(canary.Spec.Webhook) == 0 {
+	webhook := canary.Spec.Webhook
+	if webhook == nil {
 		return Errorf(ENOTFOUND, "no webhook checks found")
 	}
-	webhook := canary.Spec.Webhook[0]
 
 	// Authorization
 	if webhook.Token != nil {
@@ -84,15 +81,15 @@ func webhookHandler(ctx goctx.Context, id, authToken string, body map[string]any
 
 	// We create the check from the request's body ??
 	var results pkg.Results
-	result := pkg.Success(v1.WebhookCheck{}, *canary)
+	result := pkg.Success(webhook, *canary)
 	results = append(results, result)
-	result.AddDetails(body)
+	result.AddDetails(body["alerts"])
 
 	scrapeCtx := context.New(nil, nil, db.Gorm, db.Pool, *canary)
-	transformedResults := checksPkg.TransformResults(scrapeCtx, results)
+	transformedResults := checks.TransformResults(scrapeCtx, results)
 	results = append(results, transformedResults...)
 
-	checksPkg.ExportCheckMetrics(scrapeCtx, transformedResults)
-	_ = checksPkg.ProcessResults(scrapeCtx, results)
+	checks.ExportCheckMetrics(scrapeCtx, transformedResults)
+	_ = checks.ProcessResults(scrapeCtx, results)
 	return nil
 }

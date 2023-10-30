@@ -127,6 +127,20 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		if logPass && result.Pass || logFail && !result.Pass {
 			logger.Infof(result.String())
 		}
+
+		// For webhook check result, simply save the check directly as it doesn't really produce any result.
+		if result.Check.GetType() == checks.WebhookCheckType {
+			check := pkg.FromV1(result.Canary, result.Check)
+
+			savedID, err := db.PersistCheck(check, check.CanaryID)
+			if err != nil {
+				logger.Errorf("error persisting check with canary %s: %v", check.CanaryID, err)
+			}
+			check.ID = savedID
+
+			continue
+		}
+
 		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
 		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded...)
 		for _, checkID := range transformedChecksAdded {

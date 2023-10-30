@@ -634,10 +634,7 @@
           "type": "array"
         },
         "webhook": {
-          "items": {
-            "$ref": "#/$defs/WebhookCheck"
-          },
-          "type": "array"
+          "$ref": "#/$defs/WebhookCheck"
         },
         "interval": {
           "type": "integer"

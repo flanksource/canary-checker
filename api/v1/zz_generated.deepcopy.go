@@ -623,10 +623,8 @@ func (in *CanarySpec) DeepCopyInto(out *CanarySpec) {
 	}
 	if in.Webhook != nil {
 		in, out := &in.Webhook, &out.Webhook
-		*out = make([]WebhookCheck, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		*out = new(WebhookCheck)
+		(*in).DeepCopyInto(*out)
 	}
 }
 
