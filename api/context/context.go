@@ -7,13 +7,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
 	ctemplate "github.com/flanksource/commons/template"
 	"github.com/flanksource/duty"
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
+	"github.com/flanksource/gomplate/v3"
 	"github.com/flanksource/kommons"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"gorm.io/gorm"
@@ -39,8 +42,9 @@ type Context struct {
 	Canary      v1.Canary
 	Environment map[string]interface{}
 	logger.Logger
-	db   *gorm.DB
-	pool *pgxpool.Pool
+	db    *gorm.DB
+	pool  *pgxpool.Pool
+	cache map[string]any
 }
 
 func (ctx *Context) DB() *gorm.DB {
@@ -78,6 +82,26 @@ func getDomain(username string) string {
 		return parts[1]
 	}
 	return ""
+}
+
+func (ctx *Context) GetFunctionsFor(check external.Check) map[string]any {
+	env := make(map[string]any)
+
+	return env
+}
+
+func (ctx *Context) Template(check external.Check, template string) (string, error) {
+	env := ctx.Environment
+
+	for k, v := range ctx.GetFunctionsFor(check) {
+		env[k] = v
+	}
+
+	out, err := gomplate.RunExpression(env, gomplate.Template{Template: template})
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s", out), nil
 }
 
 func (ctx *Context) GetConnection(conn v1.Connection) (*models.Connection, error) {
@@ -240,10 +264,44 @@ func (ctx *Context) Tracef(format string, args ...interface{}) {
 	}
 }
 
+func (ctx *Context) WithCheckResult(result *pkg.CheckResult) *Context {
+	ctx = ctx.WithCheck(result.Check)
+	ctx.Environment["duration"] = result.Duration
+	for k, v := range result.Data {
+		ctx.Environment[k] = v
+	}
+	return ctx
+}
+
+func (ctx *Context) WithCheck(check external.Check) *Context {
+	env := make(map[string]any)
+
+	checkID := ctx.Canary.GetCheckID(check.GetName())
+
+	env["canary"] = map[string]any{
+		"name":      ctx.Canary.GetName(),
+		"namespace": ctx.Canary.GetNamespace(),
+		"labels":    ctx.Canary.GetLabels(),
+		"id":        ctx.Canary.GetPersistedID(),
+	}
+
+	env["check"] = map[string]any{
+		"name":        check.GetName(),
+		"id":          checkID,
+		"description": check.GetDescription(),
+		"labels":      check.GetLabels(),
+		"endpoint":    check.GetEndpoint(),
+	}
+	return ctx.New(env)
+}
+
 func (ctx *Context) New(environment map[string]interface{}) *Context {
 	return &Context{
 		Context:     ctx.Context,
 		Kommons:     ctx.Kommons,
+		db:          ctx.db,
+		pool:        ctx.pool,
+		Kubernetes:  ctx.Kubernetes,
 		Namespace:   ctx.Namespace,
 		Canary:      ctx.Canary,
 		Environment: environment,

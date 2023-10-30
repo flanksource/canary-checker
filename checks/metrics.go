@@ -5,7 +5,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -40,24 +39,6 @@ func getOrAddPrometheusMetric(name, metricType string, labelNames []string) (col
 	}
 	collectorMap[key] = collector
 	return collector, prometheus.Register(collector)
-}
-
-func getWithEnvironment(ctx *context.Context, r *pkg.CheckResult) *context.Context {
-	r.Data["canary"] = map[string]any{
-		"name":      r.Canary.GetName(),
-		"namespace": r.Canary.GetNamespace(),
-		"labels":    r.Canary.GetLabels(),
-		"id":        r.Canary.GetPersistedID(),
-	}
-	r.Data["check"] = map[string]any{
-		"name":        r.Check.GetName(),
-		"id":          r.Canary.GetCheckID(r.Check.GetName()),
-		"description": r.Check.GetDescription(),
-		"labels":      r.Check.GetLabels(),
-		"endpoint":    r.Check.GetEndpoint(),
-		"duration":    time.Millisecond * time.Duration(r.GetDuration()),
-	}
-	return ctx.New(r.Data)
 }
 
 func getLabels(ctx *context.Context, metric external.Metrics) (map[string]string, error) {
@@ -107,8 +88,9 @@ func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 	}
 
 	for _, r := range results {
+		checkCtx := ctx.WithCheckResult(r)
 		for _, metric := range r.Metrics {
-			if err := exportMetric(ctx, metric); err != nil {
+			if err := exportMetric(checkCtx, metric); err != nil {
 				r.ErrorMessage(err)
 			}
 		}
@@ -117,11 +99,9 @@ func exportCheckMetrics(ctx *context.Context, results pkg.Results) {
 				continue
 			}
 
-			ctx = getWithEnvironment(ctx, r)
-
-			if metric, err := templateMetrics(ctx, spec); err != nil {
+			if metric, err := templateMetrics(checkCtx, spec); err != nil {
 				r.ErrorMessage(err)
-			} else if err := exportMetric(ctx, *metric); err != nil {
+			} else if err := exportMetric(checkCtx, *metric); err != nil {
 				r.ErrorMessage(err)
 			}
 		}
