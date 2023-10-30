@@ -43,7 +43,6 @@ var Root = &cobra.Command{
 var (
 	httpPort                 = 8080
 	publicEndpoint           = "http://localhost:8080"
-	prometheusURL            string
 	pushServers, pullServers []string
 	sharedLibrary            []string
 	exposeEnv                bool
