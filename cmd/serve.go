@@ -13,7 +13,10 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echopprof "github.com/sevennt/echo-pprof"
+	"go.opentelemetry.io/otel"
 
+	apicontext "github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
@@ -25,7 +28,9 @@ import (
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
+	commonsCtx "github.com/flanksource/commons/context"
 	"github.com/flanksource/commons/logger"
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -60,6 +65,17 @@ func setup() {
 	if err := models.SetPropertiesInDBFromFile(db.Gorm, propertiesFile); err != nil {
 		logger.Fatalf("Error setting properties in database: %v", err)
 	}
+
+	kommonsClient, k8s, err := pkg.NewKommonsClient()
+	if err != nil {
+		logger.Warnf("failed to get kommons client, checks that read kubernetes configs will fail: %v", err)
+	}
+
+	apicontext.DefaultContext = dutyContext.NewContext(context.Background(), commonsCtx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))).
+		WithDB(db.Gorm, db.Pool).
+		WithKubernetes(k8s).
+		WithKommons(kommonsClient).
+		WithNamespace(runner.WatchNamespace)
 
 	go push.Start()
 }
