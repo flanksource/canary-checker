@@ -63,6 +63,9 @@ nameOverride: ""
 pingMode: "unprivileged"
 allowPrivilegeEscalation: false
 
+# Prometheus URL
+prometheusURL: ""
+
 data:
   defaultSearchWindow: 1h
   cacheTimeoutDays: 90

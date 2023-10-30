@@ -143,7 +143,6 @@ spec:
             {{- range $k, $v := .Values.extraArgs}}
             - --{{$k}}={{$v}}
             {{- end }}
-
             {{- if .Values.upstream.enabled }}
             - --agent-name={{ .Values.upstream.agentName }}
             {{- if .Values.upstream.host }}
@@ -158,6 +157,9 @@ spec:
             {{- if .Values.upstream.insecureSkipVerify}}
             - --upstream-insecure-skip-verify=true
             {{- end}}
+            {{- end }}
+            {{- if ne .Values.prometheusURL "" }}
+            - --prometheus={{ .Values.prometheusURL }}
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
