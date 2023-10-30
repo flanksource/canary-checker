@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/commons/logger"
 	ctemplate "github.com/flanksource/commons/template"
 	"github.com/flanksource/duty"
+	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons"
@@ -18,6 +19,8 @@ import (
 	"gorm.io/gorm"
 	"k8s.io/client-go/kubernetes"
 )
+
+var DefaultContext dutyCtx.Context
 
 type KubernetesContext struct {
 	gocontext.Context

@@ -37,12 +37,12 @@ const (
 // that are missing on the upstream.
 func ReconcileChecks() {
 	jobHistory := models.NewJobHistory("PushChecksToUpstream", "Canary", "")
+
 	_ = db.PersistJobHistory(jobHistory.Start())
 	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
 
-	ctx := dutyContext.NewContext(gocontext.TODO()).WithDB(db.Gorm, db.Pool)
 	reconciler := upstream.NewUpstreamReconciler(UpstreamConf, 5)
-	if err := reconciler.SyncAfter(ctx, "checks", ReconcileMaxAge); err != nil {
+	if err := reconciler.SyncAfter(context.DefaultContext, "checks", ReconcileMaxAge); err != nil {
 		jobHistory.AddError(err.Error())
 		logger.Errorf("failed to sync table 'checks': %v", err)
 	} else {

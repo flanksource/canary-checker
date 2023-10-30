@@ -3,6 +3,7 @@ package jobs
 import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+
 	"github.com/flanksource/canary-checker/pkg/db"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/system"
@@ -10,6 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/topology/checks"
 	"github.com/flanksource/canary-checker/pkg/topology/configs"
 	"github.com/flanksource/commons/logger"
+	dutyjob "github.com/flanksource/duty/job"
 	"github.com/robfig/cron/v3"
 )
 
@@ -67,9 +69,11 @@ func Start() {
 		}
 	}
 
-	if _, err := ScheduleFunc(SyncCanaryJobsSchedule, canaryJobs.SyncCanaryJobs); err != nil {
-		logger.Errorf("Failed to schedule sync jobs for canary: %v", err)
+	if err := dutyjob.NewJob(context.DefaultContext, "SyncCanaryJobs", SyncCanaryJobsSchedule, canaryJobs.SyncCanaryJobs).
+		RunOnStart().AddToScheduler(FuncScheduler); err != nil {
+		logger.Fatalf("Failed to schedule job [canaryJobs.SyncCanaryJobs]: %v", err)
 	}
+
 	if _, err := ScheduleFunc(SyncSystemsJobsSchedule, systemJobs.SyncTopologyJobs); err != nil {
 		logger.Errorf("Failed to schedule sync jobs for systems: %v", err)
 	}
@@ -114,7 +118,6 @@ func Start() {
 	}
 
 	canaryJobs.CleanupMetricsGauges()
-	canaryJobs.SyncCanaryJobs()
 	systemJobs.SyncTopologyJobs()
 }
 

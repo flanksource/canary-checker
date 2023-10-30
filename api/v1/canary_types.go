@@ -25,6 +25,7 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/commons/logger"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type ResultMode string
@@ -232,6 +233,10 @@ func (c Canary) GetDescription(check external.Check) string {
 		return check.GetDescription()
 	}
 	return check.GetEndpoint()
+}
+
+func (c Canary) GetNamespacedName() types.NamespacedName {
+	return types.NamespacedName{Name: c.Name, Namespace: c.Namespace}
 }
 
 func (c *Canary) SetRunnerName(name string) {
