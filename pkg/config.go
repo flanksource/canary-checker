@@ -135,7 +135,7 @@ func ParseConfig(configfile string, datafile string) ([]v1.Canary, error) {
 			return nil, err
 		}
 
-		if len(config.Spec.GetAllChecks()) == 0 {
+		if len(config.Spec.GetAllChecks()) == 0 && config.Spec.Webhook == nil {
 			// try just the specs:
 			spec := v1.CanarySpec{}
 
