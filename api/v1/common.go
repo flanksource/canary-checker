@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"io/fs"
 	"net/url"
 	"regexp"
@@ -13,6 +14,7 @@ import (
 	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/gomplate/v3"
+	"github.com/timberio/go-datemath"
 )
 
 type Duration string
@@ -49,9 +51,33 @@ func (s Size) Value() (*int64, error) {
 type FolderFilter struct {
 	MinAge  Duration `yaml:"minAge,omitempty" json:"minAge,omitempty"`
 	MaxAge  Duration `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
+	Since   string   `yaml:"since,omitempty" json:"since,omitempty"`
 	MinSize Size     `yaml:"minSize,omitempty" json:"minSize,omitempty"`
 	MaxSize Size     `yaml:"maxSize,omitempty" json:"maxSize,omitempty"`
 	Regex   string   `yaml:"regex,omitempty" json:"regex,omitempty"`
+}
+
+func (f FolderFilter) String() string {
+	s := []string{}
+	if f.MinAge != "" {
+		s = append(s, fmt.Sprintf("minAge="+string(f.MinAge)))
+	}
+	if f.MaxAge != "" {
+		s = append(s, "maxAge="+string(f.MaxAge))
+	}
+	if f.MinSize != "" {
+		s = append(s, "minSize="+string(f.MinSize))
+	}
+	if f.MaxSize != "" {
+		s = append(s, "maxSize="+string(f.MaxSize))
+	}
+	if f.Regex != "" {
+		s = append(s, "regex="+f.Regex)
+	}
+	if f.Since != "" {
+		s = append(s, "since="+f.Since)
+	}
+	return strings.Join(s, ", ")
 }
 
 // +k8s:deepcopy-gen=false
@@ -59,6 +85,7 @@ type FolderFilterContext struct {
 	FolderFilter
 	minAge, maxAge   *time.Duration
 	minSize, maxSize *int64
+	Since            *time.Time
 	// kubebuilder:object:generate=false
 	regex *regexp.Regexp
 }
@@ -98,7 +125,34 @@ func (f FolderFilter) New() (*FolderFilterContext, error) {
 			return nil, err
 		}
 	}
+	if f.Since != "" {
+		if since, err := tryParse(f.Since); err == nil {
+			ctx.Since = &since
+		} else {
+			if since, err := datemath.Parse(f.Since); err != nil {
+				return nil, fmt.Errorf("could not parse since: %s: %v", f.Since, err)
+			} else {
+				t := since.Time()
+				ctx.Since = &t
+			}
+		}
+		// add 1 second to the since time so that last_result.newest.modified can be used as a since
+		after := ctx.Since.Add(1 * time.Second)
+		ctx.Since = &after
+	}
 	return ctx, nil
+}
+
+var RFC3339NanoWithoutTimezone = "2006-01-02T15:04:05.999999999"
+
+func tryParse(s string) (time.Time, error) {
+	if t, err := time.Parse(time.RFC3339Nano, s); err == nil {
+		return t, nil
+	}
+	if t, err := time.Parse(RFC3339NanoWithoutTimezone, s); err == nil {
+		return t, nil
+	}
+	return time.Time{}, fmt.Errorf("could not parse %s", s)
 }
 
 func (f *FolderFilterContext) Filter(i fs.FileInfo) bool {
@@ -118,6 +172,9 @@ func (f *FolderFilterContext) Filter(i fs.FileInfo) bool {
 		return false
 	}
 	if f.regex != nil && !f.regex.MatchString(i.Name()) {
+		return false
+	}
+	if f.Since != nil && i.ModTime().Before(*f.Since) {
 		return false
 	}
 	return true

@@ -84,20 +84,17 @@ func getDomain(username string) string {
 	return ""
 }
 
-func (ctx *Context) GetFunctionsFor(check external.Check) map[string]any {
-	env := make(map[string]any)
-
-	return env
-}
-
 func (ctx *Context) Template(check external.Check, template string) (string, error) {
 	env := ctx.Environment
 
-	for k, v := range ctx.GetFunctionsFor(check) {
-		env[k] = v
+	tpl := gomplate.Template{Template: template}
+	if tpl.Functions == nil {
+		tpl.Functions = make(map[string]func() any)
 	}
-
-	out, err := gomplate.RunExpression(env, gomplate.Template{Template: template})
+	for k, v := range ctx.GetContextualFunctions() {
+		tpl.Functions[k] = v
+	}
+	out, err := gomplate.RunExpression(env, tpl)
 	if err != nil {
 		return "", err
 	}
@@ -156,6 +153,21 @@ func (ctx *Context) GetConnection(conn v1.Connection) (*models.Connection, error
 	}
 
 	return _conn, nil
+}
+
+func (ctx Context) TemplateStruct(o interface{}) error {
+	templater := gomplate.StructTemplater{
+		Values: ctx.Environment,
+		Funcs:  ctx.GetContextualFunctions(),
+		// access go values in template requires prefix everything with .
+		// to support $(username) instead of $(.username) we add a function for each var
+		ValueFunctions: true,
+		DelimSets: []gomplate.Delims{
+			{Left: "{{", Right: "}}"},
+			{Left: "$(", Right: ")"},
+		},
+	}
+	return templater.Walk(o)
 }
 
 func (ctx Context) GetAuthValues(auth v1.Authentication) (v1.Authentication, error) {

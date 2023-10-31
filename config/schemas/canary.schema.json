@@ -1525,6 +1525,9 @@
         "maxAge": {
           "type": "string"
         },
+        "since": {
+          "type": "string"
+        },
         "minSize": {
           "type": "string"
         },

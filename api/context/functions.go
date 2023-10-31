@@ -5,16 +5,13 @@ import (
 	"time"
 
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/gomplate/v3"
 )
 
-func (ctx *Context) InjectFunctions(template *gomplate.Template) {
+func (ctx *Context) GetContextualFunctions() map[string]func() any {
+	funcs := make(map[string]func() any)
 	if check, ok := ctx.Environment["check"]; ok {
 		checkID := check.(map[string]any)["id"]
-		if template.Functions == nil {
-			template.Functions = make(map[string]func() any)
-		}
-		template.Functions["last_result"] = func() any {
+		funcs["last_result"] = func() any {
 			if ctx.cache == nil {
 				ctx.cache = make(map[string]any)
 			}
@@ -78,4 +75,5 @@ func (ctx *Context) InjectFunctions(template *gomplate.Template) {
 			return status
 		}
 	}
+	return funcs
 }

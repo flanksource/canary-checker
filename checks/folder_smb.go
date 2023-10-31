@@ -104,9 +104,6 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.ErrorMessage(err)
 	}
 
-	folders.SupportsAvailableSize = true
-	folders.SupportsTotalSize = true
-
 	folders.AvailableSize = int64(freeBlockCount * blockSize)
 	folders.TotalSize = int64(totalBlockCount * blockSize)
 
