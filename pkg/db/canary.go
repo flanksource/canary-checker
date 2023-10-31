@@ -96,6 +96,10 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 		"deleted_at":  nil,
 	}
 
+	if check.DeletedAt != nil {
+		assignments["deleted_at"] = check.DeletedAt
+	}
+
 	if err := Gorm.Clauses(
 		clause.OnConflict{
 			Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},

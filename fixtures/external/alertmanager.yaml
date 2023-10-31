@@ -17,5 +17,6 @@ spec:
             'icon': 'alert',
             'message': r.annotations.summary,
             'description': r.annotations.description,
+            'deletedAt': r.endsAt,
           }
         ).toJSON()

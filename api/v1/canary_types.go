@@ -199,9 +199,6 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	for _, check := range spec.Opensearch {
 		checks = append(checks, check)
 	}
-	if spec.Webhook != nil {
-		checks = append(checks, spec.Webhook)
-	}
 	return checks
 }
 

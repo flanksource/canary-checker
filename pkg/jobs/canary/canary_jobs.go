@@ -113,8 +113,55 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	}
 	span.End()
 
-	checks.PersistCheckResults(ctx.Context, canaryID, j.Canary, results)
+	if canaryCtx.Canary.Spec.Webhook != nil {
+		results = append(results, pkg.Success(canaryCtx.Canary.Spec.Webhook, canaryCtx.Canary))
+	}
+
+	// Get transformed checks before and after, and then delete the olds ones that are not in new set
+	existingTransformedChecks, _ := db.GetTransformedCheckIDs(ctx.Context, canaryID)
+	var transformedChecksCreated []string
+	// Transformed checks have a delete strategy
+	// On deletion they can either be marked healthy, unhealthy or left as is
+	checkIDDeleteStrategyMap := make(map[string]string)
+
+	// TODO: Use ctx with object here
+	logPass := j.Canary.IsTrace() || j.Canary.IsDebug() || LogPass
+	logFail := j.Canary.IsTrace() || j.Canary.IsDebug() || LogFail
+	for _, result := range results {
+		if logPass && result.Pass || logFail && !result.Pass {
+			logger.Infof(result.String())
+		}
+		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
+		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded...)
+		for _, checkID := range transformedChecksAdded {
+			checkIDDeleteStrategyMap[checkID] = result.Check.GetTransformDeleteStrategy()
+		}
+	}
 	updateCanaryStatusAndEvent(j.Canary, results)
+
+	checkDeleteStrategyGroup := make(map[string][]string)
+	checksToRemove := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
+	if len(checksToRemove) > 0 && len(transformedChecksCreated) > 0 {
+		for _, checkID := range checksToRemove {
+			strategy := checkIDDeleteStrategyMap[checkID]
+			// Empty status by default does not effect check status
+			var status string
+			if strategy == v1.OnTransformMarkHealthy {
+				status = models.CheckStatusHealthy
+			} else if strategy == v1.OnTransformMarkUnhealthy {
+				status = models.CheckStatusUnhealthy
+			}
+			checkDeleteStrategyGroup[status] = append(checkDeleteStrategyGroup[status], checkID)
+		}
+		for status, checkIDs := range checkDeleteStrategyGroup {
+			if err := db.AddCheckStatuses(ctx.Context, checkIDs, models.CheckHealthStatus(status)); err != nil {
+				logger.Errorf("error adding statuses for transformed checks: %v", err)
+			}
+			if err := db.RemoveTransformedChecks(ctx.Context, checkIDs); err != nil {
+				logger.Errorf("error deleting transformed checks for canary %s: %v", canaryID, err)
+			}
+		}
+	}
 
 	// Update last runtime map
 	canaryLastRuntimes.Store(canaryID, time.Now())
@@ -175,7 +222,7 @@ func updateCanaryStatusAndEvent(canary v1.Canary, results []*pkg.CheckResult) {
 		}
 
 		// TODO Why is this here ?
-		push.Queue(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
+		push.Queue(pkg.FromV1(canary, result.Check), pkg.CheckStatusFromResult(*result))
 
 		// Update status message
 		if len(messages) == 1 {

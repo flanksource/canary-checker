@@ -11,6 +11,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/models"
@@ -108,9 +109,11 @@ func webhookHandler(ctx goctx.Context, id, authToken string, data CheckData) err
 
 	scrapeCtx := context.New(context.DefaultContext.Kommons(), context.DefaultContext.Kubernetes(), db.Gorm, db.Pool, *canary)
 	transformedResults := checks.TransformResults(scrapeCtx, results)
-	results = append(results, transformedResults...)
 
 	checks.ExportCheckMetrics(scrapeCtx, transformedResults)
-	checks.PersistCheckResults(context.DefaultContext, string(canary.GetUID()), *canary, results)
+	for _, result := range transformedResults {
+		_ = cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
+	}
+
 	return nil
 }
