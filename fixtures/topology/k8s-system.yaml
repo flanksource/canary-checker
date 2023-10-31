@@ -14,6 +14,25 @@ spec:
   configs:
     - name: flanksource-canary-cluster
       type: EKS
+  properties:
+  - name: cpu
+    headline: true
+    unit: millicores
+    lookup:
+      prometheus:
+      - query: '1000 * max(rate(container_cpu_usage_seconds_total{container!=""}[5m]))'
+        url: 'http://prometheus-k8s.monitoring:9090'
+        display:
+          expr: results[0].value
+  - name: memory
+    headline: true
+    unit: bytes
+    lookup:
+      prometheus:
+      - query: 'max(avg_over_time(container_memory_working_set_bytes{container!=""}[5m]))'
+        url: 'http://prometheus-k8s.monitoring:9090'
+        display:
+          expr: results[0].value
   components:
     - name: nodes
       icon: server
