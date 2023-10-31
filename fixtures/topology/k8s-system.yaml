@@ -49,7 +49,7 @@ spec:
               lookup:
                 prometheus:
                 - query: '1000 * max by (node) (rate(container_cpu_usage_seconds_total{container!=""}[5m]))'
-                  host: 'http://prometheus-k8s.monitoring:9090'
+                  url: 'http://prometheus-k8s.monitoring:9090'
                   display:
                     javascript: |
                       var components = [];
@@ -64,7 +64,7 @@ spec:
               lookup:
                 prometheus:
                 - query: 'max by (node) (avg_over_time(container_memory_working_set_bytes{container!=""}[5m]))'
-                  host: 'http://prometheus-k8s.monitoring:9090'
+                  url: 'http://prometheus-k8s.monitoring:9090'
                   display:
                     javascript: |
                       var components = [];
@@ -98,7 +98,7 @@ spec:
               lookup:
                 prometheus:
                 - query: '1000 * max by (pod) (rate(container_cpu_usage_seconds_total{container!=""}[5m]))'
-                  host: 'http://prometheus-k8s.monitoring:9090'
+                  url: 'http://prometheus-k8s.monitoring:9090'
                   display:
                     javascript: |
                       var components = [];
@@ -117,7 +117,7 @@ spec:
               lookup:
                 prometheus:
                 - query: 'max by (pod) (avg_over_time(container_memory_working_set_bytes{container!=""}[5m]))'
-                  host: 'http://prometheus-k8s.monitoring:9090'
+                  url: 'http://prometheus-k8s.monitoring:9090'
                   display:
                     javascript: |
                       var components = [];
