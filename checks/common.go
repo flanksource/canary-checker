@@ -67,12 +67,7 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 		tpl.Functions[k] = v
 	}
 
-	e, err := unstructure(ctx.Environment)
-	if err != nil {
-		return "", err
-	}
-
-	return gomplate.RunTemplate(e, tpl)
+	return gomplate.RunTemplate(ctx.Environment, tpl)
 }
 
 // transform generates new checks from the transformation template of the parent check
