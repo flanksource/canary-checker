@@ -16,23 +16,21 @@ spec:
       type: EKS
   properties:
   - name: cpu
-    headline: true
-    unit: millicores
     lookup:
       prometheus:
       - query: '1000 * max(rate(container_cpu_usage_seconds_total{container!=""}[5m]))'
         url: 'http://prometheus-k8s.monitoring:9090'
         display:
-          expr: results[0].value
+          expr: |
+            [{'name': 'cpu', 'value': int(results[0].value), 'headline': true, 'unit': 'millicores'}].toJSON()
   - name: memory
-    headline: true
-    unit: bytes
     lookup:
       prometheus:
       - query: 'max(avg_over_time(container_memory_working_set_bytes{container!=""}[5m]))'
         url: 'http://prometheus-k8s.monitoring:9090'
         display:
-          expr: results[0].value
+          expr: |
+            [{'name': 'memory', 'value': int(results[0].value), 'headline': true, 'unit': 'bytes'}].toJSON()
   components:
     - name: nodes
       icon: server
