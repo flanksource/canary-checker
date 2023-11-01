@@ -324,10 +324,15 @@ func DeleteTopology(t *v1.Topology) error {
 func DeleteComponentsOfTopology(topologyID string, deleteTime time.Time) error {
 	logger.Infof("Deleting all components associated with topology: %s", topologyID)
 	componentsModel := &[]pkg.Component{}
-	if err := Gorm.Where("topology_id = ?", topologyID).Find(componentsModel).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
-		return err
+	if err := Gorm.Where("topology_id = ?", topologyID).Find(componentsModel).Error; err != nil {
+		return fmt.Errorf("error querying components: %w", err)
 	}
 	for _, component := range *componentsModel {
+		if err := Gorm.Table("components").
+			Where("id = ?", component.ID.String()).
+			UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+			return fmt.Errorf("error updating deleted_at for components: %w", err)
+		}
 		if err := DeleteComponentChildren(component.ID.String(), deleteTime); err != nil {
 			logger.Errorf("Error deleting component[%s] children: %v", component.ID, err)
 		}
