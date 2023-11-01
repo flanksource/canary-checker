@@ -27,7 +27,7 @@ spec:
       display:
         expr: results.?files.orValue([]).map(i, i.name).join(", ")
       test:
-        expr: results.?files.orValue([]).size()  == 0
+        expr: results.?files.orValue([]).size()  > 0
       metrics:
         - name: new_files
           value: results.?files.orValue([]).size()
