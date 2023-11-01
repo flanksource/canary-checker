@@ -25,6 +25,7 @@ var topologyRunNamespace string
 var Topology = &cobra.Command{
 	Use: "topology",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		logger.ParseFlags(cmd.Flags())
 		db.ConnectionString = readFromEnv(db.ConnectionString)
 		if db.IsConfigured() {
 			if err := db.Init(); err != nil {

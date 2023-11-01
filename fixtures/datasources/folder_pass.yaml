@@ -3,8 +3,32 @@ kind: Canary
 metadata:
   name: folder-pass
 spec:
-  interval: 30
+  interval: 10
   folder:
     - path: /etc/
-      name: min count pass
-      minCount: 10
+      name: Check for updated /etc files
+      filter:
+        # use the last known max, or 60 days ago if no last known max
+        since: |
+          {{-  if last_result.results.max }}
+          {{  last_result.results.max }}
+          {{- else}}
+          now-60d
+          {{- end}}
+      transform:
+        # Save the newest modified time to the results, overriding the full file listing that would normally be saved
+        # if no new files detected, use the last known max
+        expr: |
+          {
+            "detail": {
+              "max": string(results.?newest.modified.orValue(last_result().results.?max.orValue("now-60d"))),
+            }
+          }.toJSON()
+      display:
+        expr: results.?files.orValue([]).map(i, i.name).join(", ")
+      test:
+        expr: results.?files.orValue([]).size()  > 0
+      metrics:
+        - name: new_files
+          value: results.?files.orValue([]).size()
+          type: counter

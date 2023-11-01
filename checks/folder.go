@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -11,6 +12,8 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 )
+
+const SizeNotSupported = -1
 
 var (
 	bucketScanObjectCount = prometheus.NewGaugeVec(
@@ -58,6 +61,15 @@ func (c *FolderChecker) Run(ctx *context.Context) pkg.Results {
 func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.FolderCheck)
 	path := strings.ToLower(check.Path)
+	ctx = ctx.WithCheck(check)
+	if ctx.CanTemplate() {
+		if err := ctx.TemplateStruct(&check.Filter); err != nil {
+			return pkg.Invalid(check, ctx.Canary, fmt.Sprintf("failed to template filter: %v", err))
+		}
+	}
+	if ctx.IsDebug() {
+		ctx.Infof("Checking %s with filter(%s)", path, check.Filter)
+	}
 	switch {
 	case strings.HasPrefix(path, "s3://"):
 		return CheckS3Bucket(ctx, check)
@@ -104,7 +116,11 @@ func getLocalFolderCheck(path string, filter v1.FolderFilter) (*FolderCheck, err
 		if err != nil {
 			return nil, err
 		}
-		return &FolderCheck{Oldest: info, Newest: info}, nil
+		return &FolderCheck{
+			Oldest:        newFile(info),
+			Newest:        newFile(info),
+			AvailableSize: SizeNotSupported,
+			TotalSize:     SizeNotSupported}, nil
 	}
 
 	for _, file := range files {
@@ -137,7 +153,11 @@ func getGenericFolderCheck(fs Filesystem, dir string, filter v1.FolderFilter) (*
 		if err != nil {
 			return nil, err
 		}
-		return &FolderCheck{Oldest: info, Newest: info}, nil
+		return &FolderCheck{
+			Oldest:        newFile(info),
+			Newest:        newFile(info),
+			AvailableSize: SizeNotSupported,
+			TotalSize:     SizeNotSupported}, nil
 	}
 
 	for _, file := range files {

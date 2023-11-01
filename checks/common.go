@@ -47,7 +47,7 @@ func getNextRuntime(canary v1.Canary, lastRuntime time.Time) (*time.Time, error)
 }
 
 // unstructure marshalls a struct to and from JSON to remove any type details
-func unstructure(o any) (out interface{}, err error) {
+func unstructure(o any) (out map[string]any, err error) {
 	data, err := json.Marshal(o)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,13 @@ func unstructure(o any) (out interface{}, err error) {
 func template(ctx *context.Context, template v1.Template) (string, error) {
 	tpl := template.Gomplate()
 
-	ctx.InjectFunctions(&tpl)
+	if tpl.Functions == nil {
+		tpl.Functions = make(map[string]func() any)
+	}
+
+	for k, v := range ctx.GetContextualFunctions() {
+		tpl.Functions[k] = v
+	}
 
 	return gomplate.RunTemplate(ctx.Environment, tpl)
 }
@@ -137,7 +143,6 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 		if t.Start != nil {
 			in.Start = *t.Start
 		}
-
 		if t.Pass != nil {
 			in.Pass = *t.Pass
 		}
@@ -157,7 +162,12 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 			in.Error = t.Error
 		}
 		if t.Detail != nil {
-			in.Detail = t.Detail
+			if t.Detail == "$delete" {
+				in.Detail = nil
+				delete(in.Data, "results")
+			} else {
+				in.Detail = t.Detail
+			}
 		}
 		if t.DisplayType != "" {
 			in.DisplayType = t.DisplayType

@@ -12,8 +12,10 @@ type Results []*CheckResult
 
 func Fail(check external.Check, canary v1.Canary) *CheckResult {
 	return &CheckResult{
-		Check:  check,
-		Data:   make(map[string]interface{}),
+		Check: check,
+		Data: map[string]interface{}{
+			"results": make(map[string]interface{}),
+		},
 		Start:  time.Now(),
 		Pass:   false,
 		Canary: canary,
@@ -29,18 +31,35 @@ func SetupError(canary v1.Canary, err error) Results {
 			Invalid: true,
 			Error:   err.Error(),
 			Check:   check,
-			Data:    make(map[string]interface{}),
+			Data: map[string]interface{}{
+				"results": make(map[string]interface{}),
+			},
 		})
 	}
 	return results
 }
 
+func Invalid(check external.Check, canary v1.Canary, reason string) Results {
+	return Results{&CheckResult{
+		Start: time.Now(),
+		Pass:  false,
+		Error: reason,
+		Check: check,
+		Data: map[string]interface{}{
+			"results": make(map[string]interface{}),
+		},
+		Canary: canary,
+	}}
+}
+
 func Success(check external.Check, canary v1.Canary) *CheckResult {
 	return &CheckResult{
-		Start:  time.Now(),
-		Pass:   true,
-		Check:  check,
-		Data:   make(map[string]interface{}),
+		Start: time.Now(),
+		Pass:  true,
+		Check: check,
+		Data: map[string]interface{}{
+			"results": make(map[string]interface{}),
+		},
 		Canary: canary,
 	}
 }

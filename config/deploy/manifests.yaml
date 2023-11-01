@@ -2654,6 +2654,8 @@ spec:
                             type: string
                           regex:
                             type: string
+                          since:
+                            type: string
                         type: object
                       gcpConnection:
                         properties:

@@ -19,6 +19,10 @@ import (
 var Root = &cobra.Command{
 	Use: "canary-checker",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+
+		canary.LogFail = logFail
+		canary.LogPass = logPass
+
 		logger.UseZap(cmd.Flags())
 		for _, script := range sharedLibrary {
 			if err := gomplate.LoadSharedLibrary(script); err != nil {
