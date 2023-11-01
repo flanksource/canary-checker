@@ -97,7 +97,7 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 
 	query := check.GetQuery()
 
-	if ctx.Canary.Annotations["template"] != "false" {
+	if ctx.CanTemplate() {
 		query, err = template(ctx.WithCheck(checker.GetCheck()), v1.Template{
 			Template: query,
 		})

@@ -62,7 +62,7 @@ func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	check := extConfig.(v1.FolderCheck)
 	path := strings.ToLower(check.Path)
 	ctx = ctx.WithCheck(check)
-	if ctx.Canary.Annotations["template"] != "false" {
+	if ctx.CanTemplate() {
 		if err := ctx.TemplateStruct(&check.Filter); err != nil {
 			return pkg.Invalid(check, ctx.Canary, fmt.Sprintf("failed to template filter: %v", err))
 		}

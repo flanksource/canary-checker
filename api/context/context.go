@@ -101,6 +101,10 @@ func (ctx *Context) Template(check external.Check, template string) (string, err
 	return fmt.Sprintf("%s", out), nil
 }
 
+func (ctx *Context) CanTemplate() bool {
+	return ctx.Canary.Annotations["template"] != "false"
+}
+
 func (ctx *Context) GetConnection(conn v1.Connection) (*models.Connection, error) {
 	var _conn *models.Connection
 	var err error
