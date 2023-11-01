@@ -59,8 +59,6 @@ func run(cmd *cobra.Command, args []string) {
 		logger.Fatalf("failed to get zap logger")
 		return
 	}
-	canaryJobs.LogFail = logFail
-	canaryJobs.LogPass = logPass
 
 	loggr := ctrlzap.NewRaw(
 		ctrlzap.UseDevMode(true),

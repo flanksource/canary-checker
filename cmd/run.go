@@ -114,12 +114,10 @@ var Run = &cobra.Command{
 			}
 		}
 		if jsonExport {
-
 			for _, result := range results {
 				result.Name = def(result.Name, result.Check.GetName(), result.Canary.Name)
 				result.Description = def(result.Description, result.Check.GetDescription())
 				result.Labels = merge(result.Check.GetLabels(), result.Labels)
-				fmt.Println(result.Name)
 			}
 
 			data, err := json.Marshal(results)

@@ -7,6 +7,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs/canary"
+	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/telemetry"
@@ -19,6 +20,10 @@ import (
 var Root = &cobra.Command{
 	Use: "canary-checker",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+
+		canaryJobs.LogFail = logFail
+		canaryJobs.LogPass = logPass
+
 		logger.UseZap(cmd.Flags())
 		for _, script := range sharedLibrary {
 			if err := gomplate.LoadSharedLibrary(script); err != nil {
