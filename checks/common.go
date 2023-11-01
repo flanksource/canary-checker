@@ -6,11 +6,13 @@ import (
 	"time"
 
 	_ "github.com/robertkrimen/otto/underscore"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
+	cUtils "github.com/flanksource/commons/utils"
 	"github.com/flanksource/gomplate/v3"
 	"github.com/robfig/cron/v3"
 )
@@ -44,13 +46,6 @@ func getNextRuntime(canary v1.Canary, lastRuntime time.Time) (*time.Time, error)
 	return &t, nil
 }
 
-func def(a, b string) string {
-	if a != "" {
-		return a
-	}
-	return b
-}
-
 // unstructure marshalls a struct to and from JSON to remove any type details
 func unstructure(o any) (out interface{}, err error) {
 	data, err := json.Marshal(o)
@@ -69,6 +64,7 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 	return gomplate.RunTemplate(ctx.Environment, tpl)
 }
 
+// transform generates new checks from the transformation template of the parent check
 func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, error) {
 	var tpl v1.Template
 	switch v := in.Check.(type) {
@@ -105,22 +101,29 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 	if t.Name != "" && t.Name != in.Check.GetName() {
 		// new check result created with a new name
 		for _, t := range transformed {
-			t.Icon = def(t.Icon, in.Check.GetIcon())
-			t.Description = def(t.Description, in.Check.GetDescription())
-			t.Name = def(t.Name, in.Check.GetName())
-			t.Type = def(t.Type, in.Check.GetType())
-			t.Endpoint = def(t.Endpoint, in.Check.GetEndpoint())
-			t.TransformDeleteStrategy = def(t.TransformDeleteStrategy, in.Check.GetTransformDeleteStrategy())
+			t.Icon = cUtils.Coalesce(t.Icon, in.Check.GetIcon())
+			t.Description = cUtils.Coalesce(t.Description, in.Check.GetDescription())
+			t.Name = cUtils.Coalesce(t.Name, in.Check.GetName())
+			t.Type = cUtils.Coalesce(t.Type, in.Check.GetType())
+			t.Endpoint = cUtils.Coalesce(t.Endpoint, in.Check.GetEndpoint())
+			t.TransformDeleteStrategy = cUtils.Coalesce(t.TransformDeleteStrategy, in.Check.GetTransformDeleteStrategy())
+
 			r := t.ToCheckResult()
 			r.Canary = in.Canary
-			r.Canary.Namespace = def(t.Namespace, r.Canary.Namespace)
+			r.Canary.Namespace = cUtils.Coalesce(t.Namespace, r.Canary.Namespace)
 			if r.Canary.Labels == nil {
 				r.Canary.Labels = make(map[string]string)
 			}
 
 			// We use this label to set the transformed column to true
-			// This label is used and then removed in pkg.FromV1 function
+			// this label are used and then removed in pkg.FromV1 function
 			r.Canary.Labels["transformed"] = "true" //nolint:goconst
+			if t.DeletedAt != nil && !t.DeletedAt.IsZero() {
+				r.Canary.DeletionTimestamp = &metav1.Time{
+					Time: *t.DeletedAt,
+				}
+			}
+
 			r.Labels = t.Labels
 			r.Transformed = true
 			results = append(results, &r)

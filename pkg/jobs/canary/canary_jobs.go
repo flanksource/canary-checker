@@ -113,6 +113,10 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	}
 	span.End()
 
+	if canaryCtx.Canary.Spec.Webhook != nil {
+		results = append(results, pkg.Success(canaryCtx.Canary.Spec.Webhook, canaryCtx.Canary))
+	}
+
 	// Get transformed checks before and after, and then delete the olds ones that are not in new set
 	existingTransformedChecks, _ := db.GetTransformedCheckIDs(ctx.Context, canaryID)
 	var transformedChecksCreated []string
@@ -127,7 +131,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		if logPass && result.Pass || logFail && !result.Pass {
 			logger.Infof(result.String())
 		}
-		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
+		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
 		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded...)
 		for _, checkID := range transformedChecksAdded {
 			checkIDDeleteStrategyMap[checkID] = result.Check.GetTransformDeleteStrategy()
@@ -218,7 +222,7 @@ func updateCanaryStatusAndEvent(canary v1.Canary, results []*pkg.CheckResult) {
 		}
 
 		// TODO Why is this here ?
-		push.Queue(pkg.FromV1(canary, result.Check), pkg.FromResult(*result))
+		push.Queue(pkg.FromV1(canary, result.Check), pkg.CheckStatusFromResult(*result))
 
 		// Update status message
 		if len(messages) == 1 {

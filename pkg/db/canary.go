@@ -96,6 +96,10 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 		"deleted_at":  nil,
 	}
 
+	if check.DeletedAt != nil {
+		assignments["deleted_at"] = check.DeletedAt
+	}
+
 	if err := Gorm.Clauses(
 		clause.OnConflict{
 			Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
@@ -276,6 +280,23 @@ func FindCheck(canary pkg.Canary, name string) (*pkg.Check, error) {
 		return nil, err
 	}
 	return &model, nil
+}
+
+func FindChecks(ctx context.Context, idOrName, checkType string) ([]models.Check, error) {
+	query := ctx.DB().
+		Where("agent_id = ?", uuid.Nil.String()).
+		Where("type = ?", checkType).
+		Where("deleted_at IS NULL")
+
+	if _, err := uuid.Parse(idOrName); err != nil {
+		query = query.Where("name = ?", idOrName)
+	} else {
+		query = query.Where("id = ?", idOrName)
+	}
+
+	var checks []models.Check
+	err := query.Find(&checks).Error
+	return checks, err
 }
 
 func FindDeletedChecksSince(ctx context.Context, since time.Time) ([]string, error) {

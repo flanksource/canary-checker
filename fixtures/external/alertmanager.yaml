@@ -1,0 +1,24 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: alert-manager-webhook-check
+  labels:
+    "Expected-Fail": "true"
+spec:
+  schedule: "@every 1m"
+  webhook:
+    name: my-webhook
+    token:
+      value: webhook-auth-token
+    transform:
+      expr: |
+        results.json.alerts.map(r,
+          {
+            'name': r.name + r.fingerprint,
+            'labels': r.labels,
+            'icon': 'alert',
+            'message': r.annotations.summary,
+            'description': r.annotations.description,
+            'deletedAt': has(r.endsAt) ? r.endsAt : null,
+          }
+        ).toJSON()

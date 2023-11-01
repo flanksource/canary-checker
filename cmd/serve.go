@@ -117,6 +117,9 @@ func serve() {
 	e.POST("/api/push", api.PushHandler)
 	e.GET("/api/details", api.DetailsHandler)
 	e.GET("/api/topology", api.Topology)
+
+	e.POST("/webhook/:id", api.WebhookHandler)
+
 	e.GET("/metrics", echo.WrapHandler(promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{})))
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")

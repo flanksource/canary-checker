@@ -229,7 +229,7 @@ func FromExternalCheck(canary Canary, check external.Check) Check {
 	}
 }
 
-func FromResult(result CheckResult) CheckStatus {
+func CheckStatusFromResult(result CheckResult) CheckStatus {
 	return CheckStatus{
 		Status:   result.Pass,
 		Invalid:  result.Invalid,
@@ -261,10 +261,16 @@ func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Che
 		Statuses:    statuses,
 		Type:        check.GetType(),
 	}
+
 	if _, exists := c.Labels["transformed"]; exists {
 		c.Transformed = true
 		delete(c.Labels, "transformed")
 	}
+
+	if canary.DeletionTimestamp != nil && !canary.DeletionTimestamp.Time.IsZero() {
+		c.DeletedAt = &canary.DeletionTimestamp.Time
+	}
+
 	return c
 }
 
@@ -469,6 +475,7 @@ type TransformedCheckResult struct {
 	Invalid                 *bool                  `json:"invalid,omitempty"`
 	Detail                  interface{}            `json:"detail,omitempty"`
 	Data                    map[string]interface{} `json:"data,omitempty"`
+	DeletedAt               *time.Time             `json:"deletedAt,omitempty"`
 	Duration                *int64                 `json:"duration,omitempty"`
 	Description             string                 `json:"description,omitempty"`
 	DisplayType             string                 `json:"displayType,omitempty"`
