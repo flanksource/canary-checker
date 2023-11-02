@@ -86,6 +86,7 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 			ClientSecret: connection.Password,
 			TokenURL:     check.Oauth2.TokenURL,
 			Scopes:       check.Oauth2.Scopes,
+			Params:       check.Oauth2.Params,
 		})
 	}
 
