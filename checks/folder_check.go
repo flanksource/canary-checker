@@ -21,7 +21,7 @@ type FolderCheck struct {
 	MaxSize       *File  `json:"largest,omitempty"`
 	TotalSize     int64  `json:"size,omitempty"`
 	AvailableSize int64  `json:"availableSize,omitempty"`
-	Files         []File `json:"files,omitempty"`
+	Files         []File `json:"files"`
 }
 
 type File struct {
