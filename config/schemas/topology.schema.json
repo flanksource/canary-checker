@@ -2648,6 +2648,14 @@
         },
         "tokenURL": {
           "type": "string"
+        },
+        "params": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
         }
       },
       "additionalProperties": false,

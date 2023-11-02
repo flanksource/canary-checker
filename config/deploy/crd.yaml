@@ -3292,6 +3292,10 @@ spec:
                       oauth2:
                         description: Oauth2 Configuration. The client ID & Client secret should go to username & password respectively.
                         properties:
+                          params:
+                            additionalProperties:
+                              type: string
+                            type: object
                           scope:
                             items:
                               type: string
