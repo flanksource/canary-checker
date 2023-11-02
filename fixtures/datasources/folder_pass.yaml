@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: folder-pass
 spec:
-  interval: 10
+  interval: 300
   folder:
     - path: /etc/
       name: Check for updated /etc files
@@ -32,3 +32,15 @@ spec:
         - name: new_files
           value: results.?files.orValue([]).size()
           type: counter
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: folder-pass-empty
+spec:
+  interval: 300
+  folder:
+    - name: folder-nil-handling
+      path: /some/folder/that/does/not/exist
+      test:
+        expr: results.files.size() == 0

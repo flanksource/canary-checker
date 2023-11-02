@@ -89,10 +89,11 @@ func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 	folders, err := getLocalFolderCheck(check.Path, check.Filter)
+	result.AddDetails(folders)
+
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
-	result.AddDetails(folders)
 
 	if test := folders.Test(check.FolderTest); test != "" {
 		return results.Failf(test)
@@ -100,23 +101,31 @@ func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	return results
 }
 
-func getLocalFolderCheck(path string, filter v1.FolderFilter) (*FolderCheck, error) {
+func getLocalFolderCheck(path string, filter v1.FolderFilter) (FolderCheck, error) {
 	result := FolderCheck{}
 	_filter, err := filter.New()
 	if err != nil {
-		return nil, err
+		return result, err
+	}
+	if dir, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			return result, nil
+		}
+		return result, err
+	} else if !dir.IsDir() {
+		return result, fmt.Errorf("%s is not a directory", path)
 	}
 	files, err := os.ReadDir(path)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 	if len(files) == 0 {
 		// directory is empty. returning duration of directory
 		info, err := os.Stat(path)
 		if err != nil {
-			return nil, err
+			return result, err
 		}
-		return &FolderCheck{
+		return FolderCheck{
 			Oldest:        newFile(info),
 			Newest:        newFile(info),
 			AvailableSize: SizeNotSupported,
@@ -126,7 +135,7 @@ func getLocalFolderCheck(path string, filter v1.FolderFilter) (*FolderCheck, err
 	for _, file := range files {
 		info, err := file.Info()
 		if err != nil {
-			return nil, err
+			return result, err
 		}
 		if file.IsDir() || !_filter.Filter(info) {
 			continue
@@ -134,7 +143,7 @@ func getLocalFolderCheck(path string, filter v1.FolderFilter) (*FolderCheck, err
 
 		result.Append(info)
 	}
-	return &result, err
+	return result, err
 }
 
 func getGenericFolderCheck(fs Filesystem, dir string, filter v1.FolderFilter) (*FolderCheck, error) {
