@@ -5,7 +5,7 @@ metadata:
   labels:
     "Expected-Fail": "true"
 spec:
-  interval: 120
+  schedule: '@every 2h'
   owner: DBAdmin
   severity: high
   junit:
