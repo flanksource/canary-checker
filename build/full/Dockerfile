@@ -12,7 +12,7 @@ RUN go mod download
 COPY ./ ./
 RUN make build
 
-FROM eclipse-temurin:11.0.20.1_1-jdk-jammy@sha256:1584fd589b45a67b6f56b0c702776ca3d5640d1001f7848f5bcd19cb10545eaa
+FROM eclipse-temurin:20.0.2_9-jdk-jammy@sha256:7c2a5b09eb941a438fdb655ebc0d10a510e03c968ba6a29b915a2c1f587dc4c4
 WORKDIR /app
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
