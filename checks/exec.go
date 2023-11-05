@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	osExec "os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -118,13 +117,13 @@ func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 func execPowershell(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.Results {
 	result := pkg.Success(check, ctx.Canary).AddDetails(ExecDetails{ExitCode: -1})
-	ps, err := osExec.LookPath("powershell.exe")
+	ps, err := exec.LookPath("powershell.exe")
 	if err != nil {
 		result.Failf("powershell not found")
 	}
 
 	args := []string{check.Script}
-	cmd := osExec.CommandContext(ctx, ps, args...)
+	cmd := exec.CommandContext(ctx, ps, args...)
 	if len(envParams.envs) != 0 {
 		cmd.Env = append(os.Environ(), envParams.envs...)
 	}
@@ -142,7 +141,7 @@ func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.
 		return []*pkg.CheckResult{result.Failf("no script provided")}
 	}
 
-	cmd := osExec.CommandContext(ctx, "bash", "-c", check.Script)
+	cmd := exec.CommandContext(ctx, "bash", "-c", check.Script)
 	if len(envParams.envs) != 0 {
 		cmd.Env = append(os.Environ(), envParams.envs...)
 	}
@@ -157,7 +156,7 @@ func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.
 	return checkCmd(ctx, cmd, result)
 }
 
-func setupConnection(ctx *context.Context, check v1.ExecCheck, cmd *osExec.Cmd) error {
+func setupConnection(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd) error {
 	var envPreps []models.EnvPrep
 
 	if check.Connections.AWS != nil {
@@ -221,7 +220,7 @@ func setupConnection(ctx *context.Context, check v1.ExecCheck, cmd *osExec.Cmd) 
 	return nil
 }
 
-func checkCmd(ctx *context.Context, cmd *osExec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
+func checkCmd(ctx *context.Context, cmd *exec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
 	details := runCmd(ctx, cmd)
 	result.AddDetails(details)
 	if details.ExitCode != 0 {
@@ -233,7 +232,9 @@ func checkCmd(ctx *context.Context, cmd *osExec.Cmd, result *pkg.CheckResult) (r
 }
 
 func run(ctx *context.Context, cwd string, name string, args ...string) ExecDetails {
-	return runCmd(ctx, exec.CommandContext(ctx, name, args...))
+	cmd := exec.CommandContext(ctx, name, args...)
+	cmd.Dir = cwd
+	return runCmd(ctx, cmd)
 }
 
 func runCmd(ctx *context.Context, cmd *exec.Cmd) ExecDetails {
