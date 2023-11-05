@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
 	osExec "os/exec"
 	"path/filepath"
 	"runtime"
@@ -16,15 +17,22 @@ import (
 	"github.com/flanksource/commons/files"
 	"github.com/flanksource/commons/hash"
 	"github.com/flanksource/duty/models"
+	"github.com/hashicorp/go-getter"
 )
 
 type ExecChecker struct {
 }
 
 type ExecDetails struct {
-	Stdout   string `json:"stdout"`
-	Stderr   string `json:"stderr"`
-	ExitCode int    `json:"exitCode"`
+	Cmd      *exec.Cmd `json:"-"`
+	Stdout   string    `json:"stdout"`
+	Stderr   string    `json:"stderr"`
+	ExitCode int       `json:"exitCode"`
+	Error    error     `json:"-"`
+}
+
+func (e ExecDetails) String() string {
+	return fmt.Sprintf("%s %s exit=%d %s %s", e.Cmd.Path, e.Cmd.Args, e.ExitCode, e.Stdout, e.Stderr)
 }
 
 func (c *ExecChecker) Type() string {
@@ -63,6 +71,10 @@ func (c *ExecChecker) prepareEnvironment(ctx *context.Context, check v1.ExecChec
 		if connection, err := ctx.HydrateConnectionByURL(check.Checkout.Connection); err != nil {
 			return nil, fmt.Errorf("error hydrating connection: %w", err)
 		} else if connection != nil {
+			if sourceURL != "" {
+				// if we are overriding the url in the connection, set it back
+				connection.URL = sourceURL
+			}
 			goGetterURL, err := connection.AsGoGetterURL()
 			if err != nil {
 				return nil, fmt.Errorf("error getting go getter URL: %w", err)
@@ -71,7 +83,7 @@ func (c *ExecChecker) prepareEnvironment(ctx *context.Context, check v1.ExecChec
 		}
 
 		if sourceURL == "" {
-			return nil, fmt.Errorf("error checking out. missing URL")
+			return nil, fmt.Errorf("missing URL")
 		}
 
 		result.mountPoint = check.Checkout.Destination
@@ -80,7 +92,7 @@ func (c *ExecChecker) prepareEnvironment(ctx *context.Context, check v1.ExecChec
 			result.mountPoint = filepath.Join(pwd, ".downloads", hash.Sha256Hex(sourceURL))
 		}
 
-		if err := files.Getter(sourceURL, result.mountPoint); err != nil {
+		if err := checkout(ctx, sourceURL, result.mountPoint); err != nil {
 			return nil, fmt.Errorf("error checking out %s: %w", sourceURL, err)
 		}
 	}
@@ -93,7 +105,7 @@ func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	env, err := c.prepareEnvironment(ctx, check)
 	if err != nil {
-		return []*pkg.CheckResult{pkg.Fail(check, ctx.Canary).Failf("something went wrong while preparing exec env: %v", err)}
+		return pkg.Invalid(check, ctx.Canary, err.Error())
 	}
 
 	switch runtime.GOOS {
@@ -105,7 +117,7 @@ func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 }
 
 func execPowershell(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.Results {
-	result := pkg.Success(check, ctx.Canary)
+	result := pkg.Success(check, ctx.Canary).AddDetails(ExecDetails{ExitCode: -1})
 	ps, err := osExec.LookPath("powershell.exe")
 	if err != nil {
 		result.Failf("powershell not found")
@@ -120,11 +132,11 @@ func execPowershell(ctx *context.Context, check v1.ExecCheck, envParams *execEnv
 		cmd.Dir = envParams.mountPoint
 	}
 
-	return runCmd(cmd, result)
+	return checkCmd(ctx, cmd, result)
 }
 
 func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.Results {
-	result := pkg.Success(check, ctx.Canary)
+	result := pkg.Success(check, ctx.Canary).AddDetails(ExecDetails{ExitCode: -1})
 	fields := strings.Fields(check.Script)
 	if len(fields) == 0 {
 		return []*pkg.CheckResult{result.Failf("no script provided")}
@@ -142,7 +154,7 @@ func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.
 		return []*pkg.CheckResult{result.Failf("failed to setup connection: %v", err)}
 	}
 
-	return runCmd(cmd, result)
+	return checkCmd(ctx, cmd, result)
 }
 
 func setupConnection(ctx *context.Context, check v1.ExecCheck, cmd *osExec.Cmd) error {
@@ -209,22 +221,73 @@ func setupConnection(ctx *context.Context, check v1.ExecCheck, cmd *osExec.Cmd) 
 	return nil
 }
 
-func runCmd(cmd *osExec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	details := ExecDetails{
-		Stdout:   strings.TrimSpace(stdout.String()),
-		Stderr:   strings.TrimSpace(stderr.String()),
-		ExitCode: cmd.ProcessState.ExitCode(),
-	}
+func checkCmd(ctx *context.Context, cmd *osExec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
+	details := runCmd(ctx, cmd)
 	result.AddDetails(details)
 	if details.ExitCode != 0 {
-		return result.Failf("non-zero exit-code: %d stdout=%s, stderr=%s, error=%v", details.ExitCode, details.Stdout, details.Stderr, err).ToSlice()
+		return result.Failf(details.String()).ToSlice()
 	}
 
 	results = append(results, result)
 	return results
+}
+
+func run(ctx *context.Context, cwd string, name string, args ...string) ExecDetails {
+	return runCmd(ctx, exec.CommandContext(ctx, name, args...))
+}
+
+func runCmd(ctx *context.Context, cmd *exec.Cmd) ExecDetails {
+	result := ExecDetails{}
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	result.Cmd = cmd
+	result.Error = cmd.Run()
+	result.ExitCode = cmd.ProcessState.ExitCode()
+	result.Stderr = strings.TrimSpace(stderr.String())
+	result.Stdout = strings.TrimSpace(stdout.String())
+
+	if ctx.IsTrace() {
+		ctx.Infof(result.String())
+	}
+
+	return result
+}
+
+// Getter gets a directory or file using the Hashicorp go-getter library
+// See https://github.com/hashicorp/go-getter
+func checkout(ctx *context.Context, url, dst string) error {
+	pwd, _ := os.Getwd()
+
+	stashed := false
+	if files.Exists(dst + "/.git") {
+		if r := run(ctx, dst, "git", "status", "-s"); r.Stdout != "" {
+			if r2 := run(ctx, dst, "git", "stash"); r2.Error != nil {
+				return r2.Error
+			}
+			stashed = true
+		}
+	}
+	client := &getter.Client{
+		Ctx:     ctx,
+		Src:     url,
+		Dst:     dst,
+		Pwd:     pwd,
+		Mode:    getter.ClientModeDir,
+		Options: []getter.ClientOption{},
+	}
+	if ctx.IsDebug() {
+		ctx.Infof("Downloading %s -> %s", url, dst)
+	}
+	if err := client.Get(); err != nil {
+		return err
+	}
+	if stashed {
+		if r := run(ctx, dst, "git", "stash", "pop"); r.Error != nil {
+			return fmt.Errorf("failed to pop: %v", r.Error)
+		}
+	}
+	return nil
 }
