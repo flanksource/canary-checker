@@ -16,7 +16,7 @@ FROM eclipse-temurin:11.0.20.1_1-jdk-jammy@sha256:1584fd589b45a67b6f56b0c702776c
 WORKDIR /app
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
-  apt-get install -y curl unzip ca-certificates jq tzdata wget gnupg2 bzip2 apt-transport-https lsb-release python3 python3-pip --no-install-recommends && \
+  apt-get install -y curl unzip ca-certificates jq tzdata wget gnupg2 bzip2 apt-transport-https lsb-release python3 python3-pip git --no-install-recommends && \
   rm -Rf /var/lib/apt/lists/*  && \
   rm -Rf /usr/share/doc && rm -Rf /usr/share/man  && \
   apt-get clean

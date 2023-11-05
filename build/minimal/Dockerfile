@@ -16,7 +16,7 @@ FROM ubuntu:jammy-20231004@sha256:2b7412e6465c3c7fc5bb21d3e6f1917c167358449fecac
 WORKDIR /app
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
-  apt-get install -y curl unzip ca-certificates jq  tzdata wget gnupg2 bzip2 apt-transport-https lsb-release --no-install-recommends  && \
+  apt-get install -y curl unzip ca-certificates jq  tzdata wget gnupg2 bzip2 apt-transport-https lsb-release git --no-install-recommends  && \
   apt-get clean
 
 RUN mkdir -p /etc/apt/keyrings && \
