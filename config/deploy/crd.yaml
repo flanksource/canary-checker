@@ -2420,7 +2420,7 @@ spec:
                             type: string
                         type: object
                       env:
-                        description: EnvVars are the environment variables that are accesible to exec processes
+                        description: EnvVars are the environment variables that are accessible to exec processes
                         items:
                           properties:
                             name:
