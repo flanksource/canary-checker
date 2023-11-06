@@ -12,7 +12,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
 	ctemplate "github.com/flanksource/commons/template"
-	"github.com/flanksource/duty"
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
@@ -80,8 +79,8 @@ func (ctx *Context) WithDeadline(deadline time.Time) (*Context, gocontext.Cancel
 	return ctx, fn
 }
 
-func (ctx *Context) GetEnvValueFromCache(env types.EnvVar) (string, error) {
-	return duty.GetEnvValueFromCache(ctx.Kubernetes, env, ctx.Namespace)
+func (ctx *Context) GetEnvValueFromCache(env types.EnvVar, namespace ...string) (string, error) {
+	return ctx.Duty().GetEnvValueFromCache(env, namespace...)
 }
 
 func getDomain(username string) string {
@@ -211,7 +210,7 @@ func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Conne
 		return nil, errors.New("db has not been initialized")
 	}
 
-	connection, err := duty.HydratedConnectionByURL(ctx, ctx.db, ctx.Kubernetes, ctx.Namespace, connectionName)
+	connection, err := ctx.Duty().HydrateConnectionByURL(connectionName)
 	if err != nil {
 		return nil, err
 	}

@@ -69,6 +69,12 @@ manifests: .bin/controller-gen
 	cd config/deploy && yq ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.checks.items.properties)' crd.yaml | yq ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.forEach.properties)' /dev/stdin  | yq ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.lookup.properties)'  /dev/stdin | yq ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.properties.items.properties.lookup.properties)' /dev/stdin | yq ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.forEach.properties)' /dev/stdin |  yq ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.lookup.properties)' /dev/stdin | yq ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.checks.items.properties.inline.properties)' /dev/stdin | yq ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.properties.items.properties.lookup.properties)' /dev/stdin > crd.slim.yaml
 	cd config/deploy && mv crd.slim.yaml crd.yaml
 
+
+tidy:
+	go mod tidy
+	cd hack/generate-schemas && go mod tidy
+
+
 # Run go fmt against code
 fmt:
 	go fmt ./...
