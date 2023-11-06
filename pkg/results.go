@@ -51,11 +51,15 @@ func Invalid(check external.Check, canary v1.Canary, reason string) Results {
 		Canary: canary,
 	}}
 }
-
 func Success(check external.Check, canary v1.Canary) *CheckResult {
+	result := New(check, canary)
+	result.Pass = true
+	return result
+}
+
+func New(check external.Check, canary v1.Canary) *CheckResult {
 	return &CheckResult{
 		Start: time.Now(),
-		Pass:  true,
 		Check: check,
 		Data: map[string]interface{}{
 			"results": make(map[string]interface{}),
@@ -116,6 +120,12 @@ func (result *CheckResult) Failf(message string, args ...interface{}) *CheckResu
 	result.Pass = false
 	result.Error += fmt.Sprintf(message, args...)
 	return result
+}
+
+func (result *CheckResult) Invalidf(message string, args ...interface{}) Results {
+	result = result.Failf(message, args...)
+	result.Invalid = true
+	return Results{result}
 }
 
 func (result *CheckResult) AddDetails(detail interface{}) *CheckResult {

@@ -47,6 +47,14 @@ type Context struct {
 	cache map[string]any
 }
 
+func (ctx *Context) Duty() dutyCtx.Context {
+	return dutyCtx.NewContext(ctx.Context).
+		WithDB(ctx.db, ctx.pool).
+		WithKubernetes(ctx.Kubernetes).
+		WithNamespace(ctx.Namespace).
+		WithObject(ctx.Canary.ObjectMeta)
+}
+
 func (ctx *Context) DB() *gorm.DB {
 	if ctx.db == nil {
 		return nil

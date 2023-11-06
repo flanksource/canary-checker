@@ -3,6 +3,7 @@ package checks
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -65,34 +66,37 @@ func (c *ExecChecker) prepareEnvironment(ctx *context.Context, check v1.ExecChec
 	}
 
 	if check.Checkout != nil {
-		sourceURL := check.Checkout.URL
-
-		if connection, err := ctx.HydrateConnectionByURL(check.Checkout.Connection); err != nil {
+		var err error
+		var connection *models.Connection
+		if connection, err = ctx.HydrateConnectionByURL(check.Checkout.Connection); err != nil {
 			return nil, fmt.Errorf("error hydrating connection: %w", err)
-		} else if connection != nil {
-			if sourceURL != "" {
-				// if we are overriding the url in the connection, set it back
-				connection.URL = sourceURL
-			}
-			goGetterURL, err := connection.AsGoGetterURL()
+		} else if connection == nil {
+			connection = &models.Connection{Type: models.ConnectionTypeGit}
 			if err != nil {
 				return nil, fmt.Errorf("error getting go getter URL: %w", err)
 			}
-			sourceURL = goGetterURL
 		}
 
-		if sourceURL == "" {
-			return nil, fmt.Errorf("missing URL")
+		if connection, err = connection.Merge(ctx.Duty(), check.Checkout); err != nil {
+			return nil, err
+		}
+		var goGetterURL string
+		if goGetterURL, err = connection.AsGoGetterURL(); err != nil {
+			return nil, err
+		}
+
+		if goGetterURL == "" {
+			return nil, fmt.Errorf("missing URL %v", *connection)
 		}
 
 		result.mountPoint = check.Checkout.Destination
 		if result.mountPoint == "" {
 			pwd, _ := os.Getwd()
-			result.mountPoint = filepath.Join(pwd, ".downloads", hash.Sha256Hex(sourceURL))
+			result.mountPoint = filepath.Join(pwd, ".downloads", hash.Sha256Hex(goGetterURL))
 		}
 
-		if err := checkout(ctx, sourceURL, result.mountPoint); err != nil {
-			return nil, fmt.Errorf("error checking out %s: %w", sourceURL, err)
+		if err := checkout(ctx, goGetterURL, result.mountPoint); err != nil {
+			return nil, fmt.Errorf("error checking out: %w", err)
 		}
 	}
 
@@ -104,7 +108,7 @@ func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	env, err := c.prepareEnvironment(ctx, check)
 	if err != nil {
-		return pkg.Invalid(check, ctx.Canary, err.Error())
+		return pkg.New(check, ctx.Canary).AddDetails(ExecDetails{}).Invalidf(err.Error())
 	}
 
 	switch runtime.GOOS {
@@ -138,7 +142,7 @@ func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.
 	result := pkg.Success(check, ctx.Canary).AddDetails(ExecDetails{ExitCode: -1})
 	fields := strings.Fields(check.Script)
 	if len(fields) == 0 {
-		return []*pkg.CheckResult{result.Failf("no script provided")}
+		return result.Invalidf("no script provided")
 	}
 
 	cmd := exec.CommandContext(ctx, "bash", "-c", check.Script)
@@ -150,7 +154,7 @@ func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.
 	}
 
 	if err := setupConnection(ctx, check, cmd); err != nil {
-		return []*pkg.CheckResult{result.Failf("failed to setup connection: %v", err)}
+		return result.Invalidf("failed to setup connection: %v", err)
 	}
 
 	return checkCmd(ctx, cmd, result)
@@ -245,6 +249,12 @@ func runCmd(ctx *context.Context, cmd *exec.Cmd) ExecDetails {
 	cmd.Stderr = &stderr
 
 	result.Cmd = cmd
+	if ctx.IsTrace() {
+		ctx.Infof("%s %s", cmd.Path, cmd.Args)
+		cmd.Stderr = io.MultiWriter(&stderr, os.Stderr)
+		cmd.Stdout = io.MultiWriter(&stdout, os.Stdout)
+	}
+
 	result.Error = cmd.Run()
 	result.ExitCode = cmd.ProcessState.ExitCode()
 	result.Stderr = strings.TrimSpace(stderr.String())
@@ -280,10 +290,13 @@ func checkout(ctx *context.Context, url, dst string) error {
 		Options: []getter.ClientOption{},
 	}
 	if ctx.IsDebug() {
-		ctx.Infof("Downloading %s -> %s", url, dst)
+		ctx.Infof("Downloading %s -> %s", v1.SanitizeEndpoints(url), dst)
 	}
 	if err := client.Get(); err != nil {
 		return err
+	}
+	if ctx.IsTraceEnabled() {
+		ctx.Infof("Downloaded %s -> %s", v1.SanitizeEndpoints(url), dst)
 	}
 	if stashed {
 		if r := run(ctx, dst, "git", "stash", "pop"); r.Error != nil {
