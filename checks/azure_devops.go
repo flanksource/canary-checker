@@ -46,7 +46,6 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 		if c, err = c.Merge(ctx, check); err != nil {
 			return results.Failf("failed to merge connection: %v", err)
 		}
-
 	}
 
 	connection := azuredevops.NewPatConnection(fmt.Sprintf("https://dev.azure.com/%s", check.Organization), c.Password)
