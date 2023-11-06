@@ -406,6 +406,7 @@ type URL struct {
 }
 
 type SystemResult struct{}
+
 type CheckResult struct {
 	Name        string                 `json:"name,omitempty"`
 	Start       time.Time              `json:"start,omitempty"`

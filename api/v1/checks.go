@@ -980,6 +980,22 @@ type GitCheckout struct {
 	Destination string `yaml:"destination,omitempty" json:"destination,omitempty"`
 }
 
+func (git GitCheckout) GetURL() types.EnvVar {
+	return types.EnvVar{ValueStatic: git.URL}
+}
+
+func (git GitCheckout) GetUsername() types.EnvVar {
+	return git.Username
+}
+
+func (git GitCheckout) GetPassword() types.EnvVar {
+	return git.Password
+}
+
+func (git GitCheckout) GetCertificate() types.EnvVar {
+	return git.Certificate
+}
+
 type ExecCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`

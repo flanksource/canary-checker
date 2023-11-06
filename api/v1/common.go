@@ -395,13 +395,13 @@ type Connection struct {
 }
 
 func (c Connection) GetEndpoint() string {
-	return sanitizeEndpoints(c.URL)
+	return SanitizeEndpoints(c.URL)
 }
 
 // Obfuscate passwords of the form ' password=xxxxx ' from connectionString since
 // connectionStrings are used as metric labels and we don't want to leak passwords
 // Returns the Connection string with the password replaced by '###'
-func sanitizeEndpoints(connection string) string {
+func SanitizeEndpoints(connection string) string {
 	if _url, err := url.Parse(connection); err == nil {
 		if _url.User != nil {
 			_url.User = nil

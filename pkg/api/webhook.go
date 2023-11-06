@@ -91,7 +91,7 @@ func webhookHandler(ctx goctx.Context, id, authToken string, data CheckData) err
 	}
 
 	// Authorization
-	if webhook.Token != nil {
+	if webhook.Token != nil && !webhook.Token.IsEmpty() {
 		token, err := duty.GetEnvValueFromCache(context.DefaultContext.Kubernetes(), *webhook.Token, canary.Namespace)
 		if err != nil {
 			return err
