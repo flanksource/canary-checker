@@ -13,7 +13,7 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/models"
 )
 
 type AzureDevopsChecker struct {
@@ -36,22 +36,20 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 	var results pkg.Results
 	results = append(results, result)
 
-	var personalAccessToken string
+	var err error
+	var c *models.Connection
 	if check.PersonalAccessToken.ValueStatic != "" {
-		personalAccessToken = check.PersonalAccessToken.ValueStatic
-	} else if connection, err := ctx.HydrateConnectionByURL(check.ConnectionName); err != nil {
+		c = &models.Connection{Password: check.PersonalAccessToken.ValueStatic}
+	} else if c, err = ctx.HydrateConnectionByURL(check.ConnectionName); err != nil {
 		return results.Failf("failed to hydrate connection: %v", err)
-	} else if connection != nil {
-		personalAccessToken = connection.Password
-	} else if ctx.Kubernetes != nil {
-		value, err := duty.GetEnvValueFromCache(ctx.Kubernetes, check.PersonalAccessToken, ctx.Namespace)
-		if err != nil {
-			return results.ErrorMessage(err)
+	} else if c != nil {
+		if c, err = c.Merge(ctx, check); err != nil {
+			return results.Failf("failed to merge connection: %v", err)
 		}
-		personalAccessToken = value
+
 	}
 
-	connection := azuredevops.NewPatConnection(fmt.Sprintf("https://dev.azure.com/%s", check.Organization), personalAccessToken)
+	connection := azuredevops.NewPatConnection(fmt.Sprintf("https://dev.azure.com/%s", check.Organization), c.Password)
 	coreClient, err := core.NewClient(ctx, connection)
 	if err != nil {
 		return results.ErrorMessage(fmt.Errorf("failed to create core client: %w", err))

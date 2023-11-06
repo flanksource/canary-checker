@@ -8,11 +8,9 @@ import (
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/external"
-	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -23,7 +21,7 @@ const (
 type checkContext interface {
 	context.Context
 	HydrateConnectionByURL(connectionName string) (*models.Connection, error)
-	GetEnvValueFromCache(env types.EnvVar) (string, error)
+	GetEnvValueFromCache(env types.EnvVar, namespace ...string) (string, error)
 }
 
 type Check struct {
@@ -844,9 +842,27 @@ type AWSConnection struct {
 	UsePathStyle bool `yaml:"usePathStyle,omitempty" json:"usePathStyle,omitempty"`
 }
 
+func (t *AWSConnection) GetUsername() types.EnvVar {
+	return t.AccessKey
+}
+
+func (t *AWSConnection) GetPassword() types.EnvVar {
+	return t.SecretKey
+}
+
+func (t *AWSConnection) GetProperties() map[string]string {
+	return map[string]string{
+		"region": t.Region,
+	}
+}
+
+func (t *AWSConnection) GetURL() types.EnvVar {
+	return types.EnvVar{ValueStatic: t.Endpoint}
+}
+
 // Populate populates an AWSConnection with credentials and other information.
 // If a connection name is specified, it'll be used to populate the endpoint, accessKey and secretKey.
-func (t *AWSConnection) Populate(ctx checkContext, k8s kubernetes.Interface, namespace string) error {
+func (t *AWSConnection) Populate(ctx checkContext) error {
 	if t.ConnectionName != "" {
 		connection, err := ctx.HydrateConnectionByURL(t.ConnectionName)
 		if err != nil {
@@ -867,19 +883,19 @@ func (t *AWSConnection) Populate(ctx checkContext, k8s kubernetes.Interface, nam
 		}
 	}
 
-	if accessKey, err := duty.GetEnvValueFromCache(k8s, t.AccessKey, namespace); err != nil {
+	if accessKey, err := ctx.GetEnvValueFromCache(t.AccessKey); err != nil {
 		return fmt.Errorf("could not parse AWS access key id: %v", err)
 	} else {
 		t.AccessKey.ValueStatic = accessKey
 	}
 
-	if secretKey, err := duty.GetEnvValueFromCache(k8s, t.SecretKey, namespace); err != nil {
+	if secretKey, err := ctx.GetEnvValueFromCache(t.SecretKey); err != nil {
 		return fmt.Errorf(fmt.Sprintf("Could not parse AWS secret access key: %v", err))
 	} else {
 		t.SecretKey.ValueStatic = secretKey
 	}
 
-	if sessionToken, err := duty.GetEnvValueFromCache(k8s, t.SessionToken, namespace); err != nil {
+	if sessionToken, err := ctx.GetEnvValueFromCache(t.SessionToken); err != nil {
 		return fmt.Errorf(fmt.Sprintf("Could not parse AWS session token: %v", err))
 	} else {
 		t.SessionToken.ValueStatic = sessionToken
@@ -1003,7 +1019,7 @@ type ExecCheck struct {
 	// On windows executed via powershell and in darwin and linux executed using bash
 	Script      string          `yaml:"script" json:"script"`
 	Connections ExecConnections `yaml:"connections,omitempty" json:"connections,omitempty"`
-	// EnvVars are the environment variables that are accesible to exec processes
+	// EnvVars are the environment variables that are accessible to exec processes
 	EnvVars []types.EnvVar `yaml:"env,omitempty" json:"env,omitempty"`
 	// Checkout details the git repository that should be mounted to the process
 	Checkout *GitCheckout `yaml:"checkout,omitempty" json:"checkout,omitempty"`
@@ -1365,6 +1381,14 @@ type AzureDevopsCheck struct {
 
 	// ThresholdMillis the maximum duration of a Run. (Optional)
 	ThresholdMillis *int `yaml:"thresholdMillis" json:"thresholdMillis"`
+}
+
+func (c AzureDevopsCheck) GetUsername() types.EnvVar {
+	return types.EnvVar{ValueStatic: c.Organization}
+}
+
+func (c AzureDevopsCheck) GetPassword() types.EnvVar {
+	return c.PersonalAccessToken
 }
 
 func (c AzureDevopsCheck) GetType() string {

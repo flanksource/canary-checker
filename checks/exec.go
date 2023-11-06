@@ -77,7 +77,7 @@ func (c *ExecChecker) prepareEnvironment(ctx *context.Context, check v1.ExecChec
 			}
 		}
 
-		if connection, err = connection.Merge(ctx.Duty(), check.Checkout); err != nil {
+		if connection, err = connection.Merge(ctx, check.Checkout); err != nil {
 			return nil, err
 		}
 		var goGetterURL string
@@ -164,7 +164,7 @@ func setupConnection(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd) er
 	var envPreps []models.EnvPrep
 
 	if check.Connections.AWS != nil {
-		if err := check.Connections.AWS.Populate(ctx, ctx.Kubernetes, ctx.Namespace); err != nil {
+		if err := check.Connections.AWS.Populate(ctx); err != nil {
 			return fmt.Errorf("failed to hydrate aws connection: %w", err)
 		}
 
