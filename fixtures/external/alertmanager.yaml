@@ -5,7 +5,7 @@ metadata:
   labels:
     "Expected-Fail": "true"
 spec:
-  schedule: "@every 1m"
+  # schedule: "@every 1m" # (Not required for webhook checks)
   webhook:
     name: my-webhook
     token:

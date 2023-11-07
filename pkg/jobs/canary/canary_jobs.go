@@ -113,10 +113,6 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	}
 	span.End()
 
-	if canaryCtx.Canary.Spec.Webhook != nil {
-		results = append(results, pkg.Success(canaryCtx.Canary.Spec.Webhook, canaryCtx.Canary))
-	}
-
 	// Get transformed checks before and after, and then delete the olds ones that are not in new set
 	existingTransformedChecks, _ := db.GetTransformedCheckIDs(ctx.Context, canaryID)
 	var transformedChecksCreated []string
@@ -315,6 +311,12 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 	canary, err := dbCanary.ToV1()
 	if err != nil {
 		return err
+	}
+
+	if canary.Spec.Webhook != nil {
+		// Webhook checks can be persisted immediately as they do not require scheduling & running.
+		result := pkg.Success(canary.Spec.Webhook, *canary)
+		_ = cache.PostgresCache.Add(pkg.FromV1(*canary, canary.Spec.Webhook), pkg.CheckStatusFromResult(*result))
 	}
 
 	if canary.Spec.GetSchedule() == "@never" {
