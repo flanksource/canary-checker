@@ -53,7 +53,7 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 
 	ginkgo.It("schedule the canary job", func() {
 		CanaryScheduler.Start()
-		minimumTimeBetweenCanaryRuns = 0 // reset this for now so it doesn't hinder test with small schedules
+		MinimumTimeBetweenCanaryRuns = 0 // reset this for now so it doesn't hinder test with small schedules
 		ctx := context.NewContext(gocontext.Background()).WithDB(db.Gorm, db.Pool)
 		jobCtx := job.JobRuntime{
 			Context: ctx,

@@ -66,7 +66,7 @@ func (j CanaryJob) GetNamespacedName() types.NamespacedName {
 	return types.NamespacedName{Name: j.Canary.Name, Namespace: j.Canary.Namespace}
 }
 
-var minimumTimeBetweenCanaryRuns = 10 * time.Second
+var MinimumTimeBetweenCanaryRuns = 10 * time.Second
 var canaryLastRuntimes = sync.Map{}
 
 func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
@@ -89,7 +89,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	}
 	defer lock.Unlock()
 
-	lastRunDelta := minimumTimeBetweenCanaryRuns
+	lastRunDelta := MinimumTimeBetweenCanaryRuns
 	// Get last runtime from sync map
 	var lastRuntime time.Time
 	if lastRuntimeVal, exists := canaryLastRuntimes.Load(canaryID); exists {
@@ -98,7 +98,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	}
 
 	// Skip run if job ran too recently
-	if lastRunDelta < minimumTimeBetweenCanaryRuns {
+	if lastRunDelta < MinimumTimeBetweenCanaryRuns {
 		logger.Infof("Skipping Canary[%s]:%s since it last ran %.2f seconds ago", canaryID, j.Canary.GetNamespacedName(), lastRunDelta.Seconds())
 		return nil
 	}
