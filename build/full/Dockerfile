@@ -1,4 +1,4 @@
-FROM golang:1.20-bookworm@sha256:077ff85b374b23916b4b41835e242e5a3ddad9fc537ea7e980f230431747d245 AS builder
+FROM golang:1.21.4-bookworm@sha256:c5dcbd1cc2b81f9edf2d2bb6a3a8453893f4aa587e1d12a2f013b16bd8091ee7 AS builder
 WORKDIR /app
 
 ARG NAME
