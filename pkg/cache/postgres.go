@@ -1,21 +1,24 @@
 package cache
 
 import (
-	"context"
+	gocontext "context"
 	"encoding/json"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/query"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"gorm.io/gorm/clause"
 )
 
 var PostgresCache = &postgresCache{}
+
+type SummaryOptions query.CheckSummaryOptions
 
 type postgresCache struct {
 	*pgxpool.Pool
@@ -80,7 +83,7 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 		logger.Debugf("check not found")
 		return
 	}
-	_, err = c.Exec(context.TODO(), `INSERT INTO check_statuses(
+	_, err = c.Exec(gocontext.TODO(), `INSERT INTO check_statuses(
 		check_id,
 		details,
 		duration,
@@ -113,17 +116,17 @@ func (c *postgresCache) Query(q QueryParams) (pkg.Checks, error) {
 	return q.ExecuteSummary(db.Pool)
 }
 
-func (c *postgresCache) QuerySummary() (models.Checks, error) {
-	return duty.QueryCheckSummary(context.Background(), db.Pool)
+func (c *postgresCache) QuerySummary(ctx context.Context, opt SummaryOptions) (models.Checks, error) {
+	return query.CheckSummary(ctx, query.CheckSummaryOptions(opt))
 }
 
-func (c *postgresCache) QueryStatus(ctx context.Context, q QueryParams) ([]pkg.Timeseries, error) {
+func (c *postgresCache) QueryStatus(ctx gocontext.Context, q QueryParams) ([]pkg.Timeseries, error) {
 	return q.ExecuteDetails(ctx, db.Pool)
 }
 
 func (c *postgresCache) GetDetails(checkkey string, time string) interface{} {
 	var details interface{}
-	row := c.QueryRow(context.TODO(), `SELECT details from check_statuses where check_id=$1 and time=$2`, checkkey, time)
+	row := c.QueryRow(gocontext.TODO(), `SELECT details from check_statuses where check_id=$1 and time=$2`, checkkey, time)
 	if err := row.Scan(&details); err != nil {
 		logger.Errorf("error fetching details from check_statuses: %v", err)
 	}
