@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/telemetry"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty"
 	gomplate "github.com/flanksource/gomplate/v3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -105,6 +106,7 @@ func readFromEnv(v string) string {
 
 func init() {
 	logger.BindFlags(Root.PersistentFlags())
+	duty.BindFlags(Root.PersistentFlags())
 
 	Root.PersistentFlags().StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database")
 	Root.PersistentFlags().BoolVar(&db.RunMigrations, "db-migrations", false, "Run database migrations")

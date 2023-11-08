@@ -129,13 +129,17 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 	return check.ID, nil
 }
 
-func GetTransformedCheckIDs(ctx context.Context, canaryID string) ([]string, error) {
+func GetTransformedCheckIDs(ctx context.Context, canaryID string, excludeTypes ...string) ([]string, error) {
 	var ids []string
-	err := ctx.DB().Table("checks").
+	query := ctx.DB().Model(&models.Check{}).
 		Select("id").
-		Where("canary_id = ? AND transformed = true AND deleted_at IS NULL", canaryID).
-		Find(&ids).
-		Error
+		Where("canary_id = ? AND transformed = true AND deleted_at IS NULL", canaryID)
+
+	if len(excludeTypes) != 0 {
+		query = query.Where("type NOT IN ?", excludeTypes)
+	}
+
+	err := query.Find(&ids).Error
 	return ids, err
 }
 
