@@ -2,10 +2,7 @@ package canary
 
 import (
 	gocontext "context"
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -75,6 +72,8 @@ type CanaryPullResponse struct {
 // UpstreamPullJob pulls canaries from the upstream
 type UpstreamPullJob struct {
 	lastRuntime time.Time
+
+	Client *upstream.UpstreamClient
 }
 
 func (t *UpstreamPullJob) Run() {
@@ -82,7 +81,7 @@ func (t *UpstreamPullJob) Run() {
 	_ = db.PersistJobHistory(jobHistory.Start())
 	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
 
-	if err := t.pull(UpstreamConf); err != nil {
+	if err := t.pull(gocontext.TODO(), UpstreamConf); err != nil {
 		jobHistory.AddError(err.Error())
 		logger.Errorf("error pulling from upstream: %v", err)
 	} else {
@@ -90,34 +89,22 @@ func (t *UpstreamPullJob) Run() {
 	}
 }
 
-func (t *UpstreamPullJob) pull(config upstream.UpstreamConfig) error {
+func (t *UpstreamPullJob) pull(ctx gocontext.Context, config upstream.UpstreamConfig) error {
 	logger.Tracef("pulling canaries from upstream since: %v", t.lastRuntime)
 
-	endpoint, err := url.JoinPath(config.Host, "upstream", "canary", "pull", config.AgentName)
-	if err != nil {
-		return fmt.Errorf("error creating url endpoint for host %s: %w", config.Host, err)
-	}
-
-	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
-	if err != nil {
-		return fmt.Errorf("error creating new http request: %w", err)
-	}
-
-	req.SetBasicAuth(config.Username, config.Password)
-
-	params := url.Values{}
-	params.Add("since", t.lastRuntime.Format(time.RFC3339))
-	req.URL.RawQuery = params.Encode()
-
-	httpClient := &http.Client{}
-	resp, err := httpClient.Do(req)
+	req := t.Client.Client.R(ctx).QueryParam("since", t.lastRuntime.Format(time.RFC3339))
+	resp, err := req.Get(fmt.Sprintf("canary/pull/%s", config.AgentName))
 	if err != nil {
 		return fmt.Errorf("error making request: %w", err)
 	}
 	defer resp.Body.Close()
 
+	if !resp.IsOK() {
+		return fmt.Errorf("upstream responded with status: %s", resp.Status)
+	}
+
 	var response CanaryPullResponse
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+	if err := resp.Into(&response); err != nil {
 		return fmt.Errorf("error decoding response: %w", err)
 	}
 

@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/topology/configs"
 	"github.com/flanksource/commons/logger"
 	dutyjob "github.com/flanksource/duty/job"
+	"github.com/flanksource/duty/upstream"
 	"github.com/robfig/cron/v3"
 )
 
@@ -48,7 +49,9 @@ func Start() {
 	FuncScheduler.Start()
 
 	if canaryJobs.UpstreamConf.Valid() {
-		pullJob := &canaryJobs.UpstreamPullJob{}
+		pullJob := &canaryJobs.UpstreamPullJob{
+			Client: upstream.NewUpstreamClient(canaryJobs.UpstreamConf),
+		}
 		pullJob.Run()
 		if _, err := FuncScheduler.AddJob(PullCanaryFromUpstreamSchedule, pullJob); err != nil {
 			logger.Fatalf("Failed to schedule job [canaryJobs.Pull]: %v", err)
