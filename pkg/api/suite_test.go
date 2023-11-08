@@ -31,6 +31,8 @@ var (
 	testDB   *gorm.DB
 	testPool *pgxpool.Pool
 
+	httpCheckCallCounter int
+
 	postgresServer *embeddedPG.EmbeddedPostgres
 )
 
@@ -63,6 +65,28 @@ var _ = ginkgo.BeforeSuite(func() {
 
 	testEchoServer = echo.New()
 	testEchoServer.POST("/webhook/:id", api.WebhookHandler)
+
+	// A dummy endpoint used by the HTTP check
+	testEchoServer.GET("/http-check", func(c echo.Context) error {
+		httpCheckCallCounter++
+		resp := map[string][]map[string]string{
+			"alerts": {
+				{
+					"name":        "http-check",
+					"icon":        "http",
+					"message":     "A dummy http check",
+					"description": "A dummy http check",
+				},
+			},
+		}
+
+		if httpCheckCallCounter > 1 {
+			resp["alerts"][0]["deleted_at"] = "2023-10-30T09:00:00Z"
+		}
+
+		return c.JSON(http.StatusOK, resp)
+	})
+
 	listenAddr := fmt.Sprintf(":%d", testEchoServerPort)
 
 	go func() {
