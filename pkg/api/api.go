@@ -6,6 +6,7 @@ import (
 
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/runner"
+	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/labstack/echo/v4"
 
@@ -116,8 +117,15 @@ func CheckSummary(c echo.Context) error {
 }
 
 func HealthSummary(c echo.Context) error {
+	ctx := c.Request().Context().(context.Context)
+
+	var queryOpt cache.SummaryOptions
+	if err := c.Bind(&queryOpt); err != nil {
+		return errorResonse(c, err, http.StatusBadRequest)
+	}
+
 	start := time.Now()
-	results, err := cache.PostgresCache.QuerySummary()
+	results, err := cache.PostgresCache.QuerySummary(ctx, queryOpt)
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}

@@ -111,8 +111,16 @@ func serve() {
 
 	e.Use(middleware.Logger())
 
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.SetRequest(c.Request().WithContext(apicontext.DefaultContext.Wrap(c.Request().Context())))
+			return next(c)
+		}
+	})
+
 	e.GET("/api", api.CheckSummary)
-	e.GET("/api/summary", api.HealthSummary)
+	e.GET("/api/summary", api.HealthSummary) // Deprecated: Use Post request for filtering
+	e.POST("/api/summary", api.HealthSummary)
 	e.GET("/about", api.About)
 	e.GET("/api/graph", api.CheckDetails)
 	e.POST("/api/push", api.PushHandler)
