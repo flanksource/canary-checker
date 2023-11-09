@@ -79,9 +79,9 @@ require (
 	gopkg.in/flanksource/yaml.v3 v3.2.3
 	gorm.io/gorm v1.25.5
 	gorm.io/plugin/prometheus v0.0.0-20231026031148-436184e80556
-	k8s.io/api v0.28.2
-	k8s.io/apimachinery v0.28.2
-	k8s.io/client-go v0.28.2
+	k8s.io/api v0.28.3
+	k8s.io/apimachinery v0.28.3
+	k8s.io/client-go v0.28.3
 	sigs.k8s.io/controller-runtime v0.16.2
 	sigs.k8s.io/yaml v1.4.0
 )
