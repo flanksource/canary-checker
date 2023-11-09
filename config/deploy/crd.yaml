@@ -129,6 +129,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       password:
                         properties:
                           name:
@@ -304,6 +307,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       objectPath:
                         description: glob path to restrict matches to a subset
@@ -500,6 +506,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       objectPath:
                         description: glob path to restrict matches to a subset
                         type: string
@@ -659,6 +668,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       organization:
                         type: string
@@ -831,6 +843,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       objectPath:
                         description: glob path to restrict matches to a subset
                         type: string
@@ -982,6 +997,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       query:
                         type: string
                       test:
@@ -1122,6 +1140,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       transformDeleteStrategy:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
@@ -1173,6 +1194,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       password:
                         type: string
@@ -1287,6 +1311,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       test:
                         properties:
                           expr:
@@ -1363,6 +1390,9 @@ spec:
                         type: integer
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       port:
                         type: integer
@@ -1491,6 +1521,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       transformDeleteStrategy:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
@@ -1602,6 +1635,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       transformDeleteStrategy:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
@@ -1696,6 +1732,7 @@ spec:
                         description: Name of the check
                         type: string
                       namespace:
+                        description: Namespace of the check
                         type: string
                       scheme:
                         type: string
@@ -1816,6 +1853,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       objectPath:
                         description: glob path to restrict matches to a subset
@@ -1956,6 +1996,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       password:
                         properties:
@@ -2486,6 +2529,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       script:
                         description: Script can be a inline script or a path to a script that needs to be executed On windows executed via powershell and in darwin and linux executed using bash
                         type: string
@@ -2747,6 +2793,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       path:
                         description: Path  to folder or object storage, e.g. `s3://<bucket-name>`,  `gcs://<bucket-name>`, `/path/tp/folder`
                         type: string
@@ -3003,6 +3052,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       query:
                         description: Query to be executed. Please see https://github.com/askgitdev/askgit for more details regarding syntax
                         type: string
@@ -3140,6 +3192,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       project:
                         type: string
@@ -3281,7 +3336,7 @@ spec:
                         description: Name of the check
                         type: string
                       namespace:
-                        description: Namespace to crawl for TLS endpoints.  Mutually exclusive with Endpoint
+                        description: Namespace of the check
                         type: string
                       ntlm:
                         description: NTLM when set to true will do authentication using NTLM v1 protocol
@@ -3460,6 +3515,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       packetCount:
                         type: integer
                       packetLossThreshold:
@@ -3555,6 +3613,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       port:
                         description: Port on which the server is running
                         format: int32
@@ -3632,6 +3693,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       spec:
                         type: object
@@ -3733,6 +3797,7 @@ spec:
                         description: Name of the check
                         type: string
                       namespace:
+                        description: Namespace of the check
                         properties:
                           fieldSelector:
                             type: string
@@ -3740,7 +3805,7 @@ spec:
                             type: string
                           name:
                             type: string
-                        type: object
+                        type: string
                       ready:
                         type: boolean
                       resource:
@@ -3828,6 +3893,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       password:
                         properties:
@@ -3944,6 +4012,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       password:
                         properties:
@@ -4066,6 +4137,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       password:
                         properties:
@@ -4215,6 +4289,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       password:
                         properties:
@@ -4377,6 +4454,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       namespaceAnnotations:
                         additionalProperties:
                           type: string
@@ -4467,6 +4547,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       password:
                         properties:
@@ -4635,6 +4718,7 @@ spec:
                         description: Name of the check
                         type: string
                       namespace:
+                        description: Namespace of the check
                         type: string
                       path:
                         type: string
@@ -4715,6 +4799,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       password:
                         properties:
@@ -4868,6 +4955,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       password:
                         properties:
                           name:
@@ -5009,6 +5099,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace of the check
                         type: string
                       password:
                         properties:
@@ -5162,6 +5255,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       password:
                         description: Password for the restic repository
                         properties:
@@ -5312,6 +5408,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       objectPath:
                         description: glob path to restrict matches to a subset
                         type: string
@@ -5435,6 +5534,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace of the check
+                        type: string
                       thresholdMillis:
                         format: int64
                         type: integer
@@ -5496,6 +5598,9 @@ spec:
                       type: array
                     name:
                       description: Name of the check
+                      type: string
+                    namespace:
+                      description: Namespace of the check
                       type: string
                     test:
                       properties:

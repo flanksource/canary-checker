@@ -8,6 +8,7 @@ type Describable interface {
 	GetDescription() string
 	GetIcon() string
 	GetName() string
+	GetNamespace() string
 	GetLabels() map[string]string
 	GetTransformDeleteStrategy() string
 	GetMetricsSpec() []Metrics

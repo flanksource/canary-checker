@@ -53,6 +53,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -90,9 +93,6 @@
           "$ref": "#/$defs/EnvVar"
         },
         "endpoint": {
-          "type": "string"
-        },
-        "namespace": {
           "type": "string"
         },
         "thresholdMillis": {

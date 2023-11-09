@@ -345,6 +345,8 @@ type Description struct {
 	Description string `yaml:"description,omitempty" json:"description,omitempty" template:"true"`
 	// Name of the check
 	Name string `yaml:"name" json:"name" template:"true"`
+	// Namespace of the check
+	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	// Icon for overwriting default icon on the dashboard
 	Icon string `yaml:"icon,omitempty" json:"icon,omitempty" template:"true"`
 	// Labels for the check
@@ -376,6 +378,10 @@ func (d Description) GetMetricsSpec() []external.Metrics {
 
 func (d Description) GetName() string {
 	return d.Name
+}
+
+func (d Description) GetNamespace() string {
+	return d.Namespace
 }
 
 func (d Description) GetLabels() map[string]string {

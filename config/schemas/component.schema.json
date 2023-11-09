@@ -44,6 +44,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -135,6 +138,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -206,6 +212,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -308,6 +317,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -645,6 +657,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -972,6 +987,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1042,6 +1060,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1085,6 +1106,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1123,6 +1147,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -1180,6 +1207,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -1245,6 +1275,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1288,6 +1321,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1325,6 +1361,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1360,9 +1399,6 @@
         },
         "apiKey": {
           "$ref": "#/$defs/EnvVar"
-        },
-        "namespace": {
-          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -1377,6 +1413,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -1458,6 +1497,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -1547,6 +1589,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1620,6 +1665,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -1819,6 +1867,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1868,6 +1919,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1905,9 +1959,6 @@
           "$ref": "#/$defs/EnvVar"
         },
         "endpoint": {
-          "type": "string"
-        },
-        "namespace": {
           "type": "string"
         },
         "thresholdMillis": {
@@ -1973,6 +2024,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2013,6 +2067,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -2073,6 +2130,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2128,6 +2188,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2176,6 +2239,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "$ref": "#/$defs/ResourceSelector"
+        },
         "icon": {
           "type": "string"
         },
@@ -2199,9 +2265,6 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
-        },
-        "namespace": {
-          "$ref": "#/$defs/ResourceSelector"
         },
         "resource": {
           "$ref": "#/$defs/ResourceSelector"
@@ -2232,6 +2295,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -2422,6 +2488,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2462,6 +2531,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -2521,6 +2593,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2576,6 +2651,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -2784,6 +2862,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2876,6 +2957,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2890,9 +2974,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "namespace": {
-          "type": "string"
         },
         "spec": {
           "type": "string"
@@ -2963,6 +3044,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -3018,6 +3102,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -3150,6 +3237,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -3231,6 +3321,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -3289,6 +3382,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -3458,6 +3554,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -3533,6 +3632,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {

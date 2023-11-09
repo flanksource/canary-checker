@@ -65,8 +65,6 @@ type HTTPCheck struct {
 	Connection  `yaml:",inline" json:",inline"`
 	// Deprecated: Use url instead
 	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty" template:"true"`
-	// Namespace to crawl for TLS endpoints.  Mutually exclusive with Endpoint
-	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty" template:"true"`
 	// Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.
 	ThresholdMillis int `yaml:"thresholdMillis,omitempty" json:"thresholdMillis,omitempty"`
 	// Expected response codes for the HTTP Request.

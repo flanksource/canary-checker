@@ -36,10 +36,10 @@ var (
 )
 
 type Response struct {
-	Duration      int           `json:"duration,omitempty"`
-	RunnerName    string        `json:"runnerName"`
-	Checks        pkg.Checks    `json:"checks"`
-	ChecksSummary models.Checks `json:"checks_summary,omitempty"`
+	Duration      int                   `json:"duration,omitempty"`
+	RunnerName    string                `json:"runnerName"`
+	Checks        pkg.Checks            `json:"checks,omitempty"`
+	ChecksSummary []models.CheckSummary `json:"checks_summary,omitempty"`
 }
 
 type DetailResponse struct {

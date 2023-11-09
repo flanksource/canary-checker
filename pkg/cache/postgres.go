@@ -116,7 +116,7 @@ func (c *postgresCache) Query(q QueryParams) (pkg.Checks, error) {
 	return q.ExecuteSummary(db.Pool)
 }
 
-func (c *postgresCache) QuerySummary(ctx context.Context, opt SummaryOptions) (models.Checks, error) {
+func (c *postgresCache) QuerySummary(ctx context.Context, opt SummaryOptions) ([]models.CheckSummary, error) {
 	return query.CheckSummary(ctx, query.CheckSummaryOptions(opt))
 }
 

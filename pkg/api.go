@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
+	cUtils "github.com/flanksource/commons/utils"
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -189,7 +190,7 @@ type Check struct {
 	Type               string              `json:"type"`
 	Name               string              `json:"name"`
 	CanaryName         string              `json:"canary_name" gorm:"-"`
-	Namespace          string              `json:"namespace"  gorm:"-"`
+	Namespace          string              `json:"namespace"`
 	Labels             types.JSONStringMap `json:"labels" gorm:"type:jsonstringmap"`
 	Description        string              `json:"description,omitempty"`
 	Status             string              `json:"status,omitempty"`
@@ -223,7 +224,7 @@ func FromExternalCheck(canary Canary, check external.Check) Check {
 		Icon:        check.GetIcon(),
 		Description: check.GetDescription(),
 		Name:        check.GetName(),
-		Namespace:   canary.Namespace,
+		Namespace:   cUtils.Coalesce(check.GetNamespace(), canary.Namespace),
 		CanaryName:  canary.Name,
 		Labels:      labels.FilterLabels(canary.Labels),
 	}
@@ -252,9 +253,9 @@ func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Che
 		Severity: canary.Spec.Severity,
 		// DisplayType: check.DisplayType,
 		Name:        check.GetName(),
+		Namespace:   cUtils.Coalesce(check.GetNamespace(), canary.Namespace),
 		Description: check.GetDescription(),
 		Icon:        check.GetIcon(),
-		Namespace:   canary.Namespace,
 		CanaryName:  canary.Name,
 		CanaryID:    canaryID,
 		Labels:      labels.FilterLabels(canary.GetAllLabels(check.GetLabels())),
@@ -283,6 +284,10 @@ func (c Check) GetName() string {
 		return c.Name
 	}
 	return c.Description
+}
+
+func (c Check) GetNamespace() string {
+	return c.Namespace
 }
 
 type Checks []*Check
