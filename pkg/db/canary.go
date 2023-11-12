@@ -87,6 +87,7 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 
 	assignments := map[string]interface{}{
 		"spec":        check.Spec,
+		"namespace":   check.Namespace, // Can be modified after transformation
 		"type":        check.Type,
 		"description": check.Description,
 		"owner":       check.Owner,

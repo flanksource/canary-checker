@@ -26,6 +26,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -61,9 +64,6 @@
         },
         "apiKey": {
           "$ref": "#/$defs/EnvVar"
-        },
-        "namespace": {
-          "type": "string"
         }
       },
       "additionalProperties": false,

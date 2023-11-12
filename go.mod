@@ -21,7 +21,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.10.1
 	github.com/fergusstrange/embedded-postgres v1.24.0
 	github.com/flanksource/commons v1.17.1
-	github.com/flanksource/duty v1.0.217
+	github.com/flanksource/duty v1.0.218
 	github.com/flanksource/gomplate/v3 v3.20.24
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
 	github.com/flanksource/kommons v0.31.4
@@ -102,7 +102,7 @@ require (
 	github.com/antonmedv/expr v1.15.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
-	github.com/aws/aws-sdk-go v1.47.6 // indirect
+	github.com/aws/aws-sdk-go v1.47.7 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.0 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.2 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.1 // indirect

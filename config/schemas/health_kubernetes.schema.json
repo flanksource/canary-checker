@@ -11,6 +11,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "$ref": "#/$defs/ResourceSelector"
+        },
         "icon": {
           "type": "string"
         },
@@ -34,9 +37,6 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
-        },
-        "namespace": {
-          "$ref": "#/$defs/ResourceSelector"
         },
         "resource": {
           "$ref": "#/$defs/ResourceSelector"
