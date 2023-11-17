@@ -26,7 +26,7 @@ require (
 	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230305170008-8188dc5388df // indirect
 	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/flanksource/duty v1.0.218 // indirect
+	github.com/flanksource/duty v1.0.222 // indirect
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-openapi/jsonpointer v0.20.0 // indirect
