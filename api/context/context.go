@@ -318,6 +318,13 @@ func (ctx *Context) WithCheck(check external.Check) *Context {
 	return ctx.New(env)
 }
 
+func (ctx *Context) WithEnvValues(environment map[string]interface{}) *Context {
+	for k, v := range environment {
+		ctx.Environment[k] = v
+	}
+	return ctx
+}
+
 func (ctx *Context) New(environment map[string]interface{}) *Context {
 	return &Context{
 		Context:     ctx.Context,
