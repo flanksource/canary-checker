@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/duty/connection"
 	"github.com/hirochachacha/go-smb2"
 )
 
@@ -30,7 +31,7 @@ func (s *SMBSession) Close() error {
 	return nil
 }
 
-func smbConnect(server string, port int, share string, auth v1.Authentication) (Filesystem, uint64, uint64, uint64, error) {
+func smbConnect(server string, port int, share string, auth connection.Authentication) (Filesystem, uint64, uint64, uint64, error) {
 	var err error
 	var smb *SMBSession
 	server = server + ":" + fmt.Sprintf("%d", port)

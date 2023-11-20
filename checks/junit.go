@@ -36,6 +36,8 @@ const (
 	junitCheckLabelValue = "junit-check"
 )
 
+// JunitChecker runs a junit test on a new kubernetes pod and then saves
+// the test result.
 type JunitChecker struct {
 }
 

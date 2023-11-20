@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	v1 "k8s.io/api/core/v1"
@@ -647,92 +647,6 @@ func (c JunitCheck) GetType() string {
 	return "junit"
 }
 
-type SMBConnection struct {
-	// ConnectionName of the connection. It'll be used to populate the connection fields.
-	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
-	//Port on which smb server is running. Defaults to 445
-	Port           int `yaml:"port,omitempty" json:"port,omitempty"`
-	Authentication `yaml:",inline" json:",inline"`
-	//Domain...
-	Domain string `yaml:"domain,omitempty" json:"domain,omitempty"`
-}
-
-func (c SMBConnection) GetPort() int {
-	if c.Port != 0 {
-		return c.Port
-	}
-	return 445
-}
-
-func (c *SMBConnection) HydrateConnection(ctx checkContext) (found bool, err error) {
-	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
-	if err != nil {
-		return false, err
-	}
-
-	if connection == nil {
-		return false, nil
-	}
-
-	c.Authentication = Authentication{
-		Username: types.EnvVar{ValueStatic: connection.Username},
-		Password: types.EnvVar{ValueStatic: connection.Password},
-	}
-
-	if domain, ok := connection.Properties["domain"]; ok {
-		c.Domain = domain
-	}
-
-	if portRaw, ok := connection.Properties["port"]; ok {
-		if port, err := strconv.Atoi(portRaw); nil == err {
-			c.Port = port
-		}
-	}
-
-	return true, nil
-}
-
-type SFTPConnection struct {
-	// ConnectionName of the connection. It'll be used to populate the connection fields.
-	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
-	// Port for the SSH server. Defaults to 22
-	Port           int    `yaml:"port,omitempty" json:"port,omitempty"`
-	Host           string `yaml:"host" json:"host"`
-	Authentication `yaml:",inline" json:",inline"`
-}
-
-func (c *SFTPConnection) HydrateConnection(ctx checkContext) (found bool, err error) {
-	connection, err := ctx.HydrateConnectionByURL(c.ConnectionName)
-	if err != nil {
-		return false, err
-	}
-
-	if connection == nil {
-		return false, nil
-	}
-
-	c.Host = connection.URL
-	c.Authentication = Authentication{
-		Username: types.EnvVar{ValueStatic: connection.Username},
-		Password: types.EnvVar{ValueStatic: connection.Password},
-	}
-
-	if portRaw, ok := connection.Properties["port"]; ok {
-		if port, err := strconv.Atoi(portRaw); nil == err {
-			c.Port = port
-		}
-	}
-
-	return true, nil
-}
-
-func (c SFTPConnection) GetPort() int {
-	if c.Port != 0 {
-		return c.Port
-	}
-	return 22
-}
-
 /*
 [include:datasources/prometheus.yaml]
 */
@@ -960,13 +874,13 @@ type FolderCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 	// Path  to folder or object storage, e.g. `s3://<bucket-name>`,  `gcs://<bucket-name>`, `/path/tp/folder`
-	Path            string       `yaml:"path" json:"path"`
-	Filter          FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
-	FolderTest      `yaml:",inline" json:",inline"`
-	*AWSConnection  `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
-	*GCPConnection  `yaml:"gcpConnection,omitempty" json:"gcpConnection,omitempty"`
-	*SMBConnection  `yaml:"smbConnection,omitempty" json:"smbConnection,omitempty"`
-	*SFTPConnection `yaml:"sftpConnection,omitempty" json:"sftpConnection,omitempty"`
+	Path                       string       `yaml:"path" json:"path"`
+	Filter                     FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
+	FolderTest                 `yaml:",inline" json:",inline"`
+	*AWSConnection             `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
+	*GCPConnection             `yaml:"gcpConnection,omitempty" json:"gcpConnection,omitempty"`
+	*connection.SMBConnection  `yaml:"smbConnection,omitempty" json:"smbConnection,omitempty"`
+	*connection.SFTPConnection `yaml:"sftpConnection,omitempty" json:"sftpConnection,omitempty"`
 }
 
 func (c FolderCheck) GetType() string {
