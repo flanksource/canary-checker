@@ -18,7 +18,7 @@ spec:
   - name: cpu
     lookup:
       prometheus:
-      - query: '1000 * max(rate(container_cpu_usage_seconds_total{container!=""}[5m]))'
+      - query: 'sum(1000 * max by (node) (rate(container_cpu_usage_seconds_total{container!=""}[5m])))'
         url: 'http://prometheus-k8s.monitoring:9090'
         display:
           expr: |
@@ -26,7 +26,7 @@ spec:
   - name: memory
     lookup:
       prometheus:
-      - query: 'max(avg_over_time(container_memory_working_set_bytes{container!=""}[5m]))'
+      - query: 'sum(max by (node) (avg_over_time(container_memory_working_set_bytes{container!=""}[5m])))'
         url: 'http://prometheus-k8s.monitoring:9090'
         display:
           expr: |
@@ -38,19 +38,6 @@ spec:
       id:
         javascript: properties.zone + "/" + self.name
       type: KubernetesNode
-      configs:
-        - name: flanksource-canary-cluster
-          type: EKS
-#     properties:
-#       - name: cluster-name
-#         configLookup:
-#           display:
-#             javascript: findConfigItem("EKS", "flanksource-canary-cluster")["name"]
-#       - name: cluster-status
-#         configLookup:
-#           display:
-#             javascript: getConfigItems("EKS")[0]["spec"]["status"]
-
       components:
         - name: NodesGroup
           type: virtual
@@ -145,4 +132,3 @@ spec:
                         })
                       }
                       JSON.stringify(components)
-
