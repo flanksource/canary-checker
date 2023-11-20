@@ -392,18 +392,26 @@ func DeleteComponentChildren(componentID string, deleteTime time.Time) error {
 }
 
 func DeleteInlineCanariesForComponent(componentID string, deleteTime time.Time) error {
-	var canaries = []*pkg.Canary{}
+	var rows []struct {
+		ID string
+	}
 	source := "component/" + componentID
-	if err := Gorm.Where("source = ?", source).Find(&canaries).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+	if err := Gorm.
+		Model(&rows).
+		Table("canaries").
+		Where("source = ?", source).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
+		UpdateColumn("deleted_at", deleteTime).Error; err != nil {
 		return err
 	}
-	for _, c := range canaries {
-		if _, err := DeleteChecksForCanary(c.ID.String(), deleteTime); err != nil {
-			logger.Debugf("Error deleting checks for canary %v", c.ID)
+
+	for _, r := range rows {
+		if _, err := DeleteChecksForCanary(r.ID, deleteTime); err != nil {
+			logger.Debugf("Error deleting checks for canary %v", r.ID)
 			continue
 		}
-		if err := DeleteCheckComponentRelationshipsForCanary(c.ID.String(), deleteTime); err != nil {
-			logger.Debugf("Error deleting check component relationships for canary %v", c.ID)
+		if err := DeleteCheckComponentRelationshipsForCanary(r.ID, deleteTime); err != nil {
+			logger.Debugf("Error deleting check component relationships for canary %v", r.ID)
 			continue
 		}
 	}

@@ -62,7 +62,7 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 	}
 
 	if res.IsError() {
-		var e map[string]interface{}
+		var e map[string]any
 		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
 			return results.ErrorMessage(
 				fmt.Errorf("Error parsing the response body: %s", err),
@@ -70,8 +70,8 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 		} else {
 			return results.ErrorMessage(fmt.Errorf("Error from elasticsearch [%s]: %v, %v",
 				res.Status(),
-				e["error"].(map[string]interface{})["type"],
-				e["error"].(map[string]interface{})["reason"],
+				e["error"].(map[string]any)["type"],
+				e["error"].(map[string]any)["reason"],
 			))
 		}
 	}
@@ -79,14 +79,14 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 	// We are closing the body after error as the Body object is not set in case of error
 	// leading to nil pointer errors
 	defer res.Body.Close()
-	var r map[string]interface{}
+	var r map[string]any
 	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
 		return results.ErrorMessage(
 			fmt.Errorf("Error parsing the response body: %s", err),
 		)
 	}
 
-	count := int(r["hits"].(map[string]interface{})["total"].(map[string]interface{})["value"].(float64))
+	count := int(r["hits"].(map[string]any)["total"].(map[string]any)["value"].(float64))
 
 	if count != check.Results {
 		return results.Failf("Query return %d rows, expected %d", count, check.Results)
