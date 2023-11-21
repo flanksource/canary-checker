@@ -412,6 +412,13 @@ type URL struct {
 
 type SystemResult struct{}
 
+type ArtifactResult struct {
+	ContentType string
+	Path        string
+	Content     []byte
+	Connection  string
+}
+
 type CheckResult struct {
 	Name        string                 `json:"name,omitempty"`
 	Start       time.Time              `json:"start,omitempty"`
@@ -427,6 +434,8 @@ type CheckResult struct {
 	Error       string                 `json:"error,omitempty"`
 	Metrics     []Metric               `json:"metrics,omitempty"`
 	Transformed bool                   `json:"transformed,omitempty"`
+	// Artifacts is the generated artifacts
+	Artifacts []ArtifactResult `json:"artifacts,omitempty"`
 	// Check is the configuration
 	Check  external.Check `json:"-"`
 	Canary v1.Canary      `json:"-"`

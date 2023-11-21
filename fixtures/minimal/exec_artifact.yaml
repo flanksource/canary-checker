@@ -1,0 +1,14 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: exec-artifact
+spec:
+  interval: 30
+  exec:
+    - name: exec-pass-check
+      description: "exec dummy check"
+      script: |
+        echo "hello"
+      artifacts:
+        - connection: connection://sftp/adityathebe
+          path: /home/admin/exec/

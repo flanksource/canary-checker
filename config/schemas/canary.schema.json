@@ -118,6 +118,22 @@
         "name"
       ]
     },
+    "Artifact": {
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "connection": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "path",
+        "connection"
+      ]
+    },
     "Authentication": {
       "properties": {
         "username": {
@@ -1451,6 +1467,12 @@
         },
         "checkout": {
           "$ref": "#/$defs/GitCheckout"
+        },
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
@@ -2009,7 +2031,13 @@
         "timeout": {
           "type": "integer"
         },
-        "spec": true
+        "spec": true,
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "type": "array"
+        }
       },
       "additionalProperties": false,
       "type": "object",

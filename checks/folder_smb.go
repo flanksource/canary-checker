@@ -2,71 +2,12 @@ package checks
 
 import (
 	"fmt"
-	"net"
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/duty/connection"
-	"github.com/hirochachacha/go-smb2"
 )
-
-type SMBSession struct {
-	net.Conn
-	*smb2.Session
-	*smb2.Share
-}
-
-func (s *SMBSession) Close() error {
-	if s.Conn != nil {
-		_ = s.Conn.Close()
-	}
-	if s.Session != nil {
-		_ = s.Session.Logoff()
-	}
-	if s.Share != nil {
-		_ = s.Share.Umount()
-	}
-	return nil
-}
-
-func smbConnect(server string, port int, share string, auth connection.Authentication) (Filesystem, uint64, uint64, uint64, error) {
-	var err error
-	var smb *SMBSession
-	server = server + ":" + fmt.Sprintf("%d", port)
-	conn, err := net.Dial("tcp", server)
-	if err != nil {
-		return nil, 0, 0, 0, err
-	}
-	smb = &SMBSession{
-		Conn: conn,
-	}
-
-	d := &smb2.Dialer{
-		Initiator: &smb2.NTLMInitiator{
-			User:     auth.GetUsername(),
-			Password: auth.GetPassword(),
-			Domain:   auth.GetDomain(),
-		},
-	}
-
-	s, err := d.Dial(conn)
-	if err != nil {
-		return nil, 0, 0, 0, err
-	}
-	smb.Session = s
-	fs, err := s.Mount(share)
-	if err != nil {
-		return nil, 0, 0, 0, err
-	}
-	smb.Share = fs
-	info, err := fs.Statfs(".")
-	if err != nil {
-		return nil, 0, 0, 0, err
-	}
-	return smb, info.TotalBlockCount(), info.FreeBlockCount(), info.BlockSize(), err
-}
 
 func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
@@ -92,7 +33,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		}
 	}
 
-	session, totalBlockCount, freeBlockCount, blockSize, err := smbConnect(server, check.SMBConnection.GetPort(), sharename, auth)
+	session, err := smbConnect(server, fmt.Sprintf("%d", check.SMBConnection.GetPort()), sharename, auth)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
@@ -105,6 +46,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.ErrorMessage(err)
 	}
 
+	var totalBlockCount, freeBlockCount, blockSize int // TODO:
 	folders.AvailableSize = int64(freeBlockCount * blockSize)
 	folders.TotalSize = int64(totalBlockCount * blockSize)
 

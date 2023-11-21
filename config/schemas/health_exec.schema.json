@@ -36,6 +36,22 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "Artifact": {
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "connection": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "path",
+        "connection"
+      ]
+    },
     "AzureConnection": {
       "properties": {
         "connection": {
@@ -145,6 +161,12 @@
         },
         "checkout": {
           "$ref": "#/$defs/GitCheckout"
+        },
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,

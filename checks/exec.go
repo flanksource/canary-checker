@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -135,7 +136,7 @@ func execPowershell(ctx *context.Context, check v1.ExecCheck, envParams *execEnv
 		cmd.Dir = envParams.mountPoint
 	}
 
-	return checkCmd(ctx, cmd, result)
+	return checkCmd(ctx, check, cmd, result)
 }
 
 func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.Results {
@@ -157,7 +158,7 @@ func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.
 		return result.Invalidf("failed to setup connection: %v", err)
 	}
 
-	return checkCmd(ctx, cmd, result)
+	return checkCmd(ctx, check, cmd, result)
 }
 
 func setupConnection(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd) error {
@@ -224,9 +225,19 @@ func setupConnection(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd) er
 	return nil
 }
 
-func checkCmd(ctx *context.Context, cmd *exec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
+func checkCmd(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
 	details := runCmd(ctx, cmd)
 	result.AddDetails(details)
+
+	for _, a := range check.Artifacts {
+		result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
+			ContentType: "plain/text",
+			Path:        filepath.Join(a.Path, fmt.Sprintf("%d.txt", time.Now().UnixNano())),
+			Connection:  a.Connection,
+			Content:     []byte(details.String()),
+		})
+	}
+
 	if details.ExitCode != 0 {
 		return result.Failf(details.String()).ToSlice()
 	}

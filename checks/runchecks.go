@@ -10,7 +10,10 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
+	"github.com/google/uuid"
 	gocache "github.com/patrickmn/go-cache"
 )
 
@@ -94,6 +97,50 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 		result := c.Run(ctx)
 		transformedResults := TransformResults(ctx, result)
 		results = append(results, transformedResults...)
+
+		for _, r := range result {
+			if len(r.Artifacts) == 0 {
+				continue
+			}
+
+			for _, a := range r.Artifacts {
+				connection, err := ctx.HydrateConnectionByURL(r.Artifacts[0].Connection)
+				if err != nil {
+					logger.Errorf("error getting fs: %v", err)
+					continue
+				} else if connection == nil {
+					logger.Errorf("error getting fs: %v", err)
+					continue
+				}
+
+				fs, err := GetFSForConnection(*connection)
+				if err != nil {
+					logger.Errorf("error getting fs: %v", err)
+					continue
+				}
+
+				info, err := fs.Write(ctx, a.Path, a.Content)
+				if err != nil {
+					logger.Errorf("error saving artifact to filestore: %v", err)
+					continue
+				}
+
+				artifact := models.Artifact{
+					CheckID:      utils.Ptr(uuid.MustParse("018bf176-9ed9-30cd-a2ba-537313594500")), // TODO:
+					CheckTime:    utils.Ptr(time.Now()),                                             // TODO:
+					ConnectionID: connection.ID,
+					Path:         a.Path,
+					Filename:     info.Name(),
+					Size:         info.Size(),
+					ContentType:  a.ContentType,
+					Checksum:     "", // TODO:
+				}
+
+				if err := ctx.DB().Create(&artifact).Error; err != nil {
+					logger.Errorf("error saving artifact to db: %v", err)
+				}
+			}
+		}
 
 		ExportCheckMetrics(ctx, transformedResults)
 	}
