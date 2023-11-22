@@ -10,6 +10,7 @@ spec:
   endpoints:
     - port: http
       interval: 30s
+      honorLabels: true
       metricRelabelings:
       - action: labeldrop
         regex: (pod|instance)
