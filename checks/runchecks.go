@@ -3,6 +3,7 @@ package checks
 import (
 	"database/sql"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -131,17 +132,18 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 			continue
 		}
 
+		checkIDRaw := ctx.Canary.Status.Checks[r.Check.GetName()]
+		checkID, err := uuid.Parse(checkIDRaw)
+		if err != nil {
+			logger.Errorf("error parsing checkID(%s): %v", checkIDRaw, err)
+			continue
+		}
+
 		for _, a := range r.Artifacts {
+			a.Path = filepath.Join("checks", checkID.String(), fmt.Sprintf("%d", r.Start.UnixNano()), a.Path)
 			info, err := fs.Write(ctx, a.Path, a.Content)
 			if err != nil {
 				logger.Errorf("error saving artifact to filestore: %v", err)
-				continue
-			}
-
-			checkIDRaw := ctx.Canary.Status.Checks[r.Check.GetName()]
-			checkID, err := uuid.Parse(checkIDRaw)
-			if err != nil {
-				logger.Errorf("error parsing checkID(%s): %v", checkIDRaw, err)
 				continue
 			}
 

@@ -71,8 +71,25 @@ func (t *s3FS) ReadDir(name string) ([]os.FileInfo, error) {
 	return output, nil
 }
 
-func (t *s3FS) Stat(name string) (os.FileInfo, error) {
-	return nil, nil
+func (t *s3FS) Stat(path string) (os.FileInfo, error) {
+	headObject, err := t.Client.HeadObject(gocontext.TODO(), &s3.HeadObjectInput{
+		Bucket: aws.String(t.Bucket),
+		Key:    aws.String(path),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	fileInfo := &awsUtil.S3FileInfo{
+		Object: s3Types.Object{
+			Key:          utils.Ptr(filepath.Base(path)),
+			Size:         headObject.ContentLength,
+			LastModified: headObject.LastModified,
+			ETag:         headObject.ETag,
+		},
+	}
+
+	return fileInfo, nil
 }
 
 func (t *s3FS) Read(ctx gocontext.Context, key string) (io.ReadCloser, error) {
@@ -99,22 +116,7 @@ func (t *s3FS) Write(ctx gocontext.Context, path string, data []byte) (os.FileIn
 		return nil, err
 	}
 
-	headObject, err := t.Client.HeadObject(ctx, &s3.HeadObjectInput{
-		Bucket: aws.String(t.Bucket),
-		Key:    aws.String(path),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	fileInfo := &awsUtil.S3FileInfo{
-		Object: s3Types.Object{
-			Key:  utils.Ptr(filepath.Base(path)),
-			Size: headObject.ContentLength,
-		},
-	}
-
-	return fileInfo, nil
+	return t.Stat(path)
 }
 
 // gcsFS implements connection.Filesystem for Google Cloud Storage
@@ -146,9 +148,18 @@ func (t *gcsFS) ReadDir(name string) ([]os.FileInfo, error) {
 	return nil, nil
 }
 
-// TODO: implement
-func (t *gcsFS) Stat(name string) (os.FileInfo, error) {
-	return nil, nil
+func (t *gcsFS) Stat(path string) (os.FileInfo, error) {
+	obj := t.Client.Bucket(t.Bucket).Object(path)
+	attrs, err := obj.Attrs(gocontext.TODO())
+	if err != nil {
+		return nil, err
+	}
+
+	fileInfo := &gcpUtil.GCSFileInfo{
+		Object: attrs,
+	}
+
+	return fileInfo, nil
 }
 
 func (t *gcsFS) Read(ctx gocontext.Context, fileID string) (io.ReadCloser, error) {
@@ -175,17 +186,7 @@ func (t *gcsFS) Write(ctx gocontext.Context, path string, data []byte) (os.FileI
 		return nil, err
 	}
 
-	attrs, err := obj.Attrs(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	fileInfo := &gcpUtil.GCSFileInfo{
-		Object: attrs,
-	}
-
-	return fileInfo, nil
-
+	return t.Stat(path)
 }
 
 func GetFSForConnection(ctx *context.Context, c models.Connection) (connection.FilesystemRW, error) {
@@ -362,5 +363,5 @@ func sshConnect(host, user, password string) (*sshFS, error) {
 		return nil, err
 	}
 
-	return &sshFS{client}, err
+	return &sshFS{Client: client}, err
 }
