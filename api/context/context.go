@@ -47,7 +47,7 @@ type Context struct {
 }
 
 func (ctx *Context) Duty() dutyCtx.Context {
-	return dutyCtx.NewContext(ctx.Context).
+	return dutyCtx.NewContext(gocontext.Background()).
 		WithDB(ctx.db, ctx.pool).
 		WithKubernetes(ctx.Kubernetes).
 		WithNamespace(ctx.Namespace).
