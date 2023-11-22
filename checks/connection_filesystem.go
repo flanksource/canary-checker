@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"bytes"
 	gocontext "context"
 	"fmt"
 	"io"
@@ -28,13 +27,25 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+type Filesystem interface {
+	Close() error
+	ReadDir(name string) ([]os.FileInfo, error)
+	Stat(name string) (os.FileInfo, error)
+}
+
+type FilesystemRW interface {
+	Filesystem
+	Read(ctx gocontext.Context, fileID string) (io.ReadCloser, error)
+	Write(ctx gocontext.Context, path string, data io.Reader) (os.FileInfo, error)
+}
+
 // s3FS implements connection.Filesystem for S3
 type s3FS struct {
 	*s3.Client
 	Bucket string
 }
 
-func newS3FS(ctx *context.Context, bucket string, conn connection.AWSConnection) (*s3FS, error) {
+func newS3FS(ctx context.Context, bucket string, conn connection.AWSConnection) (*s3FS, error) {
 	cfg, err := awsUtil.NewSession(ctx, conn)
 	if err != nil {
 		return nil, err
@@ -105,11 +116,11 @@ func (t *s3FS) Read(ctx gocontext.Context, key string) (io.ReadCloser, error) {
 	return results.Body, nil
 }
 
-func (t *s3FS) Write(ctx gocontext.Context, path string, data []byte) (os.FileInfo, error) {
+func (t *s3FS) Write(ctx gocontext.Context, path string, data io.Reader) (os.FileInfo, error) {
 	_, err := t.Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(t.Bucket),
 		Key:    aws.String(path),
-		Body:   bytes.NewReader(data),
+		Body:   data,
 	})
 
 	if err != nil {
@@ -173,12 +184,16 @@ func (t *gcsFS) Read(ctx gocontext.Context, fileID string) (io.ReadCloser, error
 	return reader, nil
 }
 
-func (t *gcsFS) Write(ctx gocontext.Context, path string, data []byte) (os.FileInfo, error) {
+func (t *gcsFS) Write(ctx gocontext.Context, path string, data io.Reader) (os.FileInfo, error) {
 	obj := t.Client.Bucket(t.Bucket).Object(path)
 
-	writer := obj.NewWriter(ctx)
-	_, err := writer.Write(data)
+	content, err := io.ReadAll(data)
 	if err != nil {
+		return nil, err
+	}
+
+	writer := obj.NewWriter(ctx)
+	if _, err := writer.Write(content); err != nil {
 		return nil, err
 	}
 
@@ -189,7 +204,7 @@ func (t *gcsFS) Write(ctx gocontext.Context, path string, data []byte) (os.FileI
 	return t.Stat(path)
 }
 
-func GetFSForConnection(ctx *context.Context, c models.Connection) (connection.FilesystemRW, error) {
+func GetFSForConnection(ctx context.Context, c models.Connection) (FilesystemRW, error) {
 	switch c.Type {
 	case models.ConnectionTypeAWS:
 		bucket := c.Properties["bucket"]
@@ -200,11 +215,7 @@ func GetFSForConnection(ctx *context.Context, c models.Connection) (connection.F
 			return nil, err
 		}
 
-		client, err := newS3FS(ctx, bucket, conn)
-		if err != nil {
-			return nil, err
-		}
-		return client, nil
+		return newS3FS(ctx, bucket, conn)
 
 	case models.ConnectionTypeGCP:
 		bucket := c.Properties["bucket"]
@@ -215,7 +226,7 @@ func GetFSForConnection(ctx *context.Context, c models.Connection) (connection.F
 			return nil, err
 		}
 
-		client, err := newGCSFS(*ctx, bucket, conn)
+		client, err := newGCSFS(ctx, bucket, conn)
 		if err != nil {
 			return nil, err
 		}
@@ -255,14 +266,15 @@ func (s *SMBSession) Read(ctx gocontext.Context, fileID string) (io.ReadCloser, 
 	return s.Share.Open(fileID)
 }
 
-func (s *SMBSession) Write(ctx gocontext.Context, path string, data []byte) (os.FileInfo, error) {
+func (s *SMBSession) Write(ctx gocontext.Context, path string, data io.Reader) (os.FileInfo, error) {
 	f, err := s.Share.Create(path)
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err = f.Write(data); err != nil {
-		return nil, err
+	_, err = io.Copy(f, data)
+	if err != nil {
+		return nil, fmt.Errorf("error writing file: %w", err)
 	}
 
 	return f.Stat()
@@ -281,7 +293,7 @@ func (s *SMBSession) Close() error {
 	return nil
 }
 
-func smbConnect(server string, port, share string, auth connection.Authentication) (connection.FilesystemRW, error) {
+func smbConnect(server string, port, share string, auth connection.Authentication) (FilesystemRW, error) {
 	var err error
 	var smb *SMBSession
 	server = server + ":" + port
@@ -324,7 +336,7 @@ func (s *sshFS) Read(ctx gocontext.Context, fileID string) (io.ReadCloser, error
 	return s.Client.Open(fileID)
 }
 
-func (s *sshFS) Write(ctx gocontext.Context, path string, data []byte) (os.FileInfo, error) {
+func (s *sshFS) Write(ctx gocontext.Context, path string, data io.Reader) (os.FileInfo, error) {
 	// Ensure the directory exists
 	dir := filepath.Dir(path)
 	err := s.Client.MkdirAll(dir)
@@ -337,7 +349,8 @@ func (s *sshFS) Write(ctx gocontext.Context, path string, data []byte) (os.FileI
 		return nil, fmt.Errorf("error creating file: %w", err)
 	}
 
-	if _, err = f.Write(data); err != nil {
+	_, err = io.Copy(f, data)
+	if err != nil {
 		return nil, fmt.Errorf("error writing to file: %w", err)
 	}
 

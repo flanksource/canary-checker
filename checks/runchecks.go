@@ -1,8 +1,11 @@
 package checks
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"path/filepath"
 	"strings"
 	"time"
@@ -12,7 +15,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/flanksource/commons/hash"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
@@ -110,7 +112,12 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 }
 
 func saveArtifacts(ctx *context.Context, results pkg.Results) error {
+	if results.TotalArtifacts() == 0 {
+		return nil
+	}
+
 	if DefaultArtifactConnection == "" {
+		logger.Warnf("no artifact connection configured")
 		return nil
 	}
 
@@ -121,7 +128,7 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 		return fmt.Errorf("connection(%s) was not found", DefaultArtifactConnection)
 	}
 
-	fs, err := GetFSForConnection(utils.Ptr(ctx.Duty()), *connection)
+	fs, err := GetFSForConnection(ctx.Duty(), *connection)
 	if err != nil {
 		return fmt.Errorf("error getting filesystem for connection: %w", err)
 	}
@@ -132,7 +139,7 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 			continue
 		}
 
-		checkIDRaw := ctx.Canary.Status.Checks[r.Check.GetName()]
+		checkIDRaw := r.Canary.GetCheckID(r.Check.GetName())
 		checkID, err := uuid.Parse(checkIDRaw)
 		if err != nil {
 			logger.Errorf("error parsing checkID(%s): %v", checkIDRaw, err)
@@ -140,8 +147,12 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 		}
 
 		for _, a := range r.Artifacts {
+			checksum := sha256.New()
+			clonedReader := io.TeeReader(a.Content, checksum)
+			defer a.Content.Close()
+
 			a.Path = filepath.Join("checks", checkID.String(), fmt.Sprintf("%d", r.Start.UnixNano()), a.Path)
-			info, err := fs.Write(ctx, a.Path, a.Content)
+			info, err := fs.Write(ctx, a.Path, clonedReader)
 			if err != nil {
 				logger.Errorf("error saving artifact to filestore: %v", err)
 				continue
@@ -155,9 +166,8 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 				Filename:     info.Name(),
 				Size:         info.Size(),
 				ContentType:  a.ContentType,
-				Checksum:     hash.Sha256Hex(string(a.Content)),
+				Checksum:     hex.EncodeToString(checksum.Sum(nil)),
 			}
-
 			if err := ctx.DB().Create(&artifact).Error; err != nil {
 				logger.Errorf("error saving artifact to db: %v", err)
 			}

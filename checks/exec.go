@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -236,7 +235,7 @@ func checkCmd(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd, result *p
 		case "/dev/stdout":
 			result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
 				Connection:  DefaultArtifactConnection,
-				Content:     []byte(details.Stdout),
+				Content:     io.NopCloser(strings.NewReader(details.Stdout)),
 				ContentType: "text/plain",
 				Path:        "stdout",
 			})
@@ -244,7 +243,7 @@ func checkCmd(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd, result *p
 		case "/dev/stderr":
 			result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
 				Connection:  DefaultArtifactConnection,
-				Content:     []byte(details.Stderr),
+				Content:     io.NopCloser(strings.NewReader(details.Stderr)),
 				ContentType: "text/plain",
 				Path:        "stderr",
 			})
@@ -261,15 +260,9 @@ func checkCmd(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd, result *p
 					logger.Errorf("error opening file. path=%s; %w", path, err)
 					continue
 				}
-				defer file.Close()
 
-				if artifact.Content, err = io.ReadAll(file); err != nil {
-					logger.Errorf("error reading file. path=%s; %w", path, err)
-					continue
-				}
-
+				artifact.Content = file
 				artifact.Path = path
-				artifact.ContentType = http.DetectContentType(artifact.Content)
 				result.Artifacts = append(result.Artifacts, artifact)
 			}
 		}

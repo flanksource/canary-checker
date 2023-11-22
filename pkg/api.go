@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"io"
 	"sort"
 	"strings"
 	"time"
@@ -415,7 +416,7 @@ type SystemResult struct{}
 type ArtifactResult struct {
 	ContentType string
 	Path        string
-	Content     []byte
+	Content     io.ReadCloser
 	Connection  string
 }
 

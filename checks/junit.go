@@ -3,8 +3,6 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -281,19 +279,11 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 				logger.Errorf("error opening file. path=%s; %w", path, err)
 				continue
 			}
-			defer file.Close()
-
-			content, err := io.ReadAll(file)
-			if err != nil {
-				logger.Errorf("error reading file. path=%s; %w", path, err)
-				continue
-			}
 
 			result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
-				ContentType: http.DetectContentType(content), // TODO: Limited detection. Might need to use a 3rd party library.
-				Path:        path,
-				Content:     content,
-				Connection:  DefaultArtifactConnection,
+				Path:       path,
+				Content:    file,
+				Connection: DefaultArtifactConnection,
 			})
 		}
 	}

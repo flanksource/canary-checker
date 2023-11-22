@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 )
 
-func NewSession(ctx *context.Context, conn connection.AWSConnection) (*aws.Config, error) {
+func NewSession(ctx context.Context, conn connection.AWSConnection) (*aws.Config, error) {
 	var tr http.RoundTripper
 	tr = &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: conn.SkipTLSVerify},
