@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/commons/hash"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
@@ -97,55 +98,65 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 		result := c.Run(ctx)
 		transformedResults := TransformResults(ctx, result)
 		results = append(results, transformedResults...)
-
-		for _, r := range result {
-			if len(r.Artifacts) == 0 {
-				continue
-			}
-
-			for _, a := range r.Artifacts {
-				connection, err := ctx.HydrateConnectionByURL(r.Artifacts[0].Connection)
-				if err != nil {
-					logger.Errorf("error getting fs: %v", err)
-					continue
-				} else if connection == nil {
-					logger.Errorf("error getting fs: %v", err)
-					continue
-				}
-
-				fs, err := GetFSForConnection(*connection)
-				if err != nil {
-					logger.Errorf("error getting fs: %v", err)
-					continue
-				}
-
-				info, err := fs.Write(ctx, a.Path, a.Content)
-				if err != nil {
-					logger.Errorf("error saving artifact to filestore: %v", err)
-					continue
-				}
-
-				artifact := models.Artifact{
-					CheckID:      utils.Ptr(uuid.MustParse("018bf176-9ed9-30cd-a2ba-537313594500")), // TODO:
-					CheckTime:    utils.Ptr(time.Now()),                                             // TODO:
-					ConnectionID: connection.ID,
-					Path:         a.Path,
-					Filename:     info.Name(),
-					Size:         info.Size(),
-					ContentType:  a.ContentType,
-					Checksum:     "", // TODO:
-				}
-
-				if err := ctx.DB().Create(&artifact).Error; err != nil {
-					logger.Errorf("error saving artifact to db: %v", err)
-				}
-			}
-		}
-
 		ExportCheckMetrics(ctx, transformedResults)
 	}
 
+	SaveArtifacts(ctx, results)
+
 	return ProcessResults(ctx, results), nil
+}
+
+func SaveArtifacts(ctx *context.Context, results pkg.Results) {
+	for _, r := range results {
+		if len(r.Artifacts) == 0 {
+			continue
+		}
+
+		for _, a := range r.Artifacts {
+			connection, err := ctx.HydrateConnectionByURL(a.Connection)
+			if err != nil {
+				logger.Errorf("error getting connection(%s): %v", a.Connection, err)
+				continue
+			} else if connection == nil {
+				logger.Errorf("connection(%s) was not found", a.Connection)
+				continue
+			}
+
+			fs, err := GetFSForConnection(utils.Ptr(ctx.Duty()), *connection)
+			if err != nil {
+				logger.Errorf("error getting fs: %v", err)
+				continue
+			}
+
+			info, err := fs.Write(ctx, a.Path, a.Content)
+			if err != nil {
+				logger.Errorf("error saving artifact to filestore: %v", err)
+				continue
+			}
+
+			checkIDRaw := ctx.Canary.Status.Checks[r.Check.GetName()]
+			checkID, err := uuid.Parse(checkIDRaw)
+			if err != nil {
+				logger.Errorf("error parsing checkID(%s): %v", checkIDRaw, err)
+				continue
+			}
+
+			artifact := models.Artifact{
+				CheckID:      utils.Ptr(checkID),
+				CheckTime:    utils.Ptr(r.Start),
+				ConnectionID: connection.ID,
+				Path:         a.Path,
+				Filename:     info.Name(),
+				Size:         info.Size(),
+				ContentType:  a.ContentType,
+				Checksum:     hash.Sha256Hex(string(a.Content)),
+			}
+
+			if err := ctx.DB().Create(&artifact).Error; err != nil {
+				logger.Errorf("error saving artifact to db: %v", err)
+			}
+		}
+	}
 }
 
 func TransformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.CheckResult) {

@@ -268,6 +268,20 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 		}
 		return results.Failf("")
 	}
+
+	for _, artifactConfig := range check.Artifacts {
+		for _, item := range suites.Suites {
+			for _, t := range item.Tests {
+				result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
+					ContentType: "text/xml",
+					Path:        filepath.Join(artifactConfig.Path, fmt.Sprintf("%d.xml", time.Now().UnixNano())),
+					Content:     []byte(t.SystemOut),
+					Connection:  artifactConfig.Connection,
+				})
+			}
+		}
+	}
+
 	return results
 }
 

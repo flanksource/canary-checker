@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/duty/context"
 	"github.com/henvic/httpretty"
 
 	"github.com/aws/aws-sdk-go-v2/aws"

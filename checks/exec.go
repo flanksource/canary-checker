@@ -231,7 +231,7 @@ func checkCmd(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd, result *p
 
 	for _, a := range check.Artifacts {
 		result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
-			ContentType: "plain/text",
+			ContentType: "text/plain",
 			Path:        filepath.Join(a.Path, fmt.Sprintf("%d.txt", time.Now().UnixNano())),
 			Connection:  a.Connection,
 			Content:     []byte(details.String()),

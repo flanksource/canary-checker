@@ -5,10 +5,12 @@ metadata:
 spec:
   interval: 30
   exec:
-    - name: exec-pass-check
+    - name: exec-pass-with-artifact
       description: "exec dummy check"
       script: |
         echo "hello"
       artifacts:
         - connection: connection://sftp/adityathebe
           path: /home/admin/exec/
+        - connection: connection://aws/aws
+          path: exec-results
