@@ -9,14 +9,15 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"time"
+	"strings"
 
+	gcs "cloud.google.com/go/storage"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	v1 "github.com/flanksource/canary-checker/api/v1"
 	awsUtil "github.com/flanksource/canary-checker/pkg/clients/aws"
+	gcpUtil "github.com/flanksource/canary-checker/pkg/clients/gcp"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/context"
@@ -27,50 +28,13 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-type s3FileInfo struct {
-	s3Types.Object
-	Bucket string
-}
-
-func (t *s3FileInfo) Name() string {
-	return utils.Deref(t.Object.Key)
-}
-
-func (t *s3FileInfo) Size() int64 {
-	return t.Object.Size
-}
-
-func (t *s3FileInfo) Mode() os.FileMode {
-	return 0
-}
-
-func (t *s3FileInfo) ModTime() time.Time {
-	return utils.Deref(t.LastModified)
-}
-
-func (t *s3FileInfo) IsDir() bool {
-	return false // TODO:
-}
-
-func (t *s3FileInfo) Sys() interface{} {
-	return nil
-}
-
-func (t *s3FileInfo) Path() string {
-	return filepath.Join(t.Bucket, utils.Deref(t.Key))
-}
-
-func (t *s3FileInfo) String() string {
-	return t.Path()
-}
-
 // s3FS implements connection.Filesystem for S3
 type s3FS struct {
 	*s3.Client
 	Bucket string
 }
 
-func newS3FS(ctx *context.Context, bucket string, conn v1.AWSConnection) (*s3FS, error) {
+func newS3FS(ctx *context.Context, bucket string, conn connection.AWSConnection) (*s3FS, error) {
 	cfg, err := awsUtil.NewSession(ctx, conn)
 	if err != nil {
 		return nil, err
@@ -80,7 +44,7 @@ func newS3FS(ctx *context.Context, bucket string, conn v1.AWSConnection) (*s3FS,
 		Client: s3.NewFromConfig(*cfg, func(o *s3.Options) {
 			o.UsePathStyle = conn.UsePathStyle
 		}),
-		Bucket: getS3BucketName(bucket),
+		Bucket: strings.TrimPrefix(bucket, "s3://"),
 	}
 
 	return client, nil
@@ -101,7 +65,7 @@ func (t *s3FS) ReadDir(name string) ([]os.FileInfo, error) {
 
 	var output []os.FileInfo
 	for _, r := range resp.Contents {
-		output = append(output, &s3FileInfo{r, t.Bucket})
+		output = append(output, &awsUtil.S3FileInfo{Object: r})
 	}
 
 	return output, nil
@@ -143,48 +107,92 @@ func (t *s3FS) Write(ctx gocontext.Context, path string, data []byte) (os.FileIn
 		return nil, err
 	}
 
-	fileInfo := &s3FileInfo{
+	fileInfo := &awsUtil.S3FileInfo{
 		Object: s3Types.Object{
 			Key:  utils.Ptr(filepath.Base(path)),
 			Size: headObject.ContentLength,
 		},
-		Bucket: t.Bucket,
 	}
 
 	return fileInfo, nil
 }
 
-// gcpFS implements connection.Filesystem for GCP
-type gcpFS struct {
-	*s3.Client
+// gcsFS implements connection.Filesystem for Google Cloud Storage
+type gcsFS struct {
+	*gcs.Client
 	Bucket string
 }
 
-func (t *gcpFS) Close() error {
-	return nil // NOOP
+func newGCSFS(ctx context.Context, bucket string, conn *connection.GCPConnection) (*gcsFS, error) {
+	cfg, err := gcpUtil.NewSession(ctx, conn)
+	if err != nil {
+		return nil, err
+	}
+
+	client := gcsFS{
+		Bucket: strings.TrimPrefix(bucket, "gcs://"),
+		Client: cfg,
+	}
+
+	return &client, nil
 }
 
-func (t *gcpFS) ReadDir(name string) ([]os.FileInfo, error) {
+func (t *gcsFS) Close() error {
+	return t.Client.Close()
+}
+
+// TODO: implement
+func (t *gcsFS) ReadDir(name string) ([]os.FileInfo, error) {
 	return nil, nil
 }
 
-func (t *gcpFS) Stat(name string) (os.FileInfo, error) {
+// TODO: implement
+func (t *gcsFS) Stat(name string) (os.FileInfo, error) {
 	return nil, nil
 }
 
-func (t *gcpFS) Read(ctx gocontext.Context, fileID string) (io.ReadCloser, error) {
-	return nil, nil
+func (t *gcsFS) Read(ctx gocontext.Context, fileID string) (io.ReadCloser, error) {
+	obj := t.Client.Bucket(t.Bucket).Object(fileID)
+
+	reader, err := obj.NewReader(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return reader, nil
 }
 
-func (t *gcpFS) Write(ctx gocontext.Context, path string, data []byte) (os.FileInfo, error) {
-	return nil, nil
+func (t *gcsFS) Write(ctx gocontext.Context, path string, data []byte) (os.FileInfo, error) {
+	obj := t.Client.Bucket(t.Bucket).Object(path)
+
+	writer := obj.NewWriter(ctx)
+	_, err := writer.Write(data)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := writer.Close(); err != nil {
+		return nil, err
+	}
+
+	attrs, err := obj.Attrs(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	fileInfo := &gcpUtil.GCSFileInfo{
+		Object: attrs,
+	}
+
+	return fileInfo, nil
+
 }
 
 func GetFSForConnection(ctx *context.Context, c models.Connection) (connection.FilesystemRW, error) {
 	switch c.Type {
 	case models.ConnectionTypeAWS:
 		bucket := c.Properties["bucket"]
-		conn := v1.AWSConnection{
+		conn := connection.AWSConnection{
 			ConnectionName: c.ID.String(),
 		}
 		if err := conn.Populate(ctx); err != nil {
@@ -198,8 +206,19 @@ func GetFSForConnection(ctx *context.Context, c models.Connection) (connection.F
 		return client, nil
 
 	case models.ConnectionTypeGCP:
-		var client gcpFS
-		return &client, nil
+		bucket := c.Properties["bucket"]
+		conn := &connection.GCPConnection{
+			ConnectionName: c.ID.String(),
+		}
+		if err := conn.HydrateConnection(ctx); err != nil {
+			return nil, err
+		}
+
+		client, err := newGCSFS(*ctx, bucket, conn)
+		if err != nil {
+			return nil, err
+		}
+		return client, nil
 
 	case models.ConnectionTypeSFTP:
 		parsedURL, err := url.Parse(c.URL)

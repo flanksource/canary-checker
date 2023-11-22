@@ -24,7 +24,7 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.Failf("failed to populate GCP connection: %v", err)
 	}
 
-	cfg, err := gcp.NewSession(ctx, check.GCPConnection)
+	cfg, err := gcp.NewSession(ctx.Duty(), check.GCPConnection)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

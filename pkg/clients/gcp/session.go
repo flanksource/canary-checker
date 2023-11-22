@@ -2,12 +2,12 @@ package gcp
 
 import (
 	gcs "cloud.google.com/go/storage"
-	"github.com/flanksource/canary-checker/api/context"
-	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/duty/connection"
+	"github.com/flanksource/duty/context"
 	"google.golang.org/api/option"
 )
 
-func NewSession(ctx *context.Context, conn *v1.GCPConnection) (*gcs.Client, error) {
+func NewSession(ctx context.Context, conn *connection.GCPConnection) (*gcs.Client, error) {
 	conn = conn.Validate()
 	var client *gcs.Client
 	var err error

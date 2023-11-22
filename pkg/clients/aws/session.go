@@ -7,16 +7,16 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/context"
 	"github.com/henvic/httpretty"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
-	v1 "github.com/flanksource/canary-checker/api/v1"
 )
 
-func NewSession(ctx *context.Context, conn v1.AWSConnection) (*aws.Config, error) {
+func NewSession(ctx *context.Context, conn connection.AWSConnection) (*aws.Config, error) {
 	var tr http.RoundTripper
 	tr = &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: conn.SkipTLSVerify},

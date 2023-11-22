@@ -2,12 +2,12 @@ package gcp
 
 import (
 	"github.com/flanksource/canary-checker/api/context"
-	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/duty/connection"
 	"google.golang.org/api/option"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 )
 
-func NewSQLAdmin(ctx *context.Context, conn *v1.GCPConnection) (*sqladmin.Service, error) {
+func NewSQLAdmin(ctx *context.Context, conn *connection.GCPConnection) (*sqladmin.Service, error) {
 	conn = conn.Validate()
 	var err error
 	var client *sqladmin.Service

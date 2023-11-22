@@ -150,9 +150,9 @@ type Bucket struct {
 }
 
 type S3Check struct {
-	Description   `yaml:",inline" json:",inline"`
-	AWSConnection `yaml:",inline" json:",inline"`
-	BucketName    string `yaml:"bucketName" json:"bucketName,omitempty"`
+	Description              `yaml:",inline" json:",inline"`
+	connection.AWSConnection `yaml:",inline" json:",inline"`
+	BucketName               string `yaml:"bucketName" json:"bucketName,omitempty"`
 }
 
 func (c S3Check) GetEndpoint() string {
@@ -164,10 +164,10 @@ func (c S3Check) GetType() string {
 }
 
 type CloudWatchCheck struct {
-	Description      `yaml:",inline" json:",inline"`
-	AWSConnection    `yaml:",inline" json:",inline"`
-	Templatable      `yaml:",inline" json:",inline"`
-	CloudWatchFilter `yaml:",inline" json:",inline"`
+	Description              `yaml:",inline" json:",inline"`
+	connection.AWSConnection `yaml:",inline" json:",inline"`
+	Templatable              `yaml:",inline" json:",inline"`
+	CloudWatchFilter         `yaml:",inline" json:",inline"`
 }
 
 type CloudWatchFilter struct {
@@ -749,114 +749,6 @@ func (c KubernetesCheck) GetEndpoint() string {
 	return fmt.Sprintf("%v/%v/%v", c.Kind, c.Description.Description, c.Namespace.Name)
 }
 
-type AWSConnection struct {
-	// ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
-	ConnectionName string       `yaml:"connection,omitempty" json:"connection,omitempty"`
-	AccessKey      types.EnvVar `yaml:"accessKey" json:"accessKey,omitempty"`
-	SecretKey      types.EnvVar `yaml:"secretKey" json:"secretKey,omitempty"`
-	SessionToken   types.EnvVar `yaml:"sessionToken,omitempty" json:"sessionToken,omitempty"`
-	Region         string       `yaml:"region,omitempty" json:"region,omitempty"`
-	Endpoint       string       `yaml:"endpoint,omitempty" json:"endpoint,omitempty"`
-	// Skip TLS verify when connecting to aws
-	SkipTLSVerify bool `yaml:"skipTLSVerify,omitempty" json:"skipTLSVerify,omitempty"`
-	// glob path to restrict matches to a subset
-	ObjectPath string `yaml:"objectPath,omitempty" json:"objectPath,omitempty"`
-	// Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY
-	UsePathStyle bool `yaml:"usePathStyle,omitempty" json:"usePathStyle,omitempty"`
-}
-
-func (t *AWSConnection) GetUsername() types.EnvVar {
-	return t.AccessKey
-}
-
-func (t *AWSConnection) GetPassword() types.EnvVar {
-	return t.SecretKey
-}
-
-func (t *AWSConnection) GetProperties() map[string]string {
-	return map[string]string{
-		"region": t.Region,
-	}
-}
-
-func (t *AWSConnection) GetURL() types.EnvVar {
-	return types.EnvVar{ValueStatic: t.Endpoint}
-}
-
-// Populate populates an AWSConnection with credentials and other information.
-// If a connection name is specified, it'll be used to populate the endpoint, accessKey and secretKey.
-func (t *AWSConnection) Populate(ctx checkContext) error {
-	if t.ConnectionName != "" {
-		connection, err := ctx.HydrateConnectionByURL(t.ConnectionName)
-		if err != nil {
-			return fmt.Errorf("could not parse EC2 access key: %v", err)
-		}
-
-		t.AccessKey.ValueStatic = connection.Username
-		t.SecretKey.ValueStatic = connection.Password
-		if t.Endpoint == "" {
-			t.Endpoint = connection.URL
-		}
-
-		t.SkipTLSVerify = connection.InsecureTLS
-		if t.Region == "" {
-			if region, ok := connection.Properties["region"]; ok {
-				t.Region = region
-			}
-		}
-	}
-
-	if accessKey, err := ctx.GetEnvValueFromCache(t.AccessKey); err != nil {
-		return fmt.Errorf("could not parse AWS access key id: %v", err)
-	} else {
-		t.AccessKey.ValueStatic = accessKey
-	}
-
-	if secretKey, err := ctx.GetEnvValueFromCache(t.SecretKey); err != nil {
-		return fmt.Errorf(fmt.Sprintf("Could not parse AWS secret access key: %v", err))
-	} else {
-		t.SecretKey.ValueStatic = secretKey
-	}
-
-	if sessionToken, err := ctx.GetEnvValueFromCache(t.SessionToken); err != nil {
-		return fmt.Errorf(fmt.Sprintf("Could not parse AWS session token: %v", err))
-	} else {
-		t.SessionToken.ValueStatic = sessionToken
-	}
-
-	return nil
-}
-
-type GCPConnection struct {
-	// ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
-	ConnectionName string        `yaml:"connection,omitempty" json:"connection,omitempty"`
-	Endpoint       string        `yaml:"endpoint" json:"endpoint,omitempty"`
-	Credentials    *types.EnvVar `yaml:"credentials" json:"credentials,omitempty"`
-}
-
-func (g *GCPConnection) Validate() *GCPConnection {
-	if g == nil {
-		return &GCPConnection{}
-	}
-	return g
-}
-
-// HydrateConnection attempts to find the connection by name
-// and populate the endpoint and credentials.
-func (g *GCPConnection) HydrateConnection(ctx checkContext) error {
-	connection, err := ctx.HydrateConnectionByURL(g.ConnectionName)
-	if err != nil {
-		return err
-	}
-
-	if connection != nil {
-		g.Credentials = &types.EnvVar{ValueStatic: connection.Certificate}
-		g.Endpoint = connection.URL
-	}
-
-	return nil
-}
-
 type AzureConnection struct {
 	ConnectionName string        `yaml:"connection,omitempty" json:"connection,omitempty"`
 	ClientID       *types.EnvVar `yaml:"clientID,omitempty" json:"clientID,omitempty"`
@@ -888,8 +780,8 @@ type FolderCheck struct {
 	Path                       string       `yaml:"path" json:"path"`
 	Filter                     FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
 	FolderTest                 `yaml:",inline" json:",inline"`
-	*AWSConnection             `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
-	*GCPConnection             `yaml:"gcpConnection,omitempty" json:"gcpConnection,omitempty"`
+	*connection.AWSConnection  `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
+	*connection.GCPConnection  `yaml:"gcpConnection,omitempty" json:"gcpConnection,omitempty"`
 	*connection.SMBConnection  `yaml:"smbConnection,omitempty" json:"smbConnection,omitempty"`
 	*connection.SFTPConnection `yaml:"sftpConnection,omitempty" json:"sftpConnection,omitempty"`
 }
@@ -903,9 +795,9 @@ func (c FolderCheck) GetEndpoint() string {
 }
 
 type ExecConnections struct {
-	AWS   *AWSConnection   `yaml:"aws,omitempty" json:"aws,omitempty"`
-	GCP   *GCPConnection   `yaml:"gcp,omitempty" json:"gcp,omitempty"`
-	Azure *AzureConnection `yaml:"azure,omitempty" json:"azure,omitempty"`
+	AWS   *connection.AWSConnection `yaml:"aws,omitempty" json:"aws,omitempty"`
+	GCP   *connection.GCPConnection `yaml:"gcp,omitempty" json:"gcp,omitempty"`
+	Azure *AzureConnection          `yaml:"azure,omitempty" json:"azure,omitempty"`
 }
 
 type GitCheckout struct {
@@ -966,11 +858,11 @@ func (c ExecCheck) GetTestFunction() Template {
 }
 
 type AwsConfigCheck struct {
-	Description    `yaml:",inline" json:",inline"`
-	Templatable    `yaml:",inline" json:",inline"`
-	Query          string `yaml:"query" json:"query"`
-	*AWSConnection `yaml:",inline" json:",inline"`
-	AggregatorName *string `yaml:"aggregatorName,omitempty" json:"aggregatorName,omitempty"`
+	Description               `yaml:",inline" json:",inline"`
+	Templatable               `yaml:",inline" json:",inline"`
+	Query                     string `yaml:"query" json:"query"`
+	*connection.AWSConnection `yaml:",inline" json:",inline"`
+	AggregatorName            *string `yaml:"aggregatorName,omitempty" json:"aggregatorName,omitempty"`
 }
 
 func (c AwsConfigCheck) GetType() string {
@@ -989,8 +881,8 @@ type AwsConfigRuleCheck struct {
 	// Specify one or more Config rule names to filter the results by rule.
 	Rules []string `yaml:"rules,omitempty" json:"rules,omitempty"`
 	// Filters the results by compliance. The allowed values are INSUFFICIENT_DATA, NON_COMPLIANT, NOT_APPLICABLE, COMPLIANT
-	ComplianceTypes []string `yaml:"complianceTypes,omitempty" json:"complianceTypes,omitempty"`
-	*AWSConnection  `yaml:",inline" json:",inline"`
+	ComplianceTypes           []string `yaml:"complianceTypes,omitempty" json:"complianceTypes,omitempty"`
+	*connection.AWSConnection `yaml:",inline" json:",inline"`
 }
 
 func (c AwsConfigRuleCheck) GetType() string {
@@ -1009,9 +901,9 @@ type DatabaseBackupCheck struct {
 }
 
 type GCPDatabase struct {
-	Project        string `yaml:"project" json:"project"`
-	Instance       string `yaml:"instance" json:"instance"`
-	*GCPConnection `yaml:"gcpConnection,omitempty" json:"gcpConnection,omitempty"`
+	Project                   string `yaml:"project" json:"project"`
+	Instance                  string `yaml:"instance" json:"instance"`
+	*connection.GCPConnection `yaml:"gcpConnection,omitempty" json:"gcpConnection,omitempty"`
 }
 
 func (c DatabaseBackupCheck) GetType() string {
@@ -1273,15 +1165,15 @@ type EC2 struct {
 }
 
 type EC2Check struct {
-	Description   `yaml:",inline" json:",inline"`
-	AWSConnection `yaml:",inline" json:",inline"`
-	AMI           string                    `yaml:"ami,omitempty" json:"ami,omitempty"`
-	UserData      string                    `yaml:"userData,omitempty" json:"userData,omitempty"`
-	SecurityGroup string                    `yaml:"securityGroup,omitempty" json:"securityGroup,omitempty"`
-	KeepAlive     bool                      `yaml:"keepAlive,omitempty" json:"keepAlive,omitempty"`
-	WaitTime      int                       `yaml:"waitTime,omitempty" json:"waitTime,omitempty"`
-	TimeOut       int                       `yaml:"timeOut,omitempty" json:"timeOut,omitempty"`
-	CanaryRef     []v1.LocalObjectReference `yaml:"canaryRef,omitempty" json:"canaryRef,omitempty"`
+	Description              `yaml:",inline" json:",inline"`
+	connection.AWSConnection `yaml:",inline" json:",inline"`
+	AMI                      string                    `yaml:"ami,omitempty" json:"ami,omitempty"`
+	UserData                 string                    `yaml:"userData,omitempty" json:"userData,omitempty"`
+	SecurityGroup            string                    `yaml:"securityGroup,omitempty" json:"securityGroup,omitempty"`
+	KeepAlive                bool                      `yaml:"keepAlive,omitempty" json:"keepAlive,omitempty"`
+	WaitTime                 int                       `yaml:"waitTime,omitempty" json:"waitTime,omitempty"`
+	TimeOut                  int                       `yaml:"timeOut,omitempty" json:"timeOut,omitempty"`
+	CanaryRef                []v1.LocalObjectReference `yaml:"canaryRef,omitempty" json:"canaryRef,omitempty"`
 }
 
 func (c EC2Check) GetEndpoint() string {
