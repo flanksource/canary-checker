@@ -8,9 +8,9 @@ spec:
     - name: exec-pass-with-artifact
       description: "exec dummy check"
       script: |
-        echo "hello"
+        mkdir -p /tmp/exec-results &&
+        echo "hello" > /tmp/exec-results/hello && echo "world" > /tmp/exec-results/world && echo "random" > /tmp/random-text && echo "to stdout"
       artifacts:
-        - connection: connection://sftp/adityathebe
-          path: /home/admin/exec/
-        - connection: connection://aws/aws
-          path: exec-results
+        - path: /tmp/exec-results/*
+        - path: /tmp/random-text
+        - path: /dev/stdout

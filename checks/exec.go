@@ -4,19 +4,21 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/files"
 	"github.com/flanksource/commons/hash"
+	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	"github.com/hashicorp/go-getter"
 )
@@ -229,13 +231,48 @@ func checkCmd(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd, result *p
 	details := runCmd(ctx, cmd)
 	result.AddDetails(details)
 
-	for _, a := range check.Artifacts {
-		result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
-			ContentType: "text/plain",
-			Path:        filepath.Join(a.Path, fmt.Sprintf("%d.txt", time.Now().UnixNano())),
-			Connection:  a.Connection,
-			Content:     []byte(details.String()),
-		})
+	for _, artifactConfig := range check.Artifacts {
+		switch artifactConfig.Path {
+		case "/dev/stdout":
+			result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
+				Connection:  DefaultArtifactConnection,
+				Content:     []byte(details.Stdout),
+				ContentType: "text/plain",
+				Path:        "stdout",
+			})
+
+		case "/dev/stderr":
+			result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
+				Connection:  DefaultArtifactConnection,
+				Content:     []byte(details.Stderr),
+				ContentType: "text/plain",
+				Path:        "stderr",
+			})
+
+		default:
+			paths := utils.UnfoldGlobs(artifactConfig.Path)
+			for _, path := range paths {
+				artifact := pkg.ArtifactResult{
+					Connection: DefaultArtifactConnection,
+				}
+
+				file, err := os.Open(path)
+				if err != nil {
+					logger.Errorf("error opening file. path=%s; %w", path, err)
+					continue
+				}
+				defer file.Close()
+
+				if artifact.Content, err = io.ReadAll(file); err != nil {
+					logger.Errorf("error reading file. path=%s; %w", path, err)
+					continue
+				}
+
+				artifact.Path = path
+				artifact.ContentType = http.DetectContentType(artifact.Content)
+				result.Artifacts = append(result.Artifacts, artifact)
+			}
+		}
 	}
 
 	if details.ExitCode != 0 {

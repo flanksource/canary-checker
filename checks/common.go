@@ -17,6 +17,9 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
+// DefaultArtifactConnection is the connection that's used to save all check artifacts.
+var DefaultArtifactConnection string
+
 func age(t time.Time) string {
 	return utils.Age(time.Since(t))
 }

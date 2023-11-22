@@ -54,8 +54,9 @@ func (c Check) GetLabels() map[string]string {
 }
 
 type Artifact struct {
-	Path       string `yaml:"path" json:"path"`
-	Connection string `yaml:"connection" json:"connection"`
+	// Path to the artifact on the check runner.
+	// Special paths: /dev/stdout & /dev/stdin
+	Path string `yaml:"path" json:"path"`
 }
 
 // type TestResult struct {

@@ -101,33 +101,37 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 		ExportCheckMetrics(ctx, transformedResults)
 	}
 
-	SaveArtifacts(ctx, results)
+	if err := saveArtifacts(ctx, results); err != nil {
+		logger.Errorf("error saving artifacts: %v", err)
+	}
 
 	return ProcessResults(ctx, results), nil
 }
 
-func SaveArtifacts(ctx *context.Context, results pkg.Results) {
+func saveArtifacts(ctx *context.Context, results pkg.Results) error {
+	if DefaultArtifactConnection == "" {
+		return nil
+	}
+
+	connection, err := ctx.HydrateConnectionByURL(DefaultArtifactConnection)
+	if err != nil {
+		return fmt.Errorf("error getting connection(%s): %w", DefaultArtifactConnection, err)
+	} else if connection == nil {
+		return fmt.Errorf("connection(%s) was not found", DefaultArtifactConnection)
+	}
+
+	fs, err := GetFSForConnection(utils.Ptr(ctx.Duty()), *connection)
+	if err != nil {
+		return fmt.Errorf("error getting filesystem for connection: %w", err)
+	}
+	defer fs.Close()
+
 	for _, r := range results {
 		if len(r.Artifacts) == 0 {
 			continue
 		}
 
 		for _, a := range r.Artifacts {
-			connection, err := ctx.HydrateConnectionByURL(a.Connection)
-			if err != nil {
-				logger.Errorf("error getting connection(%s): %v", a.Connection, err)
-				continue
-			} else if connection == nil {
-				logger.Errorf("connection(%s) was not found", a.Connection)
-				continue
-			}
-
-			fs, err := GetFSForConnection(utils.Ptr(ctx.Duty()), *connection)
-			if err != nil {
-				logger.Errorf("error getting fs: %v", err)
-				continue
-			}
-
 			info, err := fs.Write(ctx, a.Path, a.Content)
 			if err != nil {
 				logger.Errorf("error saving artifact to filestore: %v", err)
@@ -157,6 +161,8 @@ func SaveArtifacts(ctx *context.Context, results pkg.Results) {
 			}
 		}
 	}
+
+	return nil
 }
 
 func TransformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.CheckResult) {

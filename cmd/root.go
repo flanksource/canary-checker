@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs/canary"
@@ -83,6 +84,7 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&db.CheckStatusRetentionDays, "check-status-retention-period", db.DefaultCheckStatusRetentionDays, "Check status retention period in days")
 	flags.IntVar(&db.CheckRetentionDays, "check-retention-period", db.DefaultCheckRetentionDays, "Check retention period in days")
 	flags.IntVar(&db.CanaryRetentionDays, "canary-retention-period", db.DefaultCanaryRetentionDays, "Canary retention period in days")
+	flags.StringVar(&checks.DefaultArtifactConnection, "artifact-connection", "", "Specify the default connection to use for artifacts")
 
 	flags.IntVar(&canary.ReconcilePageSize, "upstream-page-size", 500, "upstream reconciliation page size")
 	flags.DurationVar(&canary.ReconcileMaxAge, "upstream-max-age", time.Hour*48, "upstream reconciliation max age")

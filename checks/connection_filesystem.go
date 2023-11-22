@@ -324,6 +324,13 @@ func (s *sshFS) Read(ctx gocontext.Context, fileID string) (io.ReadCloser, error
 }
 
 func (s *sshFS) Write(ctx gocontext.Context, path string, data []byte) (os.FileInfo, error) {
+	// Ensure the directory exists
+	dir := filepath.Dir(path)
+	err := s.Client.MkdirAll(dir)
+	if err != nil {
+		return nil, fmt.Errorf("error creating directory: %w", err)
+	}
+
 	f, err := s.Client.Create(path)
 	if err != nil {
 		return nil, fmt.Errorf("error creating file: %w", err)

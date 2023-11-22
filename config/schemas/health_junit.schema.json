@@ -7,16 +7,12 @@
       "properties": {
         "path": {
           "type": "string"
-        },
-        "connection": {
-          "type": "string"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "path",
-        "connection"
+        "path"
       ]
     },
     "JunitCheck": {

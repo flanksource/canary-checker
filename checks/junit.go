@@ -3,11 +3,15 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/pkg/utils"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -270,15 +274,27 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	}
 
 	for _, artifactConfig := range check.Artifacts {
-		for _, item := range suites.Suites {
-			for _, t := range item.Tests {
-				result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
-					ContentType: "text/xml",
-					Path:        filepath.Join(artifactConfig.Path, fmt.Sprintf("%d.xml", time.Now().UnixNano())),
-					Content:     []byte(t.SystemOut),
-					Connection:  artifactConfig.Connection,
-				})
+		paths := utils.UnfoldGlobs(artifactConfig.Path)
+		for _, path := range paths {
+			file, err := os.Open(path)
+			if err != nil {
+				logger.Errorf("error opening file. path=%s; %w", path, err)
+				continue
 			}
+			defer file.Close()
+
+			content, err := io.ReadAll(file)
+			if err != nil {
+				logger.Errorf("error reading file. path=%s; %w", path, err)
+				continue
+			}
+
+			result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
+				ContentType: http.DetectContentType(content), // TODO: Limited detection. Might need to use a 3rd party library.
+				Path:        path,
+				Content:     content,
+				Connection:  DefaultArtifactConnection,
+			})
 		}
 	}
 
