@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 
 	"time"
 
@@ -398,11 +399,19 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, error) {
 	return PersistCanaryModel(model)
 }
 
+var refreshCheckStatusSummaryMutex sync.Mutex
+
 func RefreshCheckStatusSummary() {
+	if !refreshCheckStatusSummaryMutex.TryLock() {
+		logger.Debugf("Skipping RefreshCheckStatusSummary as it is already running")
+		return
+	}
+
 	jobHistory := models.NewJobHistory("RefreshCheckStatusSummary", "check_status_summary", "").Start()
 	_ = PersistJobHistory(jobHistory)
 	defer func() {
 		_ = PersistJobHistory(jobHistory.End())
+		refreshCheckStatusSummaryMutex.Unlock()
 	}()
 
 	if err := duty.RefreshCheckStatusSummary(Pool); err != nil {
