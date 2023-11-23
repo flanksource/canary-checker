@@ -17,9 +17,12 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
 	gocache "github.com/patrickmn/go-cache"
 )
+
+const maxBytesForMimeDetection = 512 * 1024 // 512KB
 
 var checksCache = gocache.New(5*time.Minute, 5*time.Minute)
 
@@ -147,15 +150,23 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 		}
 
 		for _, a := range r.Artifacts {
-			checksum := sha256.New()
-			clonedReader := io.TeeReader(a.Content, checksum)
 			defer a.Content.Close()
 
+			checksum := sha256.New()
+			clonedReader := io.TeeReader(a.Content, checksum)
+
+			mr := &mimeWriter{max: maxBytesForMimeDetection}
+			clonedReader2 := io.TeeReader(clonedReader, mr)
+
 			a.Path = filepath.Join("checks", checkID.String(), fmt.Sprintf("%d", r.Start.UnixNano()), a.Path)
-			info, err := fs.Write(ctx, a.Path, clonedReader)
+			info, err := fs.Write(ctx, a.Path, clonedReader2)
 			if err != nil {
 				logger.Errorf("error saving artifact to filestore: %v", err)
 				continue
+			}
+
+			if a.ContentType == "" {
+				a.ContentType = mr.Detect().String()
 			}
 
 			artifact := models.Artifact{
@@ -169,7 +180,7 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 				Checksum:     hex.EncodeToString(checksum.Sum(nil)),
 			}
 			if err := ctx.DB().Create(&artifact).Error; err != nil {
-				logger.Errorf("error saving artifact to db: %v", err)
+				return fmt.Errorf("error saving artifact to db: %w", err)
 			}
 		}
 	}
@@ -259,4 +270,27 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 	}
 
 	return r
+}
+
+// mimeWriter implements io.Writer with a limit on the number of bytes used for detection.
+type mimeWriter struct {
+	buffer []byte
+	max    int // max number of bytes to use from the source
+}
+
+func (t *mimeWriter) Write(bb []byte) (n int, err error) {
+	if len(t.buffer) > t.max {
+		return 0, nil
+	}
+
+	rem := t.max - len(t.buffer)
+	if rem > len(bb) {
+		rem = len(bb)
+	}
+	t.buffer = append(t.buffer, bb[:rem]...)
+	return rem, nil
+}
+
+func (t *mimeWriter) Detect() *mimetype.MIME {
+	return mimetype.Detect(t.buffer)
 }

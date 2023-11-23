@@ -39,7 +39,7 @@ type FilesystemRW interface {
 	Write(ctx gocontext.Context, path string, data io.Reader) (os.FileInfo, error)
 }
 
-// s3FS implements connection.Filesystem for S3
+// s3FS implements FilesystemRW for S3
 type s3FS struct {
 	*s3.Client
 	Bucket string
@@ -130,7 +130,7 @@ func (t *s3FS) Write(ctx gocontext.Context, path string, data io.Reader) (os.Fil
 	return t.Stat(path)
 }
 
-// gcsFS implements connection.Filesystem for Google Cloud Storage
+// gcsFS implements FilesystemRW for Google Cloud Storage
 type gcsFS struct {
 	*gcs.Client
 	Bucket string
@@ -204,8 +204,59 @@ func (t *gcsFS) Write(ctx gocontext.Context, path string, data io.Reader) (os.Fi
 	return t.Stat(path)
 }
 
+// localFS implements FilesystemRW for local filesystem
+type localFS struct {
+	base string
+}
+
+func newLocalFS(base string) *localFS {
+	return &localFS{base: base}
+}
+
+func (t *localFS) Close() error {
+	return nil
+}
+
+func (t *localFS) ReadDir(name string) ([]os.FileInfo, error) {
+	return nil, nil // TODO:
+}
+
+func (t *localFS) Stat(name string) (os.FileInfo, error) {
+	return os.Stat(filepath.Join(t.base, name))
+}
+
+func (t *localFS) Read(ctx gocontext.Context, path string) (io.ReadCloser, error) {
+	return os.Open(filepath.Join(t.base, path))
+}
+
+func (t *localFS) Write(ctx gocontext.Context, path string, data io.Reader) (os.FileInfo, error) {
+	fullpath := filepath.Join(t.base, path)
+
+	// Ensure the directory exists
+	err := os.MkdirAll(filepath.Dir(fullpath), os.ModePerm)
+	if err != nil {
+		return nil, fmt.Errorf("error creating base directory: %w", err)
+	}
+
+	f, err := os.Create(fullpath)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = io.Copy(f, data)
+	if err != nil {
+		return nil, err
+	}
+
+	return t.Stat(path)
+}
+
 func GetFSForConnection(ctx context.Context, c models.Connection) (FilesystemRW, error) {
 	switch c.Type {
+	case models.ConnectionTypeFolder:
+		path := c.Properties["path"]
+		return newLocalFS(path), nil
+
 	case models.ConnectionTypeAWS:
 		bucket := c.Properties["bucket"]
 		conn := connection.AWSConnection{
