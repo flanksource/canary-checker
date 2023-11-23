@@ -11,9 +11,6 @@ spec:
   schedule: "@every 10m"
   id:
     javascript: properties.id
-  configs:
-    - name: flanksource-canary-cluster
-      type: EKS
   properties:
   - name: cpu
     lookup:
@@ -76,6 +73,21 @@ spec:
                         components.push({
                           name: results[idx].node,
                           properties: [{name: 'memory', value: parseInt(Number(results[idx].value))}],
+                        })
+                      }
+                      JSON.stringify(components)
+            - name: ephemeral-storage
+              lookup:
+                prometheus:
+                - query: 'max by (instance) (avg_over_time(node_filesystem_avail_bytes{mountpoint="/",fstype!="rootfs"}[5m]))'
+                  url: 'http://prometheus-k8s.monitoring:9090'
+                  display:
+                    javascript: |
+                      var components = [];
+                      for (idx in results) {
+                        components.push({
+                          name: results[idx].instance,
+                          properties: [{name: 'ephemeral-storage', value: parseInt(Number(results[idx].value))}],
                         })
                       }
                       JSON.stringify(components)
