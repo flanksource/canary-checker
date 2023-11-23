@@ -140,20 +140,20 @@ func (components Components) Walk() Components {
 }
 
 type Component struct {
-	Name         string              `json:"name,omitempty"`
-	ID           uuid.UUID           `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
-	Text         string              `json:"text,omitempty"`
-	Schedule     string              `json:"schedule,omitempty"`
-	TopologyType string              `json:"topology_type,omitempty"`
-	Namespace    string              `json:"namespace,omitempty"`
-	Labels       types.JSONStringMap `json:"labels,omitempty"`
-	Tooltip      string              `json:"tooltip,omitempty"`
-	Icon         string              `json:"icon,omitempty"`
-	Owner        string              `json:"owner,omitempty"`
-	Status       ComponentStatus     `json:"status,omitempty"`
-	StatusReason string              `json:"status_reason,omitempty"`
-	Path         string              `json:"path,omitempty"`
-	Order        int                 `json:"order,omitempty"  gorm:"-"`
+	Name         string               `json:"name,omitempty"`
+	ID           uuid.UUID            `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
+	Text         string               `json:"text,omitempty"`
+	Schedule     string               `json:"schedule,omitempty"`
+	TopologyType string               `json:"topology_type,omitempty"`
+	Namespace    string               `json:"namespace,omitempty"`
+	Labels       types.JSONStringMap  `json:"labels,omitempty"`
+	Tooltip      string               `json:"tooltip,omitempty"`
+	Icon         string               `json:"icon,omitempty"`
+	Owner        string               `json:"owner,omitempty"`
+	Status       ComponentStatus      `json:"status,omitempty"`
+	StatusReason dutyTypes.NullString `json:"status_reason,omitempty"`
+	Path         string               `json:"path,omitempty"`
+	Order        int                  `json:"order,omitempty"  gorm:"-"`
 	// The type of component, e.g. service, API, website, library, database, etc.
 	Type    string     `json:"type,omitempty"`
 	Summary v1.Summary `json:"summary,omitempty" gorm:"type:summary"`

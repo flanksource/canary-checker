@@ -407,12 +407,10 @@ func DeleteInlineCanariesForComponent(componentID string, deleteTime time.Time) 
 
 	for _, r := range rows {
 		if _, err := DeleteChecksForCanary(r.ID, deleteTime); err != nil {
-			logger.Debugf("Error deleting checks for canary %v", r.ID)
-			continue
+			logger.Errorf("Error deleting checks for canary[%s]: %v", r.ID, err)
 		}
 		if err := DeleteCheckComponentRelationshipsForCanary(r.ID, deleteTime); err != nil {
-			logger.Debugf("Error deleting check component relationships for canary %v", r.ID)
-			continue
+			logger.Errorf("Error deleting check component relationships for canary[%s]: %v", r.ID, err)
 		}
 	}
 	return nil
