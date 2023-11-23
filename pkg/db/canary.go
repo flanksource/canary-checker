@@ -399,8 +399,15 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, error) {
 }
 
 func RefreshCheckStatusSummary() {
+	jobHistory := models.NewJobHistory("RefreshCheckStatusSummary", "check_status_summary", "").Start()
+	_ = PersistJobHistory(jobHistory)
+	defer func() {
+		_ = PersistJobHistory(jobHistory.End())
+	}()
+
 	if err := duty.RefreshCheckStatusSummary(Pool); err != nil {
 		logger.Errorf("error refreshing check_status_summary materialized view: %v", err)
+		jobHistory.AddError(err.Error())
 	}
 }
 
