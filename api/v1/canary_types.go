@@ -322,10 +322,11 @@ type Canary struct {
 	Status CanaryStatus `json:"status,omitempty"`
 }
 
-func NewCanaryFromSpec(name string, spec CanarySpec) Canary {
+func NewCanaryFromSpec(name, namespace string, spec CanarySpec) Canary {
 	return Canary{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:      name,
+			Namespace: namespace,
 		},
 		Spec: spec,
 	}
