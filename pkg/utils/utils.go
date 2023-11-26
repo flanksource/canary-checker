@@ -1,15 +1,47 @@
 package utils
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
+
+	"golang.org/x/sync/semaphore"
 
 	"github.com/google/uuid"
 	"k8s.io/apimachinery/pkg/util/duration"
 )
+
+type NamedLock struct {
+	locks sync.Map
+}
+
+type Unlocker interface {
+	Release()
+}
+
+type unlocker struct {
+	lock *semaphore.Weighted
+}
+
+func (u *unlocker) Release() {
+	u.lock.Release(1)
+}
+
+func (n *NamedLock) TryLock(name string, timeout time.Duration) Unlocker {
+	o, _ := n.locks.LoadOrStore(name, semaphore.NewWeighted(1))
+	lock := o.(*semaphore.Weighted)
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeout))
+	defer cancel()
+	if err := lock.Acquire(ctx, 1); err != nil {
+		return nil
+	}
+	return &unlocker{lock}
+}
 
 func Age(d time.Duration) string {
 	if d.Milliseconds() == 0 {
