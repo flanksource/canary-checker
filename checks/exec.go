@@ -36,7 +36,7 @@ type ExecDetails struct {
 }
 
 func (e ExecDetails) String() string {
-	return fmt.Sprintf("%s %s exit=%d %s %s", e.Cmd.Path, e.Cmd.Args, e.ExitCode, e.Stdout, e.Stderr)
+	return fmt.Sprintf("cwd=%s, %s %s exit=%d stdout=%s stderr=%s", e.Cmd.Dir, e.Cmd.Path, e.Cmd.Args, e.ExitCode, e.Stdout, e.Stderr)
 }
 
 func (c *ExecChecker) Type() string {
@@ -95,7 +95,7 @@ func (c *ExecChecker) prepareEnvironment(ctx *context.Context, check v1.ExecChec
 
 		result.mountPoint = check.Checkout.Destination
 		if result.mountPoint == "" {
-			result.mountPoint = filepath.Join("exec-checkout", hash.Sha256Hex(goGetterURL))
+			result.mountPoint = filepath.Join(os.TempDir(), "exec-checkout", hash.Sha256Hex(goGetterURL))
 		}
 		// We allow multiple checks to use the same checkout location, for disk space and performance reasons
 		// however git does not allow multiple operations to be performed, so we need to lock it
@@ -105,7 +105,7 @@ func (c *ExecChecker) prepareEnvironment(ctx *context.Context, check v1.ExecChec
 		}
 		defer lock.Release()
 
-		if err := checkout(ctx, goGetterURL, filepath.Join(os.TempDir(), result.mountPoint)); err != nil {
+		if err := checkout(ctx, goGetterURL, result.mountPoint); err != nil {
 			return nil, fmt.Errorf("error checking out: %w", err)
 		}
 	}
@@ -271,7 +271,7 @@ func runCmd(ctx *context.Context, cmd *exec.Cmd) ExecDetails {
 	result.Stdout = strings.TrimSpace(stdout.String())
 
 	if ctx.IsTrace() {
-		ctx.Infof(result.String())
+		ctx.Infof("trace: %s, %s ", result.String(), cmd.ProcessState.String())
 	}
 
 	return result
@@ -305,7 +305,7 @@ func checkout(ctx *context.Context, url, dst string) error {
 	if err := client.Get(); err != nil {
 		return err
 	}
-	if ctx.IsTraceEnabled() {
+	if ctx.IsTrace() {
 		ctx.Infof("Downloaded %s -> %s", v1.SanitizeEndpoints(url), dst)
 	}
 	if stashed {
