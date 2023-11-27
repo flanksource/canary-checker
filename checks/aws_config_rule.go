@@ -8,11 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
+	awsUtil "github.com/flanksource/artifacts/clients/aws"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	awsUtil "github.com/flanksource/canary-checker/pkg/clients/aws"
 	"github.com/flanksource/duty/connection"
 )
 

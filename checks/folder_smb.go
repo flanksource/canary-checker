@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/flanksource/artifacts/clients/smb"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -33,7 +34,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		}
 	}
 
-	session, err := smbConnect(server, fmt.Sprintf("%d", check.SMBConnection.GetPort()), sharename, auth)
+	session, err := smb.SMBConnect(server, fmt.Sprintf("%d", check.SMBConnection.GetPort()), sharename, auth)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

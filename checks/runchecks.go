@@ -1,15 +1,13 @@
 package checks
 
 import (
-	"crypto/sha256"
 	"database/sql"
-	"encoding/hex"
 	"fmt"
-	"io"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -17,12 +15,9 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
-	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
 	gocache "github.com/patrickmn/go-cache"
 )
-
-const maxBytesForMimeDetection = 512 * 1024 // 512KB
 
 var checksCache = gocache.New(5*time.Minute, 5*time.Minute)
 
@@ -131,7 +126,7 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 		return fmt.Errorf("connection(%s) was not found", DefaultArtifactConnection)
 	}
 
-	fs, err := GetFSForConnection(ctx.Duty(), *connection)
+	fs, err := artifacts.GetFSForConnection(ctx.Duty(), *connection)
 	if err != nil {
 		return fmt.Errorf("error getting filesystem for connection: %w", err)
 	}
@@ -150,36 +145,13 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 		}
 
 		for _, a := range r.Artifacts {
-			defer a.Content.Close()
-
-			checksum := sha256.New()
-			clonedReader := io.TeeReader(a.Content, checksum)
-
-			mr := &mimeWriter{max: maxBytesForMimeDetection}
-			clonedReader2 := io.TeeReader(clonedReader, mr)
-
 			a.Path = filepath.Join("checks", checkID.String(), fmt.Sprintf("%d", r.Start.UnixNano()), a.Path)
-			info, err := fs.Write(ctx, a.Path, clonedReader2)
-			if err != nil {
-				logger.Errorf("error saving artifact to filestore: %v", err)
-				continue
-			}
-
-			if a.ContentType == "" {
-				a.ContentType = mr.Detect().String()
-			}
-
 			artifact := models.Artifact{
 				CheckID:      utils.Ptr(checkID),
 				CheckTime:    utils.Ptr(r.Start),
 				ConnectionID: connection.ID,
-				Path:         a.Path,
-				Filename:     info.Name(),
-				Size:         info.Size(),
-				ContentType:  a.ContentType,
-				Checksum:     hex.EncodeToString(checksum.Sum(nil)),
 			}
-			if err := ctx.DB().Create(&artifact).Error; err != nil {
+			if err := artifacts.SaveArtifact(ctx.Duty(), fs, &artifact, a); err != nil {
 				return fmt.Errorf("error saving artifact to db: %w", err)
 			}
 		}
@@ -270,27 +242,4 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 	}
 
 	return r
-}
-
-// mimeWriter implements io.Writer with a limit on the number of bytes used for detection.
-type mimeWriter struct {
-	buffer []byte
-	max    int // max number of bytes to use from the source
-}
-
-func (t *mimeWriter) Write(bb []byte) (n int, err error) {
-	if len(t.buffer) > t.max {
-		return 0, nil
-	}
-
-	rem := t.max - len(t.buffer)
-	if rem > len(bb) {
-		rem = len(bb)
-	}
-	t.buffer = append(t.buffer, bb[:rem]...)
-	return rem, nil
-}
-
-func (t *mimeWriter) Detect() *mimetype.MIME {
-	return mimetype.Detect(t.buffer)
 }

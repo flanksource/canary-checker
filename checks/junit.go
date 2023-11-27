@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/pkg/utils"
 
@@ -280,10 +281,9 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 				continue
 			}
 
-			result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
-				Path:       path,
-				Content:    file,
-				Connection: DefaultArtifactConnection,
+			result.Artifacts = append(result.Artifacts, artifacts.Artifact{
+				Path:    path,
+				Content: file,
 			})
 		}
 	}

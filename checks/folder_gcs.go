@@ -4,10 +4,10 @@ import (
 	"strings"
 
 	gcs "cloud.google.com/go/storage"
+	"github.com/flanksource/artifacts/clients/gcp"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/clients/gcp"
 )
 
 type GCS struct {

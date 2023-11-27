@@ -3,6 +3,9 @@ package checks
 import (
 	"fmt"
 
+	"github.com/flanksource/artifacts"
+	"github.com/flanksource/artifacts/clients/sftp"
+
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -26,13 +29,13 @@ func CheckSFTP(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		}
 	}
 
-	client, err := sshConnect(fmt.Sprintf("%s:%d", check.SFTPConnection.Host, check.SFTPConnection.GetPort()), auth.GetUsername(), auth.GetPassword())
+	client, err := sftp.SSHConnect(fmt.Sprintf("%s:%d", check.SFTPConnection.Host, check.SFTPConnection.GetPort()), auth.GetUsername(), auth.GetPassword())
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
 	defer client.Close()
 
-	session := Filesystem(client)
+	session := artifacts.Filesystem(client)
 	folders, err := getGenericFolderCheck(session, check.Path, check.Filter)
 	if err != nil {
 		return results.ErrorMessage(err)

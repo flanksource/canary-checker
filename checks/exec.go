@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -233,16 +234,14 @@ func checkCmd(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd, result *p
 	for _, artifactConfig := range check.Artifacts {
 		switch artifactConfig.Path {
 		case "/dev/stdout":
-			result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
-				Connection:  DefaultArtifactConnection,
+			result.Artifacts = append(result.Artifacts, artifacts.Artifact{
 				Content:     io.NopCloser(strings.NewReader(details.Stdout)),
 				ContentType: "text/plain",
 				Path:        "stdout",
 			})
 
 		case "/dev/stderr":
-			result.Artifacts = append(result.Artifacts, pkg.ArtifactResult{
-				Connection:  DefaultArtifactConnection,
+			result.Artifacts = append(result.Artifacts, artifacts.Artifact{
 				Content:     io.NopCloser(strings.NewReader(details.Stderr)),
 				ContentType: "text/plain",
 				Path:        "stderr",
@@ -251,9 +250,7 @@ func checkCmd(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd, result *p
 		default:
 			paths := utils.UnfoldGlobs(artifactConfig.Path)
 			for _, path := range paths {
-				artifact := pkg.ArtifactResult{
-					Connection: DefaultArtifactConnection,
-				}
+				artifact := artifacts.Artifact{}
 
 				file, err := os.Open(path)
 				if err != nil {

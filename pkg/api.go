@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/labels"
@@ -436,7 +437,7 @@ type CheckResult struct {
 	Metrics     []Metric               `json:"metrics,omitempty"`
 	Transformed bool                   `json:"transformed,omitempty"`
 	// Artifacts is the generated artifacts
-	Artifacts []ArtifactResult `json:"artifacts,omitempty"`
+	Artifacts []artifacts.Artifact `json:"artifacts,omitempty"`
 	// Check is the configuration
 	Check  external.Check `json:"-"`
 	Canary v1.Canary      `json:"-"`
