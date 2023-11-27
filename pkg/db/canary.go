@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 
 	"time"
 
@@ -13,9 +14,9 @@ import (
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/query"
 	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -398,9 +399,37 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, error) {
 	return PersistCanaryModel(model)
 }
 
+var refreshCheckStatusSummaryMutex sync.Mutex
+
 func RefreshCheckStatusSummary() {
-	if err := duty.RefreshCheckStatusSummary(Pool); err != nil {
+	if !refreshCheckStatusSummaryMutex.TryLock() {
+		logger.Debugf("Skipping RefreshCheckStatusSummary as it is already running")
+		return
+	}
+
+	jobHistory := models.NewJobHistory("RefreshCheckStatusSummary", "check_status_summary", "").Start()
+	_ = PersistJobHistory(jobHistory)
+	defer func() {
+		_ = PersistJobHistory(jobHistory.End())
+		refreshCheckStatusSummaryMutex.Unlock()
+	}()
+
+	if err := query.RefreshCheckStatusSummary(defaultCtx); err != nil {
 		logger.Errorf("error refreshing check_status_summary materialized view: %v", err)
+		jobHistory.AddError(err.Error())
+	}
+}
+
+func RefreshCheckStatusSummaryAged() {
+	jobHistory := models.NewJobHistory("RefreshCheckStatusSummaryAged", "check_status_summary_aged", "").Start()
+	_ = PersistJobHistory(jobHistory)
+	defer func() {
+		_ = PersistJobHistory(jobHistory.End())
+	}()
+
+	if err := query.RefreshCheckStatusSummaryAged(defaultCtx); err != nil {
+		logger.Errorf("error refreshing check_status_summary_aged materialized view: %v", err)
+		jobHistory.AddError(err.Error())
 	}
 }
 

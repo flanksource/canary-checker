@@ -22,7 +22,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.24.0
 	github.com/flanksource/artifacts v1.0.0
 	github.com/flanksource/commons v1.17.1
-	github.com/flanksource/duty v1.0.226
+	github.com/flanksource/duty v1.0.227
 	github.com/flanksource/gomplate/v3 v3.20.25
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
 	github.com/flanksource/kommons v0.31.4
@@ -279,7 +279,3 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.15.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
-
-replace github.com/flanksource/duty => ../duty
-
-replace github.com/flanksource/artifacts => ../artifacts

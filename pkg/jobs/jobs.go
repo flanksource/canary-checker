@@ -98,11 +98,11 @@ func Start() {
 	if _, err := ScheduleFunc(CheckStatusSummarySchedule, db.RefreshCheckStatusSummary); err != nil {
 		logger.Errorf("Failed to schedule check status summary refresh: %v", err)
 	}
+	if _, err := ScheduleFunc(CheckStatusesAggregate1hSchedule, db.RefreshCheckStatusSummaryAged); err != nil {
+		logger.Errorf("Failed to schedule check status summary refresh: %v", err)
+	}
 	if _, err := ScheduleFunc(CheckStatusDeleteSchedule, db.DeleteAllOldCheckStatuses); err != nil {
 		logger.Errorf("Failed to schedule check status deleter: %v", err)
-	}
-	if _, err := ScheduleFunc(CheckStatusesAggregate1hSchedule, db.AggregateCheckStatuses1h); err != nil {
-		logger.Errorf("Failed to schedule check statuses aggregator 1h: %v", err)
 	}
 	if _, err := ScheduleFunc(CheckStatusesAggregate1dSchedule, db.AggregateCheckStatuses1d); err != nil {
 		logger.Errorf("Failed to schedule check statuses aggregator 1d: %v", err)
