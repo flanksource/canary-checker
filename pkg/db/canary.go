@@ -20,8 +20,13 @@ import (
 	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+)
+
+var (
+	PostgresDuplicateKeyError = &pgconn.PgError{Code: "23505"}
 )
 
 func GetAllCanariesForSync(ctx context.Context, namespace string) ([]pkg.Canary, error) {
@@ -335,9 +340,11 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, error) {
 
 	// Duplicate key happens when an already created canary is persisted
 	// We will ignore this error but act on other errors
+	// In this scenario PostgresDuplicateKeyError is checked primarily and
+	// gorm.ErrDuplicatedKey is just for fallback but does not work
 	if err != nil {
-		if !errors.Is(err, gorm.ErrDuplicatedKey) {
-			return nil, err
+		if !errors.As(err, &PostgresDuplicateKeyError) && !errors.Is(err, gorm.ErrDuplicatedKey) {
+			return nil, fmt.Errorf("error persisting canary to db: %w", err)
 		}
 	}
 
