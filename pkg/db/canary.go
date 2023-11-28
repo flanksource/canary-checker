@@ -150,6 +150,19 @@ func GetTransformedCheckIDs(ctx context.Context, canaryID string, excludeTypes .
 	return ids, err
 }
 
+func LatestCheckStatus(ctx context.Context, checkID string) (*models.CheckStatus, error) {
+	var status models.CheckStatus
+	if err := ctx.DB().Where("check_id = ?", checkID).Order("created_at DESC").Find(&status).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return &status, nil
+}
+
 func AddCheckStatuses(ctx context.Context, ids []string, status models.CheckHealthStatus) error {
 	if len(ids) == 0 {
 		return nil

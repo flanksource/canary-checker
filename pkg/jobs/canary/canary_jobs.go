@@ -139,7 +139,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 			checkIDDeleteStrategyMap[checkID] = result.Check.GetTransformDeleteStrategy()
 		}
 	}
-	updateCanaryStatusAndEvent(j.Canary, results)
+	updateCanaryStatusAndEvent(ctx.Context, j.Canary, results)
 
 	checkDeleteStrategyGroup := make(map[string][]string)
 	checksToRemove := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
@@ -170,7 +170,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	return nil
 }
 
-func updateCanaryStatusAndEvent(canary v1.Canary, results []*pkg.CheckResult) {
+func updateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results []*pkg.CheckResult) {
 	if CanaryStatusChannel == nil {
 		return
 	}
@@ -192,8 +192,8 @@ func updateCanaryStatusAndEvent(canary v1.Canary, results []*pkg.CheckResult) {
 
 		// Set uptime and latency
 		uptime, latency := metrics.Record(canary, result)
-		checkKey := canary.GetKey(result.Check)
-		checkStatus[checkKey] = &v1.CheckStatus{
+		checkID := canary.Status.Checks[result.Check.GetName()]
+		checkStatus[checkID] = &v1.CheckStatus{
 			Uptime1H:  uptime.String(),
 			Latency1H: latency.String(),
 		}
@@ -208,18 +208,19 @@ func updateCanaryStatusAndEvent(canary v1.Canary, results []*pkg.CheckResult) {
 		}
 
 		// Transition
-		q := cache.QueryParams{Check: checkKey, StatusCount: 1}
+		q := cache.QueryParams{Check: checkID, StatusCount: 1}
 		if canary.Status.LastTransitionedTime != nil {
 			q.Start = canary.Status.LastTransitionedTime.Format(time.RFC3339)
 		}
-		lastStatus, err := cache.PostgresCache.Query(q)
-		if err != nil || len(lastStatus) == 0 || len(lastStatus[0].Statuses) == 0 {
+
+		latestCheckStatus, err := db.LatestCheckStatus(ctx, checkID)
+		if err != nil || latestCheckStatus == nil {
 			transitioned = true
-		} else if len(lastStatus) > 0 && (lastStatus[0].Statuses[0].Status != result.Pass) {
+		} else if latestCheckStatus.Status != result.Pass {
 			transitioned = true
 		}
 		if transitioned {
-			checkStatus[checkKey].LastTransitionedTime = &metav1.Time{Time: time.Now()}
+			checkStatus[checkID].LastTransitionedTime = &metav1.Time{Time: time.Now()}
 			lastTransitionedTime = &metav1.Time{Time: time.Now()}
 		}
 
