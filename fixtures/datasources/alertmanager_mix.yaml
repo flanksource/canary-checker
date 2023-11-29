@@ -2,8 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: alertmanager
-  labels:
-    "Expected-Fail": "true"
 spec:
   interval: 30
   alertmanager:
