@@ -15,8 +15,8 @@ github.com/emicklei/go-restful/v3 v3.11.0 h1:rAQeMHw1c7zTmncogyy8VvRZwtkmkZ4FxER
 github.com/emicklei/go-restful/v3 v3.11.0/go.mod h1:6n3XBCmQQb25CM2LCACGz8ukIrRry+4bhvbpWn3mrbc=
 github.com/flanksource/commons v1.17.1 h1:jd114sxRwe2VWcbG/PVVEAWsEkialL6eltbqFGANyuI=
 github.com/flanksource/commons v1.17.1/go.mod h1:RDdQI0/QYC4GzicbDaXIvBPjWuQWKLzX8/rFBbFjG5U=
-github.com/flanksource/duty v1.0.228 h1:fl1/L5u0zR////4JTu4GJxw/ytv6AMW+tjddJ0+YyTo=
-github.com/flanksource/duty v1.0.228/go.mod h1:fTHCJAD3U2wwL9DoXci5L7g0KQcUJIe2/2l4J0ggrLA=
+github.com/flanksource/duty v1.0.230 h1:tDMmSYwGMUefMVvValXW32FakOm/4x6WxHoZz4zppBE=
+github.com/flanksource/duty v1.0.230/go.mod h1:fTHCJAD3U2wwL9DoXci5L7g0KQcUJIe2/2l4J0ggrLA=
 github.com/flanksource/gomplate/v3 v3.20.25 h1:/5qsAzZMbwr0vQcosVAAeSqzJkS0rxJiGnqTDCYU/7M=
 github.com/flanksource/gomplate/v3 v3.20.25/go.mod h1:GKmptFMdr2LbOuqwQZrmo9a/UygyZ0pbXffks8MuYhE=
 github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7 h1:s6jf6P1pRfdvksVFjIXFRfnimvEYUR0/Mmla1EIjiRM=
