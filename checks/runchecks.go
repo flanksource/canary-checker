@@ -104,7 +104,7 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 func TransformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.CheckResult) {
 	for _, r := range in {
 		checkCtx := ctx.WithCheckResult(r)
-		transformed, err := transform(checkCtx, r)
+		transformed, _, err := transform(checkCtx, r)
 		if err != nil {
 			r.Failf("transformation failure: %v", err)
 			out = append(out, r)
