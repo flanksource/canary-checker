@@ -2,12 +2,15 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	_ "net/http/pprof" // required by serve
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -81,6 +84,32 @@ func setup() {
 	go push.Start()
 }
 
+func postgrestResponseModifier(r *http.Response) error {
+	shouldPersistCanary := r.Request.Method == http.MethodPost &&
+		strings.TrimSuffix(r.Request.URL.Path, "/") == "/canaries" &&
+		r.StatusCode == http.StatusCreated
+
+	// If a new canary is inserted via postgrest, we need to persist the canary
+	// again so that all the checks of that canary are created in the database
+	if shouldPersistCanary {
+		var canaries []pkg.Canary
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			return fmt.Errorf("error reading response body: %w", err)
+		}
+		if err := json.Unmarshal(body, &canaries); err != nil {
+			return fmt.Errorf("error unmarshaling response body to json: %w", err)
+		}
+		for _, c := range canaries {
+			if _, err := db.PersistCanaryModel(c); err != nil {
+				logger.Errorf("Error persisting canary[%s]: %v", c.ID, err)
+			}
+		}
+	}
+
+	return nil
+}
+
 func serve() {
 	var allowedCors string
 	e := echo.New()
@@ -106,7 +135,7 @@ func serve() {
 
 	if !disablePostgrest {
 		go db.StartPostgrest()
-		forward(e, "/db", db.PostgRESTEndpoint())
+		forward(e, "/db", db.PostgRESTEndpoint(), postgrestResponseModifier)
 	}
 
 	e.Use(middleware.Logger())
@@ -158,7 +187,7 @@ func serve() {
 	}
 }
 
-func forward(e *echo.Echo, prefix string, target string) {
+func forward(e *echo.Echo, prefix string, target string, respModifierFunc func(*http.Response) error) {
 	targetURL, err := url.Parse(target)
 	if err != nil {
 		e.Logger.Fatal(err)
@@ -172,6 +201,7 @@ func forward(e *echo.Echo, prefix string, target string) {
 				URL: targetURL,
 			},
 		}),
+		ModifyResponse: respModifierFunc,
 	}))
 }
 

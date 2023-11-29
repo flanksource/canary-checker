@@ -474,7 +474,7 @@ func (t DynatraceCheck) GetEndpoint() string {
 }
 
 /*
-[include:datasources/alertmanager_pass.yaml]
+[include:datasources/alertmanager_mix.yaml]
 */
 
 type AlertManager struct {

@@ -74,7 +74,7 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 }
 
 // transform generates new checks from the transformation template of the parent check
-func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, error) {
+func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, bool, error) {
 	var tpl v1.Template
 	switch v := in.Check.(type) {
 	case v1.Transformer:
@@ -82,19 +82,21 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 	}
 
 	if tpl.IsEmpty() {
-		return []*pkg.CheckResult{in}, nil
+		return []*pkg.CheckResult{in}, false, nil
 	}
+
+	hasTransformer := true
 
 	out, err := template(ctx, tpl)
 	if err != nil {
-		return nil, err
+		return nil, hasTransformer, err
 	}
 
 	var transformed []pkg.TransformedCheckResult
 	if err := json.Unmarshal([]byte(out), &transformed); err != nil {
 		var t pkg.TransformedCheckResult
 		if errSingle := json.Unmarshal([]byte(out), &t); errSingle != nil {
-			return nil, err
+			return nil, hasTransformer, err
 		}
 		transformed = []pkg.TransformedCheckResult{t}
 	}
@@ -102,7 +104,7 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 	var results []*pkg.CheckResult
 	if len(transformed) == 0 {
 		ctx.Tracef("transformation returned empty array")
-		return nil, nil
+		return nil, hasTransformer, nil
 	}
 
 	t := transformed[0]
@@ -140,7 +142,7 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 		if ctx.IsTrace() {
 			ctx.Tracef("transformed %s into %v", in, results)
 		}
-		return results, nil
+		return results, hasTransformer, nil
 	} else if len(transformed) == 1 && t.Name == "" {
 		in.Metrics = append(in.Metrics, t.Metrics...)
 		if t.Start != nil {
@@ -184,10 +186,10 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, e
 			}
 		}
 	} else {
-		return nil, fmt.Errorf("transformation returned more than 1 entry without a name")
+		return nil, hasTransformer, fmt.Errorf("transformation returned more than 1 entry without a name")
 	}
 
-	return []*pkg.CheckResult{in}, nil
+	return []*pkg.CheckResult{in}, hasTransformer, nil
 }
 
 func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) JunitTestSuite {

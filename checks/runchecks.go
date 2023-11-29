@@ -163,10 +163,17 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 func TransformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.CheckResult) {
 	for _, r := range in {
 		checkCtx := ctx.WithCheckResult(r)
-		transformed, err := transform(checkCtx, r)
+		transformed, hasTransformer, err := transform(checkCtx, r)
+		if hasTransformer {
+			// Keeping the detail field empty as it can have huge json blobs
+			r.Detail = nil
+
+			// We'll append the original check status to the result
+			// so that it can be tracked
+			out = append(out, r)
+		}
 		if err != nil {
 			r.Failf("transformation failure: %v", err)
-			out = append(out, r)
 		} else {
 			for _, t := range transformed {
 				out = append(out, processTemplates(checkCtx, t))
