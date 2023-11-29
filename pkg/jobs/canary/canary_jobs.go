@@ -220,8 +220,13 @@ func updateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 			transitioned = true
 		}
 		if transitioned {
-			checkStatus[checkID].LastTransitionedTime = &metav1.Time{Time: time.Now()}
-			lastTransitionedTime = &metav1.Time{Time: time.Now()}
+			transitionTime := time.Now()
+			if latestCheckStatus != nil {
+				transitionTime = latestCheckStatus.CreatedAt
+			}
+
+			checkStatus[checkID].LastTransitionedTime = &metav1.Time{Time: transitionTime}
+			lastTransitionedTime = &metav1.Time{Time: transitionTime}
 		}
 
 		// TODO Why is this here ?
