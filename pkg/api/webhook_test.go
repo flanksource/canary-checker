@@ -192,7 +192,7 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 		var transformedChecks []models.Check
 		err := ctx.DB().Where("transformed = true").Where("type = 'http'").Find(&transformedChecks).Error
 		Expect(err).To(BeNil())
-		Expect(len(transformedChecks)).To(Equal(1))
+		Expect(len(transformedChecks)).To(Equal(2))
 	})
 
 	ginkgo.It("Should forbid when webhook is called without the auth token", func() {
