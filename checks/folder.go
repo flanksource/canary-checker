@@ -7,6 +7,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -146,7 +147,7 @@ func getLocalFolderCheck(path string, filter v1.FolderFilter) (FolderCheck, erro
 	return result, err
 }
 
-func getGenericFolderCheck(fs Filesystem, dir string, filter v1.FolderFilter) (*FolderCheck, error) {
+func getGenericFolderCheck(fs artifacts.Filesystem, dir string, filter v1.FolderFilter) (*FolderCheck, error) {
 	result := FolderCheck{}
 	_filter, err := filter.New()
 	if err != nil {

@@ -166,3 +166,11 @@ func (r Results) ErrorMessage(err error) Results {
 	r[0].ErrorMessage(err)
 	return r
 }
+
+func (r Results) TotalArtifacts() int {
+	var total int
+	for _, result := range r {
+		total += len(result.Artifacts)
+	}
+	return total
+}

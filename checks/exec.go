@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -18,6 +19,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/files"
 	"github.com/flanksource/commons/hash"
+	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	"github.com/hashicorp/go-getter"
 )
@@ -145,7 +147,7 @@ func execPowershell(ctx *context.Context, check v1.ExecCheck, envParams *execEnv
 		cmd.Dir = envParams.mountPoint
 	}
 
-	return checkCmd(ctx, cmd, result)
+	return checkCmd(ctx, check, cmd, result)
 }
 
 func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.Results {
@@ -167,7 +169,7 @@ func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.
 		return result.Invalidf("failed to setup connection: %v", err)
 	}
 
-	return checkCmd(ctx, cmd, result)
+	return checkCmd(ctx, check, cmd, result)
 }
 
 func setupConnection(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd) error {
@@ -234,9 +236,44 @@ func setupConnection(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd) er
 	return nil
 }
 
-func checkCmd(ctx *context.Context, cmd *exec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
+func checkCmd(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd, result *pkg.CheckResult) (results pkg.Results) {
 	details := runCmd(ctx, cmd)
 	result.AddDetails(details)
+
+	for _, artifactConfig := range check.Artifacts {
+		switch artifactConfig.Path {
+		case "/dev/stdout":
+			result.Artifacts = append(result.Artifacts, artifacts.Artifact{
+				Content:     io.NopCloser(strings.NewReader(details.Stdout)),
+				ContentType: "text/plain",
+				Path:        "stdout",
+			})
+
+		case "/dev/stderr":
+			result.Artifacts = append(result.Artifacts, artifacts.Artifact{
+				Content:     io.NopCloser(strings.NewReader(details.Stderr)),
+				ContentType: "text/plain",
+				Path:        "stderr",
+			})
+
+		default:
+			paths := utils.UnfoldGlobs(artifactConfig.Path)
+			for _, path := range paths {
+				artifact := artifacts.Artifact{}
+
+				file, err := os.Open(path)
+				if err != nil {
+					logger.Errorf("error opening file. path=%s; %w", path, err)
+					continue
+				}
+
+				artifact.Content = file
+				artifact.Path = path
+				result.Artifacts = append(result.Artifacts, artifact)
+			}
+		}
+	}
+
 	if details.ExitCode != 0 {
 		return result.Failf(details.String()).ToSlice()
 	}

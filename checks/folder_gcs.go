@@ -4,10 +4,10 @@ import (
 	"strings"
 
 	gcs "cloud.google.com/go/storage"
+	"github.com/flanksource/artifacts/clients/gcp"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/clients/gcp"
 )
 
 type GCS struct {
@@ -24,7 +24,7 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.Failf("failed to populate GCP connection: %v", err)
 	}
 
-	cfg, err := gcp.NewSession(ctx, check.GCPConnection)
+	cfg, err := gcp.NewSession(ctx.Duty(), check.GCPConnection)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

@@ -3,14 +3,19 @@ package checks
 import (
 	"database/sql"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
+	"github.com/google/uuid"
 	gocache "github.com/patrickmn/go-cache"
 )
 
@@ -94,11 +99,65 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 		result := c.Run(ctx)
 		transformedResults := TransformResults(ctx, result)
 		results = append(results, transformedResults...)
-
 		ExportCheckMetrics(ctx, transformedResults)
 	}
 
+	if err := saveArtifacts(ctx, results); err != nil {
+		logger.Errorf("error saving artifacts: %v", err)
+	}
+
 	return ProcessResults(ctx, results), nil
+}
+
+func saveArtifacts(ctx *context.Context, results pkg.Results) error {
+	if results.TotalArtifacts() == 0 {
+		return nil
+	}
+
+	if DefaultArtifactConnection == "" {
+		logger.Warnf("no artifact connection configured")
+		return nil
+	}
+
+	connection, err := ctx.HydrateConnectionByURL(DefaultArtifactConnection)
+	if err != nil {
+		return fmt.Errorf("error getting connection(%s): %w", DefaultArtifactConnection, err)
+	} else if connection == nil {
+		return fmt.Errorf("connection(%s) was not found", DefaultArtifactConnection)
+	}
+
+	fs, err := artifacts.GetFSForConnection(ctx.Duty(), *connection)
+	if err != nil {
+		return fmt.Errorf("error getting filesystem for connection: %w", err)
+	}
+	defer fs.Close()
+
+	for _, r := range results {
+		if len(r.Artifacts) == 0 {
+			continue
+		}
+
+		checkIDRaw := r.Canary.GetCheckID(r.Check.GetName())
+		checkID, err := uuid.Parse(checkIDRaw)
+		if err != nil {
+			logger.Errorf("error parsing checkID(%s): %v", checkIDRaw, err)
+			continue
+		}
+
+		for _, a := range r.Artifacts {
+			a.Path = filepath.Join("checks", checkID.String(), fmt.Sprintf("%d", r.Start.UnixNano()), a.Path)
+			artifact := models.Artifact{
+				CheckID:      utils.Ptr(checkID),
+				CheckTime:    utils.Ptr(r.Start),
+				ConnectionID: connection.ID,
+			}
+			if err := artifacts.SaveArtifact(ctx.Duty(), fs, &artifact, a); err != nil {
+				return fmt.Errorf("error saving artifact to db: %w", err)
+			}
+		}
+	}
+
+	return nil
 }
 
 func TransformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.CheckResult) {

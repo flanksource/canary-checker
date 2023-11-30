@@ -11,6 +11,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/commons/utils"
+	"github.com/flanksource/duty/connection"
 	"github.com/henvic/httpretty"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -122,28 +123,28 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 	return results
 }
 
-func GetAWSConfig(ctx *context.Context, connection v1.AWSConnection) (cfg aws.Config, err error) {
+func GetAWSConfig(ctx *context.Context, conn connection.AWSConnection) (cfg aws.Config, err error) {
 	var options []func(*config.LoadOptions) error
 
-	if connection.Region != "" {
-		options = append(options, config.WithRegion(connection.Region))
+	if conn.Region != "" {
+		options = append(options, config.WithRegion(conn.Region))
 	}
 
-	if connection.Endpoint != "" {
+	if conn.Endpoint != "" {
 		options = append(options, config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(
 			func(service, region string, options ...any) (aws.Endpoint, error) {
 				return aws.Endpoint{
-					URL: connection.Endpoint,
+					URL: conn.Endpoint,
 				}, nil
 			},
 		)))
 	}
 
-	if !connection.AccessKey.IsEmpty() {
-		options = append(options, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(connection.AccessKey.ValueStatic, connection.SecretKey.ValueStatic, "")))
+	if !conn.AccessKey.IsEmpty() {
+		options = append(options, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(conn.AccessKey.ValueStatic, conn.SecretKey.ValueStatic, "")))
 	}
 
-	if connection.SkipTLSVerify {
+	if conn.SkipTLSVerify {
 		var tr http.RoundTripper
 		if ctx.IsTrace() {
 			httplogger := &httpretty.Logger{

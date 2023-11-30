@@ -3,11 +3,14 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/pkg/utils"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -36,6 +39,8 @@ const (
 	junitCheckLabelValue = "junit-check"
 )
 
+// JunitChecker runs a junit test on a new kubernetes pod and then saves
+// the test result.
 type JunitChecker struct {
 }
 
@@ -266,6 +271,23 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 		}
 		return results.Failf("")
 	}
+
+	for _, artifactConfig := range check.Artifacts {
+		paths := utils.UnfoldGlobs(artifactConfig.Path)
+		for _, path := range paths {
+			file, err := os.Open(path)
+			if err != nil {
+				logger.Errorf("error opening file. path=%s; %w", path, err)
+				continue
+			}
+
+			result.Artifacts = append(result.Artifacts, artifacts.Artifact{
+				Path:    path,
+				Content: file,
+			})
+		}
+	}
+
 	return results
 }
 

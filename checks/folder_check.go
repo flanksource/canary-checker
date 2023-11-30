@@ -8,12 +8,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 )
 
-type Filesystem interface {
-	Close() error
-	ReadDir(name string) ([]os.FileInfo, error)
-	Stat(name string) (os.FileInfo, error)
-}
-
 type FolderCheck struct {
 	Oldest        *File  `json:"oldest,omitempty"`
 	Newest        *File  `json:"newest,omitempty"`

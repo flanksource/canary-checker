@@ -8,11 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	awsUtil "github.com/flanksource/artifacts/clients/aws"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	awsUtil "github.com/flanksource/canary-checker/pkg/clients/aws"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/connection"
 )
 
 type S3 struct {
@@ -26,12 +28,12 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	results = append(results, result)
 
 	if check.AWSConnection == nil {
-		check.AWSConnection = &v1.AWSConnection{}
+		check.AWSConnection = &connection.AWSConnection{}
 	} else if err := check.AWSConnection.Populate(ctx); err != nil {
 		return results.Failf("failed to populate aws connection: %v", err)
 	}
 
-	cfg, err := awsUtil.NewSession(ctx, *check.AWSConnection)
+	cfg, err := awsUtil.NewSession(ctx.Duty(), *check.AWSConnection)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
@@ -71,7 +73,7 @@ func (conn *S3) CheckFolder(ctx *context.Context, filter v1.FolderFilter) (*Fold
 		req := &s3.ListObjectsInput{
 			Bucket:  aws.String(conn.Bucket),
 			Marker:  marker,
-			MaxKeys: int32(maxKeys),
+			MaxKeys: utils.Ptr(int32(maxKeys)),
 			Prefix:  &prefix,
 		}
 		resp, err := conn.ListObjects(ctx, req)
@@ -90,7 +92,7 @@ func (conn *S3) CheckFolder(ctx *context.Context, filter v1.FolderFilter) (*Fold
 			}
 			result.Append(file)
 		}
-		if resp.IsTruncated && len(resp.Contents) > 0 {
+		if resp.IsTruncated != nil && *resp.IsTruncated && len(resp.Contents) > 0 {
 			marker = resp.Contents[len(resp.Contents)-1].Key
 		} else {
 			break
