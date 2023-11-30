@@ -427,6 +427,9 @@
     },
     "CanarySpec": {
       "properties": {
+        "replicas": {
+          "type": "integer"
+        },
         "env": {
           "patternProperties": {
             ".*": {
@@ -726,6 +729,17 @@
         },
         "latency1h": {
           "type": "string"
+        },
+        "replicas": {
+          "type": "integer"
+        },
+        "selector": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
         }
       },
       "additionalProperties": false,

@@ -63,6 +63,9 @@ gen-schemas:
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: .bin/controller-gen
+	# For debugging
+	yq -V 
+
 	schemaPath=.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties
 	.bin/controller-gen crd paths="./api/..." output:stdout | yq ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/crd.yaml
 	$(MAKE) gen-schemas
