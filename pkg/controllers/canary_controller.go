@@ -131,8 +131,14 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), true); err != nil {
 				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 			}
-		} else if canaryForStatus.Status.Replicas == 0 && canary.Spec.Replicas > 0 {
-			if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
+		} else if canaryForStatus.Status.Replicas == 0 || canaryForStatus.Status.Replicas == 1 {
+			// Run immediately if replica > 1
+			var syncCanaryJobOptions []canaryJobs.SyncCanaryJobOption
+			if canary.Spec.Replicas > 1 {
+				syncCanaryJobOptions = append(syncCanaryJobOptions, canaryJobs.WithRunNow(true))
+			}
+
+			if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary, syncCanaryJobOptions...); err != nil {
 				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 			}
 			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), false); err != nil {

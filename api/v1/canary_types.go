@@ -287,8 +287,6 @@ type CanaryStatus struct {
 	runnerName string `json:"-"`
 	// Replicas keep track of the number of replicas
 	Replicas int `json:"replicas,omitempty"`
-	// Selector ??
-	Selector map[string]string `json:"selector,omitempty"`
 }
 
 func (c Canary) GetCheckID(checkName string) string {
@@ -323,7 +321,7 @@ type CheckStatus struct {
 // +kubebuilder:printcolumn:name="Message",type=string,priority=1,JSONPath=`.status.message`
 // +kubebuilder:printcolumn:name="Error",type=string,priority=1,JSONPath=`.status.errorMessage`
 // +kubebuilder:subresource:status
-// +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
+// +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas
 type Canary struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

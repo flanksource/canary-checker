@@ -732,14 +732,6 @@
         },
         "replicas": {
           "type": "integer"
-        },
-        "selector": {
-          "patternProperties": {
-            ".*": {
-              "type": "string"
-            }
-          },
-          "type": "object"
         }
       },
       "additionalProperties": false,

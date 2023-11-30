@@ -318,8 +318,26 @@ func ScanCanaryConfigs() {
 
 var canaryUpdateTimeCache = sync.Map{}
 
+type SyncCanaryJobConfig struct {
+	RunNow bool
+}
+
+func WithRunNow(value bool) SyncCanaryJobOption {
+	return func(config *SyncCanaryJobConfig) {
+		config.RunNow = value
+	}
+}
+
+type SyncCanaryJobOption func(*SyncCanaryJobConfig)
+
 // TODO: Refactor to use database object instead of kubernetes
-func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
+func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary, options ...SyncCanaryJobOption) error {
+	// Apply options to the configuration
+	syncOption := &SyncCanaryJobConfig{}
+	for _, option := range options {
+		option(syncOption)
+	}
+
 	canary, err := dbCanary.ToV1()
 	if err != nil {
 		return err
@@ -377,7 +395,7 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 	}
 
 	// Run all regularly scheduled canaries on startup (<1h) and not daily/weekly schedules
-	if entry != nil && time.Until(entry.Next) < 1*time.Hour && !exists {
+	if (entry != nil && time.Until(entry.Next) < 1*time.Hour && !exists) || syncOption.RunNow {
 		go entry.Job.Run()
 	}
 

@@ -1,3 +1,4 @@
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -5739,11 +5740,6 @@ spec:
                 replicas:
                   description: Replicas keep track of the number of replicas
                   type: integer
-                selector:
-                  additionalProperties:
-                    type: string
-                  description: Selector ??
-                  type: object
                 status:
                   type: string
                 uptime1h:
@@ -5755,7 +5751,6 @@ spec:
       storage: true
       subresources:
         scale:
-          labelSelectorPath: .status.selector
           specReplicasPath: .spec.replicas
           statusReplicasPath: .status.replicas
         status: {}
