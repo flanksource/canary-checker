@@ -18,6 +18,7 @@ package controllers
 
 import (
 	gocontext "context"
+	"fmt"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -25,10 +26,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/flanksource/canary-checker/api/context"
+
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/runner"
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/kommons"
 	"github.com/go-logr/logr"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
@@ -67,7 +70,9 @@ const FinalizerName = "canary.canaries.flanksource.com"
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=pods/exec,verbs=*
 // +kubebuilder:rbac:groups="",resources=pods/logs,verbs=*
-func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Request) (ctrl.Result, error) {
+	ctx := context.DefaultContext.Wrap(parentCtx)
+
 	logger := r.Log.WithValues("canary", req.NamespacedName)
 	canary := &v1.Canary{}
 	err := r.Get(ctx, req.NamespacedName, canary)
@@ -82,6 +87,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 
 	canary.SetRunnerName(r.RunnerName)
+
 	// Add finalizer first if not exist to avoid the race condition between init and delete
 	if !controllerutil.ContainsFinalizer(canary, FinalizerName) {
 		controllerutil.AddFinalizer(canary, FinalizerName)
@@ -99,14 +105,14 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		return ctrl.Result{}, r.Update(ctx, canary)
 	}
 
-	dbCanary, err := r.updateCanaryInDB(canary)
+	dbCanary, err := r.updateCanaryInDB(ctx, canary)
 	if err != nil {
 		return ctrl.Result{Requeue: true}, err
 	}
 
 	// Sync jobs if canary is created or updated
 	if canary.Generation == 1 {
-		if err := canaryJobs.SyncCanaryJob(context.DefaultContext, *dbCanary); err != nil {
+		if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
 			logger.Error(err, "failed to sync canary job")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}
@@ -121,12 +127,55 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 	patch := client.MergeFrom(canaryForStatus.DeepCopy())
 
+	if val, ok := canary.Annotations["next-runtime"]; ok {
+		runAt, err := time.Parse(time.RFC3339, val)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		var syncCanaryJobOptions = []canaryJobs.SyncCanaryJobOption{}
+		syncCanaryJobOptions = append(syncCanaryJobOptions, canaryJobs.WithSchedule(
+			fmt.Sprintf("%d %d %d %d *", runAt.Minute(), runAt.Hour(), runAt.Day(), runAt.Month()),
+		))
+		if !runAt.After(time.Now()) {
+			syncCanaryJobOptions = append(syncCanaryJobOptions, canaryJobs.WithRunNow(true))
+		}
+
+		if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary, syncCanaryJobOptions...); err != nil {
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+		}
+
+		delete(canary.Annotations, "next-runtime")
+		if err := r.Update(ctx, canary); err != nil {
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+		}
+	}
+
+	if canaryForStatus.Status.Replicas != canary.Spec.Replicas {
+		if canary.Spec.Replicas == 0 {
+			canaryJobs.DeleteCanaryJob(canary.GetPersistedID())
+			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), true); err != nil {
+				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+			}
+		} else {
+			if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
+				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+			}
+			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), false); err != nil {
+				logger.Error(err, "failed to suspend canary")
+			}
+		}
+
+		canaryForStatus.Status.Replicas = canary.Spec.Replicas
+	}
+
 	canaryForStatus.Status.Checks = dbCanary.Checks
 	canaryForStatus.Status.ObservedGeneration = canary.Generation
 	if err = r.Status().Patch(ctx, &canaryForStatus, patch); err != nil {
 		logger.Error(err, "failed to update status for canary")
 		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -137,26 +186,26 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *CanaryReconciler) persistAndCacheCanary(canary *v1.Canary) (*pkg.Canary, error) {
+func (r *CanaryReconciler) persistAndCacheCanary(ctx dutyContext.Context, canary *v1.Canary) (*pkg.Canary, error) {
 	dbCanary, err := db.PersistCanary(*canary, "kubernetes/"+canary.GetPersistedID())
 	if err != nil {
 		return nil, err
 	}
 	r.CanaryCache.Set(dbCanary.ID.String(), dbCanary, cache.DefaultExpiration)
 
-	if err := canaryJobs.SyncCanaryJob(context.DefaultContext, *dbCanary); err != nil {
+	if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
 		return nil, err
 	}
 	return dbCanary, nil
 }
 
-func (r *CanaryReconciler) updateCanaryInDB(canary *v1.Canary) (*pkg.Canary, error) {
+func (r *CanaryReconciler) updateCanaryInDB(ctx dutyContext.Context, canary *v1.Canary) (*pkg.Canary, error) {
 	var dbCanary *pkg.Canary
 	var err error
 
 	// Get DBCanary from cache if exists else persist in database and update cache
 	if cacheObj, exists := r.CanaryCache.Get(canary.GetPersistedID()); !exists {
-		dbCanary, err = r.persistAndCacheCanary(canary)
+		dbCanary, err = r.persistAndCacheCanary(ctx, canary)
 		if err != nil {
 			return nil, err
 		}
@@ -172,7 +221,7 @@ func (r *CanaryReconciler) updateCanaryInDB(canary *v1.Canary) (*pkg.Canary, err
 	}
 	opts := jsondiff.DefaultJSONOptions()
 	if diff, _ := jsondiff.Compare(canarySpecJSON, dbCanary.Spec, &opts); diff != jsondiff.FullMatch {
-		dbCanary, err = r.persistAndCacheCanary(canary)
+		dbCanary, err = r.persistAndCacheCanary(ctx, canary)
 		if err != nil {
 			return nil, err
 		}

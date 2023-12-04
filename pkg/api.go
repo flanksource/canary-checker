@@ -12,6 +12,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
 	cUtils "github.com/flanksource/commons/utils"
@@ -118,17 +119,18 @@ type Timeseries struct {
 }
 
 type Canary struct {
-	ID        uuid.UUID `gorm:"default:generate_ulid()"`
-	AgentID   uuid.UUID
-	Spec      types.JSON          `json:"spec"`
-	Labels    types.JSONStringMap `json:"labels"`
-	Source    string
-	Name      string
-	Namespace string
-	Checks    types.JSONStringMap `gorm:"-"`
-	CreatedAt time.Time
-	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
+	ID          uuid.UUID `gorm:"default:generate_ulid()"`
+	AgentID     uuid.UUID
+	Spec        types.JSON          `json:"spec"`
+	Labels      types.JSONStringMap `json:"labels"`
+	Source      string
+	Name        string
+	Namespace   string
+	Checks      types.JSONStringMap `gorm:"-"`
+	Annotations types.JSONStringMap `json:"annotations,omitempty"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time  `json:"updated_at"`
+	DeletedAt   *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
 }
 
 func (c Canary) GetCheckID(checkName string) string {
@@ -156,7 +158,10 @@ func (c Canary) ToV1() (*v1.Canary, error) {
 		logger.Debugf("Failed to unmarshal canary spec: %s", err)
 		return nil, err
 	}
+
 	canary.Status.Checks = c.Checks
+	canary.ObjectMeta.Annotations = collections.MergeMap(canary.ObjectMeta.Annotations, c.Annotations)
+
 	return &canary, nil
 }
 

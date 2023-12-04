@@ -36,6 +36,10 @@ const (
 
 // CanarySpec defines the desired state of Canary
 type CanarySpec struct {
+	//+kubebuilder:default=1
+	//+optional
+	Replicas int `yaml:"replicas,omitempty" json:"replicas,omitempty"`
+
 	Env            map[string]VarSource  `yaml:"env,omitempty" json:"env,omitempty"`
 	HTTP           []HTTPCheck           `yaml:"http,omitempty" json:"http,omitempty"`
 	DNS            []DNSCheck            `yaml:"dns,omitempty" json:"dns,omitempty"`
@@ -281,6 +285,8 @@ type CanaryStatus struct {
 	Latency1H string `json:"latency1h,omitempty"`
 	// used for keeping history of the checks
 	runnerName string `json:"-"`
+	// Replicas keep track of the number of replicas
+	Replicas int `json:"replicas,omitempty"`
 }
 
 func (c Canary) GetCheckID(checkName string) string {
@@ -305,6 +311,7 @@ type CheckStatus struct {
 // +kubebuilder:object:root=true
 
 // Canary is the Schema for the canaries API
+// +kubebuilder:printcolumn:name="Replicas",type=integer,priority=1,JSONPath=`.spec.replicas`
 // +kubebuilder:printcolumn:name="Interval",type=string,JSONPath=`.spec.interval`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
 // +kubebuilder:printcolumn:name="Last Check",type=date,JSONPath=`.status.lastCheck`
@@ -314,6 +321,7 @@ type CheckStatus struct {
 // +kubebuilder:printcolumn:name="Message",type=string,priority=1,JSONPath=`.status.message`
 // +kubebuilder:printcolumn:name="Error",type=string,priority=1,JSONPath=`.status.errorMessage`
 // +kubebuilder:subresource:status
+// +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas
 type Canary struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -318,8 +318,35 @@ func ScanCanaryConfigs() {
 
 var canaryUpdateTimeCache = sync.Map{}
 
+type SyncCanaryJobConfig struct {
+	RunNow bool
+
+	// Schedule to override the schedule from the spec
+	Schedule string
+}
+
+func WithRunNow(value bool) SyncCanaryJobOption {
+	return func(config *SyncCanaryJobConfig) {
+		config.RunNow = value
+	}
+}
+
+func WithSchedule(schedule string) SyncCanaryJobOption {
+	return func(config *SyncCanaryJobConfig) {
+		config.Schedule = schedule
+	}
+}
+
+type SyncCanaryJobOption func(*SyncCanaryJobConfig)
+
 // TODO: Refactor to use database object instead of kubernetes
-func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
+func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary, options ...SyncCanaryJobOption) error {
+	// Apply options to the configuration
+	syncOption := &SyncCanaryJobConfig{}
+	for _, option := range options {
+		option(syncOption)
+	}
+
 	canary, err := dbCanary.ToV1()
 	if err != nil {
 		return err
@@ -331,7 +358,17 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 		_ = cache.PostgresCache.Add(pkg.FromV1(*canary, canary.Spec.Webhook), pkg.CheckStatusFromResult(*result))
 	}
 
-	if canary.Spec.GetSchedule() == "@never" {
+	var (
+		schedule   = syncOption.Schedule
+		scheduleID = dbCanary.ID.String() + "-scheduled"
+	)
+
+	if schedule == "" {
+		schedule = canary.Spec.GetSchedule()
+		scheduleID = dbCanary.ID.String()
+	}
+
+	if schedule == "@never" {
 		DeleteCanaryJob(canary.GetPersistedID())
 		return nil
 	}
@@ -357,9 +394,15 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 
 	// Create new job context from empty context to create root spans for jobs
 	jobCtx := ctx.Wrap(gocontext.Background()).WithObject(canary.ObjectMeta)
-	newJob := dutyjob.NewJob(jobCtx, "SyncCanaryJob", canary.Spec.GetSchedule(), cj.Run).SetID(dbCanary.ID.String())
-	entry := findCronEntry(dbCanary.ID.String())
-	if !exists || dbCanary.UpdatedAt.After(updateTime.(time.Time)) || entry == nil {
+	newJob := dutyjob.NewJob(jobCtx, "SyncCanaryJob", schedule, cj.Run).SetID(scheduleID)
+	entry := findCronEntry(scheduleID)
+
+	shouldSchedule := !exists || // updated time cache was not found. So we reschedule anyway.
+		dbCanary.UpdatedAt.After(updateTime.(time.Time)) || // the spec has been updated since it was last scheduled
+		entry == nil || // the canary is not scheduled yet
+		syncOption.Schedule != "" // custom schedule so we always need to reschedule
+
+	if shouldSchedule {
 		// Remove entry if it exists
 		if entry != nil {
 			CanaryScheduler.Remove(entry.ID)
@@ -371,13 +414,13 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 		}
 
 		entry = newJob.GetEntry(CanaryScheduler)
-		logger.Infof("Scheduled %s: %s", canary, canary.Spec.GetSchedule())
+		logger.Infof("Scheduled %s (%s). Next run: %v", canary, schedule, entry.Next)
 
 		canaryUpdateTimeCache.Store(dbCanary.ID.String(), dbCanary.UpdatedAt)
 	}
 
 	// Run all regularly scheduled canaries on startup (<1h) and not daily/weekly schedules
-	if entry != nil && time.Until(entry.Next) < 1*time.Hour && !exists {
+	if (entry != nil && time.Until(entry.Next) < 1*time.Hour && !exists) || syncOption.RunNow {
 		go entry.Job.Run()
 	}
 

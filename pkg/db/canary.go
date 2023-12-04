@@ -511,3 +511,27 @@ func CleanupCanaries() {
 		jobHistory.IncrSuccess()
 	}
 }
+
+// SuspendCanary sets the suspend annotation on the canary table.
+func SuspendCanary(ctx context.Context, id string, suspend bool) error {
+	query := `
+	UPDATE canaries 
+		SET annotations = 
+			CASE 
+				WHEN annotations IS NULL THEN '{"suspend": "true"}'::jsonb
+				ELSE jsonb_set(annotations, '{suspend}', '"true"')
+			END
+		WHERE id = ?;
+	`
+
+	if !suspend {
+		query = `
+		UPDATE canaries 
+			SET annotations = 
+				CASE WHEN annotations IS NOT NULL THEN annotations - 'suspend' END
+			WHERE id = ?;
+		`
+	}
+
+	return ctx.DB().Exec(query, id).Error
+}
