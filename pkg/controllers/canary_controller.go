@@ -18,6 +18,7 @@ package controllers
 
 import (
 	gocontext "context"
+	"fmt"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -86,6 +87,7 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 	}
 
 	canary.SetRunnerName(r.RunnerName)
+
 	// Add finalizer first if not exist to avoid the race condition between init and delete
 	if !controllerutil.ContainsFinalizer(canary, FinalizerName) {
 		controllerutil.AddFinalizer(canary, FinalizerName)
@@ -125,20 +127,38 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 	}
 	patch := client.MergeFrom(canaryForStatus.DeepCopy())
 
+	if val, ok := canary.Annotations["next-runtime"]; ok {
+		runAt, err := time.Parse(time.RFC3339, val)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		var syncCanaryJobOptions = []canaryJobs.SyncCanaryJobOption{}
+		syncCanaryJobOptions = append(syncCanaryJobOptions, canaryJobs.WithSchedule(
+			fmt.Sprintf("%d %d %d %d *", runAt.Minute(), runAt.Hour(), runAt.Day(), runAt.Month()),
+		))
+		if !runAt.After(time.Now()) {
+			syncCanaryJobOptions = append(syncCanaryJobOptions, canaryJobs.WithRunNow(true))
+		}
+
+		if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary, syncCanaryJobOptions...); err != nil {
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+		}
+
+		delete(canary.Annotations, "next-runtime")
+		if err := r.Update(ctx, canary); err != nil {
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+		}
+	}
+
 	if canaryForStatus.Status.Replicas != canary.Spec.Replicas {
 		if canary.Spec.Replicas == 0 {
 			canaryJobs.DeleteCanaryJob(canary.GetPersistedID())
 			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), true); err != nil {
 				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 			}
-		} else if canaryForStatus.Status.Replicas == 0 || canaryForStatus.Status.Replicas == 1 {
-			// Run immediately if replica > 1
-			var syncCanaryJobOptions []canaryJobs.SyncCanaryJobOption
-			if canary.Spec.Replicas > 1 {
-				syncCanaryJobOptions = append(syncCanaryJobOptions, canaryJobs.WithRunNow(true))
-			}
-
-			if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary, syncCanaryJobOptions...); err != nil {
+		} else {
+			if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
 				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 			}
 			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), false); err != nil {
@@ -155,6 +175,7 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 		logger.Error(err, "failed to update status for canary")
 		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 	}
+
 	return ctrl.Result{}, nil
 }
 
