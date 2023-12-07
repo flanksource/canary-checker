@@ -161,11 +161,16 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		}
 	}
 
+	check.URL, err = template(ctx.WithCheck(check).WithEnvValues(templateEnv), v1.Template{Template: check.URL})
+	if err != nil {
+		return results.Failf("failed to template request url: %v", err)
+	}
+
 	body := check.Body
 	if check.TemplateBody {
 		body, err = template(ctx.WithCheck(check).WithEnvValues(templateEnv), v1.Template{Template: body})
 		if err != nil {
-			return results.ErrorMessage(err)
+			return results.Failf("failed to template request body: %v", err)
 		}
 	}
 
