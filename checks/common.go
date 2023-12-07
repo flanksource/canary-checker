@@ -144,6 +144,8 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 		}
 		return results, hasTransformer, nil
 	} else if len(transformed) == 1 && t.Name == "" {
+		// no new checks created, in-line transformation only
+		hasTransformer = false
 		in.Metrics = append(in.Metrics, t.Metrics...)
 		if t.Start != nil {
 			in.Start = *t.Start
