@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
@@ -481,10 +482,28 @@ type AlertManager struct {
 	AlertManagerCheck `yaml:",inline" json:",inline"`
 }
 
+// CheckRelationship defines a way to link the check results to components and configs
+// using lookup expressions.
+type CheckRelationship struct {
+	Components []duty.LookupSpec `yaml:"components,omitempty" json:"components,omitempty"`
+	Configs    []duty.LookupSpec `yaml:"configs,omitempty" json:"configs,omitempty"`
+}
+
+type Relatable struct {
+	// Relationships defines a way to link the check results to components and configs
+	// using lookup expressions.
+	Relationships *CheckRelationship `yaml:"relationships,omitempty" json:"relationships,omitempty"`
+}
+
+func (t Relatable) GetRelationship() *CheckRelationship {
+	return t.Relationships
+}
+
 type AlertManagerCheck struct {
 	Description    `yaml:",inline" json:",inline"`
 	Templatable    `yaml:",inline" json:",inline"`
 	Connection     `yaml:",inline" json:",inline"`
+	Relatable      `yaml:",inline" json:",inline"`
 	Alerts         []string          `yaml:"alerts" json:"alerts,omitempty" template:"true"`
 	Filters        map[string]string `yaml:"filters" json:"filters,omitempty" template:"true"`
 	ExcludeFilters map[string]string `yaml:"exclude_filters" json:"exclude_filters,omitempty" template:"true"`

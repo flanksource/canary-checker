@@ -167,6 +167,100 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      relationships:
+                        description: Relationships defines a way to link the check results to components and configs using lookup expressions.
+                        properties:
+                          components:
+                            items:
+                              description: LookupSpec defines a tuple of fields to lookup.
+                              properties:
+                                name:
+                                  description: Lookup specifies the type of lookup to perform.
+                                  properties:
+                                    expr:
+                                      description: Expr is a cel-expression.
+                                      type: string
+                                    label:
+                                      description: Label specifies the key to lookup on the label.
+                                      type: string
+                                    value:
+                                      description: Value is the static value to use.
+                                      type: string
+                                  type: object
+                                namespace:
+                                  description: Lookup specifies the type of lookup to perform.
+                                  properties:
+                                    expr:
+                                      description: Expr is a cel-expression.
+                                      type: string
+                                    label:
+                                      description: Label specifies the key to lookup on the label.
+                                      type: string
+                                    value:
+                                      description: Value is the static value to use.
+                                      type: string
+                                  type: object
+                                type:
+                                  description: Lookup specifies the type of lookup to perform.
+                                  properties:
+                                    expr:
+                                      description: Expr is a cel-expression.
+                                      type: string
+                                    label:
+                                      description: Label specifies the key to lookup on the label.
+                                      type: string
+                                    value:
+                                      description: Value is the static value to use.
+                                      type: string
+                                  type: object
+                              type: object
+                            type: array
+                          configs:
+                            items:
+                              description: LookupSpec defines a tuple of fields to lookup.
+                              properties:
+                                name:
+                                  description: Lookup specifies the type of lookup to perform.
+                                  properties:
+                                    expr:
+                                      description: Expr is a cel-expression.
+                                      type: string
+                                    label:
+                                      description: Label specifies the key to lookup on the label.
+                                      type: string
+                                    value:
+                                      description: Value is the static value to use.
+                                      type: string
+                                  type: object
+                                namespace:
+                                  description: Lookup specifies the type of lookup to perform.
+                                  properties:
+                                    expr:
+                                      description: Expr is a cel-expression.
+                                      type: string
+                                    label:
+                                      description: Label specifies the key to lookup on the label.
+                                      type: string
+                                    value:
+                                      description: Value is the static value to use.
+                                      type: string
+                                  type: object
+                                type:
+                                  description: Lookup specifies the type of lookup to perform.
+                                  properties:
+                                    expr:
+                                      description: Expr is a cel-expression.
+                                      type: string
+                                    label:
+                                      description: Label specifies the key to lookup on the label.
+                                      type: string
+                                    value:
+                                      description: Value is the static value to use.
+                                      type: string
+                                  type: object
+                              type: object
+                            type: array
+                        type: object
                       test:
                         properties:
                           expr:

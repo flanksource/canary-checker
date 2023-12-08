@@ -45,7 +45,8 @@ func GetAllCanariesForSync(ctx context.Context, namespace string) ([]pkg.Canary,
         FROM canaries
         WHERE
             deleted_at IS NULL AND
-            agent_id = '00000000-0000-0000-0000-000000000000'
+            agent_id = '00000000-0000-0000-0000-000000000000' AND
+						(annotations->>'suspend' != 'true' OR annotations->>'suspend' IS NULL)
     `
 
 	args := make(pgx.NamedArgs)
@@ -238,6 +239,14 @@ func DeleteChecksForCanary(id string, deleteTime time.Time) ([]string, error) {
 		checkIDs = append(checkIDs, c.ID.String())
 	}
 	return checkIDs, err
+}
+
+func SaveCheckConfigRelationship(ctx context.Context, relationship *models.CheckConfigRelationship) error {
+	tx := Gorm.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "canary_id"}, {Name: "check_id"}, {Name: "config_id"}, {Name: "selector_id"}},
+		UpdateAll: true,
+	}).Create(relationship)
+	return tx.Error
 }
 
 func DeleteCheckComponentRelationshipsForCanary(id string, deleteTime time.Time) error {

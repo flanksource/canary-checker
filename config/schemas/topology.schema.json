@@ -83,6 +83,9 @@
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "alerts": {
           "items": {
             "type": "string"
@@ -659,6 +662,24 @@
         },
         "resultMode": {
           "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "CheckRelationship": {
+      "properties": {
+        "components": {
+          "items": {
+            "$ref": "#/$defs/LookupSpec"
+          },
+          "type": "array"
+        },
+        "configs": {
+          "items": {
+            "$ref": "#/$defs/LookupSpec"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
@@ -2410,6 +2431,36 @@
         "$ref": "#/$defs/LogSelector"
       },
       "type": "array"
+    },
+    "Lookup": {
+      "properties": {
+        "expr": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "LookupSpec": {
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "namespace": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "type": {
+          "$ref": "#/$defs/Lookup"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "ManagedFieldsEntry": {
       "properties": {
