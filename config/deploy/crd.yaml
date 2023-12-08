@@ -163,6 +163,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       test:
@@ -219,6 +222,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -254,6 +260,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       aggregatorName:
@@ -349,6 +358,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       sessionToken:
@@ -377,6 +389,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       skipTLSVerify:
@@ -444,6 +459,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       complianceTypes:
@@ -550,6 +568,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       sessionToken:
@@ -578,6 +599,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       skipTLSVerify:
@@ -705,6 +729,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       pipeline:
@@ -783,6 +810,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       actionPrefix:
@@ -882,6 +912,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       sessionToken:
@@ -910,6 +943,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       skipTLSVerify:
@@ -1068,6 +1104,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           username:
@@ -1096,6 +1135,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                         type: object
@@ -1265,6 +1307,9 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               endpoint:
@@ -1449,6 +1494,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           username:
@@ -1477,6 +1525,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                         type: object
@@ -1568,6 +1619,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           username:
@@ -1596,6 +1650,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                         type: object
@@ -1680,6 +1737,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       connection:
@@ -1799,6 +1859,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       ami:
@@ -1893,6 +1956,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       securityGroup:
@@ -1923,6 +1989,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       skipTLSVerify:
@@ -2031,6 +2100,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       query:
@@ -2091,6 +2163,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -2193,6 +2268,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           connection:
@@ -2226,6 +2304,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           url:
@@ -2256,6 +2337,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                         type: object
@@ -2289,6 +2373,9 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               connection:
@@ -2327,6 +2414,9 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               sessionToken:
@@ -2355,6 +2445,9 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               skipTLSVerify:
@@ -2392,6 +2485,9 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               clientSecret:
@@ -2420,6 +2516,9 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               connection:
@@ -2458,6 +2557,9 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               endpoint:
@@ -2506,6 +2608,9 @@ spec:
                                   required:
                                     - key
                                   type: object
+                                serviceAccount:
+                                  description: ServiceAccount specifies the service account whose token should be fetched
+                                  type: string
                               type: object
                           type: object
                         type: array
@@ -2615,6 +2720,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           connection:
@@ -2653,6 +2761,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           sessionToken:
@@ -2681,6 +2792,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           skipTLSVerify:
@@ -2750,6 +2864,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           endpoint:
@@ -2848,6 +2965,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           port:
@@ -2879,6 +2999,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                         required:
@@ -2918,6 +3041,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           port:
@@ -2949,6 +3075,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                         type: object
@@ -3030,6 +3159,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       icon:
@@ -3135,6 +3267,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           username:
@@ -3163,6 +3298,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                         type: object
@@ -3275,6 +3413,9 @@ spec:
                                   required:
                                     - key
                                   type: object
+                                serviceAccount:
+                                  description: ServiceAccount specifies the service account whose token should be fetched
+                                  type: string
                               type: object
                           type: object
                         type: array
@@ -3306,6 +3447,9 @@ spec:
                                   required:
                                     - key
                                   type: object
+                                serviceAccount:
+                                  description: ServiceAccount specifies the service account whose token should be fetched
+                                  type: string
                               type: object
                           type: object
                         type: array
@@ -3400,6 +3544,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       responseCodes:
@@ -3481,6 +3628,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -3594,6 +3744,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       labels:
@@ -3950,6 +4103,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       skipTLSVerify:
@@ -3988,6 +4144,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -4069,6 +4228,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       transformDeleteStrategy:
@@ -4103,6 +4265,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -4194,6 +4359,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       query:
@@ -4255,6 +4423,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -4346,6 +4517,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       query:
@@ -4407,6 +4581,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -4604,6 +4781,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       query:
@@ -4665,6 +4845,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -4856,6 +5039,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       query:
@@ -4917,6 +5103,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -5011,6 +5200,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       query:
@@ -5070,6 +5262,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -5156,6 +5351,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       transformDeleteStrategy:
@@ -5190,6 +5388,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -5229,6 +5430,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       awsConnectionName:
@@ -5315,6 +5519,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       repository:
@@ -5347,6 +5554,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       transformDeleteStrategy:
@@ -5390,6 +5600,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       bucketName:
@@ -5472,6 +5685,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       sessionToken:
@@ -5500,6 +5716,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       skipTLSVerify:
@@ -5670,6 +5889,9 @@ spec:
                               required:
                                 - key
                               type: object
+                            serviceAccount:
+                              description: ServiceAccount specifies the service account whose token should be fetched
+                              type: string
                           type: object
                       type: object
                     transform:
