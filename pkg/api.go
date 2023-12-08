@@ -446,6 +446,8 @@ type CheckResult struct {
 	// Check is the configuration
 	Check  external.Check `json:"-"`
 	Canary v1.Canary      `json:"-"`
+	// ParentCheck is the parent check of a transformed check
+	ParentCheck external.Check `json:"-"`
 }
 
 func (result CheckResult) GetDescription() string {

@@ -24,3 +24,18 @@ spec:
               'description': r.message,
             }
           ).toJSON()
+      relationships:
+        components:
+          - name:
+              label: pod
+            namespace:
+              label: namespace
+            type:
+              value: KubernetesPod
+        configs:
+          - name:
+              label: pod
+            namespace:
+              label: namespace
+            type:
+              value: Kubernetes::Pod

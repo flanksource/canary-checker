@@ -22,6 +22,7 @@ import (
 	dutyjob "github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/kommons"
+	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/robfig/cron/v3"
@@ -45,6 +46,10 @@ var CanaryStatusChannel chan CanaryStatusPayload
 
 // concurrentJobLocks keeps track of the currently running jobs.
 var concurrentJobLocks sync.Map
+
+type RelatableCheck interface {
+	GetRelationship() *v1.CheckRelationship
+}
 
 func StartScanCanaryConfigs(dataFile string, configFiles []string) {
 	DataFile = dataFile
@@ -138,7 +143,13 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		for _, checkID := range transformedChecksAdded {
 			checkIDDeleteStrategyMap[checkID] = result.Check.GetTransformDeleteStrategy()
 		}
+
+		// Establish relationship with components
+		if err := formCheckRelationships(ctx.Context, result); err != nil {
+			logger.Errorf("error forming check relationships: %v", err)
+		}
 	}
+
 	updateCanaryStatusAndEvent(ctx.Context, j.Canary, results)
 
 	checkDeleteStrategyGroup := make(map[string][]string)
@@ -167,6 +178,99 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 
 	// Update last runtime map
 	canaryLastRuntimes.Store(canaryID, time.Now())
+	return nil
+}
+
+// formCheckRelationships forms check relationships with components and configs
+// based on the lookup expressions in the check spec.
+func formCheckRelationships(ctx context.Context, result *pkg.CheckResult) error {
+	check := result.Check
+	if result.Transformed {
+		check = result.ParentCheck // because the parent check has the relationship spec.
+	}
+
+	_check, ok := check.(RelatableCheck)
+	if !ok {
+		return nil
+	}
+	relationshipConfig := _check.GetRelationship()
+	if relationshipConfig == nil {
+		return nil
+	}
+
+	if result.Canary.GetCheckID(result.Check.GetName()) == "" {
+		logger.Tracef("no canary id found for check %s", result.Check.GetName())
+		return nil
+	}
+
+	checkID, err := uuid.Parse(result.Canary.GetCheckID(result.Check.GetName()))
+	if err != nil {
+		return fmt.Errorf("error parsing canary id(%s): %w", result.Canary.GetCheckID(result.Check.GetName()), err)
+	}
+
+	canaryID, err := uuid.Parse(result.Canary.GetPersistedID())
+	if err != nil {
+		return fmt.Errorf("error parsing canary id(%s): %w", result.Canary.GetPersistedID(), err)
+	}
+
+	for _, lookup := range relationshipConfig.Components {
+		if populated, err := lookup.Populate(result.Labels, map[string]any{"result": result}); err != nil {
+			logger.Errorf("error populating lookup config in check %s: %v", checkID, err)
+			continue
+		} else if !populated {
+			continue
+		}
+
+		logger.Infof("Finding all components with %s/%s/%s", lookup.Namespace.Value, lookup.Name.Value, lookup.Type.Value)
+		componentIDs, err := db.FindComponentIDsByNameNamespaceType(ctx, lookup.Namespace.Value, lookup.Name.Value, lookup.Type.Value)
+		if err != nil {
+			logger.Errorf("error finding components (check=%s) (lookup=%v): %v", checkID, lookup, err)
+			continue
+		}
+
+		for _, componentID := range componentIDs {
+			selectorID, err := utils.GenerateJSONMD5Hash(check)
+			if err != nil {
+				logger.Errorf("error generating selector_id hash: %v", err)
+				continue
+			}
+			rel := &pkg.CheckComponentRelationship{ComponentID: componentID, CheckID: checkID, CanaryID: canaryID, SelectorID: selectorID}
+
+			if err := db.PersistCheckComponentRelationship(rel); err != nil {
+				logger.Errorf("error saving relationship between check %s and component %s: %v", checkID, lookup, err)
+			}
+		}
+	}
+
+	for _, lookup := range relationshipConfig.Configs {
+		if populated, err := lookup.Populate(result.Labels, map[string]any{"result": result}); err != nil {
+			logger.Errorf("error populating lookup config in check %s: %v", checkID, err)
+			continue
+		} else if !populated {
+			continue
+		}
+
+		logger.Infof("Finding all configs with %s/%s/%s", lookup.Namespace.Value, lookup.Name.Value, lookup.Type.Value)
+		configIDs, err := db.FindConfigIDsByNameNamespaceType(ctx, lookup.Namespace.Value, lookup.Name.Value, lookup.Type.Value)
+		if err != nil {
+			logger.Errorf("error finding config items (check=%s) (lookup=%v): %v", checkID, lookup, err)
+			continue
+		}
+
+		for _, configID := range configIDs {
+			selectorID, err := utils.GenerateJSONMD5Hash(check)
+			if err != nil {
+				logger.Errorf("error generating selector_id hash: %v", err)
+				continue
+			}
+			rel := &models.CheckConfigRelationship{ConfigID: configID, CheckID: checkID, CanaryID: canaryID, SelectorID: selectorID}
+
+			if err := db.SaveCheckConfigRelationship(ctx, rel); err != nil {
+				logger.Errorf("error saving relationship between check %s and config %s: %v", checkID, lookup, err)
+			}
+		}
+	}
+
 	return nil
 }
 

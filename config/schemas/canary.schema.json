@@ -83,6 +83,9 @@
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "alerts": {
           "items": {
             "type": "string"
@@ -732,6 +735,54 @@
         },
         "replicas": {
           "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "CheckRelationship": {
+      "properties": {
+        "components": {
+          "items": {
+            "$ref": "#/$defs/CheckRelationshipLookupFields"
+          },
+          "type": "array"
+        },
+        "configs": {
+          "items": {
+            "$ref": "#/$defs/CheckRelationshipLookupFields"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "CheckRelationshipLookup": {
+      "properties": {
+        "expr": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "CheckRelationshipLookupFields": {
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/CheckRelationshipLookup"
+        },
+        "namespace": {
+          "$ref": "#/$defs/CheckRelationshipLookup"
+        },
+        "type": {
+          "$ref": "#/$defs/CheckRelationshipLookup"
         }
       },
       "additionalProperties": false,

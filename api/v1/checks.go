@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
+	"github.com/flanksource/gomplate/v3"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -481,10 +483,113 @@ type AlertManager struct {
 	AlertManagerCheck `yaml:",inline" json:",inline"`
 }
 
+// CheckRelationshipLookup specifies the type of lookup to perform.
+type CheckRelationshipLookup struct {
+	Expr string `json:"expr,omitempty" yaml:"expr,omitempty"`
+	// Value is the static value to use
+	Value string `json:"value,omitempty" yaml:"value,omitempty"`
+	// Label specifies the key to lookup on the check's label.
+	Label string `json:"label,omitempty" yaml:"label,omitempty"`
+}
+
+func (t *CheckRelationshipLookup) Empty() bool {
+	return t.Expr == "" && t.Value == "" && t.Label == ""
+}
+
+func (t *CheckRelationshipLookup) Eval(labels map[string]string, envVar map[string]any) (string, error) {
+	if t.Value != "" {
+		return t.Value, nil
+	}
+
+	if t.Label != "" {
+		return labels[t.Label], nil
+	}
+
+	if t.Expr != "" {
+		res, err := gomplate.RunTemplate(envVar, gomplate.Template{Expression: t.Expr})
+		if err != nil {
+			return "", err
+		}
+
+		return res, nil
+	}
+
+	return "", errors.New("check linker:: unknown lookup type")
+}
+
+// CheckRelationshipLookupFields defines all the fields to lookup to form a relationship
+// to component/config.
+type CheckRelationshipLookupFields struct {
+	// Name defines the lookup expression for the name of the component to link to
+	Name CheckRelationshipLookup `json:"name,omitempty" yaml:"name,omitempty"`
+	// Namespace defines the lookup expression for the namespace of the component to link to
+	Namespace CheckRelationshipLookup `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	// Type defines the lookup expression for the component to link to
+	Type CheckRelationshipLookup `json:"type,omitempty" yaml:"type,omitempty"`
+}
+
+// Populate evaluates the lookup expression in-place.
+// A non empty lookup MUST have a non empty result.
+// If even a single the non-empty lookup results in a non empty value, then it returns false.
+func (t *CheckRelationshipLookupFields) Populate(labels map[string]string, envVar map[string]any) (bool, error) {
+	if !t.Name.Empty() {
+		name, err := t.Name.Eval(labels, envVar)
+		if err != nil {
+			return false, err
+		}
+		if name == "" {
+			return false, nil
+		}
+		t.Name.Value = name
+	}
+
+	if !t.Namespace.Empty() {
+		namespace, err := t.Namespace.Eval(labels, envVar)
+		if err != nil {
+			return false, err
+		}
+		if namespace == "" {
+			return false, nil
+		}
+		t.Namespace.Value = namespace
+	}
+
+	if !t.Type.Empty() {
+		typ, err := t.Type.Eval(labels, envVar)
+		if err != nil {
+			return false, err
+		}
+		if typ == "" {
+			return false, nil
+		}
+		t.Type.Value = typ
+	}
+
+	return true, nil
+}
+
+// CheckRelationship defines a way to link the check results to components and configs
+// using lookup expressions.
+type CheckRelationship struct {
+	Components []CheckRelationshipLookupFields `yaml:"components,omitempty" json:"components,omitempty"`
+	Configs    []CheckRelationshipLookupFields `yaml:"configs,omitempty" json:"configs,omitempty"`
+}
+
+type Relatable struct {
+	// Relationships defines a way to link the check results to components and configs
+	// using lookup expressions.
+	Relationships *CheckRelationship `yaml:"relationships,omitempty" json:"relationships,omitempty"`
+}
+
+func (t Relatable) GetRelationship() *CheckRelationship {
+	return t.Relationships
+}
+
 type AlertManagerCheck struct {
 	Description    `yaml:",inline" json:",inline"`
 	Templatable    `yaml:",inline" json:",inline"`
 	Connection     `yaml:",inline" json:",inline"`
+	Relatable      `yaml:",inline" json:",inline"`
 	Alerts         []string          `yaml:"alerts" json:"alerts,omitempty" template:"true"`
 	Filters        map[string]string `yaml:"filters" json:"filters,omitempty" template:"true"`
 	ExcludeFilters map[string]string `yaml:"exclude_filters" json:"exclude_filters,omitempty" template:"true"`

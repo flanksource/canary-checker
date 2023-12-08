@@ -120,6 +120,7 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 			t.TransformDeleteStrategy = cUtils.Coalesce(t.TransformDeleteStrategy, in.Check.GetTransformDeleteStrategy())
 
 			r := t.ToCheckResult()
+			r.ParentCheck = in.Check
 			r.Canary = in.Canary
 			r.Canary.Namespace = cUtils.Coalesce(t.Namespace, r.Canary.Namespace)
 			if r.Canary.Labels == nil {
