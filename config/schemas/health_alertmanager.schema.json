@@ -92,45 +92,15 @@
       "properties": {
         "components": {
           "items": {
-            "$ref": "#/$defs/CheckRelationshipLookupFields"
+            "$ref": "#/$defs/LookupSpec"
           },
           "type": "array"
         },
         "configs": {
           "items": {
-            "$ref": "#/$defs/CheckRelationshipLookupFields"
+            "$ref": "#/$defs/LookupSpec"
           },
           "type": "array"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
-    "CheckRelationshipLookup": {
-      "properties": {
-        "expr": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        },
-        "label": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
-    "CheckRelationshipLookupFields": {
-      "properties": {
-        "name": {
-          "$ref": "#/$defs/CheckRelationshipLookup"
-        },
-        "namespace": {
-          "$ref": "#/$defs/CheckRelationshipLookup"
-        },
-        "type": {
-          "$ref": "#/$defs/CheckRelationshipLookup"
         }
       },
       "additionalProperties": false,
@@ -187,6 +157,36 @@
           "type": "string"
         }
       },
+      "type": "object"
+    },
+    "Lookup": {
+      "properties": {
+        "expr": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "LookupSpec": {
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "namespace": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "type": {
+          "$ref": "#/$defs/Lookup"
+        }
+      },
+      "additionalProperties": false,
       "type": "object"
     },
     "MetricLabel": {

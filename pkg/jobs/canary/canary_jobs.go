@@ -18,6 +18,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
 	dutyjob "github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
@@ -144,7 +145,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 			checkIDDeleteStrategyMap[checkID] = result.Check.GetTransformDeleteStrategy()
 		}
 
-		// Establish relationship with components
+		// Establish relationship with components & configs
 		if err := formCheckRelationships(ctx.Context, result); err != nil {
 			logger.Errorf("error forming check relationships: %v", err)
 		}
@@ -205,7 +206,7 @@ func formCheckRelationships(ctx context.Context, result *pkg.CheckResult) error 
 
 	checkID, err := uuid.Parse(result.Canary.GetCheckID(result.Check.GetName()))
 	if err != nil {
-		return fmt.Errorf("error parsing canary id(%s): %w", result.Canary.GetCheckID(result.Check.GetName()), err)
+		return fmt.Errorf("error parsing check id(%s): %w", result.Canary.GetCheckID(result.Check.GetName()), err)
 	}
 
 	canaryID, err := uuid.Parse(result.Canary.GetPersistedID())
@@ -213,60 +214,44 @@ func formCheckRelationships(ctx context.Context, result *pkg.CheckResult) error 
 		return fmt.Errorf("error parsing canary id(%s): %w", result.Canary.GetPersistedID(), err)
 	}
 
-	for _, lookup := range relationshipConfig.Components {
-		if populated, err := lookup.Populate(result.Labels, map[string]any{"result": result}); err != nil {
-			logger.Errorf("error populating lookup config in check %s: %v", checkID, err)
-			continue
-		} else if !populated {
-			continue
-		}
-
-		logger.Infof("Finding all components with %s/%s/%s", lookup.Namespace.Value, lookup.Name.Value, lookup.Type.Value)
-		componentIDs, err := db.FindComponentIDsByNameNamespaceType(ctx, lookup.Namespace.Value, lookup.Name.Value, lookup.Type.Value)
+	for _, lookupSpec := range relationshipConfig.Components {
+		componentIDs, err := duty.LookupComponents(ctx, lookupSpec, result.Labels, map[string]any{"result": result})
 		if err != nil {
-			logger.Errorf("error finding components (check=%s) (lookup=%v): %v", checkID, lookup, err)
+			logger.Errorf("error finding components (check=%s) (lookup=%v): %v", checkID, lookupSpec, err)
 			continue
 		}
 
 		for _, componentID := range componentIDs {
-			selectorID, err := utils.GenerateJSONMD5Hash(check)
+			selectorID, err := utils.GenerateJSONMD5Hash(lookupSpec)
 			if err != nil {
 				logger.Errorf("error generating selector_id hash: %v", err)
 				continue
 			}
-			rel := &pkg.CheckComponentRelationship{ComponentID: componentID, CheckID: checkID, CanaryID: canaryID, SelectorID: selectorID}
 
+			rel := &pkg.CheckComponentRelationship{ComponentID: componentID, CheckID: checkID, CanaryID: canaryID, SelectorID: selectorID}
 			if err := db.PersistCheckComponentRelationship(rel); err != nil {
-				logger.Errorf("error saving relationship between check %s and component %s: %v", checkID, lookup, err)
+				logger.Errorf("error saving relationship between check=%s and component=%s: %v", checkID, componentID, err)
 			}
 		}
 	}
 
-	for _, lookup := range relationshipConfig.Configs {
-		if populated, err := lookup.Populate(result.Labels, map[string]any{"result": result}); err != nil {
-			logger.Errorf("error populating lookup config in check %s: %v", checkID, err)
-			continue
-		} else if !populated {
-			continue
-		}
-
-		logger.Infof("Finding all configs with %s/%s/%s", lookup.Namespace.Value, lookup.Name.Value, lookup.Type.Value)
-		configIDs, err := db.FindConfigIDsByNameNamespaceType(ctx, lookup.Namespace.Value, lookup.Name.Value, lookup.Type.Value)
+	for _, lookupSpec := range relationshipConfig.Configs {
+		configIDs, err := duty.LookupConfigs(ctx, lookupSpec, result.Labels, map[string]any{"result": result})
 		if err != nil {
-			logger.Errorf("error finding config items (check=%s) (lookup=%v): %v", checkID, lookup, err)
+			logger.Errorf("error finding config items (check=%s) (lookup=%v): %v", checkID, lookupSpec, err)
 			continue
 		}
 
 		for _, configID := range configIDs {
-			selectorID, err := utils.GenerateJSONMD5Hash(check)
+			selectorID, err := utils.GenerateJSONMD5Hash(lookupSpec)
 			if err != nil {
 				logger.Errorf("error generating selector_id hash: %v", err)
 				continue
 			}
-			rel := &models.CheckConfigRelationship{ConfigID: configID, CheckID: checkID, CanaryID: canaryID, SelectorID: selectorID}
 
+			rel := &models.CheckConfigRelationship{ConfigID: configID, CheckID: checkID, CanaryID: canaryID, SelectorID: selectorID}
 			if err := db.SaveCheckConfigRelationship(ctx, rel); err != nil {
-				logger.Errorf("error saving relationship between check %s and config %s: %v", checkID, lookup, err)
+				logger.Errorf("error saving relationship between check=%s and config=%s: %v", checkID, configID, err)
 			}
 		}
 	}

@@ -173,84 +173,90 @@ spec:
                         properties:
                           components:
                             items:
-                              description: CheckRelationshipLookupFields defines all the fields to lookup to form a relationship to component/config.
+                              description: LookupSpec defines a tuple of fields to lookup.
                               properties:
                                 name:
-                                  description: Name defines the lookup expression for the name of the component to link to
+                                  description: Lookup specifies the type of lookup to perform.
                                   properties:
                                     expr:
+                                      description: Expr is a cel-expression.
                                       type: string
                                     label:
-                                      description: Label specifies the key to lookup on the check's label.
+                                      description: Label specifies the key to lookup on the label.
                                       type: string
                                     value:
-                                      description: Value is the static value to use
+                                      description: Value is the static value to use.
                                       type: string
                                   type: object
                                 namespace:
-                                  description: Namespace defines the lookup expression for the namespace of the component to link to
+                                  description: Lookup specifies the type of lookup to perform.
                                   properties:
                                     expr:
+                                      description: Expr is a cel-expression.
                                       type: string
                                     label:
-                                      description: Label specifies the key to lookup on the check's label.
+                                      description: Label specifies the key to lookup on the label.
                                       type: string
                                     value:
-                                      description: Value is the static value to use
+                                      description: Value is the static value to use.
                                       type: string
                                   type: object
                                 type:
-                                  description: Type defines the lookup expression for the component to link to
+                                  description: Lookup specifies the type of lookup to perform.
                                   properties:
                                     expr:
+                                      description: Expr is a cel-expression.
                                       type: string
                                     label:
-                                      description: Label specifies the key to lookup on the check's label.
+                                      description: Label specifies the key to lookup on the label.
                                       type: string
                                     value:
-                                      description: Value is the static value to use
+                                      description: Value is the static value to use.
                                       type: string
                                   type: object
                               type: object
                             type: array
                           configs:
                             items:
-                              description: CheckRelationshipLookupFields defines all the fields to lookup to form a relationship to component/config.
+                              description: LookupSpec defines a tuple of fields to lookup.
                               properties:
                                 name:
-                                  description: Name defines the lookup expression for the name of the component to link to
+                                  description: Lookup specifies the type of lookup to perform.
                                   properties:
                                     expr:
+                                      description: Expr is a cel-expression.
                                       type: string
                                     label:
-                                      description: Label specifies the key to lookup on the check's label.
+                                      description: Label specifies the key to lookup on the label.
                                       type: string
                                     value:
-                                      description: Value is the static value to use
+                                      description: Value is the static value to use.
                                       type: string
                                   type: object
                                 namespace:
-                                  description: Namespace defines the lookup expression for the namespace of the component to link to
+                                  description: Lookup specifies the type of lookup to perform.
                                   properties:
                                     expr:
+                                      description: Expr is a cel-expression.
                                       type: string
                                     label:
-                                      description: Label specifies the key to lookup on the check's label.
+                                      description: Label specifies the key to lookup on the label.
                                       type: string
                                     value:
-                                      description: Value is the static value to use
+                                      description: Value is the static value to use.
                                       type: string
                                   type: object
                                 type:
-                                  description: Type defines the lookup expression for the component to link to
+                                  description: Lookup specifies the type of lookup to perform.
                                   properties:
                                     expr:
+                                      description: Expr is a cel-expression.
                                       type: string
                                     label:
-                                      description: Label specifies the key to lookup on the check's label.
+                                      description: Label specifies the key to lookup on the label.
                                       type: string
                                     value:
-                                      description: Value is the static value to use
+                                      description: Value is the static value to use.
                                       type: string
                                   type: object
                               type: object
