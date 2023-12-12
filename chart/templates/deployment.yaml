@@ -161,8 +161,11 @@ spec:
             {{- if ne .Values.prometheusURL "" }}
             - --prometheus={{ tpl .Values.prometheusURL . }}
             {{- end }}
-            {{- if .Values.otel_collector }}
-            - --otel-collector-url={{ tpl .Values.otel_collector . | default "" }}
+            {{- if .Values.otel.collector }}
+            - --otel-collector-url={{ tpl .Values.otel.collector . | default "" }}
+            {{- end }}
+            {{- if .Values.otel.serviceName }}
+            - --otel-service-name={{ tpl .Values.otel.serviceName . | default "canary-checker" }}
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
