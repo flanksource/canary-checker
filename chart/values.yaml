@@ -30,6 +30,11 @@ logLevel: "-v"
 # restrict canary-checker to monitor single namespace for canaries.  Leave blank to monitor all namespaces
 canaryNamespace: ""
 
+otel:
+  # OpenTelemetry gRPC collector endpoint in host:port format
+  collector: ""
+  serviceName: canary-checker
+
 db:
   runMigrations: true
   embedded:
