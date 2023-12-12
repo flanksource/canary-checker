@@ -161,7 +161,7 @@ spec:
             {{- if ne .Values.prometheusURL "" }}
             - --prometheus={{ tpl .Values.prometheusURL . }}
             {{- end }}
-            {{- if .Values.otel.collector }}
+            {{- if (tpl .Values.otel.collector .) }}
             - --otel-collector-url={{ tpl .Values.otel.collector . | default "" }}
             {{- end }}
             {{- if .Values.otel.serviceName }}
