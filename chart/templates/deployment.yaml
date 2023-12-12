@@ -159,7 +159,10 @@ spec:
             {{- end}}
             {{- end }}
             {{- if ne .Values.prometheusURL "" }}
-            - --prometheus={{ .Values.prometheusURL }}
+            - --prometheus={{ tpl .Values.prometheusURL . }}
+            {{- end }}
+            {{- if .Values.otel_collector }}
+            - --otel-collector-url={{ tpl .Values.otel_collector . | default "" }}
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
