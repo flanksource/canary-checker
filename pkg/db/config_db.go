@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,7 +10,9 @@ import (
 	"gorm.io/gorm/clause"
 
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
+	gocache "github.com/patrickmn/go-cache"
 )
 
 // Store entry in config_component_relationship table
@@ -47,11 +50,27 @@ func configQuery(config pkg.Config) *gorm.DB {
 	return query
 }
 
+var configCache = gocache.New(30*time.Minute, 1*time.Hour)
+
 func FindConfig(config pkg.Config) (*pkg.Config, error) {
 	if Gorm == nil {
 		logger.Debugf("Config lookup on %v will be ignored, db not initialized", config)
 		return nil, gorm.ErrRecordNotFound
 	}
+
+	cacheKey, err := utils.GenerateJSONMD5Hash(config)
+	if err != nil {
+		return nil, fmt.Errorf("error generating cacheKey: %w", err)
+	}
+
+	if val, exists := configCache.Get(cacheKey); exists {
+		// If config item is not found, it is stored as nil
+		if val == nil {
+			return nil, nil
+		}
+		return val.(*pkg.Config), nil
+	}
+
 	var dbConfigObject pkg.Config
 	query := configQuery(config)
 	tx := query.Limit(1).Find(&dbConfigObject)
@@ -59,8 +78,12 @@ func FindConfig(config pkg.Config) (*pkg.Config, error) {
 		return nil, tx.Error
 	}
 	if tx.RowsAffected == 0 {
+		// If config item is not found, stored as nil for a short duration
+		configCache.Set(cacheKey, nil, 10*time.Minute)
 		return nil, nil
 	}
+
+	configCache.Set(cacheKey, &dbConfigObject, gocache.DefaultExpiration)
 	return &dbConfigObject, nil
 }
 
