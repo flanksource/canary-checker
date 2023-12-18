@@ -90,7 +90,11 @@ func run(cmd *cobra.Command, args []string) {
 	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 	if operatorExecutor {
 		logger.Infof("Starting executors")
-		jobs.Start()
+
+		// Some synchronous jobs can take time
+		// so we use a goroutine to unblock server start
+		// to prevent health check from failing
+		go jobs.Start()
 	}
 	go serve()
 
