@@ -3,8 +3,8 @@
     <source srcset="https://canarychecker.io/img/canary-checker-white.svg" media="(prefers-color-scheme: dark)">
     <img src="https://canarychecker.io/img/canary-checker.svg">
   </picture>
-  
-  <p>Kubernetes operator for executing synthetic tests</p>
+
+  <p>Kubernetes Native Health Check Platform</p>
   <p>
     <a href="https://github.com/flanksource/canary-checker/actions"><img src="https://github.com/flanksource/canary-checker/workflows/Test/badge.svg"></a>
     <a href="https://goreportcard.com/report/github.com/flanksource/canary-checker"><img src="https://goreportcard.com/badge/github.com/flanksource/canary-checker"></a>
@@ -33,15 +33,20 @@ Canary checker is a kubernetes-native platform for monitoring health across appl
 
 ## Getting Started
 
-1. Install canary checker:
+1. Install canary checker CLI
 
   ```shell
 helm repo add flanksource https://flanksource.github.io/charts
 helm repo update
-helm install canary-checker
+helm install \
+  canary-checker \
+  flanksource/canary-checker \
+ -n canary-checker \
+ --create-namespace
+ --wait
   ```
 
-2. Create a new check:
+2. Create a new check
 
   ```yaml title="canary.yaml"
 apiVersion: canaries.flanksource.com/v1
@@ -59,8 +64,12 @@ spec:
 
 2a. Run the check locally (Optional)
 
+
 ```shell
-canary-checker run canary.yaml
+wget  https://github.com/flanksource/canary-checker/releases/latest/download/canary-checker_linux_amd64   \
+  -O canary-checker && \
+  chmod +x canary-checker
+./canary-checker run canary.yaml
 ```
 
 [![asciicast](https://asciinema.org/a/cYS6hlmX516JQeECHH7za3IDG.svg)](https://asciinema.org/a/cYS6hlmX516JQeECHH7za3IDG)
@@ -80,6 +89,123 @@ NAME               INTERVAL   STATUS   LAST CHECK   UPTIME 1H        LATENCY 1H 
 http-check.        30         Passed   13s          18/18 (100.0%)   480ms        13s
 ```
 
+
+Ne
+
+## Use Cases
+
+### Synthetic Testing
+
+Run simple HTTP/DNS/ICMP probes or more advanced full test suites using JMeter, K6, Playright, Postman.
+
+```yaml
+# Run a container that executes a playwright test, and then collect the
+# JUnit formatted test results from the /tmp folder
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: playwright-junit
+spec:
+  interval: 120
+  junit:
+    - testResults: "/tmp/"
+      name: playwright-junit
+      spec:
+        containers:
+          - name: playwright
+            image: ghcr.io/flanksource/canary-playwright:latest
+```
+
+### Infrastructure Testing
+
+Verify that infrastructure is fully operational by deploying new pods, spinning up new EC2 instances and pushing/pulling from docker and helm repositories.
+
+### Backup Checks / Batch File Monitoring
+
+Check that batch file processes are functioning correctly by checking the age and size of files in local file systems, SFTP, SMB, S3 and GCS.
+
+```yaml
+# Checks that a recent DB backup has been uploaded
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: folder-check
+spec:
+  schedule: 0 22 * * *
+  folder:
+    - path: s3://database-backups/prod
+      name: prod-backup
+      maxAge: 1d
+      minSize: 10gb
+```
+
+### Alert Aggregation
+
+Aggregate alerts and recommendations from Prometheus, AWS Cloudwatch, Dynatrace, etc.
+
+```yaml
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: alertmanager-check
+spec:
+  schedule: "*/5 * * * *"
+  alertmanager:
+    - url: alertmanager.monitoring.svc
+      alerts:
+        - .*
+      ignore:
+        - KubeScheduler.*
+        - Watchdog
+      transform:
+        javascript: |
+          var out = _.map(results, function(r) {
+            return {
+              name: r.name,
+              labels: r.labels,
+              icon: 'alert',
+              message: r.message,
+              description: r.message,
+            }
+          })
+          JSON.stringify(out);
+```
+
+### Prometheus Exporter Replacement
+
+Export [custom metrics](https://canarychecker.io/concepts/metrics-exporter) from the result of any check, making it possible to replace various other promethus exporters that collect metrics via HTTP, SQL, etc..
+
+```yaml
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: exchange-rates
+spec:
+  schedule: "every 1 @hour"
+  http:
+    - name: exchange-rates
+      url: https://api.frankfurter.app/latest?from=USD&to=GBP,EUR,ILS
+      metrics:
+        - name: exchange_rate
+          type: gauge
+          value: result.json.rates.GBP
+          labels:
+            - name: "from"
+              value: "USD"
+            - name: to
+              value: GBP
+```
+
+> Note canary-checker is not a replacement for exporters with significant amount of logic like node-exporter or postgresql-exporter
+
+## Dashboard
+
+Canary checker comes with a built-in dashboard by default
+
+![](https://canarychecker.io/img/canary-ui.png)
+
+There is also a [grafana](https://canarychecker.io/concepts/grafana) dashboard, or build your own using the metrics exposed.
+
 ## Getting Help
 
 If you have any questions about canary checker:
@@ -87,7 +213,7 @@ If you have any questions about canary checker:
 * Read the [docs](https://canarychecker.io)
 * Invite yourself to the [CNCF community slack](https://slack.cncf.io/) and join the [#canary-checker](https://cloud-native.slack.com/messages/canary-checker/) channel.
 * Check out the [Youtube Playlist](https://www.youtube.com/playlist?list=PLz4F_KggvA58D6krlw433TNr8qMbu1aIU).
-* File an [issue](https://github.com/flanksource/canary-checker/issues/new) - (We do provide user support via Github Issues, so don't worry  if your issue a real bug or not)
+* File an [issue](https://github.com/flanksource/canary-checker/issues/new) - (We do provide user support via Github Issues, so don't worry if your issue is a bug or not)
 
 Your feedback is always welcome!
 
@@ -112,10 +238,13 @@ Your feedback is always welcome!
 | [Dynatrace Problems](./reference/dynatrace.md)               | Beta       | Problems deteced                                             |
 | **DevOps**                                                   |            |                                                              |
 | [Git](https://canarychecker.io/reference/git)                                      | GA         | Query Git and Github repositories via SQL                    |
-| [Azure Devops](https://canarychecker.io/reference)                                 |            |                                                              |
+| [Azure Devops](https://canarychecker.io/reference)                                 | Beta |                                                              |
 | **Integration Testing**                                      |            |                                                              |
 | [JMeter](https://canarychecker.io/reference/jmeter)                                | Beta       | Runs and checks the result of a JMeter test                  |
 | [JUnit / BYO](https://canarychecker.io/reference/junit)                            | Beta       | Run a pod that saves Junit test results                      |
+| [K6](https://canarychecker.io/reference/k6) | Beta | Runs K6 tests that export JUnit via a container |
+| [Newman](https://canarychecker.io/reference/newman) | Beta |  Runs Newman / Postman tests that export JUnit via a container  |
+| [Playwright](https://canarychecker.io/reference/Playwright) | Beta |  Runs Playwright tests that export JUnit via a container  |
 | **File Systems / Batch**                                     |            |                                                              |
 | [Local Disk / NFS](https://canarychecker.io/reference/folder)                      | GA         | Check folders for files that are:  too few/many, too old/new, too small/large |
 | [S3](https://canarychecker.io/reference/s3-bucket)                                 | GA         | Check contents of AWS S3 Buckets                             |
@@ -136,6 +265,16 @@ Your feedback is always welcome!
 | [Docker/Containerd](https://canarychecker.io/reference/containerd)                 | Deprecated | Ability to push and pull containers via docker/containerd    |
 | [Helm](https://canarychecker.io/reference/helm)                                    | Deprecated | Ability to push and pull helm charts                         |
 | [S3 Protocol](https://canarychecker.io/reference/s3-protocol)                      | GA         | Ability to read/write/list objects on an S3 compatible object store |
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+Thank you to all our contributors !
+
+<a href="https://github.com/flanksource/canary-checker/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=flanksource/canary-checker" />
+</a>
 
 ## License
 
