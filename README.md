@@ -33,11 +33,12 @@ Canary checker is a kubernetes-native platform for monitoring health across appl
 
 ## Getting Started
 
-1. Install canary checker CLI
+1. Install canary checker with Helm
 
-  ```shell
+```shell
 helm repo add flanksource https://flanksource.github.io/charts
 helm repo update
+
 helm install \
   canary-checker \
   flanksource/canary-checker \
@@ -64,33 +65,32 @@ spec:
 
 2a. Run the check locally (Optional)
 
-
 ```shell
-wget  https://github.com/flanksource/canary-checker/releases/latest/download/canary-checker_linux_amd64   \
-  -O canary-checker && \
-  chmod +x canary-checker
+wget  https://github.com/flanksource/canary-checker/releases/latest/download/canary-checker_linux_amd64 \
+-O canary-checker &&  chmod +x canary-checker
 ./canary-checker run canary.yaml
 ```
 
 [![asciicast](https://asciinema.org/a/cYS6hlmX516JQeECHH7za3IDG.svg)](https://asciinema.org/a/cYS6hlmX516JQeECHH7za3IDG)
 
-  ```shell
- kubectl apply -f canary.yaml
-  ```
+3. Apply the check
 
-3. Check the status of the health check:
+```shell
+kubectl apply -f canary.yaml
+```
 
-  ```shell
+4. Check the health status
+
+```shell
 kubectl get canary
-  ```
+```
 
 ``` title="sample output"
 NAME               INTERVAL   STATUS   LAST CHECK   UPTIME 1H        LATENCY 1H   LAST TRANSITIONED
 http-check.        30         Passed   13s          18/18 (100.0%)   480ms        13s
 ```
 
-
-Ne
+See [fixtures](https://github.com/flanksource/canary-checker/tree/master/fixtures) for more examples and [docs](https://canarychecker.io/getting-started) for more comprehensive documentation.
 
 ## Use Cases
 
@@ -118,7 +118,42 @@ spec:
 
 ### Infrastructure Testing
 
-Verify that infrastructure is fully operational by deploying new pods, spinning up new EC2 instances and pushing/pulling from docker and helm repositories.
+Verify that infrastructure is fully operational by [deploying new pods](https://canarychecker.io/reference/pod), spinning up new EC2 instances and pushing/pulling from docker and helm repositories.
+
+```yaml
+# Schedule a new pod with an ingress and then time how long it takes to schedule, be ready, respond to an http request and finally be cleaned up.
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: pod-check
+spec:
+  interval: 30
+  pod:
+    - name: golang
+      spec: |
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: hello-world-golang
+          namespace: default
+          labels:
+            app: hello-world-golang
+        spec:
+          containers:
+            - name: hello
+              image: quay.io/toni0/hello-webserver-golang:latest
+      port: 8080
+      path: /foo/bar
+      scheduleTimeout: 20000
+      readyTimeout: 10000
+      httpTimeout: 7000
+      deleteTimeout: 12000
+      ingressTimeout: 10000
+      deadline: 60000
+      httpRetryInterval: 200
+      expectedContent: bar
+      expectedHttpStatuses: [200, 201, 202]
+```
 
 ### Backup Checks / Batch File Monitoring
 
@@ -158,6 +193,7 @@ spec:
         - KubeScheduler.*
         - Watchdog
       transform:
+        # for each alert, transform it into a new check
         javascript: |
           var out = _.map(results, function(r) {
             return {
@@ -196,7 +232,37 @@ spec:
               value: GBP
 ```
 
-> Note canary-checker is not a replacement for exporters with significant amount of logic like node-exporter or postgresql-exporter
+## Platform Ready
+
+Canary checker is ideal for building platforms, developers can include health checks for their applications in whatever tooling they prefer, with secret management that uses native Kubernetes constructs.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name:  basic-auth
+stringData:
+   user: john
+   pass: doe
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-basic-auth-configmap
+spec:
+  http:
+    - url: https://httpbin.demo.aws.flanksource.com/basic-auth/john/doe
+      username:
+        valueFrom:
+          secretKeyRef:
+            name: basic-auth
+            key: user
+      password:
+        valueFrom:
+          secretKeyRef:
+            name: basic-auth
+            key: pass
+```
 
 ## Dashboard
 
