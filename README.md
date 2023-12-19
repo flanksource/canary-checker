@@ -85,7 +85,7 @@ http-check.        30         Passed   13s          18/18 (100.0%)   480ms      
 If you have any questions about canary checker:
 
 * Read the [docs](https://canarychecker.io)
-* Invite yourself to the [CNCF community slack](https://slack.cncf.io/)and join the [#canary-checker](https://cloud-native.slack.com/messages/canary-checker/) channel.
+* Invite yourself to the [CNCF community slack](https://slack.cncf.io/) and join the [#canary-checker](https://cloud-native.slack.com/messages/canary-checker/) channel.
 * Check out the [Youtube Playlist](https://www.youtube.com/playlist?list=PLz4F_KggvA58D6krlw433TNr8qMbu1aIU).
 * File an [issue](https://github.com/flanksource/canary-checker/issues/new) - (We do provide user support via Github Issues, so don't worry  if your issue a real bug or not)
 
