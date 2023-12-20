@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sync"
 
 	"time"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
-	"github.com/flanksource/duty/query"
 	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -428,40 +426,6 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, error) {
 	return PersistCanaryModel(model)
 }
 
-var refreshCheckStatusSummaryMutex sync.Mutex
-
-func RefreshCheckStatusSummary() {
-	if !refreshCheckStatusSummaryMutex.TryLock() {
-		logger.Debugf("Skipping RefreshCheckStatusSummary as it is already running")
-		return
-	}
-
-	jobHistory := models.NewJobHistory("RefreshCheckStatusSummary", "check_status_summary", "").Start()
-	_ = PersistJobHistory(jobHistory)
-	defer func() {
-		_ = PersistJobHistory(jobHistory.End())
-		refreshCheckStatusSummaryMutex.Unlock()
-	}()
-
-	if err := query.RefreshCheckStatusSummary(defaultCtx); err != nil {
-		logger.Errorf("error refreshing check_status_summary materialized view: %v", err)
-		jobHistory.AddError(err.Error())
-	}
-}
-
-func RefreshCheckStatusSummaryAged() {
-	jobHistory := models.NewJobHistory("RefreshCheckStatusSummaryAged", "check_status_summary_aged", "").Start()
-	_ = PersistJobHistory(jobHistory)
-	defer func() {
-		_ = PersistJobHistory(jobHistory.End())
-	}()
-
-	if err := query.RefreshCheckStatusSummaryAged(defaultCtx); err != nil {
-		logger.Errorf("error refreshing check_status_summary_aged materialized view: %v", err)
-		jobHistory.AddError(err.Error())
-	}
-}
-
 const (
 	DefaultCheckRetentionDays  = 7
 	DefaultCanaryRetentionDays = 7
@@ -524,9 +488,9 @@ func CleanupCanaries() {
 // SuspendCanary sets the suspend annotation on the canary table.
 func SuspendCanary(ctx context.Context, id string, suspend bool) error {
 	query := `
-	UPDATE canaries 
-		SET annotations = 
-			CASE 
+	UPDATE canaries
+		SET annotations =
+			CASE
 				WHEN annotations IS NULL THEN '{"suspend": "true"}'::jsonb
 				ELSE jsonb_set(annotations, '{suspend}', '"true"')
 			END
@@ -535,8 +499,8 @@ func SuspendCanary(ctx context.Context, id string, suspend bool) error {
 
 	if !suspend {
 		query = `
-		UPDATE canaries 
-			SET annotations = 
+		UPDATE canaries
+			SET annotations =
 				CASE WHEN annotations IS NOT NULL THEN annotations - 'suspend' END
 			WHERE id = ?;
 		`

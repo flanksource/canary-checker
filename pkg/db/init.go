@@ -11,7 +11,6 @@ import (
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
-	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/migrate"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"gorm.io/gorm"
@@ -26,7 +25,6 @@ var RunMigrations bool
 var DBMetrics bool
 var PostgresServer *embeddedpostgres.EmbeddedPostgres
 var HTTPEndpoint = "http://localhost:8080/db"
-var defaultCtx dutyContext.Context
 
 func Start(ctx context.Context) error {
 	if err := Init(); err != nil {
@@ -103,8 +101,6 @@ func Init() error {
 	if err != nil {
 		return err
 	}
-
-	defaultCtx = dutyContext.Context{}.WithDB(Gorm, Pool)
 
 	if DBMetrics {
 		go func() {

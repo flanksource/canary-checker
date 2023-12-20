@@ -47,12 +47,11 @@ var Root = &cobra.Command{
 }
 
 var (
-	httpPort                 = 8080
-	publicEndpoint           = "http://localhost:8080"
-	pushServers, pullServers []string
-	sharedLibrary            []string
-	exposeEnv                bool
-	logPass, logFail         bool
+	httpPort         = 8080
+	publicEndpoint   = "http://localhost:8080"
+	sharedLibrary    []string
+	exposeEnv        bool
+	logPass, logFail bool
 
 	otelcollectorURL string
 	otelServiceName  string
@@ -81,7 +80,7 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database. Use embedded:///path/to/dir to use the embedded database")
 	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
 	flags.StringVarP(&cache.DefaultWindow, "default-window", "", "1h", "Default search window")
-	flags.IntVar(&db.CheckStatusRetentionDays, "check-status-retention-period", db.DefaultCheckStatusRetentionDays, "Check status retention period in days")
+	flags.IntVar(&db.CheckStatusRetention, "check-status-retention-period", db.CheckStatusRetention, "Check status retention period in days")
 	flags.IntVar(&db.CheckRetentionDays, "check-retention-period", db.DefaultCheckRetentionDays, "Check retention period in days")
 	flags.IntVar(&db.CanaryRetentionDays, "canary-retention-period", db.DefaultCanaryRetentionDays, "Canary retention period in days")
 	flags.StringVar(&checks.DefaultArtifactConnection, "artifact-connection", "", "Specify the default connection to use for artifacts")

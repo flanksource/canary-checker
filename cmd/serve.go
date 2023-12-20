@@ -76,7 +76,6 @@ func setup() {
 	if err := duty.UpdatePropertiesFromFile(apicontext.DefaultContext, propertiesFile); err != nil {
 		logger.Fatalf("Error setting properties in database: %v", err)
 	}
-
 }
 
 func postgrestResponseModifier(r *http.Response) error {

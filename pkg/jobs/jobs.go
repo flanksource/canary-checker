@@ -12,7 +12,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/topology/configs"
 	"github.com/flanksource/commons/logger"
 	dutyjob "github.com/flanksource/duty/job"
-	"github.com/flanksource/duty/upstream"
 	"github.com/robfig/cron/v3"
 )
 
@@ -30,10 +29,6 @@ const (
 	ComponentCheckSchedule             = "@every 2m"
 	ComponentConfigSchedule            = "@every 2m"
 	ComponentCostSchedule              = "@every 1h"
-	CheckStatusSummarySchedule         = "@every 1m"
-	CheckStatusesAggregate1hSchedule   = "@every 1h"
-	CheckStatusesAggregate1dSchedule   = "@every 24h"
-	CheckStatusDeleteSchedule          = "@every 24h"
 	CheckCleanupSchedule               = "@every 12h"
 	CanaryCleanupSchedule              = "@every 12h"
 	PrometheusGaugeCleanupSchedule     = "@every 1h"
@@ -49,29 +44,25 @@ func Start() {
 	FuncScheduler.Start()
 
 	if canaryJobs.UpstreamConf.Valid() {
-		pullJob := &canaryJobs.UpstreamPullJob{
-			Client: upstream.NewUpstreamClient(canaryJobs.UpstreamConf),
-		}
-		pullJob.Run()
-		if _, err := FuncScheduler.AddJob(PullCanaryFromUpstreamSchedule, pullJob); err != nil {
-			logger.Fatalf("Failed to schedule job [canaryJobs.Pull]: %v", err)
-		}
-
 		// Push checks to upstream in real-time
 		if err := canaryJobs.StartUpstreamEventQueueConsumer(context.New(nil, nil, db.Gorm, db.Pool, v1.Canary{})); err != nil {
 			logger.Fatalf("Failed to start upstream event queue consumer: %v", err)
 		}
 
-		if _, err := ScheduleFunc(ReconcileCanaryToUpstreamSchedule, canaryJobs.ReconcileChecks); err != nil {
-			logger.Fatalf("Failed to schedule job [canaryJobs.ReconcileChecks]: %v", err)
-		}
-
-		canaryJobs.SyncCheckStatuses()
-		if _, err := ScheduleFunc(PushCheckStatusesSchedule, canaryJobs.SyncCheckStatuses); err != nil {
-			logger.Fatalf("Failed to schedule job [canaryJobs.SyncCheckStatuses]: %v", err)
+		for _, job := range canaryJobs.UpstreamJobs {
+			job.Context = context.DefaultContext
+			if err := job.AddToScheduler(FuncScheduler); err != nil {
+				logger.Errorf(err.Error())
+			}
 		}
 	}
 
+	for _, job := range db.CheckStatusJobs {
+		job.Context = context.DefaultContext
+		if err := job.AddToScheduler(FuncScheduler); err != nil {
+			logger.Errorf(err.Error())
+		}
+	}
 	if err := dutyjob.NewJob(context.DefaultContext, "SyncCanaryJobs", SyncCanaryJobsSchedule, canaryJobs.SyncCanaryJobs).
 		RunOnStart().AddToScheduler(FuncScheduler); err != nil {
 		logger.Fatalf("Failed to schedule job [canaryJobs.SyncCanaryJobs]: %v", err)
@@ -92,21 +83,11 @@ func Start() {
 	if _, err := ScheduleFunc(ComponentCheckSchedule, checks.ComponentCheckRun); err != nil {
 		logger.Errorf("Failed to schedule component check: %v", err)
 	}
+
 	if _, err := ScheduleFunc(ComponentConfigSchedule, configs.ComponentConfigRun); err != nil {
 		logger.Errorf("Failed to schedule component config: %v", err)
 	}
-	if _, err := ScheduleFunc(CheckStatusSummarySchedule, db.RefreshCheckStatusSummary); err != nil {
-		logger.Errorf("Failed to schedule check status summary refresh: %v", err)
-	}
-	if _, err := ScheduleFunc(CheckStatusesAggregate1hSchedule, db.RefreshCheckStatusSummaryAged); err != nil {
-		logger.Errorf("Failed to schedule check status summary refresh: %v", err)
-	}
-	if _, err := ScheduleFunc(CheckStatusDeleteSchedule, db.DeleteAllOldCheckStatuses); err != nil {
-		logger.Errorf("Failed to schedule check status deleter: %v", err)
-	}
-	if _, err := ScheduleFunc(CheckStatusesAggregate1dSchedule, db.AggregateCheckStatuses1d); err != nil {
-		logger.Errorf("Failed to schedule check statuses aggregator 1d: %v", err)
-	}
+
 	if _, err := ScheduleFunc(PrometheusGaugeCleanupSchedule, canaryJobs.CleanupMetricsGauges); err != nil {
 		logger.Errorf("Failed to schedule prometheus gauge cleanup job: %v", err)
 	}
