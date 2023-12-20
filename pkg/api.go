@@ -141,6 +141,9 @@ func (c Canary) GetCheckID(checkName string) string {
 
 func (c Canary) ToV1() (*v1.Canary, error) {
 	annotations := c.Annotations
+	if annotations == nil {
+		annotations = make(types.JSONStringMap)
+	}
 	annotations["source"] = c.Source
 	canary := v1.Canary{
 		ObjectMeta: metav1.ObjectMeta{
