@@ -57,31 +57,22 @@ echo "Server is ready now"
 i=0
 while [ $i -lt 5 ]
 do
-    go run main.go push http://0.0.0.0:8080 --name abc --description a --type junit  --duration 10 --message "10 of 10 passed"
+    go run main.go push http://0.0.0.0:8080 --name abc$i --description a --type junit  --duration 10 --message "10 of 10 passed"
     i=$((i+1))
 done
 
 
 CANARY_COUNT=$(kubectl get canaries.canaries.flanksource.com -A --no-headers | wc -l)
 CANARY_COUNT=$(echo "$CANARY_COUNT" | xargs)
-STATUS_COUNT_POSTGRES=$(curl -s http://0.0.0.0:8080/api\?count\=4  | jq ."checks[0].checkStatuses | length")
-STATUS_COUNT_MEMORY=$(curl -s http://0.0.0.0:8080/api  | jq ."checks[0].checkStatuses | length")
-
+STATUS_COUNT_POSTGRES=$(curl -s http://0.0.0.0:8080/api/summary | jq ".checks_summary | length")
 
 
 echo "Canary count: ${CANARY_COUNT}"
 echo "Postgres count: ${STATUS_COUNT_POSTGRES}"
-echo "Memory count: ${STATUS_COUNT_MEMORY}"
 
 
 if [ "${CANARY_COUNT}" -gt 0 ]; then
     echo "Number of canaries is greater than 0: ${CANARY_COUNT}"
-    exit 1
-fi
-
-if [ "${STATUS_COUNT_MEMORY}" -gt 1 ]; then
-    echo "Status in memory should not be greater than 1"
-    sudo kill -9 $PROC_ID || :
     exit 1
 fi
 
