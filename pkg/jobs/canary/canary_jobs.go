@@ -14,7 +14,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/metrics"
-	"github.com/flanksource/canary-checker/pkg/push"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
@@ -317,9 +316,6 @@ func updateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 			checkStatus[checkID].LastTransitionedTime = &metav1.Time{Time: transitionTime}
 			lastTransitionedTime = &metav1.Time{Time: transitionTime}
 		}
-
-		// TODO Why is this here ?
-		push.Queue(pkg.FromV1(canary, result.Check), pkg.CheckStatusFromResult(*result))
 
 		// Update status message
 		if len(messages) == 1 {
