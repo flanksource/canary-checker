@@ -25,10 +25,11 @@ Canary checker is a kubernetes-native platform for monitoring health across appl
 * **Dependency Free** - Runs an embedded postgres instance by default,  can also be configured to use an external database.
 * **JUnit Export (CI/CD)**  - Export health check results to JUnit format for integration into CI/CD pipelines
 * **JUnit Import (k6/newman/puppeter/etc)** - Use any container that creates JUnit test results
-* **Scriptable** - Go templates, Javascript and [Expr](https://github.com/antonmedv/expr) can be used to:
+* **Scriptable** - Go templates, Javascript and [CEL](https://canarychecker.io/scripting/cel) can be used to:
   * Evaluate whether a check is passing and severity to use when failing
   * Extract a user friendly error message
   * Transform and filter check responses into individual check results
+  * Extract custom metrics
 * **Multi-Modal** - While designed as a Kubernetes Operator, canary checker can also run as a CLI and a server without K8s
 
 ## Getting Started
