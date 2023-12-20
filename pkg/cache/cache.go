@@ -9,6 +9,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 )
 
 var DefaultCacheCount int
@@ -57,8 +58,11 @@ func (q QueryParams) GetStartTime() *time.Time {
 }
 
 func (q QueryParams) GetEndTime() *time.Time {
-	if q._end != nil || q.End == "" {
+	if q._end != nil {
 		return q._end
+	}
+	if q.End == "" {
+		q._end = lo.ToPtr(time.Now())
 	}
 	q._end, _ = timeV(q.End)
 	return q._end

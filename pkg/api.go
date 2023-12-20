@@ -115,7 +115,9 @@ type Timeseries struct {
 	Error    string `json:"error,omitempty"`
 	Duration int    `json:"duration"`
 	// Count is the number of times the check has been run in the specified time window
-	Count int `json:"count,omitempty"`
+	Count  int `json:"count,omitempty"`
+	Passed int `json:"passed,omitempty"`
+	Failed int `json:"failed,omitempty"`
 }
 
 type Canary struct {
@@ -138,15 +140,15 @@ func (c Canary) GetCheckID(checkName string) string {
 }
 
 func (c Canary) ToV1() (*v1.Canary, error) {
+	annotations := c.Annotations
+	annotations["source"] = c.Source
 	canary := v1.Canary{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.Name,
-			Namespace: c.Namespace,
-			Annotations: map[string]string{
-				"source": c.Source,
-			},
-			Labels: c.Labels,
-			UID:    k8stypes.UID(c.ID.String()),
+			Name:        c.Name,
+			Namespace:   c.Namespace,
+			Annotations: annotations,
+			Labels:      c.Labels,
+			UID:         k8stypes.UID(c.ID.String()),
 		},
 	}
 	var deletionTimestamp metav1.Time
@@ -181,12 +183,13 @@ func CanaryFromV1(canary v1.Canary) (Canary, error) {
 		checks = canary.Status.Checks
 	}
 	return Canary{
-		Spec:      spec,
-		Labels:    types.JSONStringMap(canary.Labels),
-		Name:      canary.Name,
-		Namespace: canary.Namespace,
-		Source:    canary.Annotations["source"],
-		Checks:    types.JSONStringMap(checks),
+		Spec:        spec,
+		Labels:      types.JSONStringMap(canary.Labels),
+		Annotations: types.JSONStringMap(canary.Annotations),
+		Name:        canary.Name,
+		Namespace:   canary.Namespace,
+		Source:      canary.Annotations["source"],
+		Checks:      types.JSONStringMap(checks),
 	}, nil
 }
 

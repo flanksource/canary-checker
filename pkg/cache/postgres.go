@@ -8,8 +8,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -112,15 +110,7 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 	}
 }
 
-func (c *postgresCache) Query(q QueryParams) (pkg.Checks, error) {
-	return q.ExecuteSummary(db.Pool)
-}
-
-func (c *postgresCache) QuerySummary(ctx context.Context, opt SummaryOptions) ([]models.CheckSummary, error) {
-	return query.CheckSummary(ctx, query.CheckSummaryOptions(opt))
-}
-
-func (c *postgresCache) QueryStatus(ctx gocontext.Context, q QueryParams) ([]pkg.Timeseries, error) {
+func (c *postgresCache) QueryStatus(ctx gocontext.Context, q QueryParams) ([]pkg.Timeseries, pkg.Uptime, pkg.Latency, error) {
 	return q.ExecuteDetails(ctx, db.Pool)
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/query"
 	"github.com/labstack/echo/v4"
 
 	"github.com/flanksource/canary-checker/pkg"
@@ -66,21 +67,21 @@ func CheckDetails(c echo.Context) error {
 
 	start := time.Now()
 
-	summary, err := cache.PostgresCache.Query(*q)
-	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
+	end := q.GetEndTime()
+	since := q.GetStartTime()
+	timeRange := end.Sub(*since)
+
+	if timeRange <= time.Hour*2 {
+		q.WindowDuration = time.Minute
+	} else if timeRange >= time.Hour*24 {
+		q.WindowDuration = time.Minute * 15
+	} else if timeRange >= time.Hour*24*7 {
+		q.WindowDuration = time.Minute * 60
+	} else {
+		q.WindowDuration = time.Hour * 4
 	}
-	if len(summary) == 0 {
-		return c.JSON(http.StatusOK, DetailResponse{})
-	}
 
-	checkSummary := summary[0]
-	totalChecks := checkSummary.TotalRuns
-
-	rangeDuration := checkSummary.LatestRuntime.Sub(*checkSummary.EarliestRuntime)
-	q.WindowDuration = getBestPartitioner(totalChecks, rangeDuration)
-
-	results, err := cache.PostgresCache.QueryStatus(c.Request().Context(), *q)
+	results, uptime, latency, err := cache.PostgresCache.QueryStatus(c.Request().Context(), *q)
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
@@ -89,30 +90,10 @@ func CheckDetails(c echo.Context) error {
 		RunnerName: runner.RunnerName,
 		Status:     results,
 		Duration:   int(time.Since(start).Milliseconds()),
-		Latency:    checkSummary.Latency,
-		Uptime:     checkSummary.Uptime,
+		Latency:    latency,
+		Uptime:     uptime,
 	}
 
-	return c.JSON(http.StatusOK, apiResponse)
-}
-
-func CheckSummary(c echo.Context) error {
-	q, err := cache.ParseQuery(c)
-	if err != nil {
-		return errorResonse(c, err, http.StatusBadRequest)
-	}
-
-	start := time.Now()
-	results, err := cache.PostgresCache.Query(*q)
-	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
-	}
-
-	apiResponse := &Response{
-		RunnerName: runner.RunnerName,
-		Checks:     results,
-		Duration:   int(time.Since(start).Milliseconds()),
-	}
 	return c.JSON(http.StatusOK, apiResponse)
 }
 
@@ -125,7 +106,7 @@ func HealthSummary(c echo.Context) error {
 	}
 
 	start := time.Now()
-	results, err := cache.PostgresCache.QuerySummary(ctx, queryOpt)
+	results, err := query.CheckSummary(ctx, query.CheckSummaryOptions(queryOpt))
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}

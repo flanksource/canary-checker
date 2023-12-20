@@ -138,7 +138,6 @@ func serve() {
 		}
 	})
 
-	e.GET("/api", api.CheckSummary)
 	e.GET("/api/summary", api.HealthSummary) // Deprecated: Use Post request for filtering
 	e.POST("/api/summary", api.HealthSummary)
 	e.GET("/about", api.About)
