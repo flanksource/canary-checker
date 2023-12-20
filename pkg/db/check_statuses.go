@@ -16,6 +16,7 @@ var RefreshCheckStatusSummary = job.Job{
 	Name:       "RefreshCheckStatusSummary",
 	Singleton:  true,
 	Timeout:    1 * time.Minute,
+	Schedule:   "@every 1m",
 	JobHistory: true,
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
@@ -26,6 +27,7 @@ var RefreshCheckStatusSummary = job.Job{
 var RefreshCheckStatusSummaryAged = job.Job{
 	Name:       "RefreshCheckStatusSummaryAged",
 	Timeout:    60 * time.Minute,
+	Schedule:   "@every 1h",
 	Singleton:  true,
 	JobHistory: true,
 	Fn: func(ctx job.JobRuntime) error {

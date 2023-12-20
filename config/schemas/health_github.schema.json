@@ -38,6 +38,9 @@
         "serviceAccount": {
           "type": "string"
         },
+        "helmRef": {
+          "$ref": "#/$defs/HelmRefKeySelector"
+        },
         "configMapKeyRef": {
           "$ref": "#/$defs/ConfigMapKeySelector"
         },
@@ -98,6 +101,21 @@
       "required": [
         "name",
         "query"
+      ]
+    },
+    "HelmRefKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
       ]
     },
     "Labels": {
