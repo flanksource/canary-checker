@@ -23,10 +23,9 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
+	"github.com/flanksource/duty"
 
 	"github.com/flanksource/canary-checker/pkg/runner"
-
-	"github.com/flanksource/canary-checker/pkg/push"
 
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
@@ -34,7 +33,6 @@ import (
 	commonsCtx "github.com/flanksource/commons/context"
 	"github.com/flanksource/commons/logger"
 	dutyContext "github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/models"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -64,12 +62,6 @@ func setup() {
 	}
 	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
 
-	push.AddServers(pushServers)
-
-	if err := models.SetPropertiesInDBFromFile(db.Gorm, propertiesFile); err != nil {
-		logger.Fatalf("Error setting properties in database: %v", err)
-	}
-
 	kommonsClient, k8s, err := pkg.NewKommonsClient()
 	if err != nil {
 		logger.Warnf("failed to get kommons client, checks that read kubernetes configs will fail: %v", err)
@@ -81,7 +73,9 @@ func setup() {
 		WithKommons(kommonsClient).
 		WithNamespace(runner.WatchNamespace)
 
-	go push.Start()
+	if err := duty.UpdatePropertiesFromFile(apicontext.DefaultContext, propertiesFile); err != nil {
+		logger.Fatalf("Error setting properties in database: %v", err)
+	}
 }
 
 func postgrestResponseModifier(r *http.Response) error {
@@ -123,9 +117,6 @@ func serve() {
 	// PostgREST needs to know how it is exposed to create the correct links
 	db.HTTPEndpoint = publicEndpoint + "/db"
 
-	push.AddServers(pushServers)
-	go push.Start()
-
 	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheus.PrometheusURL)
 
 	if debug {
@@ -147,7 +138,6 @@ func serve() {
 		}
 	})
 
-	e.GET("/api", api.CheckSummary)
 	e.GET("/api/summary", api.HealthSummary) // Deprecated: Use Post request for filtering
 	e.POST("/api/summary", api.HealthSummary)
 	e.GET("/about", api.About)

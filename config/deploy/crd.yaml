@@ -154,6 +154,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -307,6 +317,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -339,6 +359,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -443,6 +473,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -468,6 +508,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -538,6 +588,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -653,6 +713,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -678,6 +748,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -814,6 +894,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -889,6 +979,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -997,6 +1097,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -1022,6 +1132,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -1189,6 +1309,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -1214,6 +1344,16 @@ spec:
                                   configMapKeyRef:
                                     properties:
                                       key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                         type: string
                                       name:
                                         type: string
@@ -1386,6 +1526,16 @@ spec:
                                       configMapKeyRef:
                                         properties:
                                           key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                             type: string
                                           name:
                                             type: string
@@ -1579,6 +1729,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -1604,6 +1764,16 @@ spec:
                                   configMapKeyRef:
                                     properties:
                                       key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                         type: string
                                       name:
                                         type: string
@@ -1704,6 +1874,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -1729,6 +1909,16 @@ spec:
                                   configMapKeyRef:
                                     properties:
                                       key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                         type: string
                                       name:
                                         type: string
@@ -1816,6 +2006,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -1944,6 +2144,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -2041,6 +2251,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -2068,6 +2288,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -2185,6 +2415,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -2242,6 +2482,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -2353,6 +2603,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -2383,6 +2643,16 @@ spec:
                                   configMapKeyRef:
                                     properties:
                                       key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                         type: string
                                       name:
                                         type: string
@@ -2422,6 +2692,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -2452,6 +2732,16 @@ spec:
                                       configMapKeyRef:
                                         properties:
                                           key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                             type: string
                                           name:
                                             type: string
@@ -2499,6 +2789,16 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
                                       secretKeyRef:
                                         properties:
                                           key:
@@ -2524,6 +2824,16 @@ spec:
                                       configMapKeyRef:
                                         properties:
                                           key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                             type: string
                                           name:
                                             type: string
@@ -2570,6 +2880,16 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
                                       secretKeyRef:
                                         properties:
                                           key:
@@ -2595,6 +2915,16 @@ spec:
                                       configMapKeyRef:
                                         properties:
                                           key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                             type: string
                                           name:
                                             type: string
@@ -2636,6 +2966,16 @@ spec:
                                       configMapKeyRef:
                                         properties:
                                           key:
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                             type: string
                                           name:
                                             type: string
@@ -2687,6 +3027,16 @@ spec:
                                 configMapKeyRef:
                                   properties:
                                     key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
+                                helmRef:
+                                  properties:
+                                    key:
+                                      description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                       type: string
                                     name:
                                       type: string
@@ -2805,6 +3155,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -2846,6 +3206,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -2871,6 +3241,16 @@ spec:
                                   configMapKeyRef:
                                     properties:
                                       key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                         type: string
                                       name:
                                         type: string
@@ -2943,6 +3323,16 @@ spec:
                                   configMapKeyRef:
                                     properties:
                                       key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                         type: string
                                       name:
                                         type: string
@@ -3050,6 +3440,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -3078,6 +3478,16 @@ spec:
                                   configMapKeyRef:
                                     properties:
                                       key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                         type: string
                                       name:
                                         type: string
@@ -3126,6 +3536,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -3154,6 +3574,16 @@ spec:
                                   configMapKeyRef:
                                     properties:
                                       key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                         type: string
                                       name:
                                         type: string
@@ -3238,6 +3668,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -3352,6 +3792,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -3377,6 +3827,16 @@ spec:
                                   configMapKeyRef:
                                     properties:
                                       key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                         type: string
                                       name:
                                         type: string
@@ -3498,6 +3958,16 @@ spec:
                                   required:
                                     - key
                                   type: object
+                                helmRef:
+                                  properties:
+                                    key:
+                                      description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
                                 secretKeyRef:
                                   properties:
                                     key:
@@ -3526,6 +3996,16 @@ spec:
                                 configMapKeyRef:
                                   properties:
                                     key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
+                                helmRef:
+                                  properties:
+                                    key:
+                                      description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                       type: string
                                     name:
                                       type: string
@@ -3629,6 +4109,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -3707,6 +4197,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -3823,6 +4323,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -4188,6 +4698,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4223,6 +4743,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -4313,6 +4843,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4344,6 +4884,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -4444,6 +4994,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4502,6 +5062,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -4602,6 +5172,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4660,6 +5240,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -4866,6 +5456,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4924,6 +5524,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -5124,6 +5734,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -5182,6 +5802,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -5285,6 +5915,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -5341,6 +5981,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -5436,6 +6086,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -5467,6 +6127,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -5509,6 +6179,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -5604,6 +6284,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -5633,6 +6323,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -5679,6 +6379,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -5770,6 +6480,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -5795,6 +6515,16 @@ spec:
                               configMapKeyRef:
                                 properties:
                                   key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                     type: string
                                   name:
                                     type: string
@@ -5968,6 +6698,16 @@ spec:
                             configMapKeyRef:
                               properties:
                                 key:
+                                  type: string
+                                name:
+                                  type: string
+                              required:
+                                - key
+                              type: object
+                            helmRef:
+                              properties:
+                                key:
+                                  description: Key is a JSONPath expression used to fetch the key from the merged JSON.
                                   type: string
                                 name:
                                   type: string

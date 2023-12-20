@@ -47,12 +47,11 @@ var Root = &cobra.Command{
 }
 
 var (
-	httpPort                 = 8080
-	publicEndpoint           = "http://localhost:8080"
-	pushServers, pullServers []string
-	sharedLibrary            []string
-	exposeEnv                bool
-	logPass, logFail         bool
+	httpPort         = 8080
+	publicEndpoint   = "http://localhost:8080"
+	sharedLibrary    []string
+	exposeEnv        bool
+	logPass, logFail bool
 
 	otelcollectorURL string
 	otelServiceName  string
@@ -68,20 +67,20 @@ func ServerFlags(flags *pflag.FlagSet) {
 	_ = flags.MarkDeprecated("devGuiPort", "")
 	_ = flags.MarkDeprecated("metricsPort", "Extra metrics server removed")
 	_ = flags.MarkDeprecated("dev", "")
+	_ = flags.MarkDeprecated("push-servers", "")
+	_ = flags.MarkDeprecated("pull-servers", "")
 
 	flags.StringVar(&publicEndpoint, "public-endpoint", publicEndpoint, "Host on which the health dashboard is exposed. Could be used for generting-links, redirects etc.")
 	flags.StringSliceVar(&runner.IncludeCanaries, "include-check", []string{}, "Run matching canaries - useful for debugging")
 	flags.StringSliceVar(&runner.IncludeTypes, "include-type", []string{}, "Check type to disable")
 	flags.StringSliceVar(&runner.IncludeNamespaces, "include-namespace", []string{}, "Check type to disable")
 	flags.IntVar(&cache.DefaultCacheCount, "maxStatusCheckCount", 5, "Maximum number of past checks in the in memory cache")
-	flags.StringSliceVar(&pushServers, "push-servers", []string{}, "push check results to multiple canary servers")
-	flags.StringSliceVar(&pullServers, "pull-servers", []string{}, "push check results to multiple canary servers")
 	flags.StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 	flags.StringVar(&prometheus.PrometheusURL, "prometheus", "", "URL of the prometheus server that is scraping this instance")
 	flags.StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database. Use embedded:///path/to/dir to use the embedded database")
 	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
 	flags.StringVarP(&cache.DefaultWindow, "default-window", "", "1h", "Default search window")
-	flags.IntVar(&db.CheckStatusRetentionDays, "check-status-retention-period", db.DefaultCheckStatusRetentionDays, "Check status retention period in days")
+	flags.IntVar(&db.CheckStatusRetention, "check-status-retention-period", db.CheckStatusRetention, "Check status retention period in days")
 	flags.IntVar(&db.CheckRetentionDays, "check-retention-period", db.DefaultCheckRetentionDays, "Check retention period in days")
 	flags.IntVar(&db.CanaryRetentionDays, "canary-retention-period", db.DefaultCanaryRetentionDays, "Canary retention period in days")
 	flags.StringVar(&checks.DefaultArtifactConnection, "artifact-connection", "", "Specify the default connection to use for artifacts")

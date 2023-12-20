@@ -5,11 +5,11 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	ginkgo "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/samber/lo"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/yaml"
@@ -47,13 +47,13 @@ var _ = ginkgo.Describe("Test topology run", ginkgo.Ordered, func() {
 		}
 
 		ci := models.ConfigItem{
-			Name: utils.Ptr("config-item"),
+			Name: lo.ToPtr("config-item"),
 			Tags: &types.JSONStringMap{
 				"tag-1": "a",
 				"tag-2": "b",
 			},
-			Config:      utils.Ptr(`{"spec": {"container": {"name": "hello", "version": "v3"}}}`),
-			Type:        utils.Ptr("Config::Dummy"),
+			Config:      lo.ToPtr(`{"spec": {"container": {"name": "hello", "version": "v3"}}}`),
+			Type:        lo.ToPtr("Config::Dummy"),
 			ConfigClass: "Dummy",
 		}
 
