@@ -79,7 +79,7 @@ func embeddedDB() error {
 	return nil
 }
 
-func Init() error {
+func Connect() error {
 	if ConnectionString == "" || ConnectionString == "DB_URL" {
 		logger.Warnf("No db connection string specified")
 		return nil
@@ -101,7 +101,11 @@ func Init() error {
 	}
 
 	Gorm, err = duty.NewGorm(ConnectionString, duty.DefaultGormConfig())
-	if err != nil {
+	return err
+}
+
+func Init() error {
+	if err := Connect(); err != nil {
 		return err
 	}
 

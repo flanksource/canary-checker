@@ -329,6 +329,10 @@ func (c Check) ToString() string {
 	return fmt.Sprintf("%s-%s-%s", c.Name, c.Type, c.Description)
 }
 
+func (c Check) String() string {
+	return fmt.Sprintf("%s/%s type=%s", c.Namespace, c.Name, c.Type)
+}
+
 func (c Check) GetDescription() string {
 	return c.Description
 }

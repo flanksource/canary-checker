@@ -78,7 +78,7 @@ func (c *postgresCache) AddCheckStatus(check pkg.Check, status pkg.CheckStatus) 
 	}
 
 	if len(checks) == 0 || checks[0].ID == uuid.Nil {
-		logger.Debugf("check not found")
+		logger.Tracef("%s check not found, skipping status insert", check)
 		return
 	}
 	_, err = c.Exec(gocontext.TODO(), `INSERT INTO check_statuses(
