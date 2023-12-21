@@ -25,12 +25,6 @@
         },
         "skipTLSVerify": {
           "type": "boolean"
-        },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
-          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -204,12 +198,6 @@
         "skipTLSVerify": {
           "type": "boolean"
         },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
-          "type": "boolean"
-        },
         "aggregatorName": {
           "type": "string"
         }
@@ -293,12 +281,6 @@
           "type": "string"
         },
         "skipTLSVerify": {
-          "type": "boolean"
-        },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
           "type": "boolean"
         }
       },
@@ -730,12 +712,6 @@
           "type": "string"
         },
         "skipTLSVerify": {
-          "type": "boolean"
-        },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
           "type": "boolean"
         },
         "test": {
@@ -1490,12 +1466,6 @@
         "skipTLSVerify": {
           "type": "boolean"
         },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
-          "type": "boolean"
-        },
         "ami": {
           "type": "string"
         },
@@ -1745,6 +1715,9 @@
         "path": {
           "type": "string"
         },
+        "recursive": {
+          "type": "boolean"
+        },
         "filter": {
           "$ref": "#/$defs/FolderFilter"
         },
@@ -1773,10 +1746,10 @@
           "type": "string"
         },
         "awsConnection": {
-          "$ref": "#/$defs/AWSConnection"
+          "$ref": "#/$defs/S3Connection"
         },
         "gcpConnection": {
-          "$ref": "#/$defs/GCPConnection"
+          "$ref": "#/$defs/GCSConnection"
         },
         "smbConnection": {
           "$ref": "#/$defs/SMBConnection"
@@ -1882,6 +1855,24 @@
         "project",
         "instance"
       ]
+    },
+    "GCSConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bucket": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "GitCheckout": {
       "properties": {
@@ -3522,6 +3513,9 @@
         "skipTLSVerify": {
           "type": "boolean"
         },
+        "bucket": {
+          "type": "string"
+        },
         "objectPath": {
           "type": "string"
         },
@@ -3537,6 +3531,42 @@
       "required": [
         "name"
       ]
+    },
+    "S3Connection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "bucket": {
+          "type": "string"
+        },
+        "objectPath": {
+          "type": "string"
+        },
+        "usePathStyle": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "SFTPConnection": {
       "properties": {

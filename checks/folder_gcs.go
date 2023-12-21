@@ -1,13 +1,15 @@
 package checks
 
 import (
+	"errors"
 	"strings"
 
 	gcs "cloud.google.com/go/storage"
-	"github.com/flanksource/artifacts/clients/gcp"
+	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/duty/models"
 )
 
 type GCS struct {
@@ -20,62 +22,54 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 
-	if err := check.GCPConnection.HydrateConnection(ctx); err != nil {
-		return results.Failf("failed to populate GCP connection: %v", err)
+	if check.GCSConnection == nil {
+		return results.ErrorMessage(errors.New("missing GCS connection"))
 	}
 
-	cfg, err := gcp.NewSession(ctx.Duty(), check.GCPConnection)
+	var bucket string
+	bucket, check.Path = parseGCSPath(check.Path)
+
+	connection, err := ctx.HydrateConnectionByURL(check.GCPConnection.ConnectionName)
+	if err != nil {
+		return results.Failf("failed to populate GCS connection: %v", err)
+	} else if connection == nil {
+		connection = &models.Connection{Type: models.ConnectionTypeGCS}
+		if check.GCSConnection.Bucket == "" {
+			check.GCSConnection.Bucket = bucket
+		}
+
+		connection, err = connection.Merge(ctx, check.GCSConnection)
+		if err != nil {
+			return results.Failf("failed to populate GCS connection: %v", err)
+		}
+	}
+
+	fs, err := artifacts.GetFSForConnection(ctx.Duty(), *connection)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
-	client := GCS{
-		BucketName: getGCSBucketName(check.Path),
-		Client:     cfg,
-	}
-	folders, err := client.CheckFolder(ctx, check.Filter)
+
+	folders, err := genericFolderCheckWithoutPrecheck(fs, check.Path, check.Recursive, check.Filter)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
 	result.AddDetails(folders)
+
 	if test := folders.Test(check.FolderTest); test != "" {
-		results.Failf(test)
+		return results.Failf(test)
 	}
+
 	return results
 }
 
-func (conn *GCS) CheckFolder(ctx *context.Context, filter v1.FolderFilter) (*FolderCheck, error) {
-	result := FolderCheck{}
-	bucket := conn.Bucket(conn.BucketName)
-	objs := bucket.Objects(ctx, nil)
-	_filter, err := filter.New()
-	if err != nil {
-		return nil, err
+// parseGCSPath returns the bucket name and the actual path stripping of the gcs:// prefix and the bucket name.
+// The path is expected to be in the format "gcs://bucket_name/<actual_path>"
+func parseGCSPath(fullpath string) (bucket, path string) {
+	trimmed := strings.TrimPrefix(fullpath, "gcs://")
+	splits := strings.SplitN(trimmed, "/", 2)
+	if len(splits) != 2 {
+		return splits[0], ""
 	}
-	obj, err := objs.Next()
-	// empty bucket
-	if obj == nil {
-		return &result, nil
-	}
-	if err != nil {
-		return nil, nil
-	}
-	for {
-		file := gcp.GCSFileInfo{Object: obj}
-		if file.IsDir() || !_filter.Filter(file) {
-			continue
-		}
 
-		result.Append(file)
-		obj, err = objs.Next()
-		if obj == nil {
-			return &result, nil
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-}
-
-func getGCSBucketName(bucket string) string {
-	return strings.TrimPrefix(bucket, "gcs://")
+	return splits[0], splits[1]
 }

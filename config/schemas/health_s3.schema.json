@@ -163,6 +163,9 @@
         "skipTLSVerify": {
           "type": "boolean"
         },
+        "bucket": {
+          "type": "string"
+        },
         "objectPath": {
           "type": "string"
         },

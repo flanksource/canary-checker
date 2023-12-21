@@ -50,12 +50,6 @@
         "skipTLSVerify": {
           "type": "boolean"
         },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
-          "type": "boolean"
-        },
         "test": {
           "$ref": "#/$defs/Template"
         },

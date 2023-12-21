@@ -1,0 +1,17 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: recursive-folder-check
+spec:
+  interval: 30
+  folder:
+    - path: gcs://folder-check-test/recursive-test
+      name: recursive folders
+      namespace: default
+      minCount: 3
+      recursive: true
+      display:
+        expr: results.?files.orValue([]).map(i, i.name).join(", ")
+      gcpConnection:
+        connection: connection://gcs/flanksource-prod
