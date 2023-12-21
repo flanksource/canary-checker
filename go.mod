@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.26.2
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.13
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.30.0
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.41.0
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.43.6
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.130.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.42.0
