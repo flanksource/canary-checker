@@ -44,3 +44,37 @@ spec:
       path: /some/folder/that/does/not/exist
       test:
         expr: results.files.size() == 0
+---
+# apiVersion: canaries.flanksource.com/v1
+# kind: Canary
+# metadata:
+#   name: recursive-folder-check
+# spec:
+#   interval: 30
+#   folder:
+#     - path: gcs://folder-check-test/recursive-test
+#       name: recursive folders
+#       namespace: default
+#       minCount: 3
+#       recursive: true
+#       display:
+#         expr: results.?files.orValue([]).map(i, i.name).join(", ")
+#       gcpConnection:
+#         connection: connection://google_cloud/flanksource-prod
+# ---
+# apiVersion: canaries.flanksource.com/v1
+# kind: Canary
+# metadata:
+#   name: recursive-folder-check
+# spec:
+#   interval: 30
+#   folder:
+#     - path: s3://folder-check-test/recursive
+#       name: recursive folders
+#       namespace: default
+#       minCount: 3
+#       recursive: true
+#       display:
+#         expr: results.?files.orValue([]).map(i, i.name).join(", ")
+#       awsConnection:
+#         connection: connection://aws_s3/adityathebe

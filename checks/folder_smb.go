@@ -42,7 +42,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		defer session.Close()
 	}
 
-	folders, err := getGenericFolderCheck(session, path, check.Filter)
+	folders, err := genericFolderCheck(session, path, check.Recursive, check.Filter)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

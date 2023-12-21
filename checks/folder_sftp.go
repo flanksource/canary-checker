@@ -36,7 +36,7 @@ func CheckSFTP(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	defer client.Close()
 
 	session := artifacts.Filesystem(client)
-	folders, err := getGenericFolderCheck(session, check.Path, check.Filter)
+	folders, err := genericFolderCheck(session, check.Path, check.Recursive, check.Filter)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

@@ -35,6 +35,7 @@ func newFile(file os.FileInfo) *File {
 		IsDir:    file.IsDir(),
 	}
 }
+
 func (f *FolderCheck) Append(osFile os.FileInfo) {
 	file := newFile(osFile)
 	if f.Oldest == nil || f.Oldest.Modified.After(osFile.ModTime()) {

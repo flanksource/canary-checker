@@ -3,18 +3,15 @@
 package checks
 
 import (
-	"fmt"
+	"errors"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	awsUtil "github.com/flanksource/artifacts/clients/aws"
+	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/duty/connection"
+	"github.com/flanksource/duty/models"
 )
 
 type S3 struct {
@@ -28,25 +25,29 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	results = append(results, result)
 
 	if check.AWSConnection == nil {
-		check.AWSConnection = &connection.AWSConnection{}
-	} else if err := check.AWSConnection.Populate(ctx); err != nil {
-		return results.Failf("failed to populate aws connection: %v", err)
+		return results.ErrorMessage(errors.New("missing AWS connection"))
 	}
 
-	cfg, err := awsUtil.NewSession(ctx.Duty(), *check.AWSConnection)
+	connection, err := ctx.HydrateConnectionByURL(check.AWSConnection.ConnectionName)
+	if err != nil {
+		return results.Failf("failed to populate AWS connection: %v", err)
+	} else if connection == nil {
+		connection = &models.Connection{}
+		connection, err = connection.Merge(ctx, check.AWSConnection)
+		if err != nil {
+			return results.Failf("failed to populate AWS connection: %v", err)
+		}
+	}
+
+	fs, err := artifacts.GetFSForConnection(ctx.Duty(), *connection)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
 
-	client := &S3{
-		Client: s3.NewFromConfig(*cfg, func(o *s3.Options) {
-			o.UsePathStyle = check.AWSConnection.UsePathStyle
-		}),
-		Bucket: getS3BucketName(check.Path),
-	}
-	folders, err := client.CheckFolder(ctx, check.Filter)
+	check.Path = getS3Path(check.Path)
+	folders, err := genericFolderCheckWithoutPrecheck(fs, check.Path, check.Recursive, check.Filter)
 	if err != nil {
-		return results.ErrorMessage(fmt.Errorf("failed to retrieve s3://%s: %v", getS3BucketName(check.Path), err))
+		return results.ErrorMessage(err)
 	}
 	result.AddDetails(folders)
 
@@ -57,51 +58,14 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	return results
 }
 
-func (conn *S3) CheckFolder(ctx *context.Context, filter v1.FolderFilter) (*FolderCheck, error) {
-	result := FolderCheck{}
-
-	var marker *string = nil
-	parts := strings.Split(conn.Bucket, "/")
-	bucket := parts[0]
-	prefix := ""
-	if len(parts) > 0 {
-		prefix = strings.Join(parts[1:], "/")
+// getS3Path returns the actual path stripping of the s3:// prefix and the bucket name.
+// The path is expected to be in the format "s3://bucket_name/<actual_path>"
+func getS3Path(path string) string {
+	trimmed := strings.TrimPrefix(path, "s3://")
+	splits := strings.SplitN(trimmed, "/", 2)
+	if len(splits) != 2 {
+		return ""
 	}
-	maxKeys := 500
-	for {
-		logger.Debugf("%s fetching %d, prefix%s, marker=%s", bucket, maxKeys, prefix, marker)
-		req := &s3.ListObjectsInput{
-			Bucket:  aws.String(conn.Bucket),
-			Marker:  marker,
-			MaxKeys: utils.Ptr(int32(maxKeys)),
-			Prefix:  &prefix,
-		}
-		resp, err := conn.ListObjects(ctx, req)
-		if err != nil {
-			return nil, err
-		}
 
-		_filter, err := filter.New()
-		if err != nil {
-			return nil, err
-		}
-		for _, obj := range resp.Contents {
-			file := awsUtil.S3FileInfo{Object: obj}
-			if !_filter.Filter(file) {
-				continue
-			}
-			result.Append(file)
-		}
-		if resp.IsTruncated != nil && *resp.IsTruncated && len(resp.Contents) > 0 {
-			marker = resp.Contents[len(resp.Contents)-1].Key
-		} else {
-			break
-		}
-	}
-	// bucketScanTotalSize.WithLabelValues(bucket.Endpoint, bucket.Bucket).Add(float64(aws.Int64Value(obj.Size)))
-	return &result, nil
-}
-
-func getS3BucketName(bucket string) string {
-	return strings.TrimPrefix(bucket, "s3://")
+	return splits[1]
 }

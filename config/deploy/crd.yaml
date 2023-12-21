@@ -3416,6 +3416,9 @@ spec:
                       path:
                         description: Path  to folder or object storage, e.g. `s3://<bucket-name>`,  `gcs://<bucket-name>`, `/path/tp/folder`
                         type: string
+                      recursive:
+                        description: Recursive when set to true will recursively scan the folder to list the files in it
+                        type: boolean
                       sftpConnection:
                         properties:
                           connection:

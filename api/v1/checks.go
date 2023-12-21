@@ -797,7 +797,10 @@ type FolderCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 	// Path  to folder or object storage, e.g. `s3://<bucket-name>`,  `gcs://<bucket-name>`, `/path/tp/folder`
-	Path                       string       `yaml:"path" json:"path"`
+	Path string `yaml:"path" json:"path"`
+	// Recursive when set to true will recursively scan the folder to list the files in it.
+	// However, symlinks are simply listed but not traversed.
+	Recursive                  bool         `yaml:"recursive,omitempty" json:"recursive,omitempty"`
 	Filter                     FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
 	FolderTest                 `yaml:",inline" json:",inline"`
 	*connection.AWSConnection  `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`

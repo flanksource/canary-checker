@@ -86,6 +86,7 @@ type FolderFilterContext struct {
 	FolderFilter
 	minAge, maxAge   *time.Duration
 	minSize, maxSize *int64
+	AllowDir         bool // Allow directories to support recursive folder checks
 	Since            *time.Time
 	// kubebuilder:object:generate=false
 	regex *regexp.Regexp
@@ -157,7 +158,7 @@ func tryParse(s string) (time.Time, error) {
 }
 
 func (f *FolderFilterContext) Filter(i fs.FileInfo) bool {
-	if i.IsDir() {
+	if i.IsDir() && !f.AllowDir {
 		return false
 	}
 	if f.maxAge != nil && time.Since(i.ModTime()) > *f.maxAge {

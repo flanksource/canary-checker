@@ -1569,6 +1569,9 @@
         "path": {
           "type": "string"
         },
+        "recursive": {
+          "type": "boolean"
+        },
         "filter": {
           "$ref": "#/$defs/FolderFilter"
         },
