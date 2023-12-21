@@ -65,12 +65,6 @@
         "skipTLSVerify": {
           "type": "boolean"
         },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
-          "type": "boolean"
-        },
         "ami": {
           "type": "string"
         },

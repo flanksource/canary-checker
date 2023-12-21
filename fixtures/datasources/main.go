@@ -155,6 +155,7 @@ var (
 		CreateBuckets: []string{
 			"tests-e2e-1",
 			"tests-e2e-2",
+			"recursive-test",
 		},
 		Files: []S3FixtureFile{
 			{
@@ -177,6 +178,34 @@ var (
 				Size:        30,
 				Age:         7*24*time.Hour - 10*time.Minute, // 30 days
 				ContentType: "application/zip",
+			},
+			{
+				Bucket:      "recursive-test",
+				Filename:    "developers/john.txt",
+				Size:        30,
+				Age:         7*24*time.Hour - 10*time.Minute, // 30 days
+				ContentType: "text/plain",
+			},
+			{
+				Bucket:      "recursive-test",
+				Filename:    "developers/backend/james.txt",
+				Size:        40,
+				Age:         7*24*time.Hour - 10*time.Minute, // 30 days
+				ContentType: "text/plain",
+			},
+			{
+				Bucket:      "recursive-test",
+				Filename:    "developers/backend/go/aditya.txt",
+				Size:        50,
+				Age:         7*24*time.Hour - 10*time.Minute, // 30 days
+				ContentType: "text/plain",
+			},
+			{
+				Bucket:      "recursive-test",
+				Filename:    "developers/backend/node/taylor.txt",
+				Size:        60,
+				Age:         7*24*time.Hour - 10*time.Minute, // 30 days
+				ContentType: "text/plain",
 			},
 		},
 	}

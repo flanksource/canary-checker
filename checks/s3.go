@@ -81,7 +81,7 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 	}
 
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.UsePathStyle = check.AWSConnection.UsePathStyle
+		o.UsePathStyle = check.S3Connection.UsePathStyle
 	})
 
 	listTimer := NewTimer()

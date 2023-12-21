@@ -22,31 +22,31 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 
-	if check.GCPConnection == nil {
-		return results.ErrorMessage(errors.New("missing GCP connection"))
+	if check.GCSConnection == nil {
+		return results.ErrorMessage(errors.New("missing GCS connection"))
 	}
+
+	var bucket string
+	bucket, check.Path = parseGCSPath(check.Path)
 
 	connection, err := ctx.HydrateConnectionByURL(check.GCPConnection.ConnectionName)
 	if err != nil {
-		return results.Failf("failed to populate GCP connection: %v", err)
+		return results.Failf("failed to populate GCS connection: %v", err)
 	} else if connection == nil {
-		connection = &models.Connection{}
-		connection, err = connection.Merge(ctx, check.GCPConnection)
+		connection = &models.Connection{Type: models.ConnectionTypeGCS}
+		if check.GCSConnection.Bucket == "" {
+			check.GCSConnection.Bucket = bucket
+		}
+
+		connection, err = connection.Merge(ctx, check.GCSConnection)
 		if err != nil {
-			return results.Failf("failed to populate GCP connection: %v", err)
+			return results.Failf("failed to populate GCS connection: %v", err)
 		}
 	}
 
 	fs, err := artifacts.GetFSForConnection(ctx.Duty(), *connection)
 	if err != nil {
 		return results.ErrorMessage(err)
-	}
-
-	// check.Path will be in the format gcs://bucket_name/<actual_path>
-	fullPath := getGCSBucketName(check.Path)
-	splits := strings.SplitN(fullPath, "/", 2)
-	if len(splits) > 1 {
-		check.Path = splits[1]
 	}
 
 	folders, err := genericFolderCheckWithoutPrecheck(fs, check.Path, check.Recursive, check.Filter)
@@ -62,14 +62,14 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	return results
 }
 
-// getGCSBucketName returns the actual path stripping of the gcs:// prefix and the bucket name.
+// parseGCSPath returns the bucket name and the actual path stripping of the gcs:// prefix and the bucket name.
 // The path is expected to be in the format "gcs://bucket_name/<actual_path>"
-func getGCSBucketName(path string) string {
-	trimmed := strings.TrimPrefix(path, "gcs://")
+func parseGCSPath(fullpath string) (bucket, path string) {
+	trimmed := strings.TrimPrefix(fullpath, "gcs://")
 	splits := strings.SplitN(trimmed, "/", 2)
 	if len(splits) != 2 {
-		return ""
+		return splits[0], ""
 	}
 
-	return splits[1]
+	return splits[0], splits[1]
 }

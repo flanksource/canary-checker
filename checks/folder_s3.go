@@ -24,16 +24,23 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 
-	if check.AWSConnection == nil {
+	if check.S3Connection == nil {
 		return results.ErrorMessage(errors.New("missing AWS connection"))
 	}
+
+	var bucket string
+	bucket, check.Path = parseS3Path(check.Path)
 
 	connection, err := ctx.HydrateConnectionByURL(check.AWSConnection.ConnectionName)
 	if err != nil {
 		return results.Failf("failed to populate AWS connection: %v", err)
 	} else if connection == nil {
-		connection = &models.Connection{}
-		connection, err = connection.Merge(ctx, check.AWSConnection)
+		connection = &models.Connection{Type: models.ConnectionTypeS3}
+		if check.S3Connection.Bucket == "" {
+			check.S3Connection.Bucket = bucket
+		}
+
+		connection, err = connection.Merge(ctx, check.S3Connection)
 		if err != nil {
 			return results.Failf("failed to populate AWS connection: %v", err)
 		}
@@ -44,7 +51,6 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.ErrorMessage(err)
 	}
 
-	check.Path = getS3Path(check.Path)
 	folders, err := genericFolderCheckWithoutPrecheck(fs, check.Path, check.Recursive, check.Filter)
 	if err != nil {
 		return results.ErrorMessage(err)
@@ -58,14 +64,14 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	return results
 }
 
-// getS3Path returns the actual path stripping of the s3:// prefix and the bucket name.
+// parseS3Path returns the bucket name and the actual path stripping of the s3:// prefix and the bucket name.
 // The path is expected to be in the format "s3://bucket_name/<actual_path>"
-func getS3Path(path string) string {
-	trimmed := strings.TrimPrefix(path, "s3://")
+func parseS3Path(fullpath string) (bucket, path string) {
+	trimmed := strings.TrimPrefix(fullpath, "s3://")
 	splits := strings.SplitN(trimmed, "/", 2)
 	if len(splits) != 2 {
-		return ""
+		return splits[0], ""
 	}
 
-	return splits[1]
+	return splits[0], splits[1]
 }

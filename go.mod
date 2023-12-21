@@ -19,8 +19,8 @@ require (
 	github.com/eko/gocache/lib/v4 v4.1.5
 	github.com/eko/gocache/store/bigcache/v4 v4.2.1
 	github.com/elastic/go-elasticsearch/v8 v8.10.1
-	github.com/fergusstrange/embedded-postgres v1.24.0
-	github.com/flanksource/artifacts v1.0.0
+	github.com/fergusstrange/embedded-postgres v1.25.0
+	github.com/flanksource/artifacts v1.0.3
 	github.com/flanksource/commons v1.19.2
 	github.com/flanksource/duty v1.0.247
 	github.com/flanksource/gomplate/v3 v3.20.26
@@ -281,7 +281,3 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.16.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
-
-replace github.com/flanksource/artifacts => ../artifacts
-
-replace github.com/flanksource/duty => ../duty

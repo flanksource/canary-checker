@@ -152,9 +152,9 @@ type Bucket struct {
 }
 
 type S3Check struct {
-	Description              `yaml:",inline" json:",inline"`
-	connection.AWSConnection `yaml:",inline" json:",inline"`
-	BucketName               string `yaml:"bucketName" json:"bucketName,omitempty"`
+	Description             `yaml:",inline" json:",inline"`
+	connection.S3Connection `yaml:",inline" json:",inline"`
+	BucketName              string `yaml:"bucketName" json:"bucketName,omitempty"`
 }
 
 func (c S3Check) GetEndpoint() string {
@@ -803,8 +803,8 @@ type FolderCheck struct {
 	Recursive                  bool         `yaml:"recursive,omitempty" json:"recursive,omitempty"`
 	Filter                     FolderFilter `yaml:"filter,omitempty" json:"filter,omitempty"`
 	FolderTest                 `yaml:",inline" json:",inline"`
-	*connection.AWSConnection  `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
-	*connection.GCPConnection  `yaml:"gcpConnection,omitempty" json:"gcpConnection,omitempty"`
+	*connection.S3Connection   `yaml:"awsConnection,omitempty" json:"awsConnection,omitempty"`
+	*connection.GCSConnection  `yaml:"gcpConnection,omitempty" json:"gcpConnection,omitempty"`
 	*connection.SMBConnection  `yaml:"smbConnection,omitempty" json:"smbConnection,omitempty"`
 	*connection.SFTPConnection `yaml:"sftpConnection,omitempty" json:"sftpConnection,omitempty"`
 }
