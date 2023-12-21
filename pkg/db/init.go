@@ -7,12 +7,15 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/migrate"
+	"github.com/flanksource/duty/models"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 	"gorm.io/plugin/prometheus"
 )
@@ -121,8 +124,14 @@ func Init() error {
 		if err := duty.Migrate(ConnectionString, opts); err != nil {
 			return err
 		}
+	} else {
+		_, _, err := lo.AttemptWithDelay(5, 5*time.Second, func(i int, d time.Duration) error {
+			return Gorm.Limit(1).Find(&[]models.Agent{}).Error
+		})
+		if err != nil {
+			logger.Fatalf("Database migrations not run: %v", err)
+		}
 	}
-
 	return nil
 }
 

@@ -290,8 +290,10 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) ([]byte, error
 
 	if property.Lookup != nil {
 		results, err := lookup(ctx, property.Name, *property.Lookup)
-		lp, _ := json.Marshal(property.Lookup)
-		logger.Infof("Results of %v are %v", string(lp), results)
+		if ctx.IsTraceEnabled() {
+			lp, _ := json.Marshal(property.Lookup)
+			logger.Tracef("Results of %v are %v", string(lp), results)
+		}
 		if err != nil {
 			return nil, err
 		}
