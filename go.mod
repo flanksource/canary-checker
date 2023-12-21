@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.130.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.44.0
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.42.0
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.44.6
 	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b
 	github.com/dynatrace-ace/dynatrace-go-api-client/api/v2/environment/dynatrace v0.0.0-20210816162345-de2eacc8ac9a
 	github.com/eko/gocache/lib/v4 v4.1.5
