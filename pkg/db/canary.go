@@ -154,7 +154,7 @@ func LatestCheckStatus(ctx context.Context, checkID string) (*models.CheckStatus
 		return nil, nil
 	}
 	var status models.CheckStatus
-	if err := ctx.DB().Limit(1).Select("time, created_at, status").Where("check_id = ?", checkID).Order("created_at DESC").Find(&status).Error; err != nil {
+	if err := ctx.DB().Limit(1).Select("time, created_at, status").Where("check_id = ?", checkID).Order("time DESC").Find(&status).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
