@@ -108,6 +108,9 @@ func Init() error {
 	if err := Connect(); err != nil {
 		return err
 	}
+	if Gorm == nil {
+		return nil
+	}
 
 	if DBMetrics {
 		go func() {
