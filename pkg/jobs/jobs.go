@@ -49,7 +49,8 @@ func Start() {
 			logger.Fatalf("Failed to start upstream event queue consumer: %v", err)
 		}
 
-		for _, job := range canaryJobs.UpstreamJobs {
+		for _, j := range canaryJobs.UpstreamJobs {
+			var job = j
 			job.Context = context.DefaultContext
 			if err := job.AddToScheduler(FuncScheduler); err != nil {
 				logger.Errorf(err.Error())
@@ -57,7 +58,8 @@ func Start() {
 		}
 	}
 
-	for _, job := range db.CheckStatusJobs {
+	for _, j := range db.CheckStatusJobs {
+		var job = j
 		job.Context = context.DefaultContext
 		if err := job.AddToScheduler(FuncScheduler); err != nil {
 			logger.Errorf(err.Error())
