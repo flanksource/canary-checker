@@ -38,6 +38,7 @@ func NewTopologyParams(values url.Values) duty.TopologyOptions {
 		ID:      values.Get("id"),
 		Owner:   values.Get("owner"),
 		Labels:  labels,
+		Team:    values.Get("team"),
 		Status:  parseItems(values.Get("status")),
 		Depth:   depth,
 		Types:   parseItems(values.Get("type")),
