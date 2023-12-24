@@ -22,7 +22,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.3
 	github.com/flanksource/commons v1.19.2
-	github.com/flanksource/duty v1.0.249
+	github.com/flanksource/duty v1.0.250
 	github.com/flanksource/gomplate/v3 v3.20.26
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
 	github.com/flanksource/kommons v0.31.4
@@ -46,7 +46,7 @@ require (
 	github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0
 	github.com/microsoft/go-mssqldb v1.6.0
 	github.com/nsf/jsondiff v0.0.0-20230430225905-43f6cf3098c1
-	github.com/onsi/ginkgo/v2 v2.13.0
+	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.30.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/orcaman/concurrent-map v1.0.0
@@ -160,7 +160,7 @@ require (
 	github.com/google/gnostic-models v0.6.9-0.20230804172637-c7be7c783f49 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/pprof v0.0.0-20230323073829-e72429f035bd // indirect
+	github.com/google/pprof v0.0.0-20231212022811-ec68065c825e // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
@@ -254,7 +254,7 @@ require (
 	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.16.0 // indirect
+	golang.org/x/tools v0.16.1 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/api v0.153.0 // indirect
@@ -268,6 +268,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/postgres v1.5.4 // indirect
+	gorm.io/plugin/opentelemetry v0.1.4 // indirect
 	k8s.io/apiextensions-apiserver v0.28.3 // indirect
 	k8s.io/cli-runtime v0.28.2 // indirect
 	k8s.io/component-base v0.28.3 // indirect
