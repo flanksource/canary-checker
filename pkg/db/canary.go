@@ -13,6 +13,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	dutyTypes "github.com/flanksource/duty/types"
@@ -150,7 +151,7 @@ func GetTransformedCheckIDs(ctx context.Context, canaryID string, excludeTypes .
 }
 
 func LatestCheckStatus(ctx context.Context, checkID string) (*models.CheckStatus, error) {
-	if uuid.Nil.String() == checkID {
+	if checkID == "" || uuid.Nil.String() == checkID {
 		return nil, nil
 	}
 	var status models.CheckStatus
@@ -198,7 +199,7 @@ func RemoveTransformedChecks(ctx context.Context, ids []string) error {
 		return nil
 	}
 	updates := map[string]any{
-		"deleted_at": gorm.Expr("NOW()"),
+		"deleted_at": duty.Now(),
 	}
 
 	return ctx.DB().Table("checks").
@@ -208,32 +209,32 @@ func RemoveTransformedChecks(ctx context.Context, ids []string) error {
 		Error
 }
 
-func DeleteCanary(id string, deleteTime time.Time) error {
+func DeleteCanary(db *gorm.DB, id string) error {
 	logger.Infof("Deleting canary[%s]", id)
 
-	if err := Gorm.Table("canaries").Where("id = ?", id).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+	if err := db.Table("canaries").Where("id = ?", id).UpdateColumn("deleted_at", duty.Now()).Error; err != nil {
 		return err
 	}
-	checkIDs, err := DeleteChecksForCanary(id, deleteTime)
+	checkIDs, err := DeleteChecksForCanary(db, id)
 	if err != nil {
 		return err
 	}
 	metrics.UnregisterGauge(checkIDs)
 
-	if err := DeleteCheckComponentRelationshipsForCanary(id, deleteTime); err != nil {
+	if err := DeleteCheckComponentRelationshipsForCanary(db, id); err != nil {
 		return err
 	}
 	return nil
 }
 
-func DeleteChecksForCanary(id string, deleteTime time.Time) ([]string, error) {
+func DeleteChecksForCanary(db *gorm.DB, id string) ([]string, error) {
 	var checkIDs []string
 	var checks []pkg.Check
-	err := Gorm.Model(&checks).
+	err := db.Model(&checks).
 		Table("checks").
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Where("canary_id = ? and deleted_at IS NULL", id).
-		UpdateColumn("deleted_at", deleteTime).
+		UpdateColumn("deleted_at", duty.Now()).
 		Error
 
 	for _, c := range checks {
@@ -242,20 +243,12 @@ func DeleteChecksForCanary(id string, deleteTime time.Time) ([]string, error) {
 	return checkIDs, err
 }
 
-func SaveCheckConfigRelationship(ctx context.Context, relationship *models.CheckConfigRelationship) error {
-	tx := Gorm.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "canary_id"}, {Name: "check_id"}, {Name: "config_id"}, {Name: "selector_id"}},
-		UpdateAll: true,
-	}).Create(relationship)
-	return tx.Error
+func DeleteCheckComponentRelationshipsForCanary(db *gorm.DB, id string) error {
+	return db.Table("check_component_relationships").Where("canary_id = ?", id).UpdateColumn("deleted_at", duty.Now()).Error
 }
 
-func DeleteCheckComponentRelationshipsForCanary(id string, deleteTime time.Time) error {
-	return Gorm.Table("check_component_relationships").Where("canary_id = ?", id).UpdateColumn("deleted_at", deleteTime).Error
-}
-
-func DeleteNonTransformedChecks(id []string) error {
-	return Gorm.Table("checks").Where("id IN (?) and transformed = false", id).UpdateColumn("deleted_at", time.Now()).Error
+func DeleteNonTransformedChecks(db *gorm.DB, id []string) error {
+	return db.Table("checks").Where("id IN (?) and transformed = false", id).UpdateColumn("deleted_at", duty.Now()).Error
 }
 
 func GetCanary(id string) (pkg.Canary, error) {
@@ -333,12 +326,6 @@ func FindChecks(ctx context.Context, idOrName, checkType string) ([]models.Check
 	return checks, err
 }
 
-func FindDeletedChecksSince(ctx context.Context, since time.Time) ([]string, error) {
-	var ids []string
-	err := ctx.DB().Model(&models.Check{}).Where("deleted_at > ?", since).Pluck("id", &ids).Error
-	return ids, err
-}
-
 func CreateCanary(canary *pkg.Canary) error {
 	if canary.Spec == nil || len(canary.Spec) == 0 {
 		empty := []byte("{}")
@@ -352,8 +339,8 @@ func CreateCheck(canary pkg.Canary, check *pkg.Check) error {
 	return Gorm.Create(&check).Error
 }
 
-func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, error) {
-	err := Gorm.Clauses(
+func PersistCanaryModel(db *gorm.DB, model pkg.Canary) (*pkg.Canary, error) {
+	err := db.Clauses(
 		clause.OnConflict{
 			Columns:   []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}, {Name: "source"}},
 			DoUpdates: clause.AssignmentColumns([]string{"labels", "spec"}),
@@ -372,7 +359,7 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, error) {
 	}
 
 	var oldCheckIDs []string
-	err = Gorm.
+	err = db.
 		Table("checks").
 		Select("id").
 		Where("canary_id = ? AND deleted_at IS NULL AND transformed = false", model.ID).
@@ -406,7 +393,7 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, error) {
 	checkIDsToRemove := utils.SetDifference(oldCheckIDs, newCheckIDs)
 	if len(checkIDsToRemove) > 0 {
 		logger.Infof("removing checks from canary:%s with ids %v", model.ID, checkIDsToRemove)
-		if err := DeleteNonTransformedChecks(checkIDsToRemove); err != nil {
+		if err := DeleteNonTransformedChecks(db, checkIDsToRemove); err != nil {
 			logger.Errorf("failed to delete non transformed checks: %v", err)
 		}
 		metrics.UnregisterGauge(checkIDsToRemove)
@@ -416,7 +403,7 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, error) {
 	return &model, nil
 }
 
-func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, error) {
+func PersistCanary(db *gorm.DB, canary v1.Canary, source string) (*pkg.Canary, error) {
 	model, err := pkg.CanaryFromV1(canary)
 	if err != nil {
 		return nil, err
@@ -426,66 +413,7 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, error) {
 	}
 	model.Source = source
 
-	return PersistCanaryModel(model)
-}
-
-const (
-	DefaultCheckRetentionDays  = 7
-	DefaultCanaryRetentionDays = 7
-)
-
-var (
-	CheckRetentionDays  int
-	CanaryRetentionDays int
-)
-
-func CleanupChecks() {
-	jobHistory := models.NewJobHistory("CleanupChecks", "checks", "").Start()
-	_ = PersistJobHistory(jobHistory)
-	defer func() {
-		_ = PersistJobHistory(jobHistory.End())
-	}()
-
-	if CheckRetentionDays <= 0 {
-		CheckRetentionDays = DefaultCheckRetentionDays
-	}
-	err := Gorm.Exec(`
-        DELETE FROM checks
-        WHERE
-            id NOT IN (SELECT check_id FROM evidences WHERE check_id IS NOT NULL) AND
-            (NOW() - deleted_at) > INTERVAL '1 day' * ?
-        `, CheckRetentionDays).Error
-	if err != nil {
-		logger.Errorf("Error cleaning up checks: %v", err)
-		jobHistory.AddError(err.Error())
-	} else {
-		jobHistory.IncrSuccess()
-	}
-}
-
-func CleanupCanaries() {
-	jobHistory := models.NewJobHistory("CleanupCanaries", "canaries", "").Start()
-	_ = PersistJobHistory(jobHistory)
-	defer func() {
-		_ = PersistJobHistory(jobHistory.End())
-	}()
-
-	if CanaryRetentionDays <= 0 {
-		CanaryRetentionDays = DefaultCanaryRetentionDays
-	}
-	err := Gorm.Exec(`
-        DELETE FROM canaries
-        WHERE
-            id NOT IN (SELECT canary_id FROM checks) AND
-            (NOW() - deleted_at) > INTERVAL '1 day' * ?
-        `, CanaryRetentionDays).Error
-
-	if err != nil {
-		logger.Errorf("Error cleaning up canaries: %v", err)
-		jobHistory.AddError(err.Error())
-	} else {
-		jobHistory.IncrSuccess()
-	}
+	return PersistCanaryModel(db, model)
 }
 
 // SuspendCanary sets the suspend annotation on the canary table.

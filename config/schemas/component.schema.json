@@ -846,10 +846,7 @@
           "$ref": "#/$defs/ComponentChecks"
         },
         "configs": {
-          "items": {
-            "$ref": "#/$defs/Config"
-          },
-          "type": "array"
+          "$ref": "#/$defs/ConfigQueries"
         },
         "summary": {
           "$ref": "#/$defs/Summary"
@@ -926,10 +923,7 @@
           "$ref": "#/$defs/ComponentChecks"
         },
         "configs": {
-          "items": {
-            "$ref": "#/$defs/Config"
-          },
-          "type": "array"
+          "$ref": "#/$defs/ConfigQueries"
         },
         "summary": {
           "$ref": "#/$defs/Summary"
@@ -948,35 +942,6 @@
       "properties": {
         "status": {
           "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
-    "Config": {
-      "properties": {
-        "id": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "type": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "namespace": {
-          "type": "string"
-        },
-        "tags": {
-          "patternProperties": {
-            ".*": {
-              "type": "string"
-            }
-          },
-          "type": "object"
         }
       },
       "additionalProperties": false,
@@ -1034,7 +999,7 @@
           "type": "string"
         },
         "config": {
-          "$ref": "#/$defs/Config"
+          "$ref": "#/$defs/ConfigQuery"
         },
         "field": {
           "type": "string"
@@ -1063,6 +1028,47 @@
       "required": [
         "key"
       ]
+    },
+    "ConfigQueries": {
+      "items": {
+        "$ref": "#/$defs/ConfigQuery"
+      },
+      "type": "array"
+    },
+    "ConfigQuery": {
+      "properties": {
+        "id": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "tags": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "ContainerdPullCheck": {
       "properties": {
@@ -1802,7 +1808,7 @@
         },
         "configs": {
           "items": {
-            "$ref": "#/$defs/Config"
+            "$ref": "#/$defs/ConfigQuery"
           },
           "type": "array"
         },
@@ -3635,6 +3641,14 @@
                 }
               },
               "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "checks": {
+          "patternProperties": {
+            ".*": {
+              "type": "integer"
             }
           },
           "type": "object"

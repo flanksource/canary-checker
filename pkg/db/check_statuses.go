@@ -18,6 +18,12 @@ var RefreshCheckStatusSummary = job.Job{
 	Timeout:    1 * time.Minute,
 	Schedule:   "@every 1m",
 	JobHistory: true,
+	Retention: job.Retention{
+		Interval: 5 * time.Minute,
+		Success:  1,
+		Failed:   3,
+		Age:      time.Hour * 24,
+	},
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
 		return job.RefreshCheckStatusSummary(ctx.Context)
