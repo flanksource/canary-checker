@@ -11,7 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	pkgTopology "github.com/flanksource/canary-checker/pkg/topology"
-	"github.com/flanksource/commons/logger"
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
@@ -64,11 +64,7 @@ func RunCanaryHandler(c echo.Context) error {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 
-	kommonsClient, k8s, err := pkg.NewKommonsClient()
-	if err != nil {
-		logger.Warnf("failed to get kommons client, checks that read kubernetes configs will fail: %v", err)
-	}
-	ctx := context.New(kommonsClient, k8s, db.Gorm, db.Pool, *canary)
+	ctx := context.New(c.Request().Context().(dutyContext.Context), *canary)
 	result, err := checks.RunChecks(ctx)
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
@@ -97,7 +93,8 @@ func RunTopologyHandler(c echo.Context) error {
 		topologyRunDepth = num
 	}
 
-	topology, err := db.GetTopology(c.Request().Context(), id)
+	ctx := c.Request().Context().(dutyContext.Context)
+	topology, err := db.GetTopology(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errorResonse(c, fmt.Errorf("topology with id=%s was not found", id), http.StatusNotFound)
@@ -106,16 +103,10 @@ func RunTopologyHandler(c echo.Context) error {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 
-	kommonsClient, k8s, err := pkg.NewKommonsClient()
-	if err != nil {
-		logger.Warnf("failed to get kommons client, checks that read kubernetes configs will fail: %v", err)
-	}
-
 	opts := pkgTopology.TopologyRunOptions{
-		Client:     kommonsClient,
-		Kubernetes: k8s,
-		Depth:      topologyRunDepth,
-		Namespace:  topology.Namespace,
+		Context:   ctx,
+		Depth:     topologyRunDepth,
+		Namespace: topology.Namespace,
 	}
 	if err := pkgTopology.SyncComponents(opts, *topology); err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)

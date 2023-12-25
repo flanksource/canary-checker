@@ -4,9 +4,11 @@ import (
 	"testing"
 
 	embeddedPG "github.com/fergusstrange/embedded-postgres"
+	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/testutils"
 	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -14,6 +16,7 @@ import (
 
 var (
 	postgresServer *embeddedPG.EmbeddedPostgres
+	DefaultContext dutyContext.Context
 )
 
 func TestTopologySync(t *testing.T) {
@@ -35,6 +38,8 @@ var _ = ginkgo.BeforeSuite(func() {
 	if db.Gorm, db.Pool, err = duty.SetupDB(dbString, nil); err != nil {
 		ginkgo.Fail(err.Error())
 	}
+	DefaultContext = dutyContext.New().WithDB(db.Gorm, db.Pool)
+	context.DefaultContext = DefaultContext
 })
 
 var _ = ginkgo.AfterSuite(func() {

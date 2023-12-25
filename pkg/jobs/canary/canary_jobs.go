@@ -108,7 +108,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		return nil
 	}
 
-	canaryCtx := canarycontext.New(ctx.Kommons(), ctx.Kubernetes(), ctx.DB(), ctx.Pool(), j.Canary)
+	canaryCtx := canarycontext.New(ctx.Context, j.Canary)
 	var span trace.Span
 	ctx.Context, span = ctx.StartSpan("RunCanaryChecks")
 	results, err := checks.RunChecks(canaryCtx)
@@ -164,7 +164,9 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 			} else if strategy == v1.OnTransformMarkUnhealthy {
 				status = models.CheckStatusUnhealthy
 			}
-			checkDeleteStrategyGroup[status] = append(checkDeleteStrategyGroup[status], checkID)
+			if strategy != v1.OnTransformIgnore {
+				checkDeleteStrategyGroup[status] = append(checkDeleteStrategyGroup[status], checkID)
+			}
 		}
 		for status, checkIDs := range checkDeleteStrategyGroup {
 			if err := db.AddCheckStatuses(ctx.Context, checkIDs, models.CheckHealthStatus(status)); err != nil {
@@ -227,8 +229,8 @@ func formCheckRelationships(ctx context.Context, result *pkg.CheckResult) error 
 				continue
 			}
 
-			rel := &pkg.CheckComponentRelationship{ComponentID: componentID, CheckID: checkID, CanaryID: canaryID, SelectorID: selectorID}
-			if err := db.PersistCheckComponentRelationship(rel); err != nil {
+			rel := &models.CheckComponentRelationship{ComponentID: componentID, CheckID: checkID, CanaryID: canaryID, SelectorID: selectorID}
+			if err := rel.Save(ctx.DB()); err != nil {
 				logger.Errorf("error saving relationship between check=%s and component=%s: %v", checkID, componentID, err)
 			}
 		}
@@ -249,7 +251,7 @@ func formCheckRelationships(ctx context.Context, result *pkg.CheckResult) error 
 			}
 
 			rel := &models.CheckConfigRelationship{ConfigID: configID, CheckID: checkID, CanaryID: canaryID, SelectorID: selectorID}
-			if err := db.SaveCheckConfigRelationship(ctx, rel); err != nil {
+			if err := rel.Save(ctx.DB()); err != nil {
 				logger.Errorf("error saving relationship between check=%s and config=%s: %v", checkID, configID, err)
 			}
 		}
@@ -391,7 +393,7 @@ func ScanCanaryConfigs() {
 			if runner.IsCanaryIgnored(&canary.ObjectMeta) {
 				continue
 			}
-			_, err := db.PersistCanary(canary, path.Base(configfile))
+			_, err := db.PersistCanary(db.Gorm, canary, path.Base(configfile))
 			if err != nil {
 				logger.Errorf("could not persist %s: %v", canary.Name, err)
 			} else {
@@ -460,15 +462,6 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary, options ...SyncCana
 
 	if runner.IsCanaryIgnored(&canary.ObjectMeta) {
 		return nil
-	}
-
-	if Kommons == nil {
-		var err error
-		Kommons, Kubernetes, err = pkg.NewKommonsClient()
-		ctx = ctx.WithKommons(Kommons).WithKubernetes(Kubernetes)
-		if err != nil {
-			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
-		}
 	}
 
 	updateTime, exists := canaryUpdateTimeCache.Load(dbCanary.ID.String())

@@ -20,7 +20,10 @@ import (
 	"gorm.io/plugin/prometheus"
 )
 
+// Deprecated
 var Pool *pgxpool.Pool
+
+// Deprecated
 var Gorm *gorm.DB
 var ConnectionString string
 var DefaultExpiryDays int
@@ -45,7 +48,7 @@ func StopServer() error {
 			return err
 		}
 		PostgresServer = nil
-		logger.Infof("Stoped database server")
+		logger.Infof("Stopped database server")
 	}
 	return nil
 }

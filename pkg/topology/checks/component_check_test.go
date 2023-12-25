@@ -1,10 +1,14 @@
 package checks
 
 import (
+	gocontext "context"
+
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	ginkgo "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -14,7 +18,7 @@ var _ = ginkgo.Describe("Test component check sync job", ginkgo.Ordered, func() 
 	component := pkg.Component{
 		Name: "Component",
 		ComponentChecks: []v1.ComponentCheck{{
-			Selector: v1.ResourceSelector{
+			Selector: types.ResourceSelector{
 				Name:          "ComponentCheckSelector",
 				LabelSelector: "check-target=api",
 			},
@@ -63,7 +67,8 @@ var _ = ginkgo.Describe("Test component check sync job", ginkgo.Ordered, func() 
 	})
 
 	ginkgo.It("should create check component relationships", func() {
-		ComponentCheckRun()
+		ComponentCheckRun.Context = context.NewContext(gocontext.Background()).WithDB(db.Gorm, nil)
+		ComponentCheckRun.Run()
 		cr, err := db.GetCheckRelationshipsForComponent(component.ID)
 		Expect(err).To(BeNil())
 

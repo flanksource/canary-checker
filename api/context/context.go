@@ -45,14 +45,20 @@ type Context struct {
 	db    *gorm.DB
 	pool  *pgxpool.Pool
 	cache map[string]any
+	duty  *dutyCtx.Context
 }
 
 func (ctx *Context) Duty() dutyCtx.Context {
-	return dutyCtx.NewContext(gocontext.Background()).
+	if ctx.duty != nil {
+		return *ctx.duty
+	}
+	duty := dutyCtx.NewContext(gocontext.Background()).
 		WithDB(ctx.db, ctx.pool).
 		WithKubernetes(ctx.Kubernetes).
 		WithNamespace(ctx.Namespace).
 		WithObject(ctx.Canary.ObjectMeta)
+	ctx.duty = &duty
+	return *ctx.duty
 }
 
 func (ctx *Context) DB() *gorm.DB {
@@ -250,17 +256,18 @@ func (ctx *KubernetesContext) Clone() *KubernetesContext {
 	}
 }
 
-func New(client *kommons.Client, kubernetes kubernetes.Interface, db *gorm.DB, pool *pgxpool.Pool, canary v1.Canary) *Context {
+func New(ctx dutyCtx.Context, canary v1.Canary) *Context {
 	if canary.Namespace == "" {
 		canary.Namespace = "default"
 	}
 
 	return &Context{
-		db:          db,
-		pool:        pool,
+		duty:        &ctx,
+		db:          ctx.DB(),
+		pool:        ctx.Pool(),
 		Context:     gocontext.Background(),
-		Kommons:     client,
-		Kubernetes:  kubernetes,
+		Kommons:     ctx.Kommons(),
+		Kubernetes:  ctx.Kubernetes(),
 		Namespace:   canary.GetNamespace(),
 		Canary:      canary,
 		Environment: make(map[string]interface{}),

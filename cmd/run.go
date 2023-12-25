@@ -10,13 +10,17 @@ import (
 	"sync"
 	"time"
 
+	gocontext "context"
+
 	"github.com/flanksource/commons/timer"
+	dutyContext "github.com/flanksource/duty/context"
 
 	"github.com/flanksource/canary-checker/cmd/output"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/spf13/cobra"
 
 	"github.com/flanksource/canary-checker/api/context"
+	apicontext "github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
@@ -40,10 +44,17 @@ var Run = &cobra.Command{
 		if len(configFiles) == 0 {
 			log.Fatalln("Must specify at least one canary")
 		}
+
 		kommonsClient, k8s, err := pkg.NewKommonsClient()
 		if err != nil {
 			logger.Warnf("Failed to get kubernetes client: %v", err)
 		}
+
+		apicontext.DefaultContext = dutyContext.NewContext(gocontext.Background()).
+			WithDB(db.Gorm, db.Pool).
+			WithKubernetes(k8s).
+			WithKommons(kommonsClient)
+
 		var results = []*pkg.CheckResult{}
 
 		wg := sync.WaitGroup{}
@@ -68,7 +79,7 @@ var Run = &cobra.Command{
 				go func() {
 					defer wg.Done()
 
-					res, err := checks.RunChecks(context.New(kommonsClient, k8s, db.Gorm, db.Pool, _config))
+					res, err := checks.RunChecks(context.New(apicontext.DefaultContext, _config))
 					if err != nil {
 						logger.Errorf("error running checks: %v", err)
 						return

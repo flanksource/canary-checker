@@ -97,7 +97,7 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 	}
 
 	if !canary.DeletionTimestamp.IsZero() {
-		if err := db.DeleteCanary(canary.GetPersistedID(), canary.DeletionTimestamp.Time); err != nil {
+		if err := db.DeleteCanary(ctx.DB(), canary.GetPersistedID()); err != nil {
 			logger.Error(err, "failed to delete canary")
 		}
 		canaryJobs.DeleteCanaryJob(canary.GetPersistedID())
@@ -187,7 +187,7 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *CanaryReconciler) persistAndCacheCanary(ctx dutyContext.Context, canary *v1.Canary) (*pkg.Canary, error) {
-	dbCanary, err := db.PersistCanary(*canary, "kubernetes/"+canary.GetPersistedID())
+	dbCanary, err := db.PersistCanary(ctx.DB(), *canary, "kubernetes/"+canary.GetPersistedID())
 	if err != nil {
 		return nil, err
 	}
