@@ -3,24 +3,23 @@ package topology
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/query"
+	"github.com/flanksource/duty/types"
 	"github.com/flanksource/gomplate/v3"
-	"github.com/flanksource/kommons"
 	"github.com/google/uuid"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
 	"github.com/pkg/errors"
-	"k8s.io/client-go/kubernetes"
 )
 
 var json = jsontime.ConfigWithCustomTimeFormat
@@ -110,7 +109,7 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 			logger.Errorf(errMsg)
 			ctx.JobHistory.AddError(errMsg)
 		} else {
-			component.Configs = append(component.Configs, pkg.NewConfig(child))
+			component.Configs = append(component.Configs, &child)
 		}
 	}
 
@@ -190,7 +189,7 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface{}, error) {
 	var results []any
 
-	canaryCtx := context.New(ctx.Kommons, ctx.Kubernetes, db.Gorm, db.Pool, v1.NewCanaryFromSpec(name, ctx.Namespace, spec))
+	canaryCtx := context.New(*ctx.duty, v1.NewCanaryFromSpec(name, ctx.Namespace, spec))
 	canaryCtx.Context = ctx
 	canaryCtx.Namespace = ctx.Namespace
 	canaryCtx.Environment = ctx.Environment
@@ -253,9 +252,9 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*pkg.Property, 
 	if err := ctx.TemplateConfig(config); err != nil {
 		return nil, err
 	}
-	pkgConfig := pkg.NewConfig(*config)
+	pkgConfig := config
 	pkgConfig.Name = configName
-	_config, err := db.FindConfig(*pkgConfig)
+	_config, err := query.FindConfig(ctx.Duty(), *pkgConfig)
 	if err != nil {
 		return prop, err
 	}
@@ -264,8 +263,8 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*pkg.Property, 
 	}
 
 	templateEnv := map[string]any{
-		"config": *_config.Spec,
-		"tags":   toMapStringAny(_config.Tags),
+		"config": *_config.Config,
+		"tags":   _config.Tags.ToMapStringAny(),
 	}
 	prop.Text, err = gomplate.RunTemplate(templateEnv, property.ConfigLookup.Display.Template.Gomplate())
 	return prop, err
@@ -355,10 +354,9 @@ func mergeComponentProperties(components pkg.Components, propertiesRaw []byte) e
 }
 
 type TopologyRunOptions struct {
-	*kommons.Client
-	Kubernetes kubernetes.Interface
-	Depth      int
-	Namespace  string
+	dutyContext.Context
+	Depth     int
+	Namespace string
 }
 
 func Run(opts TopologyRunOptions, t v1.Topology) []*pkg.Component {
@@ -370,7 +368,7 @@ func Run(opts TopologyRunOptions, t v1.Topology) []*pkg.Component {
 	}
 	logger.Debugf("Running topology %s/%s depth=%d", t.Namespace, t.Name, opts.Depth)
 
-	ctx := NewComponentContext(opts.Client, opts.Kubernetes, t)
+	ctx := NewComponentContext(opts.Context, t)
 	ctx.JobHistory = jobHistory
 
 	var results pkg.Components
@@ -474,9 +472,9 @@ func Run(opts TopologyRunOptions, t v1.Topology) []*pkg.Component {
 		rootComponent.ExternalId = rootComponent.Name
 	}
 
-	rootComponent.Status = pkg.ComponentStatus(rootComponent.Summary.GetStatus())
+	rootComponent.Status = types.ComponentStatus(rootComponent.Summary.GetStatus())
 
-	logger.Debugf(rootComponent.Components.Debug(""))
+	logger.Tracef(rootComponent.Components.Debug(""))
 
 	results = append(results, rootComponent)
 	logger.Infof("%s id=%s external_id=%s status=%s", rootComponent.Name, rootComponent.ID, rootComponent.ExternalId, rootComponent.Status)
@@ -492,21 +490,22 @@ func Run(opts TopologyRunOptions, t v1.Topology) []*pkg.Component {
 }
 
 func SyncComponents(opts TopologyRunOptions, topology v1.Topology) error {
-	logger.Tracef("Running sync for components with topology: %s", topology.GetPersistedID())
+	id := topology.GetPersistedID()
+	logger.Tracef("Running sync for components with topology: %s", id)
 	// Check if deleted
 	var dbTopology models.Topology
-	if err := db.Gorm.Where("id = ?", topology.GetPersistedID()).First(&dbTopology).Error; err != nil {
-		return fmt.Errorf("failed to query topology id: %s: %w", topology.GetPersistedID(), err)
+	if err := opts.DB().Where("id = ?", id).First(&dbTopology).Error; err != nil {
+		return fmt.Errorf("failed to query topology id: %s: %w", id, err)
 	}
 
 	if dbTopology.DeletedAt != nil {
-		logger.Infof("Skipping topology[%s] as its deleted", topology.GetPersistedID())
+		logger.Infof("Skipping topology[%s] as its deleted", id)
 		// TODO: Should we run the db.DeleteTopology function always in this scenario
 		return nil
 	}
 
 	components := Run(opts, topology)
-	topologyID, err := uuid.Parse(topology.GetPersistedID())
+	topologyID, err := uuid.Parse(id)
 	if err != nil {
 		return fmt.Errorf("failed to parse topology id: %w", err)
 	}
@@ -517,7 +516,7 @@ func SyncComponents(opts TopologyRunOptions, topology v1.Topology) error {
 		component.Namespace = topology.Namespace
 		component.Labels = topology.Labels
 		component.TopologyID = &topologyID
-		componentsIDs, err := db.PersistComponent(component)
+		componentsIDs, err := db.PersistComponent(opts.Context, component)
 		if err != nil {
 			return fmt.Errorf("failed to persist component(id=%s, name=%s): %w", component.ID, component.Name, err)
 		}
@@ -525,14 +524,14 @@ func SyncComponents(opts TopologyRunOptions, topology v1.Topology) error {
 		compIDs = append(compIDs, componentsIDs...)
 	}
 
-	dbCompsIDs, err := db.GetActiveComponentsIDsOfTopology(topologyID.String())
+	dbCompsIDs, err := db.GetActiveComponentsIDsOfTopology(opts.DB(), id)
 	if err != nil {
-		logger.Errorf("error getting components for system(id=%s): %v", topologyID.String(), err)
+		logger.Errorf("error getting components for system(id=%s): %v", id, err)
 	}
 
 	deleteCompIDs := utils.SetDifference(dbCompsIDs, compIDs)
 	if len(deleteCompIDs) != 0 {
-		if err := db.DeleteComponentsWithIDs(utils.UUIDsToStrings(deleteCompIDs), time.Now()); err != nil {
+		if err := db.DeleteComponentsWithIDs(opts.DB(), utils.UUIDsToStrings(deleteCompIDs)); err != nil {
 			logger.Errorf("error deleting components: %v", err)
 		}
 	}

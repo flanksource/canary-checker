@@ -12,8 +12,7 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/kommons"
-	"k8s.io/client-go/kubernetes"
+	dutyContext "github.com/flanksource/duty/context"
 
 	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg"
@@ -21,8 +20,7 @@ import (
 )
 
 var testFolder string
-var kommonsClient *kommons.Client
-var k8s kubernetes.Interface
+var DefaultContext dutyContext.Context
 var verbosity = 0
 
 func TestMain(m *testing.M) {
@@ -31,16 +29,19 @@ func TestMain(m *testing.M) {
 }
 
 func init() {
-	var err error
-	kommonsClient, k8s, err = pkg.NewKommonsClient()
-	if err != nil {
-		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
-	}
 	flag.IntVar(&verbosity, "verbose", 0, "Add verbose logging")
 	flag.StringVar(&testFolder, "test-folder", "fixtures/minimal", "The folder containing test fixtures to run")
 }
 
 func TestRunChecks(t *testing.T) {
+	kommonsClient, k8s, err := pkg.NewKommonsClient()
+	if err != nil {
+		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
+	}
+	DefaultContext = dutyContext.New().
+		WithKommons(kommonsClient).WithKubernetes(k8s).
+		WithDB(db.Gorm, db.Pool)
+
 	logger.StandardLogger().SetLogLevel(verbosity)
 	logger.Infof("Testing %s", testFolder)
 	files, _ := os.ReadDir(fmt.Sprintf("../%s", testFolder))
@@ -75,7 +76,7 @@ func runFixture(t *testing.T, name string) {
 			if canary.Name == "" {
 				canary.Name = cmd.CleanupFilename(name)
 			}
-			context := context.New(kommonsClient, k8s, db.Gorm, db.Pool, canary)
+			context := context.New(DefaultContext, canary)
 
 			checkResults, err := checks.RunChecks(context)
 			if err != nil {

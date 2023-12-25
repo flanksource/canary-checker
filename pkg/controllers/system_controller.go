@@ -21,7 +21,8 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
-	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/system"
+	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/topology"
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -45,6 +46,7 @@ const TopologyFinalizerName = "topology.canaries.flanksource.com"
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=topologies,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=topologies/status,verbs=get;update;patch
 func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (ctrl.Result, error) {
+	dCtx := dutyContext.NewContext(ctx)
 	logger := r.Log.WithValues("topology", req.NamespacedName)
 	topology := &v1.Topology{}
 	err := r.Get(ctx, req.NamespacedName, topology)
@@ -60,7 +62,7 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 	}
 
 	if !topology.DeletionTimestamp.IsZero() {
-		if err := db.DeleteTopology(topology); err != nil {
+		if err := db.DeleteTopology(dCtx.DB(), topology); err != nil {
 			logger.Error(err, "failed to delete topology")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}
@@ -69,14 +71,14 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 		return ctrl.Result{}, r.Update(ctx, topology)
 	}
 
-	changed, err := db.PersistTopology(topology)
+	changed, err := db.PersistTopology(dCtx, topology)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
 	// Sync jobs if topology is created or updated
 	if changed || topology.Generation == 1 {
-		if err := systemJobs.SyncTopologyJob(*topology); err != nil {
+		if err := systemJobs.SyncTopologyJob(dCtx, *topology); err != nil {
 			logger.Error(err, "failed to sync topology job")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}

@@ -4,7 +4,6 @@ import (
 	"os"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	ginkgo "github.com/onsi/ginkgo/v2"
@@ -34,10 +33,9 @@ func yamlFileToTopology(file string) (t v1.Topology, err error) {
 
 var _ = ginkgo.Describe("Test topology run", ginkgo.Ordered, func() {
 	opts := TopologyRunOptions{
-		Client:     nil,
-		Kubernetes: nil,
-		Depth:      10,
-		Namespace:  "default",
+		Context:   DefaultContext,
+		Depth:     10,
+		Namespace: "default",
 	}
 
 	ginkgo.It("should create component with properties", func() {
@@ -57,7 +55,7 @@ var _ = ginkgo.Describe("Test topology run", ginkgo.Ordered, func() {
 			ConfigClass: "Dummy",
 		}
 
-		err = db.Gorm.Create(&ci).Error
+		err = DefaultContext.DB().Create(&ci).Error
 		Expect(err).To(BeNil())
 
 		rootComponent := Run(opts, t)

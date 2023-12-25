@@ -4,11 +4,13 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/db"
+
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
-	"github.com/flanksource/kommons"
+	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons/ktemplate"
 	"github.com/pkg/errors"
-	"k8s.io/client-go/kubernetes"
 )
 
 type ComponentContext struct {
@@ -23,6 +25,26 @@ type ComponentContext struct {
 	CurrentComponent *pkg.Component
 	templater        *ktemplate.StructTemplater
 	JobHistory       *models.JobHistory
+	duty             *dutyContext.Context
+}
+
+func (c *ComponentContext) WithDuty(ctx dutyContext.Context) *ComponentContext {
+	c.duty = &ctx
+	return c
+}
+
+func (c *ComponentContext) Duty() dutyContext.Context {
+	if c.duty == nil {
+		return *c.duty
+	}
+	duty := dutyContext.NewContext(c.Context).
+		WithDB(db.Gorm, db.Pool).
+		WithKubernetes(c.Kubernetes).
+		WithKommons(c.Kommons).
+		WithObject(c.Topology.ObjectMeta)
+
+	c.duty = &duty
+	return *c.duty
 }
 
 func (c *ComponentContext) GetTemplater() ktemplate.StructTemplater {
@@ -75,7 +97,7 @@ func (c *ComponentContext) TemplateStruct(data interface{}) error {
 	return nil
 }
 
-func (c *ComponentContext) TemplateConfig(config *v1.Config) error {
+func (c *ComponentContext) TemplateConfig(config *types.ConfigQuery) error {
 	templater := c.GetTemplater()
 	if err := templater.Walk(config); err != nil {
 		return errors.Wrapf(err, "failed to template config %s", *config)
@@ -106,6 +128,7 @@ func (c *ComponentContext) Clone() *ComponentContext {
 		JobHistory:        c.JobHistory,
 	}
 }
+
 func (c *ComponentContext) WithComponents(components *pkg.Components, current *pkg.Component) *ComponentContext {
 	cloned := c.Clone()
 	cloned.Components = components
@@ -113,9 +136,10 @@ func (c *ComponentContext) WithComponents(components *pkg.Components, current *p
 	return cloned
 }
 
-func NewComponentContext(client *kommons.Client, kubernetes kubernetes.Interface, system v1.Topology) *ComponentContext {
+func NewComponentContext(ctx dutyContext.Context, system v1.Topology) *ComponentContext {
 	return &ComponentContext{
-		KubernetesContext: context.NewKubernetesContext(client, kubernetes, system.Namespace),
+		KubernetesContext: context.NewKubernetesContext(ctx.Kommons(), ctx.Kubernetes(), system.Namespace),
+		duty:              &ctx,
 		Topology:          system,
 	}
 }

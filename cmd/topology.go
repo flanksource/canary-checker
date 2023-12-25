@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	gocontext "context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,9 +10,11 @@ import (
 
 	"github.com/flanksource/commons/timer"
 	"github.com/flanksource/duty"
+	dutyContext "github.com/flanksource/duty/context"
 
 	"github.com/spf13/cobra"
 
+	apicontext "github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -73,15 +76,20 @@ var AddTopology = &cobra.Command{
 
 func getTopologyRunOptions(depth int) topology.TopologyRunOptions {
 	logger.Tracef("depth: %v", depth)
+
 	kommonsClient, k8s, err := pkg.NewKommonsClient()
 	if err != nil {
 		logger.Warnf("Failed to get kubernetes client: %v", err)
 	}
+
+	apicontext.DefaultContext = dutyContext.NewContext(gocontext.Background()).
+		WithDB(db.Gorm, db.Pool).
+		WithKubernetes(k8s).
+		WithKommons(kommonsClient)
 	return topology.TopologyRunOptions{
-		Client:     kommonsClient,
-		Kubernetes: k8s,
-		Depth:      10,
-		Namespace:  topologyRunNamespace,
+		Context:   apicontext.DefaultContext,
+		Depth:     10,
+		Namespace: topologyRunNamespace,
 	}
 }
 
@@ -130,7 +138,7 @@ var RunTopology = &cobra.Command{
 		logger.Infof("Checked %d systems in %v", len(results), timer)
 
 		if db.IsConnected() {
-			if err := db.PersistComponents(results); err != nil {
+			if err := db.PersistComponents(opts.Context, results); err != nil {
 				logger.Errorf("error persisting results: %v", err)
 			}
 		}
