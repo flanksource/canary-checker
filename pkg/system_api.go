@@ -24,41 +24,13 @@ import (
 
 var json = jsontime.ConfigWithCustomTimeFormat
 
-type ComponentStatus string
-
-var (
-	ComponentPropertyStatusHealthy   ComponentStatus = "healthy"
-	ComponentPropertyStatusUnhealthy ComponentStatus = "unhealthy"
-	ComponentPropertyStatusWarning   ComponentStatus = "warning"
-	ComponentPropertyStatusError     ComponentStatus = "error"
-	ComponentPropertyStatusInfo      ComponentStatus = "info"
-
-	ComponentStatusOrder = map[ComponentStatus]int{
-		ComponentPropertyStatusInfo:      0,
-		ComponentPropertyStatusHealthy:   1,
-		ComponentPropertyStatusUnhealthy: 2,
-		ComponentPropertyStatusWarning:   3,
-		ComponentPropertyStatusError:     4,
-	}
-)
-
-func (status ComponentStatus) Compare(other ComponentStatus) int {
-	if status == other {
-		return 0
-	}
-	if ComponentStatusOrder[status] > ComponentStatusOrder[other] {
-		return 1
-	}
-	return -1
-}
-
 const ComponentType = "component"
 
 type Topology struct {
 	ID        uuid.UUID `gorm:"default:generate_ulid()"`
 	Name      string
 	Namespace string
-	Labels    types.JSONStringMap
+	Labels    dutyTypes.JSONStringMap
 	Spec      types.JSON
 	Schedule  string
 	CreatedAt time.Time  `json:"created_at,omitempty" time_format:"postgres_timestamp"`
@@ -71,7 +43,7 @@ func TopologyFromV1(topology *v1.Topology) *Topology {
 	return &Topology{
 		Name:      topology.GetName(),
 		Namespace: topology.GetNamespace(),
-		Labels:    types.JSONStringMap(topology.GetLabels()),
+		Labels:    dutyTypes.JSONStringMap(topology.GetLabels()),
 		Spec:      spec,
 	}
 }
@@ -98,9 +70,9 @@ func (s *Topology) ToV1() v1.Topology {
 }
 
 type Object struct {
-	Name      string              `json:"name,omitempty"`
-	Namespace string              `json:"namespace,omitempty"`
-	Labels    types.JSONStringMap `json:"labels,omitempty"`
+	Name      string                  `json:"name,omitempty"`
+	Namespace string                  `json:"namespace,omitempty"`
+	Labels    dutyTypes.JSONStringMap `json:"labels,omitempty"`
 }
 
 func (component *Component) UnmarshalJSON(b []byte) error {
@@ -140,46 +112,46 @@ func (components Components) Walk() Components {
 }
 
 type Component struct {
-	Name         string               `json:"name,omitempty"`
-	ID           uuid.UUID            `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
-	Text         string               `json:"text,omitempty"`
-	Schedule     string               `json:"schedule,omitempty"`
-	TopologyType string               `json:"topology_type,omitempty"`
-	Namespace    string               `json:"namespace,omitempty"`
-	Labels       types.JSONStringMap  `json:"labels,omitempty"`
-	Tooltip      string               `json:"tooltip,omitempty"`
-	Icon         string               `json:"icon,omitempty"`
-	Owner        string               `json:"owner,omitempty"`
-	Status       ComponentStatus      `json:"status,omitempty"`
-	StatusReason dutyTypes.NullString `json:"status_reason,omitempty"`
-	Path         string               `json:"path,omitempty"`
-	Order        int                  `json:"order,omitempty"  gorm:"-"`
+	Name         string                    `json:"name,omitempty"`
+	ID           uuid.UUID                 `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
+	Text         string                    `json:"text,omitempty"`
+	Schedule     string                    `json:"schedule,omitempty"`
+	TopologyType string                    `json:"topology_type,omitempty"`
+	Namespace    string                    `json:"namespace,omitempty"`
+	Labels       dutyTypes.JSONStringMap   `json:"labels,omitempty"`
+	Tooltip      string                    `json:"tooltip,omitempty"`
+	Icon         string                    `json:"icon,omitempty"`
+	Owner        string                    `json:"owner,omitempty"`
+	Status       dutyTypes.ComponentStatus `json:"status,omitempty"`
+	StatusReason dutyTypes.NullString      `json:"status_reason,omitempty"`
+	Path         string                    `json:"path,omitempty"`
+	Order        int                       `json:"order,omitempty"  gorm:"-"`
 	// The type of component, e.g. service, API, website, library, database, etc.
-	Type    string     `json:"type,omitempty"`
-	Summary v1.Summary `json:"summary,omitempty" gorm:"type:summary"`
+	Type    string            `json:"type,omitempty"`
+	Summary dutyTypes.Summary `json:"summary,omitempty" gorm:"type:summary"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
-	Lifecycle       string                   `json:"lifecycle,omitempty"`
-	Properties      Properties               `json:"properties,omitempty" gorm:"type:properties"`
-	Components      Components               `json:"components,omitempty" gorm:"-"`
-	ParentId        *uuid.UUID               `json:"parent_id,omitempty"` //nolint
-	Selectors       v1.ResourceSelectors     `json:"selectors,omitempty" gorm:"resourceSelectors" swaggerignore:"true"`
-	ComponentChecks v1.ComponentChecks       `json:"-" gorm:"componentChecks" swaggerignore:"true"`
-	Checks          Checks                   `json:"checks,omitempty" gorm:"-"`
-	Configs         Configs                  `json:"configs,omitempty" gorm:"type:configs"`
-	TopologyID      *uuid.UUID               `json:"topology_id,omitempty"` //nolint
-	CreatedAt       time.Time                `json:"created_at,omitempty" time_format:"postgres_timestamp"`
-	UpdatedAt       time.Time                `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
-	DeletedAt       *time.Time               `json:"deleted_at,omitempty" time_format:"postgres_timestamp" swaggerignore:"true"`
-	ExternalId      string                   `json:"external_id,omitempty"` //nolint
-	IsLeaf          bool                     `json:"is_leaf"`
-	SelectorID      string                   `json:"-" gorm:"-"`
-	Incidents       []Incident               `json:"incidents,omitempty" gorm:"-"`
-	ConfigInsights  []map[string]interface{} `json:"insights,omitempty" gorm:"-"`
-	CostPerMinute   float64                  `json:"cost_per_minute,omitempty" gorm:"column:cost_per_minute"`
-	CostTotal1d     float64                  `json:"cost_total_1d,omitempty" gorm:"column:cost_total_1d"`
-	CostTotal7d     float64                  `json:"cost_total_7d,omitempty" gorm:"column:cost_total_7d"`
-	CostTotal30d    float64                  `json:"cost_total_30d,omitempty" gorm:"column:cost_total_30d"`
-	LogSelectors    dutyTypes.LogSelectors   `json:"logs,omitempty" gorm:"column:log_selectors"`
+	Lifecycle       string                      `json:"lifecycle,omitempty"`
+	Properties      Properties                  `json:"properties,omitempty" gorm:"type:properties"`
+	Components      Components                  `json:"components,omitempty" gorm:"-"`
+	ParentId        *uuid.UUID                  `json:"parent_id,omitempty"` //nolint
+	Selectors       dutyTypes.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors" swaggerignore:"true"`
+	ComponentChecks v1.ComponentChecks          `json:"-" gorm:"componentChecks" swaggerignore:"true"`
+	Checks          Checks                      `json:"checks,omitempty" gorm:"-"`
+	Configs         dutyTypes.ConfigQueries     `json:"configs,omitempty" gorm:"type:configs"`
+	TopologyID      *uuid.UUID                  `json:"topology_id,omitempty"` //nolint
+	CreatedAt       time.Time                   `json:"created_at,omitempty" time_format:"postgres_timestamp"`
+	UpdatedAt       time.Time                   `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
+	DeletedAt       *time.Time                  `json:"deleted_at,omitempty" time_format:"postgres_timestamp" swaggerignore:"true"`
+	ExternalId      string                      `json:"external_id,omitempty"` //nolint
+	IsLeaf          bool                        `json:"is_leaf"`
+	SelectorID      string                      `json:"-" gorm:"-"`
+	Incidents       []Incident                  `json:"incidents,omitempty" gorm:"-"`
+	ConfigInsights  []map[string]interface{}    `json:"insights,omitempty" gorm:"-"`
+	CostPerMinute   float64                     `json:"cost_per_minute,omitempty" gorm:"column:cost_per_minute"`
+	CostTotal1d     float64                     `json:"cost_total_1d,omitempty" gorm:"column:cost_total_1d"`
+	CostTotal7d     float64                     `json:"cost_total_7d,omitempty" gorm:"column:cost_total_7d"`
+	CostTotal30d    float64                     `json:"cost_total_30d,omitempty" gorm:"column:cost_total_30d"`
+	LogSelectors    dutyTypes.LogSelectors      `json:"logs,omitempty" gorm:"column:log_selectors"`
 }
 
 type ComponentRelationship struct {
@@ -256,7 +228,6 @@ func (component Component) GetAsEnvironment() map[string]interface{} {
 }
 
 func NewComponent(c v1.ComponentSpec) *Component {
-	configs := NewConfigs(c.Configs)
 	_c := Component{
 		Name:            c.Name,
 		Owner:           c.Owner,
@@ -268,7 +239,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Selectors:       c.Selectors,
 		ComponentChecks: c.ComponentChecks,
 		Labels:          c.Labels,
-		Configs:         configs,
+		Configs:         c.Configs,
 		LogSelectors:    c.LogSelectors,
 	}
 	if c.Summary != nil {
@@ -293,9 +264,9 @@ func (components Components) Debug(prefix string) string {
 		status := component.Status
 
 		if component.IsHealthy() {
-			status = ComponentStatus(console.Greenf(string(status)))
+			status = dutyTypes.ComponentStatus(console.Greenf(string(status)))
 		} else {
-			status = ComponentStatus(console.Redf(string(status)))
+			status = dutyTypes.ComponentStatus(console.Redf(string(status)))
 		}
 
 		s += fmt.Sprintf("%s%s (%s) => %s\n", prefix, component, component.GetID(), status)
@@ -491,14 +462,14 @@ func (component Component) IsHealthy() bool {
 	return s.Healthy > 0 && s.Unhealthy == 0 && s.Warning == 0
 }
 
-func (component Component) Summarize() v1.Summary {
-	s := v1.Summary{
+func (component Component) Summarize() dutyTypes.Summary {
+	s := dutyTypes.Summary{
 		Incidents: component.Summary.Incidents,
 		Insights:  component.Summary.Insights,
 	}
 	if component.Checks != nil && component.Components == nil {
 		for _, check := range component.Checks {
-			if ComponentStatus(check.Status) == ComponentPropertyStatusHealthy {
+			if dutyTypes.ComponentStatus(check.Status) == dutyTypes.ComponentStatusHealthy {
 				s.Healthy++
 			} else {
 				s.Unhealthy++
@@ -508,13 +479,13 @@ func (component Component) Summarize() v1.Summary {
 	}
 	if len(component.Components) == 0 {
 		switch component.Status {
-		case ComponentPropertyStatusHealthy:
+		case dutyTypes.ComponentStatusHealthy:
 			s.Healthy++
-		case ComponentPropertyStatusUnhealthy:
+		case dutyTypes.ComponentStatusUnhealthy:
 			s.Unhealthy++
-		case ComponentPropertyStatusWarning:
+		case dutyTypes.ComponentStatusWarning:
 			s.Warning++
-		case ComponentPropertyStatusInfo:
+		case dutyTypes.ComponentStatusInfo:
 			s.Info++
 		}
 		return s
@@ -526,25 +497,25 @@ func (component Component) Summarize() v1.Summary {
 	return s
 }
 
-func (components Components) Summarize() v1.Summary {
-	s := v1.Summary{}
+func (components Components) Summarize() dutyTypes.Summary {
+	s := dutyTypes.Summary{}
 	for _, component := range components {
 		s = s.Add(component.Summarize())
 	}
 	return s
 }
 
-func (component Component) GetStatus() ComponentStatus {
+func (component Component) GetStatus() dutyTypes.ComponentStatus {
 	if component.Summary.Healthy > 0 && component.Summary.Unhealthy > 0 {
-		return ComponentPropertyStatusWarning
+		return dutyTypes.ComponentStatusWarning
 	} else if component.Summary.Unhealthy > 0 {
-		return ComponentPropertyStatusUnhealthy
+		return dutyTypes.ComponentStatusUnhealthy
 	} else if component.Summary.Warning > 0 {
-		return ComponentPropertyStatusWarning
+		return dutyTypes.ComponentStatusWarning
 	} else if component.Summary.Healthy > 0 {
-		return ComponentPropertyStatusHealthy
+		return dutyTypes.ComponentStatusHealthy
 	} else {
-		return ComponentPropertyStatusInfo
+		return dutyTypes.ComponentStatusInfo
 	}
 }
 
@@ -593,48 +564,4 @@ func (Properties) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 func (p Properties) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
 	data, _ := json.Marshal(p)
 	return gorm.Expr("?", data)
-}
-
-func (c Configs) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
-	data, _ := json.Marshal(c)
-	return gorm.Expr("?", data)
-}
-
-// Scan scan value into Jsonb, implements sql.Scanner interface
-func (c Configs) Value() (driver.Value, error) {
-	return json.Marshal(c)
-}
-
-// Scan scan value into Jsonb, implements sql.Scanner interface
-func (c *Configs) Scan(val interface{}) error {
-	if val == nil {
-		*c = Configs{}
-		return nil
-	}
-	var ba []byte
-	switch v := val.(type) {
-	case []byte:
-		ba = v
-	default:
-		return errors.New(fmt.Sprint("Failed to unmarshal properties value:", val))
-	}
-	err := json.Unmarshal(ba, c)
-	return err
-}
-
-// GormDataType gorm common data type
-func (Configs) GormDataType() string {
-	return "configs"
-}
-
-func (Configs) GormDBDataType(db *gorm.DB, field *schema.Field) string {
-	switch db.Dialector.Name() {
-	case "sqlite":
-		return "TEXT"
-	case "postgres":
-		return "JSONB"
-	case "sqlserver":
-		return "NVARCHAR(MAX)"
-	}
-	return ""
 }

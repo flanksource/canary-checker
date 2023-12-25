@@ -994,7 +994,7 @@ func (in *ComponentSpec) DeepCopyInto(out *ComponentSpec) {
 	}
 	if in.Selectors != nil {
 		in, out := &in.Selectors, &out.Selectors
-		*out = make(ResourceSelectors, len(*in))
+		*out = make(types.ResourceSelectors, len(*in))
 		copy(*out, *in)
 	}
 	if in.ComponentChecks != nil {
@@ -1006,14 +1006,18 @@ func (in *ComponentSpec) DeepCopyInto(out *ComponentSpec) {
 	}
 	if in.Configs != nil {
 		in, out := &in.Configs, &out.Configs
-		*out = make([]Config, len(*in))
+		*out = make(types.ConfigQueries, len(*in))
 		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(types.ConfigQuery)
+				(*in).DeepCopyInto(*out)
+			}
 		}
 	}
 	if in.Summary != nil {
 		in, out := &in.Summary, &out.Summary
-		*out = new(Summary)
+		*out = new(types.Summary)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.ForEach != nil {
@@ -1085,7 +1089,7 @@ func (in *ComponentSpecObject) DeepCopyInto(out *ComponentSpecObject) {
 	}
 	if in.Selectors != nil {
 		in, out := &in.Selectors, &out.Selectors
-		*out = make(ResourceSelectors, len(*in))
+		*out = make(types.ResourceSelectors, len(*in))
 		copy(*out, *in)
 	}
 	if in.ComponentChecks != nil {
@@ -1097,14 +1101,18 @@ func (in *ComponentSpecObject) DeepCopyInto(out *ComponentSpecObject) {
 	}
 	if in.Configs != nil {
 		in, out := &in.Configs, &out.Configs
-		*out = make([]Config, len(*in))
+		*out = make(types.ConfigQueries, len(*in))
 		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(types.ConfigQuery)
+				(*in).DeepCopyInto(*out)
+			}
 		}
 	}
 	if in.Summary != nil {
 		in, out := &in.Summary, &out.Summary
-		*out = new(Summary)
+		*out = new(types.Summary)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.ForEach != nil {
@@ -1227,7 +1235,7 @@ func (in *ConfigLookup) DeepCopyInto(out *ConfigLookup) {
 	*out = *in
 	if in.Config != nil {
 		in, out := &in.Config, &out.Config
-		*out = new(Config)
+		*out = new(types.ConfigQuery)
 		(*in).DeepCopyInto(*out)
 	}
 	out.Display = in.Display
@@ -1803,14 +1811,14 @@ func (in *ForEach) DeepCopyInto(out *ForEach) {
 	}
 	if in.Configs != nil {
 		in, out := &in.Configs, &out.Configs
-		*out = make([]Config, len(*in))
+		*out = make([]types.ConfigQuery, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.Selectors != nil {
 		in, out := &in.Selectors, &out.Selectors
-		*out = make(ResourceSelectors, len(*in))
+		*out = make(types.ResourceSelectors, len(*in))
 		copy(*out, *in)
 	}
 	if in.Relationships != nil {
@@ -3089,7 +3097,7 @@ func (in *TopologySpec) DeepCopyInto(out *TopologySpec) {
 	}
 	if in.Configs != nil {
 		in, out := &in.Configs, &out.Configs
-		*out = make([]Config, len(*in))
+		*out = make([]types.ConfigQuery, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
