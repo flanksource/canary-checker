@@ -1,109 +1,148 @@
 package checks
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/flanksource/canary-checker/api/context"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func ComponentCheckRun() {
-	logger.Debugf("Syncing Check Relationships")
-	components, err := db.GetAllComponentWithCanaries()
-	if err != nil {
-		logger.Errorf("error getting components: %v", err)
-		return
-	}
-	jobHistory := models.NewJobHistory("ComponentCheckRelationshipSync", "", "").Start()
-	_ = db.PersistJobHistory(jobHistory)
-	for _, component := range components {
-		relationships := GetCheckComponentRelationshipsForComponent(component)
-		err = SyncCheckComponentRelationshipsForComponent(component.ID, relationships)
-		if err != nil {
-			logger.Errorf("error persisting relationships: %v", err)
-			jobHistory.AddError(err.Error())
-			continue
+var ComponentCheckRun = &job.Job{
+	Name:       "ComponentCheckRun",
+	JobHistory: true,
+	Schedule:   "@every 2m",
+	Singleton:  true,
+	Retention: job.Retention{
+		Success:  1,
+		Failed:   1,
+		Age:      time.Hour * 24,
+		Interval: time.Hour,
+	},
+	Fn: func(run job.JobRuntime) error {
+		var components = []pkg.Component{}
+		if err := run.DB().Table("components").
+			Where("component_checks != 'null'").
+			Where(duty.LocalFilter).
+			Find(&components).Error; err != nil {
+			return fmt.Errorf("error getting components: %v", err)
 		}
-		jobHistory.IncrSuccess()
-	}
-	_ = db.PersistJobHistory(jobHistory.End())
+
+		for _, component := range components {
+			relationships, err := GetChecksForComponent(run.Context, &component)
+			if err != nil {
+				return err
+			}
+			err = syncCheckComponentRelationships(run.Context, component.ID, relationships)
+			if err != nil {
+				logger.Errorf("error persisting relationships: %v", err)
+				run.History.AddError(err.Error())
+				continue
+			}
+			run.History.IncrSuccess()
+		}
+		return nil
+	},
 }
 
-func GetCheckComponentRelationshipsForComponent(component *pkg.Component) (relationships []*pkg.CheckComponentRelationship) {
-	for _, componentCheck := range component.ComponentChecks {
-		if componentCheck.Selector.LabelSelector != "" {
-			labelChecks, err := db.GetChecksWithLabelSelector(componentCheck.Selector.LabelSelector)
-			if err != nil {
-				logger.Debugf("error getting checks with label selector: %s. err: %v", componentCheck.Selector.LabelSelector, err)
-			}
-			for _, labelCheck := range labelChecks {
-				selectorID, err := utils.GenerateJSONMD5Hash(componentCheck)
-				if err != nil {
-					logger.Errorf("Error generationg selector_id hash: %v", err)
-				}
+func createComponentCanaryFromInline(gormDB *gorm.DB, id, name, namespace, schedule, owner string, spec *v1.CanarySpec) (*pkg.Canary, error) {
+	if spec.GetSchedule() == "@never" {
+		spec.Schedule = schedule
+	}
+	if spec.Owner == "" {
+		spec.Owner = owner
+	}
+	obj := v1.Canary{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: *spec,
+	}
+	canary, err := db.PersistCanary(gormDB, obj, fmt.Sprintf("component/%s", id))
+	if err != nil {
+		logger.Debugf("error persisting component inline canary: %v", err)
+		return nil, err
+	}
+	return canary, nil
+}
 
-				relationships = append(relationships, &pkg.CheckComponentRelationship{
-					CanaryID:    labelCheck.CanaryID,
-					CheckID:     labelCheck.ID,
+func GetChecksForComponent(ctx context.Context, component *pkg.Component) ([]models.CheckComponentRelationship, error) {
+	var relationships []models.CheckComponentRelationship
+	for _, componentCheck := range component.ComponentChecks {
+		hash := componentCheck.Hash()
+		if componentCheck.Selector.LabelSelector != "" {
+			checks, err := duty.FindChecks(ctx, types.ResourceSelectors{componentCheck.Selector}, duty.PickColumns("id", "canary_id"))
+			if err != nil {
+				return nil, err
+			}
+			for _, check := range checks {
+				relationships = append(relationships, models.CheckComponentRelationship{
+					CanaryID:    check.CanaryID,
+					CheckID:     check.ID,
 					ComponentID: component.ID,
-					SelectorID:  selectorID,
+					SelectorID:  hash,
 				})
 			}
 		}
+
 		if componentCheck.Inline != nil {
 			inlineSchedule := component.Schedule
 			if componentCheck.Inline.Schedule != "" {
 				inlineSchedule = componentCheck.Inline.Schedule
 			}
-			canary, err := db.CreateComponentCanaryFromInline(
+
+			canary, err := createComponentCanaryFromInline(ctx.DB(),
 				component.ID.String(), component.Name, component.Namespace,
 				inlineSchedule, component.Owner, componentCheck.Inline,
 			)
+
 			if err != nil {
-				logger.Debugf("error creating canary from inline: %v", err)
+				return nil, fmt.Errorf("error creating canary from inline: %v", err)
 			}
 
-			if err := canaryJobs.SyncCanaryJob(context.DefaultContext, *canary); err != nil {
-				logger.Debugf("error creating canary job: %v", err)
+			if err := canaryJobs.SyncCanaryJob(ctx, *canary); err != nil {
+				return nil, fmt.Errorf("error creating canary job: %v", err)
 			}
 
-			inlineChecks, err := db.GetAllChecksForCanary(canary.ID)
+			inlineChecks, err := canary.FindChecks(ctx.DB())
 			if err != nil {
-				logger.Debugf("error getting checks for canary: %s. err: %v", canary.ID, err)
-				continue
+				return nil, fmt.Errorf("error getting checks for canary: %s. err: %v", canary.ID, err)
 			}
 			for _, inlineCheck := range inlineChecks {
-				selectorID, err := utils.GenerateJSONMD5Hash(componentCheck)
-				if err != nil {
-					logger.Errorf("Error generationg selector_id hash: %v", err)
-				}
-
-				relationships = append(relationships, &pkg.CheckComponentRelationship{
+				relationships = append(relationships, models.CheckComponentRelationship{
 					CanaryID:    inlineCheck.CanaryID,
 					CheckID:     inlineCheck.ID,
 					ComponentID: component.ID,
-					SelectorID:  selectorID,
+					SelectorID:  hash,
 				})
 			}
 		}
 	}
-	return relationships
+	return relationships, nil
 }
 
-func SyncCheckComponentRelationshipsForComponent(componentID uuid.UUID, relationships []*pkg.CheckComponentRelationship) error {
+func syncCheckComponentRelationships(ctx context.Context, componentID uuid.UUID, relationships []models.CheckComponentRelationship) error {
 	var selectorIDs, checkIDs []string
 	existingRelationShips, err := db.GetCheckRelationshipsForComponent(componentID)
 	if err != nil {
 		return err
 	}
+	db := ctx.DB()
 	for _, r := range existingRelationShips {
 		selectorIDs = append(selectorIDs, r.SelectorID)
 		checkIDs = append(checkIDs, r.CheckID.String())
@@ -120,27 +159,27 @@ func SyncCheckComponentRelationshipsForComponent(componentID uuid.UUID, relation
 
 		// If checkID does not exist, create a new relationship
 		if !collections.Contains(checkIDs, r.CheckID.String()) {
-			if err := db.PersistCheckComponentRelationship(r); err != nil {
-				return errors.Wrap(err, "error persisting check component relationships")
+			if err := r.Save(db); err != nil {
+				return fmt.Errorf("error persisting check component relationships: %v", err)
 			}
 			continue
 		}
 
 		// If check_id exists mark old row as deleted and update selector_id
-		if err := db.Gorm.Table("check_component_relationships").Where("component_id = ? AND check_id = ?", componentID, r.CheckID).
-			Update("deleted_at", time.Now()).Error; err != nil {
+		if err := db.Table("check_component_relationships").Where("component_id = ? AND check_id = ?", componentID, r.CheckID).
+			Update("deleted_at", duty.Now()).Error; err != nil {
 			return errors.Wrap(err, "error updating check relationships")
 		}
 
-		if err := db.PersistCheckComponentRelationship(r); err != nil {
+		if err := r.Save(db); err != nil {
 			return errors.Wrap(err, "error persisting check component relationships")
 		}
 	}
 
 	// Take set difference of these child component Ids and delete them
 	checkIDsToDelete := utils.SetDifference(checkIDs, newCheckIDs)
-	if err := db.Gorm.Table("check_component_relationships").Where("component_id = ? AND check_id IN ?", componentID, checkIDsToDelete).
-		Update("deleted_at", time.Now()).Error; err != nil {
+	if err := db.Table("check_component_relationships").Where("component_id = ? AND check_id IN ?", componentID, checkIDsToDelete).
+		Update("deleted_at", duty.Now()).Error; err != nil {
 		return errors.Wrap(err, "error deleting stale check component relationships")
 	}
 

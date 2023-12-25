@@ -1,31 +1,27 @@
-package system
+package topology
 
 import (
 	"fmt"
 	"reflect"
 
+	gocontext "context"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	pkgTopology "github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/duty/models"
-	"github.com/flanksource/kommons"
+	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/job"
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes"
 )
 
 var TopologyScheduler = cron.New()
 
-var Kommons *kommons.Client
-var Kubernetes kubernetes.Interface
-
 type TopologyJob struct {
-	*kommons.Client
-	Kubernetes kubernetes.Interface
+	context.Context
 	v1.Topology
 }
 
@@ -35,53 +31,45 @@ func (job TopologyJob) GetNamespacedName() types.NamespacedName {
 
 func (job TopologyJob) Run() {
 	opts := pkgTopology.TopologyRunOptions{
-		Client:     job.Client,
-		Kubernetes: job.Kubernetes,
-		Depth:      10,
-		Namespace:  job.Namespace,
+		Context:   job.Context.Wrap(gocontext.Background()),
+		Depth:     10,
+		Namespace: job.Namespace,
 	}
 	if err := pkgTopology.SyncComponents(opts, job.Topology); err != nil {
 		logger.Errorf("failed to run topology %s: %v", job.GetNamespacedName(), err)
 	}
 }
 
-func SyncTopologyJobs() {
-	logger.Infof("Syncing topology jobs")
-	if Kommons == nil {
-		var err error
-		Kommons, Kubernetes, err = pkg.NewKommonsClient()
-		if err != nil {
-			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
-		}
-	}
+var SyncTopology = &job.Job{
+	Name:      "SyncTopology",
+	Schedule:  "@every 5m",
+	Singleton: true,
+	RunNow:    true,
+	Fn: func(ctx job.JobRuntime) error {
+		var topologies []v1.Topology
 
-	topologies, err := db.GetAllTopologiesForSync()
-	if err != nil {
-		logger.Errorf("Failed to get topology: %v", err)
-		return
-	}
-
-	for _, topology := range topologies {
-		if err := SyncTopologyJob(topology); err != nil {
-			logger.Errorf("Error syncing topology job: %v", err)
-			continue
+		if err := ctx.DB().Table("topologies").Where(duty.LocalFilter).
+			Find(&topologies).Error; err != nil {
+			return err
 		}
-	}
-	logger.Infof("Synced topology jobs %d", len(TopologyScheduler.Entries()))
+
+		for _, topology := range topologies {
+			if err := SyncTopologyJob(ctx.Context, topology); err != nil {
+				ctx.History.AddError(err.Error())
+			} else {
+				ctx.History.IncrSuccess()
+			}
+		}
+		return nil
+	},
 }
 
-func SyncTopologyJob(t v1.Topology) error {
+func SyncTopologyJob(ctx context.Context, t v1.Topology) error {
 	if !t.DeletionTimestamp.IsZero() || t.Spec.GetSchedule() == "@never" {
 		DeleteTopologyJob(t.GetPersistedID())
 		return nil
 	}
-	if Kommons == nil {
-		var err error
-		Kommons, Kubernetes, err = pkg.NewKommonsClient()
-		if err != nil {
-			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
-		}
-	}
+
 	entry := findTopologyCronEntry(t.GetPersistedID())
 	if entry != nil {
 		job := entry.Job.(TopologyJob)
@@ -93,9 +81,8 @@ func SyncTopologyJob(t v1.Topology) error {
 		}
 	}
 	job := TopologyJob{
-		Client:     Kommons,
-		Kubernetes: Kubernetes,
-		Topology:   t,
+		Context:  ctx.Wrap(gocontext.Background()).WithObject(t.ObjectMeta),
+		Topology: t,
 	}
 
 	_, err := TopologyScheduler.AddJob(t.Spec.GetSchedule(), job)
@@ -132,37 +119,34 @@ func DeleteTopologyJob(id string) {
 	TopologyScheduler.Remove(entry.ID)
 }
 
-func ReconcileDeletedTopologyComponents() {
-	jobHistory := models.NewJobHistory("ReconcileDeletedTopologyComponents", "", "").Start()
-	_ = db.PersistJobHistory(jobHistory)
-	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
+var CleanupComponents = &job.Job{
+	Name:     "CleanupComponents",
+	Schedule: "@every 1h",
+	Fn: func(ctx job.JobRuntime) error {
 
-	var rows []struct {
-		ID        string
-		DeletedAt time.Time
-	}
-	// Select all components whose topology ID is deleted but their deleted at is not marked
-	err := db.Gorm.Raw(`
-        SELECT DISTINCT(topologies.id), topologies.deleted_at as deleted_at
-        FROM topologies
+		var rows []struct {
+			ID string
+		}
+		// Select all components whose topology ID is deleted but their deleted at is not marked
+		if err := ctx.DB().Raw(`
+        SELECT DISTINCT(topologies.id) FROM topologies
         INNER JOIN components ON topologies.id = components.topology_id
         WHERE
             components.deleted_at IS NULL AND
             topologies.deleted_at IS NOT NULL
-        `).Scan(&rows).Error
-
-	if err != nil {
-		logger.Errorf("Error fetching deleted topology components: %v", err)
-		jobHistory.AddError(err.Error())
-		return
-	}
-
-	for _, r := range rows {
-		if err := db.DeleteComponentsOfTopology(r.ID, r.DeletedAt); err != nil {
-			logger.Errorf("Error deleting components for topology[%s]: %v", r.ID, err)
-			jobHistory.AddError(err.Error())
+        `).Scan(&rows).Error; err != nil {
+			return err
 		}
-		DeleteTopologyJob(r.ID)
-	}
-	jobHistory.IncrSuccess()
+
+		for _, r := range rows {
+			if err := db.DeleteComponentsOfTopology(ctx.DB(), r.ID); err != nil {
+				logger.Errorf("Error deleting components for topology[%s]: %v", r.ID, err)
+				ctx.History.AddError(err.Error())
+			} else {
+				DeleteTopologyJob(r.ID)
+				ctx.History.IncrSuccess()
+			}
+		}
+		return nil
+	},
 }

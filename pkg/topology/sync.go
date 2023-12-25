@@ -1,76 +1,91 @@
 package topology
 
 import (
-	"time"
+	"fmt"
 
-	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"gorm.io/gorm/clause"
 )
 
-// Fetches and updates the selected component for components
-func ComponentRun() {
-	logger.Debugf("Syncing Component Relationships")
+var ComponentRun = &job.Job{
+	Name: "ComponentRelationshipSync",
+	Fn: func(ctx job.JobRuntime) error {
+		var components []models.Component
+		if err := ctx.DB().Where(duty.LocalFilter).
+			Where("selectors != 'null'").
+			Find(&components).Error; err != nil {
+			return fmt.Errorf("error getting components: %v", err)
+		}
 
-	components, err := db.GetAllComponentsWithSelectors()
-	if err != nil {
-		logger.Errorf("error getting components: %v", err)
-		return
-	}
+		for _, component := range components {
+			selectorId := component.Selectors.Hash()
+			comps, err := duty.FindComponents(ctx.Context, component.Selectors, duty.PickColumns("id", "path"))
+			if err != nil {
+				logger.Errorf("error getting components with selectors: %s. err: %v", component.Selectors, err)
+				ctx.History.AddError(err.Error())
+				continue
+			}
+			relationships := []models.ComponentRelationship{}
+			for _, c := range comps {
+				relationships = append(relationships, models.ComponentRelationship{
+					RelationshipID:   component.ID,
+					ComponentID:      c.ID,
+					SelectorID:       selectorId,
+					RelationshipPath: component.Path + "." + component.ID.String(),
+				})
+			}
 
-	jobHistory := models.NewJobHistory("ComponentRelationshipSync", "", "").Start()
-	_ = db.PersistJobHistory(jobHistory)
-	for _, component := range components {
-		comps, err := db.GetComponentsWithSelectors(component.Selectors)
-		if err != nil {
-			logger.Errorf("error getting components with selectors: %s. err: %v", component.Selectors, err)
-			jobHistory.AddError(err.Error())
-			continue
+			err = syncComponentRelationships(ctx.Context, component.ID, relationships)
+			if err != nil {
+				logger.Errorf("error syncing relationships: %v", err)
+				ctx.History.AddError(err.Error())
+				continue
+			}
+			ctx.History.IncrSuccess()
 		}
-		relationships, err := db.NewComponentRelationships(component.ID, component.Path, comps)
-		if err != nil {
-			logger.Errorf("error getting relationships: %v", err)
-			jobHistory.AddError(err.Error())
-			continue
-		}
-		err = SyncComponentRelationships(component.ID, relationships)
-		if err != nil {
-			logger.Errorf("error syncing relationships: %v", err)
-			jobHistory.AddError(err.Error())
-			continue
-		}
-		jobHistory.IncrSuccess()
-	}
-	_ = db.PersistJobHistory(jobHistory.End())
+		return nil
+	},
 }
 
-func ComponentStatusSummarySync() {
-	logger.Debugf("Syncing Status and Summary for components")
-	topology, err := Query(duty.TopologyOptions{Depth: 3})
-	if err != nil {
-		logger.Errorf("error getting components: %v", err)
-		return
-	}
-	jobHistory := models.NewJobHistory("ComponentStatusSummarySync", "", "").Start()
-	_ = db.PersistJobHistory(jobHistory)
-	topology.Components.Map(func(c *models.Component) {
-		if _, err := db.UpdateStatusAndSummaryForComponent(c.ID, c.Status, c.Summary); err != nil {
-			logger.Errorf("error persisting component: %v", err)
-			jobHistory.AddError(err.Error())
+var ComponentStatusSummarySync = &job.Job{
+	Name: "ComponentStatusSummarySync",
+	Fn: func(ctx job.JobRuntime) error {
+		topology, err := Query(duty.TopologyOptions{Depth: 3})
+		if err != nil {
+			return fmt.Errorf("error getting components: %v", err)
 		}
-		jobHistory.IncrSuccess()
-	})
-	_ = db.PersistJobHistory(jobHistory.End())
+
+		for _, c := range topology.Components {
+			tx := ctx.DB().Where("id = ? and (status != ? or summary != ?)", c.ID, c.Status, c.Summary).
+				UpdateColumns(models.Component{Status: c.Status, Summary: c.Summary})
+			if tx.Error != nil {
+				ctx.History.AddError(tx.Error.Error())
+			} else {
+				ctx.History.IncrSuccess()
+			}
+		}
+
+		return nil
+	},
 }
 
-func SyncComponentRelationships(parentComponentID uuid.UUID, relationships []*pkg.ComponentRelationship) error {
-	existingRelationships, err := db.GetChildRelationshipsForParentComponent(parentComponentID)
-	if err != nil {
+var SyncComponentRelationships2 = &job.Job{
+	Name: "ComponentStatusSummarySync",
+	Fn: func(ctx job.JobRuntime) error {
+		return nil
+	},
+}
+
+func syncComponentRelationships(ctx context.Context, id uuid.UUID, relationships []models.ComponentRelationship) error {
+	var existingRelationships []models.ComponentRelationship
+	if err := ctx.DB().Where("relationship_id = ? AND deleted_at IS NULL", id).Find(&relationships).Error; err != nil {
 		return err
 	}
 
@@ -83,29 +98,74 @@ func SyncComponentRelationships(parentComponentID uuid.UUID, relationships []*pk
 	for _, r := range relationships {
 		newChildComponentIDs = append(newChildComponentIDs, r.ComponentID.String())
 	}
-	if err := db.PersistComponentRelationships(relationships); err != nil {
+
+	if len(relationships) == 0 {
+		return nil
+	}
+
+	if err := ctx.DB().Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "component_id"}, {Name: "relationship_id"}, {Name: "selector_id"}},
+		UpdateAll: true,
+	}).Create(relationships).Error; err != nil {
 		return err
 	}
 
 	// Take set difference of these child component Ids and delete them
 	childComponentIDsToDelete := utils.SetDifference(childComponentIDs, newChildComponentIDs)
-	if err := db.Gorm.Table("component_relationships").Where("relationship_id = ? AND component_id IN ?", parentComponentID, childComponentIDsToDelete).
-		Update("deleted_at", time.Now()).Error; err != nil {
+	if err := ctx.DB().
+		Table("component_relationships").
+		Where("relationship_id = ? AND component_id IN ?", id, childComponentIDsToDelete).
+		Update("deleted_at", duty.Now()).
+		Error; err != nil {
 		return errors.Wrap(err, "error deleting stale component relationships")
 	}
 
 	return nil
 }
 
-func ComponentCostRun() {
-	logger.Debugf("Syncing component costs")
+var ComponentCostRun = &job.Job{
+	Name:     "ComponentCostSync",
+	Schedule: "@every 1h",
+	Fn: func(ctx job.JobRuntime) error {
+		return ctx.DB().Exec(`
+				WITH
+				component_children AS (
+						SELECT components.id, ARRAY(
+								SELECT child_id FROM lookup_component_children(components.id::text, -1)
+								UNION
+								SELECT relationship_id as child_id FROM component_relationships WHERE component_id IN (
+										SELECT child_id FROM lookup_component_children(components.id::text, -1)
+								)
+						) AS child_ids
+						FROM components
+						GROUP BY components.id
+				),
+				component_configs AS (
+						SELECT component_children.id, ARRAY_AGG(ccr.config_id) as config_ids
+						FROM component_children
+						INNER JOIN config_component_relationships ccr ON ccr.component_id = ANY(component_children.child_ids)
+						GROUP BY component_children.id
+				),
+				component_config_costs AS (
+						SELECT
+								component_configs.id,
+								SUM(cost_per_minute) AS cost_per_minute,
+								SUM(cost_total_1d) AS cost_total_1d,
+								SUM(cost_total_7d) AS cost_total_7d,
+								SUM(cost_total_30d) AS cost_total_30d
+						FROM config_items
+						INNER JOIN component_configs ON config_items.id = ANY(component_configs.config_ids)
+						GROUP BY component_configs.id
+				)
 
-	jobHistory := models.NewJobHistory("ComponentCostSync", "", "").Start()
-	err := db.UpdateComponentCosts()
-	if err != nil {
-		logger.Errorf("Error updating component costs: %v", err)
-		_ = db.PersistJobHistory(jobHistory.AddError(err.Error()).End())
-		return
-	}
-	_ = db.PersistJobHistory(jobHistory.IncrSuccess().End())
+				UPDATE components
+				SET
+						cost_per_minute = component_config_costs.cost_per_minute,
+						cost_total_1d = component_config_costs.cost_total_1d,
+						cost_total_7d = component_config_costs.cost_total_7d,
+						cost_total_30d = component_config_costs.cost_total_30d
+				FROM component_config_costs
+				WHERE components.id = component_config_costs.id
+				`).Error
+	},
 }
