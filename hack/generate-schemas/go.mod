@@ -43,7 +43,8 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/evanphx/json-patch v5.7.0+incompatible // indirect
-	github.com/flanksource/duty v1.0.250 // indirect
+	github.com/exaring/otelpgx v0.5.2 // indirect
+	github.com/flanksource/duty v1.0.252 // indirect
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7 // indirect
 	github.com/flanksource/kommons v0.31.4 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect

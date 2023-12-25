@@ -712,11 +712,13 @@ github.com/envoyproxy/protoc-gen-validate v0.9.1/go.mod h1:OKNgG7TCp5pF4d6XftA0+
 github.com/evanphx/json-patch v4.12.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=
 github.com/evanphx/json-patch v5.7.0+incompatible h1:vgGkfT/9f8zE6tvSCe74nfpAVDQ2tG6yudJd8LBksgI=
 github.com/evanphx/json-patch v5.7.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=
+github.com/exaring/otelpgx v0.5.2 h1:joqpJoz/HJD2hP4Rdk6CVM9O7oCQ5zWAkTalTen0ShE=
+github.com/exaring/otelpgx v0.5.2/go.mod h1:4dBiAqwzDNmpj3TwX5Syti1/Nw2bIoDQItdLvWTklQU=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/flanksource/commons v1.19.2 h1:6JAnKzBBk5iUROrR79dm7Bzbg9beAiFTehkTeZyI2/g=
 github.com/flanksource/commons v1.19.2/go.mod h1:k+3B7McXUOS+TirYFR9h0pPk6mHNG3dqVUEY9gKI3/U=
-github.com/flanksource/duty v1.0.250 h1:K3BWkNXCpPjTxhWba+NPVyLjyH0qd6FNXz7nYlKgTiU=
-github.com/flanksource/duty v1.0.250/go.mod h1:qO9qEVWlKXSYy/A8cnJD+YJuS96nz42zPxmabs8Wxsk=
+github.com/flanksource/duty v1.0.252 h1:MiLT+vuem+e6qxUd1++8wJn6gvR1sIVfdOYElKxR76o=
+github.com/flanksource/duty v1.0.252/go.mod h1:v9JIeYE46dfmocI4wifW5bICeUXMjkIw791YQGYsSjw=
 github.com/flanksource/gomplate/v3 v3.20.4/go.mod h1:27BNWhzzSjDed1z8YShO6W+z6G9oZXuxfNFGd/iGSdc=
 github.com/flanksource/gomplate/v3 v3.20.26 h1:85lUzlKgZjb1uIkzoa4zN03OcdOnFPG+oWxshZTYqz4=
 github.com/flanksource/gomplate/v3 v3.20.26/go.mod h1:GKmptFMdr2LbOuqwQZrmo9a/UygyZ0pbXffks8MuYhE=
