@@ -17,6 +17,7 @@ import (
 const (
 	OnTransformMarkHealthy   = "MarkHealthy"
 	OnTransformMarkUnhealthy = "MarkUnhealthy"
+	OnTransformIgnore        = "Ignore"
 )
 
 type checkContext interface {
