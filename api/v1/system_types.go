@@ -3,6 +3,8 @@ package v1
 import (
 	"fmt"
 
+	"github.com/flanksource/commons/hash"
+	"github.com/flanksource/duty/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -30,7 +32,7 @@ type TopologySpec struct {
 	// being applied to multiple components in the tree
 	Properties Properties `json:"properties,omitempty"`
 	// Lookup and associate config items with this component
-	Configs []Config `json:"configs,omitempty"`
+	Configs []types.ConfigQuery `json:"configs,omitempty"`
 }
 
 func (s Topology) IsEmpty() bool {
@@ -62,9 +64,14 @@ type NamespaceSelector struct {
 }
 
 type ComponentCheck struct {
-	Selector ResourceSelector `json:"selector,omitempty"`
+	Selector types.ResourceSelector `json:"selector,omitempty"`
 	// +kubebuilder:validation:XPreserveUnknownFields
 	Inline *CanarySpec `json:"inline,omitempty"`
+}
+
+func (c ComponentCheck) Hash() string {
+	h, _ := hash.JSONMD5Hash(c)
+	return h
 }
 
 type Config struct {
@@ -73,6 +80,16 @@ type Config struct {
 	Name      string            `json:"name,omitempty"`
 	Namespace string            `json:"namespace,omitempty"`
 	Tags      map[string]string `json:"tags,omitempty"`
+}
+
+func (c Config) ToDuty() types.ConfigQuery {
+	return types.ConfigQuery{
+		ID:        c.ID,
+		Type:      c.Type,
+		Name:      c.Name,
+		Namespace: c.Namespace,
+		Tags:      c.Tags,
+	}
 }
 
 func (c Config) String() string {

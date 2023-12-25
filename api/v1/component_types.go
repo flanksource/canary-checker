@@ -40,12 +40,12 @@ type ComponentSpec struct {
 	// Create new child components
 	Components []ComponentSpecObject `json:"components,omitempty"`
 	// Lookup and associcate other components with this component
-	Selectors       ResourceSelectors `json:"selectors,omitempty"`
-	ComponentChecks ComponentChecks   `json:"checks,omitempty"`
+	Selectors       types.ResourceSelectors `json:"selectors,omitempty"`
+	ComponentChecks ComponentChecks         `json:"checks,omitempty"`
 	// Lookup and associate config items with this component
-	Configs []Config `json:"configs,omitempty"`
+	Configs types.ConfigQueries `json:"configs,omitempty"`
 	//
-	Summary *Summary `json:"summary,omitempty"`
+	Summary *types.Summary `json:"summary,omitempty"`
 	// Only applies when using lookup, when specified the components and properties
 	// specified under ForEach will be templated using the components returned by the lookup
 	// ${.properties} can be used to reference the properties of the component
@@ -69,13 +69,13 @@ func (c ComponentSpec) String() string {
 type ForEach struct {
 	Components []ComponentSpec `json:"components,omitempty"`
 	// Properties are created once the full component tree is created, property lookup functions
-	// can return a map of coomponent name => properties to allow for bulk property lookups
+	// can return a map of component name => properties to allow for bulk property lookups
 	// being applied to multiple components in the tree
-	Properties      Properties         `json:"properties,omitempty"`
-	Configs         []Config           `json:"configs,omitempty"`
-	Selectors       ResourceSelectors  `json:"selectors,omitempty"`
-	Relationships   []RelationshipSpec `json:"relationships,omitempty"`
-	ComponentChecks ComponentChecks    `json:"checks,omitempty"`
+	Properties      Properties              `json:"properties,omitempty"`
+	Configs         []types.ConfigQuery     `json:"configs,omitempty"`
+	Selectors       types.ResourceSelectors `json:"selectors,omitempty"`
+	Relationships   []RelationshipSpec      `json:"relationships,omitempty"`
+	ComponentChecks ComponentChecks         `json:"checks,omitempty"`
 }
 
 func (f *ForEach) IsEmpty() bool {
@@ -215,7 +215,7 @@ func (p *Property) String() string {
 type ConfigLookup struct {
 	ID string `json:"id,omitempty"`
 	// Lookup a config by it
-	Config *Config `json:"config,omitempty"`
+	Config *types.ConfigQuery `json:"config,omitempty"`
 	// A JSONPath expression to lookup the value in the config
 	Field string `json:"field,omitempty"`
 	// Apply transformations to the value
