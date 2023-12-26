@@ -6,7 +6,6 @@ resources:
   - k8s
   - minimal
   - git
-  - topology
   - ldap
   - opensearch
   - elasticsearch
