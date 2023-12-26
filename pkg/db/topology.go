@@ -310,12 +310,10 @@ func UpdateStatusAndSummaryForComponent(id uuid.UUID, status types.ComponentStat
 
 func DeleteTopology(t *v1.Topology) error {
 	logger.Infof("Deleting topology %s/%s", t.Namespace, t.Name)
-	model := pkg.TopologyFromV1(t)
 	deleteTime := time.Now()
 
-	tx := Gorm.Table("topologies").Find(model, "id = ?", t.GetPersistedID()).UpdateColumn("deleted_at", deleteTime)
-	if tx.Error != nil {
-		return tx.Error
+	if err := Gorm.Table("topologies").Where("id = ?", t.GetPersistedID()).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+		return fmt.Errorf("failed to update deleted_at for topology[%s]: %w", t.GetPersistedID(), err)
 	}
 	return DeleteComponentsOfTopology(t.GetPersistedID(), deleteTime)
 }
