@@ -119,7 +119,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		logger.Errorf("error running checks for canary %s: %v", canaryID, err)
 		return nil
 	}
-	span.End()
+	defer span.End()
 
 	// Get transformed checks before and after, and then delete the olds ones that are not in new set.
 	// NOTE: Webhook checks, although they are transformed, are handled entirely by the webhook caller
