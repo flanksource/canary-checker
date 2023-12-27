@@ -12,7 +12,6 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/checks"
 	dutyContext "github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/tests/setup"
 	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -31,22 +30,24 @@ func TestChecks(t *testing.T) {
 }
 
 var _ = ginkgo.BeforeSuite(func() {
-	DefaultContext = setup.BeforeSuiteFn().WithDBLogLevel("trace").WithTrace()
 	kommonsClient, k8s, err := pkg.NewKommonsClient()
 	if err != nil {
 		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
 	}
 
-	DefaultContext = DefaultContext.WithKubernetes(k8s).WithKommons(kommonsClient)
+	DefaultContext = dutyContext.New().WithKubernetes(k8s).WithKommons(kommonsClient)
 
 	logger.StandardLogger().SetLogLevel(verbosity)
 
 })
-var _ = ginkgo.AfterSuite(setup.AfterSuiteFn)
 
 func init() {
+	defaultFolder := "fixtures/minimal"
+	if os.Getenv("TEST_FOLDER") != "" {
+		defaultFolder = os.Getenv("TEST_FOLDER")
+	}
 	flag.IntVar(&verbosity, "verbose", 0, "Add verbose logging")
-	flag.StringVar(&testFolder, "test-folder", "fixtures/minimal", "The folder containing test fixtures to run")
+	flag.StringVar(&testFolder, "test-folder", defaultFolder, "The folder containing test fixtures to run")
 }
 
 var _ = ginkgo.Describe("Canary Checks/"+testFolder, func() {
@@ -128,5 +129,4 @@ func runFixture(name string) {
 			}
 		}
 	})
-
 }

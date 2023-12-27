@@ -61,17 +61,17 @@ var AddTopology = &cobra.Command{
 	Use:   "topology <system.yaml>",
 	Short: "Add a new topology spec",
 	Run: func(cmd *cobra.Command, configFiles []string) {
-		opts := getTopologyRunOptions(0)
+		opts := getTopologyRunOptions()
 		if err := configSync.SyncTopology(opts, dataFile, configFiles...); err != nil {
 			logger.Fatalf("Could not sync topology: %v", err)
 		}
 	},
 }
 
-func getTopologyRunOptions(depth int) topology.TopologyRunOptions {
+func getTopologyRunOptions() topology.TopologyRunOptions {
 	return topology.TopologyRunOptions{
 		Context:   apicontext.DefaultContext,
-		Depth:     10,
+		Depth:     queryParams.Depth,
 		Namespace: topologyRunNamespace,
 	}
 }
@@ -88,7 +88,7 @@ var RunTopology = &cobra.Command{
 			log.Fatalln("Must specify at least one topology definition")
 		}
 
-		opts := getTopologyRunOptions(10)
+		opts := getTopologyRunOptions()
 
 		var results = []*pkg.Component{}
 
@@ -139,7 +139,7 @@ var RunTopology = &cobra.Command{
 
 func init() {
 	QueryTopology.Flags().StringVar(&queryParams.ID, "component", "", "The component id to query")
-	QueryTopology.Flags().IntVar(&queryParams.Depth, "depth", 1, "The depth of the components to return")
+	QueryTopology.Flags().IntVar(&queryParams.Depth, "depth", 10, "The depth of the components to return")
 	RunTopology.Flags().StringVarP(&topologyOutput, "output", "o", "", "Output file to write results to")
 	RunTopology.Flags().StringVarP(&topologyRunNamespace, "namespace", "n", "default", "Namespace to query")
 	Topology.AddCommand(RunTopology, QueryTopology, AddTopology)

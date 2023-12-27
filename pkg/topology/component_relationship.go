@@ -27,7 +27,7 @@ var ComponentRelationshipSync = &job.Job{
 		}
 
 		for _, component := range components {
-			selectorId := component.Selectors.Hash()
+			hash := component.Selectors.Hash()
 			comps, err := duty.FindComponents(ctx.Context, component.Selectors, duty.PickColumns("id", "path"))
 			if err != nil {
 				ctx.History.AddError(fmt.Sprintf("error getting components with selectors: %s. err: %v", component.Selectors, err))
@@ -38,7 +38,7 @@ var ComponentRelationshipSync = &job.Job{
 				relationships = append(relationships, models.ComponentRelationship{
 					RelationshipID:   component.ID,
 					ComponentID:      c.ID,
-					SelectorID:       selectorId,
+					SelectorID:       hash,
 					RelationshipPath: component.Path + "." + component.ID.String(),
 				})
 			}

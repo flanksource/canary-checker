@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -e
 
 export KUBECONFIG=~/.kube/config
 export KARINA="karina -c $(pwd)/test/karina.yaml"
@@ -123,10 +124,10 @@ if [[ "$SKIP_TELEPRESENCE" != "true" ]]; then
   telepresence="telepresence --mount false -m vpn-tcp --namespace default --run"
 fi
 
-cmd="$telepresence ginkgo -p  --junit-report test-results.xml $TEST_BINARY -ginkgo.v -- --test-folder $TEST_FOLDER $EXTRA"
+cmd="$telepresence ginkgo -p  --junit-report test-results.xml $TEST_BINARY --test-folder $TEST_FOLDER $EXTRA"
 $cmd  2>&1 | tee test.out
-code=$?
-echo "return=$code"
 
-echo "::endgroup::"
-exit $code
+if [ grep "Test Suite Failed" test.out ]; then
+  echo "::endgroup::"
+  exit 1
+fi

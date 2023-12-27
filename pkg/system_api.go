@@ -150,27 +150,27 @@ type Component struct {
 	LogSelectors    dutyTypes.LogSelectors      `json:"logs,omitempty" gorm:"column:log_selectors"`
 }
 
-func (c *Component) GetConfigs(db *gorm.DB) (relationships []models.ConfigComponentRelationship, err error) {
-	err = db.Where("component_id = ? AND deleted_at IS NULL", c.ID).Find(&relationships).Error
+func (component *Component) GetConfigs(db *gorm.DB) (relationships []models.ConfigComponentRelationship, err error) {
+	err = db.Where("component_id = ? AND deleted_at IS NULL", component.ID).Find(&relationships).Error
 	return relationships, err
 }
 
-func (c *Component) GetChecks(db *gorm.DB) (relationships []models.CheckComponentRelationship, err error) {
-	err = db.Where("component_id = ? AND deleted_at IS NULL", c.ID).Find(&relationships).Error
+func (component *Component) GetChecks(db *gorm.DB) (relationships []models.CheckComponentRelationship, err error) {
+	err = db.Where("component_id = ? AND deleted_at IS NULL", component.ID).Find(&relationships).Error
 	return relationships, err
 }
 
-func (c *Component) GetChildren(db *gorm.DB) (relationships []models.ComponentRelationship, err error) {
-	err = db.Where("relationship_id = ? AND deleted_at IS NULL", c.ID).Find(&relationships).Error
+func (component *Component) GetChildren(db *gorm.DB) (relationships []models.ComponentRelationship, err error) {
+	err = db.Where("relationship_id = ? AND deleted_at IS NULL", component.ID).Find(&relationships).Error
 	return relationships, err
 }
 
-func (c *Component) GetParents(db *gorm.DB) (relationships []models.CheckComponentRelationship, err error) {
-	err = db.Where("component_id = ? AND deleted_at IS NULL", c.ID).Find(&relationships).Error
+func (component *Component) GetParents(db *gorm.DB) (relationships []models.CheckComponentRelationship, err error) {
+	err = db.Where("component_id = ? AND deleted_at IS NULL", component.ID).Find(&relationships).Error
 	return relationships, err
 }
 
-func (component Component) Clone() Component {
+func (component *Component) Clone() Component {
 	clone := Component{
 		Name:            component.Name,
 		TopologyType:    component.TopologyType,

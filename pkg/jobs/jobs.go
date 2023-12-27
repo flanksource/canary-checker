@@ -68,7 +68,6 @@ func Start() {
 		RunOnStart().AddToScheduler(FuncScheduler); err != nil {
 		logger.Fatalf("Failed to schedule job [canaryJobs.SyncCanaryJobs]: %v", err)
 	}
-
 }
 
 func ScheduleFunc(schedule string, fn func()) (interface{}, error) {

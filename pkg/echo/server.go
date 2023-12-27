@@ -18,7 +18,6 @@ var Debug bool
 var AllowedCORS string
 
 func New(ctx context.Context) *echo.Echo {
-
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{AllowedCORS},

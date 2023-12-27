@@ -16,7 +16,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/spf13/cobra"
 
-	"github.com/flanksource/canary-checker/api/context"
 	apicontext "github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
@@ -66,7 +65,7 @@ var Run = &cobra.Command{
 				go func() {
 					defer wg.Done()
 
-					res, err := checks.RunChecks(context.New(apicontext.DefaultContext, _config))
+					res, err := checks.RunChecks(apicontext.New(apicontext.DefaultContext, _config))
 					if err != nil {
 						logger.Errorf("error running checks: %v", err)
 						return

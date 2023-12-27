@@ -51,7 +51,6 @@ var Serve = &cobra.Command{
 }
 
 func setup() dutyContext.Context {
-
 	var err error
 
 	if apicontext.DefaultContext, err = InitContext(); err != nil {

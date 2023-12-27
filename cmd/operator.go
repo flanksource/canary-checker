@@ -71,10 +71,13 @@ func run(cmd *cobra.Command, args []string) {
 	_ = canaryv1.AddToScheme(scheme)
 
 	ctx, err := InitContext()
+	if err != nil {
+		logger.Fatalf(err.Error())
+	}
 	if ctx.DB() == nil {
 		logger.Fatalf("operator requires db connections")
 	}
-	if ctx.Kubernetes() == nil {
+	if ctx.Kommons() == nil {
 		logger.Fatalf("operator requires a kubernetes connection")
 	}
 
