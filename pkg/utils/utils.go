@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net"
 	"path/filepath"
 	"sync"
 	"time"
@@ -138,4 +139,18 @@ func UnfoldGlobs(paths ...string) []string {
 	}
 
 	return unfoldedPaths
+}
+
+func FreePort() int {
+	// Bind to port 0 to let the OS choose a free port
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer listener.Close()
+
+	// Get the address of the listener
+	address := listener.Addr().(*net.TCPAddr)
+	return address.Port
 }

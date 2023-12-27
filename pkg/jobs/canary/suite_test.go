@@ -1,7 +1,6 @@
 package canary
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -9,6 +8,7 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/cache"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/tests/setup"
@@ -19,15 +19,15 @@ import (
 
 var (
 	testEchoServer     *echo.Echo
-	testEchoServerPort = 9232
+	testEchoServerPort int
 	requestCount       int
 
 	DefaultContext dutyContext.Context
 )
 
-func TestCanarySyncJob(t *testing.T) {
+func TestCanaryJobs(t *testing.T) {
 	RegisterFailHandler(ginkgo.Fail)
-	ginkgo.RunSpecs(t, "Sync Canary Job test")
+	ginkgo.RunSpecs(t, "Canary Job")
 }
 
 // DelayedResponseHandler waits for "delay" seconds before responding.
@@ -46,12 +46,13 @@ func DelayedResponseHandler(c echo.Context) error {
 }
 
 var _ = ginkgo.BeforeSuite(func() {
-	DefaultContext = setup.BeforeSuiteFn()
+	DefaultContext = setup.BeforeSuiteFn().WithDBLogLevel("trace").WithTrace()
 
 	cache.PostgresCache = cache.NewPostgresCache(DefaultContext)
 
 	testEchoServer = echo.New()
 	testEchoServer.GET("/", DelayedResponseHandler)
+	testEchoServerPort = utils.FreePort()
 	listenAddr := fmt.Sprintf(":%d", testEchoServerPort)
 
 	go func() {
@@ -68,7 +69,7 @@ var _ = ginkgo.BeforeSuite(func() {
 
 var _ = ginkgo.AfterSuite(func() {
 	logger.Infof("Stopping test echo server")
-	if err := testEchoServer.Shutdown(context.Background()); err != nil {
+	if err := testEchoServer.Close(); err != nil {
 		ginkgo.Fail(err.Error())
 	}
 
