@@ -1,17 +1,16 @@
 package topology
 
 import (
-	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/duty/types"
 	ginkgo "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = ginkgo.Describe("Test component relationship sync job", ginkgo.Ordered, func() {
+var _ = ginkgo.Describe("Topology relationships", ginkgo.Ordered, func() {
 	parentComponent := pkg.Component{
 		Name: "Component",
-		Selectors: []v1.ResourceSelector{
+		Selectors: []types.ResourceSelector{
 			{
 				Name:          "ComponentSelector",
 				LabelSelector: "service=payments",
@@ -32,16 +31,19 @@ var _ = ginkgo.Describe("Test component relationship sync job", ginkgo.Ordered, 
 	}
 
 	ginkgo.BeforeAll(func() {
-		err := db.Gorm.Create(&parentComponent).Error
+		ComponentRelationshipSync.Context = DefaultContext
+		err := DefaultContext.DB().Create(&parentComponent).Error
 		Expect(err).To(BeNil())
 
-		err = db.Gorm.Create(pkg.Components{&childComponent1, &childComponent2, &childComponent3}).Error
+		err = DefaultContext.DB().Create(pkg.Components{&childComponent1, &childComponent2, &childComponent3}).Error
 		Expect(err).To(BeNil())
 	})
 
 	ginkgo.It("should create component relationships", func() {
-		ComponentRun()
-		relationships, err := db.GetChildRelationshipsForParentComponent(parentComponent.ID)
+		ComponentRelationshipSync.Run()
+		expectJobToPass(ComponentRelationshipSync)
+
+		relationships, err := parentComponent.GetChildren(DefaultContext.DB())
 		Expect(err).To(BeNil())
 
 		// Child-1 and Child-3 should be present but not Child-2
@@ -49,21 +51,25 @@ var _ = ginkgo.Describe("Test component relationship sync job", ginkgo.Ordered, 
 	})
 
 	ginkgo.It("should handle component relationship deletions", func() {
-		err := db.Gorm.Delete(&childComponent3).Error
+		err := DefaultContext.DB().Delete(&childComponent3).Error
 		Expect(err).To(BeNil())
 
-		ComponentRun()
-		relationships, err := db.GetChildRelationshipsForParentComponent(parentComponent.ID)
+		ComponentRelationshipSync.Run()
+		expectJobToPass(ComponentRelationshipSync)
+
+		relationships, err := parentComponent.GetChildren(DefaultContext.DB())
 		Expect(err).To(BeNil())
 
 		// Only child 1 should be present
 		Expect(len(relationships)).To(Equal(1))
 
-		err = db.Gorm.Create(&childComponent3).Error
+		err = DefaultContext.DB().Create(&childComponent3).Error
 		Expect(err).To(BeNil())
 
-		ComponentRun()
-		relationships, err = db.GetChildRelationshipsForParentComponent(parentComponent.ID)
+		ComponentRelationshipSync.Run()
+		expectJobToPass(ComponentRelationshipSync)
+
+		relationships, err = parentComponent.GetChildren(DefaultContext.DB())
 		Expect(err).To(BeNil())
 
 		// Child-1 and Child-3 should be present but not Child-2
@@ -72,11 +78,12 @@ var _ = ginkgo.Describe("Test component relationship sync job", ginkgo.Ordered, 
 
 	ginkgo.It("should handle component label updates", func() {
 		childComponent3.Labels = map[string]string{"service": "logistics"}
-		err := db.Gorm.Save(&childComponent3).Error
+		err := DefaultContext.DB().Save(&childComponent3).Error
 		Expect(err).To(BeNil())
+		ComponentRelationshipSync.Run()
+		expectJobToPass(ComponentRelationshipSync)
 
-		ComponentRun()
-		relationships, err := db.GetChildRelationshipsForParentComponent(parentComponent.ID)
+		relationships, err := parentComponent.GetChildren(DefaultContext.DB())
 		Expect(err).To(BeNil())
 
 		// Only child 1 should be present as we updated the labels

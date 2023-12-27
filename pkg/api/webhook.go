@@ -1,7 +1,6 @@
 package api
 
 import (
-	goctx "context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,7 +12,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/duty"
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/labstack/echo/v4"
 )
@@ -54,15 +53,17 @@ func WebhookHandler(c echo.Context) error {
 		data.Content = string(b)
 	}
 
-	if err := webhookHandler(c.Request().Context(), id, authToken, data); err != nil {
+	ctx := c.Request().Context().(dutyContext.Context)
+
+	if err := webhookHandler(ctx, id, authToken, data); err != nil {
 		return WriteError(c, err)
 	}
 
 	return c.JSON(http.StatusOK, &HTTPSuccess{Message: "ok"})
 }
 
-func webhookHandler(ctx goctx.Context, id, authToken string, data CheckData) error {
-	webhookChecks, err := db.FindChecks(context.DefaultContext.Wrap(ctx), id, checks.WebhookCheckType)
+func webhookHandler(ctx dutyContext.Context, id, authToken string, data CheckData) error {
+	webhookChecks, err := db.FindChecks(ctx, id, checks.WebhookCheckType)
 	if err != nil {
 		return err
 	}
@@ -77,7 +78,7 @@ func webhookHandler(ctx goctx.Context, id, authToken string, data CheckData) err
 	}
 
 	var canary *v1.Canary
-	if c, err := db.FindCanaryByID(check.CanaryID.String()); err != nil {
+	if c, err := db.FindCanaryByID(ctx, check.CanaryID.String()); err != nil {
 		return fmt.Errorf("failed to get canary: %w", err)
 	} else if c == nil {
 		return Errorf(ENOTFOUND, "canary was not found (id:%s): %v", check.CanaryID.String(), err)
@@ -92,7 +93,7 @@ func webhookHandler(ctx goctx.Context, id, authToken string, data CheckData) err
 
 	// Authorization
 	if webhook.Token != nil && !webhook.Token.IsEmpty() {
-		token, err := duty.GetEnvValueFromCache(context.DefaultContext.Kubernetes(), *webhook.Token, canary.Namespace)
+		token, err := ctx.GetEnvValueFromCache(*webhook.Token, canary.Namespace)
 		if err != nil {
 			return err
 		}
@@ -107,7 +108,7 @@ func webhookHandler(ctx goctx.Context, id, authToken string, data CheckData) err
 
 	results := []*pkg.CheckResult{result}
 
-	scrapeCtx := context.New(context.DefaultContext.Kommons(), context.DefaultContext.Kubernetes(), db.Gorm, db.Pool, *canary)
+	scrapeCtx := context.New(ctx, *canary)
 	transformedResults := checks.TransformResults(scrapeCtx, results)
 
 	checks.ExportCheckMetrics(scrapeCtx, transformedResults)

@@ -25,14 +25,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/flanksource/canary-checker/api/context"
-
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	dutyContext "github.com/flanksource/duty/context"
-	"github.com/flanksource/kommons"
 	"github.com/go-logr/logr"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
 	"github.com/nsf/jsondiff"
@@ -40,7 +37,6 @@ import (
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -53,8 +49,7 @@ var json = jsontime.ConfigWithCustomTimeFormat
 type CanaryReconciler struct {
 	LogPass, LogFail bool
 	client.Client
-	Kubernetes  kubernetes.Interface
-	Kommons     *kommons.Client
+	dutyContext.Context
 	Log         logr.Logger
 	Scheme      *runtime.Scheme
 	Events      record.EventRecorder
@@ -71,11 +66,9 @@ const FinalizerName = "canary.canaries.flanksource.com"
 // +kubebuilder:rbac:groups="",resources=pods/exec,verbs=*
 // +kubebuilder:rbac:groups="",resources=pods/logs,verbs=*
 func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.DefaultContext.Wrap(parentCtx)
-
 	logger := r.Log.WithValues("canary", req.NamespacedName)
 	canary := &v1.Canary{}
-	err := r.Get(ctx, req.NamespacedName, canary)
+	err := r.Get(parentCtx, req.NamespacedName, canary)
 	if errors.IsNotFound(err) {
 		return ctrl.Result{}, nil
 	} else if err != nil {
@@ -85,6 +78,7 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 	if runner.IsCanaryIgnored(&canary.ObjectMeta) {
 		return ctrl.Result{}, nil
 	}
+	ctx := r.Context.WithObject(canary.ObjectMeta)
 
 	canary.SetRunnerName(r.RunnerName)
 
@@ -97,7 +91,7 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 	}
 
 	if !canary.DeletionTimestamp.IsZero() {
-		if err := db.DeleteCanary(canary.GetPersistedID(), canary.DeletionTimestamp.Time); err != nil {
+		if err := db.DeleteCanary(ctx.DB(), canary.GetPersistedID()); err != nil {
 			logger.Error(err, "failed to delete canary")
 		}
 		canaryJobs.DeleteCanaryJob(canary.GetPersistedID())
@@ -187,7 +181,7 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *CanaryReconciler) persistAndCacheCanary(ctx dutyContext.Context, canary *v1.Canary) (*pkg.Canary, error) {
-	dbCanary, err := db.PersistCanary(*canary, "kubernetes/"+canary.GetPersistedID())
+	dbCanary, err := db.PersistCanary(ctx.DB(), *canary, "kubernetes/"+canary.GetPersistedID())
 	if err != nil {
 		return nil, err
 	}

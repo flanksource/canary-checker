@@ -7,30 +7,25 @@ import (
 	"io"
 	"net/http"
 	_ "net/http/pprof" // required by serve
-	"net/url"
 	"os"
 	"os/signal"
 	"strings"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	echopprof "github.com/sevennt/echo-pprof"
-	"go.opentelemetry.io/otel"
-
 	apicontext "github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/echo"
 	"github.com/flanksource/canary-checker/pkg/jobs"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/duty"
+	echov4 "github.com/labstack/echo/v4"
+	"go.opentelemetry.io/otel"
 
 	"github.com/flanksource/canary-checker/pkg/runner"
 
-	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
-	commonsCtx "github.com/flanksource/commons/context"
 	"github.com/flanksource/commons/logger"
 	dutyContext "github.com/flanksource/duty/context"
 	prom "github.com/prometheus/client_golang/prometheus"
@@ -39,7 +34,7 @@ import (
 )
 
 var schedule, configFile string
-var executor, debug bool
+var executor bool
 var propertiesFile = "canary-checker.properties"
 
 var Serve = &cobra.Command{
@@ -47,8 +42,7 @@ var Serve = &cobra.Command{
 	Short: "Start a server to execute checks",
 	Run: func(cmd *cobra.Command, configFiles []string) {
 		logger.ParseFlags(cmd.Flags())
-		setup()
-		canaryJobs.StartScanCanaryConfigs(dataFile, configFiles)
+		canaryJobs.StartScanCanaryConfigs(setup(), dataFile, configFiles)
 		if executor {
 			jobs.Start()
 		}
@@ -56,26 +50,22 @@ var Serve = &cobra.Command{
 	},
 }
 
-func setup() {
-	if err := db.Init(); err != nil {
-		logger.Fatalf("error connecting to db %v", err)
-	}
-	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
+func setup() dutyContext.Context {
+	var err error
 
-	kommonsClient, k8s, err := pkg.NewKommonsClient()
-	if err != nil {
-		logger.Warnf("failed to get kommons client, checks that read kubernetes configs will fail: %v", err)
+	if apicontext.DefaultContext, err = InitContext(); err != nil {
+		logger.Fatalf(err.Error())
 	}
 
-	apicontext.DefaultContext = dutyContext.NewContext(context.Background(), commonsCtx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))).
-		WithDB(db.Gorm, db.Pool).
-		WithKubernetes(k8s).
-		WithKommons(kommonsClient).
-		WithNamespace(runner.WatchNamespace)
+	apicontext.DefaultContext.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))
+	apicontext.DefaultContext = apicontext.DefaultContext.WithNamespace(runner.WatchNamespace)
+
+	cache.PostgresCache = cache.NewPostgresCache(apicontext.DefaultContext)
 
 	if err := duty.UpdatePropertiesFromFile(apicontext.DefaultContext, propertiesFile); err != nil {
 		logger.Fatalf("Error setting properties in database: %v", err)
 	}
+	return apicontext.DefaultContext
 }
 
 func postgrestResponseModifier(r *http.Response) error {
@@ -95,7 +85,7 @@ func postgrestResponseModifier(r *http.Response) error {
 			return fmt.Errorf("error unmarshaling response body to json: %w", err)
 		}
 		for _, c := range canaries {
-			if _, err := db.PersistCanaryModel(c); err != nil {
+			if _, err := db.PersistCanaryModel(apicontext.DefaultContext.DB(), c); err != nil {
 				logger.Errorf("Error persisting canary[%s]: %v", c.ID, err)
 			}
 		}
@@ -105,56 +95,23 @@ func postgrestResponseModifier(r *http.Response) error {
 }
 
 func serve() {
-	var allowedCors string
-	e := echo.New()
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{allowedCors},
-	}))
 	if db.ConnectionString != "" {
-		cache.PostgresCache = cache.NewPostgresCache(db.Pool)
+		cache.PostgresCache = cache.NewPostgresCache(apicontext.DefaultContext)
 	}
+
+	e := echo.New(apicontext.DefaultContext)
 
 	// PostgREST needs to know how it is exposed to create the correct links
 	db.HTTPEndpoint = publicEndpoint + "/db"
 
 	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheus.PrometheusURL)
 
-	if debug {
-		logger.Infof("Starting pprof at /debug")
-		echopprof.Wrap(e)
-	}
+	e.GET("/metrics", echov4.WrapHandler(promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{})))
 
 	if !disablePostgrest {
 		go db.StartPostgrest()
-		forward(e, "/db", db.PostgRESTEndpoint(), postgrestResponseModifier)
+		echo.Forward(e, "/db", db.PostgRESTEndpoint(), postgrestResponseModifier)
 	}
-
-	e.Use(middleware.Logger())
-
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			c.SetRequest(c.Request().WithContext(apicontext.DefaultContext.Wrap(c.Request().Context())))
-			return next(c)
-		}
-	})
-
-	e.GET("/api/summary", api.HealthSummary) // Deprecated: Use Post request for filtering
-	e.POST("/api/summary", api.HealthSummary)
-	e.GET("/about", api.About)
-	e.GET("/api/graph", api.CheckDetails)
-	e.POST("/api/push", api.PushHandler)
-	e.GET("/api/details", api.DetailsHandler)
-	e.GET("/api/topology", api.Topology)
-
-	e.POST("/webhook/:id", api.WebhookHandler)
-
-	e.GET("/metrics", echo.WrapHandler(promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{})))
-	e.GET("/health", func(c echo.Context) error {
-		return c.String(http.StatusOK, "OK")
-	})
-
-	e.POST("/run/canary/:id", api.RunCanaryHandler)
-	e.POST("/run/topology/:id", api.RunTopologyHandler)
 
 	// Start server
 	go func() {
@@ -177,29 +134,12 @@ func serve() {
 	}
 }
 
-func forward(e *echo.Echo, prefix string, target string, respModifierFunc func(*http.Response) error) {
-	targetURL, err := url.Parse(target)
-	if err != nil {
-		e.Logger.Fatal(err)
-	}
-	e.Group(prefix).Use(middleware.ProxyWithConfig(middleware.ProxyConfig{
-		Rewrite: map[string]string{
-			fmt.Sprintf("^%s/*", prefix): "/$1",
-		},
-		Balancer: middleware.NewRoundRobinBalancer([]*middleware.ProxyTarget{
-			{
-				URL: targetURL,
-			},
-		}),
-		ModifyResponse: respModifierFunc,
-	}))
-}
-
 func init() {
 	ServerFlags(Serve.Flags())
 	debugDefault := os.Getenv("DEBUG") == "true"
 	Serve.Flags().BoolVar(&executor, "executor", true, "If false, only serve the UI and sync the configs")
-	Serve.Flags().BoolVar(&debug, "debug", debugDefault, "If true, start pprof at /debug")
+	Serve.Flags().BoolVar(&echo.Debug, "debug", debugDefault, "If true, start pprof at /debug")
+	Serve.Flags().StringVar(&echo.AllowedCORS, "allowed-cors", "", "Allowed CORS origin headers")
 	Serve.Flags().StringVarP(&configFile, "configfile", "c", "", "Specify configfile")
 	Serve.Flags().StringVarP(&schedule, "schedule", "s", "", "schedule to run checks on. Supports all cron expression and golang duration support in format: '@every duration'")
 	Serve.Flags().BoolVar(&disablePostgrest, "disable-postgrest", false, "Disable the postgrest server")

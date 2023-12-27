@@ -18,7 +18,7 @@ import (
 	cUtils "github.com/flanksource/commons/utils"
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
+	"gorm.io/gorm"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 )
@@ -133,6 +133,11 @@ type Canary struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time  `json:"updated_at"`
 	DeletedAt   *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
+}
+
+func (c Canary) FindChecks(db *gorm.DB) (checks Checks, err error) {
+	err = db.Table("checks").Where("canary_id = ?", c.ID).Find(&checks).Error
+	return
 }
 
 func (c Canary) GetCheckID(checkName string) string {
@@ -340,78 +345,6 @@ func (c Check) GetDescription() string {
 type Checker interface {
 	CheckArgs(args map[string]interface{}) *CheckResult
 }
-
-type Config struct {
-	ID          *uuid.UUID          `json:"id,omitempty"`
-	ConfigClass string              `json:"config_class,omitempty"`
-	Name        string              `json:"name,omitempty"`
-	Namespace   string              `json:"namespace,omitempty"`
-	Spec        *types.JSONMap      `json:"spec,omitempty" gorm:"column:config"`
-	Tags        types.JSONStringMap `json:"tags,omitempty"  gorm:"type:jsonstringmap"`
-	ExternalID  pq.StringArray      `json:"external_id,omitempty" gorm:"type:text[]"`
-	Type        string              `json:"type,omitempty"`
-}
-
-func (c Config) String() string {
-	s := c.ConfigClass
-	if c.Namespace != "" {
-		s += "/" + c.Namespace
-	}
-
-	if c.Name != "" {
-		s += "/" + c.Name
-	}
-	if len(c.Tags) > 0 {
-		s += " " + fmt.Sprintf("%v", c.Tags)
-	}
-	return s
-}
-
-func NewConfigs(configs []v1.Config) Configs {
-	var pkgConfigs Configs
-	for _, config := range configs {
-		pkgConfigs = append(pkgConfigs, NewConfig(config))
-	}
-	return pkgConfigs
-}
-
-func NewConfig(config v1.Config) *Config {
-	return &Config{
-		Name:       config.Name,
-		Namespace:  config.Namespace,
-		Tags:       types.JSONStringMap(config.Tags),
-		ExternalID: pq.StringArray(config.ID),
-		Type:       config.Type,
-	}
-}
-
-func ToV1Config(config Config) v1.Config {
-	return v1.Config{
-		Name:      config.Name,
-		Namespace: config.Namespace,
-		ID:        config.ExternalID,
-		Type:      config.Type,
-	}
-}
-
-func (c Config) GetSelectorID() string {
-	selectorID, err := utils.GenerateJSONMD5Hash(ToV1Config(c))
-	if err != nil {
-		return ""
-	}
-	return selectorID
-}
-
-// ToJSONMap converts the struct to map[string]interface{} to
-// be compatible with otto vm
-func (c Config) ToJSONMap() map[string]interface{} {
-	m := make(map[string]interface{})
-	b, _ := json.Marshal(&c)
-	_ = json.Unmarshal(b, &m)
-	return m
-}
-
-type Configs []*Config
 
 // URL information
 type URL struct {

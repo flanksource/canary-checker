@@ -8,6 +8,7 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/utils"
@@ -19,81 +20,94 @@ import (
 	"github.com/google/uuid"
 	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/samber/lo"
 )
 
-var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
-	type Alert struct {
-		Status       string            `json:"status"`
-		Name         string            `json:"name"`
-		Labels       map[string]string `json:"labels"`
-		Annotations  map[string]string `json:"annotations"`
-		StartsAt     string            `json:"startsAt"`
-		GeneratorURL string            `json:"generatorURL"`
-		Fingerprint  string            `json:"fingerprint"`
-		EndsAt       *time.Time        `json:"endsAt,omitempty"`
-	}
+type Alert struct {
+	Status       string            `json:"status"`
+	Name         string            `json:"name"`
+	Labels       map[string]string `json:"labels"`
+	Annotations  map[string]string `json:"annotations"`
+	StartsAt     string            `json:"startsAt"`
+	GeneratorURL string            `json:"generatorURL"`
+	Fingerprint  string            `json:"fingerprint"`
+	EndsAt       *time.Time        `json:"endsAt,omitempty"`
+}
 
-	type DummyWebhookMessage struct {
-		Version string  `json:"version"`
-		Alerts  []Alert `json:"alerts"`
-	}
+type DummyWebhookMessage struct {
+	Version string  `json:"version"`
+	Alerts  []Alert `json:"alerts"`
+}
 
-	// Create an array of test data with three different Alert data
-	testData := []struct {
-		Msg   Alert
-		Count int
-	}{
-		{
-			Msg: Alert{
-				Status:       "firing",
-				Name:         "ServerDown",
-				Labels:       map[string]string{"severity": "critical", "alertName": "ServerDown", "location": "DataCenterA"},
-				Annotations:  map[string]string{"summary": "Server in DataCenterA is down", "description": "This alert indicates that a server in DataCenterA is currently down."},
-				StartsAt:     "2023-10-30T08:00:00Z",
-				GeneratorURL: "http://example.com/generatorURL/serverdown",
-				Fingerprint:  "a1b2c3d4e5f6",
-			},
-			Count: 1,
-		},
-		{
-			Msg: Alert{
-				Status:       "firing",
-				Name:         "ServerUp",
-				Labels:       map[string]string{"severity": "info", "alertName": "ServerUp", "location": "DataCenterB"},
-				Annotations:  map[string]string{"summary": "Server in DataCenterB is up", "description": "This alert indicates that a server in DataCenterB is currently up."},
-				StartsAt:     "2023-10-31T10:00:00Z",
-				GeneratorURL: "http://example.com/generatorURL/serverup",
-				Fingerprint:  "x1y2z3w4v5u6",
-			},
-			Count: 2,
-		},
-		{
-			Msg: Alert{
-				Status:       "firing",
-				Name:         "HighTraffic",
-				Labels:       map[string]string{"severity": "major", "alertName": "HighTraffic", "location": "DataCenterC"},
-				Annotations:  map[string]string{"summary": "High traffic detected in DataCenterC", "description": "This alert indicates a high level of network traffic in DataCenterC."},
-				StartsAt:     "2023-11-01T15:00:00Z",
-				GeneratorURL: "http://example.com/generatorURL/hightraffic",
-				Fingerprint:  "q1r2s3t4u5v6",
-			},
-			Count: 3,
-		},
-	}
+var testData []struct {
+	Msg   Alert
+	Count int
+}
 
-	canarySpec := v1.CanarySpec{
-		Schedule: "@every 1s",
-		HTTP: []v1.HTTPCheck{ // Run another transformed check on the same canary to test that the "delete transform" strategy doesn't delete webhook checks
+var canarySpec v1.CanarySpec
+
+var client *http.Client
+var canaryM *models.Canary
+
+var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
+
+	ginkgo.BeforeAll(func() {
+		// Create an array of test data with three different Alert data
+		testData = []struct {
+			Msg   Alert
+			Count int
+		}{
 			{
-				Description: v1.Description{
-					Name: "my-http",
+				Msg: Alert{
+					Status:       "firing",
+					Name:         "ServerDown",
+					Labels:       map[string]string{"severity": "critical", "alertName": "ServerDown", "location": "DataCenterA"},
+					Annotations:  map[string]string{"summary": "Server in DataCenterA is down", "description": "This alert indicates that a server in DataCenterA is currently down."},
+					StartsAt:     "2023-10-30T08:00:00Z",
+					GeneratorURL: "http://example.com/generatorURL/serverdown",
+					Fingerprint:  "a1b2c3d4e5f6",
 				},
-				Connection: v1.Connection{
-					URL: fmt.Sprintf("http://localhost:%d/http-check", testEchoServerPort),
+				Count: 1,
+			},
+			{
+				Msg: Alert{
+					Status:       "firing",
+					Name:         "ServerUp",
+					Labels:       map[string]string{"severity": "info", "alertName": "ServerUp", "location": "DataCenterB"},
+					Annotations:  map[string]string{"summary": "Server in DataCenterB is up", "description": "This alert indicates that a server in DataCenterB is currently up."},
+					StartsAt:     "2023-10-31T10:00:00Z",
+					GeneratorURL: "http://example.com/generatorURL/serverup",
+					Fingerprint:  "x1y2z3w4v5u6",
 				},
-				Templatable: v1.Templatable{
-					Transform: v1.Template{
-						Expression: `
+				Count: 2,
+			},
+			{
+				Msg: Alert{
+					Status:       "firing",
+					Name:         "HighTraffic",
+					Labels:       map[string]string{"severity": "major", "alertName": "HighTraffic", "location": "DataCenterC"},
+					Annotations:  map[string]string{"summary": "High traffic detected in DataCenterC", "description": "This alert indicates a high level of network traffic in DataCenterC."},
+					StartsAt:     "2023-11-01T15:00:00Z",
+					GeneratorURL: "http://example.com/generatorURL/hightraffic",
+					Fingerprint:  "q1r2s3t4u5v6",
+				},
+				Count: 3,
+			},
+		}
+
+		canarySpec = v1.CanarySpec{
+			Schedule: "@every 1s",
+			HTTP: []v1.HTTPCheck{ // Run another transformed check on the same canary to test that the "delete transform" strategy doesn't delete webhook checks
+				{
+					Description: v1.Description{
+						Name: "my-http",
+					},
+					Connection: v1.Connection{
+						URL: fmt.Sprintf("http://localhost:%d/http-check", testEchoServerPort),
+					},
+					Templatable: v1.Templatable{
+						Transform: v1.Template{
+							Expression: `
 							json.alerts.map(r,
 								{
 									'name': r.name,
@@ -103,17 +117,17 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 									'deletedAt': has(r.deleted_at) ? r.deleted_at : null,
 								}
 							).toJSON()`,
+						},
 					},
 				},
 			},
-		},
-		Webhook: &v1.WebhookCheck{
-			Description: v1.Description{
-				Name: "my-webhook",
-			},
-			Templatable: v1.Templatable{
-				Transform: v1.Template{
-					Expression: `
+			Webhook: &v1.WebhookCheck{
+				Description: v1.Description{
+					Name: "my-webhook",
+				},
+				Templatable: v1.Templatable{
+					Transform: v1.Template{
+						Expression: `
 						results.json.alerts.map(r,
 							{
 								'name': r.name + r.fingerprint,
@@ -124,17 +138,17 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 								'deletedAt': has(r.endsAt) ? r.endsAt : null,
 							}
 						).toJSON()`,
+					},
+				},
+				Token: &types.EnvVar{
+					ValueStatic: "my-token",
 				},
 			},
-			Token: &types.EnvVar{
-				ValueStatic: "my-token",
-			},
-		},
-	}
+		}
 
-	var canaryM *models.Canary
-	client := http.NewClient().BaseURL(fmt.Sprintf("http://localhost:%d", testEchoServerPort)).Header("Content-Type", "application/json")
+		client = http.NewClient().BaseURL(fmt.Sprintf("http://localhost:%d", testEchoServerPort)).Header("Content-Type", "application/json")
 
+	})
 	ginkgo.It("should save a canary spec", func() {
 		b, err := json.Marshal(canarySpec)
 		Expect(err).To(BeNil())
@@ -148,12 +162,12 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 			Spec: spec,
 			Name: "alert-manager-canary",
 		}
-		err = testDB.Create(canaryM).Error
+		err = ctx.DB().Create(canaryM).Error
 		Expect(err).To(BeNil())
 
 		response, err := db.GetAllCanariesForSync(ctx, "")
 		Expect(err).To(BeNil())
-		Expect(len(response)).To(Equal(1))
+		Expect(lo.CountBy(response, func(c pkg.Canary) bool { return c.Name == canaryM.Name })).To(Equal(1))
 	})
 
 	ginkgo.It("schedule the canary job", func() {
@@ -169,6 +183,7 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 	})
 
 	ginkgo.It("Should have created the webhook check", func() {
+
 		var count = 30
 		for {
 			time.Sleep(time.Second) // Wait for SyncCanaryJob to create the check
@@ -211,7 +226,7 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 			Expect(resp.StatusCode).To(Equal(netHTTP.StatusOK))
 
 			var result []models.Check
-			err = testDB.Where("type = ?", checks.WebhookCheckType).Where("deleted_at IS NULL").Where("name != ?", canarySpec.Webhook.Name).Find(&result).Error
+			err = ctx.DB().Where("type = ?", checks.WebhookCheckType).Where("deleted_at IS NULL").Where("name != ?", canarySpec.Webhook.Name).Find(&result).Error
 			Expect(err).To(BeNil())
 			Expect(len(result)).To(Equal(td.Count), "should have created new webhook check")
 		}
@@ -230,7 +245,7 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 		Expect(resp.StatusCode).To(Equal(netHTTP.StatusOK))
 
 		var result models.Check
-		err = testDB.Where("name = ?", td.Msg.Name+td.Msg.Fingerprint).Find(&result).Error
+		err = ctx.DB().Where("name = ?", td.Msg.Name+td.Msg.Fingerprint).Find(&result).Error
 		Expect(err).To(BeNil())
 		Expect(result.DeletedAt).To(Not(BeNil()))
 	})
@@ -247,19 +262,19 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 
 		logger.Debugf("http check endpoint was called %d times", httpCheckCallCounter)
 		var result models.Check
-		err := testDB.Where("name = 'http-check'").Find(&result).Error
+		err := ctx.DB().Where("name = 'http-check'").Find(&result).Error
 		Expect(err).To(BeNil())
 		Expect(result.DeletedAt).To(Not(BeNil()))
 	})
 
 	ginkgo.It("should have two active and one resolved webhook check", func() {
 		var activeChecks []models.Check
-		err := testDB.Where("type = ?", checks.WebhookCheckType).Where("deleted_at IS NULL").Where("name != ?", canarySpec.Webhook.Name).Find(&activeChecks).Error
+		err := ctx.DB().Where("type = ?", checks.WebhookCheckType).Where("deleted_at IS NULL").Where("name != ?", canarySpec.Webhook.Name).Find(&activeChecks).Error
 		Expect(err).To(BeNil())
 		Expect(len(activeChecks)).To(Equal(2), "There should have been 2 active webhook check")
 
 		var deletedChecks []models.Check
-		err = testDB.Where("type = ?", checks.WebhookCheckType).Where("deleted_at IS NOT NULL").Where("name != ?", canarySpec.Webhook.Name).Find(&deletedChecks).Error
+		err = ctx.DB().Where("type = ?", checks.WebhookCheckType).Where("deleted_at IS NOT NULL").Where("name != ?", canarySpec.Webhook.Name).Find(&deletedChecks).Error
 		Expect(err).To(BeNil())
 		Expect(len(deletedChecks)).To(Equal(1), "There should have been 1 deleted webhook check")
 	})

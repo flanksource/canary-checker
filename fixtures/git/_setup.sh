@@ -21,5 +21,7 @@ else
     printf "\nCreating secret from github token ending with '${GH_TOKEN:(-8)}'\n"
 fi
 
-kubectl create secret generic github-token --from-literal=GITHUB_TOKEN="${GH_TOKEN}" --namespace default
-kubectl get secret github-token -o yaml --namespace default
+kubectl create namespace canaries || true
+
+kubectl create secret generic github-token --from-literal=GITHUB_TOKEN="${GH_TOKEN}" --namespace canaries
+kubectl get secret github-token -o yaml --namespace canaries

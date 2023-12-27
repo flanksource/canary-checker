@@ -4,7 +4,6 @@ import (
 	"os"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	ginkgo "github.com/onsi/ginkgo/v2"
@@ -15,31 +14,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func yamlFileToTopology(file string) (t v1.Topology, err error) {
-	fileContent, err := os.ReadFile(file)
-	if err != nil {
-		return
-	}
-	var obj unstructured.Unstructured
-	err = yaml.Unmarshal(fileContent, &obj)
-	if err != nil {
-		return
-	}
-	err = runtime.DefaultUnstructuredConverter.FromUnstructured(obj.Object, &t)
-	if err != nil {
-		return
-	}
-	return
-}
-
-var _ = ginkgo.Describe("Test topology run", ginkgo.Ordered, func() {
-	opts := TopologyRunOptions{
-		Client:     nil,
-		Kubernetes: nil,
-		Depth:      10,
-		Namespace:  "default",
-	}
-
+var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 	ginkgo.It("should create component with properties", func() {
 		t, err := yamlFileToTopology("../../fixtures/topology/component-with-properties.yml")
 		if err != nil {
@@ -57,10 +32,17 @@ var _ = ginkgo.Describe("Test topology run", ginkgo.Ordered, func() {
 			ConfigClass: "Dummy",
 		}
 
-		err = db.Gorm.Create(&ci).Error
+		err = DefaultContext.DB().Create(&ci).Error
 		Expect(err).To(BeNil())
 
-		rootComponent := Run(opts, t)
+		rootComponent, history := Run(TopologyRunOptions{
+			Context:   DefaultContext,
+			Depth:     10,
+			Namespace: "default",
+		}, t)
+
+		Expect(history.Errors).To(HaveLen(0))
+
 		Expect(len(rootComponent[0].Components)).To(Equal(3))
 
 		componentA := rootComponent[0].Components[0]
@@ -78,7 +60,14 @@ var _ = ginkgo.Describe("Test topology run", ginkgo.Ordered, func() {
 			ginkgo.Fail("Error converting yaml to v1.Topology:" + err.Error())
 		}
 
-		rootComponent := Run(opts, t)
+		rootComponent, history := Run(TopologyRunOptions{
+			Context:   DefaultContext,
+			Depth:     10,
+			Namespace: "default",
+		}, t)
+
+		Expect(history.Errors).To(HaveLen(0))
+
 		Expect(len(rootComponent[0].Components)).To(Equal(3))
 
 		componentA := rootComponent[0].Components[0]
@@ -117,3 +106,20 @@ var _ = ginkgo.Describe("Test topology run", ginkgo.Ordered, func() {
 		Expect(componentC.Configs[0].Type).To(Equal("Service"))
 	})
 })
+
+func yamlFileToTopology(file string) (t v1.Topology, err error) {
+	fileContent, err := os.ReadFile(file)
+	if err != nil {
+		return
+	}
+	var obj unstructured.Unstructured
+	err = yaml.Unmarshal(fileContent, &obj)
+	if err != nil {
+		return
+	}
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(obj.Object, &t)
+	if err != nil {
+		return
+	}
+	return
+}

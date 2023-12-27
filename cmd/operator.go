@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	gocontext "context"
 	"os"
 	"time"
 
@@ -18,9 +17,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/controllers"
 	"github.com/flanksource/canary-checker/pkg/labels"
-	commonsCtx "github.com/flanksource/commons/context"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/duty/context"
 	"github.com/go-logr/zapr"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel"
@@ -73,21 +70,23 @@ func run(cmd *cobra.Command, args []string) {
 	_ = clientgoscheme.AddToScheme(scheme)
 	_ = canaryv1.AddToScheme(scheme)
 
-	if err := db.Init(); err != nil {
-		logger.Fatalf("error connecting with postgres: %v", err)
-	}
-	kommonsClient, k8s, err := pkg.NewKommonsClient()
+	ctx, err := InitContext()
 	if err != nil {
-		logger.Warnf("failed to get kommons client, checks that read kubernetes configs will fail: %v", err)
+		logger.Fatalf(err.Error())
 	}
 
-	apicontext.DefaultContext = context.NewContext(gocontext.Background(), commonsCtx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))).
-		WithDB(db.Gorm, db.Pool).
-		WithKubernetes(k8s).
-		WithKommons(kommonsClient).
-		WithNamespace(runner.WatchNamespace)
+	if ctx.DB() == nil {
+		logger.Fatalf("operator requires a db connection")
+	}
+	if ctx.Kommons() == nil {
+		logger.Fatalf("operator requires a kubernetes connection")
+	}
 
-	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
+	ctx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))
+
+	apicontext.DefaultContext = ctx.WithNamespace(runner.WatchNamespace)
+
+	cache.PostgresCache = cache.NewPostgresCache(apicontext.DefaultContext)
 	if operatorExecutor {
 		logger.Infof("Starting executors")
 
@@ -125,6 +124,7 @@ func run(cmd *cobra.Command, args []string) {
 	runner.RunnerLabels = labels.LoadFromFile("/etc/podinfo/labels")
 
 	canaryReconciler := &controllers.CanaryReconciler{
+		Context:     apicontext.DefaultContext,
 		Client:      mgr.GetClient(),
 		LogPass:     logPass,
 		LogFail:     logFail,
@@ -135,9 +135,10 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	systemReconciler := &controllers.TopologyReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("system"),
-		Scheme: mgr.GetScheme(),
+		Context: apicontext.DefaultContext,
+		Client:  mgr.GetClient(),
+		Log:     ctrl.Log.WithName("controllers").WithName("system"),
+		Scheme:  mgr.GetScheme(),
 	}
 	if err = mgr.Add(manager.RunnableFunc(db.Start)); err != nil {
 		setupLog.Error(err, "unable to Add manager")

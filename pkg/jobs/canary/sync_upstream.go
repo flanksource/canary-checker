@@ -1,13 +1,11 @@
 package canary
 
 import (
-	gocontext "context"
 	"fmt"
 	"time"
 
-	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/upstream"
@@ -29,6 +27,12 @@ const (
 	EventPushQueueCreate    = "push_queue.create"
 	eventQueueUpdateChannel = "event_queue_updates"
 )
+
+var UpstreamJobs = []job.Job{
+	SyncCheckStatuses,
+	PullUpstreamCanaries,
+	ReconcileChecks,
+}
 
 var ReconcileChecks = job.Job{
 	Name:       "PushChecksToUpstream",
@@ -60,7 +64,7 @@ var PullUpstreamCanaries = job.Job{
 	Singleton:  true,
 	Schedule:   "@every 10m",
 	Fn: func(ctx job.JobRuntime) error {
-		count, err := pull(ctx, UpstreamConf)
+		count, err := pull(ctx.Context, UpstreamConf)
 		ctx.History.SuccessCount = count
 		return err
 	},
@@ -71,7 +75,7 @@ type CanaryPullResponse struct {
 	Canaries []models.Canary `json:"canaries,omitempty"`
 }
 
-func pull(ctx gocontext.Context, config upstream.UpstreamConfig) (int, error) {
+func pull(ctx context.Context, config upstream.UpstreamConfig) (int, error) {
 	logger.Tracef("pulling canaries from upstream since: %v", lastRuntime)
 
 	client := upstream.NewUpstreamClient(config)
@@ -97,16 +101,10 @@ func pull(ctx gocontext.Context, config upstream.UpstreamConfig) (int, error) {
 		return 0, nil
 	}
 
-	return len(response.Canaries), db.Gorm.Omit("agent_id").Clauses(clause.OnConflict{
+	return len(response.Canaries), ctx.DB().Omit("agent_id").Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
 		UpdateAll: true,
 	}).Create(&response.Canaries).Error
-}
-
-var UpstreamJobs = []job.Job{
-	SyncCheckStatuses,
-	PullUpstreamCanaries,
-	ReconcileChecks,
 }
 
 func StartUpstreamEventQueueConsumer(ctx *context.Context) error {

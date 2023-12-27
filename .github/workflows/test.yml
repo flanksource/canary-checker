@@ -65,6 +65,7 @@ jobs:
           key: cache-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             cache-
+      - run: go install github.com/onsi/ginkgo/v2/ginkgo
       - run: make bin
       - name: Test
         env:

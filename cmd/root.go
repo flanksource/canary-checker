@@ -5,18 +5,38 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/checks"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/telemetry"
+	"github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/context"
 	gomplate "github.com/flanksource/gomplate/v3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
+
+func InitContext() (context.Context, error) {
+	kommonsClient, k8s, err := pkg.NewKommonsClient()
+	if err != nil {
+		logger.Warnf("Failed to get kubernetes client: %v", err)
+	}
+
+	var ctx context.Context
+
+	if ctx, err = db.Init(); err != nil {
+		logger.Warnf("error connecting to db %v", err)
+		ctx = context.New()
+	}
+	return ctx.
+		WithKubernetes(k8s).
+		WithKommons(kommonsClient), nil
+}
 
 var Root = &cobra.Command{
 	Use: "canary-checker",
@@ -81,8 +101,8 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
 	flags.StringVarP(&cache.DefaultWindow, "default-window", "", "1h", "Default search window")
 	flags.IntVar(&db.CheckStatusRetention, "check-status-retention-period", db.CheckStatusRetention, "Check status retention period in days")
-	flags.IntVar(&db.CheckRetentionDays, "check-retention-period", db.DefaultCheckRetentionDays, "Check retention period in days")
-	flags.IntVar(&db.CanaryRetentionDays, "canary-retention-period", db.DefaultCanaryRetentionDays, "Canary retention period in days")
+	flags.IntVar(&topology.CheckRetentionDays, "check-retention-period", topology.DefaultCheckRetentionDays, "Check retention period in days")
+	flags.IntVar(&topology.CanaryRetentionDays, "canary-retention-period", topology.DefaultCanaryRetentionDays, "Canary retention period in days")
 	flags.StringVar(&checks.DefaultArtifactConnection, "artifact-connection", "", "Specify the default connection to use for artifacts")
 
 	flags.IntVar(&canary.ReconcilePageSize, "upstream-page-size", 500, "upstream reconciliation page size")

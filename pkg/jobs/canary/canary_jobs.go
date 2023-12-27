@@ -24,6 +24,7 @@ import (
 	"github.com/flanksource/kommons"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/trace"
+	"gorm.io/gorm"
 
 	"github.com/robfig/cron/v3"
 	"go.opentelemetry.io/otel/attribute"
@@ -51,13 +52,15 @@ type RelatableCheck interface {
 	GetRelationship() *v1.CheckRelationship
 }
 
-func StartScanCanaryConfigs(dataFile string, configFiles []string) {
+func StartScanCanaryConfigs(ctx context.Context, dataFile string, configFiles []string) {
 	DataFile = dataFile
 	CanaryConfigFiles = configFiles
-	if _, err := ScheduleFunc("@every 5m", ScanCanaryConfigs); err != nil {
+	if _, err := ScheduleFunc("@every 5m", func() {
+		ScanCanaryConfigs(ctx.DB())
+	}); err != nil {
 		logger.Errorf("Failed to schedule scan jobs: %v", err)
 	}
-	ScanCanaryConfigs()
+	ScanCanaryConfigs(ctx.DB())
 }
 
 type CanaryJob struct {
@@ -108,7 +111,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		return nil
 	}
 
-	canaryCtx := canarycontext.New(ctx.Kommons(), ctx.Kubernetes(), ctx.DB(), ctx.Pool(), j.Canary)
+	canaryCtx := canarycontext.New(ctx.Context, j.Canary)
 	var span trace.Span
 	ctx.Context, span = ctx.StartSpan("RunCanaryChecks")
 	results, err := checks.RunChecks(canaryCtx)
@@ -116,7 +119,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		logger.Errorf("error running checks for canary %s: %v", canaryID, err)
 		return nil
 	}
-	span.End()
+	defer span.End()
 
 	// Get transformed checks before and after, and then delete the olds ones that are not in new set.
 	// NOTE: Webhook checks, although they are transformed, are handled entirely by the webhook caller
@@ -164,7 +167,9 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 			} else if strategy == v1.OnTransformMarkUnhealthy {
 				status = models.CheckStatusUnhealthy
 			}
-			checkDeleteStrategyGroup[status] = append(checkDeleteStrategyGroup[status], checkID)
+			if strategy != v1.OnTransformIgnore {
+				checkDeleteStrategyGroup[status] = append(checkDeleteStrategyGroup[status], checkID)
+			}
 		}
 		for status, checkIDs := range checkDeleteStrategyGroup {
 			if err := db.AddCheckStatuses(ctx.Context, checkIDs, models.CheckHealthStatus(status)); err != nil {
@@ -227,8 +232,8 @@ func formCheckRelationships(ctx context.Context, result *pkg.CheckResult) error 
 				continue
 			}
 
-			rel := &pkg.CheckComponentRelationship{ComponentID: componentID, CheckID: checkID, CanaryID: canaryID, SelectorID: selectorID}
-			if err := db.PersistCheckComponentRelationship(rel); err != nil {
+			rel := &models.CheckComponentRelationship{ComponentID: componentID, CheckID: checkID, CanaryID: canaryID, SelectorID: selectorID}
+			if err := rel.Save(ctx.DB()); err != nil {
 				logger.Errorf("error saving relationship between check=%s and component=%s: %v", checkID, componentID, err)
 			}
 		}
@@ -249,7 +254,7 @@ func formCheckRelationships(ctx context.Context, result *pkg.CheckResult) error 
 			}
 
 			rel := &models.CheckConfigRelationship{ConfigID: configID, CheckID: checkID, CanaryID: canaryID, SelectorID: selectorID}
-			if err := db.SaveCheckConfigRelationship(ctx, rel); err != nil {
+			if err := rel.Save(ctx.DB()); err != nil {
 				logger.Errorf("error saving relationship between check=%s and config=%s: %v", checkID, configID, err)
 			}
 		}
@@ -379,7 +384,7 @@ func getAllCanaryIDsInCron() []string {
 	return ids
 }
 
-func ScanCanaryConfigs() {
+func ScanCanaryConfigs(_db *gorm.DB) {
 	logger.Infof("Syncing canary specs: %v", CanaryConfigFiles)
 	for _, configfile := range CanaryConfigFiles {
 		configs, err := pkg.ParseConfig(configfile, DataFile)
@@ -391,7 +396,7 @@ func ScanCanaryConfigs() {
 			if runner.IsCanaryIgnored(&canary.ObjectMeta) {
 				continue
 			}
-			_, err := db.PersistCanary(canary, path.Base(configfile))
+			_, err := db.PersistCanary(_db, canary, path.Base(configfile))
 			if err != nil {
 				logger.Errorf("could not persist %s: %v", canary.Name, err)
 			} else {
@@ -462,15 +467,6 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary, options ...SyncCana
 		return nil
 	}
 
-	if Kommons == nil {
-		var err error
-		Kommons, Kubernetes, err = pkg.NewKommonsClient()
-		ctx = ctx.WithKommons(Kommons).WithKubernetes(Kubernetes)
-		if err != nil {
-			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
-		}
-	}
-
 	updateTime, exists := canaryUpdateTimeCache.Load(dbCanary.ID.String())
 	cj := CanaryJob{
 		Canary:   *canary,
@@ -520,7 +516,7 @@ func SyncCanaryJobs(ctx dutyjob.JobRuntime) error {
 		logger.Errorf("Failed to get canaries: %v", err)
 
 		jobHistory := models.NewJobHistory("SyncCanaries", "canary", "").Start()
-		logIfError(db.PersistJobHistory(jobHistory.AddError(err.Error()).End()), "failed to persist job history [SyncCanaries]")
+		logIfError(jobHistory.AddError(err.Error()).End().Persist(ctx.DB()), "failed to persist job history [SyncCanaries]")
 
 		return err
 	}
@@ -533,7 +529,7 @@ func SyncCanaryJobs(ctx dutyjob.JobRuntime) error {
 		idsInNewFetch = append(idsInNewFetch, c.ID.String())
 		if err := SyncCanaryJob(ctx.Context, c); err != nil {
 			logger.Errorf("Error syncing canary[%s]: %v", c.ID, err.Error())
-			logIfError(db.PersistJobHistory(jobHistory.AddError(err.Error()).End()), "failed to persist job history [CanarySync]")
+			logIfError(jobHistory.AddError(err.Error()).End().Persist(ctx.DB()), "failed to persist job history [CanarySync]")
 			continue
 		}
 	}

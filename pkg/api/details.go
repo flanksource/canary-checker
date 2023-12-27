@@ -15,7 +15,7 @@ func DetailsHandler(c echo.Context) error {
 	time := queryParams.Get("time")
 	if key == "" || time == "" {
 		logger.Errorf("key and time are required parameters")
-		return errorResonse(c, errors.New("key and time are required parameters"), http.StatusBadRequest)
+		return errorResponse(c, errors.New("key and time are required parameters"), http.StatusBadRequest)
 	}
 	detail := cache.PostgresCache.GetDetails(key, time)
 	return c.JSON(http.StatusOK, detail)
