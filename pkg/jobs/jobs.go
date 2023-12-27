@@ -7,8 +7,6 @@ import (
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	topologyJobs "github.com/flanksource/canary-checker/pkg/jobs/topology"
 	"github.com/flanksource/canary-checker/pkg/topology"
-	"github.com/flanksource/canary-checker/pkg/topology/checks"
-	"github.com/flanksource/canary-checker/pkg/topology/configs"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/job"
 	"github.com/robfig/cron/v3"
@@ -50,22 +48,22 @@ func Start() {
 		}
 	}
 
-	for _, j := range []*job.Job{
-		configs.ComponentConfigRun,
-		checks.ComponentCheckRun,
-		checks.CleanupCanaries,
-		checks.CleanupChecks,
-		checks.CleanupMetricsGauges,
-		topology.ComponentCostRun,
-		topology.ComponentRun,
-		topology.ComponentStatusSummarySync,
-		topologyJobs.CleanupComponents} {
+	for _, j := range topology.Jobs {
 		var job = j
 		job.Context = context.DefaultContext
 		if err := job.AddToScheduler(FuncScheduler); err != nil {
 			logger.Errorf(err.Error())
 		}
 	}
+
+	for _, j := range []*job.Job{topologyJobs.CleanupComponents} {
+		var job = j
+		job.Context = context.DefaultContext
+		if err := job.AddToScheduler(FuncScheduler); err != nil {
+			logger.Errorf(err.Error())
+		}
+	}
+
 	if err := job.NewJob(context.DefaultContext, "SyncCanaryJobs", "@every 2m", canaryJobs.SyncCanaryJobs).
 		RunOnStart().AddToScheduler(FuncScheduler); err != nil {
 		logger.Fatalf("Failed to schedule job [canaryJobs.SyncCanaryJobs]: %v", err)

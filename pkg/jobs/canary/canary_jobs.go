@@ -24,6 +24,7 @@ import (
 	"github.com/flanksource/kommons"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/trace"
+	"gorm.io/gorm"
 
 	"github.com/robfig/cron/v3"
 	"go.opentelemetry.io/otel/attribute"
@@ -51,13 +52,15 @@ type RelatableCheck interface {
 	GetRelationship() *v1.CheckRelationship
 }
 
-func StartScanCanaryConfigs(dataFile string, configFiles []string) {
+func StartScanCanaryConfigs(ctx context.Context, dataFile string, configFiles []string) {
 	DataFile = dataFile
 	CanaryConfigFiles = configFiles
-	if _, err := ScheduleFunc("@every 5m", ScanCanaryConfigs); err != nil {
+	if _, err := ScheduleFunc("@every 5m", func() {
+		ScanCanaryConfigs(ctx.DB())
+	}); err != nil {
 		logger.Errorf("Failed to schedule scan jobs: %v", err)
 	}
-	ScanCanaryConfigs()
+	ScanCanaryConfigs(ctx.DB())
 }
 
 type CanaryJob struct {
@@ -381,7 +384,7 @@ func getAllCanaryIDsInCron() []string {
 	return ids
 }
 
-func ScanCanaryConfigs() {
+func ScanCanaryConfigs(_db *gorm.DB) {
 	logger.Infof("Syncing canary specs: %v", CanaryConfigFiles)
 	for _, configfile := range CanaryConfigFiles {
 		configs, err := pkg.ParseConfig(configfile, DataFile)
@@ -393,7 +396,7 @@ func ScanCanaryConfigs() {
 			if runner.IsCanaryIgnored(&canary.ObjectMeta) {
 				continue
 			}
-			_, err := db.PersistCanary(db.Gorm, canary, path.Base(configfile))
+			_, err := db.PersistCanary(_db, canary, path.Base(configfile))
 			if err != nil {
 				logger.Errorf("could not persist %s: %v", canary.Name, err)
 			} else {
@@ -513,7 +516,7 @@ func SyncCanaryJobs(ctx dutyjob.JobRuntime) error {
 		logger.Errorf("Failed to get canaries: %v", err)
 
 		jobHistory := models.NewJobHistory("SyncCanaries", "canary", "").Start()
-		logIfError(db.PersistJobHistory(jobHistory.AddError(err.Error()).End()), "failed to persist job history [SyncCanaries]")
+		logIfError(jobHistory.AddError(err.Error()).End().Persist(ctx.DB()), "failed to persist job history [SyncCanaries]")
 
 		return err
 	}
@@ -526,7 +529,7 @@ func SyncCanaryJobs(ctx dutyjob.JobRuntime) error {
 		idsInNewFetch = append(idsInNewFetch, c.ID.String())
 		if err := SyncCanaryJob(ctx.Context, c); err != nil {
 			logger.Errorf("Error syncing canary[%s]: %v", c.ID, err.Error())
-			logIfError(db.PersistJobHistory(jobHistory.AddError(err.Error()).End()), "failed to persist job history [CanarySync]")
+			logIfError(jobHistory.AddError(err.Error()).End().Persist(ctx.DB()), "failed to persist job history [CanarySync]")
 			continue
 		}
 	}

@@ -21,7 +21,7 @@ func SyncTopology(opts topology.TopologyRunOptions, dataFile string, configFiles
 		}
 
 		for _, config := range configs {
-			components := topology.Run(opts, config)
+			components, _ := topology.Run(opts, config)
 			if err := db.PersistComponents(opts.Context, components); err != nil {
 				return errors.Wrapf(err, "could not persist %s", configfile)
 			} else {
