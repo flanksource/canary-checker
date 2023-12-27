@@ -12,19 +12,14 @@ import (
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/migrate"
 	"github.com/flanksource/duty/models"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/samber/lo"
-	"gorm.io/gorm"
 	"gorm.io/plugin/prometheus"
 )
 
-// Deprecated
-var Pool *pgxpool.Pool
-
-// Deprecated
-var Gorm *gorm.DB
+var defaultContext *dutyContext.Context
 var ConnectionString string
 var DefaultExpiryDays int
 var RunMigrations bool
@@ -33,9 +28,6 @@ var PostgresServer *embeddedpostgres.EmbeddedPostgres
 var HTTPEndpoint = "http://localhost:8080/db"
 
 func Start(ctx context.Context) error {
-	if err := Init(); err != nil {
-		return err
-	}
 	<-ctx.Done()
 	return StopServer()
 }
@@ -58,7 +50,7 @@ func IsConfigured() bool {
 }
 
 func IsConnected() bool {
-	return Pool != nil
+	return defaultContext != nil
 }
 
 func embeddedDB() error {
@@ -82,43 +74,53 @@ func embeddedDB() error {
 	return nil
 }
 
-func Connect() error {
+func Connect() (*dutyContext.Context, error) {
 	if ConnectionString == "" || ConnectionString == "DB_URL" {
 		logger.Warnf("No db connection string specified")
-		return nil
+		return nil, nil
 	}
-	if Pool != nil {
-		return nil
+	if defaultContext != nil {
+		return defaultContext, nil
 	}
 
 	if strings.HasPrefix(ConnectionString, "embedded://") {
 		if err := embeddedDB(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	var err error
-	Pool, err = duty.NewPgxPool(ConnectionString)
+	Pool, err := duty.NewPgxPool(ConnectionString)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	Gorm, err = duty.NewGorm(ConnectionString, duty.DefaultGormConfig())
-	return err
+	Gorm, err := duty.NewGorm(ConnectionString, duty.DefaultGormConfig())
+	if err != nil {
+		return nil, err
+	}
+	ctx := dutyContext.New().WithDB(Gorm, Pool)
+	defaultContext = &ctx
+	return defaultContext, nil
 }
 
-func Init() error {
-	if err := Connect(); err != nil {
-		return err
+func Init() (dutyContext.Context, error) {
+	if defaultContext != nil {
+		return *defaultContext, nil
 	}
-	if Gorm == nil {
-		return nil
+	var ctx *dutyContext.Context
+	var err error
+	if ctx, err = Connect(); err != nil {
+		return dutyContext.New(), err
+	}
+	if ctx == nil {
+		return dutyContext.New(), nil
 	}
 
 	if DBMetrics {
 		go func() {
-			if err := Gorm.Use(prometheus.New(prometheus.Config{
-				DBName:      Pool.Config().ConnConfig.Database,
+			if err := ctx.DB().Use(prometheus.New(prometheus.Config{
+				DBName:      ctx.Pool().Config().ConnConfig.Database,
 				StartServer: false,
 				MetricsCollector: []prometheus.MetricsCollector{
 					&prometheus.Postgres{},
@@ -132,17 +134,17 @@ func Init() error {
 	if RunMigrations {
 		opts := &migrate.MigrateOptions{IgnoreFiles: []string{"007_events.sql", "012_changelog.sql"}}
 		if err := duty.Migrate(ConnectionString, opts); err != nil {
-			return err
+			return dutyContext.New(), err
 		}
 	} else {
 		_, _, err := lo.AttemptWithDelay(5, 5*time.Second, func(i int, d time.Duration) error {
-			return Gorm.Limit(1).Find(&[]models.Agent{}).Error
+			return ctx.DB().Limit(1).Find(&[]models.Agent{}).Error
 		})
 		if err != nil {
 			logger.Fatalf("Database migrations not run: %v", err)
 		}
 	}
-	return nil
+	return *ctx, nil
 }
 
 func GetDB() (*sql.DB, error) {

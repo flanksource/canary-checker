@@ -1,10 +1,12 @@
 package topology
 
 import (
+	"fmt"
+
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db"
+	"gorm.io/gorm"
 
 	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
@@ -25,26 +27,15 @@ type ComponentContext struct {
 	CurrentComponent *pkg.Component
 	templater        *ktemplate.StructTemplater
 	JobHistory       *models.JobHistory
-	duty             *dutyContext.Context
+	Duty             dutyContext.Context
+	DB               *gorm.DB
 }
 
-func (c *ComponentContext) WithDuty(ctx dutyContext.Context) *ComponentContext {
-	c.duty = &ctx
-	return c
-}
-
-func (c *ComponentContext) Duty() dutyContext.Context {
-	if c.duty == nil {
-		return *c.duty
+func (c *ComponentContext) String() string {
+	if c.CurrentComponent != nil {
+		return fmt.Sprintf("[%s] %s", c.Topology.Name, c.CurrentComponent.Name)
 	}
-	duty := dutyContext.NewContext(c.Context).
-		WithDB(db.Gorm, db.Pool).
-		WithKubernetes(c.Kubernetes).
-		WithKommons(c.Kommons).
-		WithObject(c.Topology.ObjectMeta)
-
-	c.duty = &duty
-	return *c.duty
+	return fmt.Sprintf("[%s]", c.Topology.Name)
 }
 
 func (c *ComponentContext) GetTemplater() ktemplate.StructTemplater {
@@ -122,6 +113,8 @@ func (c *ComponentContext) TemplateComponent(component *v1.ComponentSpec) error 
 func (c *ComponentContext) Clone() *ComponentContext {
 	return &ComponentContext{
 		KubernetesContext: c.KubernetesContext.Clone(),
+		Duty:              c.Duty,
+		DB:                c.DB,
 		Topology:          c.Topology,
 		ComponentAPI:      c.ComponentAPI,
 		Components:        c.Components,
@@ -139,7 +132,8 @@ func (c *ComponentContext) WithComponents(components *pkg.Components, current *p
 func NewComponentContext(ctx dutyContext.Context, system v1.Topology) *ComponentContext {
 	return &ComponentContext{
 		KubernetesContext: context.NewKubernetesContext(ctx.Kommons(), ctx.Kubernetes(), system.Namespace),
-		duty:              &ctx,
+		Duty:              ctx,
+		DB:                ctx.DB(),
 		Topology:          system,
 	}
 }

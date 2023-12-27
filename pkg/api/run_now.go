@@ -50,24 +50,26 @@ func (t *RunCanaryResponse) FromCheckResults(result []*pkg.CheckResult) {
 func RunCanaryHandler(c echo.Context) error {
 	id := c.Param("id")
 
-	canaryModel, err := db.FindCanaryByID(id)
+	duty := c.Request().Context().(dutyContext.Context)
+
+	canaryModel, err := db.FindCanaryByID(duty, id)
 	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
+		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
 	if canaryModel == nil {
-		return errorResonse(c, fmt.Errorf("canary with id=%s was not found", id), http.StatusNotFound)
+		return errorResponse(c, fmt.Errorf("canary with id=%s was not found", id), http.StatusNotFound)
 	}
 
 	canary, err := canaryModel.ToV1()
+	ctx := context.New(duty, *canary)
 	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
+		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
-	ctx := context.New(c.Request().Context().(dutyContext.Context), *canary)
 	result, err := checks.RunChecks(ctx)
 	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
+		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
 	var response RunCanaryResponse
@@ -83,11 +85,11 @@ func RunTopologyHandler(c echo.Context) error {
 	if _depth != "" {
 		num, err := strconv.Atoi(_depth)
 		if err != nil {
-			return errorResonse(c, err, http.StatusBadRequest)
+			return errorResponse(c, err, http.StatusBadRequest)
 		}
 
 		if num < 0 {
-			return errorResonse(c, fmt.Errorf("depth must be greater than 0"), http.StatusBadRequest)
+			return errorResponse(c, fmt.Errorf("depth must be greater than 0"), http.StatusBadRequest)
 		}
 
 		topologyRunDepth = num
@@ -97,10 +99,10 @@ func RunTopologyHandler(c echo.Context) error {
 	topology, err := db.GetTopology(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errorResonse(c, fmt.Errorf("topology with id=%s was not found", id), http.StatusNotFound)
+			return errorResponse(c, fmt.Errorf("topology with id=%s was not found", id), http.StatusNotFound)
 		}
 
-		return errorResonse(c, err, http.StatusInternalServerError)
+		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
 	opts := pkgTopology.TopologyRunOptions{
@@ -109,7 +111,7 @@ func RunTopologyHandler(c echo.Context) error {
 		Namespace: topology.Namespace,
 	}
 	if err := pkgTopology.SyncComponents(opts, *topology); err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
+		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
