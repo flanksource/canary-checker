@@ -2,14 +2,12 @@ package v1
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/flanksource/duty/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +kubebuilder:object:root=true
-
 type Component struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -75,7 +73,7 @@ type ForEach struct {
 	Configs         []types.ConfigQuery     `json:"configs,omitempty"`
 	Selectors       types.ResourceSelectors `json:"selectors,omitempty"`
 	Relationships   []RelationshipSpec      `json:"relationships,omitempty"`
-	ComponentChecks ComponentChecks         `json:"checks,omitempty"`
+	ComponentChecks types.ComponentChecks   `json:"checks,omitempty"`
 }
 
 func (f *ForEach) IsEmpty() bool {
@@ -86,59 +84,8 @@ func (f *ForEach) String() string {
 	return fmt.Sprintf("ForEach(components=%d, properties=%d)", len(f.Components), len(f.Properties))
 }
 
-type Summary struct {
-	Healthy   int                       `json:"healthy,omitempty"`
-	Unhealthy int                       `json:"unhealthy,omitempty"`
-	Warning   int                       `json:"warning,omitempty"`
-	Info      int                       `json:"info,omitempty"`
-	Incidents map[string]map[string]int `json:"incidents,omitempty"`
-	Insights  map[string]map[string]int `json:"insights,omitempty"`
-}
-
-func (s Summary) String() string {
-	str := ""
-	if s.Unhealthy > 0 {
-		str += fmt.Sprintf("unhealthy=%d ", s.Unhealthy)
-	}
-	if s.Warning > 0 {
-		str += fmt.Sprintf("warning=%d ", s.Warning)
-	}
-	if s.Healthy > 0 {
-		str += fmt.Sprintf("healthy=%d ", s.Healthy)
-	}
-	return strings.TrimSpace(str)
-}
-
-func (s Summary) GetStatus() ComponentPropertyStatus {
-	if s.Unhealthy > 0 {
-		return ComponentPropertyStatusUnhealthy
-	} else if s.Warning > 0 {
-		return ComponentPropertyStatusWarning
-	} else if s.Healthy > 0 {
-		return ComponentPropertyStatusHealthy
-	}
-	return "unknown"
-}
-
-func (s Summary) Add(b Summary) Summary {
-	if b.Healthy > 0 && b.Unhealthy > 0 {
-		s.Warning += 1
-	} else if b.Unhealthy > 0 {
-		s.Unhealthy += 1
-	} else if b.Healthy > 0 {
-		s.Healthy += 1
-	}
-	if b.Warning > 0 {
-		s.Warning += b.Warning
-	}
-	if b.Info > 0 {
-		s.Info += b.Info
-	}
-	return s
-}
-
 type ComponentStatus struct {
-	Status ComponentPropertyStatus `json:"status,omitempty"`
+	Status types.ComponentStatus `json:"status,omitempty"`
 }
 
 type RelationshipSpec struct {
@@ -147,31 +94,7 @@ type RelationshipSpec struct {
 	Ref  string `json:"ref,omitempty"`
 }
 
-type ComponentPropertyStatus string
-
-var (
-	ComponentPropertyStatusHealthy   ComponentPropertyStatus = "healthy"
-	ComponentPropertyStatusUnhealthy ComponentPropertyStatus = "unhealthy"
-	ComponentPropertyStatusWarning   ComponentPropertyStatus = "warning"
-	ComponentPropertyStatusError     ComponentPropertyStatus = "error"
-	ComponentPropertyStatusInfo      ComponentPropertyStatus = "info"
-)
-
 type Owner string
-
-type Text struct {
-	Tooltip string `json:"tooltip,omitempty"`
-	Icon    string `json:"icon,omitempty"`
-	Text    string `json:"text,omitempty"`
-	Label   string `json:"label,omitempty"`
-}
-
-type Link struct {
-	// e.g. documentation, support, playbook
-	Type string `json:"type,omitempty"`
-	URL  string `json:"url,omitempty"`
-	Text `json:",inline"`
-}
 
 type Properties []Property
 
@@ -186,13 +109,13 @@ type Property struct {
 	Type     string `json:"type,omitempty"`
 	Color    string `json:"color,omitempty"`
 	// e.g. milliseconds, bytes, millicores, epoch etc.
-	Unit           string `json:"unit,omitempty"`
-	Value          int64  `json:"value,omitempty"`
-	Max            *int64 `json:"max,omitempty"`
-	Min            *int64 `json:"min,omitempty"`
-	Status         string `json:"status,omitempty"`
-	LastTransition string `json:"lastTransition,omitempty"`
-	Links          []Link `json:"links,omitempty"`
+	Unit           string       `json:"unit,omitempty"`
+	Value          int64        `json:"value,omitempty"`
+	Max            *int64       `json:"max,omitempty"`
+	Min            *int64       `json:"min,omitempty"`
+	Status         string       `json:"status,omitempty"`
+	LastTransition string       `json:"lastTransition,omitempty"`
+	Links          []types.Link `json:"links,omitempty"`
 	// +kubebuilder:validation:XPreserveUnknownFields
 	Lookup       *CanarySpec   `json:"lookup,omitempty"`
 	ConfigLookup *ConfigLookup `json:"configLookup,omitempty"`
