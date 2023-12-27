@@ -31,10 +31,8 @@ func InitContext() (context.Context, error) {
 
 	if ctx, err = db.Init(); err != nil {
 		logger.Warnf("error connecting to db %v", err)
-	} else {
 		ctx = context.New()
 	}
-
 	return ctx.
 		WithKubernetes(k8s).
 		WithKommons(kommonsClient), nil

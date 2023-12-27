@@ -19,13 +19,19 @@ $KARINA ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.
 fi
 
 ## starting the postgres as docker container
-docker run --rm -p 5432:5432  --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres:14.1
+docker run --rm -p 5433:5432  --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres:14.1
+
+curl https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh -o wait-for-it.sh;
+chmod +x wait-for-it.sh;
+
 if $KARINA provision kind-cluster -e name=$CLUSTER_NAME -v ; then
 echo "::endgroup::"
 else
 echo "::endgroup::"
 exit 1
 fi
+echo "Waiting for server to accept connections"
+./wait-for-it.sh 0.0.0.0:5433 --timeout=120;
 
 kubectl config use-context kind-$CLUSTER_NAME
 
@@ -40,7 +46,7 @@ echo "::endgroup::"
 
 echo "::group::Operator"
 ## starting operator in background
-go run main.go operator --db-migrations -vvv --db="postgres://postgres:mysecretpassword@localhost:5432/postgres?sslmode=disable" --maxStatusCheckCount=1 &
+go run main.go operator --db-migrations -vvv --db="postgres://postgres:mysecretpassword@localhost:5433/postgres?sslmode=disable"  &
 PROC_ID=$!
 
 echo "Started operator with PID $PROC_ID"
@@ -48,9 +54,8 @@ echo "Started operator with PID $PROC_ID"
 ## sleeping for a bit to let the operator start and statuses to be present
 sleep 120
 
-echo "Waiting for server to accept connections"
-curl https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh -o wait-for-it.sh;
-chmod +x wait-for-it.sh; ./wait-for-it.sh 0.0.0.0:8080 --timeout=0;
+
+./wait-for-it.sh 0.0.0.0:8080 --timeout=120;
 
 echo "Server is ready now"
 

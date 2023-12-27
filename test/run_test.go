@@ -35,7 +35,7 @@ var _ = ginkgo.BeforeSuite(func() {
 		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
 	}
 
-	DefaultContext = dutyContext.New().WithKubernetes(k8s).WithKommons(kommonsClient)
+	DefaultContext = dutyContext.New().WithKubernetes(k8s).WithKommons(kommonsClient).WithNamespace("canaries")
 
 	logger.StandardLogger().SetLogLevel(verbosity)
 

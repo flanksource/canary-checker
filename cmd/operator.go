@@ -74,8 +74,9 @@ func run(cmd *cobra.Command, args []string) {
 	if err != nil {
 		logger.Fatalf(err.Error())
 	}
+
 	if ctx.DB() == nil {
-		logger.Fatalf("operator requires db connections")
+		logger.Fatalf("operator requires a db connection")
 	}
 	if ctx.Kommons() == nil {
 		logger.Fatalf("operator requires a kubernetes connection")
@@ -123,6 +124,7 @@ func run(cmd *cobra.Command, args []string) {
 	runner.RunnerLabels = labels.LoadFromFile("/etc/podinfo/labels")
 
 	canaryReconciler := &controllers.CanaryReconciler{
+		Context:     apicontext.DefaultContext,
 		Client:      mgr.GetClient(),
 		LogPass:     logPass,
 		LogFail:     logFail,
@@ -133,9 +135,10 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	systemReconciler := &controllers.TopologyReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("system"),
-		Scheme: mgr.GetScheme(),
+		Context: apicontext.DefaultContext,
+		Client:  mgr.GetClient(),
+		Log:     ctrl.Log.WithName("controllers").WithName("system"),
+		Scheme:  mgr.GetScheme(),
 	}
 	if err = mgr.Add(manager.RunnableFunc(db.Start)); err != nil {
 		setupLog.Error(err, "unable to Add manager")

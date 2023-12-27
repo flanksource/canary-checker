@@ -3,9 +3,7 @@ package topology
 import (
 	"fmt"
 	"reflect"
-
-	gocontext "context"
-	"time"
+	"sync"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -15,28 +13,37 @@ import (
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
 	"github.com/robfig/cron/v3"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var TopologyScheduler = cron.New()
 
-type TopologyJob struct {
-	context.Context
-	v1.Topology
-}
+var topologyJobs sync.Map
 
-func (job TopologyJob) GetNamespacedName() types.NamespacedName {
-	return types.NamespacedName{Name: job.Topology.Name, Namespace: job.Topology.Namespace}
-}
-
-func (job TopologyJob) Run() {
-	opts := pkgTopology.TopologyRunOptions{
-		Context:   job.Context.Wrap(gocontext.Background()),
-		Depth:     10,
-		Namespace: job.Namespace,
+func newTopologyJob(ctx context.Context, topology v1.Topology) {
+	j := &job.Job{
+		Name:       "TopologyRun",
+		Context:    ctx.WithObject(topology.ObjectMeta),
+		Schedule:   topology.Spec.Schedule,
+		JobHistory: true,
+		Retention:  job.RetentionHour,
+		ID:         topology.GetPersistedID(),
+		Fn: func(ctx job.JobRuntime) error {
+			ctx.History.ResourceID = topology.GetPersistedID()
+			ctx.History.ResourceType = "topology"
+			opts := pkgTopology.TopologyRunOptions{
+				Context:   ctx.Context,
+				Depth:     10,
+				Namespace: topology.Namespace,
+			}
+			count, err := pkgTopology.SyncComponents(opts, topology)
+			ctx.History.SuccessCount = count
+			return err
+		},
 	}
-	if err := pkgTopology.SyncComponents(opts, job.Topology); err != nil {
-		logger.Errorf("failed to run topology %s: %v", job.GetNamespacedName(), err)
+
+	topologyJobs.Store(topology.GetPersistedID(), j)
+	if err := j.AddToScheduler(TopologyScheduler); err != nil {
+		logger.Errorf("[%s] failed to schedule %v", *j, err)
 	}
 }
 
@@ -65,58 +72,37 @@ var SyncTopology = &job.Job{
 }
 
 func SyncTopologyJob(ctx context.Context, t v1.Topology) error {
+	id := t.GetPersistedID()
+	var existingJob *job.Job
+	if j, ok := topologyJobs.Load(id); ok {
+		existingJob = j.(*job.Job)
+	}
 	if !t.DeletionTimestamp.IsZero() || t.Spec.GetSchedule() == "@never" {
-		DeleteTopologyJob(t.GetPersistedID())
+		existingJob.Unschedule()
+		topologyJobs.Delete(id)
 		return nil
 	}
 
-	entry := findTopologyCronEntry(t.GetPersistedID())
-	if entry != nil {
-		job := entry.Job.(TopologyJob)
-		if !reflect.DeepEqual(job.Topology.Spec, t.Spec) {
-			logger.Infof("Rescheduling %s topology with updated specs", t)
-			TopologyScheduler.Remove(entry.ID)
-		} else {
-			return nil
-		}
-	}
-	job := TopologyJob{
-		Context:  ctx.Wrap(gocontext.Background()).WithObject(t.ObjectMeta),
-		Topology: t,
+	if existingJob == nil {
+		newTopologyJob(ctx, t)
+		return nil
 	}
 
-	_, err := TopologyScheduler.AddJob(t.Spec.GetSchedule(), job)
-	if err != nil {
-		return fmt.Errorf("failed to schedule topology %s/%s: %v", t.Namespace, t.Name, err)
-	} else {
-		logger.Infof("Scheduled %s/%s: %s", t.Namespace, t.Name, t.Spec.GetSchedule())
-	}
-
-	entry = findTopologyCronEntry(t.GetPersistedID())
-	if entry != nil && time.Until(entry.Next) < 1*time.Hour {
-		// run all regular topologies on startup
-		job = entry.Job.(TopologyJob)
-		go job.Run()
-	}
-	return nil
-}
-
-func findTopologyCronEntry(id string) *cron.Entry {
-	for _, entry := range TopologyScheduler.Entries() {
-		if entry.Job.(TopologyJob).GetPersistedID() == id {
-			return &entry
-		}
+	existingTopology := existingJob.Context.Value("topology")
+	if existingTopology != nil && !reflect.DeepEqual(existingTopology.(v1.Topology).Spec, t.Spec) {
+		ctx.Debugf("Rescheduling %s topology with updated specs", t)
+		existingJob.Unschedule()
+		newTopologyJob(ctx, t)
 	}
 	return nil
 }
 
 func DeleteTopologyJob(id string) {
-	entry := findTopologyCronEntry(id)
-	if entry == nil {
-		return
+	if j, ok := topologyJobs.Load(id); ok {
+		existingJob := j.(*job.Job)
+		existingJob.Unschedule()
+		topologyJobs.Delete(id)
 	}
-	logger.Tracef("deleting cron entry for topology:%s with entry ID: %v", id, entry.ID)
-	TopologyScheduler.Remove(entry.ID)
 }
 
 var CleanupComponents = &job.Job{

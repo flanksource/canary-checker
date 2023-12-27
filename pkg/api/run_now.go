@@ -110,9 +110,9 @@ func RunTopologyHandler(c echo.Context) error {
 		Depth:     topologyRunDepth,
 		Namespace: topology.Namespace,
 	}
-	if err := pkgTopology.SyncComponents(opts, *topology); err != nil {
+	if count, err := pkgTopology.SyncComponents(opts, *topology); err != nil {
 		return errorResponse(c, err, http.StatusInternalServerError)
+	} else {
+		return c.JSON(http.StatusOK, map[string]string{"status": "ok", "count": fmt.Sprint(count)})
 	}
-
-	return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 }

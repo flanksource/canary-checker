@@ -34,6 +34,7 @@ import (
 
 // TopologyReconciler reconciles a Canary object
 type TopologyReconciler struct {
+	dutyContext.Context
 	client.Client
 	Log        logr.Logger
 	Scheme     *runtime.Scheme
@@ -46,7 +47,6 @@ const TopologyFinalizerName = "topology.canaries.flanksource.com"
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=topologies,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=topologies/status,verbs=get;update;patch
 func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (ctrl.Result, error) {
-	dCtx := dutyContext.NewContext(ctx)
 	logger := r.Log.WithValues("topology", req.NamespacedName)
 	topology := &v1.Topology{}
 	err := r.Get(ctx, req.NamespacedName, topology)
@@ -54,6 +54,7 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 		logger.V(1).Info("Topology not found")
 		return ctrl.Result{}, nil
 	}
+	dCtx := r.Context.WithObject(topology.ObjectMeta)
 	if !controllerutil.ContainsFinalizer(topology, TopologyFinalizerName) {
 		controllerutil.AddFinalizer(topology, TopologyFinalizerName)
 		if err := r.Client.Update(ctx, topology); err != nil {

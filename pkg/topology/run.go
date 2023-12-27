@@ -456,25 +456,25 @@ func Run(opts TopologyRunOptions, t v1.Topology) ([]*pkg.Component, models.JobHi
 	return results, *jobHistory
 }
 
-func SyncComponents(opts TopologyRunOptions, topology v1.Topology) error {
+func SyncComponents(opts TopologyRunOptions, topology v1.Topology) (int, error) {
 	id := topology.GetPersistedID()
 	opts.Context.Debugf("[%s] running topology sync", id)
 	// Check if deleted
 	var dbTopology models.Topology
 	if err := opts.DB().Where("id = ?", id).First(&dbTopology).Error; err != nil {
-		return fmt.Errorf("failed to query topology id: %s: %w", id, err)
+		return 0, fmt.Errorf("failed to query topology id: %s: %w", id, err)
 	}
 
 	if dbTopology.DeletedAt != nil {
 		opts.Context.Debugf("Skipping topology[%s] as its deleted", id)
 		// TODO: Should we run the db.DeleteTopology function always in this scenario
-		return nil
+		return 0, nil
 	}
 
 	components, _ := Run(opts, topology)
 	topologyID, err := uuid.Parse(id)
 	if err != nil {
-		return fmt.Errorf("failed to parse topology id: %w", err)
+		return 0, fmt.Errorf("failed to parse topology id: %w", err)
 	}
 
 	var compIDs []uuid.UUID
@@ -485,7 +485,7 @@ func SyncComponents(opts TopologyRunOptions, topology v1.Topology) error {
 		component.TopologyID = &topologyID
 		componentsIDs, err := db.PersistComponent(opts.Context, component)
 		if err != nil {
-			return fmt.Errorf("failed to persist component(id=%s, name=%s): %w", component.ID, component.Name, err)
+			return 0, fmt.Errorf("failed to persist component(id=%s, name=%s): %w", component.ID, component.Name, err)
 		}
 
 		compIDs = append(compIDs, componentsIDs...)
@@ -493,15 +493,15 @@ func SyncComponents(opts TopologyRunOptions, topology v1.Topology) error {
 
 	dbCompsIDs, err := db.GetActiveComponentsIDsOfTopology(opts.DB(), id)
 	if err != nil {
-		return fmt.Errorf("error getting components for topology (id=%s): %v", id, err)
+		return 0, fmt.Errorf("error getting components for topology (id=%s): %v", id, err)
 	}
 
 	deleteCompIDs := utils.SetDifference(dbCompsIDs, compIDs)
 	if len(deleteCompIDs) != 0 {
 		if err := db.DeleteComponentsWithIDs(opts.DB(), utils.UUIDsToStrings(deleteCompIDs)); err != nil {
-			return fmt.Errorf("error deleting components: %v", err)
+			return 0, fmt.Errorf("error deleting components: %v", err)
 		}
 	}
 
-	return nil
+	return len(components), nil
 }

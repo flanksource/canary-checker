@@ -60,40 +60,34 @@ func GetTopology(ctx context.Context, id string) (*v1.Topology, error) {
 
 // TODO: Simplify logic and improve readability
 func PersistComponent(ctx context.Context, component *pkg.Component) ([]uuid.UUID, error) {
-	existing := models.Component{}
+	var existing *models.Component
+	var err error
 	var persisted []uuid.UUID
 	db := ctx.DB()
-	var tx *gorm.DB
-	if component.ID == uuid.Nil {
-		if component.ParentId == nil {
-			tx = db.Find(existing, "name = ? AND type = ? and parent_id is NULL", component.Name, component.Type)
-		} else {
-			tx = db.Find(existing, "name = ? AND type = ? and parent_id = ?", component.Name, component.Type, component.ParentId)
-		}
-	} else {
-		if component.ParentId == nil {
-			tx = db.Find(existing, "topology_id = ? AND name = ? AND type = ? and parent_id is NULL", component.TopologyID, component.Name, component.Type)
-		} else {
-			tx = db.Find(existing, "topology_id = ? AND name = ? AND type = ? and parent_id = ?", component.TopologyID, component.Name, component.Type, component.ParentId)
-		}
-	}
-	if tx.Error != nil {
-		return persisted, fmt.Errorf("error finding component: %v", tx.Error)
+
+	existing, err = component.FindExisting(db)
+	if err != nil {
+		return persisted, fmt.Errorf("error finding component: %v", err)
 	}
 
-	if existing.ID != uuid.Nil {
+	tx := db.Table("components")
+	if existing != nil && existing.ID != uuid.Nil {
 		component.ID = existing.ID
-		tx = db.Table("components").Clauses(
+		tx = tx.Clauses(
 			clause.OnConflict{
 				Columns:   []clause.Column{{Name: "topology_id"}, {Name: "name"}, {Name: "type"}, {Name: "parent_id"}},
 				UpdateAll: true,
 			},
 		).UpdateColumns(component)
 
-		// Since gorm ignores nil fields, we are setting deleted_at explicitly
-		db.Table("components").Where("id = ?", existing.ID).UpdateColumn("deleted_at", nil)
+		if existing.DeletedAt != component.DeletedAt {
+			// Since gorm ignores nil fields, we are setting deleted_at explicitly
+			if err := db.Table("components").Where("id = ?", existing.ID).UpdateColumn("deleted_at", nil).Error; err != nil {
+				return nil, fmt.Errorf("failed to undelete: %v", err)
+			}
+		}
 	} else {
-		tx = db.Table("components").Clauses(
+		tx = tx.Clauses(
 			clause.OnConflict{
 				Columns:   []clause.Column{{Name: "topology_id"}, {Name: "name"}, {Name: "type"}, {Name: "parent_id"}},
 				UpdateAll: true,

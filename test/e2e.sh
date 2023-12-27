@@ -121,13 +121,13 @@ fi
 echo "::group::Testing"
 
 if [[ "$SKIP_TELEPRESENCE" != "true" ]]; then
-  telepresence="telepresence --mount false -m vpn-tcp --namespace default --run"
+  telepresence="telepresence --mount false -m vpn-tcp --namespace canaries --run"
 fi
 
 cmd="$telepresence ginkgo -p  --junit-report test-results.xml $TEST_BINARY --test-folder $TEST_FOLDER $EXTRA"
 $cmd  2>&1 | tee test.out
 
-if [ grep "Test Suite Failed" test.out ]; then
+if  grep "Test Suite Failed" test.out ; then
   echo "::endgroup::"
   exit 1
 fi

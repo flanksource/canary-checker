@@ -15,6 +15,7 @@ import (
 
 var ComponentRelationshipSync = &job.Job{
 	Name:       "ComponentRelationshipSync",
+	Schedule:   "@every 5m",
 	JobHistory: true,
 	Retention:  job.RetentionHour,
 	Singleton:  true,
@@ -56,6 +57,7 @@ var ComponentRelationshipSync = &job.Job{
 
 var ComponentStatusSummarySync = &job.Job{
 	Name:       "ComponentStatusSummarySync",
+	Schedule:   "@every 2m",
 	JobHistory: true,
 	Retention:  job.RetentionHour,
 	Singleton:  true,

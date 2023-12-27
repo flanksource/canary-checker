@@ -150,6 +150,25 @@ type Component struct {
 	LogSelectors    dutyTypes.LogSelectors      `json:"logs,omitempty" gorm:"column:log_selectors"`
 }
 
+func (component *Component) FindExisting(db *gorm.DB) (*models.Component, error) {
+	var existing models.Component
+	tx := db.Model(component).Select("id", "deleted_at")
+	if component.ID == uuid.Nil {
+		if component.ParentId == nil {
+			tx = tx.Find(&existing, "name = ? AND type = ? and parent_id is NULL", component.Name, component.Type)
+		} else {
+			tx = tx.Find(&existing, "name = ? AND type = ? and parent_id = ?", component.Name, component.Type, component.ParentId).Pluck("id", &existing)
+		}
+	} else {
+		if component.ParentId == nil {
+			tx = tx.Find(&existing, "topology_id = ? AND name = ? AND type = ? and parent_id is NULL", component.TopologyID, component.Name, component.Type).Pluck("id", &existing)
+		} else {
+			tx = tx.Find(&existing, "topology_id = ? AND name = ? AND type = ? and parent_id = ?", component.TopologyID, component.Name, component.Type, component.ParentId).Pluck("id", &existing)
+		}
+	}
+	return &existing, tx.Error
+}
+
 func (component *Component) GetConfigs(db *gorm.DB) (relationships []models.ConfigComponentRelationship, err error) {
 	err = db.Where("component_id = ? AND deleted_at IS NULL", component.ID).Find(&relationships).Error
 	return relationships, err

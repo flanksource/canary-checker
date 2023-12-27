@@ -2,9 +2,11 @@ package v1
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/flanksource/commons/hash"
 	"github.com/flanksource/duty/types"
+	"github.com/robfig/cron/v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,6 +35,18 @@ type TopologySpec struct {
 	Properties Properties `json:"properties,omitempty"`
 	// Lookup and associate config items with this component
 	Configs []types.ConfigQuery `json:"configs,omitempty"`
+}
+
+func (s Topology) NextRuntime() (*time.Time, error) {
+	if s.Spec.Schedule != "" {
+		schedule, err := cron.ParseStandard(s.Spec.Schedule)
+		if err != nil {
+			return nil, err
+		}
+		t := schedule.Next(time.Now())
+		return &t, nil
+	}
+	return nil, nil
 }
 
 func (s Topology) String() string {
