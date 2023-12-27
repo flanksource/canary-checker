@@ -715,10 +715,10 @@ github.com/evanphx/json-patch v5.7.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLi
 github.com/exaring/otelpgx v0.5.2 h1:joqpJoz/HJD2hP4Rdk6CVM9O7oCQ5zWAkTalTen0ShE=
 github.com/exaring/otelpgx v0.5.2/go.mod h1:4dBiAqwzDNmpj3TwX5Syti1/Nw2bIoDQItdLvWTklQU=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
-github.com/flanksource/commons v1.19.2 h1:6JAnKzBBk5iUROrR79dm7Bzbg9beAiFTehkTeZyI2/g=
-github.com/flanksource/commons v1.19.2/go.mod h1:k+3B7McXUOS+TirYFR9h0pPk6mHNG3dqVUEY9gKI3/U=
-github.com/flanksource/duty v1.0.253 h1:ucjYJgl797sI/Jnpxg9SIoa55di6fWwALfjDzdj3SVA=
-github.com/flanksource/duty v1.0.253/go.mod h1:v9JIeYE46dfmocI4wifW5bICeUXMjkIw791YQGYsSjw=
+github.com/flanksource/commons v1.19.3 h1:J4s5WWicUMNavEDCC5AIJQWBDaaloJ/tgztWUXTtRXc=
+github.com/flanksource/commons v1.19.3/go.mod h1:ZUgFy0Wwrm2LxV/AltBx36FShzXcn7wPmXJldK8Aa0E=
+github.com/flanksource/duty v1.0.256 h1:Dltik0ybMtCOvEg1TA1T1zbPtPfvLEN/lQ1RsXEwqfg=
+github.com/flanksource/duty v1.0.256/go.mod h1:tXMyMlcSGOXvXoP5KZApwzSDFs07NDQGhnJi9ArjWf4=
 github.com/flanksource/gomplate/v3 v3.20.4/go.mod h1:27BNWhzzSjDed1z8YShO6W+z6G9oZXuxfNFGd/iGSdc=
 github.com/flanksource/gomplate/v3 v3.20.26 h1:85lUzlKgZjb1uIkzoa4zN03OcdOnFPG+oWxshZTYqz4=
 github.com/flanksource/gomplate/v3 v3.20.26/go.mod h1:GKmptFMdr2LbOuqwQZrmo9a/UygyZ0pbXffks8MuYhE=
