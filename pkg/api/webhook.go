@@ -63,7 +63,7 @@ func WebhookHandler(c echo.Context) error {
 }
 
 func webhookHandler(ctx dutyContext.Context, id, authToken string, data CheckData) error {
-	webhookChecks, err := db.FindChecks(context.DefaultContext.Wrap(ctx), id, checks.WebhookCheckType)
+	webhookChecks, err := db.FindChecks(ctx, id, checks.WebhookCheckType)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func webhookHandler(ctx dutyContext.Context, id, authToken string, data CheckDat
 	}
 
 	var canary *v1.Canary
-	if c, err := db.FindCanaryByID(check.CanaryID.String()); err != nil {
+	if c, err := db.FindCanaryByID(ctx, check.CanaryID.String()); err != nil {
 		return fmt.Errorf("failed to get canary: %w", err)
 	} else if c == nil {
 		return Errorf(ENOTFOUND, "canary was not found (id:%s): %v", check.CanaryID.String(), err)

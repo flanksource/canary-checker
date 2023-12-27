@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	gocontext "context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/flanksource/commons/timer"
 	"github.com/flanksource/duty"
-	dutyContext "github.com/flanksource/duty/context"
 
 	"github.com/spf13/cobra"
 
@@ -30,10 +28,10 @@ var Topology = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		logger.ParseFlags(cmd.Flags())
 		db.ConnectionString = readFromEnv(db.ConnectionString)
-		if db.IsConfigured() {
-			if err := db.Init(); err != nil {
-				logger.Debugf("error connecting with postgres %v", err)
-			}
+		var err error
+		apicontext.DefaultContext, err = InitContext()
+		if err != nil {
+			logger.Fatalf(err.Error())
 		}
 	},
 }
@@ -50,11 +48,7 @@ var QueryTopology = &cobra.Command{
 			logger.Fatalf("Must specify --db or DB_URL env")
 		}
 
-		if err := db.Init(); err != nil {
-			logger.Fatalf("error connecting with postgres %v", err)
-		}
-
-		results, err := topology.Query(queryParams)
+		results, err := topology.Query(apicontext.DefaultContext, queryParams)
 		if err != nil {
 			logger.Fatalf("Failed to query topology: %v", err)
 		}
@@ -75,17 +69,6 @@ var AddTopology = &cobra.Command{
 }
 
 func getTopologyRunOptions(depth int) topology.TopologyRunOptions {
-	logger.Tracef("depth: %v", depth)
-
-	kommonsClient, k8s, err := pkg.NewKommonsClient()
-	if err != nil {
-		logger.Warnf("Failed to get kubernetes client: %v", err)
-	}
-
-	apicontext.DefaultContext = dutyContext.NewContext(gocontext.Background()).
-		WithDB(db.Gorm, db.Pool).
-		WithKubernetes(k8s).
-		WithKommons(kommonsClient)
 	return topology.TopologyRunOptions{
 		Context:   apicontext.DefaultContext,
 		Depth:     10,
@@ -127,7 +110,7 @@ var RunTopology = &cobra.Command{
 					}
 				}
 				go func() {
-					components := topology.Run(opts, _config)
+					components, _ := topology.Run(opts, _config)
 					results = append(results, components...)
 					wg.Done()
 				}()

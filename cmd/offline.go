@@ -24,7 +24,7 @@ var GoOffline = &cobra.Command{
 		defer os.RemoveAll(databaseDir)
 
 		db.ConnectionString = "embedded://" + databaseDir
-		if err := db.Connect(); err != nil {
+		if _, err := db.Connect(); err != nil {
 			logger.Fatalf("Failed to run in embedded mode: %+v", err)
 		}
 		if err := db.PostgresServer.Stop(); err != nil {

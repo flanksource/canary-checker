@@ -8,12 +8,10 @@ import (
 	"testing"
 	"time"
 
-	embeddedPG "github.com/fergusstrange/embedded-postgres"
 	"github.com/flanksource/canary-checker/pkg/cache"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/duty"
-	"github.com/flanksource/duty/testutils"
+	dutyContext "github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/tests/setup"
 	"github.com/labstack/echo/v4"
 	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -24,7 +22,7 @@ var (
 	testEchoServerPort = 9232
 	requestCount       int
 
-	postgresServer *embeddedPG.EmbeddedPostgres
+	DefaultContext dutyContext.Context
 )
 
 func TestCanarySyncJob(t *testing.T) {
@@ -48,20 +46,9 @@ func DelayedResponseHandler(c echo.Context) error {
 }
 
 var _ = ginkgo.BeforeSuite(func() {
-	var err error
+	DefaultContext = setup.BeforeSuiteFn()
 
-	port := 9881
-	config, dbString := testutils.GetEmbeddedPGConfig("test_canary_job", port)
-	postgresServer = embeddedPG.NewDatabase(config)
-	if err = postgresServer.Start(); err != nil {
-		ginkgo.Fail(err.Error())
-	}
-	logger.Infof("Started postgres on port: %d", port)
-
-	if db.Gorm, db.Pool, err = duty.SetupDB(dbString, nil); err != nil {
-		ginkgo.Fail(err.Error())
-	}
-	cache.PostgresCache = cache.NewPostgresCache(db.Pool)
+	cache.PostgresCache = cache.NewPostgresCache(DefaultContext)
 
 	testEchoServer = echo.New()
 	testEchoServer.GET("/", DelayedResponseHandler)
@@ -85,8 +72,5 @@ var _ = ginkgo.AfterSuite(func() {
 		ginkgo.Fail(err.Error())
 	}
 
-	logger.Infof("Stopping postgres")
-	if err := postgresServer.Stop(); err != nil {
-		ginkgo.Fail(err.Error())
-	}
+	setup.AfterSuiteFn()
 })

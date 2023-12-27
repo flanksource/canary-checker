@@ -9,14 +9,13 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
-	dutyTypes "github.com/flanksource/duty/types"
+	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -74,7 +73,7 @@ func GetAllCanariesForSync(ctx context.Context, namespace string) ([]pkg.Canary,
 	return _canaries, nil
 }
 
-func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
+func PersistCheck(db *gorm.DB, check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 	check.CanaryID = canaryID
 	name := check.GetName()
 	description := check.GetDescription()
@@ -107,7 +106,7 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 		assignments["deleted_at"] = check.DeletedAt
 	}
 
-	if err := Gorm.Clauses(
+	if err := db.Clauses(
 		clause.OnConflict{
 			Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
 			DoUpdates: clause.Assignments(assignments),
@@ -121,7 +120,7 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 	if check.ID == uuid.Nil {
 		var err error
 		var idStr string
-		if err := Gorm.Table("checks").Select("id").Where("canary_id = ? AND type = ? AND name = ? AND agent_id = ?", check.CanaryID, check.Type, check.Name, uuid.Nil).Find(&idStr).Error; err != nil {
+		if err := db.Table("checks").Select("id").Where("canary_id = ? AND type = ? AND name = ? AND agent_id = ?", check.CanaryID, check.Type, check.Name, uuid.Nil).Find(&idStr).Error; err != nil {
 			return uuid.Nil, err
 		}
 		check.ID, err = uuid.Parse(idStr)
@@ -251,15 +250,15 @@ func DeleteNonTransformedChecks(db *gorm.DB, id []string) error {
 	return db.Table("checks").Where("id IN (?) and transformed = false", id).UpdateColumn("deleted_at", duty.Now()).Error
 }
 
-func GetCanary(id string) (pkg.Canary, error) {
+func GetCanary(ctx context.Context, id string) (pkg.Canary, error) {
 	var model pkg.Canary
-	err := Gorm.Where("id = ?", id).First(&model).Error
+	err := ctx.DB().Where("id = ?", id).First(&model).Error
 	return model, err
 }
 
-func FindCanaryByID(id string) (*pkg.Canary, error) {
+func FindCanaryByID(ctx context.Context, id string) (*pkg.Canary, error) {
 	var model *pkg.Canary
-	if err := Gorm.Where("id = ?", id).First(&model).Error; err != nil {
+	if err := ctx.DB().Where("id = ?", id).First(&model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -270,9 +269,9 @@ func FindCanaryByID(id string) (*pkg.Canary, error) {
 	return model, nil
 }
 
-func GetCheck(id string) (*pkg.Check, error) {
+func GetCheck(ctx context.Context, id string) (*pkg.Check, error) {
 	var model *pkg.Check
-	if err := Gorm.Where("id = ?", id).First(model).Error; err != nil {
+	if err := ctx.DB().Where("id = ?", id).First(model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -281,9 +280,9 @@ func GetCheck(id string) (*pkg.Check, error) {
 	return model, nil
 }
 
-func FindCanary(namespace, name string) (*pkg.Canary, error) {
+func FindCanary(ctx context.Context, namespace, name string) (*pkg.Canary, error) {
 	var model pkg.Canary
-	if err := Gorm.
+	if err := ctx.DB().
 		Where("namespace = ? AND name = ?", namespace, name).
 		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
 		First(&model).Error; err != nil {
@@ -296,9 +295,9 @@ func FindCanary(namespace, name string) (*pkg.Canary, error) {
 	return &model, nil
 }
 
-func FindCheck(canary pkg.Canary, name string) (*pkg.Check, error) {
+func FindCheck(ctx context.Context, canary pkg.Canary, name string) (*pkg.Check, error) {
 	var model pkg.Check
-	if err := Gorm.Where("canary_id = ? AND name = ?", canary.ID.String(), name).
+	if err := ctx.DB().Where("canary_id = ? AND name = ?", canary.ID.String(), name).
 		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
 		First(&model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -326,17 +325,17 @@ func FindChecks(ctx context.Context, idOrName, checkType string) ([]models.Check
 	return checks, err
 }
 
-func CreateCanary(canary *pkg.Canary) error {
+func CreateCanary(ctx context.Context, canary *pkg.Canary) error {
 	if canary.Spec == nil || len(canary.Spec) == 0 {
 		empty := []byte("{}")
 		canary.Spec = dutyTypes.JSON(types.JSON(empty))
 	}
 
-	return Gorm.Create(canary).Error
+	return ctx.DB().Create(canary).Error
 }
 
-func CreateCheck(canary pkg.Canary, check *pkg.Check) error {
-	return Gorm.Create(&check).Error
+func CreateCheck(ctx context.Context, canary pkg.Canary, check *pkg.Check) error {
+	return ctx.DB().Create(&check).Error
 }
 
 func PersistCanaryModel(db *gorm.DB, model pkg.Canary) (*pkg.Canary, error) {
@@ -380,7 +379,7 @@ func PersistCanaryModel(db *gorm.DB, model pkg.Canary) (*pkg.Canary, error) {
 	for _, config := range spec.GetAllChecks() {
 		check := pkg.FromExternalCheck(model, config)
 		check.Spec, _ = json.Marshal(config)
-		id, err := PersistCheck(check, model.ID)
+		id, err := PersistCheck(db, check, model.ID)
 		if err != nil {
 			logger.Errorf("error persisting check", err)
 		}
@@ -392,7 +391,7 @@ func PersistCanaryModel(db *gorm.DB, model pkg.Canary) (*pkg.Canary, error) {
 	// fetching the checkIds present in the db but not present on the canary
 	checkIDsToRemove := utils.SetDifference(oldCheckIDs, newCheckIDs)
 	if len(checkIDsToRemove) > 0 {
-		logger.Infof("removing checks from canary:%s with ids %v", model.ID, checkIDsToRemove)
+		logger.Debugf("removing checks from canary:%s with ids %v", model.ID, checkIDsToRemove)
 		if err := DeleteNonTransformedChecks(db, checkIDsToRemove); err != nil {
 			logger.Errorf("failed to delete non transformed checks: %v", err)
 		}

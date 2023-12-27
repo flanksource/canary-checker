@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
@@ -25,32 +26,35 @@ type QueueData struct {
 func PushHandler(c echo.Context) error {
 	if c.Request().Body == nil {
 		logger.Debugf("missing request body")
-		return errorResonse(c, errors.New("missing request body"), http.StatusBadRequest)
+		return errorResponse(c, errors.New("missing request body"), http.StatusBadRequest)
 	}
 	defer c.Request().Body.Close()
+
+	ctx := c.Request().Context().(dutyContext.Context)
+
 	data := QueueData{
 		Check:  pkg.Check{},
 		Status: pkg.CheckStatus{},
 	}
 	reqBody, err := io.ReadAll(c.Request().Body)
 	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
+		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 	if err := json.Unmarshal(reqBody, &data); err != nil {
-		return errorResonse(c, err, http.StatusBadRequest)
+		return errorResponse(c, err, http.StatusBadRequest)
 	}
 	if data.Check.ID != uuid.Nil && data.Check.CanaryID == uuid.Nil {
-		check, err := db.GetCheck(data.Check.ID.String())
+		check, err := db.GetCheck(ctx, data.Check.ID.String())
 		if check == nil && err == nil {
-			return errorResonse(c, errors.New("check not found"), http.StatusNotFound)
+			return errorResponse(c, errors.New("check not found"), http.StatusNotFound)
 		} else if err != nil {
-			return errorResonse(c, err, http.StatusInternalServerError)
+			return errorResponse(c, err, http.StatusInternalServerError)
 		}
 		data.Check.CanaryID = check.CanaryID
 	} else if data.Check.ID == uuid.Nil {
-		canary, err := db.FindCanary(data.Check.Namespace, data.Check.Name)
+		canary, err := db.FindCanary(ctx, data.Check.Namespace, data.Check.Name)
 		if err != nil {
-			return errorResonse(c, err, http.StatusInternalServerError)
+			return errorResponse(c, err, http.StatusInternalServerError)
 		}
 		if canary != nil {
 			data.Check.CanaryID = canary.ID
@@ -59,12 +63,12 @@ func PushHandler(c echo.Context) error {
 				Name:      data.Check.Name,
 				Namespace: data.Check.Namespace,
 			}
-			if err := db.CreateCanary(canary); err != nil {
-				return errorResonse(c, err, http.StatusInternalServerError)
+			if err := db.CreateCanary(ctx, canary); err != nil {
+				return errorResponse(c, err, http.StatusInternalServerError)
 			}
 			data.Check.CanaryID = canary.ID
-			if err := db.CreateCheck(*canary, &data.Check); err != nil {
-				return errorResonse(c, err, http.StatusInternalServerError)
+			if err := db.CreateCheck(ctx, *canary, &data.Check); err != nil {
+				return errorResponse(c, err, http.StatusInternalServerError)
 			}
 		}
 	}

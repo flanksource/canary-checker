@@ -5,7 +5,7 @@ import (
 )
 
 // Deprecated: use HTTPError
-func errorResonse(c echo.Context, err error, code int) error {
+func errorResponse(c echo.Context, err error, code int) error {
 	e := map[string]string{"error": err.Error()}
 	return c.JSON(code, e)
 }

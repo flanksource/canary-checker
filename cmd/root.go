@@ -5,19 +5,40 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/checks"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/telemetry"
-	cleanup "github.com/flanksource/canary-checker/pkg/topology/checks"
+	"github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/context"
 	gomplate "github.com/flanksource/gomplate/v3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
+
+func InitContext() (context.Context, error) {
+	kommonsClient, k8s, err := pkg.NewKommonsClient()
+	if err != nil {
+		logger.Warnf("Failed to get kubernetes client: %v", err)
+	}
+
+	var ctx context.Context
+
+	if ctx, err = db.Init(); err != nil {
+		logger.Warnf("error connecting to db %v", err)
+	} else {
+		ctx = context.New()
+	}
+
+	return ctx.
+		WithKubernetes(k8s).
+		WithKommons(kommonsClient), nil
+}
 
 var Root = &cobra.Command{
 	Use: "canary-checker",

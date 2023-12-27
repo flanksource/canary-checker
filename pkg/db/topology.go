@@ -124,8 +124,8 @@ func PersistComponent(ctx context.Context, component *pkg.Component) ([]uuid.UUI
 	return persisted, tx.Error
 }
 
-func UpdateStatusAndSummaryForComponent(id uuid.UUID, status types.ComponentStatus, summary types.Summary) (int64, error) {
-	tx := Gorm.Table("components").Where("id = ? and (status != ? or summary != ?)", id, status, summary).
+func UpdateStatusAndSummaryForComponent(db *gorm.DB, id uuid.UUID, status types.ComponentStatus, summary types.Summary) (int64, error) {
+	tx := db.Table("components").Where("id = ? and (status != ? or summary != ?)", id, status, summary).
 		UpdateColumns(models.Component{Status: status, Summary: summary})
 	return tx.RowsAffected, tx.Error
 }

@@ -10,10 +10,7 @@ import (
 	"sync"
 	"time"
 
-	gocontext "context"
-
 	"github.com/flanksource/commons/timer"
-	dutyContext "github.com/flanksource/duty/context"
 
 	"github.com/flanksource/canary-checker/cmd/output"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -35,9 +32,7 @@ var Run = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		logger.ParseFlags(cmd.Flags())
 		db.ConnectionString = readFromEnv(db.ConnectionString)
-		if err := db.Init(); err != nil {
-			logger.Fatalf("error connecting with postgres %v", err)
-		}
+
 	},
 	Run: func(cmd *cobra.Command, configFiles []string) {
 		timer := timer.NewTimer()
@@ -45,15 +40,7 @@ var Run = &cobra.Command{
 			log.Fatalln("Must specify at least one canary")
 		}
 
-		kommonsClient, k8s, err := pkg.NewKommonsClient()
-		if err != nil {
-			logger.Warnf("Failed to get kubernetes client: %v", err)
-		}
-
-		apicontext.DefaultContext = dutyContext.NewContext(gocontext.Background()).
-			WithDB(db.Gorm, db.Pool).
-			WithKubernetes(k8s).
-			WithKommons(kommonsClient)
+		apicontext.DefaultContext, _ = InitContext()
 
 		var results = []*pkg.CheckResult{}
 

@@ -11,7 +11,6 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
@@ -60,24 +59,52 @@ func getDisabledChecks(ctx *context.Context) (map[string]struct{}, error) {
 	return result, nil
 }
 
+// Exec runs the actions specified and returns the results, without exporting any metrics
+func Exec(ctx *context.Context) ([]*pkg.CheckResult, error) {
+	var results []*pkg.CheckResult
+	disabledChecks, err := getDisabledChecks(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error getting disabled checks: %v", err)
+	}
+
+	checks := ctx.Canary.Spec.GetAllChecks()
+	for _, c := range All {
+		// FIXME: this doesn't work correct with DNS,
+		// t := GetDeadline(ctx.Canary)
+		// ctx, cancel := ctx.WithDeadline(t)
+		// defer cancel()
+
+		if _, ok := disabledChecks[c.Type()]; ok {
+			continue
+		}
+		if !Checks(checks).Includes(c) {
+			continue
+		}
+
+		result := c.Run(ctx)
+		transformedResults := TransformResults(ctx, result)
+		results = append(results, transformedResults...)
+	}
+	return results, nil
+}
+
 func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 	var results []*pkg.CheckResult
-
 	disabledChecks, err := getDisabledChecks(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting disabled checks: %v", err)
 	}
 
 	// Check if canary is not marked deleted in DB
-	if db.Gorm != nil && ctx.Canary.GetPersistedID() != "" {
+	if ctx.DB() != nil && ctx.Canary.GetPersistedID() != "" {
 		var deletedAt sql.NullTime
-		err := db.Gorm.Table("canaries").Select("deleted_at").Where("id = ?", ctx.Canary.GetPersistedID()).Scan(&deletedAt).Error
+		err := ctx.DB().Table("canaries").Select("deleted_at").Where("id = ?", ctx.Canary.GetPersistedID()).Scan(&deletedAt).Error
 		if err != nil {
 			return nil, fmt.Errorf("error getting canary: %v", err)
 		}
 
 		if deletedAt.Valid {
-			return results, nil
+			return nil, nil
 		}
 	}
 

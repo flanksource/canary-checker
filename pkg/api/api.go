@@ -62,7 +62,7 @@ func About(c echo.Context) error {
 func CheckDetails(c echo.Context) error {
 	q, err := cache.ParseQuery(c)
 	if err != nil {
-		return errorResonse(c, err, http.StatusBadRequest)
+		return errorResponse(c, err, http.StatusBadRequest)
 	}
 
 	start := time.Now()
@@ -81,9 +81,11 @@ func CheckDetails(c echo.Context) error {
 		q.WindowDuration = time.Hour * 4
 	}
 
-	results, uptime, latency, err := cache.PostgresCache.QueryStatus(c.Request().Context(), *q)
+	ctx := c.Request().Context().(context.Context)
+
+	results, uptime, latency, err := q.ExecuteDetails(ctx, ctx.Pool())
 	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
+		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
 	apiResponse := &DetailResponse{
@@ -102,13 +104,13 @@ func HealthSummary(c echo.Context) error {
 
 	var queryOpt cache.SummaryOptions
 	if err := c.Bind(&queryOpt); err != nil {
-		return errorResonse(c, err, http.StatusBadRequest)
+		return errorResponse(c, err, http.StatusBadRequest)
 	}
 
 	start := time.Now()
 	results, err := query.CheckSummary(ctx, query.CheckSummaryOptions(queryOpt))
 	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
+		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
 	apiResponse := &Response{
