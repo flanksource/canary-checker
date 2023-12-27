@@ -58,22 +58,6 @@ func GetTopology(ctx context.Context, id string) (*v1.Topology, error) {
 	return &tv1, nil
 }
 
-func GetChildRelationshipsForParentComponent(componentID uuid.UUID) ([]pkg.ComponentRelationship, error) {
-	var relationships []pkg.ComponentRelationship
-	if err := Gorm.Table("component_relationships").Where("relationship_id = ? AND deleted_at IS NULL", componentID).Find(&relationships).Error; err != nil {
-		return relationships, err
-	}
-	return relationships, nil
-}
-
-func GetCheckRelationshipsForComponent(componentID uuid.UUID) ([]models.CheckComponentRelationship, error) {
-	var relationships []models.CheckComponentRelationship
-	if err := Gorm.Where("component_id = ? AND deleted_at IS NULL", componentID).Find(&relationships).Error; err != nil {
-		return relationships, err
-	}
-	return relationships, nil
-}
-
 // TODO: Simplify logic and improve readability
 func PersistComponent(ctx context.Context, component *pkg.Component) ([]uuid.UUID, error) {
 	existing := models.Component{}

@@ -35,6 +35,9 @@ type TopologySpec struct {
 	Configs []types.ConfigQuery `json:"configs,omitempty"`
 }
 
+func (s Topology) String() string {
+	return fmt.Sprintf("%s/%s", s.Namespace, s.Name)
+}
 func (s Topology) IsEmpty() bool {
 	return len(s.Spec.Properties) == 0 && len(s.Spec.Components) == 0 && s.Name == ""
 }

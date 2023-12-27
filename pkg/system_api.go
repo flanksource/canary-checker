@@ -1,23 +1,17 @@
 package pkg
 
 import (
-	"context"
-	"database/sql/driver"
 	"fmt"
-	"strings"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
-	"gorm.io/gorm/schema"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sTypes "k8s.io/apimachinery/pkg/types"
 )
@@ -26,12 +20,13 @@ var json = jsontime.ConfigWithCustomTimeFormat
 
 const ComponentType = "component"
 
+// Topology mirrors the models.Topology struct except that instead of raw JSON serialized to the DB, it has the full CRD based spec.
 type Topology struct {
 	ID        uuid.UUID `gorm:"default:generate_ulid()"`
 	Name      string
 	Namespace string
 	Labels    dutyTypes.JSONStringMap
-	Spec      types.JSON
+	Spec      dutyTypes.JSON
 	Schedule  string
 	CreatedAt time.Time  `json:"created_at,omitempty" time_format:"postgres_timestamp"`
 	UpdatedAt time.Time  `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
@@ -111,6 +106,7 @@ func (components Components) Walk() Components {
 	return comps
 }
 
+// Component mirrors the models.Component struct except that instead of raw JSON serialized to the DB, it has the full CRD based spec.
 type Component struct {
 	Name         string                    `json:"name,omitempty"`
 	ID           uuid.UUID                 `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
@@ -131,7 +127,7 @@ type Component struct {
 	Summary dutyTypes.Summary `json:"summary,omitempty" gorm:"type:summary"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
 	Lifecycle       string                      `json:"lifecycle,omitempty"`
-	Properties      Properties                  `json:"properties,omitempty" gorm:"type:properties"`
+	Properties      dutyTypes.Properties        `json:"properties,omitempty" gorm:"type:properties"`
 	Components      Components                  `json:"components,omitempty" gorm:"-"`
 	ParentId        *uuid.UUID                  `json:"parent_id,omitempty"` //nolint
 	Selectors       dutyTypes.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors" swaggerignore:"true"`
@@ -145,7 +141,7 @@ type Component struct {
 	ExternalId      string                      `json:"external_id,omitempty"` //nolint
 	IsLeaf          bool                        `json:"is_leaf"`
 	SelectorID      string                      `json:"-" gorm:"-"`
-	Incidents       []Incident                  `json:"incidents,omitempty" gorm:"-"`
+	Incidents       []dutyTypes.Incident        `json:"incidents,omitempty" gorm:"-"`
 	ConfigInsights  []map[string]interface{}    `json:"insights,omitempty" gorm:"-"`
 	CostPerMinute   float64                     `json:"cost_per_minute,omitempty" gorm:"column:cost_per_minute"`
 	CostTotal1d     float64                     `json:"cost_total_1d,omitempty" gorm:"column:cost_total_1d"`
@@ -154,24 +150,24 @@ type Component struct {
 	LogSelectors    dutyTypes.LogSelectors      `json:"logs,omitempty" gorm:"column:log_selectors"`
 }
 
-type ComponentRelationship struct {
-	ComponentID      uuid.UUID  `json:"component_id,omitempty"`
-	RelationshipID   uuid.UUID  `json:"relationship_id,omitempty"`
-	SelectorID       string     `json:"selector_id,omitempty"`
-	RelationshipPath string     `json:"relationship_path,omitempty"`
-	CreatedAt        time.Time  `json:"created_at,omitempty"`
-	UpdatedAt        time.Time  `json:"updated_at,omitempty"`
-	DeletedAt        *time.Time `json:"deleted_at,omitempty"`
+func (c *Component) GetConfigs(db *gorm.DB) (relationships []models.ConfigComponentRelationship, err error) {
+	err = db.Where("component_id = ? AND deleted_at IS NULL", c.ID).Find(&relationships).Error
+	return relationships, err
 }
 
-type CheckComponentRelationship struct {
-	ComponentID uuid.UUID  `json:"component_id,omitempty"`
-	CheckID     uuid.UUID  `json:"check_id,omitempty"`
-	CanaryID    uuid.UUID  `json:"canary_id,omitempty"`
-	SelectorID  string     `json:"selector_id,omitempty"`
-	CreatedAt   time.Time  `json:"created_at,omitempty"`
-	UpdatedAt   time.Time  `json:"updated_at,omitempty"`
-	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
+func (c *Component) GetChecks(db *gorm.DB) (relationships []models.CheckComponentRelationship, err error) {
+	err = db.Where("component_id = ? AND deleted_at IS NULL", c.ID).Find(&relationships).Error
+	return relationships, err
+}
+
+func (c *Component) GetChildren(db *gorm.DB) (relationships []models.ComponentRelationship, err error) {
+	err = db.Where("relationship_id = ? AND deleted_at IS NULL", c.ID).Find(&relationships).Error
+	return relationships, err
+}
+
+func (c *Component) GetParents(db *gorm.DB) (relationships []models.CheckComponentRelationship, err error) {
+	err = db.Where("component_id = ? AND deleted_at IS NULL", c.ID).Find(&relationships).Error
+	return relationships, err
 }
 
 func (component Component) Clone() Component {
@@ -286,158 +282,8 @@ func (components Components) Find(name string) *Component {
 	return nil
 }
 
-type Text struct {
-	Tooltip string `json:"tooltip,omitempty"`
-	Icon    string `json:"icon,omitempty"`
-	Text    string `json:"text,omitempty"`
-	Label   string `json:"label,omitempty"`
-}
-
-type Link struct {
-	// e.g. documentation, support, playbook
-	Type string `json:"type,omitempty"`
-	URL  string `json:"url,omitempty"`
-	Text `json:",inline"`
-}
-
-type Incident struct {
-	ID          uuid.UUID `json:"id"`
-	Type        string    `json:"type"`
-	Title       string    `json:"title"`
-	Severity    int       `json:"severity"`
-	Description string    `json:"description"`
-}
-
-// Property is a realized v1.Property without the lookup definition
-type Property struct {
-	Label    string `json:"label,omitempty"`
-	Name     string `json:"name,omitempty"`
-	Tooltip  string `json:"tooltip,omitempty"`
-	Icon     string `json:"icon,omitempty"`
-	Type     string `json:"type,omitempty"`
-	Color    string `json:"color,omitempty"`
-	Order    int    `json:"order,omitempty"`
-	Headline bool   `json:"headline,omitempty"`
-
-	// Either text or value is required, but not both.
-	Text  string `json:"text,omitempty"`
-	Value int64  `json:"value,omitempty"`
-
-	// e.g. milliseconds, bytes, millicores, epoch etc.
-	Unit string `json:"unit,omitempty"`
-	Max  *int64 `json:"max,omitempty"`
-	Min  *int64 `json:"min,omitempty"`
-
-	Status         string    `json:"status,omitempty"`
-	LastTransition string    `json:"lastTransition,omitempty"`
-	Links          []v1.Link `json:"links,omitempty"`
-}
-
-type Properties []*Property
-
-func (p Properties) AsJSON() []byte {
-	if len(p) == 0 {
-		return []byte("[]")
-	}
-	data, err := json.Marshal(p)
-	if err != nil {
-		logger.Errorf("Error marshalling properties: %v", err)
-	}
-	return data
-}
-
-func (p Properties) AsMap() map[string]interface{} {
-	result := make(map[string]interface{})
-	for _, property := range p {
-		result[property.Name] = property.GetValue()
-	}
-	return result
-}
-
-func (p Properties) Find(name string) *Property {
-	for _, prop := range p {
-		if prop.Name == name {
-			return prop
-		}
-	}
-	return nil
-}
-
-func (p Property) GetValue() interface{} {
-	if p.Text != "" {
-		return p.Text
-	}
-	if p.Value != 0 {
-		return p.Value
-	}
-	return nil
-}
-
-func (p *Property) String() string {
-	s := fmt.Sprintf("%s[", p.Name)
-	if p.Text != "" {
-		s += fmt.Sprintf("text=%s ", p.Text)
-	}
-	if p.Value != 0 {
-		s += fmt.Sprintf("value=%d ", p.Value)
-	}
-	if p.Unit != "" {
-		s += fmt.Sprintf("unit=%s ", p.Unit)
-	}
-	if p.Max != nil {
-		s += fmt.Sprintf("max=%d ", *p.Max)
-	}
-	if p.Min != nil {
-		s += fmt.Sprintf("min=%d ", *p.Min)
-	}
-	if p.Status != "" {
-		s += fmt.Sprintf("status=%s ", p.Status)
-	}
-	if p.LastTransition != "" {
-		s += fmt.Sprintf("lastTransition=%s ", p.LastTransition)
-	}
-
-	return strings.TrimRight(s, " ") + "]"
-}
-
-func (p *Property) Merge(other *Property) {
-	if other.Text != "" {
-		p.Text = other.Text
-	}
-	if other.Value != 0 {
-		p.Value = other.Value
-	}
-	if other.Unit != "" {
-		p.Unit = other.Unit
-	}
-	if other.Max != nil {
-		p.Max = other.Max
-	}
-	if other.Min != nil {
-		p.Min = other.Min
-	}
-	if other.Order > 0 {
-		p.Order = other.Order
-	}
-	if other.Status != "" {
-		p.Status = other.Status
-	}
-	if other.LastTransition != "" {
-		p.LastTransition = other.LastTransition
-	}
-	if other.Links != nil {
-		p.Links = other.Links
-	}
-	if other.Type != "" {
-		p.Type = other.Type
-	}
-	if other.Color != "" {
-		p.Color = other.Color
-	}
-}
-
-func NewProperty(property v1.Property) *Property {
-	return &Property{
+func NewProperty(property v1.Property) *dutyTypes.Property {
+	return &dutyTypes.Property{
 		Label:          property.Label,
 		Name:           property.Name,
 		Tooltip:        property.Tooltip,
@@ -517,51 +363,4 @@ func (component Component) GetStatus() dutyTypes.ComponentStatus {
 	} else {
 		return dutyTypes.ComponentStatusInfo
 	}
-}
-
-// Scan scan value into Jsonb, implements sql.Scanner interface
-func (p Properties) Value() (driver.Value, error) {
-	if len(p) == 0 {
-		return nil, nil
-	}
-	return p.AsJSON(), nil
-}
-
-// Scan scan value into Jsonb, implements sql.Scanner interface
-func (p *Properties) Scan(val interface{}) error {
-	if val == nil {
-		*p = make(Properties, 0)
-		return nil
-	}
-	var ba []byte
-	switch v := val.(type) {
-	case []byte:
-		ba = v
-	default:
-		return errors.New(fmt.Sprint("Failed to unmarshal properties value:", val))
-	}
-	err := json.Unmarshal(ba, p)
-	return err
-}
-
-// GormDataType gorm common data type
-func (Properties) GormDataType() string {
-	return "properties"
-}
-
-func (Properties) GormDBDataType(db *gorm.DB, field *schema.Field) string {
-	switch db.Dialector.Name() {
-	case "sqlite":
-		return "TEXT"
-	case "postgres":
-		return "JSONB"
-	case "sqlserver":
-		return "NVARCHAR(MAX)"
-	}
-	return ""
-}
-
-func (p Properties) GormValue(ctx context.Context, db *gorm.DB) clause.Expr {
-	data, _ := json.Marshal(p)
-	return gorm.Expr("?", data)
 }
