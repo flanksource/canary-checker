@@ -98,7 +98,7 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 	// Check if canary is not marked deleted in DB
 	if ctx.DB() != nil && ctx.Canary.GetPersistedID() != "" {
 		var deletedAt sql.NullTime
-		err := ctx.DB().Table("canaries").Select("deleted_at").Where("id = ?", ctx.Canary.GetPersistedID()).Scan(&deletedAt).Error
+		err := ctx.DB().Table("canaries").Select("deleted_at").Where("id = ? and deleted_at < now()", ctx.Canary.GetPersistedID()).Scan(&deletedAt).Error
 		if err != nil {
 			return nil, fmt.Errorf("error getting canary: %v", err)
 		}
