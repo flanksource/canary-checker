@@ -3143,8 +3143,26 @@
           },
           "type": "array"
         },
-        "inline": {
-          "$ref": "#/$defs/AWSConnection"
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
         },
         "bucket": {
           "type": "string"
@@ -3162,14 +3180,31 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "inline"
+        "name"
       ]
     },
     "S3Connection": {
       "properties": {
-        "inline": {
-          "$ref": "#/$defs/AWSConnection"
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
         },
         "bucket": {
           "type": "string"
@@ -3182,10 +3217,7 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "inline"
-      ]
+      "type": "object"
     },
     "SFTPConnection": {
       "properties": {
