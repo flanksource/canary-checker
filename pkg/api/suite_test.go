@@ -1,7 +1,6 @@
 package api_test
 
 import (
-	gocontext "context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -9,6 +8,7 @@ import (
 	apiContext "github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/echo"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/tests/setup"
@@ -19,14 +19,14 @@ import (
 
 var (
 	testEchoServer       *echov4.Echo
-	testEchoServerPort   = 9232
+	testEchoServerPort   int
 	ctx                  context.Context
 	httpCheckCallCounter int
 )
 
 func TestAPI(t *testing.T) {
 	RegisterFailHandler(ginkgo.Fail)
-	ginkgo.RunSpecs(t, "API Tests")
+	ginkgo.RunSpecs(t, "API")
 }
 
 var _ = ginkgo.BeforeSuite(func() {
@@ -57,6 +57,7 @@ var _ = ginkgo.BeforeSuite(func() {
 		return c.JSON(http.StatusOK, resp)
 	})
 
+	testEchoServerPort = utils.FreePort()
 	listenAddr := fmt.Sprintf(":%d", testEchoServerPort)
 
 	go func() {
@@ -73,7 +74,7 @@ var _ = ginkgo.BeforeSuite(func() {
 
 var _ = ginkgo.AfterSuite(func() {
 	logger.Infof("Stopping test echo server")
-	if err := testEchoServer.Shutdown(gocontext.Background()); err != nil {
+	if err := testEchoServer.Close(); err != nil {
 		ginkgo.Fail(err.Error())
 	}
 	setup.AfterSuiteFn()

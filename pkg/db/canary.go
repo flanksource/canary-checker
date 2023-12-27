@@ -328,7 +328,7 @@ func FindChecks(ctx context.Context, idOrName, checkType string) ([]models.Check
 func CreateCanary(ctx context.Context, canary *pkg.Canary) error {
 	if canary.Spec == nil || len(canary.Spec) == 0 {
 		empty := []byte("{}")
-		canary.Spec = dutyTypes.JSON(types.JSON(empty))
+		canary.Spec = types.JSON(empty)
 	}
 
 	return ctx.DB().Create(canary).Error

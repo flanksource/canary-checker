@@ -22,7 +22,7 @@ func expectJobToPass(j *job.Job) {
 	Expect(history[0].Status).To(Equal(models.StatusSuccess))
 }
 
-func TestTopologySync(t *testing.T) {
+func TestTopologyJobs(t *testing.T) {
 	RegisterFailHandler(ginkgo.Fail)
 	ginkgo.RunSpecs(t, "Topology")
 }
