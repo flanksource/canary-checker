@@ -1,8 +1,7 @@
-package checks
+package topology
 
 import (
 	"fmt"
-	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -16,7 +15,6 @@ import (
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,15 +22,10 @@ import (
 
 var ComponentCheckRun = &job.Job{
 	Name:       "ComponentCheckRun",
-	JobHistory: true,
 	Schedule:   "@every 2m",
 	Singleton:  true,
-	Retention: job.Retention{
-		Success:  1,
-		Failed:   1,
-		Age:      time.Hour * 24,
-		Interval: time.Hour,
-	},
+	JobHistory: true,
+	Retention:  job.RetentionHour,
 	Fn: func(run job.JobRuntime) error {
 		var components = []pkg.Component{}
 		if err := run.DB().Table("components").
@@ -47,10 +40,9 @@ var ComponentCheckRun = &job.Job{
 			if err != nil {
 				return err
 			}
-			err = syncCheckComponentRelationships(run.Context, component.ID, relationships)
+			err = syncCheckComponentRelationships(run.Context, component, relationships)
 			if err != nil {
-				logger.Errorf("error persisting relationships: %v", err)
-				run.History.AddError(err.Error())
+				run.History.AddError(fmt.Sprintf("error persisting relationships: %v", err))
 				continue
 			}
 			run.History.IncrSuccess()
@@ -75,7 +67,7 @@ func createComponentCanaryFromInline(gormDB *gorm.DB, id, name, namespace, sched
 	}
 	canary, err := db.PersistCanary(gormDB, obj, fmt.Sprintf("component/%s", id))
 	if err != nil {
-		logger.Debugf("error persisting component inline canary: %v", err)
+		logger.Errorf("error persisting component inline canary: %v", err)
 		return nil, err
 	}
 	return canary, nil
@@ -136,9 +128,9 @@ func GetChecksForComponent(ctx context.Context, component *pkg.Component) ([]mod
 	return relationships, nil
 }
 
-func syncCheckComponentRelationships(ctx context.Context, componentID uuid.UUID, relationships []models.CheckComponentRelationship) error {
+func syncCheckComponentRelationships(ctx context.Context, component pkg.Component, relationships []models.CheckComponentRelationship) error {
 	var selectorIDs, checkIDs []string
-	existingRelationShips, err := db.GetCheckRelationshipsForComponent(componentID)
+	existingRelationShips, err := component.GetChecks(ctx.DB())
 	if err != nil {
 		return err
 	}
@@ -166,7 +158,7 @@ func syncCheckComponentRelationships(ctx context.Context, componentID uuid.UUID,
 		}
 
 		// If check_id exists mark old row as deleted and update selector_id
-		if err := db.Table("check_component_relationships").Where("component_id = ? AND check_id = ?", componentID, r.CheckID).
+		if err := db.Table("check_component_relationships").Where("component_id = ? AND check_id = ?", component.ID, r.CheckID).
 			Update("deleted_at", duty.Now()).Error; err != nil {
 			return errors.Wrap(err, "error updating check relationships")
 		}
@@ -178,7 +170,10 @@ func syncCheckComponentRelationships(ctx context.Context, componentID uuid.UUID,
 
 	// Take set difference of these child component Ids and delete them
 	checkIDsToDelete := utils.SetDifference(checkIDs, newCheckIDs)
-	if err := db.Table("check_component_relationships").Where("component_id = ? AND check_id IN ?", componentID, checkIDsToDelete).
+	if len(checkIDsToDelete) == 0 {
+		return nil
+	}
+	if err := db.Table("check_component_relationships").Where("component_id = ? AND check_id IN ?", component.ID, checkIDsToDelete).
 		Update("deleted_at", duty.Now()).Error; err != nil {
 		return errors.Wrap(err, "error deleting stale check component relationships")
 	}

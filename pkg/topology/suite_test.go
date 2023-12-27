@@ -3,48 +3,32 @@ package topology
 import (
 	"testing"
 
-	embeddedPG "github.com/fergusstrange/embedded-postgres"
-	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/duty"
 	dutyContext "github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/testutils"
+	"github.com/flanksource/duty/job"
+	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/tests/setup"
 	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var (
-	postgresServer *embeddedPG.EmbeddedPostgres
 	DefaultContext dutyContext.Context
 )
 
+func expectJobToPass(j *job.Job) {
+	history, err := j.FindHistory()
+	Expect(err).To(BeNil())
+	Expect(len(history)).To(BeNumerically(">=", 1))
+	Expect(history[0].Status).To(Equal(models.StatusSuccess))
+}
+
 func TestTopologySync(t *testing.T) {
 	RegisterFailHandler(ginkgo.Fail)
-	ginkgo.RunSpecs(t, "Test topology sync runs")
+	ginkgo.RunSpecs(t, "Topology")
 }
 
 var _ = ginkgo.BeforeSuite(func() {
-	var err error
+	DefaultContext = setup.BeforeSuiteFn().WithDBLogLevel("trace").WithTrace()
 
-	port := 9842
-	config, dbString := testutils.GetEmbeddedPGConfig("test_topology", port)
-	postgresServer = embeddedPG.NewDatabase(config)
-	if err = postgresServer.Start(); err != nil {
-		ginkgo.Fail(err.Error())
-	}
-	logger.Infof("Started postgres on port: %d", port)
-
-	if db.Gorm, db.Pool, err = duty.SetupDB(dbString, nil); err != nil {
-		ginkgo.Fail(err.Error())
-	}
-	DefaultContext = dutyContext.New().WithDB(db.Gorm, db.Pool)
-	context.DefaultContext = DefaultContext
 })
-
-var _ = ginkgo.AfterSuite(func() {
-	logger.Infof("Stopping postgres")
-	if err := postgresServer.Stop(); err != nil {
-		ginkgo.Fail(err.Error())
-	}
-})
+var _ = ginkgo.AfterSuite(setup.AfterSuiteFn)

@@ -3,19 +3,21 @@ package topology
 import (
 	"fmt"
 
-	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"gorm.io/gorm/clause"
 )
 
-var ComponentRun = &job.Job{
-	Name: "ComponentRelationshipSync",
+var ComponentRelationshipSync = &job.Job{
+	Name:       "ComponentRelationshipSync",
+	JobHistory: true,
+	Retention:  job.RetentionHour,
+	Singleton:  true,
 	Fn: func(ctx job.JobRuntime) error {
 		var components []models.Component
 		if err := ctx.DB().Where(duty.LocalFilter).
@@ -28,8 +30,7 @@ var ComponentRun = &job.Job{
 			selectorId := component.Selectors.Hash()
 			comps, err := duty.FindComponents(ctx.Context, component.Selectors, duty.PickColumns("id", "path"))
 			if err != nil {
-				logger.Errorf("error getting components with selectors: %s. err: %v", component.Selectors, err)
-				ctx.History.AddError(err.Error())
+				ctx.History.AddError(fmt.Sprintf("error getting components with selectors: %s. err: %v", component.Selectors, err))
 				continue
 			}
 			relationships := []models.ComponentRelationship{}
@@ -44,8 +45,7 @@ var ComponentRun = &job.Job{
 
 			err = syncComponentRelationships(ctx.Context, component.ID, relationships)
 			if err != nil {
-				logger.Errorf("error syncing relationships: %v", err)
-				ctx.History.AddError(err.Error())
+				ctx.History.AddError(fmt.Sprintf("error syncing relationships: %v", err))
 				continue
 			}
 			ctx.History.IncrSuccess()
@@ -55,9 +55,12 @@ var ComponentRun = &job.Job{
 }
 
 var ComponentStatusSummarySync = &job.Job{
-	Name: "ComponentStatusSummarySync",
+	Name:       "ComponentStatusSummarySync",
+	JobHistory: true,
+	Retention:  job.RetentionHour,
+	Singleton:  true,
 	Fn: func(ctx job.JobRuntime) error {
-		topology, err := Query(duty.TopologyOptions{Depth: 3})
+		topology, err := Query(ctx.Context, duty.TopologyOptions{Depth: 3})
 		if err != nil {
 			return fmt.Errorf("error getting components: %v", err)
 		}
@@ -85,7 +88,7 @@ var SyncComponentRelationships2 = &job.Job{
 
 func syncComponentRelationships(ctx context.Context, id uuid.UUID, relationships []models.ComponentRelationship) error {
 	var existingRelationships []models.ComponentRelationship
-	if err := ctx.DB().Where("relationship_id = ? AND deleted_at IS NULL", id).Find(&relationships).Error; err != nil {
+	if err := ctx.DB().Where("relationship_id = ? AND deleted_at IS NULL", id).Find(&existingRelationships).Error; err != nil {
 		return err
 	}
 
@@ -111,7 +114,7 @@ func syncComponentRelationships(ctx context.Context, id uuid.UUID, relationships
 	}
 
 	// Take set difference of these child component Ids and delete them
-	childComponentIDsToDelete := utils.SetDifference(childComponentIDs, newChildComponentIDs)
+	childComponentIDsToDelete, _ := lo.Difference(childComponentIDs, newChildComponentIDs)
 	if err := ctx.DB().
 		Table("component_relationships").
 		Where("relationship_id = ? AND component_id IN ?", id, childComponentIDsToDelete).
@@ -124,8 +127,11 @@ func syncComponentRelationships(ctx context.Context, id uuid.UUID, relationships
 }
 
 var ComponentCostRun = &job.Job{
-	Name:     "ComponentCostSync",
-	Schedule: "@every 1h",
+	Name:       "ComponentCostSync",
+	JobHistory: true,
+	Singleton:  true,
+	Retention:  job.RetentionDay,
+	Schedule:   "@every 1h",
 	Fn: func(ctx job.JobRuntime) error {
 		return ctx.DB().Exec(`
 				WITH

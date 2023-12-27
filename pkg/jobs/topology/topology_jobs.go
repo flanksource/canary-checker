@@ -120,10 +120,12 @@ func DeleteTopologyJob(id string) {
 }
 
 var CleanupComponents = &job.Job{
-	Name:     "CleanupComponents",
-	Schedule: "@every 1h",
+	Name:       "CleanupComponents",
+	Schedule:   "@every 1h",
+	Singleton:  true,
+	JobHistory: true,
+	Retention:  job.RetentionDay,
 	Fn: func(ctx job.JobRuntime) error {
-
 		var rows []struct {
 			ID string
 		}
@@ -140,8 +142,7 @@ var CleanupComponents = &job.Job{
 
 		for _, r := range rows {
 			if err := db.DeleteComponentsOfTopology(ctx.DB(), r.ID); err != nil {
-				logger.Errorf("Error deleting components for topology[%s]: %v", r.ID, err)
-				ctx.History.AddError(err.Error())
+				ctx.History.AddError(fmt.Sprintf("Error deleting components for topology[%s]: %v", r.ID, err))
 			} else {
 				DeleteTopologyJob(r.ID)
 				ctx.History.IncrSuccess()

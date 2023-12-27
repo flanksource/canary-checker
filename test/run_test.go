@@ -11,8 +11,8 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/checks"
-	"github.com/flanksource/canary-checker/pkg/db"
 	dutyContext "github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/tests/setup"
 
 	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg"
@@ -38,9 +38,8 @@ func TestRunChecks(t *testing.T) {
 	if err != nil {
 		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
 	}
-	DefaultContext = dutyContext.New().
-		WithKommons(kommonsClient).WithKubernetes(k8s).
-		WithDB(db.Gorm, db.Pool)
+
+	DefaultContext = setup.BeforeSuiteFn().WithDBLogLevel("trace").WithTrace().WithKubernetes(k8s).WithKommons(kommonsClient)
 
 	logger.StandardLogger().SetLogLevel(verbosity)
 	logger.Infof("Testing %s", testFolder)

@@ -1,4 +1,4 @@
-package checks
+package topology
 
 import (
 	"fmt"
@@ -26,6 +26,7 @@ var CleanupChecks = &job.Job{
 	Schedule:   "@every 12h",
 	Singleton:  true,
 	JobHistory: true,
+	Retention:  job.Retention3Day,
 	Fn: func(ctx job.JobRuntime) error {
 		if CheckRetentionDays <= 0 {
 			CheckRetentionDays = DefaultCheckRetentionDays
@@ -46,8 +47,9 @@ var CleanupCanaries = &job.Job{
 	Name:       "CleanupCanaries",
 	Schedule:   "@every 12h",
 	Singleton:  true,
-	RunNow:     true,
 	JobHistory: true,
+	Retention:  job.Retention3Day,
+	RunNow:     true,
 	Fn: func(ctx job.JobRuntime) error {
 		if CheckRetentionDays <= 0 {
 			CheckRetentionDays = DefaultCheckRetentionDays
@@ -68,15 +70,16 @@ var CleanupCanaries = &job.Job{
 var CleanupMetricsGauges = &job.Job{
 	Name:       "CleanupMetricsGauges",
 	Schedule:   "@every 1h",
-	RunNow:     true,
 	Singleton:  true,
 	JobHistory: true,
+	Retention:  job.RetentionDay,
+	RunNow:     true,
 	Fn: func(ctx job.JobRuntime) error {
 
 		sevenDaysAgo := time.Now().Add(-time.Hour * 24 * 7)
 		var deletedCheckIDs []string
 		if err := ctx.DB().Model(&models.Check{}).Where("deleted_at > ?", sevenDaysAgo).Pluck("id", &deletedCheckIDs).Error; err != nil {
-			return fmt.Errorf("Error finding deleted checks: %v", err)
+			return fmt.Errorf("error finding deleted checks: %v", err)
 		}
 
 		if ctx.IsDebug() {
