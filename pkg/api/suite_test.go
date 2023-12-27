@@ -6,34 +6,22 @@ import (
 	"net/http"
 	"testing"
 
-	embeddedPG "github.com/fergusstrange/embedded-postgres"
 	apiContext "github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/canary-checker/pkg/cache"
-	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/echo"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/testutils"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/labstack/echo/v4"
+	"github.com/flanksource/duty/tests/setup"
+	echov4 "github.com/labstack/echo/v4"
 	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"gorm.io/gorm"
 )
 
 var (
-	testEchoServer     *echo.Echo
-	testEchoServerPort = 9232
-	dbPort             = 9999
-	ctx                context.Context
-
-	testDB   *gorm.DB
-	testPool *pgxpool.Pool
-
+	testEchoServer       *echov4.Echo
+	testEchoServerPort   = 9232
+	ctx                  context.Context
 	httpCheckCallCounter int
-
-	postgresServer *embeddedPG.EmbeddedPostgres
 )
 
 func TestAPI(t *testing.T) {
@@ -42,32 +30,14 @@ func TestAPI(t *testing.T) {
 }
 
 var _ = ginkgo.BeforeSuite(func() {
-	var err error
 
-	config, dbString := testutils.GetEmbeddedPGConfig("test_canary_job", dbPort)
-	postgresServer = embeddedPG.NewDatabase(config)
-	if err = postgresServer.Start(); err != nil {
-		ginkgo.Fail(err.Error())
-	}
-	logger.Infof("Started postgres on port: %d", dbPort)
-
-	if testDB, testPool, err = duty.SetupDB(dbString, nil); err != nil {
-		ginkgo.Fail(err.Error())
-	}
-	cache.PostgresCache = cache.NewPostgresCache(testPool)
-
-	// Set this because some functions directly use db.Gorm
-	db.Gorm = testDB
-	db.Pool = testPool
-
-	ctx = context.NewContext(gocontext.Background()).WithDB(testDB, testPool)
+	ctx = setup.BeforeSuiteFn().WithDBLogLevel("trace").WithTrace()
 	apiContext.DefaultContext = ctx
-
-	testEchoServer = echo.New()
-	testEchoServer.POST("/webhook/:id", api.WebhookHandler)
+	testEchoServer = echo.New(ctx)
+	cache.PostgresCache = cache.NewPostgresCache(ctx)
 
 	// A dummy endpoint used by the HTTP check
-	testEchoServer.GET("/http-check", func(c echo.Context) error {
+	testEchoServer.GET("/http-check", func(c echov4.Context) error {
 		httpCheckCallCounter++
 		resp := map[string][]map[string]string{
 			"alerts": {
@@ -106,9 +76,5 @@ var _ = ginkgo.AfterSuite(func() {
 	if err := testEchoServer.Shutdown(gocontext.Background()); err != nil {
 		ginkgo.Fail(err.Error())
 	}
-
-	logger.Infof("Stopping postgres")
-	if err := postgresServer.Stop(); err != nil {
-		ginkgo.Fail(err.Error())
-	}
+	setup.AfterSuiteFn()
 })

@@ -103,8 +103,8 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
 	flags.StringVarP(&cache.DefaultWindow, "default-window", "", "1h", "Default search window")
 	flags.IntVar(&db.CheckStatusRetention, "check-status-retention-period", db.CheckStatusRetention, "Check status retention period in days")
-	flags.IntVar(&cleanup.CheckRetentionDays, "check-retention-period", cleanup.DefaultCheckRetentionDays, "Check retention period in days")
-	flags.IntVar(&cleanup.CanaryRetentionDays, "canary-retention-period", cleanup.DefaultCanaryRetentionDays, "Canary retention period in days")
+	flags.IntVar(&topology.CheckRetentionDays, "check-retention-period", topology.DefaultCheckRetentionDays, "Check retention period in days")
+	flags.IntVar(&topology.CanaryRetentionDays, "canary-retention-period", topology.DefaultCanaryRetentionDays, "Canary retention period in days")
 	flags.StringVar(&checks.DefaultArtifactConnection, "artifact-connection", "", "Specify the default connection to use for artifacts")
 
 	flags.IntVar(&canary.ReconcilePageSize, "upstream-page-size", 500, "upstream reconciliation page size")
