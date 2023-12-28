@@ -45,7 +45,7 @@ type SyncCanaryJobOption func(*SyncCanaryJobConfig)
 
 // TODO: Refactor to use database object instead of kubernetes
 func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary, options ...SyncCanaryJobOption) error {
-	if disabled, _ := ctx.Properties()["check.*.disabled"]; disabled == "true" {
+	if disabled := ctx.Properties()["check.*.disabled"]; disabled == "true" {
 		return nil
 	}
 	// Apply options to the configuration

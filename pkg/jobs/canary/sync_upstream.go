@@ -26,6 +26,7 @@ var (
 const (
 	EventPushQueueCreate    = "push_queue.create"
 	eventQueueUpdateChannel = "event_queue_updates"
+	ResourceTypeUpstream    = "upstream"
 )
 
 var UpstreamJobs = []job.Job{
@@ -42,7 +43,7 @@ var ReconcileChecks = job.Job{
 	RunNow:     true,
 	Schedule:   "@every 30m",
 	Fn: func(ctx job.JobRuntime) error {
-		ctx.History.ResourceType = "upstream"
+		ctx.History.ResourceType = ResourceTypeUpstream
 		ctx.History.ResourceID = UpstreamConf.Host
 		if count, err := upstream.NewUpstreamReconciler(UpstreamConf, ReconcilePageSize).
 			Sync(ctx.Context, "canaries"); err != nil {
@@ -68,7 +69,7 @@ var SyncCheckStatuses = job.Job{
 	RunNow:     true,
 	Schedule:   "@every 30s",
 	Fn: func(ctx job.JobRuntime) error {
-		ctx.History.ResourceType = "upstream"
+		ctx.History.ResourceType = ResourceTypeUpstream
 		ctx.History.ResourceID = UpstreamConf.Host
 		err, count := upstream.SyncCheckStatuses(ctx.Context, UpstreamConf, ReconcilePageSize)
 		ctx.History.SuccessCount = count
@@ -84,7 +85,7 @@ var PullUpstreamCanaries = job.Job{
 	Schedule:   "@every 10m",
 	Retention:  job.RetentionHour,
 	Fn: func(ctx job.JobRuntime) error {
-		ctx.History.ResourceType = "upstream"
+		ctx.History.ResourceType = ResourceTypeUpstream
 		ctx.History.ResourceID = UpstreamConf.Host
 		count, err := pull(ctx.Context, UpstreamConf)
 		ctx.History.SuccessCount = count
