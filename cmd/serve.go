@@ -18,9 +18,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/echo"
 	"github.com/flanksource/canary-checker/pkg/jobs"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
-	"github.com/flanksource/duty"
 	echov4 "github.com/labstack/echo/v4"
-	"go.opentelemetry.io/otel"
 
 	"github.com/flanksource/canary-checker/pkg/runner"
 
@@ -57,14 +55,10 @@ func setup() dutyContext.Context {
 		logger.Fatalf(err.Error())
 	}
 
-	apicontext.DefaultContext.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))
 	apicontext.DefaultContext = apicontext.DefaultContext.WithNamespace(runner.WatchNamespace)
 
 	cache.PostgresCache = cache.NewPostgresCache(apicontext.DefaultContext)
 
-	if err := duty.UpdatePropertiesFromFile(apicontext.DefaultContext, propertiesFile); err != nil {
-		logger.Fatalf("Error setting properties in database: %v", err)
-	}
 	return apicontext.DefaultContext
 }
 
@@ -95,10 +89,6 @@ func postgrestResponseModifier(r *http.Response) error {
 }
 
 func serve() {
-	if db.ConnectionString != "" {
-		cache.PostgresCache = cache.NewPostgresCache(apicontext.DefaultContext)
-	}
-
 	e := echo.New(apicontext.DefaultContext)
 
 	// PostgREST needs to know how it is exposed to create the correct links

@@ -87,6 +87,7 @@ func run(cmd *cobra.Command, args []string) {
 	apicontext.DefaultContext = ctx.WithNamespace(runner.WatchNamespace)
 
 	cache.PostgresCache = cache.NewPostgresCache(apicontext.DefaultContext)
+
 	if operatorExecutor {
 		logger.Infof("Starting executors")
 
