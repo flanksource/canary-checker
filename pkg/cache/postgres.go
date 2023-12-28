@@ -32,7 +32,7 @@ func NewPostgresCache(context context.Context) *postgresCache {
 func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) []string {
 	checkIDs := make([]string, 0, len(statii))
 
-	db := c.FastDB()
+	db := c.DB()
 	for _, status := range statii {
 		if status.Status {
 			check.Status = "healthy"
@@ -71,10 +71,14 @@ func (c *postgresCache) AddCheckStatus(db *gorm.DB, check pkg.Check, status pkg.
 	}
 
 	checks := pkg.Checks{}
+	var nextRuntime *time.Time
+	if check.Canary != nil {
+		nextRuntime, _ = check.Canary.NextRuntime(time.Now())
+	}
 	if c.DB().Model(&checks).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Where("canary_id = ? AND type = ? AND name = ?", check.CanaryID, check.Type, check.GetName()).
-		Updates(map[string]any{"status": check.Status, "labels": check.Labels, "last_runtime": time.Now()}).Error != nil {
+		Updates(map[string]any{"status": check.Status, "labels": check.Labels, "last_runtime": time.Now(), "next_runtime": nextRuntime}).Error != nil {
 		logger.Errorf("error updating check: %v", err)
 		return
 	}
@@ -83,7 +87,7 @@ func (c *postgresCache) AddCheckStatus(db *gorm.DB, check pkg.Check, status pkg.
 		logger.Tracef("%s check not found, skipping status insert", check)
 		return
 	}
-	err = db.Raw(`INSERT INTO check_statuses(
+	err = db.Exec(`INSERT INTO check_statuses(
 		check_id,
 		details,
 		duration,
