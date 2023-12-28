@@ -279,6 +279,7 @@ func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Che
 		Labels:      labels.FilterLabels(canary.GetAllLabels(check.GetLabels())),
 		Statuses:    statuses,
 		Type:        check.GetType(),
+		Canary:      &canary,
 	}
 
 	if _, exists := c.Labels["transformed"]; exists {

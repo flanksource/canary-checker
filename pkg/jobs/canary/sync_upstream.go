@@ -38,10 +38,25 @@ var ReconcileChecks = job.Job{
 	Name:       "PushChecksToUpstream",
 	JobHistory: true,
 	Singleton:  true,
+	Retention:  job.RetentionDay,
+	RunNow:     true,
 	Schedule:   "@every 30m",
 	Fn: func(ctx job.JobRuntime) error {
-		reconciler := upstream.NewUpstreamReconciler(UpstreamConf, 5)
-		return reconciler.SyncAfter(ctx.Context, "checks", ReconcileMaxAge)
+		ctx.History.ResourceType = "upstream"
+		ctx.History.ResourceID = UpstreamConf.Host
+		if count, err := upstream.NewUpstreamReconciler(UpstreamConf, ReconcilePageSize).
+			Sync(ctx.Context, "canaries"); err != nil {
+			ctx.History.AddError(err.Error())
+		} else {
+			ctx.History.SuccessCount += count
+		}
+		if count, err := upstream.NewUpstreamReconciler(UpstreamConf, ReconcilePageSize).
+			Sync(ctx.Context, "checks"); err != nil {
+			ctx.History.AddError(err.Error())
+		} else {
+			ctx.History.SuccessCount += count
+		}
+		return nil
 	},
 }
 
@@ -49,8 +64,12 @@ var SyncCheckStatuses = job.Job{
 	Name:       "SyncCheckStatusesWithUpstream",
 	JobHistory: true,
 	Singleton:  true,
-	Schedule:   "@every 1m",
+	Retention:  job.RetentionHour,
+	RunNow:     true,
+	Schedule:   "@every 30s",
 	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = "upstream"
+		ctx.History.ResourceID = UpstreamConf.Host
 		err, count := upstream.SyncCheckStatuses(ctx.Context, UpstreamConf, ReconcilePageSize)
 		ctx.History.SuccessCount = count
 		return err
@@ -63,7 +82,10 @@ var PullUpstreamCanaries = job.Job{
 	JobHistory: true,
 	Singleton:  true,
 	Schedule:   "@every 10m",
+	Retention:  job.RetentionHour,
 	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = "upstream"
+		ctx.History.ResourceID = UpstreamConf.Host
 		count, err := pull(ctx.Context, UpstreamConf)
 		ctx.History.SuccessCount = count
 		return err
