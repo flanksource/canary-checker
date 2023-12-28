@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	pkgTopology "github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
@@ -53,7 +54,7 @@ var SyncTopology = &job.Job{
 	Singleton: true,
 	RunNow:    true,
 	Fn: func(ctx job.JobRuntime) error {
-		var topologies []v1.Topology
+		var topologies []pkg.Topology
 
 		if err := ctx.DB().Table("topologies").Where(duty.LocalFilter).
 			Find(&topologies).Error; err != nil {
@@ -61,7 +62,7 @@ var SyncTopology = &job.Job{
 		}
 
 		for _, topology := range topologies {
-			if err := SyncTopologyJob(ctx.Context, topology); err != nil {
+			if err := SyncTopologyJob(ctx.Context, topology.ToV1()); err != nil {
 				ctx.History.AddError(err.Error())
 			} else {
 				ctx.History.IncrSuccess()
