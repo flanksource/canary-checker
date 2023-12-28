@@ -74,6 +74,7 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 
 	changed, err := db.PersistTopology(dCtx, topology)
 	if err != nil {
+		logger.Error(err, "failed to persist topology", "id", topology.GetPersistedID(), "name", topology.GetName())
 		return ctrl.Result{}, err
 	}
 
