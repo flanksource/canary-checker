@@ -647,6 +647,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmms
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
 github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a/go.mod h1:lB+ZfQJz7igIIfQNfa7Ml4HSf2uFQQRzpGGRXenZAgY=
+github.com/asecurityteam/rolling v2.0.4+incompatible h1:WOSeokINZT0IDzYGc5BVcjLlR9vPol08RvI2GAsmB0s=
+github.com/asecurityteam/rolling v2.0.4+incompatible/go.mod h1:2D4ba5ZfYCWrIMleUgTvc8pmLExEuvu3PDwl+vnG58Q=
 github.com/aws/aws-sdk-go v1.44.122/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/aws/aws-sdk-go v1.48.15 h1:Gad2C4pLzuZDd5CA0Rvkfko6qUDDTOYru145gkO7w/Y=
 github.com/aws/aws-sdk-go v1.48.15/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
@@ -719,6 +721,8 @@ github.com/flanksource/commons v1.19.3 h1:J4s5WWicUMNavEDCC5AIJQWBDaaloJ/tgztWUX
 github.com/flanksource/commons v1.19.3/go.mod h1:ZUgFy0Wwrm2LxV/AltBx36FShzXcn7wPmXJldK8Aa0E=
 github.com/flanksource/duty v1.0.259 h1:PbMqiF1Uk4nHjxlEJtNke23QXZlAyZpBY/Rj5sF13UU=
 github.com/flanksource/duty v1.0.259/go.mod h1:tXMyMlcSGOXvXoP5KZApwzSDFs07NDQGhnJi9ArjWf4=
+github.com/flanksource/duty v1.0.263 h1:e4mEioMJGlpCZ8Dzr5pAZqKsAy0gSHNhP0ffgP0C0/I=
+github.com/flanksource/duty v1.0.263/go.mod h1:cfaBnuz1o5WqJ7mKOe03R7so6dHzz8vtdEYqDAN+nwE=
 github.com/flanksource/gomplate/v3 v3.20.4/go.mod h1:27BNWhzzSjDed1z8YShO6W+z6G9oZXuxfNFGd/iGSdc=
 github.com/flanksource/gomplate/v3 v3.20.26 h1:85lUzlKgZjb1uIkzoa4zN03OcdOnFPG+oWxshZTYqz4=
 github.com/flanksource/gomplate/v3 v3.20.26/go.mod h1:GKmptFMdr2LbOuqwQZrmo9a/UygyZ0pbXffks8MuYhE=
