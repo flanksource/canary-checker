@@ -107,14 +107,14 @@ func getNamespaces(ctx *context.Context, check v1.KubernetesCheck) ([]string, er
 	if check.Namespace.FieldSelector == "" && check.Namespace.LabelSelector == "" {
 		return []string{""}, nil
 	}
-	namespeceList, err := ctx.Kubernetes.CoreV1().Namespaces().List(ctx, metav1.ListOptions{
+	namespaceList, err := ctx.Kubernetes.CoreV1().Namespaces().List(ctx, metav1.ListOptions{
 		LabelSelector: check.Namespace.LabelSelector,
 		FieldSelector: check.Namespace.FieldSelector,
 	})
 	if err != nil {
 		return nil, err
 	}
-	for _, namespace := range namespeceList.Items {
+	for _, namespace := range namespaceList.Items {
 		namespaces = append(namespaces, namespace.Name)
 	}
 	return namespaces, nil

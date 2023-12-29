@@ -754,7 +754,7 @@ type ResourceSelector struct {
 type KubernetesCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
-	Namespace   ResourceSelector `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Namespace   ResourceSelector `yaml:"namespaceSelector,omitempty" json:"namespaceSelector,omitempty"`
 	Resource    ResourceSelector `yaml:"resource,omitempty" json:"resource,omitempty"`
 	// Ignore the specified resources from the fetched resources. Can be a glob pattern.
 	Ignore []string `yaml:"ignore,omitempty" json:"ignore,omitempty"`

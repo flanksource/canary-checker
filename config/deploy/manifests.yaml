@@ -4558,6 +4558,8 @@ spec:
                         type: string
                       namespace:
                         description: Namespace of the check
+                        type: string
+                      namespaceSelector:
                         properties:
                           fieldSelector:
                             type: string
@@ -4565,7 +4567,7 @@ spec:
                             type: string
                           name:
                             type: string
-                        type: string
+                        type: object
                       ready:
                         type: boolean
                       resource:
