@@ -56,7 +56,7 @@ func Start() {
 		}
 	}
 
-	for _, j := range []*job.Job{topologyJobs.CleanupComponents} {
+	for _, j := range []*job.Job{topologyJobs.CleanupComponents, topologyJobs.SyncTopology} {
 		var job = j
 		job.Context = context.DefaultContext
 		if err := job.AddToScheduler(FuncScheduler); err != nil {
