@@ -21,9 +21,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/commons/logger"
+	"github.com/robfig/cron/v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -367,6 +369,19 @@ func (c Canary) ID() string {
 
 func (c Canary) GetPersistedID() string {
 	return string(c.GetUID())
+}
+
+func (c Canary) NextRuntime(lastRuntime time.Time) (*time.Time, error) {
+	if c.Spec.Schedule != "" {
+		schedule, err := cron.ParseStandard(c.Spec.Schedule)
+		if err != nil {
+			return nil, err
+		}
+		t := schedule.Next(time.Now())
+		return &t, nil
+	}
+	t := lastRuntime.Add(time.Duration(c.Spec.Interval) * time.Second)
+	return &t, nil
 }
 
 // +kubebuilder:object:root=true

@@ -19,6 +19,7 @@ import (
 	gomplate "github.com/flanksource/gomplate/v3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"go.opentelemetry.io/otel"
 )
 
 func InitContext() (context.Context, error) {
@@ -32,7 +33,13 @@ func InitContext() (context.Context, error) {
 	if ctx, err = db.Init(); err != nil {
 		logger.Warnf("error connecting to db %v", err)
 		ctx = context.New()
+	} else {
+		if err := context.LoadPropertiesFromFile(ctx, propertiesFile); err != nil {
+			logger.Fatalf("Error loading properties: %v", err)
+		}
 	}
+
+	ctx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))
 	return ctx.
 		WithKubernetes(k8s).
 		WithKommons(kommonsClient), nil
@@ -57,7 +64,9 @@ var Root = &cobra.Command{
 		}
 
 		if canary.UpstreamConf.Valid() {
-			logger.Infof("Pushing checks to %s with name=%s user=%s", canary.UpstreamConf.Host, canary.UpstreamConf.AgentName, canary.UpstreamConf.Username)
+			logger.Infof("Pushing checks %s", canary.UpstreamConf)
+		} else {
+			logger.Debugf("Upstream not fully configured: %s", canary.UpstreamConf)
 		}
 
 		if otelcollectorURL != "" {
