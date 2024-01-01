@@ -251,7 +251,7 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*types.Property
 	}
 
 	templateEnv := _config.AsMap("type")
-	templateEnv["spec"] = configJSON
+	templateEnv["config"] = configJSON
 	templateEnv["config_type"] = _config.Type
 
 	ctx.Duty.Tracef("%s property=%s => %s", ctx, property.Name, _config.String())
