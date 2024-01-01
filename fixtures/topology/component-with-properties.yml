@@ -5,109 +5,106 @@ metadata:
 spec:
   schedule: "@every 10m"
   components:
-    - name: RootComponents
-      type: virtual
-      icon: server
-      lookup:
-        http:
+  - name: RootComponents
+    type: virtual
+    icon: server
+    lookup:
+      http:
+        - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
+          name: http-lookup
+          display:
+            expr: |
+              [
+                {
+                  'name': 'component-a',
+                  'type': 'API',
+                  'properties': [{'name': 'error_percentage', 'min': 0, 'max': 100}, {'name': 'owner'}]
+                },
+                {
+                  'name': 'component-b',
+                  'type': 'Frontend',
+                  'properties': [{'name': 'error_percentage', 'min': 0, 'max': 100}, {'name': 'owner'}]
+                },
+                {
+                  'name': 'component-c',
+                  'type': 'Database',
+                  'properties': [{'name': 'error_percentage', 'min': 0, 'max': 100}, {'name': 'owner'}]
+                },
+              ].toJSON()
+    properties:
+      # Test property lookup merge as components
+      - name: error_percentage
+        lookup:
+          http:
           - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
-            name: http-lookup
+            name: error_percentage_lookup
             display:
               expr: |
                 [
                   {
                     'name': 'component-a',
-                    'type': 'API',
-                    'properties': [{'name': 'error_percentage', 'min': 0, 'max': 100}, {'name': 'owner'}]
+                    'properties': [{'name': 'error_percentage', 'value': 1}]
                   },
                   {
                     'name': 'component-b',
-                    'type': 'Frontend',
-                    'properties': [{'name': 'error_percentage', 'min': 0, 'max': 100}, {'name': 'owner'}]
+                    'properties': [{'name': 'error_percentage', 'value': 10}]
                   },
                   {
                     'name': 'component-c',
-                    'type': 'Database',
-                    'properties': [{'name': 'error_percentage', 'min': 0, 'max': 100}, {'name': 'owner'}]
+                    'properties': [{'name': 'error_percentage', 'value': 50}]
                   },
                 ].toJSON()
-      properties:
-        # Test property lookup merge as components
-        - name: error_percentage
-          lookup:
-            http:
-              - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
-                name: error_percentage_lookup
-                display:
-                  expr: |
-                    [
-                      {
-                        'name': 'component-a',
-                        'properties': [{'name': 'error_percentage', 'value': 1}]
-                      },
-                      {
-                        'name': 'component-b',
-                        'properties': [{'name': 'error_percentage', 'value': 10}]
-                      },
-                      {
-                        'name': 'component-c',
-                        'properties': [{'name': 'error_percentage', 'value': 50}]
-                      },
-                    ].toJSON()
-        # Test property lookup merge as components
-        - name: owner
-          lookup:
-            http:
-              - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
-                name: owner_lookup
-                display:
-                  expr: |
-                    [
-                      {
-                        'name': 'component-a',
-                        'properties': [{'name': 'owner', 'text': 'team-a'}]
-                      },
-                      {
-                        'name': 'component-b',
-                        'properties': [{'name': 'owner', 'text': 'team-b'}]
-                      },
-                      {
-                        'name': 'component-c',
-                        'properties': [{'name': 'owner', 'text': 'team-b'}]
-                      },
-                    ].toJSON()
-        # Test property lookup merge as properties
-        - name: generic
-          lookup:
-            http:
-              - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
-                name: generic_lookup
-                display:
-                  expr: |
-                    [
-                      {'name': 'company', 'text': 'Acme'},
-                      {'name': 'location', 'text': 'Mars'},
-                    ].toJSON()
-        # Test property as direct value
-        - name: key
-          lookup:
-            http:
-              - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
-                name: value_lookup
-                display:
-                  expr: '"value"'
-        # Test property with config lookup
-        - name: config-key
-          configLookup:
-            config:
-              name: config-item
-              tags:
-                tag-1: a
-                tag-2: b
-              type: Config::Dummy
+      # Test property lookup merge as components
+      - name: owner
+        lookup:
+          http:
+          - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
+            name: owner_lookup
             display:
-              # template: "{{ (.config | json).spec.container.version }}"
-              # expr: JSON(config).spec.container.version
-              javascript: JSON.parse(config).spec.container.version
-              # template: ""
-              # expr: config
+              expr: |
+                [
+                  {
+                    'name': 'component-a',
+                    'properties': [{'name': 'owner', 'text': 'team-a'}]
+                  },
+                  {
+                    'name': 'component-b',
+                    'properties': [{'name': 'owner', 'text': 'team-b'}]
+                  },
+                  {
+                    'name': 'component-c',
+                    'properties': [{'name': 'owner', 'text': 'team-b'}]
+                  },
+                ].toJSON()
+      # Test property lookup merge as properties
+      - name: generic
+        lookup:
+          http:
+          - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
+            name: generic_lookup
+            display:
+              expr: |
+                [
+                  {'name': 'company', 'text': 'Acme'},
+                  {'name': 'location', 'text': 'Mars'},
+                ].toJSON()
+      # Test property as direct value
+      - name: key
+        lookup:
+          http:
+          - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
+            name: value_lookup
+            display:
+              expr: '"value"'
+      # Test property with config lookup
+      - name: config-key
+        configLookup:
+          config:
+            name: config-item
+            tags:
+              tag-1: a
+              tag-2: b
+            type: Config::Dummy
+          display:
+            javascript: |
+              config.spec.container.version
