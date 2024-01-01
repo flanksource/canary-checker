@@ -245,8 +245,13 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*types.Property
 		return prop, err
 	}
 
+	configJSON, err := _config.ConfigJSONStringMap()
+	if err != nil {
+		return nil, fmt.Errorf("error converting config[%s] to json for lookup: %w", _config.ID, err)
+	}
+
 	templateEnv := _config.AsMap("type")
-	templateEnv["spec"] = _config.Config
+	templateEnv["spec"] = configJSON
 	templateEnv["config_type"] = _config.Type
 
 	ctx.Duty.Tracef("%s property=%s => %s", ctx, property.Name, _config.String())
