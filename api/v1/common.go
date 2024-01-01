@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"net/url"
@@ -347,8 +348,13 @@ type Description struct {
 	Description string `yaml:"description,omitempty" json:"description,omitempty" template:"true"`
 	// Name of the check
 	Name string `yaml:"name" json:"name" template:"true"`
-	// Namespace of the check
-	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	// TODO: namespace is a json.RawMessage for backwards compatibility when it used to be a resource selector
+	// can be removed in a few versions time
+
+	// Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:validation:Type=string
+	Namespace json.RawMessage `yaml:"namespace,omitempty" json:"namespace,omitempty"  jsonschema:"type=string"`
 	// Icon for overwriting default icon on the dashboard
 	Icon string `yaml:"icon,omitempty" json:"icon,omitempty" template:"true"`
 	// Labels for the check
@@ -383,7 +389,18 @@ func (d Description) GetName() string {
 }
 
 func (d Description) GetNamespace() string {
-	return d.Namespace
+	s := string(d.Namespace)
+	if s == "" || s == "{}" {
+		return ""
+	}
+	if !strings.HasPrefix(s, "{}") {
+		return s
+	}
+	var r types.ResourceSelector
+	if err := json.Unmarshal(d.Namespace, &r); err != nil {
+		return r.Name
+	}
+	return ""
 }
 
 func (d Description) GetLabels() map[string]string {
