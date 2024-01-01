@@ -178,7 +178,12 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface{}, error) {
 	var results []any
 
-	canaryCtx := context.New(ctx.Duty, v1.NewCanaryFromSpec(name, ctx.Namespace, spec))
+	canarySpec := v1.NewCanaryFromSpec(name, ctx.Namespace, spec)
+	dutyCtx := ctx.Duty.
+		WithNamespace(ctx.Namespace).
+		WithObject(canarySpec.ObjectMeta)
+
+	canaryCtx := context.New(dutyCtx, canarySpec)
 	canaryCtx.Context = ctx
 	canaryCtx.Namespace = ctx.Namespace
 	canaryCtx.Environment = ctx.Environment
