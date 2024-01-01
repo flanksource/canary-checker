@@ -16,7 +16,6 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
-	gomplate "github.com/flanksource/gomplate/v3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"go.opentelemetry.io/otel"
@@ -48,16 +47,11 @@ func InitContext() (context.Context, error) {
 var Root = &cobra.Command{
 	Use: "canary-checker",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-
 		canary.LogFail = logFail
 		canary.LogPass = logPass
 
 		logger.UseZap(cmd.Flags())
-		for _, script := range sharedLibrary {
-			if err := gomplate.LoadSharedLibrary(script); err != nil {
-				logger.Errorf("Failed to load shared library %s: %v", script, err)
-			}
-		}
+
 		db.ConnectionString = readFromEnv(db.ConnectionString)
 		if db.ConnectionString == "DB_URL" {
 			db.ConnectionString = ""
@@ -78,8 +72,6 @@ var Root = &cobra.Command{
 var (
 	httpPort         = 8080
 	publicEndpoint   = "http://localhost:8080"
-	sharedLibrary    []string
-	exposeEnv        bool
 	logPass, logFail bool
 
 	otelcollectorURL string
@@ -98,6 +90,8 @@ func ServerFlags(flags *pflag.FlagSet) {
 	_ = flags.MarkDeprecated("dev", "")
 	_ = flags.MarkDeprecated("push-servers", "")
 	_ = flags.MarkDeprecated("pull-servers", "")
+	_ = flags.MarkDeprecated("expose-env", "")
+	_ = flags.MarkDeprecated("shared-library", "")
 
 	flags.StringVar(&publicEndpoint, "public-endpoint", publicEndpoint, "Host on which the health dashboard is exposed. Could be used for generting-links, redirects etc.")
 	flags.StringSliceVar(&runner.IncludeCanaries, "include-check", []string{}, "Run matching canaries - useful for debugging")
@@ -141,10 +135,8 @@ func init() {
 	Root.PersistentFlags().StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database")
 	Root.PersistentFlags().BoolVar(&db.RunMigrations, "db-migrations", false, "Run database migrations")
 	Root.PersistentFlags().BoolVar(&db.DBMetrics, "db-metrics", false, "Expose db metrics")
-	Root.PersistentFlags().BoolVar(&logFail, "log-fail", true, "Log every failing check")
+	Root.PersistentFlags().BoolVar(&logFail, "log-fail", false, "Log every failing check")
 	Root.PersistentFlags().BoolVar(&logPass, "log-pass", false, "Log every passing check")
-	Root.PersistentFlags().StringArrayVar(&sharedLibrary, "shared-library", []string{}, "Add javascript files to be shared by all javascript templates")
-	Root.PersistentFlags().BoolVar(&exposeEnv, "expose-env", false, "Expose environment variables for use in all templates. Note this has serious security implications with untrusted canaries")
 	Root.AddCommand(Docs)
 	Root.AddCommand(Run, Serve, Operator)
 	Root.AddCommand(Serve, GoOffline)
