@@ -393,14 +393,14 @@ func (d Description) GetNamespace() string {
 	if s == "" || s == "{}" {
 		return ""
 	}
-	if !strings.HasPrefix(s, "{}") {
+	if !strings.HasPrefix(s, "{") {
 		return s
 	}
 	var r types.ResourceSelector
 	if err := json.Unmarshal(d.Namespace, &r); err != nil {
-		return r.Name
+		return ""
 	}
-	return ""
+	return r.Name
 }
 
 func (d Description) GetLabels() map[string]string {
