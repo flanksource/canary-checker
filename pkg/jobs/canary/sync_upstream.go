@@ -9,6 +9,7 @@ import (
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/upstream"
+	"github.com/flanksource/postq"
 	"github.com/flanksource/postq/pg"
 	"gorm.io/gorm/clause"
 )
@@ -130,8 +131,24 @@ func pull(ctx context.Context, config upstream.UpstreamConfig) (int, error) {
 	}).Create(&response.Canaries).Error
 }
 
-func StartUpstreamEventQueueConsumer(ctx *context.Context) error {
-	consumer, err := upstream.NewPushQueueConsumer(UpstreamConf).EventConsumer()
+func StartUpstreamEventQueueConsumer(ctx context.Context) error {
+	asyncConsumer := postq.AsyncEventConsumer{
+		WatchEvents: []string{EventPushQueueCreate},
+		Consumer: func(_ctx postq.Context, e postq.Events) postq.Events {
+			return upstream.NewPushUpstreamConsumer(UpstreamConf)(ctx, e)
+		},
+		BatchSize: 50,
+		ConsumerOption: &postq.ConsumerOption{
+			NumConsumers: 5,
+			ErrorHandler: func(err error) bool {
+				logger.Errorf("error consuming upstream push_queue.create events: %v", err)
+				time.Sleep(time.Second)
+				return true
+			},
+		},
+	}
+
+	eventConsumer, err := asyncConsumer.EventConsumer()
 	if err != nil {
 		return err
 	}
@@ -139,6 +156,6 @@ func StartUpstreamEventQueueConsumer(ctx *context.Context) error {
 	pgNotifyChannel := make(chan string)
 	go pg.Listen(ctx, eventQueueUpdateChannel, pgNotifyChannel)
 
-	go consumer.Listen(ctx, pgNotifyChannel)
+	go eventConsumer.Listen(ctx, pgNotifyChannel)
 	return nil
 }

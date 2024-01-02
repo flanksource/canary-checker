@@ -22,7 +22,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.3
 	github.com/flanksource/commons v1.19.3
-	github.com/flanksource/duty v1.0.264
+	github.com/flanksource/duty v1.0.268
 	github.com/flanksource/gomplate/v3 v3.20.26
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
 	github.com/flanksource/kommons v0.31.4
@@ -34,13 +34,13 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/gobwas/glob v0.2.3
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.5.0
 	github.com/hashicorp/go-getter v1.7.3
 	github.com/henvic/httpretty v0.1.3
-	github.com/jackc/pgx/v5 v5.5.0
+	github.com/jackc/pgx/v5 v5.5.1
 	github.com/joshdk/go-junit v1.0.0
 	github.com/jszwec/csvutil v1.8.0
-	github.com/labstack/echo/v4 v4.11.2
+	github.com/labstack/echo/v4 v4.11.4
 	github.com/liamylian/jsontime/v2 v2.0.0
 	github.com/lib/pq v1.10.9
 	github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0
@@ -193,7 +193,7 @@ require (
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/labstack/gommon v0.4.0 // indirect
+	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -216,6 +216,7 @@ require (
 	github.com/pkg/sftp v1.13.6 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/rodaine/table v1.1.0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/sethvargo/go-retry v0.2.4 // indirect
