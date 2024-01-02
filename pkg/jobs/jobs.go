@@ -27,7 +27,7 @@ func Start() {
 
 	if canaryJobs.UpstreamConf.Valid() {
 		// Push checks to upstream in real-time
-		if err := canaryJobs.StartUpstreamEventQueueConsumer(&context.DefaultContext); err != nil {
+		if err := canaryJobs.StartUpstreamEventQueueConsumer(context.DefaultContext); err != nil {
 			logger.Fatalf("Failed to start upstream event queue consumer: %v", err)
 		}
 
