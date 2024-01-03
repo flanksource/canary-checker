@@ -2,6 +2,7 @@ package canary
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -18,6 +19,11 @@ import (
 
 func updateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results []*pkg.CheckResult) {
 	if CanaryStatusChannel == nil {
+		return
+	}
+
+	// Skip function if canary is not sourced from Kubernetes CRD
+	if !strings.HasPrefix(canary.Annotations["source"], "kubernetes") {
 		return
 	}
 
