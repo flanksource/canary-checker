@@ -6,11 +6,12 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/query"
+	dutyTypes "github.com/flanksource/duty/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -28,7 +29,7 @@ func updateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 	var pass = true
 	var lastTransitionedTime *metav1.Time
 	var highestLatency float64
-	var uptimeAgg pkg.Uptime
+	var uptimeAgg dutyTypes.Uptime
 
 	transitioned := false
 	for _, result := range results {
@@ -53,7 +54,7 @@ func updateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 		}
 
 		// Transition
-		q := cache.QueryParams{Check: checkID, StatusCount: 1}
+		q := query.CheckQueryParams{Check: checkID, StatusCount: 1}
 		if canary.Status.LastTransitionedTime != nil {
 			q.Start = canary.Status.LastTransitionedTime.Format(time.RFC3339)
 		}

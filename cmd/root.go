@@ -6,7 +6,6 @@ import (
 
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
@@ -16,6 +15,7 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/query"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"go.opentelemetry.io/otel"
@@ -97,12 +97,12 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringSliceVar(&runner.IncludeCanaries, "include-check", []string{}, "Run matching canaries - useful for debugging")
 	flags.StringSliceVar(&runner.IncludeTypes, "include-type", []string{}, "Check type to disable")
 	flags.StringSliceVar(&runner.IncludeNamespaces, "include-namespace", []string{}, "Check type to disable")
-	flags.IntVar(&cache.DefaultCacheCount, "maxStatusCheckCount", 5, "Maximum number of past checks in the in memory cache")
+	flags.IntVar(&query.DefaultCacheCount, "maxStatusCheckCount", 5, "Maximum number of past checks in the in memory cache")
 	flags.StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 	flags.StringVar(&prometheus.PrometheusURL, "prometheus", "", "URL of the prometheus server that is scraping this instance")
 	flags.StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database. Use embedded:///path/to/dir to use the embedded database")
 	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
-	flags.StringVarP(&cache.DefaultWindow, "default-window", "", "1h", "Default search window")
+	flags.StringVarP(&query.DefaultCheckQueryWindow, "default-window", "", "1h", "Default search window")
 	flags.IntVar(&db.CheckStatusRetention, "check-status-retention-period", db.CheckStatusRetention, "Check status retention period in days")
 	flags.IntVar(&topology.CheckRetentionDays, "check-retention-period", topology.DefaultCheckRetentionDays, "Check retention period in days")
 	flags.IntVar(&topology.CanaryRetentionDays, "canary-retention-period", topology.DefaultCanaryRetentionDays, "Canary retention period in days")

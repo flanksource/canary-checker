@@ -64,62 +64,6 @@ func (s CheckStatus) GetTime() (time.Time, error) {
 	return time.Parse("2006-01-02 15:04:05", s.Time)
 }
 
-type Latency struct {
-	Percentile99 float64 `json:"p99,omitempty" db:"p99"`
-	Percentile97 float64 `json:"p97,omitempty" db:"p97"`
-	Percentile95 float64 `json:"p95,omitempty" db:"p95"`
-	Rolling1H    float64 `json:"rolling1h"`
-}
-
-func (l Latency) String() string {
-	s := ""
-	if l.Percentile99 != 0 {
-		s += fmt.Sprintf("p99=%s", utils.Age(time.Duration(l.Percentile99)*time.Millisecond))
-	}
-	if l.Percentile95 != 0 {
-		s += fmt.Sprintf("p95=%s", utils.Age(time.Duration(l.Percentile95)*time.Millisecond))
-	}
-	if l.Percentile97 != 0 {
-		s += fmt.Sprintf("p97=%s", utils.Age(time.Duration(l.Percentile97)*time.Millisecond))
-	}
-	if l.Rolling1H != 0 {
-		s += fmt.Sprintf("rolling1h=%s", utils.Age(time.Duration(l.Rolling1H)*time.Millisecond))
-	}
-	return s
-}
-
-type Uptime struct {
-	Passed   int        `json:"passed"`
-	Failed   int        `json:"failed"`
-	P100     float64    `json:"p100,omitempty"`
-	LastPass *time.Time `json:"last_pass,omitempty"`
-	LastFail *time.Time `json:"last_fail,omitempty"`
-}
-
-func (u Uptime) String() string {
-	if u.Passed == 0 && u.Failed == 0 {
-		return ""
-	}
-	if u.Passed == 0 {
-		return fmt.Sprintf("0/%d 0%%", u.Failed)
-	}
-	percentage := 100.0 * (1 - (float64(u.Failed) / float64(u.Passed+u.Failed)))
-	return fmt.Sprintf("%d/%d (%0.1f%%)", u.Passed, u.Passed+u.Failed, percentage)
-}
-
-type Timeseries struct {
-	Key      string `json:"key,omitempty"`
-	Time     string `json:"time,omitempty"`
-	Status   bool   `json:"status,omitempty"`
-	Message  string `json:"message,omitempty"`
-	Error    string `json:"error,omitempty"`
-	Duration int    `json:"duration"`
-	// Count is the number of times the check has been run in the specified time window
-	Count  int `json:"count,omitempty"`
-	Passed int `json:"passed,omitempty"`
-	Failed int `json:"failed,omitempty"`
-}
-
 type Canary struct {
 	ID          uuid.UUID `gorm:"default:generate_ulid()"`
 	AgentID     uuid.UUID
@@ -212,8 +156,8 @@ type Check struct {
 	Labels             types.JSONStringMap `json:"labels" gorm:"type:jsonstringmap"`
 	Description        string              `json:"description,omitempty"`
 	Status             string              `json:"status,omitempty"`
-	Uptime             Uptime              `json:"uptime"  gorm:"-"`
-	Latency            Latency             `json:"latency"  gorm:"-"`
+	Uptime             types.Uptime        `json:"uptime"  gorm:"-"`
+	Latency            types.Latency       `json:"latency"  gorm:"-"`
 	Statuses           []CheckStatus       `json:"checkStatuses"  gorm:"-"`
 	Owner              string              `json:"owner,omitempty"`
 	Severity           string              `json:"severity,omitempty"`
