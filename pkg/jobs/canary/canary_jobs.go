@@ -65,12 +65,15 @@ func (j CanaryJob) GetNamespacedName() types.NamespacedName {
 }
 
 func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
-	ctx.GetSpan().SetAttributes(attribute.String("canary-id", j.DBCanary.ID.String()))
 	if runner.IsCanaryIgnored(&j.Canary.ObjectMeta) {
 		return nil
 	}
 
 	canaryID := j.DBCanary.ID.String()
+	ctx.History.ResourceID = canaryID
+	ctx.History.ResourceType = "canary"
+	ctx.GetSpan().SetAttributes(attribute.String("canary-id", canaryID))
+
 	val, _ := concurrentJobLocks.LoadOrStore(canaryID, &sync.Mutex{})
 	lock, ok := val.(*sync.Mutex)
 	if !ok {
