@@ -173,6 +173,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 
 	// Update last runtime map
 	canaryLastRuntimes.Store(canaryID, time.Now())
+	ctx.History.SuccessCount = len(results)
 	return nil
 }
 
