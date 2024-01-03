@@ -58,7 +58,7 @@ func (c *postgresCache) AddCheckFromStatus(check pkg.Check, status pkg.CheckStat
 	}
 
 	if check.ID != uuid.Nil {
-		return uuid.Nil, nil
+		return check.ID, nil
 	}
 
 	return db.PersistCheck(c.DB(), check, check.CanaryID)
