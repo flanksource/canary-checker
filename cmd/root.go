@@ -105,6 +105,7 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringVarP(&query.DefaultCheckQueryWindow, "default-window", "", "1h", "Default search window")
 	flags.IntVar(&db.CheckStatusRetention, "check-status-retention-period", db.CheckStatusRetention, "Check status retention period in days")
 	flags.IntVar(&topology.CheckRetentionDays, "check-retention-period", topology.DefaultCheckRetentionDays, "Check retention period in days")
+	flags.IntVar(&topology.CheckRetentionDays, "component-retention-period", topology.DefaultComponentRetentionDays, "Component retention period in days")
 	flags.IntVar(&topology.CanaryRetentionDays, "canary-retention-period", topology.DefaultCanaryRetentionDays, "Canary retention period in days")
 	flags.StringVar(&checks.DefaultArtifactConnection, "artifact-connection", "", "Specify the default connection to use for artifacts")
 

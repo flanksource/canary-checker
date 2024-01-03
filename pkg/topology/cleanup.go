@@ -12,14 +12,30 @@ import (
 )
 
 const (
-	DefaultCheckRetentionDays  = 7
-	DefaultCanaryRetentionDays = 7
+	DefaultCheckRetentionDays     = 7
+	DefaultComponentRetentionDays = 7
+	DefaultCanaryRetentionDays    = 7
 )
 
 var (
-	CheckRetentionDays  int
-	CanaryRetentionDays int
+	CheckRetentionDays     int
+	ComponentRetentionDays int
+	CanaryRetentionDays    int
 )
+
+var CleanupComponents = &job.Job{
+	Name:       "CleanupComponents",
+	Schedule:   "@every 24h",
+	Singleton:  true,
+	JobHistory: true,
+	Retention:  job.Retention3Day,
+	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = job.ResourceTypeComponent
+		count, err := job.CleanupSoftDeletedComponents(ctx.Context, time.Hour*24*time.Duration(ComponentRetentionDays))
+		ctx.History.SuccessCount = count
+		return err
+	},
+}
 
 var CleanupChecks = &job.Job{
 	Name:       "CleanupChecks",
