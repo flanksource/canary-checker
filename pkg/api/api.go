@@ -9,6 +9,7 @@ import (
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
+	"github.com/flanksource/duty/types"
 	"github.com/labstack/echo/v4"
 
 	"github.com/flanksource/canary-checker/pkg"
@@ -44,11 +45,11 @@ type Response struct {
 }
 
 type DetailResponse struct {
-	Duration   int              `json:"duration,omitempty"`
-	RunnerName string           `json:"runnerName"`
-	Status     []pkg.Timeseries `json:"status"`
-	Latency    pkg.Latency      `json:"latency"`
-	Uptime     pkg.Uptime       `json:"uptime"`
+	Duration   int                `json:"duration,omitempty"`
+	RunnerName string             `json:"runnerName"`
+	Status     []query.Timeseries `json:"status"`
+	Latency    types.Latency      `json:"latency"`
+	Uptime     types.Uptime       `json:"uptime"`
 }
 
 func About(c echo.Context) error {
@@ -60,30 +61,15 @@ func About(c echo.Context) error {
 }
 
 func CheckDetails(c echo.Context) error {
-	q, err := cache.ParseQuery(c)
-	if err != nil {
+	ctx := c.Request().Context().(context.Context)
+
+	var q query.CheckQueryParams
+	if err := q.Init(c.QueryParams()); err != nil {
 		return errorResponse(c, err, http.StatusBadRequest)
 	}
 
 	start := time.Now()
-
-	end := q.GetEndTime()
-	since := q.GetStartTime()
-	timeRange := end.Sub(*since)
-
-	if timeRange <= time.Hour*2 {
-		q.WindowDuration = time.Minute
-	} else if timeRange >= time.Hour*24 {
-		q.WindowDuration = time.Minute * 15
-	} else if timeRange >= time.Hour*24*7 {
-		q.WindowDuration = time.Minute * 60
-	} else {
-		q.WindowDuration = time.Hour * 4
-	}
-
-	ctx := c.Request().Context().(context.Context)
-
-	results, uptime, latency, err := q.ExecuteDetails(ctx, ctx.Pool())
+	results, uptime, latency, err := q.ExecuteDetails(ctx)
 	if err != nil {
 		return errorResponse(c, err, http.StatusInternalServerError)
 	}

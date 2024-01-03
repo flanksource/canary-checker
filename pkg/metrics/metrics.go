@@ -8,8 +8,10 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/types"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/samber/lo"
 )
 
 var (
@@ -120,8 +122,8 @@ func RemoveCheckByKey(key string) {
 	latencies.Remove(key)
 }
 
-func GetMetrics(key string) (uptime pkg.Uptime, latency pkg.Latency) {
-	uptime = pkg.Uptime{}
+func GetMetrics(key string) (uptime types.Uptime, latency types.Latency) {
+	uptime = types.Uptime{}
 
 	fail, ok := failed.Get(key)
 	if ok {
@@ -135,12 +137,12 @@ func GetMetrics(key string) (uptime pkg.Uptime, latency pkg.Latency) {
 
 	lat, ok := latencies.Get(key)
 	if ok {
-		latency = pkg.Latency{Rolling1H: lat.(*rolling.TimePolicy).Reduce(rolling.Percentile(95))}
+		latency = types.Latency{Rolling1H: lat.(*rolling.TimePolicy).Reduce(rolling.Percentile(95))}
 	}
 	return
 }
 
-func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _latency pkg.Latency) {
+func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime types.Uptime, _latency types.Latency) {
 	defer func() {
 		e := recover()
 		if e != nil {
@@ -236,11 +238,11 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		OpsFailedCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 	}
 
-	_uptime = pkg.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
+	_uptime = types.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
 	if latency != nil {
-		_latency = pkg.Latency{Rolling1H: latency.Reduce(rolling.Percentile(95))}
+		_latency = types.Latency{Rolling1H: latency.Reduce(rolling.Percentile(95))}
 	} else {
-		_latency = pkg.Latency{}
+		_latency = types.Latency{}
 	}
 	return _uptime, _latency
 }
@@ -308,7 +310,7 @@ func getOrCreateHistogram(m pkg.Metric) error {
 	}
 }
 
-func FillLatencies(checkKey string, duration string, latency *pkg.Latency) error {
+func FillLatencies(checkKey string, duration string, latency *types.Latency) error {
 	if runner.Prometheus == nil || duration == "" {
 		return nil
 	}
@@ -331,7 +333,7 @@ func FillLatencies(checkKey string, duration string, latency *pkg.Latency) error
 	return nil
 }
 
-func FillUptime(checkKey, duration string, uptime *pkg.Uptime) error {
+func FillUptime(checkKey, duration string, uptime *types.Uptime) error {
 	if runner.Prometheus == nil || duration == "" {
 		return nil
 	}
@@ -339,7 +341,7 @@ func FillUptime(checkKey, duration string, uptime *pkg.Uptime) error {
 	if err != nil {
 		return err
 	}
-	uptime.P100 = value
+	uptime.P100 = lo.ToPtr(value)
 	return nil
 }
 

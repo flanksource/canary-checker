@@ -61,7 +61,6 @@ require (
 	github.com/samber/lo v1.39.0
 	github.com/sevennt/echo-pprof v0.1.1-0.20220616082843-66a461746b5f
 	github.com/spf13/cobra v1.8.0
-	github.com/spf13/pflag v1.0.5
 	github.com/timberio/go-datemath v0.1.0
 	go.mongodb.org/mongo-driver v1.12.1
 	go.opentelemetry.io/otel v1.19.0
@@ -221,6 +220,7 @@ require (
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/sethvargo/go-retry v0.2.4 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/tidwall/gjson v1.17.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
@@ -285,6 +285,4 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 
-// replace github.com/flanksource/commons => ../commons
-
-// replace github.com/flanksource/duty => ../duty
+// replace "github.com/flanksource/duty" => ../duty
