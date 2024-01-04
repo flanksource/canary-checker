@@ -1,0 +1,37 @@
+gitea:
+  additionalConfigFromEnvs: []
+  additionalConfigSources: []
+  admin:
+    email: gitea@local.domain
+    existingSecret: null
+    password: admin
+    username: gitea_admin
+  config:
+    security:
+      PASSWORD_COMPLEXITY: "off"
+    server:
+      SSH_LISTEN_PORT: 2222
+      SSH_PORT: 22
+persistence:
+  enabled: false
+postgresql-ha:
+  enabled: false
+redis-cluster:
+  enabled: false
+postgresql:
+  enabled: true
+  persistence:
+    enabled: false
+  global:
+    postgresql:
+      persistence:
+        enabled: false
+      auth:
+        database: gitea
+        password: gitea
+        username: gitea
+      service:
+        ports:
+          postgresql: 5432
+test:
+  enabled: true
