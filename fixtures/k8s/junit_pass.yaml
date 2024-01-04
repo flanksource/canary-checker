@@ -5,7 +5,7 @@ metadata:
   labels:
     part-of: canary-tools
 spec:
-  interval: 120
+  schedule: '@every 2h'
   severity: high
   junit:
     - testResults: "/tmp/junit-results/"

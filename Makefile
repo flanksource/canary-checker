@@ -2,6 +2,7 @@
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= ""
 NAME=canary-checker
+YQ=$(shell readlink -f .bin/yq)
 OS   = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH = $(shell uname -m | sed 's/x86_64/amd64/')
 LD_FLAGS=-ldflags "-w -s -X \"main.version=$(VERSION_TAG)\""
@@ -21,6 +22,7 @@ GOBIN=$(shell go env GOPATH)/bin
 else
 GOBIN=$(shell go env GOBIN)
 endif
+
 
 all: manager
 
@@ -52,22 +54,31 @@ deploy: manifests
 	cd config && kustomize edit set image controller=${IMG}
 	kustomize build config | kubectl apply -f -
 
-static:  generate manifests
-	kustomize build ./config | yq ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/manifests.yaml
-	kustomize build ./config/base | yq ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/base.yaml
+static:  generate manifests .bin/yq
+	kustomize build ./config | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/manifests.yaml
+	kustomize build ./config/base | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/base.yaml
 
 # Generate OpenAPI schema
 .PHONY: gen-schemas
 gen-schemas:
-	cd hack/generate-schemas && go run ./main.go
+	cd hack/generate-schemas &&  go mod tidy && go run ./main.go
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests: .bin/controller-gen
+manifests: .bin/controller-gen .bin/yq
+	# For debugging
+	$(YQ) -V
+
 	schemaPath=.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties
-	.bin/controller-gen crd paths="./api/..." output:stdout | yq ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/crd.yaml
+	.bin/controller-gen crd paths="./api/..." output:stdout | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/crd.yaml
 	$(MAKE) gen-schemas
-	cd config/deploy && yq ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.checks.items.properties)' crd.yaml | yq ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.forEach.properties)' /dev/stdin  | yq ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.lookup.properties)'  /dev/stdin | yq ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.properties.items.properties.lookup.properties)' /dev/stdin | yq ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.forEach.properties)' /dev/stdin |  yq ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.lookup.properties)' /dev/stdin | yq ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.checks.items.properties.inline.properties)' /dev/stdin | yq ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.properties.items.properties.lookup.properties)' /dev/stdin > crd.slim.yaml
+	cd config/deploy && $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.checks.items.properties)' crd.yaml | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.forEach.properties)' /dev/stdin  | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.lookup.properties)'  /dev/stdin | $(YQ) ea  'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.properties.items.properties.lookup.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.forEach.properties)' /dev/stdin |  $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.lookup.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.checks.items.properties.inline.properties)' /dev/stdin | $(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.properties.items.properties.lookup.properties)' /dev/stdin > crd.slim.yaml
 	cd config/deploy && mv crd.slim.yaml crd.yaml
+
+
+tidy:
+	go mod tidy
+	cd hack/generate-schemas && go mod tidy
+
 
 # Run go fmt against code
 fmt:
@@ -82,14 +93,17 @@ generate: .bin/controller-gen
 	.bin/controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./api/..."
 
 # Build the docker image
-docker:
-	docker build . -f build/full/Dockerfile -t ${IMG_F}
+docker: docker-minimal docker-full
+
+docker-full:
+	docker build . -f build/full/Dockerfile -t ${IMG}
+
+docker-minimal:
 	docker build . -f build/minimal/Dockerfile -t ${IMG}
 
 # Build the docker image
 docker-dev: linux
 	docker build ./ -f build/dev/Dockerfile -t ${IMG}
-
 
 docker-push-%:
 	docker build . -f build/full/Dockerfile -t ${IMG_F}
@@ -190,6 +204,11 @@ endif
 .bin/controller-gen: .bin
 		GOBIN=$(PWD)/.bin go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.11.1
 		CONTROLLER_GEN=$(GOBIN)/controller-gen
+
+.bin/yq: .bin
+	curl -sSLo $(YQ) https://github.com/mikefarah/yq/releases/download/v4.40.5/yq_$(OS)_$(ARCH) && \
+	chmod +x $(YQ)
+
 
 .bin/go-junit-report: .bin
 	GOBIN=$(PWD)/.bin GOFLAGS="-mod=mod"  go install github.com/jstemmer/go-junit-report

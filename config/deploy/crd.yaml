@@ -1,3 +1,4 @@
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -15,6 +16,10 @@ spec:
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
+        - jsonPath: .spec.replicas
+          name: Replicas
+          priority: 1
+          type: integer
         - jsonPath: .spec.interval
           name: Interval
           type: string
@@ -129,6 +134,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       password:
                         properties:
                           name:
@@ -146,6 +154,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -155,7 +173,104 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
+                        type: object
+                      relationships:
+                        description: Relationships defines a way to link the check results to components and configs using lookup expressions.
+                        properties:
+                          components:
+                            items:
+                              description: LookupSpec defines a tuple of fields to lookup.
+                              properties:
+                                name:
+                                  description: Lookup specifies the type of lookup to perform.
+                                  properties:
+                                    expr:
+                                      description: Expr is a cel-expression.
+                                      type: string
+                                    label:
+                                      description: Label specifies the key to lookup on the label.
+                                      type: string
+                                    value:
+                                      description: Value is the static value to use.
+                                      type: string
+                                  type: object
+                                namespace:
+                                  description: Lookup specifies the type of lookup to perform.
+                                  properties:
+                                    expr:
+                                      description: Expr is a cel-expression.
+                                      type: string
+                                    label:
+                                      description: Label specifies the key to lookup on the label.
+                                      type: string
+                                    value:
+                                      description: Value is the static value to use.
+                                      type: string
+                                  type: object
+                                type:
+                                  description: Lookup specifies the type of lookup to perform.
+                                  properties:
+                                    expr:
+                                      description: Expr is a cel-expression.
+                                      type: string
+                                    label:
+                                      description: Label specifies the key to lookup on the label.
+                                      type: string
+                                    value:
+                                      description: Value is the static value to use.
+                                      type: string
+                                  type: object
+                              type: object
+                            type: array
+                          configs:
+                            items:
+                              description: LookupSpec defines a tuple of fields to lookup.
+                              properties:
+                                name:
+                                  description: Lookup specifies the type of lookup to perform.
+                                  properties:
+                                    expr:
+                                      description: Expr is a cel-expression.
+                                      type: string
+                                    label:
+                                      description: Label specifies the key to lookup on the label.
+                                      type: string
+                                    value:
+                                      description: Value is the static value to use.
+                                      type: string
+                                  type: object
+                                namespace:
+                                  description: Lookup specifies the type of lookup to perform.
+                                  properties:
+                                    expr:
+                                      description: Expr is a cel-expression.
+                                      type: string
+                                    label:
+                                      description: Label specifies the key to lookup on the label.
+                                      type: string
+                                    value:
+                                      description: Value is the static value to use.
+                                      type: string
+                                  type: object
+                                type:
+                                  description: Lookup specifies the type of lookup to perform.
+                                  properties:
+                                    expr:
+                                      description: Expr is a cel-expression.
+                                      type: string
+                                    label:
+                                      description: Label specifies the key to lookup on the label.
+                                      type: string
+                                    value:
+                                      description: Value is the static value to use.
+                                      type: string
+                                  type: object
+                              type: object
+                            type: array
                         type: object
                       test:
                         properties:
@@ -202,6 +317,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -211,6 +336,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -237,6 +365,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -246,6 +384,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       aggregatorName:
@@ -305,8 +446,8 @@ spec:
                       name:
                         description: Name of the check
                         type: string
-                      objectPath:
-                        description: glob path to restrict matches to a subset
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       query:
                         type: string
@@ -329,6 +470,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -338,6 +489,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       sessionToken:
@@ -357,6 +511,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -366,6 +530,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       skipTLSVerify:
@@ -396,9 +563,6 @@ spec:
                       transformDeleteStrategy:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
-                      usePathStyle:
-                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
-                        type: boolean
                     required:
                       - name
                       - query
@@ -424,6 +588,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -433,6 +607,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       complianceTypes:
@@ -500,8 +677,8 @@ spec:
                       name:
                         description: Name of the check
                         type: string
-                      objectPath:
-                        description: glob path to restrict matches to a subset
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       region:
                         type: string
@@ -527,6 +704,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -536,6 +723,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       sessionToken:
@@ -555,6 +745,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -564,6 +764,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       skipTLSVerify:
@@ -594,9 +797,6 @@ spec:
                       transformDeleteStrategy:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
-                      usePathStyle:
-                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
-                        type: boolean
                     required:
                       - name
                     type: object
@@ -660,6 +860,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       organization:
                         type: string
                       personalAccessToken:
@@ -679,6 +882,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -688,6 +901,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       pipeline:
@@ -757,6 +973,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -766,6 +992,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       actionPrefix:
@@ -831,8 +1060,8 @@ spec:
                       name:
                         description: Name of the check
                         type: string
-                      objectPath:
-                        description: glob path to restrict matches to a subset
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       region:
                         type: string
@@ -853,6 +1082,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -862,6 +1101,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       sessionToken:
@@ -881,6 +1123,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -890,6 +1142,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       skipTLSVerify:
@@ -922,9 +1177,6 @@ spec:
                       transformDeleteStrategy:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
-                      usePathStyle:
-                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
-                        type: boolean
                     required:
                       - name
                     type: object
@@ -982,6 +1234,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       query:
                         type: string
                       test:
@@ -1036,6 +1291,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -1045,6 +1310,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           username:
@@ -1064,6 +1332,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -1073,6 +1351,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                         type: object
@@ -1121,6 +1402,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       transformDeleteStrategy:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
@@ -1173,6 +1457,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       password:
                         type: string
@@ -1227,6 +1514,16 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
                                       secretKeyRef:
                                         properties:
                                           key:
@@ -1236,6 +1533,9 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               endpoint:
@@ -1286,6 +1586,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       test:
                         properties:
@@ -1364,6 +1667,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       port:
                         type: integer
                       query:
@@ -1405,6 +1711,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -1414,6 +1730,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           username:
@@ -1433,6 +1752,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -1442,6 +1771,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                         type: object
@@ -1491,6 +1823,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       transformDeleteStrategy:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
@@ -1521,6 +1856,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -1530,6 +1875,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           username:
@@ -1549,6 +1897,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -1558,6 +1916,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                         type: object
@@ -1602,6 +1963,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       transformDeleteStrategy:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
@@ -1630,6 +1994,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -1639,6 +2013,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       connection:
@@ -1696,6 +2073,7 @@ spec:
                         description: Name of the check
                         type: string
                       namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       scheme:
                         type: string
@@ -1748,6 +2126,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -1757,6 +2145,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       ami:
@@ -1817,8 +2208,8 @@ spec:
                       name:
                         description: Name of the check
                         type: string
-                      objectPath:
-                        description: glob path to restrict matches to a subset
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       region:
                         type: string
@@ -1839,6 +2230,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -1848,6 +2249,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       securityGroup:
@@ -1869,6 +2273,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -1878,6 +2292,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       skipTLSVerify:
@@ -1888,9 +2305,6 @@ spec:
                       transformDeleteStrategy:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
-                      usePathStyle:
-                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
-                        type: boolean
                       userData:
                         type: string
                       waitTime:
@@ -1957,6 +2371,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       password:
                         properties:
                           name:
@@ -1974,6 +2391,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -1983,6 +2410,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       query:
@@ -2034,6 +2464,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -2043,6 +2483,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -2105,6 +2548,151 @@ spec:
                 exec:
                   items:
                     properties:
+                      artifacts:
+                        description: Artifacts configure the artifacts generated by the check
+                        items:
+                          properties:
+                            path:
+                              description: 'Path to the artifact on the check runner. Special paths: /dev/stdout & /dev/stdin'
+                              type: string
+                          required:
+                            - path
+                          type: object
+                        type: array
+                      checkout:
+                        description: Checkout details the git repository that should be mounted to the process
+                        properties:
+                          certificate:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
+                                type: object
+                            type: object
+                          connection:
+                            type: string
+                          destination:
+                            description: Destination is the full path to where the contents of the URL should be downloaded to. If left empty, the sha256 hash of the URL will be used as the dir name.
+                            type: string
+                          password:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
+                                type: object
+                            type: object
+                          url:
+                            type: string
+                          username:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
                       connections:
                         properties:
                           aws:
@@ -2126,6 +2714,16 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
                                       secretKeyRef:
                                         properties:
                                           key:
@@ -2135,15 +2733,15 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               connection:
                                 description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                                 type: string
                               endpoint:
-                                type: string
-                              objectPath:
-                                description: glob path to restrict matches to a subset
                                 type: string
                               region:
                                 type: string
@@ -2164,6 +2762,16 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
                                       secretKeyRef:
                                         properties:
                                           key:
@@ -2173,6 +2781,9 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               sessionToken:
@@ -2192,6 +2803,16 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
                                       secretKeyRef:
                                         properties:
                                           key:
@@ -2201,13 +2822,13 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               skipTLSVerify:
                                 description: Skip TLS verify when connecting to aws
-                                type: boolean
-                              usePathStyle:
-                                description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                                 type: boolean
                             type: object
                           azure:
@@ -2229,6 +2850,16 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
                                       secretKeyRef:
                                         properties:
                                           key:
@@ -2238,6 +2869,9 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               clientSecret:
@@ -2257,6 +2891,16 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
                                       secretKeyRef:
                                         properties:
                                           key:
@@ -2266,6 +2910,9 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               connection:
@@ -2295,6 +2942,16 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      helmRef:
+                                        properties:
+                                          key:
+                                            description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                            type: string
+                                          name:
+                                            type: string
+                                        required:
+                                          - key
+                                        type: object
                                       secretKeyRef:
                                         properties:
                                           key:
@@ -2304,6 +2961,9 @@ spec:
                                         required:
                                           - key
                                         type: object
+                                      serviceAccount:
+                                        description: ServiceAccount specifies the service account whose token should be fetched
+                                        type: string
                                     type: object
                                 type: object
                               endpoint:
@@ -2324,6 +2984,50 @@ spec:
                           template:
                             type: string
                         type: object
+                      env:
+                        description: EnvVars are the environment variables that are accessible to exec processes
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            value:
+                              type: string
+                            valueFrom:
+                              properties:
+                                configMapKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
+                                helmRef:
+                                  properties:
+                                    key:
+                                      description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
+                                secretKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
+                                serviceAccount:
+                                  description: ServiceAccount specifies the service account whose token should be fetched
+                                  type: string
+                              type: object
+                          type: object
+                        type: array
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
@@ -2359,6 +3063,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       script:
                         description: Script can be a inline script or a path to a script that needs to be executed On windows executed via powershell and in darwin and linux executed using bash
@@ -2418,6 +3125,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -2427,8 +3144,13 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
+                          bucket:
+                            type: string
                           connection:
                             description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                             type: string
@@ -2456,6 +3178,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -2465,6 +3197,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           sessionToken:
@@ -2484,6 +3219,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -2493,6 +3238,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           skipTLSVerify:
@@ -2528,9 +3276,13 @@ spec:
                             type: string
                           regex:
                             type: string
+                          since:
+                            type: string
                         type: object
                       gcpConnection:
                         properties:
+                          bucket:
+                            type: string
                           connection:
                             description: ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
                             type: string
@@ -2551,6 +3303,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -2560,6 +3322,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           endpoint:
@@ -2619,9 +3384,15 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       path:
                         description: Path  to folder or object storage, e.g. `s3://<bucket-name>`,  `gcs://<bucket-name>`, `/path/tp/folder`
                         type: string
+                      recursive:
+                        description: Recursive when set to true will recursively scan the folder to list the files in it. However, symlinks are simply listed but not traversed.
+                        type: boolean
                       sftpConnection:
                         properties:
                           connection:
@@ -2646,6 +3417,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -2655,6 +3436,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           port:
@@ -2677,6 +3461,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -2686,6 +3480,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                         required:
@@ -2716,6 +3513,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -2725,6 +3532,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           port:
@@ -2747,6 +3557,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -2756,6 +3576,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                         type: object
@@ -2973,6 +3796,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -2982,6 +3815,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       icon:
@@ -3019,6 +3855,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       query:
                         description: Query to be executed. Please see https://github.com/askgitdev/askgit for more details regarding syntax
@@ -3075,6 +3914,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -3084,6 +3933,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                           username:
@@ -3103,6 +3955,16 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
                                   secretKeyRef:
                                     properties:
                                       key:
@@ -3112,6 +3974,9 @@ spec:
                                     required:
                                       - key
                                     type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
                                 type: object
                             type: object
                         type: object
@@ -3158,6 +4023,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       project:
                         type: string
                       transformDeleteStrategy:
@@ -3193,6 +4061,50 @@ spec:
                       endpoint:
                         description: 'Deprecated: Use url instead'
                         type: string
+                      env:
+                        description: EnvVars are the environment variables that are accesible to templated body
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            value:
+                              type: string
+                            valueFrom:
+                              properties:
+                                configMapKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
+                                helmRef:
+                                  properties:
+                                    key:
+                                      description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
+                                secretKeyRef:
+                                  properties:
+                                    key:
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
+                                serviceAccount:
+                                  description: ServiceAccount specifies the service account whose token should be fetched
+                                  type: string
+                              type: object
+                          type: object
+                        type: array
                       headers:
                         description: Header fields to be used in the query
                         items:
@@ -3212,6 +4124,16 @@ spec:
                                   required:
                                     - key
                                   type: object
+                                helmRef:
+                                  properties:
+                                    key:
+                                      description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                    - key
+                                  type: object
                                 secretKeyRef:
                                   properties:
                                     key:
@@ -3221,6 +4143,9 @@ spec:
                                   required:
                                     - key
                                   type: object
+                                serviceAccount:
+                                  description: ServiceAccount specifies the service account whose token should be fetched
+                                  type: string
                               type: object
                           type: object
                         type: array
@@ -3267,7 +4192,7 @@ spec:
                         description: Name of the check
                         type: string
                       namespace:
-                        description: Namespace to crawl for TLS endpoints.  Mutually exclusive with Endpoint
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       ntlm:
                         description: NTLM when set to true will do authentication using NTLM v1 protocol
@@ -3275,6 +4200,20 @@ spec:
                       ntlmv2:
                         description: NTLM when set to true will do authentication using NTLM v2 protocol
                         type: boolean
+                      oauth2:
+                        description: Oauth2 Configuration. The client ID & Client secret should go to username & password respectively.
+                        properties:
+                          params:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          scope:
+                            items:
+                              type: string
+                            type: array
+                          tokenURL:
+                            type: string
+                        type: object
                       password:
                         properties:
                           name:
@@ -3292,6 +4231,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -3301,6 +4250,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       responseCodes:
@@ -3312,7 +4264,7 @@ spec:
                         description: Exact response content expected to be returned by the endpoint.
                         type: string
                       responseJSONContent:
-                        description: Path and value to of expect JSON response by the endpoint
+                        description: Deprecated, use expr and jsonpath function
                         properties:
                           path:
                             type: string
@@ -3373,6 +4325,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -3382,6 +4344,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -3431,6 +4396,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       packetCount:
                         type: integer
@@ -3483,6 +4451,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -3492,6 +4470,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       labels:
@@ -3527,6 +4508,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       port:
                         description: Port on which the server is running
                         format: int32
@@ -3555,6 +4539,17 @@ spec:
                 junit:
                   items:
                     properties:
+                      artifacts:
+                        description: Artifacts configure the artifacts generated by the check
+                        items:
+                          properties:
+                            path:
+                              description: 'Path to the artifact on the check runner. Special paths: /dev/stdout & /dev/stdin'
+                              type: string
+                          required:
+                            - path
+                          type: object
+                        type: array
                       description:
                         description: Description for the check
                         type: string
@@ -3604,6 +4599,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       spec:
                         type: object
@@ -3705,6 +4703,9 @@ spec:
                         description: Name of the check
                         type: string
                       namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
+                      namespaceSelector:
                         properties:
                           fieldSelector:
                             type: string
@@ -3801,6 +4802,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       password:
                         properties:
                           name:
@@ -3818,6 +4822,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -3827,6 +4841,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       skipTLSVerify:
@@ -3856,6 +4873,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -3865,6 +4892,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -3917,6 +4947,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       password:
                         properties:
                           name:
@@ -3934,6 +4967,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -3943,6 +4986,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       transformDeleteStrategy:
@@ -3968,6 +5014,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -3977,6 +5033,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -4039,6 +5098,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       password:
                         properties:
                           name:
@@ -4056,6 +5118,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4065,6 +5137,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       query:
@@ -4117,6 +5192,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4126,6 +5211,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -4188,6 +5276,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       password:
                         properties:
                           name:
@@ -4205,6 +5296,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4214,6 +5315,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       query:
@@ -4266,6 +5370,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4275,6 +5389,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -4348,6 +5465,9 @@ spec:
                         type: array
                       name:
                         description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       namespaceAnnotations:
                         additionalProperties:
@@ -4440,6 +5560,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       password:
                         properties:
                           name:
@@ -4457,6 +5580,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4466,6 +5599,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       query:
@@ -4518,6 +5654,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4527,6 +5673,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -4607,6 +5756,7 @@ spec:
                         description: Name of the check
                         type: string
                       namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       path:
                         type: string
@@ -4688,6 +5838,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       password:
                         properties:
                           name:
@@ -4705,6 +5858,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4714,6 +5877,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       query:
@@ -4766,6 +5932,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4775,6 +5951,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -4840,6 +6019,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       password:
                         properties:
                           name:
@@ -4857,6 +6039,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4866,6 +6058,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       query:
@@ -4916,6 +6111,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -4925,6 +6130,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
@@ -4982,6 +6190,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       password:
                         properties:
                           name:
@@ -4999,6 +6210,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -5008,6 +6229,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       transformDeleteStrategy:
@@ -5033,6 +6257,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -5042,12 +6276,18 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                     required:
                       - name
                     type: object
                   type: array
+                replicas:
+                  default: 1
+                  type: integer
                 restic:
                   items:
                     properties:
@@ -5069,6 +6309,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -5078,6 +6328,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       awsConnectionName:
@@ -5134,6 +6387,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       password:
                         description: Password for the restic repository
                         properties:
@@ -5152,6 +6408,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -5161,6 +6427,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       repository:
@@ -5184,6 +6453,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -5193,6 +6472,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       transformDeleteStrategy:
@@ -5227,6 +6509,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -5236,8 +6528,13 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
+                      bucket:
+                        type: string
                       bucketName:
                         type: string
                       connection:
@@ -5284,6 +6581,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       objectPath:
                         description: glob path to restrict matches to a subset
                         type: string
@@ -5306,6 +6606,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -5315,6 +6625,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       sessionToken:
@@ -5334,6 +6647,16 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
                               secretKeyRef:
                                 properties:
                                   key:
@@ -5343,6 +6666,9 @@ spec:
                                 required:
                                   - key
                                 type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
                             type: object
                         type: object
                       skipTLSVerify:
@@ -5407,6 +6733,9 @@ spec:
                       name:
                         description: Name of the check
                         type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
                       thresholdMillis:
                         format: int64
                         type: integer
@@ -5417,6 +6746,131 @@ spec:
                       - name
                     type: object
                   type: array
+                webhook:
+                  properties:
+                    description:
+                      description: Description for the check
+                      type: string
+                    display:
+                      properties:
+                        expr:
+                          type: string
+                        javascript:
+                          type: string
+                        jsonPath:
+                          type: string
+                        template:
+                          type: string
+                      type: object
+                    icon:
+                      description: Icon for overwriting default icon on the dashboard
+                      type: string
+                    labels:
+                      additionalProperties:
+                        type: string
+                      description: Labels for the check
+                      type: object
+                    metrics:
+                      description: Metrics to expose from check results
+                      items:
+                        properties:
+                          labels:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                value:
+                                  type: string
+                                valueExpr:
+                                  type: string
+                              required:
+                                - name
+                              type: object
+                            type: array
+                          name:
+                            type: string
+                          type:
+                            type: string
+                          value:
+                            type: string
+                        type: object
+                      type: array
+                    name:
+                      description: Name of the check
+                      type: string
+                    namespace:
+                      description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                      type: string
+                    test:
+                      properties:
+                        expr:
+                          type: string
+                        javascript:
+                          type: string
+                        jsonPath:
+                          type: string
+                        template:
+                          type: string
+                      type: object
+                    token:
+                      description: Token is an optional authorization token to run this check
+                      properties:
+                        name:
+                          type: string
+                        value:
+                          type: string
+                        valueFrom:
+                          properties:
+                            configMapKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                              required:
+                                - key
+                              type: object
+                            helmRef:
+                              properties:
+                                key:
+                                  description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                  type: string
+                                name:
+                                  type: string
+                              required:
+                                - key
+                              type: object
+                            secretKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                              required:
+                                - key
+                              type: object
+                            serviceAccount:
+                              description: ServiceAccount specifies the service account whose token should be fetched
+                              type: string
+                          type: object
+                      type: object
+                    transform:
+                      properties:
+                        expr:
+                          type: string
+                        javascript:
+                          type: string
+                        jsonPath:
+                          type: string
+                        template:
+                          type: string
+                      type: object
+                    transformDeleteStrategy:
+                      description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                      type: string
+                  required:
+                    - name
+                  type: object
               type: object
             status:
               description: CanaryStatus defines the observed state of Canary
@@ -5465,6 +6919,9 @@ spec:
                   type: integer
                 persistedID:
                   type: string
+                replicas:
+                  description: Replicas keep track of the number of replicas
+                  type: integer
                 status:
                   type: string
                 uptime1h:
@@ -5475,6 +6932,9 @@ spec:
       served: true
       storage: true
       subresources:
+        scale:
+          specReplicasPath: .spec.replicas
+          statusReplicasPath: .status.replicas
         status: {}
 ---
 apiVersion: apiextensions.k8s.io/v1
@@ -5520,7 +6980,12 @@ spec:
                 configs:
                   description: Lookup and associate config items with this component
                   items:
+                    description: ConfigQuery is used to look up and associate config items with a component.
                     properties:
+                      class:
+                        type: string
+                      external_id:
+                        type: string
                       id:
                         items:
                           type: string
@@ -5594,6 +7059,10 @@ spec:
                           config:
                             description: Lookup a config by it
                             properties:
+                              class:
+                                type: string
+                              external_id:
+                                type: string
                               id:
                                 items:
                                   type: string
@@ -5719,6 +7188,10 @@ spec:
                   type: array
                 summary:
                   properties:
+                    checks:
+                      additionalProperties:
+                        type: integer
+                      type: object
                     healthy:
                       type: integer
                     incidents:
@@ -5815,7 +7288,12 @@ spec:
                       configs:
                         description: Lookup and associate config items with this component
                         items:
+                          description: ConfigQuery is used to look up and associate config items with a component.
                           properties:
+                            class:
+                              type: string
+                            external_id:
+                              type: string
                             id:
                               items:
                                 type: string
@@ -5889,6 +7367,10 @@ spec:
                                 config:
                                   description: Lookup a config by it
                                   properties:
+                                    class:
+                                      type: string
+                                    external_id:
+                                      type: string
                                     id:
                                       items:
                                         type: string
@@ -6014,6 +7496,10 @@ spec:
                         type: array
                       summary:
                         properties:
+                          checks:
+                            additionalProperties:
+                              type: integer
+                            type: object
                           healthy:
                             type: integer
                           incidents:
@@ -6045,7 +7531,12 @@ spec:
                 configs:
                   description: Lookup and associate config items with this component
                   items:
+                    description: ConfigQuery is used to look up and associate config items with a component.
                     properties:
+                      class:
+                        type: string
+                      external_id:
+                        type: string
                       id:
                         items:
                           type: string
@@ -6090,6 +7581,10 @@ spec:
                           config:
                             description: Lookup a config by it
                             properties:
+                              class:
+                                type: string
+                              external_id:
+                                type: string
                               id:
                                 items:
                                   type: string

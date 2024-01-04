@@ -9,5 +9,5 @@ endif
 
 .PHONY: build
 build:
-	go test  ./...  -o ../.bin/$(NAME).test -c $(LD_FLAGS)  main.go
+	ginkgo build -r  ./ -c $(LD_FLAGS)
 

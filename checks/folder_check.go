@@ -8,38 +8,49 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 )
 
-type Filesystem interface {
-	Close() error
-	ReadDir(name string) ([]os.FileInfo, error)
-	Stat(name string) (os.FileInfo, error)
-}
-
 type FolderCheck struct {
-	Oldest                os.FileInfo
-	Newest                os.FileInfo
-	MinSize               os.FileInfo
-	MaxSize               os.FileInfo
-	SupportsTotalSize     bool
-	SupportsAvailableSize bool
-	TotalSize             int64
-	AvailableSize         int64
-	Files                 []os.FileInfo
+	Oldest        *File  `json:"oldest,omitempty"`
+	Newest        *File  `json:"newest,omitempty"`
+	MinSize       *File  `json:"smallest,omitempty"`
+	MaxSize       *File  `json:"largest,omitempty"`
+	TotalSize     int64  `json:"size,omitempty"`
+	AvailableSize int64  `json:"availableSize,omitempty"`
+	Files         []File `json:"files"`
 }
 
-func (f *FolderCheck) Append(file os.FileInfo) {
-	if f.Oldest == nil || f.Oldest.ModTime().After(file.ModTime()) {
+type File struct {
+	Name     string    `json:"name,omitempty"`
+	Size     int64     `json:"size,omitempty"`
+	Mode     string    `json:"mode,omitempty"`
+	Modified time.Time `json:"modified"`
+	IsDir    bool      `json:"is_dir,omitempty"`
+}
+
+func newFile(file os.FileInfo) *File {
+	return &File{
+		Name:     file.Name(),
+		Size:     file.Size(),
+		Mode:     file.Mode().String(),
+		Modified: file.ModTime().UTC(),
+		IsDir:    file.IsDir(),
+	}
+}
+
+func (f *FolderCheck) Append(osFile os.FileInfo) {
+	file := newFile(osFile)
+	if f.Oldest == nil || f.Oldest.Modified.After(osFile.ModTime()) {
 		f.Oldest = file
 	}
-	if f.Newest == nil || f.Newest.ModTime().Before(file.ModTime()) {
+	if f.Newest == nil || f.Newest.Modified.Before(osFile.ModTime()) {
 		f.Newest = file
 	}
-	if f.MinSize == nil || f.MinSize.Size() > file.Size() {
+	if f.MinSize == nil || f.MinSize.Size > osFile.Size() {
 		f.MinSize = file
 	}
-	if f.MaxSize == nil || f.MaxSize.Size() < file.Size() {
+	if f.MaxSize == nil || f.MaxSize.Size < osFile.Size() {
 		f.MaxSize = file
 	}
-	f.Files = append(f.Files, file)
+	f.Files = append(f.Files, *file)
 }
 
 func (f FolderCheck) Test(test v1.FolderTest) string {
@@ -60,7 +71,7 @@ func (f FolderCheck) Test(test v1.FolderTest) string {
 	}
 
 	if test.AvailableSize != "" {
-		if !f.SupportsAvailableSize {
+		if f.AvailableSize == SizeNotSupported {
 			return "available size not supported"
 		}
 		size, err := test.AvailableSize.Value()
@@ -73,7 +84,7 @@ func (f FolderCheck) Test(test v1.FolderTest) string {
 	}
 
 	if test.TotalSize != "" {
-		if !f.SupportsTotalSize {
+		if f.TotalSize == SizeNotSupported {
 			return "total size not supported"
 		}
 		size, err := test.TotalSize.Value()
@@ -84,15 +95,16 @@ func (f FolderCheck) Test(test v1.FolderTest) string {
 			return fmt.Sprintf("total size too small: %v < %v", mb(f.TotalSize), test.TotalSize)
 		}
 	}
+
 	if len(f.Files) == 0 {
 		// nothing run age/size checks on
 		return ""
 	}
-	if minAge != nil && time.Since(f.Newest.ModTime()) < *minAge {
-		return fmt.Sprintf("%s is too new: %s < %s", f.Newest.Name(), age(f.Newest.ModTime()), test.MinAge)
+	if minAge != nil && time.Since(f.Newest.Modified) < *minAge {
+		return fmt.Sprintf("%s is too new: %s < %s", f.Newest.Name, age(f.Newest.Modified), test.MinAge)
 	}
-	if maxAge != nil && time.Since(f.Oldest.ModTime()) > *maxAge {
-		return fmt.Sprintf("%s is too old %s > %s", f.Oldest.Name(), age(f.Oldest.ModTime()), test.MaxAge)
+	if maxAge != nil && time.Since(f.Oldest.Modified) > *maxAge {
+		return fmt.Sprintf("%s is too old %s > %s", f.Oldest.Name, age(f.Oldest.Modified), test.MaxAge)
 	}
 
 	if test.MinSize != "" {
@@ -100,8 +112,8 @@ func (f FolderCheck) Test(test v1.FolderTest) string {
 		if err != nil {
 			return fmt.Sprintf("%s is an invalid size: %s", test.MinSize, err)
 		}
-		if f.MinSize.Size() < *size {
-			return fmt.Sprintf("%s is too small: %v < %v", f.MinSize.Name(), mb(f.MinSize.Size()), test.MinSize)
+		if f.MinSize.Size < *size {
+			return fmt.Sprintf("%s is too small: %v < %v", f.MinSize.Name, mb(f.MinSize.Size), test.MinSize)
 		}
 	}
 
@@ -110,8 +122,8 @@ func (f FolderCheck) Test(test v1.FolderTest) string {
 		if err != nil {
 			return fmt.Sprintf("%s is an invalid size: %s", test.MinSize, err)
 		}
-		if f.MaxSize.Size() < *size {
-			return fmt.Sprintf("%s is too large: %v > %v", f.MaxSize.Name(), mb(f.MaxSize.Size()), test.MaxSize)
+		if f.MaxSize.Size < *size {
+			return fmt.Sprintf("%s is too large: %v > %v", f.MaxSize.Name, mb(f.MaxSize.Size), test.MaxSize)
 		}
 	}
 	return ""

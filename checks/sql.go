@@ -19,7 +19,7 @@ type SQLChecker interface {
 }
 
 type SQLDetails struct {
-	Rows  []map[string]interface{} `json:"rows,omitempty"`
+	Rows  []map[string]interface{} `json:"rows"`
 	Count int                      `json:"count,omitempty"`
 }
 
@@ -28,23 +28,24 @@ type SQLDetails struct {
 // Connects to a db using the specified `driver` and `connectionstring`
 // Performs the test query given in `query`.
 // Gives the single row test query result as result.
-func querySQL(driver string, connection string, query string) (*SQLDetails, error) {
+func querySQL(driver string, connection string, query string) (SQLDetails, error) {
+	result := SQLDetails{}
 	db, err := sql.Open(driver, connection)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to db: %w", err)
+		return result, fmt.Errorf("failed to connect to db: %w", err)
 	}
 	defer db.Close()
 
 	rows, err := db.Query(query)
-	result := SQLDetails{}
+
 	if err != nil || rows.Err() != nil {
-		return nil, fmt.Errorf("failed to query db: %w", err)
+		return result, fmt.Errorf("failed to query db: %w", err)
 	}
 	defer rows.Close()
 
 	columns, err := rows.Columns()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get columns: %w", err)
+		return result, fmt.Errorf("failed to get columns: %w", err)
 	}
 
 	for rows.Next() {
@@ -54,7 +55,7 @@ func querySQL(driver string, connection string, query string) (*SQLDetails, erro
 			rowValues[i] = &s
 		}
 		if err := rows.Scan(rowValues...); err != nil {
-			return nil, err
+			return result, err
 		}
 
 		var row = make(map[string]interface{})
@@ -71,7 +72,7 @@ func querySQL(driver string, connection string, query string) (*SQLDetails, erro
 	}
 
 	result.Count = len(result.Rows)
-	return &result, nil
+	return result, nil
 }
 
 // CheckSQL : Attempts to connect to a DB using the specified
@@ -95,12 +96,27 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 		return results.Failf("error getting connection: %v", err)
 	}
 
-	details, err := querySQL(checker.GetDriver(), connection.URL, check.GetQuery())
+	query := check.GetQuery()
+
+	if ctx.CanTemplate() {
+		query, err = template(ctx.WithCheck(checker.GetCheck()), v1.Template{
+			Template: query,
+		})
+		if err != nil {
+			return results.ErrorMessage(err)
+		}
+		if ctx.IsDebug() {
+			ctx.Infof("query: %s", query)
+		}
+	}
+
+	details, err := querySQL(checker.GetDriver(), connection.URL, query)
+	result.AddDetails(details)
+
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
 
-	result.AddDetails(details)
 	if details.Count < check.Result {
 		return results.Failf("Query returned %d rows, expected %d", details.Count, check.Result)
 	}

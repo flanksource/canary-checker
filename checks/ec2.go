@@ -110,7 +110,7 @@ type AWS struct {
 }
 
 func NewAWS(ctx *context.Context, check v1.EC2Check) (*AWS, error) {
-	if err := check.AWSConnection.Populate(ctx, ctx.Kubernetes, ctx.Canary.GetNamespace()); err != nil {
+	if err := check.AWSConnection.Populate(ctx); err != nil {
 		return nil, fmt.Errorf("failed to populate AWS connection: %v", err)
 	}
 

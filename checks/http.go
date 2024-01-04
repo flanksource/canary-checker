@@ -1,23 +1,25 @@
 package checks
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/commons/text"
+	"github.com/flanksource/commons/http"
+	"github.com/flanksource/commons/http/middlewares"
 	"github.com/flanksource/duty/models"
-	"github.com/pkg/errors"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/http"
 	"github.com/flanksource/canary-checker/pkg/metrics"
+	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/utils"
 )
 
@@ -61,28 +63,49 @@ func (c *HTTPChecker) Run(ctx *context.Context) pkg.Results {
 	return results
 }
 
-func (c *HTTPChecker) configure(req *http.HTTPRequest, ctx *context.Context, check v1.HTTPCheck, connection *models.Connection) error {
+func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPCheck, connection *models.Connection) (*http.Request, error) {
+	client := http.NewClient().UserAgent("canary-checker/" + runner.Version).InsecureSkipVerify(true)
+
 	for _, header := range check.Headers {
 		value, err := ctx.GetEnvValueFromCache(header)
 		if err != nil {
-			return errors.WithMessagef(err, "failed getting header: %v", header)
+			return nil, fmt.Errorf("failed getting header (%v): %w", header, err)
 		}
-		req.Header(header.Name, value)
+
+		client.Header(header.Name, value)
 	}
 
 	if connection.Username != "" || connection.Password != "" {
-		req.Auth(connection.Username, connection.Password)
+		client.Auth(connection.Username, connection.Password)
 	}
 
-	req.NTLM(check.NTLM)
-	req.NTLMv2(check.NTLMv2)
+	if check.Oauth2 != nil {
+		client.OAuth(middlewares.OauthConfig{
+			ClientID:     connection.Username,
+			ClientSecret: connection.Password,
+			TokenURL:     check.Oauth2.TokenURL,
+			Scopes:       check.Oauth2.Scopes,
+			Params:       check.Oauth2.Params,
+		})
+	}
+
+	client.NTLM(check.NTLM)
+	client.NTLMV2(check.NTLMv2)
 
 	if check.ThresholdMillis > 0 {
-		req.Timeout(time.Duration(check.ThresholdMillis) * time.Millisecond)
+		client.Timeout(time.Duration(check.ThresholdMillis) * time.Millisecond)
 	}
 
-	req.Trace(ctx.IsTrace()).Debug(ctx.IsDebug())
-	return nil
+	// TODO: Add finer controls over tracing to the canary
+	if ctx.IsTrace() {
+		client.TraceToStdout(http.TraceAll)
+		client.Trace(http.TraceAll)
+	} else if ctx.IsDebug() {
+		client.TraceToStdout(http.TraceHeaders)
+		client.Trace(http.TraceHeaders)
+	}
+
+	return client.R(ctx), nil
 }
 
 func truncate(text string, max int) string {
@@ -129,25 +152,49 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		return results.Failf("failed to parse url: %v", err)
 	}
 
+	templateEnv := map[string]any{}
+	for _, env := range check.EnvVars {
+		if val, err := ctx.GetEnvValueFromCache(env); err != nil {
+			return results.Failf("failed to get env value: %v", err)
+		} else {
+			templateEnv[env.Name] = val
+		}
+	}
+
+	check.URL, err = template(ctx.WithCheck(check).WithEnvValues(templateEnv), v1.Template{Template: check.URL})
+	if err != nil {
+		return results.Failf("failed to template request url: %v", err)
+	}
+
 	body := check.Body
 	if check.TemplateBody {
-		body, err = text.Template(body, ctx.Canary)
+		body, err = template(ctx.WithCheck(check).WithEnvValues(templateEnv), v1.Template{Template: body})
 		if err != nil {
+			return results.Failf("failed to template request body: %v", err)
+		}
+	}
+
+	request, err := c.generateHTTPRequest(ctx, check, connection)
+	if err != nil {
+		return results.ErrorMessage(err)
+	}
+
+	if body != "" {
+		if err := request.Body(body); err != nil {
 			return results.ErrorMessage(err)
 		}
 	}
 
-	req := http.NewRequest(connection.URL).Method(check.GetMethod())
+	start := time.Now()
 
-	if err := c.configure(req, ctx, check, connection); err != nil {
+	response, err := request.Do(check.GetMethod(), connection.URL)
+	if err != nil {
 		return results.ErrorMessage(err)
 	}
 
-	start := time.Now()
-
-	resp := req.Do(body)
 	elapsed := time.Since(start)
-	status := resp.GetStatusCode()
+	status := response.StatusCode
+
 	result.AddMetric(pkg.Metric{
 		Name: "response_code",
 		Type: metrics.CounterType,
@@ -156,33 +203,32 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 			"url":  check.URL,
 		},
 	})
+
 	result.Duration = elapsed.Milliseconds()
 	responseStatus.WithLabelValues(strconv.Itoa(status), statusCodeToClass(status), check.URL).Inc()
-	age := resp.GetSSLAge()
+	age := response.GetSSLAge()
 	if age != nil {
 		sslExpiration.WithLabelValues(check.URL).Set(age.Hours() * 24)
 	}
 
-	body, _ = resp.AsString()
-
 	data := map[string]interface{}{
 		"code":    status,
-		"headers": resp.GetHeaders(),
+		"headers": response.GetHeaders(),
 		"elapsed": time.Since(start),
-		"content": body,
 		"sslAge":  utils.Deref(age),
+		"json":    make(map[string]any),
 	}
 
-	if resp.IsJSON() {
-		json, err := resp.AsJSON()
-		if err == nil {
-			data["json"] = json.Value
-			if check.ResponseJSONContent != nil && check.ResponseJSONContent.Path != "" {
-				err := resp.CheckJSONContent(json.Value, check.ResponseJSONContent)
-				if err != nil {
-					return results.ErrorMessage(err)
-				}
-			}
+	responseBody, err := response.AsString()
+	if err != nil {
+		return results.ErrorMessage(err)
+	}
+	data["content"] = responseBody
+
+	if response.IsJSON() {
+		var jsonContent interface{}
+		if err := json.Unmarshal([]byte(responseBody), &jsonContent); err == nil {
+			data["json"] = jsonContent
 		} else if check.Test.IsEmpty() {
 			return results.Failf("invalid json response: %v", err)
 		} else {
@@ -192,11 +238,11 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	result.AddData(data)
 
-	if status == -1 {
-		return results.Failf("%v", truncate(resp.Error.Error(), 500))
+	if check.ResponseJSONContent != nil {
+		ctx.Tracef("jsonContent is deprecated")
 	}
 
-	if ok := resp.IsOK(check.ResponseCodes...); !ok {
+	if ok := response.IsOK(check.ResponseCodes...); !ok {
 		return results.Failf("response code invalid %d != %v", status, check.ResponseCodes)
 	}
 
@@ -208,7 +254,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		return results.Failf("expected %v, found %v", check.ResponseContent, truncate(body, 100))
 	}
 
-	if req.URL.Scheme == "https" && check.MaxSSLExpiry > 0 {
+	if check.MaxSSLExpiry > 0 {
 		if age == nil {
 			return results.Failf("No certificate found to check age")
 		}
@@ -216,6 +262,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 			return results.Failf("SSL certificate expires soon %s > %d", utils.Age(*age), check.MaxSSLExpiry)
 		}
 	}
+
 	return results
 }
 

@@ -2,7 +2,11 @@ package v1
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/flanksource/commons/hash"
+	"github.com/flanksource/duty/types"
+	"github.com/robfig/cron/v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -30,9 +34,24 @@ type TopologySpec struct {
 	// being applied to multiple components in the tree
 	Properties Properties `json:"properties,omitempty"`
 	// Lookup and associate config items with this component
-	Configs []Config `json:"configs,omitempty"`
+	Configs []types.ConfigQuery `json:"configs,omitempty"`
 }
 
+func (s Topology) NextRuntime() (*time.Time, error) {
+	if s.Spec.Schedule != "" {
+		schedule, err := cron.ParseStandard(s.Spec.Schedule)
+		if err != nil {
+			return nil, err
+		}
+		t := schedule.Next(time.Now())
+		return &t, nil
+	}
+	return nil, nil
+}
+
+func (s Topology) String() string {
+	return fmt.Sprintf("%s/%s", s.Namespace, s.Name)
+}
 func (s Topology) IsEmpty() bool {
 	return len(s.Spec.Properties) == 0 && len(s.Spec.Components) == 0 && s.Name == ""
 }
@@ -62,9 +81,14 @@ type NamespaceSelector struct {
 }
 
 type ComponentCheck struct {
-	Selector ResourceSelector `json:"selector,omitempty"`
+	Selector types.ResourceSelector `json:"selector,omitempty"`
 	// +kubebuilder:validation:XPreserveUnknownFields
 	Inline *CanarySpec `json:"inline,omitempty"`
+}
+
+func (c ComponentCheck) Hash() string {
+	h, _ := hash.JSONMD5Hash(c)
+	return h
 }
 
 type Config struct {
@@ -73,6 +97,16 @@ type Config struct {
 	Name      string            `json:"name,omitempty"`
 	Namespace string            `json:"namespace,omitempty"`
 	Tags      map[string]string `json:"tags,omitempty"`
+}
+
+func (c Config) ToDuty() types.ConfigQuery {
+	return types.ConfigQuery{
+		ID:        c.ID,
+		Type:      c.Type,
+		Name:      c.Name,
+		Namespace: c.Namespace,
+		Tags:      c.Tags,
+	}
 }
 
 func (c Config) String() string {

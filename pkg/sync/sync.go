@@ -8,9 +8,10 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/context"
 )
 
-func SyncCanary(dataFile string, configFiles ...string) error {
+func SyncCanary(ctx context.Context, dataFile string, configFiles ...string) error {
 	if len(configFiles) == 0 {
 		return errors.New("No config file specified, running in read-only mode")
 	}
@@ -22,7 +23,7 @@ func SyncCanary(dataFile string, configFiles ...string) error {
 		}
 
 		for _, canary := range configs {
-			_, err := db.PersistCanary(canary, path.Base(configfile))
+			_, err := db.PersistCanary(ctx.DB(), canary, path.Base(configfile))
 			if err != nil {
 				return err
 			}

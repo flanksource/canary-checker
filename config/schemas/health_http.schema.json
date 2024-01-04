@@ -35,6 +35,12 @@
     },
     "EnvVarSource": {
       "properties": {
+        "serviceAccount": {
+          "type": "string"
+        },
+        "helmRef": {
+          "$ref": "#/$defs/HelmRefKeySelector"
+        },
         "configMapKeyRef": {
           "$ref": "#/$defs/ConfigMapKeySelector"
         },
@@ -51,6 +57,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -92,9 +101,6 @@
         "endpoint": {
           "type": "string"
         },
-        "namespace": {
-          "type": "string"
-        },
         "thresholdMillis": {
           "type": "integer"
         },
@@ -133,12 +139,36 @@
         },
         "templateBody": {
           "type": "boolean"
+        },
+        "env": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
+        },
+        "oauth2": {
+          "$ref": "#/$defs/Oauth2Config"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
         "name"
+      ]
+    },
+    "HelmRefKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
       ]
     },
     "JSONCheck": {
@@ -202,6 +232,29 @@
         },
         "value": {
           "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Oauth2Config": {
+      "properties": {
+        "scope": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tokenURL": {
+          "type": "string"
+        },
+        "params": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
         }
       },
       "additionalProperties": false,

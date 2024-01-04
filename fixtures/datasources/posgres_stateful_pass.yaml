@@ -1,0 +1,25 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: postgres-succeed
+  namespace: canaries
+spec:
+  interval: 30
+  postgres:
+    - name: postgres processes new
+      url: "postgres://$(username):$(password)@postgres.canaries.svc.cluster.local:5432/postgres?sslmode=disable"
+      username:
+        value: postgresadmin
+      password:
+        value: admin123
+      query: |
+        select max(backend_start), count(*)  from pg_stat_activity WHERE backend_start >
+        {{-  if last_result.results.rows }}
+        '{{- (index last_result.results.rows 0).max }}'
+        {{- else}}
+          now() - interval '1 hour'
+        {{- end}}
+      metrics:
+        - name: postgres_process_new
+          type: counter
+          value: results.rows[0].count

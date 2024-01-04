@@ -14,4 +14,4 @@ resources:
   - prometheus.yaml
   - redis_fail.yaml
   - redis_pass.yaml
-  - alertmanager_fail.yaml
+  - alertmanager_mix.yaml

@@ -35,6 +35,12 @@
     },
     "EnvVarSource": {
       "properties": {
+        "serviceAccount": {
+          "type": "string"
+        },
+        "helmRef": {
+          "$ref": "#/$defs/HelmRefKeySelector"
+        },
         "configMapKeyRef": {
           "$ref": "#/$defs/ConfigMapKeySelector"
         },
@@ -51,6 +57,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -92,6 +101,21 @@
       "required": [
         "name",
         "query"
+      ]
+    },
+    "HelmRefKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
       ]
     },
     "Labels": {

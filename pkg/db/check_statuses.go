@@ -1,208 +1,112 @@
 package db
 
 import (
-	"database/sql"
-	"errors"
-	"fmt"
+	"time"
 
-	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/duty/models"
-	"gorm.io/gorm/clause"
+	"github.com/flanksource/duty/job"
 )
 
-const (
-	DefaultCheckStatusRetentionDays        = 60
-	RetentionDaysFor1hCheckStatusAggregate = 180
-	RetentionDaysFor1dCheckStatusAggregate = 1000
-
-	checkStatusAggDuration1h = "1hour"
-	checkStatusAggDuration1d = "1day"
+var (
+	CheckStatusRetention = 60
 )
 
-var CheckStatusRetentionDays int
+const CheckStatuses = "check_statuses"
 
-// DeleteAllOldCheckStatuses deletes check statuses older than the configured retention period
-// from 3 different tables.
-func DeleteAllOldCheckStatuses() {
-	deleteOldCheckStatuses()
-	deleteOld1hAggregatedCheckStatuses()
-	deleteOld1dAggregatedCheckStatuses()
+var RefreshCheckStatusSummary = job.Job{
+	Name:       "RefreshCheckStatusSummary",
+	Singleton:  true,
+	Timeout:    1 * time.Minute,
+	Schedule:   "@every 1m",
+	JobHistory: true,
+	Retention: job.Retention{
+		Interval: 5 * time.Minute,
+		Success:  1,
+		Failed:   3,
+		Age:      time.Hour * 24,
+	},
+	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = CheckStatuses
+		return job.RefreshCheckStatusSummary(ctx.Context)
+	},
 }
 
-func deleteOldCheckStatuses() {
-	jobHistory := models.NewJobHistory("DeleteOldCheckStatuses", "", "").Start()
-	_ = PersistJobHistory(jobHistory)
-
-	if CheckStatusRetentionDays <= 0 {
-		CheckStatusRetentionDays = DefaultCheckStatusRetentionDays
-	}
-	err := Gorm.Exec(`
-        DELETE FROM check_statuses
-        WHERE (NOW() - created_at) > INTERVAL '1 day' * ?
-    `, CheckStatusRetentionDays).Error
-
-	if err != nil {
-		logger.Errorf("Error deleting old check statuses: %v", err)
-		jobHistory.AddError(err.Error())
-	} else {
-		jobHistory.IncrSuccess()
-	}
-	_ = PersistJobHistory(jobHistory.End())
+var RefreshCheckStatusSummaryAged = job.Job{
+	Name:       "RefreshCheckStatusSummaryAged",
+	Timeout:    60 * time.Minute,
+	Schedule:   "@every 1h",
+	Singleton:  true,
+	JobHistory: true,
+	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = CheckStatuses
+		return job.RefreshCheckStatusSummaryAged(ctx.Context)
+	},
 }
 
-// deleteOld1dAggregatedCheckStatuses maintains retention period of old 1day aggregate check statuses.
-func deleteOld1dAggregatedCheckStatuses() {
-	jobHistory := models.NewJobHistory("DeleteOld1dAggregatedCheckStatuses", "", "").Start()
-	if err := PersistJobHistory(jobHistory); err != nil {
-		logger.Errorf("error persisting job history: %v", err)
-	}
-	defer func() {
-		if err := PersistJobHistory(jobHistory.End()); err != nil {
-			logger.Errorf("error persisting end of job: %v", err)
-		}
-	}()
-
-	const query = `DELETE FROM check_statuses_1d WHERE (NOW() - created_at) > INTERVAL '1 day' * ?`
-	tx := Gorm.Exec(query, RetentionDaysFor1dCheckStatusAggregate)
-	if tx.Error != nil {
-		logger.Errorf("error deleting old aggregated check statuses: %v", tx.Error)
-		jobHistory.AddError(tx.Error.Error())
-		return
-	}
-
-	logger.Infof("Successfully deleted %v entries", tx.RowsAffected)
-	jobHistory.IncrSuccess()
+var DeleteOldCheckStatues = job.Job{
+	Name:      "DeleteOldCheckStatuses",
+	Singleton: true,
+	Schedule:  "@every 24h",
+	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = CheckStatuses
+		err, count := job.DeleteOldCheckStatuses1h(ctx.Context, CheckStatusRetention*3)
+		ctx.History.SuccessCount = count
+		return err
+	},
 }
 
-// deleteOld1hAggregatedCheckStatuses maintains retention period of old 1hour aggregated check statuses.
-func deleteOld1hAggregatedCheckStatuses() {
-	jobHistory := models.NewJobHistory("DeleteOld1hAggregatedCheckStatuses", "", "").Start()
-	if err := PersistJobHistory(jobHistory); err != nil {
-		logger.Errorf("error persisting job history: %v", err)
-	}
-	defer func() {
-		if err := PersistJobHistory(jobHistory.End()); err != nil {
-			logger.Errorf("error persisting end of job: %v", err)
-		}
-	}()
-
-	const query = `DELETE FROM check_statuses_1h WHERE (NOW() - created_at) > INTERVAL '1 day' * ?`
-	tx := Gorm.Exec(query, RetentionDaysFor1hCheckStatusAggregate)
-	if tx.Error != nil {
-		logger.Errorf("error deleting old aggregated check statuses: %v", tx.Error)
-		jobHistory.AddError(tx.Error.Error())
-		return
-	}
-
-	logger.Infof("Successfully deleted %v entries", tx.RowsAffected)
-	jobHistory.IncrSuccess()
+var DeleteOldCheckStatues1d = job.Job{
+	Name:      "DeleteOldCheckStatuses1d",
+	Singleton: true,
+	Schedule:  "@every 24h",
+	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = CheckStatuses
+		err, count := job.DeleteOldCheckStatuses1d(ctx.Context, CheckStatusRetention*9)
+		ctx.History.SuccessCount = count
+		return err
+	},
 }
 
-// AggregateCheckStatuses aggregates check statuses hourly
-// and stores it to the corresponding tables.
-func AggregateCheckStatuses1h() {
-	jobHistory := models.NewJobHistory("AggregateCheckStatuses1h", "", "").Start()
-	if err := PersistJobHistory(jobHistory); err != nil {
-		logger.Errorf("error persisting job history: %v", err)
-	}
-	defer func() {
-		if err := PersistJobHistory(jobHistory.End()); err != nil {
-			logger.Errorf("error persisting end of job: %v", err)
-		}
-	}()
+var DeleteOldCheckStatues1h = job.Job{
+	Name:      "DeleteOldCheckStatuses1h",
+	Singleton: true,
 
-	if err := aggregateCheckStatuses(checkStatusAggDuration1h); err != nil {
-		logger.Errorf("error aggregating check statuses 1h: %v", err)
-		jobHistory.AddError(err.Error())
-	} else {
-		jobHistory.IncrSuccess()
-	}
+	Schedule: "@every 24h",
+	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = CheckStatuses
+		err, count := job.DeleteOldCheckStatuses1h(ctx.Context, CheckStatusRetention*3)
+		ctx.History.SuccessCount = count
+		return err
+	},
 }
 
-// AggregateCheckStatuses aggregates check statuses daily
-// and stores it to the corresponding tables.
-func AggregateCheckStatuses1d() {
-	jobHistory := models.NewJobHistory("AggregateCheckStatuses1d", "", "").Start()
-	if err := PersistJobHistory(jobHistory); err != nil {
-		logger.Errorf("error persisting job history: %v", err)
-	}
-	defer func() {
-		if err := PersistJobHistory(jobHistory.End()); err != nil {
-			logger.Errorf("error persisting end of job: %v", err)
-		}
-	}()
-
-	if err := aggregateCheckStatuses(checkStatusAggDuration1d); err != nil {
-		logger.Errorf("error aggregating check statuses 1d: %v", err)
-		jobHistory.AddError(err.Error())
-	} else {
-		jobHistory.IncrSuccess()
-	}
+var AggregateCheckStatues1d = job.Job{
+	Name:     "AggregateCheckStatuses1h",
+	Schedule: "@every 1h",
+	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = CheckStatuses
+		err, count := job.AggregateCheckStatus1h(ctx.Context)
+		ctx.History.SuccessCount = count
+		return err
+	},
 }
 
-func aggregateCheckStatuses(aggregateDurationType string) error {
-	const query = `
-	SELECT
-		check_statuses.check_id,
-		date_trunc(?, "time"),
-		count(*) AS total_checks,
-		count(*) FILTER (WHERE check_statuses.status = TRUE) AS passed,
-		count(*) FILTER (WHERE check_statuses.status = FALSE) AS failed,
-		SUM(duration) AS duration
-	FROM check_statuses 
-	LEFT JOIN checks ON check_statuses.check_id = checks.id
-	WHERE checks.created_at > NOW() - INTERVAL '1 hour' * ?
-	GROUP BY 1, 2
-	ORDER BY 1,	2 DESC`
+var AggregateCheckStatues1h = job.Job{
+	Name:     "AggregateCheckStatuses1d",
+	Schedule: "@every 24h",
+	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = CheckStatuses
+		err, count := job.AggregateCheckStatus1d(ctx.Context)
+		ctx.History.SuccessCount = count
+		return err
+	},
+}
 
-	var rows *sql.Rows
-	var err error
-	switch aggregateDurationType {
-	case checkStatusAggDuration1h:
-		rows, err = Gorm.Raw(query, "hour", 3).Rows() // Only look for aggregated data in the last 3 hour
-		if err != nil {
-			return fmt.Errorf("error aggregating check statuses 1h: %w", err)
-		} else if rows.Err() != nil {
-			return fmt.Errorf("error aggregating check statuses 1h: %w", rows.Err())
-		}
-		defer rows.Close()
-
-		for rows.Next() {
-			var aggr models.CheckStatusAggregate1h
-			if err := rows.Scan(&aggr.CheckID, &aggr.CreatedAt, &aggr.Total, &aggr.Passed, &aggr.Failed, &aggr.Duration); err != nil {
-				return fmt.Errorf("error scanning aggregated check statuses: %w", err)
-			}
-
-			cols := []clause.Column{{Name: "check_id"}, {Name: "created_at"}}
-			if err := Gorm.Clauses(clause.OnConflict{Columns: cols, UpdateAll: true}).Create(aggr).Error; err != nil {
-				return fmt.Errorf("error upserting canaries: %w", err)
-			}
-		}
-
-	case checkStatusAggDuration1d:
-		rows, err = Gorm.Raw(query, "day", 3*24).Rows() // Only look for aggregated data in the last 3 days
-		if err != nil {
-			return fmt.Errorf("error aggregating check statuses 1h: %w", err)
-		} else if rows.Err() != nil {
-			return fmt.Errorf("error aggregating check statuses 1h: %w", rows.Err())
-		}
-		defer rows.Close()
-
-		for rows.Next() {
-			var aggr models.CheckStatusAggregate1d
-			if err := rows.Scan(&aggr.CheckID, &aggr.CreatedAt, &aggr.Total, &aggr.Passed, &aggr.Failed, &aggr.Duration); err != nil {
-				return fmt.Errorf("error scanning aggregated check statuses: %w", err)
-			}
-
-			cols := []clause.Column{{Name: "check_id"}, {Name: "created_at"}}
-			if err := Gorm.Clauses(clause.OnConflict{Columns: cols, UpdateAll: true}).Create(aggr).Error; err != nil {
-				return fmt.Errorf("error upserting canaries: %w", err)
-			}
-		}
-
-	default:
-		return errors.New("unknown duration for aggregation")
-	}
-
-	return nil
+var CheckStatusJobs = []job.Job{
+	AggregateCheckStatues1d,
+	AggregateCheckStatues1h,
+	DeleteOldCheckStatues,
+	DeleteOldCheckStatues1h,
+	DeleteOldCheckStatues1d,
+	RefreshCheckStatusSummary,
+	RefreshCheckStatusSummaryAged,
 }

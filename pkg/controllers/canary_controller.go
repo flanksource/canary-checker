@@ -18,6 +18,7 @@ package controllers
 
 import (
 	gocontext "context"
+	"fmt"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -27,7 +28,8 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
-	"github.com/flanksource/kommons"
+	"github.com/flanksource/canary-checker/pkg/runner"
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/go-logr/logr"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
 	"github.com/nsf/jsondiff"
@@ -35,7 +37,6 @@ import (
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -46,12 +47,9 @@ var json = jsontime.ConfigWithCustomTimeFormat
 
 // CanaryReconciler reconciles a Canary object
 type CanaryReconciler struct {
-	IncludeCheck      string
-	IncludeNamespaces []string
-	LogPass, LogFail  bool
+	LogPass, LogFail bool
 	client.Client
-	Kubernetes  kubernetes.Interface
-	Kommons     *kommons.Client
+	dutyContext.Context
 	Log         logr.Logger
 	Scheme      *runtime.Scheme
 	Events      record.EventRecorder
@@ -67,23 +65,23 @@ const FinalizerName = "canary.canaries.flanksource.com"
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=pods/exec,verbs=*
 // +kubebuilder:rbac:groups="",resources=pods/logs,verbs=*
-func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (ctrl.Result, error) {
-	if len(r.IncludeNamespaces) > 0 && !r.includeNamespace(req.Namespace) {
-		r.Log.V(2).Info("namespace not included, skipping")
-		return ctrl.Result{}, nil
-	}
-	if r.IncludeCheck != "" && r.IncludeCheck != req.Name {
-		r.Log.V(2).Info("check not included, skipping")
-		return ctrl.Result{}, nil
-	}
-
+func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("canary", req.NamespacedName)
 	canary := &v1.Canary{}
-	err := r.Get(ctx, req.NamespacedName, canary)
+	err := r.Get(parentCtx, req.NamespacedName, canary)
 	if errors.IsNotFound(err) {
 		return ctrl.Result{}, nil
+	} else if err != nil {
+		return ctrl.Result{RequeueAfter: 10 * time.Minute}, corev1.ErrUnexpectedEndOfGroupGenerated
 	}
+
+	if runner.IsCanaryIgnored(&canary.ObjectMeta) {
+		return ctrl.Result{}, nil
+	}
+	ctx := r.Context.WithObject(canary.ObjectMeta)
+
 	canary.SetRunnerName(r.RunnerName)
+
 	// Add finalizer first if not exist to avoid the race condition between init and delete
 	if !controllerutil.ContainsFinalizer(canary, FinalizerName) {
 		controllerutil.AddFinalizer(canary, FinalizerName)
@@ -93,7 +91,7 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 
 	if !canary.DeletionTimestamp.IsZero() {
-		if err := db.DeleteCanary(canary.GetPersistedID(), canary.DeletionTimestamp.Time); err != nil {
+		if err := db.DeleteCanary(ctx.DB(), canary.GetPersistedID()); err != nil {
 			logger.Error(err, "failed to delete canary")
 		}
 		canaryJobs.DeleteCanaryJob(canary.GetPersistedID())
@@ -101,14 +99,14 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 		return ctrl.Result{}, r.Update(ctx, canary)
 	}
 
-	dbCanary, err := r.updateCanaryInDB(canary)
+	dbCanary, err := r.updateCanaryInDB(ctx, canary)
 	if err != nil {
 		return ctrl.Result{Requeue: true}, err
 	}
 
 	// Sync jobs if canary is created or updated
 	if canary.Generation == 1 {
-		if err := canaryJobs.SyncCanaryJob(*dbCanary); err != nil {
+		if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
 			logger.Error(err, "failed to sync canary job")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}
@@ -123,12 +121,55 @@ func (r *CanaryReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) (c
 	}
 	patch := client.MergeFrom(canaryForStatus.DeepCopy())
 
+	if val, ok := canary.Annotations["next-runtime"]; ok {
+		runAt, err := time.Parse(time.RFC3339, val)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		var syncCanaryJobOptions = []canaryJobs.SyncCanaryJobOption{}
+		syncCanaryJobOptions = append(syncCanaryJobOptions, canaryJobs.WithSchedule(
+			fmt.Sprintf("%d %d %d %d *", runAt.Minute(), runAt.Hour(), runAt.Day(), runAt.Month()),
+		))
+		if !runAt.After(time.Now()) {
+			syncCanaryJobOptions = append(syncCanaryJobOptions, canaryJobs.WithRunNow(true))
+		}
+
+		if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary, syncCanaryJobOptions...); err != nil {
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+		}
+
+		delete(canary.Annotations, "next-runtime")
+		if err := r.Update(ctx, canary); err != nil {
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+		}
+	}
+
+	if canaryForStatus.Status.Replicas != canary.Spec.Replicas {
+		if canary.Spec.Replicas == 0 {
+			canaryJobs.DeleteCanaryJob(canary.GetPersistedID())
+			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), true); err != nil {
+				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+			}
+		} else {
+			if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
+				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+			}
+			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), false); err != nil {
+				logger.Error(err, "failed to suspend canary")
+			}
+		}
+
+		canaryForStatus.Status.Replicas = canary.Spec.Replicas
+	}
+
 	canaryForStatus.Status.Checks = dbCanary.Checks
 	canaryForStatus.Status.ObservedGeneration = canary.Generation
 	if err = r.Status().Patch(ctx, &canaryForStatus, patch); err != nil {
 		logger.Error(err, "failed to update status for canary")
 		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -139,26 +180,26 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *CanaryReconciler) persistAndCacheCanary(canary *v1.Canary) (*pkg.Canary, error) {
-	dbCanary, err := db.PersistCanary(*canary, "kubernetes/"+canary.GetPersistedID())
+func (r *CanaryReconciler) persistAndCacheCanary(ctx dutyContext.Context, canary *v1.Canary) (*pkg.Canary, error) {
+	dbCanary, err := db.PersistCanary(ctx.DB(), *canary, "kubernetes/"+canary.GetPersistedID())
 	if err != nil {
 		return nil, err
 	}
 	r.CanaryCache.Set(dbCanary.ID.String(), dbCanary, cache.DefaultExpiration)
 
-	if err := canaryJobs.SyncCanaryJob(*dbCanary); err != nil {
+	if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
 		return nil, err
 	}
 	return dbCanary, nil
 }
 
-func (r *CanaryReconciler) updateCanaryInDB(canary *v1.Canary) (*pkg.Canary, error) {
+func (r *CanaryReconciler) updateCanaryInDB(ctx dutyContext.Context, canary *v1.Canary) (*pkg.Canary, error) {
 	var dbCanary *pkg.Canary
 	var err error
 
 	// Get DBCanary from cache if exists else persist in database and update cache
 	if cacheObj, exists := r.CanaryCache.Get(canary.GetPersistedID()); !exists {
-		dbCanary, err = r.persistAndCacheCanary(canary)
+		dbCanary, err = r.persistAndCacheCanary(ctx, canary)
 		if err != nil {
 			return nil, err
 		}
@@ -174,7 +215,7 @@ func (r *CanaryReconciler) updateCanaryInDB(canary *v1.Canary) (*pkg.Canary, err
 	}
 	opts := jsondiff.DefaultJSONOptions()
 	if diff, _ := jsondiff.Compare(canarySpecJSON, dbCanary.Spec, &opts); diff != jsondiff.FullMatch {
-		dbCanary, err = r.persistAndCacheCanary(canary)
+		dbCanary, err = r.persistAndCacheCanary(ctx, canary)
 		if err != nil {
 			return nil, err
 		}
@@ -188,7 +229,7 @@ func (r *CanaryReconciler) Report() {
 		var canary v1.Canary
 		err := r.Get(gocontext.Background(), payload.NamespacedName, &canary)
 		if err != nil {
-			r.Log.Error(err, "failed to get canary", "canary", payload.NamespacedName)
+			r.Log.Error(err, "failed to get canary while reporting", "canary", payload.NamespacedName)
 			continue
 		}
 
@@ -218,13 +259,4 @@ func (r *CanaryReconciler) Report() {
 			r.Log.Error(err, "failed to update status", "canary", canary.Name)
 		}
 	}
-}
-
-func (r *CanaryReconciler) includeNamespace(namespace string) bool {
-	for _, n := range r.IncludeNamespaces {
-		if n == namespace {
-			return true
-		}
-	}
-	return false
 }

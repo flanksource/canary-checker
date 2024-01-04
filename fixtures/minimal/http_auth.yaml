@@ -4,9 +4,11 @@ metadata:
   name: http-basic-auth
 spec:
   http:
-    - endpoint: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
+    - name: "basic auth fail"
+      endpoint: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
       responseCodes: [401]
-    - endpoint: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
+    - name: "basic auth pass"
+      endpoint: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
       responseCodes: [200]
       username:
         value: hello

@@ -1,0 +1,41 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: alertmanager
+spec:
+  interval: 30
+  alertmanager:
+    - url: https://alertmanager.demo.aws.flanksource.com
+      name: alertmanager-check
+      alerts:
+        - .*
+      ignore:
+        - KubeScheduler.*
+      exclude_filters:
+        namespace: elastic-system
+      transform:
+        expr: |
+          results.alerts.map(r,
+              {
+              'name': r.name + r.fingerprint,
+              'labels': r.labels,
+              'icon': 'alert',
+              'message': r.message,
+              'description': r.message,
+            }
+          ).toJSON()
+      relationships:
+        components:
+          - name:
+              label: pod
+            namespace:
+              label: namespace
+            type:
+              value: KubernetesPod
+        configs:
+          - name:
+              label: pod
+            namespace:
+              label: namespace
+            type:
+              value: Kubernetes::Pod

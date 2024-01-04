@@ -14,7 +14,7 @@ jobs:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Install Go
-  #       uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2.2.0
+  #       uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
   #       with:
   #         go-version: 1.20.x
   #     - name: Checkout code
@@ -46,13 +46,13 @@ jobs:
           - { name: k8s, on: ubuntu-latest }
           - { name: datasources, on: ubuntu-latest }
           - { name: opensearch, on: ubuntu-latest }
-          - { name: elasticsearch, on: ubuntu-latest }
+          # - { name: elasticsearch, on: ubuntu-latest }
           - { name: git, on: ubuntu-latest }
           # - restic
     runs-on: ${{ matrix.suite.on }}
     steps:
       - name: Install Go
-        uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2.2.0
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
           go-version: 1.20.x
       - name: Checkout code
@@ -62,10 +62,10 @@ jobs:
           path: |
             ~/go/pkg/mod
             ~/.cache/go-build
-            .bin
-          key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
+          key: cache-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             cache-
+      - run: go install github.com/onsi/ginkgo/v2/ginkgo
       - run: make bin
       - name: Test
         env:

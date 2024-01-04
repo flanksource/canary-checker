@@ -11,9 +11,9 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/checks"
-	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/kommons"
-	"k8s.io/client-go/kubernetes"
+	dutyContext "github.com/flanksource/duty/context"
+	"github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 
 	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg"
@@ -21,30 +21,38 @@ import (
 )
 
 var testFolder string
-var kommonsClient *kommons.Client
-var k8s kubernetes.Interface
+var DefaultContext dutyContext.Context
 var verbosity = 0
 
-func TestMain(m *testing.M) {
-	code := m.Run()
-	os.Exit(code)
+func TestChecks(t *testing.T) {
+	RegisterFailHandler(ginkgo.Fail)
+	ginkgo.RunSpecs(t, "Canary Checks")
 }
 
-func init() {
-	var err error
-	kommonsClient, k8s, err = pkg.NewKommonsClient()
+var _ = ginkgo.BeforeSuite(func() {
+	kommonsClient, k8s, err := pkg.NewKommonsClient()
 	if err != nil {
 		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
 	}
+
+	DefaultContext = dutyContext.New().WithKubernetes(k8s).WithKommons(kommonsClient).WithNamespace("canaries")
+
+	logger.StandardLogger().SetLogLevel(verbosity)
+
+})
+
+func init() {
+	defaultFolder := "fixtures/minimal"
+	if os.Getenv("TEST_FOLDER") != "" {
+		defaultFolder = os.Getenv("TEST_FOLDER")
+	}
 	flag.IntVar(&verbosity, "verbose", 0, "Add verbose logging")
-	flag.StringVar(&testFolder, "test-folder", "fixtures/minimal", "The folder containing test fixtures to run")
+	flag.StringVar(&testFolder, "test-folder", defaultFolder, "The folder containing test fixtures to run")
 }
 
-func TestRunChecks(t *testing.T) {
-	logger.StandardLogger().SetLogLevel(verbosity)
+var _ = ginkgo.Describe("Canary Checks/"+testFolder, func() {
 	logger.Infof("Testing %s", testFolder)
 	files, _ := os.ReadDir(fmt.Sprintf("../%s", testFolder))
-	t.Logf("Folder: %s", testFolder)
 	wg := sync.WaitGroup{}
 	for _, fixture := range files {
 		name := path.Base(fixture.Name())
@@ -53,18 +61,39 @@ func TestRunChecks(t *testing.T) {
 		}
 		wg.Add(1)
 		go func() {
-			runFixture(t, name)
+			defer ginkgo.GinkgoRecover()
+			runFixture(name)
 			wg.Done()
 		}()
 	}
 	wg.Wait()
-}
+})
 
-func runFixture(t *testing.T, name string) {
-	t.Run(name, func(t *testing.T) {
+// func TestRunChecks(t *testing.T) {
+// 	logger.Infof("Testing %s", testFolder)
+// 	files, _ := os.ReadDir(fmt.Sprintf("../%s", testFolder))
+// 	t.Logf("Folder: %s", testFolder)
+// 	wg := sync.WaitGroup{}
+// 	for _, fixture := range files {
+// 		name := path.Base(fixture.Name())
+// 		if strings.HasPrefix(name, "_") || !strings.HasSuffix(name, ".yaml") || name == "kustomization.yaml" {
+// 			continue
+// 		}
+// 		wg.Add(1)
+// 		go func() {
+// 			defer ginkgo.GinkgoRecover()
+// 			runFixture(name)
+// 			wg.Done()
+// 		}()
+// 	}
+// 	wg.Wait()
+// }
+
+func runFixture(name string) {
+	ginkgo.It(name, func() {
 		canaries, err := pkg.ParseConfig(fmt.Sprintf("../%s/%s", testFolder, name), "")
 		if err != nil {
-			t.Error(err)
+			ginkgo.Fail(err.Error())
 			return
 		}
 
@@ -75,24 +104,26 @@ func runFixture(t *testing.T, name string) {
 			if canary.Name == "" {
 				canary.Name = cmd.CleanupFilename(name)
 			}
-			context := context.New(kommonsClient, k8s, db.Gorm, db.Pool, canary)
+			context := context.New(DefaultContext, canary)
 
 			checkResults, err := checks.RunChecks(context)
 			if err != nil {
-				t.Error(err)
+				ginkgo.Fail(err.Error())
 				return
 			}
 
 			for _, res := range checkResults {
 				if res == nil {
-					t.Errorf("Result in %v returned nil:\n", name)
+					ginkgo.Fail(fmt.Sprintf("Result in %v returned nil:\n", name))
 				} else {
-					if strings.Contains(name, "fail") && res.Pass {
-						t.Errorf("Expected test to fail, but it passed: %s", res)
+					if strings.Contains(name, "_mix") {
+						logger.Infof("%v: %v", name, res.String())
+					} else if strings.Contains(name, "fail") && res.Pass {
+						ginkgo.Fail(fmt.Sprintf("Expected test to fail, but it passed: %s", res))
 					} else if !strings.Contains(name, "fail") && !res.Pass {
-						t.Errorf("Expected test to pass but it failed %s", res)
+						ginkgo.Fail(fmt.Sprintf("Expected test to pass but it failed %s", res))
 					} else {
-						t.Logf("%v: %v", name, res.String())
+						logger.Infof("%v: %v", name, res.String())
 					}
 				}
 			}

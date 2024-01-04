@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	apicontext "github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -25,11 +26,12 @@ var topologyRunNamespace string
 var Topology = &cobra.Command{
 	Use: "topology",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		logger.ParseFlags(cmd.Flags())
 		db.ConnectionString = readFromEnv(db.ConnectionString)
-		if db.IsConfigured() {
-			if err := db.Init(); err != nil {
-				logger.Debugf("error connecting with postgres %v", err)
-			}
+		var err error
+		apicontext.DefaultContext, err = InitContext()
+		if err != nil {
+			logger.Fatalf(err.Error())
 		}
 	},
 }
@@ -46,11 +48,7 @@ var QueryTopology = &cobra.Command{
 			logger.Fatalf("Must specify --db or DB_URL env")
 		}
 
-		if err := db.Init(); err != nil {
-			logger.Fatalf("error connecting with postgres %v", err)
-		}
-
-		results, err := topology.Query(queryParams)
+		results, err := topology.Query(apicontext.DefaultContext, queryParams)
 		if err != nil {
 			logger.Fatalf("Failed to query topology: %v", err)
 		}
@@ -63,24 +61,18 @@ var AddTopology = &cobra.Command{
 	Use:   "topology <system.yaml>",
 	Short: "Add a new topology spec",
 	Run: func(cmd *cobra.Command, configFiles []string) {
-		opts := getTopologyRunOptions(0)
+		opts := getTopologyRunOptions()
 		if err := configSync.SyncTopology(opts, dataFile, configFiles...); err != nil {
 			logger.Fatalf("Could not sync topology: %v", err)
 		}
 	},
 }
 
-func getTopologyRunOptions(depth int) topology.TopologyRunOptions {
-	logger.Tracef("depth: %v", depth)
-	kommonsClient, k8s, err := pkg.NewKommonsClient()
-	if err != nil {
-		logger.Warnf("Failed to get kubernetes client: %v", err)
-	}
+func getTopologyRunOptions() topology.TopologyRunOptions {
 	return topology.TopologyRunOptions{
-		Client:     kommonsClient,
-		Kubernetes: k8s,
-		Depth:      10,
-		Namespace:  topologyRunNamespace,
+		Context:   apicontext.DefaultContext,
+		Depth:     queryParams.Depth,
+		Namespace: topologyRunNamespace,
 	}
 }
 
@@ -96,7 +88,7 @@ var RunTopology = &cobra.Command{
 			log.Fatalln("Must specify at least one topology definition")
 		}
 
-		opts := getTopologyRunOptions(10)
+		opts := getTopologyRunOptions()
 
 		var results = []*pkg.Component{}
 
@@ -118,7 +110,7 @@ var RunTopology = &cobra.Command{
 					}
 				}
 				go func() {
-					components := topology.Run(opts, _config)
+					components, _ := topology.Run(opts, _config)
 					results = append(results, components...)
 					wg.Done()
 				}()
@@ -129,7 +121,7 @@ var RunTopology = &cobra.Command{
 		logger.Infof("Checked %d systems in %v", len(results), timer)
 
 		if db.IsConnected() {
-			if err := db.PersistComponents(results); err != nil {
+			if err := db.PersistComponents(opts.Context, results); err != nil {
 				logger.Errorf("error persisting results: %v", err)
 			}
 		}
@@ -147,7 +139,7 @@ var RunTopology = &cobra.Command{
 
 func init() {
 	QueryTopology.Flags().StringVar(&queryParams.ID, "component", "", "The component id to query")
-	QueryTopology.Flags().IntVar(&queryParams.Depth, "depth", 1, "The depth of the components to return")
+	QueryTopology.Flags().IntVar(&queryParams.Depth, "depth", 10, "The depth of the components to return")
 	RunTopology.Flags().StringVarP(&topologyOutput, "output", "o", "", "Output file to write results to")
 	RunTopology.Flags().StringVarP(&topologyRunNamespace, "namespace", "n", "default", "Namespace to query")
 	Topology.AddCommand(RunTopology, QueryTopology, AddTopology)

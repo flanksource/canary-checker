@@ -3,12 +3,27 @@
   "$id": "https://github.com/flanksource/canary-checker/api/v1/junit-check",
   "$ref": "#/$defs/JunitCheck",
   "$defs": {
+    "Artifact": {
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "path"
+      ]
+    },
     "JunitCheck": {
       "properties": {
         "description": {
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -41,7 +56,13 @@
         "timeout": {
           "type": "integer"
         },
-        "spec": true
+        "spec": true,
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "type": "array"
+        }
       },
       "additionalProperties": false,
       "type": "object",

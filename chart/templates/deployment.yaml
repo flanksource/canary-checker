@@ -22,7 +22,9 @@ spec:
         labels:
           {{- include "canary-checker.labels" . | nindent 10 }}
       spec:
+        {{- if not (eq .Values.db.embedded.storageClass "") }}
         storageClassName: {{ .Values.db.embedded.storageClass }}
+        {{- end }}
         accessModes: ["ReadWriteOnce"]
         resources:
           requests:
@@ -93,10 +95,10 @@ spec:
               {{- else }}
               value: "embedded:///opt/database/"
               {{- end }}
-          {{- if .Values.upstream.enabled }}
+          {{- if .Values.upstream.secretKeyRef.name }}
           envFrom:
             - secretRef:
-                name: {{ include "canary-checker.name" . }}
+                name: {{ .Values.upstream.secretKeyRef.name }}
           {{- end }}
           volumeMounts:
             {{- if eq .Values.dockerSocket true }}
@@ -138,11 +140,32 @@ spec:
             {{- if gt (int .Values.replicas) 1 }}
             - --enable-leader-election=true
             {{- end }}
+            {{- range $k, $v := .Values.extraArgs}}
+            - --{{$k}}={{$v}}
+            {{- end }}
             {{- if .Values.upstream.enabled }}
             - --agent-name={{ .Values.upstream.agentName }}
+            {{- if .Values.upstream.host }}
             - --upstream-host={{ .Values.upstream.host }}
-            - --upstream-user=$UPSTREAM_USER
-            - --upstream-password=$UPSTREAM_PASSWORD
+            {{- end}}
+            {{- if .Values.upstream.user }}
+            - --upstream-user={{ .Values.upstream.user }}
+            {{- end}}
+            {{- if .Values.upstream.password }}
+            - --upstream-password={{ .Values.upstream.password }}
+            {{- end}}
+            {{- if .Values.upstream.insecureSkipVerify}}
+            - --upstream-insecure-skip-verify=true
+            {{- end}}
+            {{- end }}
+            {{- if ne .Values.prometheusURL "" }}
+            - --prometheus={{ tpl .Values.prometheusURL . }}
+            {{- end }}
+            {{- if (tpl .Values.otel.collector .) }}
+            - --otel-collector-url={{ tpl .Values.otel.collector . | default "" }}
+            {{- end }}
+            {{- if (tpl .Values.otel.serviceName .) }}
+            - --otel-service-name={{ tpl .Values.otel.serviceName . | default "canary-checker" }}
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

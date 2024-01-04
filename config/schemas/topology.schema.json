@@ -25,12 +25,6 @@
         },
         "skipTLSVerify": {
           "type": "boolean"
-        },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
-          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -42,6 +36,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -80,6 +77,9 @@
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "alerts": {
           "items": {
             "type": "string"
@@ -115,6 +115,18 @@
         "name"
       ]
     },
+    "Artifact": {
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "path"
+      ]
+    },
     "Authentication": {
       "properties": {
         "username": {
@@ -133,6 +145,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -183,12 +198,6 @@
         "skipTLSVerify": {
           "type": "boolean"
         },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
-          "type": "boolean"
-        },
         "aggregatorName": {
           "type": "string"
         }
@@ -206,6 +215,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -270,12 +282,6 @@
         },
         "skipTLSVerify": {
           "type": "boolean"
-        },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
-          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -308,6 +314,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -382,6 +391,9 @@
     },
     "CanarySpec": {
       "properties": {
+        "replicas": {
+          "type": "integer"
+        },
         "env": {
           "patternProperties": {
             ".*": {
@@ -618,6 +630,9 @@
           },
           "type": "array"
         },
+        "webhook": {
+          "$ref": "#/$defs/WebhookCheck"
+        },
         "interval": {
           "type": "integer"
         },
@@ -640,12 +655,33 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "CheckRelationship": {
+      "properties": {
+        "components": {
+          "items": {
+            "$ref": "#/$defs/LookupSpec"
+          },
+          "type": "array"
+        },
+        "configs": {
+          "items": {
+            "$ref": "#/$defs/LookupSpec"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "CloudWatchCheck": {
       "properties": {
         "description": {
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -682,12 +718,6 @@
           "type": "string"
         },
         "skipTLSVerify": {
-          "type": "boolean"
-        },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
           "type": "boolean"
         },
         "test": {
@@ -801,10 +831,7 @@
           "$ref": "#/$defs/ComponentChecks"
         },
         "configs": {
-          "items": {
-            "$ref": "#/$defs/Config"
-          },
-          "type": "array"
+          "$ref": "#/$defs/ConfigQueries"
         },
         "summary": {
           "$ref": "#/$defs/Summary"
@@ -881,10 +908,7 @@
           "$ref": "#/$defs/ComponentChecks"
         },
         "configs": {
-          "items": {
-            "$ref": "#/$defs/Config"
-          },
-          "type": "array"
+          "$ref": "#/$defs/ConfigQueries"
         },
         "summary": {
           "$ref": "#/$defs/Summary"
@@ -894,35 +918,6 @@
         },
         "logs": {
           "$ref": "#/$defs/LogSelectors"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
-    "Config": {
-      "properties": {
-        "id": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "type": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "namespace": {
-          "type": "string"
-        },
-        "tags": {
-          "patternProperties": {
-            ".*": {
-              "type": "string"
-            }
-          },
-          "type": "object"
         }
       },
       "additionalProperties": false,
@@ -943,6 +938,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -977,7 +975,7 @@
           "type": "string"
         },
         "config": {
-          "$ref": "#/$defs/Config"
+          "$ref": "#/$defs/ConfigQuery"
         },
         "field": {
           "type": "string"
@@ -1007,12 +1005,56 @@
         "key"
       ]
     },
+    "ConfigQueries": {
+      "items": {
+        "$ref": "#/$defs/ConfigQuery"
+      },
+      "type": "array"
+    },
+    "ConfigQuery": {
+      "properties": {
+        "id": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "tags": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "ContainerdPullCheck": {
       "properties": {
         "description": {
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -1058,6 +1100,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1096,6 +1141,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -1153,6 +1201,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -1218,6 +1269,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1261,6 +1315,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1298,6 +1355,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1333,9 +1393,6 @@
         },
         "apiKey": {
           "$ref": "#/$defs/EnvVar"
-        },
-        "namespace": {
-          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -1350,6 +1407,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -1386,12 +1446,6 @@
           "type": "string"
         },
         "skipTLSVerify": {
-          "type": "boolean"
-        },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
           "type": "boolean"
         },
         "ami": {
@@ -1431,6 +1485,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -1502,6 +1559,12 @@
     },
     "EnvVarSource": {
       "properties": {
+        "serviceAccount": {
+          "type": "string"
+        },
+        "helmRef": {
+          "$ref": "#/$defs/HelmRefKeySelector"
+        },
         "configMapKeyRef": {
           "$ref": "#/$defs/ConfigMapKeySelector"
         },
@@ -1518,6 +1581,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -1549,6 +1615,21 @@
         },
         "connections": {
           "$ref": "#/$defs/ExecConnections"
+        },
+        "env": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
+        },
+        "checkout": {
+          "$ref": "#/$defs/GitCheckout"
+        },
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
@@ -1586,6 +1667,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1612,6 +1696,9 @@
         },
         "path": {
           "type": "string"
+        },
+        "recursive": {
+          "type": "boolean"
         },
         "filter": {
           "$ref": "#/$defs/FolderFilter"
@@ -1641,10 +1728,10 @@
           "type": "string"
         },
         "awsConnection": {
-          "$ref": "#/$defs/AWSConnection"
+          "$ref": "#/$defs/S3Connection"
         },
         "gcpConnection": {
-          "$ref": "#/$defs/GCPConnection"
+          "$ref": "#/$defs/GCSConnection"
         },
         "smbConnection": {
           "$ref": "#/$defs/SMBConnection"
@@ -1666,6 +1753,9 @@
           "type": "string"
         },
         "maxAge": {
+          "type": "string"
+        },
+        "since": {
           "type": "string"
         },
         "minSize": {
@@ -1694,7 +1784,7 @@
         },
         "configs": {
           "items": {
-            "$ref": "#/$defs/Config"
+            "$ref": "#/$defs/ConfigQuery"
           },
           "type": "array"
         },
@@ -1748,12 +1838,57 @@
         "instance"
       ]
     },
+    "GCSConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bucket": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "GitCheckout": {
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "certificate": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "destination": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "GitHubCheck": {
       "properties": {
         "description": {
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -1859,6 +1994,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -1896,9 +2034,6 @@
           "$ref": "#/$defs/EnvVar"
         },
         "endpoint": {
-          "type": "string"
-        },
-        "namespace": {
           "type": "string"
         },
         "thresholdMillis": {
@@ -1939,6 +2074,15 @@
         },
         "templateBody": {
           "type": "boolean"
+        },
+        "env": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
+        },
+        "oauth2": {
+          "$ref": "#/$defs/Oauth2Config"
         }
       },
       "additionalProperties": false,
@@ -1953,6 +2097,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -1989,12 +2136,30 @@
         "name"
       ]
     },
+    "HelmRefKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
     "ICMPCheck": {
       "properties": {
         "description": {
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -2055,6 +2220,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2110,6 +2278,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2140,7 +2311,13 @@
         "timeout": {
           "type": "integer"
         },
-        "spec": true
+        "spec": true,
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "type": "array"
+        }
       },
       "additionalProperties": false,
       "type": "object",
@@ -2156,6 +2333,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -2182,7 +2362,7 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
-        "namespace": {
+        "namespaceSelector": {
           "$ref": "#/$defs/ResourceSelector"
         },
         "resource": {
@@ -2214,6 +2394,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -2327,6 +2510,36 @@
       },
       "type": "array"
     },
+    "Lookup": {
+      "properties": {
+        "expr": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "LookupSpec": {
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "namespace": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "type": {
+          "$ref": "#/$defs/Lookup"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "ManagedFieldsEntry": {
       "properties": {
         "manager": {
@@ -2404,6 +2617,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2444,6 +2660,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -2503,6 +2722,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2558,6 +2780,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -2649,6 +2874,29 @@
         "name",
         "podSpec"
       ]
+    },
+    "Oauth2Config": {
+      "properties": {
+        "scope": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tokenURL": {
+          "type": "string"
+        },
+        "params": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "ObjectFieldSelector": {
       "properties": {
@@ -2743,6 +2991,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2835,6 +3086,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2849,9 +3103,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "namespace": {
-          "type": "string"
         },
         "spec": {
           "type": "string"
@@ -2922,6 +3173,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -2977,6 +3231,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -3109,6 +3366,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -3190,6 +3450,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -3250,6 +3513,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
@@ -3286,6 +3552,9 @@
         "skipTLSVerify": {
           "type": "boolean"
         },
+        "bucket": {
+          "type": "string"
+        },
         "objectPath": {
           "type": "string"
         },
@@ -3301,6 +3570,42 @@
       "required": [
         "name"
       ]
+    },
+    "S3Connection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "bucket": {
+          "type": "string"
+        },
+        "objectPath": {
+          "type": "string"
+        },
+        "usePathStyle": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "SFTPConnection": {
       "properties": {
@@ -3404,6 +3709,14 @@
             }
           },
           "type": "object"
+        },
+        "checks": {
+          "patternProperties": {
+            ".*": {
+              "type": "integer"
+            }
+          },
+          "type": "object"
         }
       },
       "additionalProperties": false,
@@ -3415,6 +3728,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -3526,7 +3842,7 @@
         },
         "configs": {
           "items": {
-            "$ref": "#/$defs/Config"
+            "$ref": "#/$defs/ConfigQuery"
           },
           "type": "array"
         }
@@ -3566,6 +3882,51 @@
       },
       "additionalProperties": false,
       "type": "object"
+    },
+    "WebhookCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "token": {
+          "$ref": "#/$defs/EnvVar"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
     }
   }
 }

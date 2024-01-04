@@ -7,10 +7,11 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/runner"
-	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/types"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/samber/lo"
 )
 
 var (
@@ -121,8 +122,8 @@ func RemoveCheckByKey(key string) {
 	latencies.Remove(key)
 }
 
-func GetMetrics(key string) (uptime pkg.Uptime, latency pkg.Latency) {
-	uptime = pkg.Uptime{}
+func GetMetrics(key string) (uptime types.Uptime, latency types.Latency) {
+	uptime = types.Uptime{}
 
 	fail, ok := failed.Get(key)
 	if ok {
@@ -136,12 +137,18 @@ func GetMetrics(key string) (uptime pkg.Uptime, latency pkg.Latency) {
 
 	lat, ok := latencies.Get(key)
 	if ok {
-		latency = pkg.Latency{Rolling1H: lat.(*rolling.TimePolicy).Reduce(rolling.Percentile(95))}
+		latency = types.Latency{Rolling1H: lat.(*rolling.TimePolicy).Reduce(rolling.Percentile(95))}
 	}
 	return
 }
 
-func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _latency pkg.Latency) {
+func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime types.Uptime, _latency types.Latency) {
+	defer func() {
+		e := recover()
+		if e != nil {
+			logger.Errorf("panic recording metrics for %s/%s/%s ==> %s", canary.Namespace, canary.Name, result, e)
+		}
+	}()
 	if result == nil || result.Check == nil {
 		logger.Warnf("%s/%s returned a nil result", canary.Namespace, canary.Name)
 		return _uptime, _latency
@@ -231,72 +238,79 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		OpsFailedCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 	}
 
-	_uptime = pkg.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
+	_uptime = types.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
 	if latency != nil {
-		_latency = pkg.Latency{Rolling1H: latency.Reduce(rolling.Percentile(95))}
+		_latency = types.Latency{Rolling1H: latency.Reduce(rolling.Percentile(95))}
 	} else {
-		_latency = pkg.Latency{}
+		_latency = types.Latency{}
 	}
 	return _uptime, _latency
 }
 
-func getOrCreateGauge(m pkg.Metric) (e any) {
-	defer func() {
-		e = recover()
-	}()
-
+func getOrCreateGauge(m pkg.Metric) error {
 	var gauge *prometheus.GaugeVec
 	var ok bool
-	if gauge, ok = CustomGauges[m.Name]; !ok {
+	if gauge, ok = CustomGauges[m.ID()]; !ok {
 		gauge = prometheus.V2.NewGaugeVec(prometheus.GaugeVecOpts{
+			VariableLabels: prometheus.UnconstrainedLabels(m.LabelNames()),
 			GaugeOpts: prometheus.GaugeOpts{
 				Name: m.Name,
 			},
 		})
-		CustomGauges[m.Name] = gauge
+		CustomGauges[m.ID()] = gauge
 	}
 
-	gauge.With(m.Labels).Set(m.Value)
-	return nil
+	if metric, err := gauge.GetMetricWith(m.Labels); err != nil {
+		return err
+	} else {
+		metric.Set(m.Value)
+		return nil
+	}
 }
 
-func getOrCreateCounter(m pkg.Metric) (e any) {
-	defer func() {
-		e = recover()
-	}()
+func getOrCreateCounter(m pkg.Metric) error {
 	var counter *prometheus.CounterVec
 	var ok bool
 
-	if counter, ok = CustomCounters[m.Name]; !ok {
-		counter = prometheus.NewCounterVec(
-			prometheus.CounterOpts{Name: m.Name},
-			utils.MapKeys(m.Labels),
-		)
-		CustomCounters[m.Name] = counter
+	if counter, ok = CustomCounters[m.ID()]; !ok {
+		counter = prometheus.V2.NewCounterVec(prometheus.CounterVecOpts{
+			VariableLabels: prometheus.UnconstrainedLabels(m.LabelNames()),
+			CounterOpts: prometheus.CounterOpts{
+				Name: m.Name,
+			},
+		})
+		CustomCounters[m.ID()] = counter
 	}
-	counter.With(m.Labels).Add(m.Value)
-	return nil
+
+	if metric, err := counter.GetMetricWith(m.Labels); err != nil {
+		return err
+	} else {
+		metric.Add(m.Value)
+		return nil
+	}
 }
 
-func getOrCreateHistogram(m pkg.Metric) (e any) {
-	defer func() {
-		e = recover()
-	}()
+func getOrCreateHistogram(m pkg.Metric) error {
 	var histogram *prometheus.HistogramVec
 	var ok bool
-	if histogram, ok = CustomHistograms[m.Name]; !ok {
+	if histogram, ok = CustomHistograms[m.ID()]; !ok {
 		histogram = prometheus.V2.NewHistogramVec(prometheus.HistogramVecOpts{
+			VariableLabels: prometheus.UnconstrainedLabels(m.LabelNames()),
 			HistogramOpts: prometheus.HistogramOpts{
 				Name: m.Name,
 			},
 		})
-		CustomHistograms[m.Name] = histogram
+		CustomHistograms[m.ID()] = histogram
 	}
-	histogram.With(m.Labels).Observe(m.Value)
-	return nil
+	if metric, err := histogram.GetMetricWith(m.Labels); err != nil {
+		return err
+	} else {
+		metric.Observe(m.Value)
+		return nil
+	}
 }
 
-func FillLatencies(checkKey string, duration string, latency *pkg.Latency) error {
+func FillLatencies(checkKey string, duration string, latency *types.Latency) error {
 	if runner.Prometheus == nil || duration == "" {
 		return nil
 	}
@@ -319,7 +333,7 @@ func FillLatencies(checkKey string, duration string, latency *pkg.Latency) error
 	return nil
 }
 
-func FillUptime(checkKey, duration string, uptime *pkg.Uptime) error {
+func FillUptime(checkKey, duration string, uptime *types.Uptime) error {
 	if runner.Prometheus == nil || duration == "" {
 		return nil
 	}
@@ -327,7 +341,7 @@ func FillUptime(checkKey, duration string, uptime *pkg.Uptime) error {
 	if err != nil {
 		return err
 	}
-	uptime.P100 = value
+	uptime.P100 = lo.ToPtr(value)
 	return nil
 }
 

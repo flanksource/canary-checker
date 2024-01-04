@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"encoding/json"
+	"fmt"
 	"io/fs"
 	"net/url"
 	"regexp"
@@ -11,8 +13,10 @@ import (
 	"github.com/c2h5oh/datasize"
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/commons/duration"
+	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/gomplate/v3"
+	"github.com/timberio/go-datemath"
 )
 
 type Duration string
@@ -49,9 +53,33 @@ func (s Size) Value() (*int64, error) {
 type FolderFilter struct {
 	MinAge  Duration `yaml:"minAge,omitempty" json:"minAge,omitempty"`
 	MaxAge  Duration `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
+	Since   string   `yaml:"since,omitempty" json:"since,omitempty"`
 	MinSize Size     `yaml:"minSize,omitempty" json:"minSize,omitempty"`
 	MaxSize Size     `yaml:"maxSize,omitempty" json:"maxSize,omitempty"`
 	Regex   string   `yaml:"regex,omitempty" json:"regex,omitempty"`
+}
+
+func (f FolderFilter) String() string {
+	s := []string{}
+	if f.MinAge != "" {
+		s = append(s, fmt.Sprintf("minAge="+string(f.MinAge)))
+	}
+	if f.MaxAge != "" {
+		s = append(s, "maxAge="+string(f.MaxAge))
+	}
+	if f.MinSize != "" {
+		s = append(s, "minSize="+string(f.MinSize))
+	}
+	if f.MaxSize != "" {
+		s = append(s, "maxSize="+string(f.MaxSize))
+	}
+	if f.Regex != "" {
+		s = append(s, "regex="+f.Regex)
+	}
+	if f.Since != "" {
+		s = append(s, "since="+f.Since)
+	}
+	return strings.Join(s, ", ")
 }
 
 // +k8s:deepcopy-gen=false
@@ -59,6 +87,8 @@ type FolderFilterContext struct {
 	FolderFilter
 	minAge, maxAge   *time.Duration
 	minSize, maxSize *int64
+	AllowDir         bool // Allow directories to support recursive folder checks
+	Since            *time.Time
 	// kubebuilder:object:generate=false
 	regex *regexp.Regexp
 }
@@ -98,11 +128,38 @@ func (f FolderFilter) New() (*FolderFilterContext, error) {
 			return nil, err
 		}
 	}
+	if f.Since != "" {
+		if since, err := tryParse(f.Since); err == nil {
+			ctx.Since = &since
+		} else {
+			if since, err := datemath.Parse(f.Since); err != nil {
+				return nil, fmt.Errorf("could not parse since: %s: %v", f.Since, err)
+			} else {
+				t := since.Time()
+				ctx.Since = &t
+			}
+		}
+		// add 1 second to the since time so that last_result.newest.modified can be used as a since
+		after := ctx.Since.Add(1 * time.Second)
+		ctx.Since = &after
+	}
 	return ctx, nil
 }
 
+var RFC3339NanoWithoutTimezone = "2006-01-02T15:04:05.999999999"
+
+func tryParse(s string) (time.Time, error) {
+	if t, err := time.Parse(time.RFC3339Nano, s); err == nil {
+		return t, nil
+	}
+	if t, err := time.Parse(RFC3339NanoWithoutTimezone, s); err == nil {
+		return t, nil
+	}
+	return time.Time{}, fmt.Errorf("could not parse %s", s)
+}
+
 func (f *FolderFilterContext) Filter(i fs.FileInfo) bool {
-	if i.IsDir() {
+	if i.IsDir() && !f.AllowDir {
 		return false
 	}
 	if f.maxAge != nil && time.Since(i.ModTime()) > *f.maxAge {
@@ -118,6 +175,9 @@ func (f *FolderFilterContext) Filter(i fs.FileInfo) bool {
 		return false
 	}
 	if f.regex != nil && !f.regex.MatchString(i.Name()) {
+		return false
+	}
+	if f.Since != nil && i.ModTime().Before(*f.Since) {
 		return false
 	}
 	return true
@@ -288,6 +348,13 @@ type Description struct {
 	Description string `yaml:"description,omitempty" json:"description,omitempty" template:"true"`
 	// Name of the check
 	Name string `yaml:"name" json:"name" template:"true"`
+	// TODO: namespace is a json.RawMessage for backwards compatibility when it used to be a resource selector
+	// can be removed in a few versions time
+
+	// Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:validation:Type=string
+	Namespace json.RawMessage `yaml:"namespace,omitempty" json:"namespace,omitempty"  jsonschema:"type=string"`
 	// Icon for overwriting default icon on the dashboard
 	Icon string `yaml:"icon,omitempty" json:"icon,omitempty" template:"true"`
 	// Labels for the check
@@ -321,6 +388,21 @@ func (d Description) GetName() string {
 	return d.Name
 }
 
+func (d Description) GetNamespace() string {
+	s := string(d.Namespace)
+	if s == "" || s == "{}" {
+		return ""
+	}
+	if !strings.HasPrefix(s, "{") {
+		return s
+	}
+	var r types.ResourceSelector
+	if err := json.Unmarshal(d.Namespace, &r); err != nil {
+		return ""
+	}
+	return r.Name
+}
+
 func (d Description) GetLabels() map[string]string {
 	return d.Labels
 }
@@ -333,18 +415,18 @@ type Connection struct {
 	// Connection name e.g. connection://http/google
 	Connection string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Connection url, interpolated with username,password
-	URL            string `yaml:"url,omitempty" json:"url,omitempty" template:"true"`
-	Authentication `yaml:",inline" json:",inline"`
+	URL                       string `yaml:"url,omitempty" json:"url,omitempty" template:"true"`
+	connection.Authentication `yaml:",inline" json:",inline"`
 }
 
 func (c Connection) GetEndpoint() string {
-	return sanitizeEndpoints(c.URL)
+	return SanitizeEndpoints(c.URL)
 }
 
 // Obfuscate passwords of the form ' password=xxxxx ' from connectionString since
 // connectionStrings are used as metric labels and we don't want to leak passwords
 // Returns the Connection string with the password replaced by '###'
-func sanitizeEndpoints(connection string) string {
+func SanitizeEndpoints(connection string) string {
 	if _url, err := url.Parse(connection); err == nil {
 		if _url.User != nil {
 			_url.User = nil

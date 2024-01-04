@@ -71,7 +71,11 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 		return results
 	}
 
-	var alertMessages []map[string]any
+	type Alerts struct {
+		Alerts []map[string]interface{} `json:"alerts,omitempty"`
+	}
+
+	var alertMessages []map[string]interface{}
 	for _, alert := range alerts.Payload {
 		alertMap := map[string]any{
 			"name":        generateFullName(alert.Labels["alertname"], alert.Labels),
@@ -83,7 +87,7 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 		alertMessages = append(alertMessages, alertMap)
 	}
 
-	result.AddDetails(alertMessages)
+	result.AddDetails(Alerts{Alerts: alertMessages})
 	return results
 }
 

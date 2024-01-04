@@ -33,3 +33,8 @@ spec:
         expr: "code in [200,201,301] && sslAge > Duration('7d')"
       display:
         template: "code={{.code}}, age={{.sslAge}}"
+
+    - name: http-headers
+      url: https://httpbin.demo.aws.flanksource.com/headers
+      test:
+        expr: json.headers["User-Agent"].startsWith("canary-checker/")

@@ -1,7 +1,6 @@
 package db
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,20 +9,25 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db/types"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
-	dutyTypes "github.com/flanksource/duty/types"
+	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
-func GetAllCanariesForSync(namespaces ...string) ([]pkg.Canary, error) {
+var (
+	PostgresDuplicateKeyError = &pgconn.PgError{Code: "23505"}
+)
+
+func GetAllCanariesForSync(ctx context.Context, namespace string) ([]pkg.Canary, error) {
 	query := `
         SELECT json_agg(
             jsonb_set_lax(to_jsonb(canaries),'{checks}', (
@@ -39,17 +43,18 @@ func GetAllCanariesForSync(namespaces ...string) ([]pkg.Canary, error) {
         FROM canaries
         WHERE
             deleted_at IS NULL AND
-            agent_id = '00000000-0000-0000-0000-000000000000'
+            agent_id = '00000000-0000-0000-0000-000000000000' AND
+						(annotations->>'suspend' != 'true' OR annotations->>'suspend' IS NULL)
     `
 
 	args := make(pgx.NamedArgs)
 
-	if namespaces != nil {
-		query += " AND namespace = ANY(@namespaces)"
-		args["namespaces"] = namespaces
+	if namespace != "" {
+		query += " AND namespace = @namespace"
+		args["namespace"] = namespace
 	}
 
-	rows, err := Pool.Query(context.Background(), query, args)
+	rows, err := ctx.Pool().Query(ctx, query, args)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +73,7 @@ func GetAllCanariesForSync(namespaces ...string) ([]pkg.Canary, error) {
 	return _canaries, nil
 }
 
-func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
+func PersistCheck(db *gorm.DB, check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 	check.CanaryID = canaryID
 	name := check.GetName()
 	description := check.GetDescription()
@@ -87,6 +92,7 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 
 	assignments := map[string]interface{}{
 		"spec":        check.Spec,
+		"namespace":   check.Namespace, // Can be modified after transformation
 		"type":        check.Type,
 		"description": check.Description,
 		"owner":       check.Owner,
@@ -96,7 +102,11 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 		"deleted_at":  nil,
 	}
 
-	if err := Gorm.Clauses(
+	if check.DeletedAt != nil {
+		assignments["deleted_at"] = check.DeletedAt
+	}
+
+	if err := db.Clauses(
 		clause.OnConflict{
 			Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
 			DoUpdates: clause.Assignments(assignments),
@@ -110,7 +120,7 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 	if check.ID == uuid.Nil {
 		var err error
 		var idStr string
-		if err := Gorm.Table("checks").Select("id").Where("canary_id = ? AND type = ? AND name = ? AND agent_id = ?", check.CanaryID, check.Type, check.Name, uuid.Nil).Find(&idStr).Error; err != nil {
+		if err := db.Table("checks").Select("id").Where("canary_id = ? AND type = ? AND name = ? AND agent_id = ?", check.CanaryID, check.Type, check.Name, uuid.Nil).Find(&idStr).Error; err != nil {
 			return uuid.Nil, err
 		}
 		check.ID, err = uuid.Parse(idStr)
@@ -125,17 +135,37 @@ func PersistCheck(check pkg.Check, canaryID uuid.UUID) (uuid.UUID, error) {
 	return check.ID, nil
 }
 
-func GetTransformedCheckIDs(canaryID string) ([]string, error) {
+func GetTransformedCheckIDs(ctx context.Context, canaryID string, excludeTypes ...string) ([]string, error) {
 	var ids []string
-	err := Gorm.Table("checks").
+	query := ctx.DB().Model(&models.Check{}).
 		Select("id").
-		Where("canary_id = ? AND transformed = true AND deleted_at IS NULL", canaryID).
-		Find(&ids).
-		Error
+		Where("canary_id = ? AND transformed = true AND deleted_at IS NULL", canaryID)
+
+	if len(excludeTypes) != 0 {
+		query = query.Where("type NOT IN ?", excludeTypes)
+	}
+
+	err := query.Find(&ids).Error
 	return ids, err
 }
 
-func AddCheckStatuses(ids []string, status models.CheckHealthStatus) error {
+func LatestCheckStatus(ctx context.Context, checkID string) (*models.CheckStatus, error) {
+	if checkID == "" || uuid.Nil.String() == checkID {
+		return nil, nil
+	}
+	var status models.CheckStatus
+	if err := ctx.DB().Limit(1).Select("time, created_at, status").Where("check_id = ?", checkID).Order("time DESC").Find(&status).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return &status, nil
+}
+
+func AddCheckStatuses(ctx context.Context, ids []string, status models.CheckHealthStatus) error {
 	if len(ids) == 0 {
 		return nil
 	}
@@ -158,52 +188,52 @@ func AddCheckStatuses(ids []string, status models.CheckHealthStatus) error {
 			})
 		}
 	}
-	return Gorm.Table("check_statuses").
+	return ctx.DB().Table("check_statuses").
 		Create(objs).
 		Error
 }
 
-func RemoveTransformedChecks(ids []string) error {
+func RemoveTransformedChecks(ctx context.Context, ids []string) error {
 	if len(ids) == 0 {
 		return nil
 	}
 	updates := map[string]any{
-		"deleted_at": gorm.Expr("NOW()"),
+		"deleted_at": duty.Now(),
 	}
 
-	return Gorm.Table("checks").
+	return ctx.DB().Table("checks").
 		Where("id in (?)", ids).
 		Where("transformed = true").
 		Updates(updates).
 		Error
 }
 
-func DeleteCanary(id string, deleteTime time.Time) error {
+func DeleteCanary(db *gorm.DB, id string) error {
 	logger.Infof("Deleting canary[%s]", id)
 
-	if err := Gorm.Table("canaries").Where("id = ?", id).UpdateColumn("deleted_at", deleteTime).Error; err != nil {
+	if err := db.Table("canaries").Where("id = ?", id).UpdateColumn("deleted_at", duty.Now()).Error; err != nil {
 		return err
 	}
-	checkIDs, err := DeleteChecksForCanary(id, deleteTime)
+	checkIDs, err := DeleteChecksForCanary(db, id)
 	if err != nil {
 		return err
 	}
 	metrics.UnregisterGauge(checkIDs)
 
-	if err := DeleteCheckComponentRelationshipsForCanary(id, deleteTime); err != nil {
+	if err := DeleteCheckComponentRelationshipsForCanary(db, id); err != nil {
 		return err
 	}
 	return nil
 }
 
-func DeleteChecksForCanary(id string, deleteTime time.Time) ([]string, error) {
+func DeleteChecksForCanary(db *gorm.DB, id string) ([]string, error) {
 	var checkIDs []string
 	var checks []pkg.Check
-	err := Gorm.Model(&checks).
+	err := db.Model(&checks).
 		Table("checks").
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Where("canary_id = ? and deleted_at IS NULL", id).
-		UpdateColumn("deleted_at", deleteTime).
+		UpdateColumn("deleted_at", duty.Now()).
 		Error
 
 	for _, c := range checks {
@@ -212,23 +242,23 @@ func DeleteChecksForCanary(id string, deleteTime time.Time) ([]string, error) {
 	return checkIDs, err
 }
 
-func DeleteCheckComponentRelationshipsForCanary(id string, deleteTime time.Time) error {
-	return Gorm.Table("check_component_relationships").Where("canary_id = ?", id).UpdateColumn("deleted_at", deleteTime).Error
+func DeleteCheckComponentRelationshipsForCanary(db *gorm.DB, id string) error {
+	return db.Table("check_component_relationships").Where("canary_id = ?", id).UpdateColumn("deleted_at", duty.Now()).Error
 }
 
-func DeleteNonTransformedChecks(id []string) error {
-	return Gorm.Table("checks").Where("id IN (?) and transformed = false", id).UpdateColumn("deleted_at", time.Now()).Error
+func DeleteNonTransformedChecks(db *gorm.DB, id []string) error {
+	return db.Table("checks").Where("id IN (?) and transformed = false", id).UpdateColumn("deleted_at", duty.Now()).Error
 }
 
-func GetCanary(id string) (pkg.Canary, error) {
+func GetCanary(ctx context.Context, id string) (pkg.Canary, error) {
 	var model pkg.Canary
-	err := Gorm.Where("id = ?", id).First(&model).Error
+	err := ctx.DB().Where("id = ?", id).First(&model).Error
 	return model, err
 }
 
-func FindCanaryByID(id string) (*pkg.Canary, error) {
+func FindCanaryByID(ctx context.Context, id string) (*pkg.Canary, error) {
 	var model *pkg.Canary
-	if err := Gorm.Where("id = ?", id).First(&model).Error; err != nil {
+	if err := ctx.DB().Where("id = ?", id).First(&model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -239,9 +269,9 @@ func FindCanaryByID(id string) (*pkg.Canary, error) {
 	return model, nil
 }
 
-func GetCheck(id string) (*pkg.Check, error) {
+func GetCheck(ctx context.Context, id string) (*pkg.Check, error) {
 	var model *pkg.Check
-	if err := Gorm.Where("id = ?", id).First(model).Error; err != nil {
+	if err := ctx.DB().Where("id = ?", id).First(model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -250,9 +280,9 @@ func GetCheck(id string) (*pkg.Check, error) {
 	return model, nil
 }
 
-func FindCanary(namespace, name string) (*pkg.Canary, error) {
+func FindCanary(ctx context.Context, namespace, name string) (*pkg.Canary, error) {
 	var model pkg.Canary
-	if err := Gorm.
+	if err := ctx.DB().
 		Where("namespace = ? AND name = ?", namespace, name).
 		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
 		First(&model).Error; err != nil {
@@ -265,9 +295,9 @@ func FindCanary(namespace, name string) (*pkg.Canary, error) {
 	return &model, nil
 }
 
-func FindCheck(canary pkg.Canary, name string) (*pkg.Check, error) {
+func FindCheck(ctx context.Context, canary pkg.Canary, name string) (*pkg.Check, error) {
 	var model pkg.Check
-	if err := Gorm.Where("canary_id = ? AND name = ?", canary.ID.String(), name).
+	if err := ctx.DB().Where("canary_id = ? AND name = ?", canary.ID.String(), name).
 		Where("agent_id = '00000000-0000-0000-0000-000000000000'").
 		First(&model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -278,27 +308,38 @@ func FindCheck(canary pkg.Canary, name string) (*pkg.Check, error) {
 	return &model, nil
 }
 
-func FindDeletedChecksSince(ctx context.Context, since time.Time) ([]string, error) {
-	var ids []string
-	err := Gorm.Model(&models.Check{}).Where("deleted_at > ?", since).Pluck("id", &ids).Error
-	return ids, err
-}
+func FindChecks(ctx context.Context, idOrName, checkType string) ([]models.Check, error) {
+	query := ctx.DB().
+		Where("agent_id = ?", uuid.Nil.String()).
+		Where("type = ?", checkType).
+		Where("deleted_at IS NULL")
 
-func CreateCanary(canary *pkg.Canary) error {
-	if canary.Spec == nil || len(canary.Spec) == 0 {
-		empty := []byte("{}")
-		canary.Spec = dutyTypes.JSON(types.JSON(empty))
+	if _, err := uuid.Parse(idOrName); err != nil {
+		query = query.Where("name = ?", idOrName)
+	} else {
+		query = query.Where("id = ?", idOrName)
 	}
 
-	return Gorm.Create(canary).Error
+	var checks []models.Check
+	err := query.Find(&checks).Error
+	return checks, err
 }
 
-func CreateCheck(canary pkg.Canary, check *pkg.Check) error {
-	return Gorm.Create(&check).Error
+func CreateCanary(ctx context.Context, canary *pkg.Canary) error {
+	if canary.Spec == nil || len(canary.Spec) == 0 {
+		empty := []byte("{}")
+		canary.Spec = types.JSON(empty)
+	}
+
+	return ctx.DB().Create(canary).Error
 }
 
-func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, error) {
-	err := Gorm.Clauses(
+func CreateCheck(ctx context.Context, canary pkg.Canary, check *pkg.Check) error {
+	return ctx.DB().Create(&check).Error
+}
+
+func PersistCanaryModel(db *gorm.DB, model pkg.Canary) (*pkg.Canary, error) {
+	err := db.Clauses(
 		clause.OnConflict{
 			Columns:   []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}, {Name: "source"}},
 			DoUpdates: clause.AssignmentColumns([]string{"labels", "spec"}),
@@ -308,14 +349,16 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, error) {
 
 	// Duplicate key happens when an already created canary is persisted
 	// We will ignore this error but act on other errors
+	// In this scenario PostgresDuplicateKeyError is checked primarily and
+	// gorm.ErrDuplicatedKey is just for fallback but does not work
 	if err != nil {
-		if !errors.Is(err, gorm.ErrDuplicatedKey) {
-			return nil, err
+		if !errors.As(err, &PostgresDuplicateKeyError) && !errors.Is(err, gorm.ErrDuplicatedKey) {
+			return nil, fmt.Errorf("error persisting canary to db: %w", err)
 		}
 	}
 
 	var oldCheckIDs []string
-	err = Gorm.
+	err = db.
 		Table("checks").
 		Select("id").
 		Where("canary_id = ? AND deleted_at IS NULL AND transformed = false", model.ID).
@@ -336,7 +379,7 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, error) {
 	for _, config := range spec.GetAllChecks() {
 		check := pkg.FromExternalCheck(model, config)
 		check.Spec, _ = json.Marshal(config)
-		id, err := PersistCheck(check, model.ID)
+		id, err := PersistCheck(db, check, model.ID)
 		if err != nil {
 			logger.Errorf("error persisting check", err)
 		}
@@ -348,8 +391,8 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, error) {
 	// fetching the checkIds present in the db but not present on the canary
 	checkIDsToRemove := utils.SetDifference(oldCheckIDs, newCheckIDs)
 	if len(checkIDsToRemove) > 0 {
-		logger.Infof("removing checks from canary:%s with ids %v", model.ID, checkIDsToRemove)
-		if err := DeleteNonTransformedChecks(checkIDsToRemove); err != nil {
+		logger.Debugf("removing checks from canary:%s with ids %v", model.ID, checkIDsToRemove)
+		if err := DeleteNonTransformedChecks(db, checkIDsToRemove); err != nil {
 			logger.Errorf("failed to delete non transformed checks: %v", err)
 		}
 		metrics.UnregisterGauge(checkIDsToRemove)
@@ -359,7 +402,7 @@ func PersistCanaryModel(model pkg.Canary) (*pkg.Canary, error) {
 	return &model, nil
 }
 
-func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, error) {
+func PersistCanary(db *gorm.DB, canary v1.Canary, source string) (*pkg.Canary, error) {
 	model, err := pkg.CanaryFromV1(canary)
 	if err != nil {
 		return nil, err
@@ -369,70 +412,29 @@ func PersistCanary(canary v1.Canary, source string) (*pkg.Canary, error) {
 	}
 	model.Source = source
 
-	return PersistCanaryModel(model)
+	return PersistCanaryModel(db, model)
 }
 
-func RefreshCheckStatusSummary() {
-	if err := duty.RefreshCheckStatusSummary(Pool); err != nil {
-		logger.Errorf("error refreshing check_status_summary materialized view: %v", err)
+// SuspendCanary sets the suspend annotation on the canary table.
+func SuspendCanary(ctx context.Context, id string, suspend bool) error {
+	query := `
+	UPDATE canaries
+		SET annotations =
+			CASE
+				WHEN annotations IS NULL THEN '{"suspend": "true"}'::jsonb
+				ELSE jsonb_set(annotations, '{suspend}', '"true"')
+			END
+		WHERE id = ?;
+	`
+
+	if !suspend {
+		query = `
+		UPDATE canaries
+			SET annotations =
+				CASE WHEN annotations IS NOT NULL THEN annotations - 'suspend' END
+			WHERE id = ?;
+		`
 	}
-}
 
-const (
-	DefaultCheckRetentionDays  = 7
-	DefaultCanaryRetentionDays = 7
-)
-
-var (
-	CheckRetentionDays  int
-	CanaryRetentionDays int
-)
-
-func CleanupChecks() {
-	jobHistory := models.NewJobHistory("CleanupChecks", "checks", "").Start()
-	_ = PersistJobHistory(jobHistory)
-	defer func() {
-		_ = PersistJobHistory(jobHistory.End())
-	}()
-
-	if CheckRetentionDays <= 0 {
-		CheckRetentionDays = DefaultCheckRetentionDays
-	}
-	err := Gorm.Exec(`
-        DELETE FROM checks
-        WHERE
-            id NOT IN (SELECT check_id FROM evidences WHERE check_id IS NOT NULL) AND
-            (NOW() - deleted_at) > INTERVAL '1 day' * ?
-        `, CheckRetentionDays).Error
-	if err != nil {
-		logger.Errorf("Error cleaning up checks: %v", err)
-		jobHistory.AddError(err.Error())
-	} else {
-		jobHistory.IncrSuccess()
-	}
-}
-
-func CleanupCanaries() {
-	jobHistory := models.NewJobHistory("CleanupCanaries", "canaries", "").Start()
-	_ = PersistJobHistory(jobHistory)
-	defer func() {
-		_ = PersistJobHistory(jobHistory.End())
-	}()
-
-	if CanaryRetentionDays <= 0 {
-		CanaryRetentionDays = DefaultCanaryRetentionDays
-	}
-	err := Gorm.Exec(`
-        DELETE FROM canaries
-        WHERE
-            id NOT IN (SELECT canary_id FROM checks) AND
-            (NOW() - deleted_at) > INTERVAL '1 day' * ?
-        `, CanaryRetentionDays).Error
-
-	if err != nil {
-		logger.Errorf("Error cleaning up canaries: %v", err)
-		jobHistory.AddError(err.Error())
-	} else {
-		jobHistory.IncrSuccess()
-	}
+	return ctx.DB().Exec(query, id).Error
 }

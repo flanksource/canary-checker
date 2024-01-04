@@ -25,16 +25,22 @@
         },
         "skipTLSVerify": {
           "type": "boolean"
-        },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
-          "type": "boolean"
         }
       },
       "additionalProperties": false,
       "type": "object"
+    },
+    "Artifact": {
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "path"
+      ]
     },
     "AzureConnection": {
       "properties": {
@@ -86,6 +92,12 @@
     },
     "EnvVarSource": {
       "properties": {
+        "serviceAccount": {
+          "type": "string"
+        },
+        "helmRef": {
+          "$ref": "#/$defs/HelmRefKeySelector"
+        },
         "configMapKeyRef": {
           "$ref": "#/$defs/ConfigMapKeySelector"
         },
@@ -102,6 +114,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "icon": {
@@ -133,6 +148,21 @@
         },
         "connections": {
           "$ref": "#/$defs/ExecConnections"
+        },
+        "env": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
+        },
+        "checkout": {
+          "$ref": "#/$defs/GitCheckout"
+        },
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
@@ -171,6 +201,45 @@
       },
       "additionalProperties": false,
       "type": "object"
+    },
+    "GitCheckout": {
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "certificate": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "destination": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "HelmRefKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
     },
     "Labels": {
       "patternProperties": {

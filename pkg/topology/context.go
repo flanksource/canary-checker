@@ -1,14 +1,18 @@
 package topology
 
 import (
+	"fmt"
+
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"gorm.io/gorm"
+
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
-	"github.com/flanksource/kommons"
+	"github.com/flanksource/duty/types"
 	"github.com/flanksource/kommons/ktemplate"
 	"github.com/pkg/errors"
-	"k8s.io/client-go/kubernetes"
 )
 
 type ComponentContext struct {
@@ -23,6 +27,15 @@ type ComponentContext struct {
 	CurrentComponent *pkg.Component
 	templater        *ktemplate.StructTemplater
 	JobHistory       *models.JobHistory
+	Duty             dutyContext.Context
+	DB               *gorm.DB
+}
+
+func (c *ComponentContext) String() string {
+	if c.CurrentComponent != nil {
+		return fmt.Sprintf("[%s] %s", c.Topology.Name, c.CurrentComponent.Name)
+	}
+	return fmt.Sprintf("[%s]", c.Topology.Name)
 }
 
 func (c *ComponentContext) GetTemplater() ktemplate.StructTemplater {
@@ -75,7 +88,7 @@ func (c *ComponentContext) TemplateStruct(data interface{}) error {
 	return nil
 }
 
-func (c *ComponentContext) TemplateConfig(config *v1.Config) error {
+func (c *ComponentContext) TemplateConfig(config *types.ConfigQuery) error {
 	templater := c.GetTemplater()
 	if err := templater.Walk(config); err != nil {
 		return errors.Wrapf(err, "failed to template config %s", *config)
@@ -100,12 +113,15 @@ func (c *ComponentContext) TemplateComponent(component *v1.ComponentSpec) error 
 func (c *ComponentContext) Clone() *ComponentContext {
 	return &ComponentContext{
 		KubernetesContext: c.KubernetesContext.Clone(),
+		Duty:              c.Duty,
+		DB:                c.DB,
 		Topology:          c.Topology,
 		ComponentAPI:      c.ComponentAPI,
 		Components:        c.Components,
 		JobHistory:        c.JobHistory,
 	}
 }
+
 func (c *ComponentContext) WithComponents(components *pkg.Components, current *pkg.Component) *ComponentContext {
 	cloned := c.Clone()
 	cloned.Components = components
@@ -113,9 +129,11 @@ func (c *ComponentContext) WithComponents(components *pkg.Components, current *p
 	return cloned
 }
 
-func NewComponentContext(client *kommons.Client, kubernetes kubernetes.Interface, system v1.Topology) *ComponentContext {
+func NewComponentContext(ctx dutyContext.Context, system v1.Topology) *ComponentContext {
 	return &ComponentContext{
-		KubernetesContext: context.NewKubernetesContext(client, kubernetes, system.Namespace),
+		KubernetesContext: context.NewKubernetesContext(ctx.Kommons(), ctx.Kubernetes(), system.Namespace),
+		Duty:              ctx,
+		DB:                ctx.DB(),
 		Topology:          system,
 	}
 }

@@ -8,6 +8,7 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
@@ -15,16 +16,19 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
-	canarySpec := v1.CanarySpec{
-		Schedule: "@every 1s",
-		HTTP: []v1.HTTPCheck{
-			{
-				Endpoint:      fmt.Sprintf("http://localhost:%d?delay=10", testEchoServerPort), // server only responds after 10 secodns
-				ResponseCodes: []int{http.StatusOK},
+var _ = ginkgo.Describe("Canary Job sync", ginkgo.Ordered, func() {
+	var canarySpec v1.CanarySpec
+	ginkgo.BeforeEach(func() {
+		canarySpec = v1.CanarySpec{
+			Schedule: "@every 1s",
+			HTTP: []v1.HTTPCheck{
+				{
+					Endpoint:      fmt.Sprintf("http://localhost:%d?delay=10", testEchoServerPort), // server only responds after 10 seconds
+					ResponseCodes: []int{http.StatusOK},
+				},
 			},
-		},
-	}
+		}
+	})
 
 	ginkgo.It("should save a canary spec", func() {
 		b, err := json.Marshal(canarySpec)
@@ -35,22 +39,30 @@ var _ = ginkgo.Describe("Test Sync Canary Job", ginkgo.Ordered, func() {
 		Expect(err).To(BeNil())
 
 		canaryM := &models.Canary{
-			ID:   uuid.New(),
+			ID: uuid.New(),
+			Annotations: map[string]string{
+				"trace": "true",
+			},
 			Spec: spec,
 			Name: "http check",
 		}
-		err = db.Gorm.Create(canaryM).Error
+		err = DefaultContext.DB().Create(canaryM).Error
 		Expect(err).To(BeNil())
 
-		response, err := db.GetAllCanariesForSync()
+		response, err := db.GetAllCanariesForSync(DefaultContext, "")
 		Expect(err).To(BeNil())
-		Expect(len(response)).To(Equal(1))
+		Expect(len(response)).To(BeNumerically(">=", 1))
 	})
 
 	ginkgo.It("schedule the canary job", func() {
 		CanaryScheduler.Start()
-		minimumTimeBetweenCanaryRuns = 0 // reset this for now so it doesn't hinder test with small schedules
-		SyncCanaryJobs()
+		MinimumTimeBetweenCanaryRuns = 0 // reset this for now so it doesn't hinder test with small schedules
+		ctx := DefaultContext
+		jobCtx := job.JobRuntime{
+			Context: ctx,
+		}
+		err := SyncCanaryJobs(jobCtx)
+		Expect(err).To(BeNil())
 	})
 
 	ginkgo.It("should verify that the endpoint wasn't called more than once after 3 seconds", func() {

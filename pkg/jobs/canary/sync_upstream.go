@@ -1,47 +1,97 @@
 package canary
 
 import (
-	goctx "context"
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/url"
 	"time"
 
-	"github.com/flanksource/canary-checker/api/context"
-	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/upstream"
+	"github.com/flanksource/postq"
+	"github.com/flanksource/postq/pg"
 	"gorm.io/gorm/clause"
 )
 
-var UpstreamConf upstream.UpstreamConfig
+var (
+	ReconcilePageSize int
 
-var tablesToReconcile = []string{
-	"checks",
-	"check_statuses",
+	// Only sync data created/updated in the last ReconcileMaxAge duration
+	ReconcileMaxAge time.Duration
+
+	// UpstreamConf is the global configuration for upstream
+	UpstreamConf upstream.UpstreamConfig
+)
+
+const (
+	EventPushQueueCreate    = "push_queue.create"
+	eventQueueUpdateChannel = "event_queue_updates"
+	ResourceTypeUpstream    = "upstream"
+)
+
+var UpstreamJobs = []job.Job{
+	SyncCheckStatuses,
+	PullUpstreamCanaries,
+	ReconcileChecks,
 }
 
-// ReconcileCanaryResults coordinates with upstream and pushes any resource
-// that are missing on the upstream.
-func ReconcileCanaryResults() {
-	ctx := context.New(nil, nil, db.Gorm, db.Pool, v1.Canary{})
-
-	jobHistory := models.NewJobHistory("PushCanaryResultsToUpstream", "Canary", "")
-	_ = db.PersistJobHistory(jobHistory.Start())
-	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
-
-	reconciler := upstream.NewUpstreamReconciler(UpstreamConf, 5)
-	for _, table := range tablesToReconcile {
-		if err := reconciler.Sync(ctx, table); err != nil {
-			jobHistory.AddError(err.Error())
-			logger.Errorf("failed to sync table %s: %v", table, err)
+var ReconcileChecks = job.Job{
+	Name:       "PushChecksToUpstream",
+	JobHistory: true,
+	Singleton:  true,
+	Retention:  job.RetentionDay,
+	RunNow:     true,
+	Schedule:   "@every 30m",
+	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = ResourceTypeUpstream
+		ctx.History.ResourceID = UpstreamConf.Host
+		if count, err := upstream.NewUpstreamReconciler(UpstreamConf, ReconcilePageSize).
+			Sync(ctx.Context, "canaries"); err != nil {
+			ctx.History.AddError(err.Error())
 		} else {
-			jobHistory.IncrSuccess()
+			ctx.History.SuccessCount += count
 		}
-	}
+		if count, err := upstream.NewUpstreamReconciler(UpstreamConf, ReconcilePageSize).
+			Sync(ctx.Context, "checks"); err != nil {
+			ctx.History.AddError(err.Error())
+		} else {
+			ctx.History.SuccessCount += count
+		}
+		return nil
+	},
+}
+
+var SyncCheckStatuses = job.Job{
+	Name:       "SyncCheckStatusesWithUpstream",
+	JobHistory: true,
+	Singleton:  true,
+	Retention:  job.RetentionHour,
+	RunNow:     true,
+	Schedule:   "@every 30s",
+	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = ResourceTypeUpstream
+		ctx.History.ResourceID = UpstreamConf.Host
+		err, count := upstream.SyncCheckStatuses(ctx.Context, UpstreamConf, ReconcilePageSize)
+		ctx.History.SuccessCount = count
+		return err
+	},
+}
+
+var lastRuntime time.Time
+var PullUpstreamCanaries = job.Job{
+	Name:       "PullUpstreamCanaries",
+	JobHistory: true,
+	Singleton:  true,
+	Schedule:   "@every 10m",
+	Retention:  job.RetentionHour,
+	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = ResourceTypeUpstream
+		ctx.History.ResourceID = UpstreamConf.Host
+		count, err := pull(ctx.Context, UpstreamConf)
+		ctx.History.SuccessCount = count
+		return err
+	},
 }
 
 type CanaryPullResponse struct {
@@ -49,117 +99,63 @@ type CanaryPullResponse struct {
 	Canaries []models.Canary `json:"canaries,omitempty"`
 }
 
-// UpstreamPullJob pulls canaries from the upstream
-type UpstreamPullJob struct {
-	lastRuntime time.Time
-}
+func pull(ctx context.Context, config upstream.UpstreamConfig) (int, error) {
+	logger.Tracef("pulling canaries from upstream since: %v", lastRuntime)
 
-func (t *UpstreamPullJob) Run() {
-	jobHistory := models.NewJobHistory("PullUpstreamCanaries", "Canary", "")
-	_ = db.PersistJobHistory(jobHistory.Start())
-	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
-
-	if err := t.pull(UpstreamConf); err != nil {
-		jobHistory.AddError(err.Error())
-		logger.Errorf("error pulling from upstream: %v", err)
-	} else {
-		jobHistory.IncrSuccess()
-	}
-}
-
-func (t *UpstreamPullJob) pull(config upstream.UpstreamConfig) error {
-	logger.Tracef("pulling canaries from upstream since: %v", t.lastRuntime)
-
-	endpoint, err := url.JoinPath(config.Host, "upstream", "canary", "pull", config.AgentName)
+	client := upstream.NewUpstreamClient(config)
+	req := client.Client.R(ctx).QueryParam("since", lastRuntime.Format(time.RFC3339))
+	resp, err := req.Get(fmt.Sprintf("canary/pull/%s", config.AgentName))
 	if err != nil {
-		return fmt.Errorf("error creating url endpoint for host %s: %w", config.Host, err)
-	}
-
-	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
-	if err != nil {
-		return fmt.Errorf("error creating new http request: %w", err)
-	}
-
-	req.SetBasicAuth(config.Username, config.Password)
-
-	params := url.Values{}
-	params.Add("since", t.lastRuntime.Format(time.RFC3339))
-	req.URL.RawQuery = params.Encode()
-
-	httpClient := &http.Client{}
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("error making request: %w", err)
+		return 0, fmt.Errorf("error making request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	var response CanaryPullResponse
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return fmt.Errorf("error decoding response: %w", err)
+	if !resp.IsOK() {
+		return 0, fmt.Errorf("upstream responded with status: %s", resp.Status)
 	}
 
-	t.lastRuntime = response.Before
+	var response CanaryPullResponse
+	if err := resp.Into(&response); err != nil {
+		return 0, fmt.Errorf("error decoding response: %w", err)
+	}
+
+	lastRuntime = response.Before
 
 	if len(response.Canaries) == 0 {
-		return nil
+		return 0, nil
 	}
 
-	logger.Tracef("fetched %d canaries from upstream", len(response.Canaries))
-
-	return db.Gorm.Omit("agent_id").Clauses(clause.OnConflict{
+	return len(response.Canaries), ctx.DB().Omit("agent_id").Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "id"}},
 		UpdateAll: true,
 	}).Create(&response.Canaries).Error
 }
 
-type UpstreamPushJob struct {
-	lastRuntime time.Time
-
-	// MaxAge defines how far back we look into the past on startup whe
-	// lastRuntime is zero.
-	MaxAge time.Duration
-}
-
-func (t *UpstreamPushJob) Run() {
-	jobHistory := models.NewJobHistory("UpstreamPushJob", "Canary", "")
-	_ = db.PersistJobHistory(jobHistory.Start())
-	defer func() { _ = db.PersistJobHistory(jobHistory.End()) }()
-
-	if err := t.run(); err != nil {
-		jobHistory.AddError(err.Error())
-		logger.Errorf("error pushing to upstream: %v", err)
-	} else {
-		jobHistory.IncrSuccess()
+func StartUpstreamEventQueueConsumer(ctx context.Context) error {
+	asyncConsumer := postq.AsyncEventConsumer{
+		WatchEvents: []string{EventPushQueueCreate},
+		Consumer: func(_ctx postq.Context, e postq.Events) postq.Events {
+			return upstream.NewPushUpstreamConsumer(UpstreamConf)(ctx, e)
+		},
+		BatchSize: 50,
+		ConsumerOption: &postq.ConsumerOption{
+			NumConsumers: 5,
+			ErrorHandler: func(err error) bool {
+				logger.Errorf("error consuming upstream push_queue.create events: %v", err)
+				time.Sleep(time.Second)
+				return true
+			},
+		},
 	}
-}
 
-func (t *UpstreamPushJob) run() error {
-	logger.Tracef("running upstream push job")
-
-	var currentTime time.Time
-	if err := db.Gorm.Raw("SELECT NOW()").Scan(&currentTime).Error; err != nil {
+	eventConsumer, err := asyncConsumer.EventConsumer()
+	if err != nil {
 		return err
 	}
 
-	if t.lastRuntime.IsZero() {
-		t.lastRuntime = currentTime.Add(-t.MaxAge)
-	}
+	pgNotifyChannel := make(chan string)
+	go pg.Listen(ctx, eventQueueUpdateChannel, pgNotifyChannel)
 
-	pushData := &upstream.PushData{AgentName: UpstreamConf.AgentName}
-	if err := db.Gorm.Where("created_at > ?", t.lastRuntime).Find(&pushData.CheckStatuses).Error; err != nil {
-		return err
-	}
-
-	if err := db.Gorm.Where("updated_at > ?", t.lastRuntime).Find(&pushData.Checks).Error; err != nil {
-		return err
-	}
-
-	t.lastRuntime = currentTime
-
-	if pushData.Count() == 0 {
-		return nil
-	}
-	logger.Tracef("pushing %d canary results to upstream", pushData.Count())
-
-	return upstream.Push(goctx.Background(), UpstreamConf, pushData)
+	go eventConsumer.Listen(ctx, pgNotifyChannel)
+	return nil
 }

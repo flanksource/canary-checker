@@ -1,16 +1,22 @@
 package checks
 
 import (
+	"fmt"
+	"io/fs"
 	"os"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/duty/models"
 )
+
+const SizeNotSupported = -1
 
 var (
 	bucketScanObjectCount = prometheus.NewGaugeVec(
@@ -58,6 +64,15 @@ func (c *FolderChecker) Run(ctx *context.Context) pkg.Results {
 func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.FolderCheck)
 	path := strings.ToLower(check.Path)
+	ctx = ctx.WithCheck(check)
+	if ctx.CanTemplate() {
+		if err := ctx.TemplateStruct(&check.Filter); err != nil {
+			return pkg.Invalid(check, ctx.Canary, fmt.Sprintf("failed to template filter: %v", err))
+		}
+	}
+	if ctx.IsDebug() {
+		ctx.Infof("Checking %s with filter(%s)", path, check.Filter)
+	}
 	switch {
 	case strings.HasPrefix(path, "s3://"):
 		return CheckS3Bucket(ctx, check)
@@ -76,11 +91,19 @@ func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	folders, err := getLocalFolderCheck(check.Path, check.Filter)
+
+	// Form a dummy connection to get a local filesystem
+	localFS, err := artifacts.GetFSForConnection(ctx.Duty(), models.Connection{Type: models.ConnectionTypeFolder})
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
+
+	folders, err := genericFolderCheck(localFS, check.Path, check.Recursive, check.Filter)
 	result.AddDetails(folders)
+
+	if err != nil {
+		return results.ErrorMessage(err)
+	}
 
 	if test := folders.Test(check.FolderTest); test != "" {
 		return results.Failf(test)
@@ -88,64 +111,91 @@ func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	return results
 }
 
-func getLocalFolderCheck(path string, filter v1.FolderFilter) (*FolderCheck, error) {
-	result := FolderCheck{}
-	_filter, err := filter.New()
-	if err != nil {
-		return nil, err
-	}
-	files, err := os.ReadDir(path)
-	if err != nil {
-		return nil, err
-	}
-	if len(files) == 0 {
-		// directory is empty. returning duration of directory
-		info, err := os.Stat(path)
-		if err != nil {
-			return nil, err
-		}
-		return &FolderCheck{Oldest: info, Newest: info}, nil
-	}
-
-	for _, file := range files {
-		info, err := file.Info()
-		if err != nil {
-			return nil, err
-		}
-		if file.IsDir() || !_filter.Filter(info) {
-			continue
-		}
-
-		result.Append(info)
-	}
-	return &result, err
+func genericFolderCheck(dirFS artifacts.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
+	return _genericFolderCheck(true, dirFS, path, recursive, filter)
 }
 
-func getGenericFolderCheck(fs Filesystem, dir string, filter v1.FolderFilter) (*FolderCheck, error) {
+// genericFolderCheckWithoutPrecheck is used for those filesystems that do not support fetching the stat of a directory.
+// Eg: s3, gcs.
+// It will not pre check whether the given path is a directory.
+func genericFolderCheckWithoutPrecheck(dirFS artifacts.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
+	return _genericFolderCheck(false, dirFS, path, recursive, filter)
+}
+
+func _genericFolderCheck(supportsDirStat bool, dirFS artifacts.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
 	result := FolderCheck{}
 	_filter, err := filter.New()
 	if err != nil {
-		return nil, err
+		return result, err
 	}
-	files, err := fs.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	if len(files) == 0 {
-		// directory is empty. returning duration of directory
-		info, err := fs.Stat(dir)
+	_filter.AllowDir = recursive
+
+	var fileInfo os.FileInfo
+	if supportsDirStat {
+		fileInfo, err := dirFS.Stat(path)
 		if err != nil {
-			return nil, err
+			if os.IsNotExist(err) {
+				return result, nil
+			}
+			return result, err
+		} else if !fileInfo.IsDir() {
+			return result, fmt.Errorf("%s is not a directory", path)
 		}
-		return &FolderCheck{Oldest: info, Newest: info}, nil
+	}
+
+	files, err := getFolderContents(dirFS, path, _filter)
+	if err != nil {
+		return result, err
+	}
+
+	if len(files) == 0 {
+		if fileInfo == nil {
+			return FolderCheck{}, nil
+		}
+
+		// directory is empty. returning duration of directory
+		return FolderCheck{
+			Oldest:        newFile(fileInfo),
+			Newest:        newFile(fileInfo),
+			AvailableSize: SizeNotSupported,
+			TotalSize:     SizeNotSupported}, nil
 	}
 
 	for _, file := range files {
-		if file.IsDir() || !_filter.Filter(file) {
+		result.Append(file)
+	}
+
+	return result, err
+}
+
+// getFolderContents walks the folder and returns all files.
+// Also supports recursively fetching contents
+func getFolderContents(dirFs artifacts.Filesystem, path string, filter *v1.FolderFilterContext) ([]fs.FileInfo, error) {
+	files, err := dirFs.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(files) == 0 {
+		return nil, nil
+	}
+
+	var result []fs.FileInfo
+	for _, info := range files {
+		if !filter.Filter(info) {
 			continue
 		}
 
-		result.Append(file)
+		result = append(result, info)
+		if info.IsDir() { // This excludes even directory symlinks
+			subFiles, err := getFolderContents(dirFs, path+"/"+info.Name(), filter)
+			if err != nil {
+				return nil, err
+			}
+
+			result = append(result, subFiles...)
+		}
 	}
-	return &result, nil
+
+	return result, err
 }

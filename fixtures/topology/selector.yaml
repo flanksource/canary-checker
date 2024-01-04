@@ -17,9 +17,8 @@ spec:
         - labelSelector: "canary=http-check"
         - inline:
             - http:
-                endpoint: "http://status.savanttools.com/?code=200"
+                url: https://httpbin.demo.aws.flanksource.com/status/200
                 test:
-                  expr: 'code == 200'
-            
+                  expr: "code == 200"
       name: selector
       type: aggregator

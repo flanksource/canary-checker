@@ -1,0 +1,26 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: namespaced-http-check
+  namespace: default
+spec:
+  interval: 30
+  http:
+    - url: https://example.com
+      name: first-namespaced-check
+      description: "demonstrate that you can set the namespace directly on the check"
+      namespace: dev
+      responseCodes: [200]
+    - url: https://example.com
+      name: second-check
+      description: "demonstrate that you can override the check's namespace after transformation"
+      responseCodes: [200]
+      transform:
+        expr: |
+          {
+            'name': 'second-after-transformation-check',
+            'namespace': 'prod',
+            'message': 'static message',
+            'description': 'static description',
+            'pass': true,
+          }.toJSON()

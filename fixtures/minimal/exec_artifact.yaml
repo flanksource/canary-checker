@@ -1,0 +1,16 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: exec-artifact
+spec:
+  interval: 30
+  exec:
+    - name: exec-pass-with-artifact
+      description: "exec dummy check"
+      script: |
+        mkdir -p /tmp/exec-results &&
+        echo "hello" > /tmp/exec-results/hello && echo "world" > /tmp/exec-results/world && echo "random" > /tmp/random-text && echo "to stdout"
+      artifacts:
+        - path: /tmp/exec-results/*
+        - path: /tmp/random-text
+        - path: /dev/stdout

@@ -21,10 +21,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/commons/logger"
+	"github.com/robfig/cron/v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type ResultMode string
@@ -35,6 +38,10 @@ const (
 
 // CanarySpec defines the desired state of Canary
 type CanarySpec struct {
+	//+kubebuilder:default=1
+	//+optional
+	Replicas int `yaml:"replicas,omitempty" json:"replicas,omitempty"`
+
 	Env            map[string]VarSource  `yaml:"env,omitempty" json:"env,omitempty"`
 	HTTP           []HTTPCheck           `yaml:"http,omitempty" json:"http,omitempty"`
 	DNS            []DNSCheck            `yaml:"dns,omitempty" json:"dns,omitempty"`
@@ -74,6 +81,7 @@ type CanarySpec struct {
 	AlertManager   []AlertManagerCheck   `yaml:"alertmanager,omitempty" json:"alertmanager,omitempty"`
 	Dynatrace      []DynatraceCheck      `yaml:"dynatrace,omitempty" json:"dynatrace,omitempty"`
 	AzureDevops    []AzureDevopsCheck    `yaml:"azureDevops,omitempty" json:"azureDevops,omitempty"`
+	Webhook        *WebhookCheck         `yaml:"webhook,omitempty" json:"webhook,omitempty"`
 	// interval (in seconds) to run checks on Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
 	// Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
@@ -238,6 +246,10 @@ func (c Canary) GetDescription(check external.Check) string {
 	return check.GetEndpoint()
 }
 
+func (c Canary) GetNamespacedName() types.NamespacedName {
+	return types.NamespacedName{Name: c.Name, Namespace: c.Namespace}
+}
+
 func (c *Canary) SetRunnerName(name string) {
 	c.Status.runnerName = name
 }
@@ -279,6 +291,8 @@ type CanaryStatus struct {
 	Latency1H string `json:"latency1h,omitempty"`
 	// used for keeping history of the checks
 	runnerName string `json:"-"`
+	// Replicas keep track of the number of replicas
+	Replicas int `json:"replicas,omitempty"`
 }
 
 func (c Canary) GetCheckID(checkName string) string {
@@ -303,6 +317,7 @@ type CheckStatus struct {
 // +kubebuilder:object:root=true
 
 // Canary is the Schema for the canaries API
+// +kubebuilder:printcolumn:name="Replicas",type=integer,priority=1,JSONPath=`.spec.replicas`
 // +kubebuilder:printcolumn:name="Interval",type=string,JSONPath=`.spec.interval`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
 // +kubebuilder:printcolumn:name="Last Check",type=date,JSONPath=`.status.lastCheck`
@@ -312,6 +327,7 @@ type CheckStatus struct {
 // +kubebuilder:printcolumn:name="Message",type=string,priority=1,JSONPath=`.status.message`
 // +kubebuilder:printcolumn:name="Error",type=string,priority=1,JSONPath=`.status.errorMessage`
 // +kubebuilder:subresource:status
+// +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas
 type Canary struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -320,10 +336,11 @@ type Canary struct {
 	Status CanaryStatus `json:"status,omitempty"`
 }
 
-func NewCanaryFromSpec(name string, spec CanarySpec) Canary {
+func NewCanaryFromSpec(name, namespace string, spec CanarySpec) Canary {
 	return Canary{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:      name,
+			Namespace: namespace,
 		},
 		Spec: spec,
 	}
@@ -356,6 +373,19 @@ func (c Canary) ID() string {
 
 func (c Canary) GetPersistedID() string {
 	return string(c.GetUID())
+}
+
+func (c Canary) NextRuntime(lastRuntime time.Time) (*time.Time, error) {
+	if c.Spec.Schedule != "" {
+		schedule, err := cron.ParseStandard(c.Spec.Schedule)
+		if err != nil {
+			return nil, err
+		}
+		t := schedule.Next(time.Now())
+		return &t, nil
+	}
+	t := lastRuntime.Add(time.Duration(c.Spec.Interval) * time.Second)
+	return &t, nil
 }
 
 // +kubebuilder:object:root=true

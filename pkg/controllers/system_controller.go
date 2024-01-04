@@ -21,7 +21,8 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
-	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/system"
+	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/topology"
+	dutyContext "github.com/flanksource/duty/context"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,6 +34,7 @@ import (
 
 // TopologyReconciler reconciles a Canary object
 type TopologyReconciler struct {
+	dutyContext.Context
 	client.Client
 	Log        logr.Logger
 	Scheme     *runtime.Scheme
@@ -52,6 +54,7 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 		logger.V(1).Info("Topology not found")
 		return ctrl.Result{}, nil
 	}
+	dCtx := r.Context.WithObject(topology.ObjectMeta)
 	if !controllerutil.ContainsFinalizer(topology, TopologyFinalizerName) {
 		controllerutil.AddFinalizer(topology, TopologyFinalizerName)
 		if err := r.Client.Update(ctx, topology); err != nil {
@@ -60,22 +63,24 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 	}
 
 	if !topology.DeletionTimestamp.IsZero() {
-		if err := db.DeleteTopology(topology); err != nil {
+		if err := db.DeleteTopology(dCtx.DB(), topology); err != nil {
 			logger.Error(err, "failed to delete topology")
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}
 		systemJobs.DeleteTopologyJob(topology.GetPersistedID())
 		controllerutil.RemoveFinalizer(topology, TopologyFinalizerName)
 		return ctrl.Result{}, r.Update(ctx, topology)
 	}
 
-	changed, err := db.PersistTopology(topology)
+	changed, err := db.PersistTopology(dCtx, topology)
 	if err != nil {
+		logger.Error(err, "failed to persist topology", "id", topology.GetPersistedID(), "name", topology.GetName())
 		return ctrl.Result{}, err
 	}
 
 	// Sync jobs if topology is created or updated
 	if changed || topology.Generation == 1 {
-		if err := systemJobs.SyncTopologyJob(*topology); err != nil {
+		if err := systemJobs.SyncTopologyJob(dCtx, *topology); err != nil {
 			logger.Error(err, "failed to sync topology job")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}

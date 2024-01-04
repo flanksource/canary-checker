@@ -6,7 +6,10 @@ import (
 
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/runner"
+	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/query"
+	"github.com/flanksource/duty/types"
 	"github.com/labstack/echo/v4"
 
 	"github.com/flanksource/canary-checker/pkg"
@@ -35,18 +38,18 @@ var (
 )
 
 type Response struct {
-	Duration      int           `json:"duration,omitempty"`
-	RunnerName    string        `json:"runnerName"`
-	Checks        pkg.Checks    `json:"checks"`
-	ChecksSummary models.Checks `json:"checks_summary,omitempty"`
+	Duration      int                   `json:"duration,omitempty"`
+	RunnerName    string                `json:"runnerName"`
+	Checks        pkg.Checks            `json:"checks,omitempty"`
+	ChecksSummary []models.CheckSummary `json:"checks_summary,omitempty"`
 }
 
 type DetailResponse struct {
-	Duration   int              `json:"duration,omitempty"`
-	RunnerName string           `json:"runnerName"`
-	Status     []pkg.Timeseries `json:"status"`
-	Latency    pkg.Latency      `json:"latency"`
-	Uptime     pkg.Uptime       `json:"uptime"`
+	Duration   int                `json:"duration,omitempty"`
+	RunnerName string             `json:"runnerName"`
+	Status     []query.Timeseries `json:"status"`
+	Latency    types.Latency      `json:"latency"`
+	Uptime     types.Uptime       `json:"uptime"`
 }
 
 func About(c echo.Context) error {
@@ -58,68 +61,42 @@ func About(c echo.Context) error {
 }
 
 func CheckDetails(c echo.Context) error {
-	q, err := cache.ParseQuery(c)
-	if err != nil {
-		return errorResonse(c, err, http.StatusBadRequest)
+	ctx := c.Request().Context().(context.Context)
+
+	var q query.CheckQueryParams
+	if err := q.Init(c.QueryParams()); err != nil {
+		return errorResponse(c, err, http.StatusBadRequest)
 	}
 
 	start := time.Now()
-
-	summary, err := cache.PostgresCache.Query(*q)
+	results, uptime, latency, err := q.ExecuteDetails(ctx)
 	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
-	}
-	if len(summary) == 0 {
-		return c.JSON(http.StatusOK, DetailResponse{})
-	}
-
-	checkSummary := summary[0]
-	totalChecks := checkSummary.TotalRuns
-
-	rangeDuration := checkSummary.LatestRuntime.Sub(*checkSummary.EarliestRuntime)
-	q.WindowDuration = getBestPartitioner(totalChecks, rangeDuration)
-
-	results, err := cache.PostgresCache.QueryStatus(c.Request().Context(), *q)
-	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
+		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
 	apiResponse := &DetailResponse{
 		RunnerName: runner.RunnerName,
 		Status:     results,
 		Duration:   int(time.Since(start).Milliseconds()),
-		Latency:    checkSummary.Latency,
-		Uptime:     checkSummary.Uptime,
+		Latency:    latency,
+		Uptime:     uptime,
 	}
 
-	return c.JSON(http.StatusOK, apiResponse)
-}
-
-func CheckSummary(c echo.Context) error {
-	q, err := cache.ParseQuery(c)
-	if err != nil {
-		return errorResonse(c, err, http.StatusBadRequest)
-	}
-
-	start := time.Now()
-	results, err := cache.PostgresCache.Query(*q)
-	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
-	}
-
-	apiResponse := &Response{
-		RunnerName: runner.RunnerName,
-		Checks:     results,
-		Duration:   int(time.Since(start).Milliseconds()),
-	}
 	return c.JSON(http.StatusOK, apiResponse)
 }
 
 func HealthSummary(c echo.Context) error {
+	ctx := c.Request().Context().(context.Context)
+
+	var queryOpt cache.SummaryOptions
+	if err := c.Bind(&queryOpt); err != nil {
+		return errorResponse(c, err, http.StatusBadRequest)
+	}
+
 	start := time.Now()
-	results, err := cache.PostgresCache.QuerySummary()
+	results, err := query.CheckSummary(ctx, query.CheckSummaryOptions(queryOpt))
 	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
+		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
 	apiResponse := &Response{

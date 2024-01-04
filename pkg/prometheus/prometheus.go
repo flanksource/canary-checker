@@ -16,6 +16,8 @@ type PrometheusClient struct {
 	v1.API
 }
 
+var PrometheusURL string
+
 func (p PrometheusClient) GetHistogramQuantileLatency(percentile, checkKey, duration string) (latency float64, err error) {
 	modelValue, _, err := p.Query(context.TODO(), fmt.Sprintf("histogram_quantile(%v, sum(rate(canary_check_duration_bucket{key='%v'}[%v])) by (le))", percentile, checkKey, duration), time.Now())
 	if err != nil {

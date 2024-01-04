@@ -1,0 +1,75 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Topology
+metadata:
+  name: test-topology-for-each
+spec:
+  schedule: "@every 10m"
+  components:
+  - name: GroupA
+    type: virtual
+    icon: server
+    lookup:
+      http:
+        - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
+          name: http-lookup
+          display:
+            expr: |
+              [
+                {
+                  'name': 'component-a',
+                  'type': 'API',
+                  'properties': [{'name': 'owner', 'text': 'team-a'}, {'name': 'processor'}]
+                },
+                {
+                  'name': 'component-b',
+                  'type': 'Frontend',
+                  'properties': [{'name': 'owner', 'text': 'team-b'}, {'name': 'processor'}]
+                },
+                {
+                  'name': 'component-c',
+                  'type': 'Database',
+                  'properties': [{'name': 'owner', 'text': 'team-b'}, {'name': 'processor'}]
+                },
+              ].toJSON()
+    forEach:
+      configs:
+        - name: ${.component.name}
+          type: Service
+      components:
+        - name: Child-A
+        - name: Child-B
+      properties:
+        # Test property lookup merge as components
+        - name: processor
+          lookup:
+            http:
+            - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
+              name: processor_lookup
+              display:
+                expr: |
+                  [
+                    {
+                      'name': 'component-a',
+                      'properties': [{'name': 'processor', 'text': 'intel'}]
+                    },
+                    {
+                      'name': 'component-b',
+                      'properties': [{'name': 'processor', 'text': 'intel'}]
+                    },
+                    {
+                      'name': 'component-c',
+                      'properties': [{'name': 'processor', 'text': 'amd'}]
+                    },
+                  ].toJSON()
+        # Test property lookup merge as properties
+        - name: generic
+          lookup:
+            http:
+            - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
+              name: generic_lookup
+              display:
+                expr: |
+                  [
+                    {'name': 'company', 'text': 'Acme'},
+                    {'name': 'location', 'text': 'Mars'},
+                  ].toJSON()
