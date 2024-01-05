@@ -72,7 +72,7 @@ var SyncCheckStatuses = job.Job{
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = ResourceTypeUpstream
 		ctx.History.ResourceID = UpstreamConf.Host
-		err, count := upstream.SyncCheckStatuses(ctx.Context, UpstreamConf, ReconcilePageSize)
+		count, err := upstream.SyncCheckStatuses(ctx.Context, UpstreamConf, ReconcilePageSize)
 		ctx.History.SuccessCount = count
 		return err
 	},
