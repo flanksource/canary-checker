@@ -22,7 +22,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.3
 	github.com/flanksource/commons v1.19.3
-	github.com/flanksource/duty v1.0.276
+	github.com/flanksource/duty v1.0.277
 	github.com/flanksource/gomplate/v3 v3.20.26
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
 	github.com/flanksource/kommons v0.31.4
@@ -62,6 +62,7 @@ require (
 	github.com/samber/lo v1.39.0
 	github.com/sevennt/echo-pprof v0.1.1-0.20220616082843-66a461746b5f
 	github.com/spf13/cobra v1.8.0
+	github.com/spf13/pflag v1.0.5
 	github.com/timberio/go-datemath v0.1.0
 	go.mongodb.org/mongo-driver v1.12.1
 	go.opentelemetry.io/otel v1.19.0
