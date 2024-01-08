@@ -8,6 +8,7 @@ import (
 )
 
 var _ = ginkgo.Describe("Topology relationships", ginkgo.Ordered, func() {
+	topology := pkg.Topology{Name: "Topology ComponentRelationship"}
 	parentComponent := pkg.Component{
 		Name: "Component",
 		Selectors: []types.ResourceSelector{
@@ -31,10 +32,17 @@ var _ = ginkgo.Describe("Topology relationships", ginkgo.Ordered, func() {
 	}
 
 	ginkgo.BeforeAll(func() {
-		ComponentRelationshipSync.Context = DefaultContext
-		err := DefaultContext.DB().Create(&parentComponent).Error
+		err := DefaultContext.DB().Create(&topology).Error
 		Expect(err).To(BeNil())
 
+		parentComponent.TopologyID = topology.ID
+		ComponentRelationshipSync.Context = DefaultContext
+		err = DefaultContext.DB().Create(&parentComponent).Error
+		Expect(err).To(BeNil())
+
+		childComponent1.TopologyID = topology.ID
+		childComponent2.TopologyID = topology.ID
+		childComponent3.TopologyID = topology.ID
 		err = DefaultContext.DB().Create(pkg.Components{&childComponent1, &childComponent2, &childComponent3}).Error
 		Expect(err).To(BeNil())
 	})
