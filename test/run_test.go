@@ -42,7 +42,7 @@ var _ = ginkgo.BeforeSuite(func() {
 })
 
 func init() {
-	defaultFolder := "fixtures/git"
+	defaultFolder := "fixtures/minimal"
 	if os.Getenv("TEST_FOLDER") != "" {
 		defaultFolder = os.Getenv("TEST_FOLDER")
 	}

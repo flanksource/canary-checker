@@ -13,6 +13,9 @@ if ! which mergestat  > /dev/null; then
     fi
 fi
 
+
+kubectl create namespace canaries || true
+
 # creating a GITHUB_TOKEN Secret
 if [[ -z "${GH_TOKEN}" ]]; then
     printf "\nEnvironment variable for github token (GH_TOKEN) is missing!!!\n"
@@ -20,8 +23,6 @@ else
     printf "\nCreating secret from github token ending with '${GH_TOKEN:(-8)}'\n"
     kubectl create secret generic github-token --from-literal=GITHUB_TOKEN="${GH_TOKEN}" --namespace canaries
 fi
-
-kubectl create namespace canaries || true
 
 helm repo add gitea-charts https://dl.gitea.io/charts
 helm repo update
