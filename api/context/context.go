@@ -11,7 +11,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
-	ctemplate "github.com/flanksource/commons/template"
 	"github.com/flanksource/duty/connection"
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
@@ -157,12 +156,12 @@ func (ctx *Context) GetConnection(conn v1.Connection) (*models.Connection, error
 		"password":  _conn.Password,
 		"domain":    getDomain(_conn.Username),
 	}
-	templater := ctemplate.StructTemplater{
+	templater := gomplate.StructTemplater{
 		Values: data,
 		// access go values in template requires prefix everything with .
 		// to support $(username) instead of $(.username) we add a function for each var
 		ValueFunctions: true,
-		DelimSets: []ctemplate.Delims{
+		DelimSets: []gomplate.Delims{
 			{Left: "{{", Right: "}}"},
 			{Left: "$(", Right: ")"},
 		},
