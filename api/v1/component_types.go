@@ -2,8 +2,10 @@ package v1
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/flanksource/duty/types"
+	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -51,10 +53,23 @@ type ComponentSpec struct {
 	ForEach *ForEach `json:"forEach,omitempty"`
 	// Logs is a list of logs selector for apm-hub.
 	LogSelectors types.LogSelectors `json:"logs,omitempty"`
+
+	// Reference to populate parent_id
+	ParentLookup *ParentLookup `json:"parentLookup,omitempty"`
 }
 
 // +kubebuilder:validation:Type=object
 type ComponentSpecObject ComponentSpec
+
+type ParentLookup struct {
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	Type      string `json:"type,omitempty"`
+}
+
+func (p ParentLookup) CacheKey(topologyID uuid.UUID) string {
+	return strings.Join([]string{topologyID.String(), p.Name, p.Namespace, p.Type}, "/")
+}
 
 func (c ComponentSpec) String() string {
 	if c.Name != "" {

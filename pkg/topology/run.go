@@ -489,10 +489,12 @@ func SyncComponents(opts TopologyRunOptions, topology v1.Topology) (int, error) 
 
 	var compIDs []uuid.UUID
 	for _, component := range components {
+		// Is this step required ever ?
 		component.Name = topology.Name
 		component.Namespace = topology.Namespace
 		component.Labels = topology.Labels
-		component.TopologyID = &topologyID
+		component.TopologyID = topologyID
+
 		componentsIDs, err := db.PersistComponent(opts.Context, component)
 		if err != nil {
 			return 0, fmt.Errorf("failed to persist component(id=%s, name=%s): %w", component.ID, component.Name, err)
