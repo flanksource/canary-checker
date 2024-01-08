@@ -99,7 +99,7 @@ func runFixture(name string) {
 
 		for _, canary := range canaries {
 			if canary.Namespace == "" {
-				canary.Namespace = "default"
+				canary.Namespace = "canaries"
 			}
 			if canary.Name == "" {
 				canary.Name = cmd.CleanupFilename(name)

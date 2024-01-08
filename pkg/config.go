@@ -1,17 +1,14 @@
 package pkg
 
 import (
-	"bytes"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	gotemplate "text/template"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/commons/text"
+	"github.com/flanksource/gomplate/v3"
 
 	"gopkg.in/flanksource/yaml.v3"
 	yamlutil "k8s.io/apimachinery/pkg/util/yaml"
@@ -32,8 +29,8 @@ func readFile(path string) (string, error) {
 	return string(data), nil
 }
 
-func parseDataFile(file string) (interface{}, error) {
-	var d interface{}
+func parseDataFile(file string) (map[string]any, error) {
+	var d map[string]any
 	data, err := readFile(file)
 	if err != nil {
 		return nil, err
@@ -42,18 +39,10 @@ func parseDataFile(file string) (interface{}, error) {
 	return d, err
 }
 
-func template(content string, data interface{}) (string, error) {
-	tpl := gotemplate.New("")
-	tpl, err := tpl.Funcs(text.GetTemplateFuncs()).Parse(content)
-	if err != nil {
-		return "", err
-	}
-
-	var buf bytes.Buffer
-	if err := tpl.Execute(&buf, data); err != nil {
-		return "", fmt.Errorf("error executing template %s: %v", strings.Split(content, "\n")[0], err)
-	}
-	return strings.TrimSpace(buf.String()), nil
+func template(content string, data map[string]any) (string, error) {
+	return gomplate.RunTemplate(data, gomplate.Template{
+		Template: content,
+	})
 }
 
 func ParseSystems(configFile, datafile string) ([]v1.Topology, error) {
