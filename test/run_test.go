@@ -42,7 +42,7 @@ var _ = ginkgo.BeforeSuite(func() {
 })
 
 func init() {
-	defaultFolder := "fixtures/minimal"
+	defaultFolder := "fixtures/git"
 	if os.Getenv("TEST_FOLDER") != "" {
 		defaultFolder = os.Getenv("TEST_FOLDER")
 	}
@@ -99,7 +99,7 @@ func runFixture(name string) {
 
 		for _, canary := range canaries {
 			if canary.Namespace == "" {
-				canary.Namespace = "default"
+				canary.Namespace = "canaries"
 			}
 			if canary.Name == "" {
 				canary.Name = cmd.CleanupFilename(name)

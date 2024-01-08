@@ -16,19 +16,16 @@ fi
 # creating a GITHUB_TOKEN Secret
 if [[ -z "${GH_TOKEN}" ]]; then
     printf "\nEnvironment variable for github token (GH_TOKEN) is missing!!!\n"
-    exit 1;
 else
     printf "\nCreating secret from github token ending with '${GH_TOKEN:(-8)}'\n"
+    kubectl create secret generic github-token --from-literal=GITHUB_TOKEN="${GH_TOKEN}" --namespace canaries
 fi
 
 kubectl create namespace canaries || true
 
-kubectl create secret generic github-token --from-literal=GITHUB_TOKEN="${GH_TOKEN}" --namespace canaries
-kubectl get secret github-token -o yaml --namespace canaries
-
 helm repo add gitea-charts https://dl.gitea.io/charts
 helm repo update
-helm install gitea gitea-charts/gitea  -f gitea.values --create-namespace --namespace gitea --wait
+helm install gitea gitea-charts/gitea  -f fixtures/git/gitea.values --create-namespace --namespace gitea --wait
 
 kubectl port-forward  svc/gitea-http -n gitea 3001:3000 &
 PID=$!
