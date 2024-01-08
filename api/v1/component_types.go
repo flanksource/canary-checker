@@ -16,13 +16,14 @@ type Component struct {
 }
 
 type ComponentSpec struct {
-	Name    string            `json:"name,omitempty"`
-	Tooltip string            `json:"tooltip,omitempty"`
-	Icon    string            `json:"icon,omitempty"`
-	Owner   string            `json:"owner,omitempty"`
-	Id      *Template         `json:"id,omitempty"` //nolint
-	Order   int               `json:"order,omitempty"`
-	Labels  map[string]string `json:"labels,omitempty"`
+	Name      string            `json:"name,omitempty"`
+	Namespace string            `json:"namespace,omitempty"`
+	Tooltip   string            `json:"tooltip,omitempty"`
+	Icon      string            `json:"icon,omitempty"`
+	Owner     string            `json:"owner,omitempty"`
+	Id        *Template         `json:"id,omitempty"` //nolint
+	Order     int               `json:"order,omitempty"`
+	Labels    map[string]string `json:"labels,omitempty"`
 	// The type of component, e.g. service, API, website, library, database, etc.
 	Type string `json:"type,omitempty"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
@@ -51,6 +52,9 @@ type ComponentSpec struct {
 	ForEach *ForEach `json:"forEach,omitempty"`
 	// Logs is a list of logs selector for apm-hub.
 	LogSelectors types.LogSelectors `json:"logs,omitempty"`
+
+	// Reference to populate parent_id
+	ParentLookup *ParentLookup `json:"parentLookup,omitempty"`
 }
 
 // +kubebuilder:validation:Type=object
@@ -82,6 +86,12 @@ func (f *ForEach) IsEmpty() bool {
 
 func (f *ForEach) String() string {
 	return fmt.Sprintf("ForEach(components=%d, properties=%d)", len(f.Components), len(f.Properties))
+}
+
+type ParentLookup struct {
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	Type      string `json:"type,omitempty"`
 }
 
 type ComponentStatus struct {

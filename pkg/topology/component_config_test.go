@@ -9,6 +9,7 @@ import (
 )
 
 var _ = ginkgo.Describe("Topology configs", ginkgo.Ordered, func() {
+	topology := pkg.Topology{Name: "Topology ComponentConfig"}
 	component := pkg.Component{
 		Name: "Component with configs",
 		Configs: types.ConfigQueries{
@@ -21,7 +22,11 @@ var _ = ginkgo.Describe("Topology configs", ginkgo.Ordered, func() {
 	}
 
 	ginkgo.BeforeAll(func() {
-		err := DefaultContext.DB().Save(&component).Error
+		err := DefaultContext.DB().Save(&topology).Error
+		Expect(err).To(BeNil())
+
+		component.TopologyID = topology.ID
+		err = DefaultContext.DB().Save(&component).Error
 		Expect(err).To(BeNil())
 	})
 

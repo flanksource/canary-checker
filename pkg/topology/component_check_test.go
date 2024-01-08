@@ -11,6 +11,7 @@ import (
 )
 
 var _ = ginkgo.Describe("Topology checks", ginkgo.Ordered, func() {
+	topology := pkg.Topology{Name: "Topology ComponentCheck"}
 	component := pkg.Component{
 		Name: "Component",
 		ComponentChecks: []v1.ComponentCheck{{
@@ -27,7 +28,11 @@ var _ = ginkgo.Describe("Topology checks", ginkgo.Ordered, func() {
 	}
 
 	ginkgo.BeforeAll(func() {
-		err := DefaultContext.DB().Create(&component).Error
+		err := DefaultContext.DB().Create(&topology).Error
+		Expect(err).To(BeNil())
+
+		component.TopologyID = topology.ID
+		err = DefaultContext.DB().Create(&component).Error
 		Expect(err).To(BeNil())
 
 		err = DefaultContext.DB().Create(&canary).Error
