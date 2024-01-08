@@ -13,9 +13,9 @@ spec:
           dyn(results).map(r, {
             'name': r.Object.metadata.name,
             'labels': r.Object.metadata.labels,
-            'pass': k8s.is_healthy(r.Object),
-            'message': k8s.health(r.Object).message,
-            'error': k8s.health(r.Object).message,
+            'pass': k8s.isHealthy(r.Object),
+            'message': k8s.getHealth(r.Object).message,
+            'error': k8s.getHealth(r.Object).message,
           }).toJSON()
     - kind: Pod
       ready: true
@@ -25,7 +25,7 @@ spec:
           dyn(results).map(r, {
             'name': r.Object.metadata.name,
             'labels': r.Object.metadata.labels,
-            'pass': k8s.is_healthy(r.Object),
-            'message': k8s.health(r.Object).message,
-            'error': k8s.health(r.Object).message,
+            'pass': k8s.isHealthy(r.Object),
+            'message': k8s.getHealth(r.Object).message,
+            'error': k8s.getHealth(r.Object).message,
           }).toJSON()
