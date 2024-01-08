@@ -336,6 +336,37 @@ func mergeComponentProperties(components pkg.Components, propertiesRaw []byte) e
 	return nil
 }
 
+func populateParentRefMap(c *pkg.Component, parentRefMap map[string]*pkg.Component) {
+	parentRefMap[genParentKey(c.Name, c.Type, c.Namespace)] = c
+	for _, child := range c.Components {
+		populateParentRefMap(child, parentRefMap)
+	}
+}
+
+func changeComponentParents(c *pkg.Component, parentRefMap map[string]*pkg.Component) {
+	var children pkg.Components
+	for _, child := range c.Components {
+		if child.ParentLookup == nil {
+			children = append(children, child)
+			continue
+		}
+
+		key := genParentKey(child.ParentLookup.Name, child.ParentLookup.Type, child.ParentLookup.Namespace)
+		if parentComp, exists := parentRefMap[key]; exists {
+			// Set nil to prevent processing again
+			child.ParentLookup = nil
+			parentComp.Components = append(parentComp.Components, child)
+		} else {
+			children = append(children, child)
+		}
+	}
+	c.Components = children
+
+	for _, child := range c.Components {
+		changeComponentParents(child, parentRefMap)
+	}
+}
+
 type TopologyRunOptions struct {
 	dutyContext.Context
 	Depth     int
@@ -409,6 +440,11 @@ func Run(opts TopologyRunOptions, t v1.Topology) ([]*pkg.Component, models.JobHi
 			rootComponent.Components = append(rootComponent.Components, components...)
 		}
 	}
+
+	// Update component parents based on ParentLookup
+	parentRefMap := make(map[string]*pkg.Component)
+	populateParentRefMap(rootComponent, parentRefMap)
+	changeComponentParents(rootComponent, parentRefMap)
 
 	if len(rootComponent.Components) == 1 && rootComponent.Components[0].Type == "virtual" {
 		// if there is only one component and it is virtual, then we don't need to show it
@@ -489,10 +525,12 @@ func SyncComponents(opts TopologyRunOptions, topology v1.Topology) (int, error) 
 
 	var compIDs []uuid.UUID
 	for _, component := range components {
+		// Is this step required ever ?
 		component.Name = topology.Name
 		component.Namespace = topology.Namespace
 		component.Labels = topology.Labels
-		component.TopologyID = &topologyID
+		component.TopologyID = topologyID
+
 		componentsIDs, err := db.PersistComponent(opts.Context, component)
 		if err != nil {
 			return 0, fmt.Errorf("failed to persist component(id=%s, name=%s): %w", component.ID, component.Name, err)

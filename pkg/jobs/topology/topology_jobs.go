@@ -23,7 +23,7 @@ var topologyJobs sync.Map
 func newTopologyJob(ctx context.Context, topology v1.Topology) {
 	j := &job.Job{
 		Name:       "TopologyRun",
-		Context:    ctx.WithObject(topology.ObjectMeta),
+		Context:    ctx.WithObject(topology.ObjectMeta).WithTopology(topology),
 		Schedule:   topology.Spec.Schedule,
 		JobHistory: true,
 		Retention:  job.RetentionHour,

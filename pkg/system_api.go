@@ -134,7 +134,7 @@ type Component struct {
 	ComponentChecks v1.ComponentChecks          `json:"-" gorm:"componentChecks" swaggerignore:"true"`
 	Checks          Checks                      `json:"checks,omitempty" gorm:"-"`
 	Configs         dutyTypes.ConfigQueries     `json:"configs,omitempty" gorm:"type:configs"`
-	TopologyID      *uuid.UUID                  `json:"topology_id,omitempty"` //nolint
+	TopologyID      uuid.UUID                   `json:"topology_id,omitempty"` //nolint
 	CreatedAt       time.Time                   `json:"created_at,omitempty" time_format:"postgres_timestamp"`
 	UpdatedAt       time.Time                   `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
 	DeletedAt       *time.Time                  `json:"deleted_at,omitempty" time_format:"postgres_timestamp" swaggerignore:"true"`
@@ -148,6 +148,7 @@ type Component struct {
 	CostTotal7d     float64                     `json:"cost_total_7d,omitempty" gorm:"column:cost_total_7d"`
 	CostTotal30d    float64                     `json:"cost_total_30d,omitempty" gorm:"column:cost_total_30d"`
 	LogSelectors    dutyTypes.LogSelectors      `json:"logs,omitempty" gorm:"column:log_selectors"`
+	ParentLookup    *v1.ParentLookup            `json:"parentLookup,omitempty" gorm:"-"`
 }
 
 func (component *Component) FindExisting(db *gorm.DB) (*models.Component, error) {
@@ -245,6 +246,7 @@ func (component Component) GetAsEnvironment() map[string]interface{} {
 func NewComponent(c v1.ComponentSpec) *Component {
 	_c := Component{
 		Name:            c.Name,
+		Namespace:       c.Namespace,
 		Owner:           c.Owner,
 		Type:            c.Type,
 		Order:           c.Order,
@@ -256,6 +258,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Labels:          c.Labels,
 		Configs:         c.Configs,
 		LogSelectors:    c.LogSelectors,
+		ParentLookup:    c.ParentLookup,
 	}
 	if c.Summary != nil {
 		_c.Summary = *c.Summary

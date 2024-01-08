@@ -774,6 +774,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "tooltip": {
           "type": "string"
         },
@@ -841,6 +844,9 @@
         },
         "logs": {
           "$ref": "#/$defs/LogSelectors"
+        },
+        "parentLookup": {
+          "$ref": "#/$defs/ParentLookup"
         }
       },
       "additionalProperties": false,
@@ -851,6 +857,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "tooltip": {
           "type": "string"
         },
@@ -918,6 +927,9 @@
         },
         "logs": {
           "$ref": "#/$defs/LogSelectors"
+        },
+        "parentLookup": {
+          "$ref": "#/$defs/ParentLookup"
         }
       },
       "additionalProperties": false,
@@ -3077,6 +3089,21 @@
         "name",
         "uid"
       ]
+    },
+    "ParentLookup": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "PodCheck": {
       "properties": {

@@ -7045,10 +7045,22 @@ spec:
                   x-kubernetes-preserve-unknown-fields: true
                 name:
                   type: string
+                namespace:
+                  type: string
                 order:
                   type: integer
                 owner:
                   type: string
+                parentLookup:
+                  description: Reference to populate parent_id
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    type:
+                      type: string
+                  type: object
                 properties:
                   items:
                     properties:
@@ -7353,10 +7365,22 @@ spec:
                         x-kubernetes-preserve-unknown-fields: true
                       name:
                         type: string
+                      namespace:
+                        type: string
                       order:
                         type: integer
                       owner:
                         type: string
+                      parentLookup:
+                        description: Reference to populate parent_id
+                        properties:
+                          name:
+                            type: string
+                          namespace:
+                            type: string
+                          type:
+                            type: string
+                        type: object
                       properties:
                         items:
                           properties:
