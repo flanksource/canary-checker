@@ -50,7 +50,9 @@ type Context struct {
 
 func (ctx *Context) Duty() dutyCtx.Context {
 	if ctx.duty != nil {
-		return *ctx.duty
+		return (*ctx.duty).
+			WithNamespace(ctx.Namespace).
+			WithObject(ctx.Canary.ObjectMeta)
 	}
 	duty := dutyCtx.NewContext(gocontext.Background()).
 		WithDB(ctx.db, ctx.pool).
