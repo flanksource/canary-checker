@@ -13,18 +13,17 @@ if ! which mergestat  > /dev/null; then
     fi
 fi
 
+kubectl create namespace canaries || true
+
 # creating a GITHUB_TOKEN Secret
 if [[ -z "${GH_TOKEN}" ]]; then
     printf "\nEnvironment variable for github token (GH_TOKEN) is missing!!!\n"
     exit 1;
 else
     printf "\nCreating secret from github token ending with '${GH_TOKEN:(-8)}'\n"
+    kubectl create secret generic github-token --from-literal=GITHUB_TOKEN="${GH_TOKEN}" --namespace canaries
+    kubectl get secret github-token -o yaml --namespace canaries
 fi
-
-kubectl create namespace canaries || true
-
-kubectl create secret generic github-token --from-literal=GITHUB_TOKEN="${GH_TOKEN}" --namespace canaries
-kubectl get secret github-token -o yaml --namespace canaries
 
 helm repo add gitea-charts https://dl.gitea.io/charts
 helm repo update
@@ -38,6 +37,5 @@ sleep 5
 curl -vvv  -u gitea_admin:admin   -H "Content-Type: application/json"  http://localhost:3001/api/v1/user/repos  -d '{"name":"test_repo","auto_init":true}'
 
 kill $PID
-
 
 kubectl create secret generic gitea --from-literal=username=gitea_admin --from-literal=password=admin --from-literal=url=http://gitea-http.gitea.svc:3000/gitea_admin/test_repo.git
