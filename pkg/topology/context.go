@@ -11,7 +11,7 @@ import (
 	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
-	"github.com/flanksource/kommons/ktemplate"
+	"github.com/flanksource/gomplate/v3"
 	"github.com/pkg/errors"
 )
 
@@ -25,7 +25,7 @@ type ComponentContext struct {
 	Components *pkg.Components
 	// Properties can either be looked up on an individual component, or act as a summary across all components
 	CurrentComponent *pkg.Component
-	templater        *ktemplate.StructTemplater
+	templater        *gomplate.StructTemplater
 	JobHistory       *models.JobHistory
 	Duty             dutyContext.Context
 	DB               *gorm.DB
@@ -38,7 +38,7 @@ func (c *ComponentContext) String() string {
 	return fmt.Sprintf("[%s]", c.Topology.Name)
 }
 
-func (c *ComponentContext) GetTemplater() ktemplate.StructTemplater {
+func (c *ComponentContext) GetTemplater() gomplate.StructTemplater {
 	if c.templater != nil {
 		return *c.templater
 	}
@@ -46,9 +46,9 @@ func (c *ComponentContext) GetTemplater() ktemplate.StructTemplater {
 	if c.CurrentComponent != nil && c.CurrentComponent.Properties != nil {
 		props = c.CurrentComponent.Properties.AsMap()
 	}
-	c.templater = &ktemplate.StructTemplater{
+	c.templater = &gomplate.StructTemplater{
 		// RequiredTag: "template",
-		DelimSets: []ktemplate.Delims{
+		DelimSets: []gomplate.Delims{
 			{
 				Left:  "${",
 				Right: "}",
