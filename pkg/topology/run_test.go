@@ -105,6 +105,41 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 		Expect(componentC.Configs[0].Name).To(Equal(componentC.Name))
 		Expect(componentC.Configs[0].Type).To(Equal("Service"))
 	})
+
+	ginkgo.It("should update component's parents", func() {
+		t, err := yamlFileToTopology("../../fixtures/topology/component-with-parent-lookup.yml")
+		if err != nil {
+			ginkgo.Fail("Error converting yaml to v1.Topology:" + err.Error())
+		}
+
+		rootComponent, history := Run(TopologyRunOptions{
+			Context:   DefaultContext,
+			Depth:     10,
+			Namespace: "default",
+		}, t)
+
+		Expect(history.Errors).To(HaveLen(0))
+
+		Expect(len(rootComponent[0].Components)).To(Equal(3))
+
+		parent1 := rootComponent[0].Components[0]
+		parent2 := rootComponent[0].Components[1]
+		parent3 := rootComponent[0].Components[2]
+
+		Expect(len(parent1.Components)).To(Equal(2))
+		Expect(len(parent2.Components)).To(Equal(3))
+		Expect(len(parent3.Components)).To(Equal(1))
+
+		Expect(parent1.Components[0].Name).To(Equal("Child-1A"))
+		Expect(parent1.Components[1].Name).To(Equal("Child-1B"))
+
+		Expect(parent2.Components[0].Name).To(Equal("Child-2A"))
+		Expect(parent2.Components[1].Name).To(Equal("Child-2B"))
+		Expect(parent2.Components[2].Name).To(Equal("Child-1C"))
+
+		Expect(parent3.Components[0].Name).To(Equal("Child-1D"))
+	})
+
 })
 
 func yamlFileToTopology(file string) (t v1.Topology, err error) {

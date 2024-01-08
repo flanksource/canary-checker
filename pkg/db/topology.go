@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -12,7 +11,6 @@ import (
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
-	"github.com/patrickmn/go-cache"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -109,7 +107,7 @@ func PersistComponent(ctx context.Context, component *pkg.Component) ([]uuid.UUI
 			child.Path = component.ID.String()
 		}
 
-		child.ParentId = getComponentParent(ctx, child, component)
+		child.ParentId = &component.ID
 		if childIDs, err := PersistComponent(ctx, child); err != nil {
 			logger.Errorf("Error persisting child component of %v, :v", component.ID, err)
 		} else {
@@ -118,53 +116,6 @@ func PersistComponent(ctx context.Context, component *pkg.Component) ([]uuid.UUI
 	}
 
 	return persisted, tx.Error
-}
-
-// Component parent can either be a lookup for the direct ID of the component if ParentLookup is nil
-func getComponentParent(ctx context.Context, child, component *pkg.Component) *uuid.UUID {
-	if child.ParentLookup == nil {
-		return &component.ID
-	}
-
-	parentID, err := lookupComponentParent(ctx, *child.ParentLookup, component.TopologyID)
-	if err != nil {
-		logger.Errorf("Error looking up component parent with lookup spec %v of topology[%s]: %v", *child.ParentLookup, component.TopologyID, err)
-		return nil
-	}
-	return parentID
-}
-
-var componentParentCache = cache.New(3*24*time.Hour, 3*24*time.Hour)
-
-func lookupComponentParent(ctx context.Context, parentLookup v1.ParentLookup, topologyID uuid.UUID) (*uuid.UUID, error) {
-	if parentLookup.Name == "" || parentLookup.Type == "" {
-		return nil, fmt.Errorf("name or type field missing from spec")
-	}
-
-	// Check cache
-	cacheKey := parentLookup.CacheKey(topologyID)
-	if parentID, exists := componentParentCache.Get(cacheKey); exists {
-		return parentID.(*uuid.UUID), nil
-	}
-
-	var parentID *uuid.UUID
-	query := ctx.DB().Table("components").
-		Select("id").
-		Where(duty.LocalFilter).
-		Where("topology_id = ?", topologyID).
-		Where("name = ?", parentLookup.Name).
-		Where("type = ?", parentLookup.Type)
-
-	if parentLookup.Namespace != "" {
-		query = query.Where("namespace = ?", parentLookup.Namespace)
-	}
-
-	if err := query.First(&parentID).Error; err != nil {
-		return nil, fmt.Errorf("error querying parent_id from components table: %w", err)
-	}
-
-	componentParentCache.SetDefault(cacheKey, parentID)
-	return parentID, nil
 }
 
 func UpdateStatusAndSummaryForComponent(db *gorm.DB, id uuid.UUID, status types.ComponentStatus, summary types.Summary) (int64, error) {

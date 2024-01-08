@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/collections"
+	"github.com/flanksource/commons/logger"
 	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
@@ -336,6 +337,47 @@ func mergeComponentProperties(components pkg.Components, propertiesRaw []byte) e
 	return nil
 }
 
+func populateParentRefMap(c *pkg.Component, parentRefMap map[string]*pkg.Component) {
+	parentRefMap[genParentKey(c.Name, c.Type, c.Namespace)] = c
+	logger.Infof("YASH KEY SET %s", genParentKey(c.Name, c.Type, c.Namespace))
+	for _, child := range c.Components {
+		populateParentRefMap(child, parentRefMap)
+	}
+}
+
+func changeParents(c *pkg.Component, parentRefMap map[string]*pkg.Component) {
+	var children pkg.Components
+	for _, child := range c.Components {
+		if child.ParentLookup == nil {
+			children = append(children, child)
+			continue
+		}
+
+		key := genParentKey(child.ParentLookup.Name, child.ParentLookup.Type, child.ParentLookup.Namespace)
+		logger.Infof("YASH KEY IS %s", key)
+		if parentComp, exists := parentRefMap[key]; exists {
+			// Set nil to prevent again
+			child.ParentLookup = nil
+			logger.Infof("YASH KEY FOUND IS %s", key)
+			parentComp.Components = append(parentComp.Components, child)
+		} else {
+			logger.Errorf("YASH ERROR")
+			children = append(children, child)
+		}
+	}
+	c.Components = children
+
+	for _, child := range c.Components {
+		changeParents(child, parentRefMap)
+	}
+}
+
+func parentRefs(rootComponent *pkg.Component) {
+	parentRefMap := make(map[string]*pkg.Component)
+	populateParentRefMap(rootComponent, parentRefMap)
+	changeParents(rootComponent, parentRefMap)
+}
+
 type TopologyRunOptions struct {
 	dutyContext.Context
 	Depth     int
@@ -409,6 +451,11 @@ func Run(opts TopologyRunOptions, t v1.Topology) ([]*pkg.Component, models.JobHi
 			rootComponent.Components = append(rootComponent.Components, components...)
 		}
 	}
+
+	// MAP
+	parentRefMap := make(map[string]*pkg.Component)
+	populateParentRefMap(rootComponent, parentRefMap)
+	changeParents(rootComponent, parentRefMap)
 
 	if len(rootComponent.Components) == 1 && rootComponent.Components[0].Type == "virtual" {
 		// if there is only one component and it is virtual, then we don't need to show it

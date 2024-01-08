@@ -2,10 +2,8 @@ package v1
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/flanksource/duty/types"
-	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -18,13 +16,14 @@ type Component struct {
 }
 
 type ComponentSpec struct {
-	Name    string            `json:"name,omitempty"`
-	Tooltip string            `json:"tooltip,omitempty"`
-	Icon    string            `json:"icon,omitempty"`
-	Owner   string            `json:"owner,omitempty"`
-	Id      *Template         `json:"id,omitempty"` //nolint
-	Order   int               `json:"order,omitempty"`
-	Labels  map[string]string `json:"labels,omitempty"`
+	Name      string            `json:"name,omitempty"`
+	Namespace string            `json:"namespace,omitempty"`
+	Tooltip   string            `json:"tooltip,omitempty"`
+	Icon      string            `json:"icon,omitempty"`
+	Owner     string            `json:"owner,omitempty"`
+	Id        *Template         `json:"id,omitempty"` //nolint
+	Order     int               `json:"order,omitempty"`
+	Labels    map[string]string `json:"labels,omitempty"`
 	// The type of component, e.g. service, API, website, library, database, etc.
 	Type string `json:"type,omitempty"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
@@ -61,16 +60,6 @@ type ComponentSpec struct {
 // +kubebuilder:validation:Type=object
 type ComponentSpecObject ComponentSpec
 
-type ParentLookup struct {
-	Name      string `json:"name,omitempty"`
-	Namespace string `json:"namespace,omitempty"`
-	Type      string `json:"type,omitempty"`
-}
-
-func (p ParentLookup) CacheKey(topologyID uuid.UUID) string {
-	return strings.Join([]string{topologyID.String(), p.Name, p.Namespace, p.Type}, "/")
-}
-
 func (c ComponentSpec) String() string {
 	if c.Name != "" {
 		return c.Name
@@ -97,6 +86,12 @@ func (f *ForEach) IsEmpty() bool {
 
 func (f *ForEach) String() string {
 	return fmt.Sprintf("ForEach(components=%d, properties=%d)", len(f.Components), len(f.Properties))
+}
+
+type ParentLookup struct {
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	Type      string `json:"type,omitempty"`
 }
 
 type ComponentStatus struct {

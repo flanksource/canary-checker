@@ -246,6 +246,7 @@ func (component Component) GetAsEnvironment() map[string]interface{} {
 func NewComponent(c v1.ComponentSpec) *Component {
 	_c := Component{
 		Name:            c.Name,
+		Namespace:       c.Namespace,
 		Owner:           c.Owner,
 		Type:            c.Type,
 		Order:           c.Order,
