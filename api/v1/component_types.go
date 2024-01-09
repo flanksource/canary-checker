@@ -24,6 +24,8 @@ type ComponentSpec struct {
 	Id        *Template         `json:"id,omitempty"` //nolint
 	Order     int               `json:"order,omitempty"`
 	Labels    map[string]string `json:"labels,omitempty"`
+	// If set to true, do not display in UI
+	Hidden bool `json:"hidden,omitempty"`
 	// The type of component, e.g. service, API, website, library, database, etc.
 	Type string `json:"type,omitempty"`
 	// The lifecycle state of the component e.g. production, staging, dev, etc.
