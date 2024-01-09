@@ -815,6 +815,9 @@
           },
           "type": "object"
         },
+        "hidden": {
+          "type": "boolean"
+        },
         "type": {
           "type": "string"
         },
@@ -897,6 +900,9 @@
             }
           },
           "type": "object"
+        },
+        "hidden": {
+          "type": "boolean"
         },
         "type": {
           "type": "string"

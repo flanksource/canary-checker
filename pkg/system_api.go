@@ -108,16 +108,18 @@ func (components Components) Walk() Components {
 
 // Component mirrors the models.Component struct except that instead of raw JSON serialized to the DB, it has the full CRD based spec.
 type Component struct {
-	Name         string                    `json:"name,omitempty"`
-	ID           uuid.UUID                 `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
-	Text         string                    `json:"text,omitempty"`
-	Schedule     string                    `json:"schedule,omitempty"`
-	TopologyType string                    `json:"topology_type,omitempty"`
-	Namespace    string                    `json:"namespace,omitempty"`
-	Labels       dutyTypes.JSONStringMap   `json:"labels,omitempty"`
-	Tooltip      string                    `json:"tooltip,omitempty"`
-	Icon         string                    `json:"icon,omitempty"`
-	Owner        string                    `json:"owner,omitempty"`
+	Name         string                  `json:"name,omitempty"`
+	ID           uuid.UUID               `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
+	Text         string                  `json:"text,omitempty"`
+	Schedule     string                  `json:"schedule,omitempty"`
+	TopologyType string                  `json:"topology_type,omitempty"`
+	Namespace    string                  `json:"namespace,omitempty"`
+	Labels       dutyTypes.JSONStringMap `json:"labels,omitempty"`
+	Tooltip      string                  `json:"tooltip,omitempty"`
+	Icon         string                  `json:"icon,omitempty"`
+	Owner        string                  `json:"owner,omitempty"`
+	// If set to true, do not display in UI
+	Hidden       bool                      `json:"hidden,omitempty"`
 	Status       dutyTypes.ComponentStatus `json:"status,omitempty"`
 	StatusReason dutyTypes.NullString      `json:"status_reason,omitempty"`
 	Path         string                    `json:"path,omitempty"`
@@ -250,6 +252,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Owner:           c.Owner,
 		Type:            c.Type,
 		Order:           c.Order,
+		Hidden:          c.Hidden,
 		Lifecycle:       c.Lifecycle,
 		Tooltip:         c.Tooltip,
 		Icon:            c.Icon,
