@@ -2,6 +2,7 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: git-pull-push
+  namespace: canaries
 spec:
   gitProtocol:
     - name: git-pull-push
@@ -15,5 +16,5 @@ spec:
           secretKeyRef:
             key: password
             name: gitea
-      repository: http://gitea-http.gitea.svc:3000/gitea_admin/test_repo.git
-  interval: 30
+      repository: http://gitea-http.gitea:3000/gitea_admin/test_repo.git
+  interval: 10
