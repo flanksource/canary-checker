@@ -23,7 +23,7 @@ require (
 	github.com/flanksource/artifacts v1.0.4
 	github.com/flanksource/commons v1.20.0
 	github.com/flanksource/duty v1.0.280
-	github.com/flanksource/gomplate/v3 v3.20.29
+	github.com/flanksource/gomplate/v3 v3.21.0
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
 	github.com/flanksource/kommons v0.31.4
 	github.com/flanksource/postq v1.0.0
@@ -282,5 +282,7 @@ require (
 )
 
 // replace github.com/flanksource/duty => ../duty
+
+// replace github.com/flanksource/gomplate/v3 => ../gomplate
 
 // replace github.com/flanksource/artifacts => ../artifacts
