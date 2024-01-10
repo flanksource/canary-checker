@@ -75,7 +75,7 @@ require (
 	google.golang.org/grpc v1.60.1
 	gopkg.in/flanksource/yaml.v3 v3.2.3
 	gorm.io/gorm v1.25.5
-	gorm.io/plugin/prometheus v0.0.0-20231026031148-436184e80556
+	gorm.io/plugin/prometheus v0.1.0
 	k8s.io/api v0.28.3
 	k8s.io/apimachinery v0.28.3
 	k8s.io/client-go v0.28.3
