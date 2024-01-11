@@ -124,15 +124,11 @@ func UpdateStatusAndSummaryForComponent(db *gorm.DB, id uuid.UUID, status types.
 	return tx.RowsAffected, tx.Error
 }
 
-func DeleteTopology(db *gorm.DB, t *v1.Topology) error {
-	logger.Infof("Deleting topology %s/%s", t.Namespace, t.Name)
-	model := pkg.TopologyFromV1(t)
-
-	tx := db.Table("topologies").Find(model, "id = ?", t.GetPersistedID()).UpdateColumn("deleted_at", duty.Now())
-	if tx.Error != nil {
-		return tx.Error
+func DeleteTopology(db *gorm.DB, topologyID string) error {
+	if err := db.Table("topologies").Where("id = ?", topologyID).UpdateColumn("deleted_at", duty.Now()).Error; err != nil {
+		return fmt.Errorf("error marking topology[%s] as deleted: %w", topologyID, err)
 	}
-	return DeleteComponentsOfTopology(db, t.GetPersistedID())
+	return DeleteComponentsOfTopology(db, topologyID)
 }
 
 // DeleteComponents deletes all components associated with a topology
