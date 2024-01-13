@@ -75,6 +75,18 @@ var _ = ginkgo.FDescribe("Topology relationships", ginkgo.Ordered, func() {
 			},
 		},
 	}
+	parentComponent6 := pkg.Component{
+		Name: "Component5",
+		Selectors: []types.ResourceSelector{
+			{
+				LabelSelector: "service=payments",
+				FieldSelector: "type=api",
+			},
+			{
+				LabelSelector: "service=logistics",
+			},
+		},
+	}
 	childrenComponents := pkg.Components{
 		{
 			Name:   "Child-1",
@@ -119,8 +131,9 @@ var _ = ginkgo.FDescribe("Topology relationships", ginkgo.Ordered, func() {
 		parentComponent3.TopologyID = topology.ID
 		parentComponent4.TopologyID = topology.ID
 		parentComponent5.TopologyID = topology.ID
+		parentComponent6.TopologyID = topology.ID
 		ComponentRelationshipSync.Context = DefaultContext
-		err = DefaultContext.DB().Create(pkg.Components{&parentComponent, &parentComponent2, &parentComponent3, &parentComponent4, &parentComponent5}).Error
+		err = DefaultContext.DB().Create(pkg.Components{&parentComponent, &parentComponent2, &parentComponent3, &parentComponent4, &parentComponent5, &parentComponent6}).Error
 		Expect(err).To(BeNil())
 
 		for _, c := range childrenComponents {
@@ -154,7 +167,6 @@ var _ = ginkgo.FDescribe("Topology relationships", ginkgo.Ordered, func() {
 		relationships, err = parentComponent3.GetChildren(DefaultContext.DB())
 		Expect(err).To(BeNil())
 
-		// Child-1 Child-3 Child-5
 		Expect(matchComponentsInRelationships(pkg.Components{
 			childrenComponents.Find("Child-1"), childrenComponents.Find("Child-3"),
 			childrenComponents.Find("Child-5")}, relationships)).
@@ -164,16 +176,24 @@ var _ = ginkgo.FDescribe("Topology relationships", ginkgo.Ordered, func() {
 		relationships, err = parentComponent4.GetChildren(DefaultContext.DB())
 		Expect(err).To(BeNil())
 
-		// Child-2 Child-5
 		Expect(matchComponentsInRelationships(pkg.Components{childrenComponents.Find("Child-2"), childrenComponents.Find("Child-5")}, relationships)).To(BeNil())
 		Expect(len(relationships)).To(Equal(2))
 
 		relationships, err = parentComponent5.GetChildren(DefaultContext.DB())
 		Expect(err).To(BeNil())
 
-		// Child-6
 		Expect(matchComponentsInRelationships(pkg.Components{childrenComponents.Find("Child-6")}, relationships)).To(BeNil())
 		Expect(len(relationships)).To(Equal(1))
+
+		relationships, err = parentComponent6.GetChildren(DefaultContext.DB())
+		Expect(err).To(BeNil())
+
+		Expect(matchComponentsInRelationships(pkg.Components{
+			childrenComponents.Find("Child-1"), childrenComponents.Find("Child-2"),
+			childrenComponents.Find("Child-3"), childrenComponents.Find("Child-5")}, relationships)).
+			To(BeNil())
+
+		Expect(len(relationships)).To(Equal(4))
 
 	})
 
