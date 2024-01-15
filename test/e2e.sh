@@ -53,11 +53,12 @@ if [[ "$SKIP_KARINA" != "true" ]] ; then
   echo "::endgroup::"
 fi
 
-kubectl create ns canaries || true
 
 if [ "$SKIP_SETUP" != "true" ]; then
   echo "::group::Setting up"
-
+  export GOOS=linux
+  export GOARCH=amd64
+  kubectl create ns canaries || true
   if [ -e $TEST_FOLDER/_karina.yaml ]; then
     $KARINA deploy phases --stubs --monitoring --apacheds --minio -c $(pwd)/$TEST_FOLDER/_karina.yaml -vv --prune=false
   fi
@@ -100,30 +101,36 @@ fi
 
 if [[ ! -e $TEST_BINARY ]]; then
   echo "::group::Compiling tests"
-  GOOS=linux GOARCH=amd64 make build
+  make build
   echo "::endgroup::"
 fi
 echo "::group::Testing"
 
-
 rm test.out test-results.xml test-results.json || true
 runner=ginkgo-$(date +%s)
 
-kubectl create clusterrolebinding ginkgo-default  --clusterrole=cluster-admin --serviceaccount=default:default || true
-kubectl run $runner --image $image -n default  --command -- bash -c 'sleep 3600'
-function cleanup {
-  kubectl delete po $runner --wait=false
-  kubectl delete clusterrolebinding ginkgo-default
-}
-trap cleanup EXIT
-kubectl wait --for=condition=Ready pod/$runner -n default --timeout=5m
-echo "Copying $TEST_FOLDER to $runner"
-kubectl cp ../$TEST_FOLDER $runner:/tmp/fixtures
-kubectl cp  $TEST_BINARY $runner:/tmp/test
-set +e
-kubectl exec -it $runner -- bash -c  "/tmp/test --test-folder /tmp/fixtures $EXTRA  --ginkgo.junit-report /tmp/test-results.xml -v 5"
-out=$?
-kubectl cp  $runner:/tmp/test-results.xml test-results.xml
+if [ "$SKIP_SETUP" != "true" ]; then
+  k="kubectl -n default"
+  $k create clusterrolebinding ginkgo-default  --clusterrole=cluster-admin --serviceaccount=default:default || true
+  $k run $runner --image $image   --command -- bash -c 'sleep 3600'
+  function cleanup {
+    $k delete po $runner --wait=false
+    $k delete clusterrolebinding ginkgo-default
+  }
+  trap cleanup EXIT
+  $k wait --for=condition=Ready pod/$runner  --timeout=5m
+  echo "Copying $TEST_FOLDER to $runner"
+  $k cp ../$TEST_FOLDER $runner:/tmp/fixtures
+  echo "Copying $TEST_BINARY to $runner"
+  $k cp  $TEST_BINARY $runner:/tmp/test
+  set +e
+  $k exec -it $runner -- bash -c  "/tmp/test --test-folder /tmp/fixtures $EXTRA  --ginkgo.junit-report /tmp/test-results.xml --ginkgo.vv  -verbose 1"
+  out=$?
+  $k cp  $runner:/tmp/test-results.xml test-results.xml
+else
+  $TEST_BINARY --test-folder $TEST_FOLDER --ginkgo.junit-report test-results.xml
+  out=$?
+fi
 
 if  [[ $out != 0 ]]  ; then
   echo "::endgroup::"

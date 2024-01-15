@@ -29,7 +29,7 @@ all: manager
 
 .PHONY: test
 test: manifests generate fmt ginkgo
-	ginkgo -vv -r  --cover  --keep-going --junit-report junit-report.xml -- --trace --db-trace
+	ginkgo -vv -r  --cover  --keep-going --junit-report junit-report.xml --
 
 # Build manager binary
 manager: generate fmt vet

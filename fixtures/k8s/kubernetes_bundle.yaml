@@ -22,7 +22,7 @@ spec:
       ready: true
       name: pod-bundle
       resource:
-        labelSelector: app != k8s-not-ready,  Expected-Fail != true, canary-checker.flanksource.com/generated != true, !canary-checker.flanksource.com/check
+        labelSelector: app != k8s-not-ready, app != k8s-ready, Expected-Fail != true, canary-checker.flanksource.com/generated != true, !canary-checker.flanksource.com/check
       transform:
         expr: |
           dyn(results).map(r, {
