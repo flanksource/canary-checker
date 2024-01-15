@@ -141,7 +141,7 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 			results = append(results, &r)
 		}
 		if ctx.IsTrace() {
-			ctx.Tracef("transformed %s into %v", in, results)
+			ctx.Tracef("transformed %s into %d results", in, len(results))
 		}
 		return results, hasTransformer, nil
 	} else if len(transformed) == 1 && t.Name == "" {

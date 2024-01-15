@@ -47,10 +47,10 @@ func InitContext() (context.Context, error) {
 var Root = &cobra.Command{
 	Use: "canary-checker",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		canary.LogFail = logFail
-		canary.LogPass = logPass
+		logger.UseZap()
 
-		logger.UseZap(cmd.Flags())
+		canary.LogFail = logFail || logger.IsLevelEnabled(3)
+		canary.LogPass = logPass || logger.IsLevelEnabled(4)
 
 		db.ConnectionString = readFromEnv(db.ConnectionString)
 		if db.ConnectionString == "DB_URL" {
@@ -59,7 +59,7 @@ var Root = &cobra.Command{
 
 		if canary.UpstreamConf.Valid() {
 			logger.Infof("Pushing checks %s", canary.UpstreamConf)
-		} else {
+		} else if canary.UpstreamConf.IsPartiallyFilled() {
 			logger.Debugf("Upstream not fully configured: %s", canary.UpstreamConf)
 		}
 

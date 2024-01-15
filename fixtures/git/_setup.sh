@@ -38,4 +38,4 @@ curl -vvv  -u gitea_admin:admin   -H "Content-Type: application/json"  http://lo
 kill $PID
 
 
-kubectl create secret generic gitea --from-literal=username=gitea_admin --from-literal=password=admin --from-literal=url=http:///gitea-http.gitea.svc:3000/gitea_admin/test_repo.git
+kubectl create secret generic gitea --from-literal=username=gitea_admin --from-literal=password=admin --from-literal=url=http:///gitea-http.gitea.svc:3000/gitea_admin/test_repo.git --namespace canaries

@@ -26,9 +26,10 @@ endif
 
 all: manager
 
-# Run tests
-test: generate fmt vet manifests
-	go test ./... -coverprofile cover.out
+
+.PHONY: test
+test: manifests generate fmt ginkgo
+	ginkgo -vv -r  --cover  --keep-going --junit-report junit-report.xml --
 
 # Build manager binary
 manager: generate fmt vet
@@ -121,7 +122,7 @@ docker-push:
 
 .PHONY: compress
 compress: .bin/upx
-	upx -5 ./.bin/$(NAME)_linux_amd64 ./.bin/$(NAME)_linux_arm64 ./.bin/$(NAME).exe
+	upx -5 ./.bin/$(NAME)_linux_amd64 ./.bin/$(NAME)_linux_arm64
 
 .PHONY: compress-build
 compress-build: .bin/upx
@@ -201,6 +202,11 @@ else
 	UPX=$(shell which upx)
 endif
 
+
+.PHONY: ginkgo
+ginkgo:
+	go install github.com/onsi/ginkgo/v2/ginkgo
+
 .bin/controller-gen: .bin
 		GOBIN=$(PWD)/.bin go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.11.1
 		CONTROLLER_GEN=$(GOBIN)/controller-gen
@@ -227,25 +233,10 @@ endif
 	curl -sSLo .bin/karina https://github.com/flanksource/karina/releases/download/v0.50.0/karina_$(OS)-$(ARCH) && \
 	chmod +x .bin/karina
 
-.PHONY: telepresence
-telepresence:
-ifeq (, $(shell which telepresence))
-ifeq ($(OS), darwin)
-	brew install --cask macfuse
-	brew install datawire/blackbird/telepresence-legacy
-else
-	sudo apt-get install -y conntrack
-	wget https://s3.amazonaws.com/datawire-static-files/telepresence/telepresence-0.109.tar.gz
-	tar xzf telepresence-0.109.tar.gz
-	sudo mv telepresence-0.109/bin/telepresence /usr/local/bin/
-	sudo mv telepresence-0.109/libexec/sshuttle-telepresence /usr/local/bin/
-endif
-endif
-
 .bin:
 	mkdir -p .bin
 
-bin: .bin .bin/wait4x .bin/karina .bin/go-junit-report  telepresence
+bin: .bin .bin/wait4x .bin/karina
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources

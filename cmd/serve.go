@@ -39,7 +39,6 @@ var Serve = &cobra.Command{
 	Use:   "serve config.yaml",
 	Short: "Start a server to execute checks",
 	Run: func(cmd *cobra.Command, configFiles []string) {
-		logger.ParseFlags(cmd.Flags())
 		canaryJobs.StartScanCanaryConfigs(setup(), dataFile, configFiles)
 		if executor {
 			jobs.Start()
