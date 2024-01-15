@@ -9,15 +9,12 @@ export CLUSTER_NAME=kind-test
 export PATH=$(pwd)/.bin:/usr/local/bin:$PATH
 export ROOT=$(pwd)
 export TEST_FOLDER=${TEST_FOLDER:-$1}
-export DOMAIN=${DOMAIN:-127.0.0.1.nip.io}
-export TELEPRESENCE_USE_DEPLOYMENT=0
 export TEST_BINARY=./test.test
 SKIP_SETUP=${SKIP_SETUP:-false}
 SKIP_KARINA=${SKIP_KARINA:-false}
-SKIP_TELEPRESENCE=${SKIP_TELEPRESENCE:-false}
 
 if [[ "$1" == "" ]]; then
-  echo "Usage ./test/e2e.sh TEST_FOLDER  [RunRegex] [--skip-setup] [--skip-karina] [--skip-telepresence] [--skip-all] "
+  echo "Usage ./test/e2e.sh TEST_FOLDER  [RunRegex] [--skip-setup] [--skip-karina] [--skip-all] "
   exit 1
 fi
 
@@ -27,16 +24,12 @@ fi
 if [[ "$*" == *"--skip-karina"* ]]; then
   SKIP_KARINA=true
 fi
-if [[ "$*" == *"--skip-telepresence"* ]]; then
-  SKIP_TELEPRESENCE=true
-fi
 if [[ "$*" == *"--skip-all"* ]]; then
-  SKIP_TELEPRESENCE=true
   SKIP_KARINA=true
   SKIP_SETUP=true
 fi
 
-echo "Testing $TEST_FOLDER with skip_setup=$SKIP_SETUP skip_karina=$SKIP_KARINA" skip_telepresence=$SKIP_TELEPRESENCE
+echo "Testing $TEST_FOLDER with skip_setup=$SKIP_SETUP skip_karina=$SKIP_KARINA"
 
 if [[ "$SKIP_KARINA" != "true" ]] ; then
   echo "::group::Provisioning"
@@ -60,18 +53,7 @@ if [[ "$SKIP_KARINA" != "true" ]] ; then
   echo "::endgroup::"
 fi
 
-_DOMAIN=$(kubectl get cm -n quack quack-config -o json | jq -r ".data.domain" || echo)
-if [[ "$_DOMAIN" != "" ]]; then
-  echo Using domain: $_DOMAIN
-  export DOMAIN=$_DOMAIN
-fi
-
-cat > /tmp/namespace.yml <<EOF
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: canaries
-EOF
+kubectl create ns canaries || true
 
 if [ "$SKIP_SETUP" != "true" ]; then
   echo "::group::Setting up"
@@ -82,10 +64,6 @@ if [ "$SKIP_SETUP" != "true" ]; then
 
   if [ -e $TEST_FOLDER/_setup.sh ]; then
     bash $TEST_FOLDER/_setup.sh || echo Setup failed, attempting tests anyway
-  fi
-
-  if [ -e $TEST_FOLDER/../namespace.yml ]; then
-    $KARINA apply /tmp/namespace.yml -v
   fi
 
   if [ -e $TEST_FOLDER/_setup.yaml ]; then
@@ -107,6 +85,13 @@ if [ "$SKIP_SETUP" != "true" ]; then
   echo "::endgroup::"
 fi
 
+image=ubuntu
+
+if [[ -e $TEST_FOLDER/_image ]]; then
+  image=$(cat $TEST_FOLDER/_image )
+  echo Using image: $image
+fi
+
 cd $ROOT/test
 
 if [[ "$TEST_REGEX" != "" ]]; then
@@ -115,19 +100,32 @@ fi
 
 if [[ ! -e $TEST_BINARY ]]; then
   echo "::group::Compiling tests"
-  make build
+  GOOS=linux GOARCH=amd64 make build
   echo "::endgroup::"
 fi
 echo "::group::Testing"
 
-if [[ "$SKIP_TELEPRESENCE" != "true" ]]; then
-  telepresence="telepresence --mount false -m vpn-tcp --namespace canaries --run"
-fi
 
-cmd="$telepresence ginkgo -p  --junit-report test-results.xml $TEST_BINARY --test-folder $TEST_FOLDER $EXTRA"
-$cmd  2>&1 | tee test.out
+rm test.out test-results.xml test-results.json || true
+runner=ginkgo-$(date +%s)
 
-if  grep "Test Suite Failed" test.out ; then
+kubectl create clusterrolebinding ginkgo-default  --clusterrole=cluster-admin --serviceaccount=default:default || true
+kubectl run $runner --image $image -n default  --command -- bash -c 'sleep 3600'
+function cleanup {
+  kubectl delete po $runner --wait=false
+  kubectl delete clusterrolebinding ginkgo-default
+}
+trap cleanup EXIT
+kubectl wait --for=condition=Ready pod/$runner -n default --timeout=5m
+echo "Copying $TEST_FOLDER to $runner"
+kubectl cp ../$TEST_FOLDER $runner:/tmp/fixtures
+kubectl cp  $TEST_BINARY $runner:/tmp/test
+set +e
+kubectl exec -it $runner -- bash -c  "/tmp/test --test-folder /tmp/fixtures $EXTRA  --ginkgo.junit-report /tmp/test-results.xml -v 5"
+out=$?
+kubectl cp  $runner:/tmp/test-results.xml test-results.xml
+
+if  [[ $out != 0 ]]  ; then
   echo "::endgroup::"
   exit 1
 fi
