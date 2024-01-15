@@ -237,12 +237,13 @@ func hydrate(ctx *context.Context, check v1.HTTPCheck) (*v1.HTTPCheck, *models.C
 
 	check.URL = uri
 
-	body := check.Body
 	if check.TemplateBody {
-		body, err = template(ctx, v1.Template{Template: body})
-		if err != nil {
-			return nil, nil, oops, results.WithError(oops.Wrap(err)).Invalidf("failed to template request body: %v", err)
-		}
+		ctx.Tracef("TemplateBody is deprecated. The body is templated by default. Use template escaping if necessary.")
+	}
+
+	body, err := template(ctx, v1.Template{Template: check.Body})
+	if err != nil {
+		return nil, nil, oops, results.WithError(oops.Wrap(err)).Invalidf("failed to template request body: %v", err)
 	}
 
 	oops = oops.Hint(body)
