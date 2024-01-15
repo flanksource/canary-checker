@@ -68,6 +68,9 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 			if err == nil {
 				resource.Object["healthStatus"] = resourceHealth
 			}
+			if check.Ready != nil && *check.Ready && resourceHealth.Status != health.HealthStatusHealthy {
+				results.Failf("%s/%s/%s is %s: %s", resource.GetKind(), resource.GetNamespace(), resource.GetName(), resourceHealth.Status, resourceHealth.Message)
+			}
 		}
 		allResources = append(allResources, resources...)
 	}

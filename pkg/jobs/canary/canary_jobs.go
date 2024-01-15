@@ -45,7 +45,7 @@ var canaryLastRuntimes = sync.Map{}
 func StartScanCanaryConfigs(ctx context.Context, dataFile string, configFiles []string) {
 	DataFile = dataFile
 	CanaryConfigFiles = configFiles
-	if _, err := ScheduleFunc("@every 5m", func() {
+	if _, err := FuncScheduler.AddFunc("@every 5m", func() {
 		ScanCanaryConfigs(ctx.DB())
 	}); err != nil {
 		logger.Errorf("Failed to schedule scan jobs: %v", err)
@@ -68,7 +68,6 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	if runner.IsCanaryIgnored(&j.Canary.ObjectMeta) {
 		return nil
 	}
-
 	canaryID := j.DBCanary.ID.String()
 	ctx.History.ResourceID = canaryID
 	ctx.History.ResourceType = "canary"
@@ -77,12 +76,12 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	val, _ := concurrentJobLocks.LoadOrStore(canaryID, &sync.Mutex{})
 	lock, ok := val.(*sync.Mutex)
 	if !ok {
-		logger.Warnf("expected mutex but got %T for canary(id=%s)", lock, canaryID)
+		ctx.Tracef("expected mutex but got %T for canary(id=%s)", lock, canaryID)
 		return nil
 	}
 
 	if !lock.TryLock() {
-		logger.Debugf("canary (id=%s) is already running. skipping this run ...", canaryID)
+		ctx.Tracef("canary (id=%s) is already running. skipping this run ...", canaryID)
 		return nil
 	}
 	defer lock.Unlock()
@@ -97,16 +96,17 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 
 	// Skip run if job ran too recently
 	if lastRunDelta < MinimumTimeBetweenCanaryRuns {
-		logger.Infof("Skipping Canary[%s]:%s since it last ran %.2f seconds ago", canaryID, j.Canary.GetNamespacedName(), lastRunDelta.Seconds())
+		ctx.Debugf("Skipping Canary[%s]:%s since it last ran %.2f seconds ago", canaryID, j.Canary.GetNamespacedName(), lastRunDelta.Seconds())
 		return nil
 	}
 
 	canaryCtx := canarycontext.New(ctx.Context, j.Canary)
 	var span trace.Span
 	ctx.Context, span = ctx.StartSpan("RunCanaryChecks")
+	span.SetAttributes(attribute.String("canary-id", canaryID))
 	results, err := checks.RunChecks(canaryCtx)
 	if err != nil {
-		logger.Errorf("error running checks for canary %s: %v", canaryID, err)
+		ctx.Errorf(err, "error running checks for canary %s: %v", canaryID, err)
 		return nil
 	}
 	defer span.End()
@@ -116,7 +116,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	// and should not be deleted manually in here.
 	existingTransformedChecks, err := db.GetTransformedCheckIDs(ctx.Context, canaryID, checks.WebhookCheckType)
 	if err != nil {
-		logger.Errorf("error getting transformed checks for canary %s: %v", canaryID, err)
+		ctx.Errorf(err, "error getting transformed checks for canary %s: %v", canaryID, err)
 	}
 
 	var transformedChecksCreated []string
@@ -139,7 +139,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 
 		// Establish relationship with components & configs
 		if err := formCheckRelationships(ctx.Context, result); err != nil {
-			logger.Errorf("error forming check relationships: %v", err)
+			ctx.Errorf(err, "error forming check relationships: %v", err)
 		}
 	}
 
@@ -163,10 +163,10 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		}
 		for status, checkIDs := range checkDeleteStrategyGroup {
 			if err := db.AddCheckStatuses(ctx.Context, checkIDs, models.CheckHealthStatus(status)); err != nil {
-				logger.Errorf("error adding statuses for transformed checks: %v", err)
+				ctx.Errorf(err, "error adding statuses for transformed checks: %v", err)
 			}
 			if err := db.RemoveTransformedChecks(ctx.Context, checkIDs); err != nil {
-				logger.Errorf("error deleting transformed checks for canary %s: %v", canaryID, err)
+				ctx.Errorf(err, "error deleting transformed checks for canary %s: %v", canaryID, err)
 			}
 		}
 	}
