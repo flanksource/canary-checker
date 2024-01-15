@@ -110,6 +110,7 @@ func (components Components) Walk() Components {
 type Component struct {
 	Name         string                  `json:"name,omitempty"`
 	ID           uuid.UUID               `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
+	AgentID      uuid.UUID               `json:"agent_id,omitempty"`                          //nolint
 	Text         string                  `json:"text,omitempty"`
 	Schedule     string                  `json:"schedule,omitempty"`
 	TopologyType string                  `json:"topology_type,omitempty"`
