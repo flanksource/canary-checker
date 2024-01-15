@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/flanksource/canary-checker v1.0.0
-	github.com/flanksource/commons v1.20.2
+	github.com/flanksource/commons v1.20.3
 	github.com/invopop/jsonschema v0.7.0
 	github.com/spf13/cobra v1.8.0
 )
@@ -44,7 +44,7 @@ require (
 	github.com/evanphx/json-patch v5.7.0+incompatible // indirect
 	github.com/exaring/otelpgx v0.5.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/flanksource/duty v1.0.287 // indirect
+	github.com/flanksource/duty v1.0.290 // indirect
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7 // indirect
 	github.com/flanksource/kommons v0.31.4 // indirect
 	github.com/flanksource/postq v1.0.0 // indirect

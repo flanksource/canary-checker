@@ -21,8 +21,8 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.11.1
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.4
-	github.com/flanksource/commons v1.20.2
-	github.com/flanksource/duty v1.0.287
+	github.com/flanksource/commons v1.20.3
+	github.com/flanksource/duty v1.0.290
 	github.com/flanksource/gomplate/v3 v3.21.0
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
 	github.com/flanksource/kommons v0.31.4
