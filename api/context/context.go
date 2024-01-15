@@ -10,6 +10,7 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/connection"
 	dutyCtx "github.com/flanksource/duty/context"
@@ -18,6 +19,7 @@ import (
 	"github.com/flanksource/gomplate/v3"
 	"github.com/flanksource/kommons"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 	"k8s.io/client-go/kubernetes"
 )
@@ -262,8 +264,8 @@ func New(ctx dutyCtx.Context, canary v1.Canary) *Context {
 		canary.Namespace = "default"
 	}
 
-	return &Context{
-		duty:        &ctx,
+	c := &Context{
+		duty:        lo.ToPtr(ctx.WithObject(canary.ObjectMeta)),
 		db:          ctx.DB(),
 		pool:        ctx.Pool(),
 		Context:     gocontext.Background(),
@@ -274,25 +276,34 @@ func New(ctx dutyCtx.Context, canary v1.Canary) *Context {
 		Environment: make(map[string]interface{}),
 		Logger:      logger.StandardLogger(),
 	}
+
+	c.Logger = c.Logger.Named(console.DarkWhitef("canary.%s.%s", canary.Namespace, canary.Name))
+
+	if c.Logger.IsLevelEnabled(4) || c.duty.IsTrace() {
+		c.Logger.SetMinLogLevel(2)
+	} else if c.Logger.IsLevelEnabled(3) || c.duty.IsDebug() {
+		c.Logger.SetMinLogLevel(1)
+	}
+	return c
 }
 
 func (ctx *Context) IsDebug() bool {
-	return ctx.Canary.IsDebug() || ctx.IsTrace()
+	return ctx.Logger.IsLevelEnabled(3) || ctx.Canary.IsDebug() || ctx.IsTrace()
 }
 
 func (ctx *Context) IsTrace() bool {
-	return ctx.Canary.IsTrace()
+	return ctx.Logger.IsLevelEnabled(4) || ctx.Canary.IsTrace()
 }
 
 func (ctx *Context) Debugf(format string, args ...interface{}) {
 	if ctx.IsDebug() {
-		ctx.Logger.Infof(format, args...)
+		ctx.Logger.Debugf(format, args...)
 	}
 }
 
 func (ctx *Context) Tracef(format string, args ...interface{}) {
 	if ctx.IsTrace() {
-		ctx.Logger.Infof(format, args...)
+		ctx.Logger.Tracef(format, args...)
 	}
 }
 

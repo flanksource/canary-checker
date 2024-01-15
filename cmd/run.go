@@ -2,18 +2,15 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/flanksource/commons/timer"
 
 	"github.com/flanksource/canary-checker/cmd/output"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/spf13/cobra"
 
 	apicontext "github.com/flanksource/canary-checker/api/context"
@@ -28,11 +25,6 @@ var junit, csv, jsonExport bool
 var Run = &cobra.Command{
 	Use:   "run <canary.yaml>",
 	Short: "Execute checks and return",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		logger.ParseFlags(cmd.Flags())
-		db.ConnectionString = readFromEnv(db.ConnectionString)
-
-	},
 	Run: func(cmd *cobra.Command, configFiles []string) {
 		timer := timer.NewTimer()
 		if len(configFiles) == 0 {
@@ -90,7 +82,12 @@ var Run = &cobra.Command{
 				} else {
 					passed++
 				}
-				fmt.Printf("%s \t%s\t\n", time.Now().Format(time.RFC3339), result.String())
+				logPass := result.Canary.IsDebug() || result.Canary.IsTrace() || logPass
+				logFail := result.Canary.IsDebug() || result.Canary.IsTrace() || logFail
+
+				if logPass && result.Pass || logFail && !result.Pass {
+					logger.Infof(result.String())
+				}
 				results = append(results, result)
 			}
 		}

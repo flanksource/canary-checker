@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/flanksource/canary-checker v1.0.0
-	github.com/flanksource/commons v1.20.0
+	github.com/flanksource/commons v1.20.2
 	github.com/invopop/jsonschema v0.7.0
 	github.com/spf13/cobra v1.8.0
 )

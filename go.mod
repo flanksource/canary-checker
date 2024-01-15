@@ -21,7 +21,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.11.1
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.4
-	github.com/flanksource/commons v1.20.0
+	github.com/flanksource/commons v1.20.2
 	github.com/flanksource/duty v1.0.287
 	github.com/flanksource/gomplate/v3 v3.21.0
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
@@ -69,6 +69,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.21.0
 	go.opentelemetry.io/otel/sdk v1.21.0
 	go.opentelemetry.io/otel/trace v1.21.0
+	go.uber.org/zap v1.26.0
 	golang.org/x/net v0.19.0
 	golang.org/x/sync v0.6.0
 	google.golang.org/genproto v0.0.0-20240102182953-50ed04b92917
@@ -244,7 +245,6 @@ require (
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
 	go.starlark.net v0.0.0-20231121155337-90ade8b19d09 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
@@ -280,9 +280,3 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.16.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
-
-// replace github.com/flanksource/duty => ../duty
-
-// replace github.com/flanksource/gomplate/v3 => ../gomplate
-
-// replace github.com/flanksource/artifacts => ../artifacts

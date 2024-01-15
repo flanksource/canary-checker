@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	gocache "github.com/patrickmn/go-cache"
+	"go.uber.org/zap/zapcore"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -31,6 +32,7 @@ import (
 )
 
 var webhookPort int
+var k8sLogLevel int
 var enableLeaderElection bool
 var operatorExecutor bool
 var disablePostgrest bool
@@ -45,6 +47,7 @@ func init() {
 	Operator.Flags().StringVarP(&runner.WatchNamespace, "namespace", "n", "", "Watch only specified namespaces, otherwise watch all")
 	Operator.Flags().BoolVar(&operatorExecutor, "executor", true, "If false, only serve the UI and sync the configs")
 	Operator.Flags().IntVar(&webhookPort, "webhookPort", 8082, "Port for webhooks ")
+	Operator.Flags().IntVar(&k8sLogLevel, "k8s-log-level", -1, "Kubernetes controller log level")
 	Operator.Flags().BoolVar(&enableLeaderElection, "enable-leader-election", false, "Enabling this will ensure there is only one active controller manager")
 	Operator.Flags().BoolVar(&disablePostgrest, "disable-postgrest", false, "Disable the postgrest server")
 	// +kubebuilder:scaffold:scheme
@@ -58,12 +61,9 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	loggr := ctrlzap.NewRaw(
-		ctrlzap.UseDevMode(true),
-		ctrlzap.WriteTo(os.Stderr),
-		ctrlzap.Level(zapLogger.Level),
-		ctrlzap.StacktraceLevel(zapLogger.StackTraceLevel),
-		ctrlzap.Encoder(zapLogger.GetEncoder()),
-	)
+		ctrlzap.Encoder(logger.NewZapEncoder()),
+		ctrlzap.Level(zapcore.Level(k8sLogLevel*-1)),
+	).Named("operator")
 
 	scheme := runtime.NewScheme()
 
