@@ -3615,6 +3615,180 @@ spec:
                       - path
                     type: object
                   type: array
+                gitProtocol:
+                  items:
+                    properties:
+                      description:
+                        description: Description for the check
+                        type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      filename:
+                        type: string
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        items:
+                          properties:
+                            labels:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
+                            name:
+                              type: string
+                            type:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                      name:
+                        description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
+                            type: object
+                        type: object
+                      repository:
+                        type: string
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
+                            type: object
+                        type: object
+                    required:
+                      - name
+                      - password
+                      - repository
+                      - username
+                    type: object
+                  type: array
                 github:
                   items:
                     properties:

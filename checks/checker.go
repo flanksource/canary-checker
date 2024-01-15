@@ -37,6 +37,7 @@ var All = []Checker{
 	&ExecChecker{},
 	&FolderChecker{},
 	&GitHubChecker{},
+	&GitProtocolChecker{},
 	&HTTPChecker{},
 	&IcmpChecker{},
 	&JmeterChecker{},

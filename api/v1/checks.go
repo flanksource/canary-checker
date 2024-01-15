@@ -731,6 +731,23 @@ func (c GitHubCheck) GetEndpoint() string {
 	return strings.ReplaceAll(c.Query, " ", "-")
 }
 
+type GitProtocolCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	FileName    string       `yaml:"filename,omitempty" json:"filename,omitempty"`
+	Repository  string       `yaml:"repository" json:"repository"`
+	Username    types.EnvVar `yaml:"username" json:"username"`
+	Password    types.EnvVar `yaml:"password" json:"password"`
+}
+
+func (c GitProtocolCheck) GetType() string {
+	return "gitProtocol"
+}
+
+func (c GitProtocolCheck) GetEndpoint() string {
+	return strings.ReplaceAll(c.Repository, "/", "-")
+}
+
 type ConfigDBCheck struct {
 	Templatable `yaml:",inline" json:",inline"`
 	Description `yaml:",inline" json:",inline"`
@@ -1275,6 +1292,7 @@ var AllChecks = []external.Check{
 	ExecCheck{},
 	FolderCheck{},
 	GitHubCheck{},
+	GitProtocolCheck{},
 	HelmCheck{},
 	HTTPCheck{},
 	ICMPCheck{},
