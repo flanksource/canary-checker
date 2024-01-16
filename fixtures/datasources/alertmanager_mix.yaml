@@ -15,15 +15,14 @@ spec:
         namespace: elastic-system
       transform:
         expr: |
-          results.alerts.map(r,
-              {
-              'name': r.name + r.fingerprint,
-              'labels': r.labels,
-              'icon': 'alert',
-              'message': r.message,
-              'description': r.message,
-            }
-          ).toJSON()
+          results.alerts.map(r, {
+            'name': r.name + r.fingerprint,
+            'namespace': 'namespace' in r.labels ? r.labels.namespace : '',
+            'labels': r.labels,
+            'icon': 'alert',
+            'message': r.message,
+            'description': r.message,
+          }).toJSON()
       relationships:
         components:
           - name:
