@@ -94,9 +94,9 @@ func syncComponentRelationships(ctx context.Context, id uuid.UUID, relationships
 		return err
 	}
 
-	var childComponentIDs []string
+	var existingChildComponentIDs []string
 	for _, r := range existingRelationships {
-		childComponentIDs = append(childComponentIDs, r.ComponentID.String())
+		existingChildComponentIDs = append(existingChildComponentIDs, r.ComponentID.String())
 	}
 
 	var newChildComponentIDs []string
@@ -104,19 +104,17 @@ func syncComponentRelationships(ctx context.Context, id uuid.UUID, relationships
 		newChildComponentIDs = append(newChildComponentIDs, r.ComponentID.String())
 	}
 
-	if len(relationships) == 0 {
-		return nil
-	}
-
-	if err := ctx.DB().Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "component_id"}, {Name: "relationship_id"}, {Name: "selector_id"}},
-		UpdateAll: true,
-	}).Create(relationships).Error; err != nil {
-		return err
+	if len(relationships) > 0 {
+		if err := ctx.DB().Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "component_id"}, {Name: "relationship_id"}, {Name: "selector_id"}},
+			UpdateAll: true,
+		}).Create(relationships).Error; err != nil {
+			return err
+		}
 	}
 
 	// Take set difference of these child component Ids and delete them
-	childComponentIDsToDelete, _ := lo.Difference(childComponentIDs, newChildComponentIDs)
+	childComponentIDsToDelete, _ := lo.Difference(existingChildComponentIDs, newChildComponentIDs)
 	if err := ctx.DB().
 		Table("component_relationships").
 		Where("relationship_id = ? AND component_id IN ?", id, childComponentIDsToDelete).
