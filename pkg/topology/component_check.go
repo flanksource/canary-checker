@@ -75,7 +75,7 @@ func createComponentCanaryFromInline(gormDB *gorm.DB, id, name, namespace, sched
 
 func GetChecksForComponent(ctx context.Context, component *pkg.Component) ([]models.CheckComponentRelationship, error) {
 	var relationships []models.CheckComponentRelationship
-	for _, componentCheck := range component.ComponentChecks {
+	for idx, componentCheck := range component.ComponentChecks {
 		hash := componentCheck.Hash()
 		if componentCheck.Selector.LabelSelector != "" {
 			checks, err := duty.FindChecks(ctx, types.ResourceSelectors{componentCheck.Selector}, duty.PickColumns("id", "canary_id"))
@@ -98,8 +98,9 @@ func GetChecksForComponent(ctx context.Context, component *pkg.Component) ([]mod
 				inlineSchedule = componentCheck.Inline.Schedule
 			}
 
+			canaryName := fmt.Sprintf("%s-%d", component.Name, idx)
 			canary, err := createComponentCanaryFromInline(ctx.DB(),
-				component.ID.String(), component.Name, component.Namespace,
+				component.ID.String(), canaryName, component.Namespace,
 				inlineSchedule, component.Owner, componentCheck.Inline,
 			)
 
