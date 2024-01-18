@@ -156,7 +156,7 @@ type Component struct {
 
 func (component *Component) FindExisting(db *gorm.DB) (*models.Component, error) {
 	var existing models.Component
-	tx := db.Model(component).Select("id", "deleted_at")
+	tx := db.Model(component).Select("id", "deleted_at").Where("agent_id = ?", uuid.Nil)
 	if component.ID == uuid.Nil {
 		if component.ParentId == nil {
 			tx = tx.Find(&existing, "name = ? AND type = ? and parent_id is NULL", component.Name, component.Type)

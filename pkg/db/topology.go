@@ -227,7 +227,7 @@ func DeleteInlineCanariesForComponent(db *gorm.DB, componentID string) error {
 }
 
 func GetActiveComponentsIDsOfTopology(db *gorm.DB, topologyID string) (compIDs []uuid.UUID, err error) {
-	if err := db.Table("components").Where("deleted_at is NULL and topology_id = ?", topologyID).Select("id").Find(&compIDs).Error; err != nil {
+	if err := db.Table("components").Where("deleted_at is NULL AND topology_id = ?", topologyID).Select("id").Find(&compIDs).Error; err != nil {
 		return nil, err
 	}
 	return
