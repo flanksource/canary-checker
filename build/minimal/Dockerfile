@@ -12,7 +12,7 @@ RUN go mod download
 COPY ./ ./
 RUN make build
 
-FROM ubuntu:jammy-20231128@sha256:8eab65df33a6de2844c9aefd19efe8ddb87b7df5e9185a4ab73af936225685bb
+FROM ubuntu:jammy-20240111@sha256:e6173d4dc55e76b87c4af8db8821b1feae4146dd47341e4d431118c7dd060a74
 WORKDIR /app
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
