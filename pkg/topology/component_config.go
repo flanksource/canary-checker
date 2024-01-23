@@ -41,6 +41,14 @@ var ComponentConfigRun = &job.Job{
 			}
 			run.History.IncrSuccess()
 		}
+
+		// Cleanup dead relationships
+		componentIDsWithConfigs := lo.Map(components, func(c pkg.Component, _ int) string { return c.ID.String() })
+		if err := db.Table("config_component_relationships").
+			Where("component_id NOT IN ?", componentIDsWithConfigs).
+			Update("deleted_at", duty.Now()).Error; err != nil {
+			return fmt.Errorf("error cleaning up old config_component_relationships: %w", err)
+		}
 		return nil
 	},
 }
