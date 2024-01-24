@@ -1,19 +1,18 @@
 package topology
 
 import (
-	"context"
 	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/flanksource/commons/collections"
-	"github.com/flanksource/duty"
 	dutyContext "github.com/flanksource/duty/context"
+	dutyQuery "github.com/flanksource/duty/query"
 )
 
 const DefaultDepth = 3
 
-func NewTopologyParams(values url.Values) duty.TopologyOptions {
+func NewTopologyParams(values url.Values) dutyQuery.TopologyOptions {
 	parseItems := func(items string) []string {
 		if strings.TrimSpace(items) == "" {
 			return nil
@@ -34,17 +33,19 @@ func NewTopologyParams(values url.Values) duty.TopologyOptions {
 			depth = DefaultDepth
 		}
 	}
-	return duty.TopologyOptions{
-		ID:      values.Get("id"),
-		Owner:   values.Get("owner"),
-		Labels:  labels,
-		Status:  parseItems(values.Get("status")),
-		Depth:   depth,
-		Types:   parseItems(values.Get("type")),
-		Flatten: values.Get("flatten") == "true",
+	return dutyQuery.TopologyOptions{
+		ID:        values.Get("id"),
+		Owner:     values.Get("owner"),
+		Labels:    labels,
+		Status:    parseItems(values.Get("status")),
+		Depth:     depth,
+		Types:     parseItems(values.Get("type")),
+		Flatten:   values.Get("flatten") == "true",
+		SortBy:    dutyQuery.TopologyQuerySortBy(values.Get("sortBy")),
+		SortOrder: values.Get("sortOrder"),
 	}
 }
 
-func Query(ctx dutyContext.Context, params duty.TopologyOptions) (*duty.TopologyResponse, error) {
-	return duty.QueryTopology(context.Background(), ctx.Pool(), params)
+func Query(ctx dutyContext.Context, params dutyQuery.TopologyOptions) (*dutyQuery.TopologyResponse, error) {
+	return dutyQuery.Topology(ctx, params)
 }
