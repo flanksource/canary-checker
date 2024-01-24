@@ -2,6 +2,7 @@ package topology
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/duty"
@@ -53,6 +54,18 @@ var ComponentConfigRun = &job.Job{
 	},
 }
 
+func PersistConfigComponentRelationships(db *gorm.DB, rels []models.ConfigComponentRelationship) error {
+	if len(rels) == 0 {
+		return nil
+	}
+
+	updatedAt := time.Now()
+	return db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "config_id"}, {Name: "component_id"}},
+		DoUpdates: clause.Assignments(map[string]any{"deleted_at": nil, "updated_at": updatedAt}),
+	}).Create(&rels).Error
+}
+
 func PersistConfigComponentRelationship(db *gorm.DB, configID, componentID uuid.UUID, selectorID string) error {
 	relationship := models.ConfigComponentRelationship{
 		ComponentID: componentID,
@@ -71,55 +84,47 @@ func SyncComponentConfigRelationship(db *gorm.DB, component pkg.Component) error
 		return nil
 	}
 
-	relationships, err := component.GetConfigs(db)
+	existingRelationships, err := component.GetConfigs(db)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "error fetching config relationships for component[%s]", component.ID)
 	}
-	var selectorIDs = lo.Map(relationships, models.ConfigSelectorID)
-	var existingConfigIDs = lo.Map(relationships, models.ConfigID)
+	existingConfigIDs := lo.Map(existingRelationships, models.ConfigID)
 
 	var newConfigsIDs []string
+	var relationshipsToPersist []models.ConfigComponentRelationship
+
 	for _, config := range component.Configs {
-		dbConfigs, err := query.FindConfigs(db, *config)
+		dbConfigIDs, err := query.FindConfigIDs(db, *config)
 		if err != nil {
 			return errors.Wrap(err, "error fetching config from database")
 		}
-		for _, dbConfig := range dbConfigs {
-			newConfigsIDs = append(newConfigsIDs, dbConfig.ID.String())
+		for _, dbConfigID := range dbConfigIDs {
+			newConfigsIDs = append(newConfigsIDs, dbConfigID.String())
 
-			selectorID := dbConfig.GetSelectorID()
-			// If selectorID already exists, no action is required
-			if collections.Contains(selectorIDs, selectorID) {
+			if collections.Contains(existingConfigIDs, dbConfigID.String()) {
 				continue
 			}
 
-			// If configID does not exist, create a new relationship
-			if !collections.Contains(existingConfigIDs, dbConfig.ID.String()) {
-				if err := PersistConfigComponentRelationship(db, dbConfig.ID, component.ID, selectorID); err != nil {
-					return errors.Wrap(err, "error persisting config relationships")
-				}
-				continue
-			}
-
-			// If config_id exists mark old row as deleted and update selector_id
-			if err := db.Table("config_component_relationships").Where("component_id = ? AND config_id = ?", component.ID, dbConfig.ID).
-				Update("deleted_at", duty.Now()).Error; err != nil {
-				return errors.Wrap(err, "error updating config relationships")
-			}
-			if err := PersistConfigComponentRelationship(db, dbConfig.ID, component.ID, selectorID); err != nil {
-				return errors.Wrap(err, "error persisting config relationships")
-			}
+			relationshipsToPersist = append(relationshipsToPersist, models.ConfigComponentRelationship{
+				ConfigID:    dbConfigID,
+				ComponentID: component.ID,
+			})
 		}
+	}
+
+	if err := PersistConfigComponentRelationships(db, relationshipsToPersist); err != nil {
+		return errors.Wrapf(err, "error persisting config component relationships for component[%s]", component.ID)
 	}
 
 	// Take set difference of these child component Ids and delete them
 	configIDsToDelete := utils.SetDifference(existingConfigIDs, newConfigsIDs)
-	if len(configIDsToDelete) == 0 {
-		return nil
-	}
-	if err := db.Table("config_component_relationships").Where("component_id = ? AND config_id IN ?", component.ID, configIDsToDelete).
-		Update("deleted_at", duty.Now()).Error; err != nil {
-		return errors.Wrap(err, "error deleting stale config component relationships")
+	if len(configIDsToDelete) > 0 {
+		if err := db.Table("config_component_relationships").
+			Where("component_id = ? AND config_id IN ?", component.ID, configIDsToDelete).
+			Update("deleted_at", duty.Now()).
+			Error; err != nil {
+			return errors.Wrap(err, "error deleting stale config component relationships")
+		}
 	}
 
 	return nil
