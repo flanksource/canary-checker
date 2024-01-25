@@ -7,7 +7,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/runner"
-	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/types"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/prometheus/client_golang/prometheus"
@@ -142,21 +142,21 @@ func GetMetrics(key string) (uptime types.Uptime, latency types.Latency) {
 	return
 }
 
-func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime types.Uptime, _latency types.Latency) {
+func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_uptime types.Uptime, _latency types.Latency) {
 	defer func() {
 		e := recover()
 		if e != nil {
-			logger.Errorf("panic recording metrics for %s/%s/%s ==> %s", canary.Namespace, canary.Name, result, e)
+			ctx.Errorf("panic recording metrics for %s ==> %s", result, e)
 		}
 	}()
 	if result == nil || result.Check == nil {
-		logger.Warnf("%s/%s returned a nil result", canary.Namespace, canary.Name)
+		ctx.Warnf("returned a nil result")
 		return _uptime, _latency
 	}
 
 	if canary.GetCheckID(result.Check.GetName()) == "" {
 		if val := result.Canary.Labels["transformed"]; val != "true" {
-			logger.Warnf("%s/%s/%s returned a result for a check that does not exist", canary.Namespace, canary.Name, result.Check.GetName())
+			ctx.Warnf("%s returned a result for a check that does not exist", result.Check.GetName())
 		}
 		return _uptime, _latency
 	}
@@ -196,9 +196,8 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime types.Uptime, _l
 		latency = _latencyV.(*rolling.TimePolicy)
 	}
 
-	if logger.IsTraceEnabled() {
-		logger.Tracef(result.String())
-	}
+	ctx.Tracef(result.String())
+
 	OpsCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 	if result.Duration > 0 {
 		RequestLatency.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Observe(float64(result.Duration))
@@ -217,17 +216,17 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime types.Uptime, _l
 			switch m.Type {
 			case CounterType:
 				if err := getOrCreateCounter(m); err != nil {
-					logger.Errorf("cannot create counter %s with labels %v: %w", m.Name, m.Labels, err)
+					ctx.Errorf("cannot create counter %s with labels %v: %v", m.Name, m.Labels, err)
 				}
 
 			case GaugeType:
 				if err := getOrCreateGauge(m); err != nil {
-					logger.Errorf("cannot create gauge %s with labels %v: %w", m.Name, m.Labels, err)
+					ctx.Errorf("cannot create gauge %s with labels %v: %v", m.Name, m.Labels, err)
 				}
 
 			case HistogramType:
 				if err := getOrCreateHistogram(m); err != nil {
-					logger.Errorf("cannot create histogram %s with labels %v: %w", m.Name, m.Labels, err)
+					ctx.Errorf("cannot create histogram %s with labels %v: %v", m.Name, m.Labels, err)
 				}
 			}
 		}
@@ -345,9 +344,9 @@ func FillUptime(checkKey, duration string, uptime *types.Uptime) error {
 	return nil
 }
 
-func UnregisterGauge(checkIDs []string) {
+func UnregisterGauge(ctx context.Context, checkIDs []string) {
 	for _, checkID := range checkIDs {
-		logger.Debugf("Unregistering gauge for checkID %s", checkID)
+		ctx.Debugf("Unregistering gauge for checkID %s", checkID)
 		Gauge.DeletePartialMatch(prometheus.Labels{"key": checkID})
 	}
 }

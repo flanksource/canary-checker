@@ -208,19 +208,19 @@ func RemoveTransformedChecks(ctx context.Context, ids []string) error {
 		Error
 }
 
-func DeleteCanary(db *gorm.DB, id string) error {
+func DeleteCanary(ctx context.Context, id string) error {
 	logger.Infof("Deleting canary[%s]", id)
 
-	if err := db.Table("canaries").Where("id = ?", id).UpdateColumn("deleted_at", duty.Now()).Error; err != nil {
+	if err := ctx.DB().Table("canaries").Where("id = ?", id).UpdateColumn("deleted_at", duty.Now()).Error; err != nil {
 		return err
 	}
-	checkIDs, err := DeleteChecksForCanary(db, id)
+	checkIDs, err := DeleteChecksForCanary(ctx.DB(), id)
 	if err != nil {
 		return err
 	}
-	metrics.UnregisterGauge(checkIDs)
+	metrics.UnregisterGauge(ctx, checkIDs)
 
-	if err := DeleteCheckComponentRelationshipsForCanary(db, id); err != nil {
+	if err := DeleteCheckComponentRelationshipsForCanary(ctx.DB(), id); err != nil {
 		return err
 	}
 	return nil
@@ -338,7 +338,8 @@ func CreateCheck(ctx context.Context, canary pkg.Canary, check *pkg.Check) error
 	return ctx.DB().Create(&check).Error
 }
 
-func PersistCanaryModel(db *gorm.DB, model pkg.Canary) (*pkg.Canary, error) {
+func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, error) {
+	db := ctx.DB()
 	err := db.Clauses(
 		clause.OnConflict{
 			Columns:   []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}, {Name: "source"}},
@@ -365,7 +366,7 @@ func PersistCanaryModel(db *gorm.DB, model pkg.Canary) (*pkg.Canary, error) {
 		Scan(&oldCheckIDs).
 		Error
 	if err != nil {
-		logger.Errorf("Error fetching existing checks for canary:%s", model.ID)
+		ctx.Error(err, "Error fetching existing checks for canary: %s", model.ID)
 		return nil, err
 	}
 
@@ -381,7 +382,7 @@ func PersistCanaryModel(db *gorm.DB, model pkg.Canary) (*pkg.Canary, error) {
 		check.Spec, _ = json.Marshal(config)
 		id, err := PersistCheck(db, check, model.ID)
 		if err != nil {
-			logger.Errorf("error persisting check", err)
+			ctx.Error(err, "error persisting check")
 		}
 		newCheckIDs = append(newCheckIDs, id.String())
 		checks[config.GetName()] = id.String()
@@ -391,18 +392,18 @@ func PersistCanaryModel(db *gorm.DB, model pkg.Canary) (*pkg.Canary, error) {
 	// fetching the checkIds present in the db but not present on the canary
 	checkIDsToRemove := utils.SetDifference(oldCheckIDs, newCheckIDs)
 	if len(checkIDsToRemove) > 0 {
-		logger.Debugf("removing checks from canary:%s with ids %v", model.ID, checkIDsToRemove)
+		ctx.Debugf("removing checks from canary:%s with ids %v", model.ID, checkIDsToRemove)
 		if err := DeleteNonTransformedChecks(db, checkIDsToRemove); err != nil {
-			logger.Errorf("failed to delete non transformed checks: %v", err)
+			ctx.Error(err, "failed to delete non transformed checks")
 		}
-		metrics.UnregisterGauge(checkIDsToRemove)
+		metrics.UnregisterGauge(ctx, checkIDsToRemove)
 	}
 
 	model.Checks = checks
 	return &model, nil
 }
 
-func PersistCanary(db *gorm.DB, canary v1.Canary, source string) (*pkg.Canary, error) {
+func PersistCanary(ctx context.Context, canary v1.Canary, source string) (*pkg.Canary, error) {
 	model, err := pkg.CanaryFromV1(canary)
 	if err != nil {
 		return nil, err
@@ -412,7 +413,7 @@ func PersistCanary(db *gorm.DB, canary v1.Canary, source string) (*pkg.Canary, e
 	}
 	model.Source = source
 
-	return PersistCanaryModel(db, model)
+	return PersistCanaryModel(ctx, model)
 }
 
 // SuspendCanary sets the suspend annotation on the canary table.

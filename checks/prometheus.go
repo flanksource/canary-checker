@@ -9,7 +9,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
-	"github.com/flanksource/commons/logger"
 	"github.com/prometheus/common/model"
 )
 
@@ -61,7 +60,7 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 		return results.ErrorMessage(err)
 	}
 	if warning != nil {
-		logger.Debugf("warnings when running the query: %v", warning)
+		ctx.Debugf("warnings when running the query: %v", warning)
 	}
 	var prometheusResults = make([]map[string]interface{}, 0)
 	var data = map[string]interface{}{

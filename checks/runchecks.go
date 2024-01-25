@@ -12,7 +12,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
 	gocache "github.com/patrickmn/go-cache"
@@ -130,7 +129,7 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 	}
 
 	if err := saveArtifacts(ctx, results); err != nil {
-		logger.Errorf("error saving artifacts: %v", err)
+		ctx.Errorf("error saving artifacts: %v", err)
 	}
 
 	return ProcessResults(ctx, results), nil
@@ -142,7 +141,7 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 	}
 
 	if DefaultArtifactConnection == "" {
-		logger.Warnf("no artifact connection configured")
+		ctx.Warnf("no artifact connection configured")
 		return nil
 	}
 
@@ -153,7 +152,7 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 		return fmt.Errorf("connection(%s) was not found", DefaultArtifactConnection)
 	}
 
-	fs, err := artifacts.GetFSForConnection(ctx.Duty(), *connection)
+	fs, err := artifacts.GetFSForConnection(ctx.Context, *connection)
 	if err != nil {
 		return fmt.Errorf("error getting filesystem for connection: %w", err)
 	}
@@ -167,7 +166,7 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 		checkIDRaw := r.Canary.GetCheckID(r.Check.GetName())
 		checkID, err := uuid.Parse(checkIDRaw)
 		if err != nil {
-			logger.Errorf("error parsing checkID(%s): %v", checkIDRaw, err)
+			ctx.Error(err, "error parsing checkID %s", checkIDRaw)
 			continue
 		}
 
@@ -178,7 +177,7 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 				CheckTime:    utils.Ptr(r.Start),
 				ConnectionID: connection.ID,
 			}
-			if err := artifacts.SaveArtifact(ctx.Duty(), fs, &artifact, a); err != nil {
+			if err := artifacts.SaveArtifact(ctx.Context, fs, &artifact, a); err != nil {
 				return fmt.Errorf("error saving artifact to db: %w", err)
 			}
 		}
@@ -235,7 +234,7 @@ func ProcessResults(ctx *context.Context, results []*pkg.CheckResult) []*pkg.Che
 			},
 		}
 	default:
-		logger.Errorf("Unknown result mode: %s", ctx.Canary.Spec.ResultMode)
+		ctx.Errorf("Unknown result mode: %s", ctx.Canary.Spec.ResultMode)
 	}
 
 	return results

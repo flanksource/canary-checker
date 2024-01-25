@@ -27,9 +27,7 @@ func (c *ConfigdbChecker) Check(ctx *canaryContext.Context, extConfig external.C
 	check := extConfig.(v1.ConfigDBCheck)
 	result := pkg.Success(check, ctx.Canary)
 
-	if ctx.IsDebugEnabled() {
-		ctx.Infof("query: %v", check.Query)
-	}
+	ctx.Tracef("query: %v", check.Query)
 
 	var results pkg.Results
 	results = append(results, result)

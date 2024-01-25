@@ -1,96 +1,31 @@
 package context
 
 import (
-	gocontext "context"
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/console"
-	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/connection"
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
-	"github.com/flanksource/duty/types"
 	"github.com/flanksource/gomplate/v3"
-	"github.com/flanksource/kommons"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/samber/lo"
-	"gorm.io/gorm"
-	"k8s.io/client-go/kubernetes"
 )
 
 var DefaultContext dutyCtx.Context
 
-type KubernetesContext struct {
-	gocontext.Context
-	Kommons     *kommons.Client
-	Kubernetes  kubernetes.Interface
-	Namespace   string
-	Environment map[string]interface{}
-	logger.Logger
-}
-
 type Context struct {
-	gocontext.Context
-	Kubernetes  kubernetes.Interface
-	Kommons     *kommons.Client
 	Namespace   string
 	Canary      v1.Canary
 	Environment map[string]interface{}
-	logger.Logger
-	db    *gorm.DB
-	pool  *pgxpool.Pool
-	cache map[string]any
-	duty  *dutyCtx.Context
+	cache       map[string]any
+	dutyCtx.Context
 }
 
-func (ctx *Context) Duty() dutyCtx.Context {
-	if ctx.duty != nil {
-		return (*ctx.duty).
-			WithNamespace(ctx.Namespace).
-			WithObject(ctx.Canary.ObjectMeta)
-	}
-	duty := dutyCtx.NewContext(gocontext.Background()).
-		WithDB(ctx.db, ctx.pool).
-		WithKubernetes(ctx.Kubernetes).
-		WithNamespace(ctx.Namespace).
-		WithObject(ctx.Canary.ObjectMeta)
-	ctx.duty = &duty
-	return *ctx.duty
-}
-
-func (ctx *Context) DB() *gorm.DB {
-	if ctx.db == nil {
-		return nil
-	}
-
-	return ctx.db.WithContext(ctx.Context)
-}
-
-func (ctx *Context) Pool() *pgxpool.Pool {
-	return ctx.pool
-}
 func (ctx *Context) String() string {
 	return fmt.Sprintf("%s/%s", ctx.Canary.Namespace, ctx.Canary.Name)
-}
-
-func (ctx *Context) WithTimeout(timeout time.Duration) (*Context, gocontext.CancelFunc) {
-	return ctx.WithDeadline(time.Now().Add(timeout))
-}
-
-func (ctx *Context) WithDeadline(deadline time.Time) (*Context, gocontext.CancelFunc) {
-	_ctx, fn := gocontext.WithDeadline(ctx.Context, deadline)
-	ctx.Context = _ctx
-	return ctx, fn
-}
-
-func (ctx *Context) GetEnvValueFromCache(env types.EnvVar, namespace ...string) (string, error) {
-	return ctx.Duty().GetEnvValueFromCache(env, namespace...)
 }
 
 func getDomain(username string) string {
@@ -216,11 +151,11 @@ func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Conne
 		return nil, nil
 	}
 
-	if ctx.db == nil {
+	if ctx.DB() == nil {
 		return nil, errors.New("db has not been initialized")
 	}
 
-	connection, err := ctx.Duty().HydrateConnectionByURL(connectionName)
+	connection, err := ctx.Context.HydrateConnectionByURL(connectionName)
 	if err != nil {
 		return nil, err
 	}
@@ -234,54 +169,22 @@ func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Conne
 	return connection, nil
 }
 
-func NewKubernetesContext(client *kommons.Client, kubernetes kubernetes.Interface, namespace string) *KubernetesContext {
-	if namespace == "" {
-		namespace = "default"
-	}
-	return &KubernetesContext{
-		Context:     gocontext.Background(),
-		Kommons:     client,
-		Kubernetes:  kubernetes,
-		Namespace:   namespace,
-		Environment: make(map[string]interface{}),
-		Logger:      logger.StandardLogger(),
-	}
-}
-
-func (ctx *KubernetesContext) Clone() *KubernetesContext {
-	return &KubernetesContext{
-		Context:     gocontext.Background(),
-		Kommons:     ctx.Kommons,
-		Kubernetes:  ctx.Kubernetes,
-		Namespace:   ctx.Namespace,
-		Environment: make(map[string]interface{}),
-		Logger:      logger.StandardLogger(),
-	}
-}
-
 func New(ctx dutyCtx.Context, canary v1.Canary) *Context {
 	if canary.Namespace == "" {
 		canary.Namespace = "default"
 	}
 
+	ctx = ctx.WithObject(canary.ObjectMeta).WithName(fmt.Sprintf("Canary[%s/%s]", canary.Namespace, canary.Name))
 	c := &Context{
-		duty:        lo.ToPtr(ctx.WithObject(canary.ObjectMeta)),
-		db:          ctx.DB(),
-		pool:        ctx.Pool(),
-		Context:     gocontext.Background(),
-		Kommons:     ctx.Kommons(),
-		Kubernetes:  ctx.Kubernetes(),
-		Namespace:   canary.GetNamespace(),
+		Context:     ctx,
+		Namespace:   canary.Namespace,
 		Canary:      canary,
 		Environment: make(map[string]interface{}),
-		Logger:      logger.StandardLogger(),
 	}
 
-	c.Logger = c.Logger.Named(console.DarkWhitef("canary.%s.%s", canary.Namespace, canary.Name))
-
-	if c.Logger.IsLevelEnabled(4) || c.duty.IsTrace() {
+	if c.Logger.IsLevelEnabled(4) || c.IsTrace() {
 		c.Logger.SetMinLogLevel(2)
-	} else if c.Logger.IsLevelEnabled(3) || c.duty.IsDebug() {
+	} else if c.Logger.IsLevelEnabled(3) || c.IsDebug() {
 		c.Logger.SetMinLogLevel(1)
 	}
 	return c
@@ -348,13 +251,8 @@ func (ctx *Context) WithEnvValues(environment map[string]interface{}) *Context {
 func (ctx *Context) New(environment map[string]interface{}) *Context {
 	return &Context{
 		Context:     ctx.Context,
-		Kommons:     ctx.Kommons,
-		db:          ctx.db,
-		pool:        ctx.pool,
-		Kubernetes:  ctx.Kubernetes,
 		Namespace:   ctx.Namespace,
 		Canary:      ctx.Canary,
 		Environment: environment,
-		Logger:      ctx.Logger,
 	}
 }

@@ -33,7 +33,7 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 		return results.Failf("failed to populate GCP connection: %v", err)
 	}
 
-	svc, err := gcp.NewSQLAdmin(ctx.Duty(), check.GCP.GCPConnection)
+	svc, err := gcp.NewSQLAdmin(ctx.Context, check.GCP.GCPConnection)
 	if err != nil {
 		databaseScanFailCount.WithLabelValues(check.GCP.Project, check.GCP.Instance).Inc()
 		return results.ErrorMessage(err)

@@ -43,7 +43,7 @@ func updateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 		duration += result.Duration
 
 		// Set uptime and latency
-		uptime, latency := metrics.Record(canary, result)
+		uptime, latency := metrics.Record(ctx, canary, result)
 		checkID := canary.Status.Checks[result.Check.GetName()]
 		checkStatus[checkID] = &v1.CheckStatus{
 			Uptime1H:  uptime.String(),

@@ -44,7 +44,7 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 		}
 	}
 
-	cfg, err := awsUtil.NewSession(ctx.Duty(), *check.AWSConnection)
+	cfg, err := awsUtil.NewSession(ctx.Context, *check.AWSConnection)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
