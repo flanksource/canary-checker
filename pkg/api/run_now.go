@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/checks"
@@ -80,39 +79,18 @@ func RunCanaryHandler(c echo.Context) error {
 func RunTopologyHandler(c echo.Context) error {
 	id := c.Param("id")
 
-	topologyRunDepth := 10
-	_depth := c.QueryParam("depth")
-	if _depth != "" {
-		num, err := strconv.Atoi(_depth)
-		if err != nil {
-			return errorResponse(c, err, http.StatusBadRequest)
-		}
-
-		if num < 0 {
-			return errorResponse(c, fmt.Errorf("depth must be greater than 0"), http.StatusBadRequest)
-		}
-
-		topologyRunDepth = num
-	}
-
 	ctx := c.Request().Context().(dutyContext.Context)
 	topology, err := db.GetTopology(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errorResponse(c, fmt.Errorf("topology with id=%s was not found", id), http.StatusNotFound)
 		}
-
 		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
-	opts := pkgTopology.TopologyRunOptions{
-		Context:   ctx,
-		Depth:     topologyRunDepth,
-		Namespace: topology.Namespace,
-	}
-	if count, err := pkgTopology.SyncComponents(opts, *topology); err != nil {
-		return errorResponse(c, err, http.StatusInternalServerError)
+	if components, history := pkgTopology.Run(ctx, *topology); history.AsError() != nil {
+		return errorResponse(c, history.AsError(), http.StatusInternalServerError)
 	} else {
-		return c.JSON(http.StatusOK, map[string]string{"status": "ok", "count": fmt.Sprint(count)})
+		return c.JSON(http.StatusOK, map[string]string{"status": "ok", "count": fmt.Sprintf("%d", len(components))})
 	}
 }

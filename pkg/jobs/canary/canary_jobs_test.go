@@ -8,8 +8,8 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/tests/setup"
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	ginkgo "github.com/onsi/ginkgo/v2"
@@ -57,12 +57,8 @@ var _ = ginkgo.Describe("Canary Job sync", ginkgo.Ordered, func() {
 	ginkgo.It("schedule the canary job", func() {
 		CanaryScheduler.Start()
 		MinimumTimeBetweenCanaryRuns = 0 // reset this for now so it doesn't hinder test with small schedules
-		ctx := DefaultContext
-		jobCtx := job.JobRuntime{
-			Context: ctx,
-		}
-		err := SyncCanaryJobs(jobCtx)
-		Expect(err).To(BeNil())
+		SyncCanaryJobs.Context = DefaultContext
+		setup.ExpectJobToPass(SyncCanaryJobs)
 	})
 
 	ginkgo.It("should verify that the endpoint wasn't called more than once after 3 seconds", func() {

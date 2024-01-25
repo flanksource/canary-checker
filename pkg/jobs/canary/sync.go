@@ -4,7 +4,6 @@ import (
 	gocontext "context"
 	"fmt"
 	"path"
-	"sync"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg"
@@ -14,46 +13,50 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/job"
 	dutyjob "github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/robfig/cron/v3"
-	"gorm.io/gorm"
 )
 
-var canaryUpdateTimeCache = sync.Map{}
+var cronJobs = make(map[string]*job.Job)
 
-type SyncCanaryJobConfig struct {
-	RunNow bool
-
-	// Schedule to override the schedule from the spec
-	Schedule string
-}
-
-func WithRunNow(value bool) SyncCanaryJobOption {
-	return func(config *SyncCanaryJobConfig) {
-		config.RunNow = value
+func Unschedule(id string) {
+	if job := cronJobs[id]; job != nil {
+		job.Unschedule()
+		delete(cronJobs, id)
 	}
 }
 
-func WithSchedule(schedule string) SyncCanaryJobOption {
-	return func(config *SyncCanaryJobConfig) {
-		config.Schedule = schedule
+func TriggerAt(ctx context.Context, dbCanary pkg.Canary, runAt time.Time) error {
+	var job *job.Job
+	if job = findJob(dbCanary); job != nil {
+		ctx.Warnf("job not found for: %v", dbCanary.ID)
+		return nil
 	}
+	if !runAt.After(time.Now()) {
+		go job.Run()
+		return nil
+	}
+	onceOff := fmt.Sprintf("%d %d %d %d *", runAt.Minute(), runAt.Hour(), runAt.Day(), runAt.Month())
+	var entry cron.EntryID
+	var err error
+	entry, err = CanaryScheduler.AddFunc(onceOff, func() {
+		job.Run()
+		CanaryScheduler.Remove(entry)
+	})
+	return err
 }
 
-type SyncCanaryJobOption func(*SyncCanaryJobConfig)
+func findJob(dbCanary pkg.Canary) *job.Job {
+	return cronJobs[dbCanary.ID.String()]
+}
 
 // TODO: Refactor to use database object instead of kubernetes
-func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary, options ...SyncCanaryJobOption) error {
+func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 	if disabled := ctx.Properties()["check.*.disabled"]; disabled == "true" {
 		return nil
 	}
-	// Apply options to the configuration
-	syncOption := &SyncCanaryJobConfig{}
-	for _, option := range options {
-		option(syncOption)
-	}
-
 	canary, err := dbCanary.ToV1()
 	if err != nil {
 		return err
@@ -66,131 +69,104 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary, options ...SyncCana
 	}
 
 	var (
-		schedule   = syncOption.Schedule
-		scheduleID = dbCanary.ID.String() + "-scheduled"
+		schedule = canary.Spec.GetSchedule()
 	)
 
-	if schedule == "" {
-		schedule = canary.Spec.GetSchedule()
-		scheduleID = dbCanary.ID.String()
-	}
+	job := cronJobs[canary.GetPersistedID()]
 
 	if schedule == "@never" {
-		DeleteCanaryJob(canary.GetPersistedID())
+		if job != nil {
+			Unschedule(canary.GetPersistedID())
+		}
 		return nil
 	}
 
 	if runner.IsCanaryIgnored(&canary.ObjectMeta) {
+		if job != nil {
+			Unschedule(canary.GetPersistedID())
+		}
 		return nil
 	}
 
-	updateTime, exists := canaryUpdateTimeCache.Load(dbCanary.ID.String())
-	cj := CanaryJob{
+	canaryJob := CanaryJob{
 		Canary:   *canary,
 		DBCanary: dbCanary,
 	}
 
-	// Create new job context from empty context to create root spans for jobs
-	jobCtx := ctx.Wrap(gocontext.Background()).WithObject(canary.ObjectMeta)
-	newJob := dutyjob.NewJob(jobCtx, "SyncCanaryJob", schedule, cj.Run).SetID(scheduleID)
-	entry := findCronEntry(scheduleID)
-
-	shouldSchedule := !exists || // updated time cache was not found. So we reschedule anyway.
-		dbCanary.UpdatedAt.After(updateTime.(time.Time)) || // the spec has been updated since it was last scheduled
-		entry == nil || // the canary is not scheduled yet
-		syncOption.Schedule != "" // custom schedule so we always need to reschedule
-
-	if shouldSchedule {
-		// Remove entry if it exists
-		if entry != nil {
-			CanaryScheduler.Remove(entry.ID)
+	if job == nil {
+		// Create new job context from empty context to create root spans for cronJobs
+		jobCtx := ctx.Wrap(gocontext.Background()).WithObject(canary.ObjectMeta)
+		jobCtx.WithAnyValue("canaryJob", canaryJob)
+		job = dutyjob.NewJob(jobCtx, "Canary", schedule, canaryJob.Run).
+			SetID(fmt.Sprintf("%s/%s", canary.Namespace, canary.Name))
+		job.Singleton = true
+		job.Retention.Success = 0
+		job.Retention.Failed = 3
+		job.Retention.Age = time.Hour * 48
+		job.Retention.Interval = time.Minute * 15
+		cronJobs[canary.GetPersistedID()] = job
+		if err := job.AddToScheduler(CanaryScheduler); err != nil {
+			return err
 		}
-
-		// Schedule canary for the first time
-		if err := newJob.AddToScheduler(CanaryScheduler); err != nil {
-			return fmt.Errorf("failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
-		}
-
-		entry = newJob.GetEntry(CanaryScheduler)
-		logger.Infof("Scheduled %s (%s). Next run: %v", canary, schedule, entry.Next)
-
-		canaryUpdateTimeCache.Store(dbCanary.ID.String(), dbCanary.UpdatedAt)
+	} else {
+		job.Context = job.Context.WithAnyValue("canaryJob", canaryJob)
 	}
 
-	// Run all regularly scheduled canaries on startup (<1h) and not daily/weekly schedules
-	if (entry != nil && time.Until(entry.Next) < 1*time.Hour && !exists) || syncOption.RunNow {
-		go entry.Job.Run()
-	}
-
-	return nil
-}
-
-func SyncCanaryJobs(ctx dutyjob.JobRuntime) error {
-	ctx.Debugf("Syncing canary jobs")
-
-	canaries, err := db.GetAllCanariesForSync(ctx.Context, runner.WatchNamespace)
-	if err != nil {
-		logger.Errorf("Failed to get canaries: %v", err)
-
-		jobHistory := models.NewJobHistory("SyncCanaries", "canary", "").Start()
-		logIfError(jobHistory.AddError(err.Error()).End().Persist(ctx.DB()), "failed to persist job history [SyncCanaries]")
-
-		return err
-	}
-
-	existingIDsInCron := getAllCanaryIDsInCron()
-	idsInNewFetch := make([]string, 0, len(canaries))
-	for _, c := range canaries {
-		jobHistory := models.NewJobHistory("CanarySync", "canary", c.ID.String()).Start()
-
-		idsInNewFetch = append(idsInNewFetch, c.ID.String())
-		if err := SyncCanaryJob(ctx.Context, c); err != nil {
-			logger.Errorf("Error syncing canary[%s]: %v", c.ID, err.Error())
-			logIfError(jobHistory.AddError(err.Error()).End().Persist(ctx.DB()), "failed to persist job history [CanarySync]")
-			continue
-		}
-	}
-
-	idsToRemoveFromCron := utils.SetDifference(existingIDsInCron, idsInNewFetch)
-	for _, id := range idsToRemoveFromCron {
-		DeleteCanaryJob(id)
-	}
-
-	logger.Infof("Synced canary jobs %d", len(CanaryScheduler.Entries()))
-	return nil
-}
-
-func DeleteCanaryJob(id string) {
-	entry := findCronEntry(id)
-	if entry == nil {
-		return
-	}
-	logger.Tracef("deleting cron entry for canary:%s with entry ID: %v", id, entry.ID)
-	CanaryScheduler.Remove(entry.ID)
-}
-
-func ScheduleFunc(schedule string, fn func()) (interface{}, error) {
-	return FuncScheduler.AddFunc(schedule, fn)
-}
-
-func findCronEntry(id string) *cron.Entry {
-	for _, entry := range CanaryScheduler.Entries() {
-		if entry.Job.(*dutyjob.Job).ID == id {
-			return &entry
+	if job.Schedule != schedule {
+		if err := job.Reschedule(schedule, CanaryScheduler); err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+var SyncCanaryJobs = &dutyjob.Job{
+	Name:       "SyncCanaryJobs",
+	JobHistory: true,
+	Singleton:  true,
+	RunNow:     true,
+	Schedule:   "@every 5m",
+	Retention:  dutyjob.RetentionHour,
+	Fn: func(ctx dutyjob.JobRuntime) error {
+		canaries, err := db.GetAllCanariesForSync(ctx.Context, runner.WatchNamespace)
+		if err != nil {
+			return err
+		}
+
+		existingIDsInCron := getAllCanaryIDsInCron()
+		idsInNewFetch := make([]string, 0, len(canaries))
+		for _, c := range canaries {
+			idsInNewFetch = append(idsInNewFetch, c.ID.String())
+			if err := SyncCanaryJob(ctx.Context, c); err != nil {
+				// log the error against the canary itself
+				jobHistory := models.NewJobHistory("SyncCanary", "canary", c.ID.String()).Start()
+				logger.Errorf("Error syncing canary[%s]: %v", c.ID, err.Error())
+				logIfError(jobHistory.AddError(err.Error()).End().Persist(ctx.DB()), "failed to persist job history [CanarySync]")
+				// log the error for the sync job itself
+				ctx.History.AddError(err.Error())
+				continue
+			} else {
+				ctx.History.IncrSuccess()
+			}
+		}
+
+		idsToRemoveFromCron := utils.SetDifference(existingIDsInCron, idsInNewFetch)
+		for _, id := range idsToRemoveFromCron {
+			Unschedule(id)
+		}
+		return nil
+	},
 }
 
 func getAllCanaryIDsInCron() []string {
 	var ids []string
 	for _, entry := range CanaryScheduler.Entries() {
-		ids = append(ids, entry.Job.(*dutyjob.Job).ID)
+		ids = append(ids, string(entry.Job.(*dutyjob.Job).GetObjectMeta().UID))
 	}
 	return ids
 }
 
-func ScanCanaryConfigs(_db *gorm.DB) {
+func ScanCanaryConfigs(ctx context.Context) {
 	logger.Infof("Syncing canary specs: %v", CanaryConfigFiles)
 	for _, configfile := range CanaryConfigFiles {
 		configs, err := pkg.ParseConfig(configfile, DataFile)
@@ -202,7 +178,7 @@ func ScanCanaryConfigs(_db *gorm.DB) {
 			if runner.IsCanaryIgnored(&canary.ObjectMeta) {
 				continue
 			}
-			_, err := db.PersistCanary(_db, canary, path.Base(configfile))
+			_, err := db.PersistCanary(ctx, canary, path.Base(configfile))
 			if err != nil {
 				logger.Errorf("could not persist %s: %v", canary.Name, err)
 			} else {
