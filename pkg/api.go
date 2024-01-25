@@ -357,7 +357,6 @@ func (result CheckResult) String() string {
 		if endpoint == "" {
 			endpoint = result.Check.GetEndpoint()
 		}
-		endpoint = result.Canary.Namespace + "/" + result.Canary.Name + "/" + endpoint
 	}
 
 	if result.Pass {

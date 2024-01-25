@@ -291,7 +291,7 @@ func (components Components) Debug(prefix string) string {
 			status = dutyTypes.ComponentStatus(console.Redf(string(status)))
 		}
 
-		s += fmt.Sprintf("%s%s (%s) => %s\n", prefix, component, component.GetID(), status)
+		s += fmt.Sprintf("%s%s => %s\n", prefix, component, status)
 		s += component.Components.Debug(prefix + "\t")
 	}
 	return s

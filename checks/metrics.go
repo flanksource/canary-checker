@@ -136,8 +136,11 @@ func exportMetric(ctx *context.Context, spec pkg.Metric) error {
 		return fmt.Errorf("failed to create metric %s (%s) %s: %s", spec.Name, spec.Type, labelNames, e)
 	}
 
-	if ctx.IsDebug() {
+	props := ctx.Properties()
+	if ctx.IsDebug() && !props.Off("metrics.debug") {
 		ctx.Debugf("%s%v=%0.3f", spec.Name, getLabelString(spec.Labels), spec.Value)
+	} else if props.On("metrics.debug") {
+		ctx.Infof("%s%v=%0.3f", spec.Name, getLabelString(spec.Labels), spec.Value)
 	}
 
 	switch collector := collector.(type) {
