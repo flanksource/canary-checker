@@ -23,7 +23,7 @@ func SyncCanary(ctx context.Context, dataFile string, configFiles ...string) err
 		}
 
 		for _, canary := range configs {
-			_, err := db.PersistCanary(ctx.DB(), canary, path.Base(configfile))
+			_, err := db.PersistCanary(ctx, canary, path.Base(configfile))
 			if err != nil {
 				return err
 			}

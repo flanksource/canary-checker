@@ -6,6 +6,8 @@ import (
 	netHTTP "net/http"
 	"time"
 
+	"github.com/flanksource/duty/tests/setup"
+
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
@@ -14,7 +16,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/http"
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
@@ -146,7 +147,7 @@ var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
 			},
 		}
 
-		client = http.NewClient().BaseURL(fmt.Sprintf("http://localhost:%d", testEchoServerPort)).Header("Content-Type", "application/json")
+		client = http.NewClient().BaseURL(fmt.Sprintf("http://localhost:%d", testEchoServerPort)).Header("Content-Type", "application/json").TraceToStdout(http.TraceAll)
 
 	})
 	ginkgo.It("should save a canary spec", func() {
@@ -160,6 +161,9 @@ var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
 		canaryM = &models.Canary{
 			ID:   uuid.New(),
 			Spec: spec,
+			Annotations: map[string]string{
+				"trace": "true",
+			},
 			Name: "alert-manager-canary",
 		}
 		err = ctx.DB().Create(canaryM).Error
@@ -172,42 +176,19 @@ var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
 
 	ginkgo.It("schedule the canary job", func() {
 		canaryJobs.MinimumTimeBetweenCanaryRuns = 0 // reset this for now so it doesn't hinder test with small schedules
-
-		canaryJobs.CanaryScheduler.Start()
-		jobCtx := job.JobRuntime{
-			Context: ctx,
-		}
-
-		err := canaryJobs.SyncCanaryJobs(jobCtx)
-		Expect(err).To(BeNil())
+		canaryJobs.SyncCanaryJobs.Context = ctx
+		canaryJobs.SyncCanaryJobs.Run()
+		setup.ExpectJobToPass(canaryJobs.SyncCanaryJobs)
 	})
 
 	ginkgo.It("Should have created the webhook check", func() {
 
-		var count = 30
-		for {
-			time.Sleep(time.Second) // Wait for SyncCanaryJob to create the check
-			count--
-
+		Eventually(func() int {
 			var checks []models.Check
-			err := ctx.DB().Where("name = ?", canarySpec.Webhook.Name).Find(&checks).Error
-			Expect(err).To(BeNil())
+			_ = ctx.DB().Where("name = ?", canarySpec.Webhook.Name).Find(&checks).Error
+			return len(checks)
+		}, "5s", "50ms").Should(BeNumerically(">=", 1))
 
-			if len(checks) == 1 {
-				break
-			}
-
-			if len(checks) != 1 && count <= 0 {
-				ginkgo.Fail("expected check to be created")
-			}
-		}
-	})
-
-	ginkgo.It("Should have created the transformed http check", func() {
-		var transformedChecks []models.Check
-		err := ctx.DB().Where("transformed = true").Where("type = 'http'").Find(&transformedChecks).Error
-		Expect(err).To(BeNil())
-		Expect(len(transformedChecks)).To(Equal(2))
 	})
 
 	ginkgo.It("Should forbid when webhook is called without the auth token", func() {
@@ -232,6 +213,15 @@ var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
 		}
 	})
 
+	ginkgo.It("Should have created the transformed http check", func() {
+		Eventually(func() int {
+			var transformedChecks []models.Check
+			err := ctx.DB().Where("transformed = true").Where("type = 'http'").Find(&transformedChecks).Error
+			Expect(err).To(BeNil())
+			return len(transformedChecks)
+		}, "5s", "100ms").Should(Equal(2))
+	})
+
 	ginkgo.It("Should have deleted one resolved alert from", func() {
 		td := testData[0]
 		td.Msg.Status = "resolved"
@@ -251,14 +241,8 @@ var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
 	})
 
 	ginkgo.It("should have deleted the transformed http check", func() {
-		for {
-			if httpCheckCallCounter <= 1 {
-				time.Sleep(time.Second)
-				continue
-			}
 
-			break
-		}
+		Eventually(func() int { return httpCheckCallCounter }, "5s", "50ms").Should(BeNumerically(">=", 1))
 
 		logger.Debugf("http check endpoint was called %d times", httpCheckCallCounter)
 		var result models.Check

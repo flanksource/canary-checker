@@ -4,6 +4,7 @@ import (
 	"os"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	ginkgo "github.com/onsi/ginkgo/v2"
@@ -13,6 +14,17 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/yaml"
 )
+
+func fakeRunOptions() TopologyRunOptions {
+	return TopologyRunOptions{
+		JobRuntime: job.JobRuntime{
+			Context: DefaultContext,
+			History: &models.JobHistory{},
+		},
+		Depth:     10,
+		Namespace: "default",
+	}
+}
 
 var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 	ginkgo.It("should create component with properties", func() {
@@ -35,11 +47,7 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 		err = DefaultContext.DB().Create(&ci).Error
 		Expect(err).To(BeNil())
 
-		rootComponent, history := Run(TopologyRunOptions{
-			Context:   DefaultContext,
-			Depth:     10,
-			Namespace: "default",
-		}, t)
+		rootComponent, history := Run(DefaultContext, t)
 
 		Expect(history.Errors).To(HaveLen(0))
 
@@ -60,11 +68,7 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 			ginkgo.Fail("Error converting yaml to v1.Topology:" + err.Error())
 		}
 
-		rootComponent, history := Run(TopologyRunOptions{
-			Context:   DefaultContext,
-			Depth:     10,
-			Namespace: "default",
-		}, t)
+		rootComponent, history := Run(DefaultContext, t)
 
 		Expect(history.Errors).To(HaveLen(0))
 
@@ -112,11 +116,7 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 			ginkgo.Fail("Error converting yaml to v1.Topology:" + err.Error())
 		}
 
-		rootComponent, history := Run(TopologyRunOptions{
-			Context:   DefaultContext,
-			Depth:     10,
-			Namespace: "default",
-		}, t)
+		rootComponent, history := Run(DefaultContext, t)
 
 		Expect(history.Errors).To(HaveLen(0))
 
