@@ -143,7 +143,6 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 			}
 		} else {
-
 			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), false); err != nil {
 				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 			}

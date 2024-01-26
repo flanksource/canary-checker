@@ -45,13 +45,36 @@ var testData []struct {
 	Count int
 }
 
-var canarySpec v1.CanarySpec
+var httpSpec, webhookSpec v1.CanarySpec
 
 var client *http.Client
 var canaryM *models.Canary
 
-var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
+func createCanary(name string, canarySpec v1.CanarySpec) {
+	b, err := json.Marshal(canarySpec)
+	Expect(err).To(BeNil())
 
+	var spec types.JSON
+	err = json.Unmarshal(b, &spec)
+	Expect(err).To(BeNil())
+
+	canaryM = &models.Canary{
+		ID:   uuid.New(),
+		Spec: spec,
+		Annotations: map[string]string{
+			"trace": "true",
+		},
+		Name: name,
+	}
+	err = ctx.DB().Create(canaryM).Error
+	Expect(err).To(BeNil())
+
+	response, err := db.GetAllCanariesForSync(ctx, "")
+	Expect(err).To(BeNil())
+	Expect(lo.CountBy(response, func(c pkg.Canary) bool { return c.Name == canaryM.Name })).To(Equal(1))
+}
+
+var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
 	ginkgo.BeforeAll(func() {
 		// Create an array of test data with three different Alert data
 		testData = []struct {
@@ -96,7 +119,7 @@ var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
 			},
 		}
 
-		canarySpec = v1.CanarySpec{
+		httpSpec = v1.CanarySpec{
 			Schedule: "@every 1s",
 			HTTP: []v1.HTTPCheck{ // Run another transformed check on the same canary to test that the "delete transform" strategy doesn't delete webhook checks
 				{
@@ -122,6 +145,8 @@ var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
 					},
 				},
 			},
+		}
+		webhookSpec = v1.CanarySpec{
 			Webhook: &v1.WebhookCheck{
 				Description: v1.Description{
 					Name: "my-webhook",
@@ -147,31 +172,13 @@ var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
 			},
 		}
 
-		client = http.NewClient().BaseURL(fmt.Sprintf("http://localhost:%d", testEchoServerPort)).Header("Content-Type", "application/json").TraceToStdout(http.TraceAll)
+		client = http.NewClient().BaseURL(fmt.Sprintf("http://localhost:%d", testEchoServerPort)).Header("Content-Type", "application/json") //.TraceToStdout(http.TraceAll)
 
+		canaryJobs.SyncCanaryJobs.Context = ctx
 	})
 	ginkgo.It("should save a canary spec", func() {
-		b, err := json.Marshal(canarySpec)
-		Expect(err).To(BeNil())
-
-		var spec types.JSON
-		err = json.Unmarshal(b, &spec)
-		Expect(err).To(BeNil())
-
-		canaryM = &models.Canary{
-			ID:   uuid.New(),
-			Spec: spec,
-			Annotations: map[string]string{
-				"trace": "true",
-			},
-			Name: "alert-manager-canary",
-		}
-		err = ctx.DB().Create(canaryM).Error
-		Expect(err).To(BeNil())
-
-		response, err := db.GetAllCanariesForSync(ctx, "")
-		Expect(err).To(BeNil())
-		Expect(lo.CountBy(response, func(c pkg.Canary) bool { return c.Name == canaryM.Name })).To(Equal(1))
+		createCanary("alert-manager-canary", webhookSpec)
+		createCanary("http-canary", httpSpec)
 	})
 
 	ginkgo.It("schedule the canary job", func() {
@@ -182,24 +189,23 @@ var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
 	})
 
 	ginkgo.It("Should have created the webhook check", func() {
-
 		Eventually(func() int {
 			var checks []models.Check
-			_ = ctx.DB().Where("name = ?", canarySpec.Webhook.Name).Find(&checks).Error
+			_ = ctx.DB().Where("name = ?", webhookSpec.Webhook.Name).Find(&checks).Error
 			return len(checks)
 		}, "5s", "50ms").Should(BeNumerically(">=", 1))
 
 	})
 
 	ginkgo.It("Should forbid when webhook is called without the auth token", func() {
-		resp, err := client.R(ctx).Post(fmt.Sprintf("/webhook/%s", canarySpec.Webhook.Name), nil)
+		resp, err := client.R(ctx).Post(fmt.Sprintf("/webhook/%s", webhookSpec.Webhook.Name), nil)
 		Expect(err).To(BeNil())
 		Expect(resp.StatusCode).To(Equal(netHTTP.StatusUnauthorized))
 	})
 
 	ginkgo.It("Should call webhook with one alert at a time", func() {
 		for _, td := range testData {
-			resp, err := client.R(ctx).Post(fmt.Sprintf("/webhook/%s?token=%s", canarySpec.Webhook.Name, canarySpec.Webhook.Token.ValueStatic), DummyWebhookMessage{
+			resp, err := client.R(ctx).Post(fmt.Sprintf("/webhook/%s?token=%s", webhookSpec.Webhook.Name, webhookSpec.Webhook.Token.ValueStatic), DummyWebhookMessage{
 				Version: "4",
 				Alerts:  []Alert{td.Msg},
 			})
@@ -207,7 +213,7 @@ var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
 			Expect(resp.StatusCode).To(Equal(netHTTP.StatusOK))
 
 			var result []models.Check
-			err = ctx.DB().Where("type = ?", checks.WebhookCheckType).Where("deleted_at IS NULL").Where("name != ?", canarySpec.Webhook.Name).Find(&result).Error
+			err = ctx.DB().Where("type = ?", checks.WebhookCheckType).Where("deleted_at IS NULL").Where("name != ?", webhookSpec.Webhook.Name).Find(&result).Error
 			Expect(err).To(BeNil())
 			Expect(len(result)).To(Equal(td.Count), "should have created new webhook check")
 		}
@@ -227,7 +233,7 @@ var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
 		td.Msg.Status = "resolved"
 		td.Msg.EndsAt = utils.Ptr(time.Now())
 
-		resp, err := client.R(ctx).Post(fmt.Sprintf("/webhook/%s?token=%s", canarySpec.Webhook.Name, canarySpec.Webhook.Token.ValueStatic), DummyWebhookMessage{
+		resp, err := client.R(ctx).Post(fmt.Sprintf("/webhook/%s?token=%s", webhookSpec.Webhook.Name, webhookSpec.Webhook.Token.ValueStatic), DummyWebhookMessage{
 			Version: "4",
 			Alerts:  []Alert{td.Msg},
 		})
@@ -246,19 +252,19 @@ var _ = ginkgo.Describe("API Canary Webhook", ginkgo.Ordered, func() {
 
 		logger.Debugf("http check endpoint was called %d times", httpCheckCallCounter)
 		var result models.Check
-		err := ctx.DB().Where("name = 'http-check'").Find(&result).Error
+		err := ctx.DB().Where("name = ?", httpSpec.HTTP[0].Name).Find(&result).Error
 		Expect(err).To(BeNil())
-		Expect(result.DeletedAt).To(Not(BeNil()))
+		Expect(result.DeletedAt).To(BeNil())
 	})
 
 	ginkgo.It("should have two active and one resolved webhook check", func() {
 		var activeChecks []models.Check
-		err := ctx.DB().Where("type = ?", checks.WebhookCheckType).Where("deleted_at IS NULL").Where("name != ?", canarySpec.Webhook.Name).Find(&activeChecks).Error
+		err := ctx.DB().Where("type = ?", checks.WebhookCheckType).Where("deleted_at IS NULL").Where("name != ?", webhookSpec.Webhook.Name).Find(&activeChecks).Error
 		Expect(err).To(BeNil())
 		Expect(len(activeChecks)).To(Equal(2), "There should have been 2 active webhook check")
 
 		var deletedChecks []models.Check
-		err = ctx.DB().Where("type = ?", checks.WebhookCheckType).Where("deleted_at IS NOT NULL").Where("name != ?", canarySpec.Webhook.Name).Find(&deletedChecks).Error
+		err = ctx.DB().Where("type = ?", checks.WebhookCheckType).Where("deleted_at IS NOT NULL").Where("name != ?", webhookSpec.Webhook.Name).Find(&deletedChecks).Error
 		Expect(err).To(BeNil())
 		Expect(len(deletedChecks)).To(Equal(1), "There should have been 1 deleted webhook check")
 	})

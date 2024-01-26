@@ -17,10 +17,6 @@ var FuncScheduler = cron.New()
 func Start() {
 	logger.Infof("Starting jobs ...")
 
-	topologyJobs.TopologyScheduler.Start()
-	canaryJobs.CanaryScheduler.Start()
-	FuncScheduler.Start()
-
 	if canaryJobs.UpstreamConf.Valid() {
 		// Push checks to upstream in real-time
 		if err := canaryJobs.StartUpstreamEventQueueConsumer(context.DefaultContext); err != nil {

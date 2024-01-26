@@ -238,7 +238,7 @@ func (ctx *Context) WithCheck(check external.Check) *Context {
 		"labels":      check.GetLabels(),
 		"endpoint":    check.GetEndpoint(),
 	}
-	return ctx.New(env)
+	return ctx.New(check.GetName(), env)
 }
 
 func (ctx *Context) WithEnvValues(environment map[string]interface{}) *Context {
@@ -248,9 +248,9 @@ func (ctx *Context) WithEnvValues(environment map[string]interface{}) *Context {
 	return ctx
 }
 
-func (ctx *Context) New(environment map[string]interface{}) *Context {
+func (ctx *Context) New(name string, environment map[string]interface{}) *Context {
 	return &Context{
-		Context:     ctx.Context,
+		Context:     ctx.Context.WithName(name),
 		Namespace:   ctx.Namespace,
 		Canary:      ctx.Canary,
 		Environment: environment,

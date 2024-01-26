@@ -113,7 +113,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	logFail := j.Canary.IsTrace() || j.Canary.IsDebug() || LogFail
 	for _, result := range results {
 		if logPass && result.Pass || logFail && !result.Pass {
-			ctx.Infof(result.String())
+			ctx.Logger.Named(result.GetName()).Infof(result.String())
 		}
 		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
 		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded...)
@@ -123,7 +123,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 
 		// Establish relationship with components & configs
 		if err := formCheckRelationships(ctx.Context, result); err != nil {
-			ctx.Error(err, "error forming check relationships")
+			ctx.Logger.Named(result.Name).Errorf("error forming check relationships: %v", err)
 		}
 	}
 

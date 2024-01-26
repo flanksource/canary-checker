@@ -280,7 +280,7 @@ func (component Component) GetID() string {
 	return component.Name
 }
 
-func (components Components) Debug(prefix string) string {
+func (components Components) Debug(properties bool, prefix string) string {
 	s := ""
 	for _, component := range components {
 		status := component.Status
@@ -291,8 +291,18 @@ func (components Components) Debug(prefix string) string {
 			status = dutyTypes.ComponentStatus(console.Redf(string(status)))
 		}
 
-		s += fmt.Sprintf("%s%s => %s\n", prefix, component, status)
-		s += component.Components.Debug(prefix + "\t")
+		s += fmt.Sprintf("%s%s => %s", prefix, component, status)
+
+		if properties {
+			s += "{"
+			for k, v := range component.Properties.AsMap() {
+				s += fmt.Sprintf(" %s=%v", console.DarkWhitef(k), v)
+			}
+			s += "}"
+		}
+
+		s += "\n"
+		s += component.Components.Debug(properties, prefix+"\t")
 	}
 	return s
 }

@@ -24,7 +24,6 @@ func newTopologyJob(ctx context.Context, topology v1.Topology) {
 	tj := pkgTopology.TopologyJob{
 		Topology:  topology,
 		Namespace: topology.Namespace,
-		Depth:     10,
 	}
 	j := &job.Job{
 		Name:         "Topology",

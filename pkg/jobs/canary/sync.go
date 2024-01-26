@@ -14,7 +14,6 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
-	dutyjob "github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/robfig/cron/v3"
 )
@@ -62,27 +61,29 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 		return err
 	}
 
+	if canary.Namespace == "" {
+		canary.Namespace = "default"
+	}
+
 	if canary.Spec.Webhook != nil {
 		// Webhook checks can be persisted immediately as they do not require scheduling & running.
 		result := pkg.Success(canary.Spec.Webhook, *canary)
 		_ = cache.PostgresCache.Add(pkg.FromV1(*canary, canary.Spec.Webhook), pkg.CheckStatusFromResult(*result))
 	}
 
-	var (
-		schedule = canary.Spec.GetSchedule()
-	)
+	var schedule = canary.Spec.GetSchedule()
 
-	job := cronJobs[canary.GetPersistedID()]
+	j := cronJobs[canary.GetPersistedID()]
 
 	if schedule == "@never" {
-		if job != nil {
+		if j != nil {
 			Unschedule(canary.GetPersistedID())
 		}
 		return nil
 	}
 
 	if runner.IsCanaryIgnored(&canary.ObjectMeta) {
-		if job != nil {
+		if j != nil {
 			Unschedule(canary.GetPersistedID())
 		}
 		return nil
@@ -93,41 +94,41 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 		DBCanary: dbCanary,
 	}
 
-	if job == nil {
+	if j == nil {
 		// Create new job context from empty context to create root spans for cronJobs
 		jobCtx := ctx.Wrap(gocontext.Background()).WithObject(canary.ObjectMeta)
 		jobCtx.WithAnyValue("canaryJob", canaryJob)
-		job = dutyjob.NewJob(jobCtx, "Canary", schedule, canaryJob.Run).
+		j = job.NewJob(jobCtx, "Canary", schedule, canaryJob.Run).
 			SetID(fmt.Sprintf("%s/%s", canary.Namespace, canary.Name))
-		job.Singleton = true
-		job.Retention.Success = 0
-		job.Retention.Failed = 3
-		job.Retention.Age = time.Hour * 48
-		job.Retention.Interval = time.Minute * 15
-		cronJobs[canary.GetPersistedID()] = job
-		if err := job.AddToScheduler(CanaryScheduler); err != nil {
+		j.Singleton = true
+		j.Retention.Success = 0
+		j.Retention.Failed = 3
+		j.Retention.Age = time.Hour * 48
+		j.Retention.Interval = time.Minute * 15
+		cronJobs[canary.GetPersistedID()] = j
+		if err := j.AddToScheduler(CanaryScheduler); err != nil {
 			return err
 		}
 	} else {
-		job.Context = job.Context.WithAnyValue("canaryJob", canaryJob)
+		j.Context = j.Context.WithAnyValue("canaryJob", canaryJob)
 	}
 
-	if job.Schedule != schedule {
-		if err := job.Reschedule(schedule, CanaryScheduler); err != nil {
+	if j.Schedule != schedule {
+		if err := j.Reschedule(schedule, CanaryScheduler); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-var SyncCanaryJobs = &dutyjob.Job{
+var SyncCanaryJobs = &job.Job{
 	Name:       "SyncCanaryJobs",
 	JobHistory: true,
 	Singleton:  true,
 	RunNow:     true,
 	Schedule:   "@every 5m",
-	Retention:  dutyjob.RetentionHour,
-	Fn: func(ctx dutyjob.JobRuntime) error {
+	Retention:  job.RetentionHour,
+	Fn: func(ctx job.JobRuntime) error {
 		canaries, err := db.GetAllCanariesForSync(ctx.Context, runner.WatchNamespace)
 		if err != nil {
 			return err
@@ -139,7 +140,7 @@ var SyncCanaryJobs = &dutyjob.Job{
 			idsInNewFetch = append(idsInNewFetch, c.ID.String())
 			if err := SyncCanaryJob(ctx.Context, c); err != nil {
 				// log the error against the canary itself
-				jobHistory := models.NewJobHistory("SyncCanary", "canary", c.ID.String()).Start()
+				jobHistory := models.NewJobHistory(ctx.Logger, "SyncCanary", "canary", c.ID.String()).Start()
 				logger.Errorf("Error syncing canary[%s]: %v", c.ID, err.Error())
 				logIfError(jobHistory.AddError(err.Error()).End().Persist(ctx.DB()), "failed to persist job history [CanarySync]")
 				// log the error for the sync job itself
@@ -161,7 +162,7 @@ var SyncCanaryJobs = &dutyjob.Job{
 func getAllCanaryIDsInCron() []string {
 	var ids []string
 	for _, entry := range CanaryScheduler.Entries() {
-		ids = append(ids, string(entry.Job.(*dutyjob.Job).GetObjectMeta().UID))
+		ids = append(ids, string(entry.Job.(*job.Job).GetObjectMeta().UID))
 	}
 	return ids
 }

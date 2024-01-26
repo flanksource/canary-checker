@@ -196,8 +196,6 @@ func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_up
 		latency = _latencyV.(*rolling.TimePolicy)
 	}
 
-	ctx.Tracef(result.String())
-
 	OpsCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 	if result.Duration > 0 {
 		RequestLatency.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Observe(float64(result.Duration))

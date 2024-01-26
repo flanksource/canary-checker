@@ -275,7 +275,7 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) ([]byte, error
 	if property.Lookup != nil {
 		results, err := lookup(ctx, property.Name, *property.Lookup)
 		if err != nil || len(results) == 0 {
-			ctx.Tracef("%s property=%s => no results", ctx, property.Name)
+			ctx.Logger.V(3).Infof("%s property=%s => no results", ctx, property.Name)
 			return nil, err
 		}
 
@@ -371,20 +371,9 @@ type TopologyRunOptions struct {
 	Namespace string
 }
 
-func getProperty(properties map[string]string, t v1.Topology, property string) (string, bool) {
-	if val, ok := properties["topology."+property]; ok {
-		return val, ok
-	}
-	if val, ok := properties[fmt.Sprintf("topology.%s.%s", t.GetPersistedID(), property)]; ok {
-		return val, ok
-	}
-	return "", false
-}
-
 type TopologyJob struct {
 	Topology  v1.Topology
 	Namespace string
-	Depth     int
 	Output    pkg.Components
 }
 
@@ -402,7 +391,6 @@ func Run(ctx dutyCtx.Context, topology v1.Topology) (pkg.Components, *models.Job
 	j.Run()
 
 	return tj.Output, j.LastJob
-
 }
 
 func (tj *TopologyJob) Run(job job.JobRuntime) error {
@@ -414,7 +402,6 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 		return fmt.Errorf("failed to parse topology id: %v", err)
 	}
 
-	job.Debugf("running topology sync")
 	// Check if deleted
 	var dbTopology models.Topology
 	if err := job.DB().Where("id = ?", id).First(&dbTopology).Error; err != nil {
@@ -434,7 +421,7 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 	ctx := NewComponentContext(job.Context, t)
 	ctx.JobHistory = job.History
 
-	ctx.Debugf("[%s] running topology depth=%d", t, tj.Depth)
+	ctx.Debugf("running topology")
 
 	var results pkg.Components
 	rootComponent := &pkg.Component{
@@ -453,39 +440,37 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 	}
 
 	ignoreLabels := []string{"kustomize.toolkit.fluxcd.io/name", "kustomize.toolkit.fluxcd.io/namespace"}
-	if tj.Depth > 0 {
-		for _, comp := range ctx.Topology.Spec.Components {
-			components, err := lookupComponents(ctx, comp)
-			if err != nil {
-				job.History.AddError(fmt.Sprintf("Error looking up component %s: %s", comp.Name, err))
-				continue
-			}
-			// add topology labels to the components
-			for _, component := range components {
-				job.History.IncrSuccess()
-				if component.Labels == nil {
-					component.Labels = make(types.JSONStringMap)
-				}
-				for key, value := range ctx.Topology.Labels {
-					// Workaround for avoiding a recursive loop
-					// If resource is added via flux kustomize the label gets added to top level Pods and Nodes
-					if strings.HasPrefix(component.Type, "Kubernetes") && collections.Contains(ignoreLabels, key) {
-						continue
-					}
-
-					// don't overwrite the component labels
-					if _, isPresent := component.Labels[key]; !isPresent {
-						component.Labels[key] = value
-					}
-				}
-			}
-			if comp.Lookup == nil {
-				rootComponent.Components = append(rootComponent.Components, components...)
-				continue
-			}
-
-			rootComponent.Components = append(rootComponent.Components, components...)
+	for _, comp := range ctx.Topology.Spec.Components {
+		components, err := lookupComponents(ctx, comp)
+		if err != nil {
+			job.History.AddError(fmt.Sprintf("Error looking up component %s: %s", comp.Name, err))
+			continue
 		}
+		// add topology labels to the components
+		for _, component := range components {
+			job.History.IncrSuccess()
+			if component.Labels == nil {
+				component.Labels = make(types.JSONStringMap)
+			}
+			for key, value := range ctx.Topology.Labels {
+				// Workaround for avoiding a recursive loop
+				// If resource is added via flux kustomize the label gets added to top level Pods and Nodes
+				if strings.HasPrefix(component.Type, "Kubernetes") && collections.Contains(ignoreLabels, key) {
+					continue
+				}
+
+				// don't overwrite the component labels
+				if _, isPresent := component.Labels[key]; !isPresent {
+					component.Labels[key] = value
+				}
+			}
+		}
+		if comp.Lookup == nil {
+			rootComponent.Components = append(rootComponent.Components, components...)
+			continue
+		}
+
+		rootComponent.Components = append(rootComponent.Components, components...)
 	}
 
 	// Update component parents based on ParentLookup
@@ -542,9 +527,9 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 	ctx.Infof("%s id=%s external_id=%s status=%s %v %d", rootComponent.Name, rootComponent.ID, rootComponent.ExternalId, rootComponent.Status, ctx.IsTrace(), ctx.Logger.GetLevel())
 
 	if ctx.IsTrace() {
-		ctx.Tracef(results.Debug(""))
+		ctx.Tracef(results.Debug(ctx.Logger.IsLevelEnabled(5), ""))
 	} else if ctx.Logger.IsLevelEnabled(5) {
-		ctx.Infof(results.Debug(""))
+		ctx.Infof(results.Debug(ctx.Logger.IsLevelEnabled(5), ""))
 	}
 	for _, c := range results.Walk() {
 		if c.Namespace == "" {

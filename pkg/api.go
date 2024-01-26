@@ -345,24 +345,25 @@ func (result CheckResult) GetDescription() string {
 	return result.Check.GetEndpoint()
 }
 
-func (result CheckResult) String() string {
-	checkType := ""
-	endpoint := ""
-	if result.Check != nil {
-		checkType = result.Check.GetType()
-		endpoint = result.Check.GetName()
-		if endpoint == "" {
-			endpoint = result.Check.GetDescription()
-		}
-		if endpoint == "" {
-			endpoint = result.Check.GetEndpoint()
-		}
+func (result CheckResult) GetName() string {
+	if result.Check == nil {
+		return ""
 	}
+	endpoint := result.Check.GetName()
+	if endpoint == "" {
+		endpoint = result.Check.GetDescription()
+	}
+	if endpoint == "" {
+		endpoint = result.Check.GetEndpoint()
+	}
+	return endpoint
+}
 
+func (result CheckResult) String() string {
 	if result.Pass {
-		return fmt.Sprintf("%s [%s] %s duration=%d %s", console.Greenf("PASS"), checkType, endpoint, result.Duration, result.Message)
+		return fmt.Sprintf("%s duration=%d %s", console.Greenf("PASS"), result.Duration, result.Message)
 	}
-	return fmt.Sprintf("%s [%s] %s duration=%d %s %s", console.Redf("FAIL"), checkType, endpoint, result.Duration, result.Message, result.Error)
+	return fmt.Sprintf("%s duration=%d %s %s", console.Redf("FAIL"), result.Duration, result.Message, result.Error)
 }
 
 type GenericCheck struct {
