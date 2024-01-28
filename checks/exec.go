@@ -19,7 +19,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/files"
 	"github.com/flanksource/commons/hash"
-	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
 	"github.com/hashicorp/go-getter"
 )
@@ -263,7 +262,7 @@ func checkCmd(ctx *context.Context, check v1.ExecCheck, cmd *exec.Cmd, result *p
 
 				file, err := os.Open(path)
 				if err != nil {
-					logger.Errorf("error opening file. path=%s; %w", path, err)
+					ctx.Error(err, "error opening file. path=%s", path)
 					continue
 				}
 

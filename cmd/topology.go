@@ -60,19 +60,10 @@ var AddTopology = &cobra.Command{
 	Use:   "topology <system.yaml>",
 	Short: "Add a new topology spec",
 	Run: func(cmd *cobra.Command, configFiles []string) {
-		opts := getTopologyRunOptions()
-		if err := configSync.SyncTopology(opts, dataFile, configFiles...); err != nil {
+		if err := configSync.SyncTopology(apicontext.DefaultContext, dataFile, configFiles...); err != nil {
 			logger.Fatalf("Could not sync topology: %v", err)
 		}
 	},
-}
-
-func getTopologyRunOptions() topology.TopologyRunOptions {
-	return topology.TopologyRunOptions{
-		Context:   apicontext.DefaultContext,
-		Depth:     queryParams.Depth,
-		Namespace: topologyRunNamespace,
-	}
 }
 
 // StaticTemplatedID for topologies created by CLI, to ensure that components are updated rather than duplicated
@@ -86,8 +77,6 @@ var RunTopology = &cobra.Command{
 		if len(configFiles) == 0 {
 			log.Fatalln("Must specify at least one topology definition")
 		}
-
-		opts := getTopologyRunOptions()
 
 		var results = []*pkg.Component{}
 
@@ -109,7 +98,7 @@ var RunTopology = &cobra.Command{
 					}
 				}
 				go func() {
-					components, _ := topology.Run(opts, _config)
+					components, _ := topology.Run(apicontext.DefaultContext, _config)
 					results = append(results, components...)
 					wg.Done()
 				}()
@@ -120,7 +109,7 @@ var RunTopology = &cobra.Command{
 		logger.Infof("Checked %d systems in %v", len(results), timer)
 
 		if db.IsConnected() {
-			if err := db.PersistComponents(opts.Context, results); err != nil {
+			if err := db.PersistComponents(apicontext.DefaultContext, results); err != nil {
 				logger.Errorf("error persisting results: %v", err)
 			}
 		}

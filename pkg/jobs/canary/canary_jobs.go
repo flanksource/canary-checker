@@ -16,13 +16,11 @@ import (
 	"github.com/flanksource/duty/context"
 	dutyjob "github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
-	"github.com/flanksource/kommons"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/robfig/cron/v3"
 	"go.opentelemetry.io/otel/attribute"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes"
 )
 
 var CanaryScheduler = cron.New()
@@ -31,14 +29,9 @@ var DataFile string
 var Executor bool
 var LogPass, LogFail bool
 var MinimumTimeBetweenCanaryRuns = 10 * time.Second
-var Kommons *kommons.Client
-var Kubernetes kubernetes.Interface
 var FuncScheduler = cron.New()
 
 var CanaryStatusChannel chan CanaryStatusPayload
-
-// concurrentJobLocks keeps track of the currently running jobs.
-var concurrentJobLocks sync.Map
 
 var canaryLastRuntimes = sync.Map{}
 
@@ -46,18 +39,18 @@ func StartScanCanaryConfigs(ctx context.Context, dataFile string, configFiles []
 	DataFile = dataFile
 	CanaryConfigFiles = configFiles
 	if _, err := FuncScheduler.AddFunc("@every 5m", func() {
-		ScanCanaryConfigs(ctx.DB())
+		ScanCanaryConfigs(ctx)
 	}); err != nil {
 		logger.Errorf("Failed to schedule scan jobs: %v", err)
 	}
-	ScanCanaryConfigs(ctx.DB())
+	ScanCanaryConfigs(ctx)
 }
 
 type CanaryJob struct {
 	Canary   v1.Canary
 	DBCanary pkg.Canary
-	LogPass  bool
-	LogFail  bool
+	// LogPass  bool
+	// LogFail  bool
 }
 
 func (j CanaryJob) GetNamespacedName() types.NamespacedName {
@@ -71,20 +64,6 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	canaryID := j.DBCanary.ID.String()
 	ctx.History.ResourceID = canaryID
 	ctx.History.ResourceType = "canary"
-	ctx.GetSpan().SetAttributes(attribute.String("canary-id", canaryID))
-
-	val, _ := concurrentJobLocks.LoadOrStore(canaryID, &sync.Mutex{})
-	lock, ok := val.(*sync.Mutex)
-	if !ok {
-		ctx.Tracef("expected mutex but got %T for canary(id=%s)", lock, canaryID)
-		return nil
-	}
-
-	if !lock.TryLock() {
-		ctx.Tracef("canary (id=%s) is already running. skipping this run ...", canaryID)
-		return nil
-	}
-	defer lock.Unlock()
 
 	lastRunDelta := MinimumTimeBetweenCanaryRuns
 	// Get last runtime from sync map
@@ -96,27 +75,32 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 
 	// Skip run if job ran too recently
 	if lastRunDelta < MinimumTimeBetweenCanaryRuns {
-		ctx.Debugf("Skipping Canary[%s]:%s since it last ran %.2f seconds ago", canaryID, j.Canary.GetNamespacedName(), lastRunDelta.Seconds())
+		ctx.Debugf("skipping since it last ran %.2f seconds ago", lastRunDelta.Seconds())
 		return nil
 	}
 
 	canaryCtx := canarycontext.New(ctx.Context, j.Canary)
 	var span trace.Span
 	ctx.Context, span = ctx.StartSpan("RunCanaryChecks")
-	span.SetAttributes(attribute.String("canary-id", canaryID))
+	defer span.End()
+	span.SetAttributes(
+		attribute.String("canary.id", canaryID),
+		attribute.String("canary.name", j.Canary.Name),
+		attribute.String("canary.namespace", j.Canary.Namespace),
+	)
+
 	results, err := checks.RunChecks(canaryCtx)
 	if err != nil {
-		ctx.Errorf(err, "error running checks for canary %s: %v", canaryID, err)
+		ctx.Error(err)
 		return nil
 	}
-	defer span.End()
 
 	// Get transformed checks before and after, and then delete the olds ones that are not in new set.
 	// NOTE: Webhook checks, although they are transformed, are handled entirely by the webhook caller
 	// and should not be deleted manually in here.
 	existingTransformedChecks, err := db.GetTransformedCheckIDs(ctx.Context, canaryID, checks.WebhookCheckType)
 	if err != nil {
-		ctx.Errorf(err, "error getting transformed checks for canary %s: %v", canaryID, err)
+		ctx.Error(err, "error getting transformed checks")
 	}
 
 	var transformedChecksCreated []string
@@ -129,7 +113,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	logFail := j.Canary.IsTrace() || j.Canary.IsDebug() || LogFail
 	for _, result := range results {
 		if logPass && result.Pass || logFail && !result.Pass {
-			logger.Infof(result.String())
+			ctx.Logger.Named(result.GetName()).Infof(result.String())
 		}
 		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
 		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded...)
@@ -139,7 +123,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 
 		// Establish relationship with components & configs
 		if err := formCheckRelationships(ctx.Context, result); err != nil {
-			ctx.Errorf(err, "error forming check relationships: %v", err)
+			ctx.Logger.Named(result.Name).Errorf("error forming check relationships: %v", err)
 		}
 	}
 
@@ -163,10 +147,10 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		}
 		for status, checkIDs := range checkDeleteStrategyGroup {
 			if err := db.AddCheckStatuses(ctx.Context, checkIDs, models.CheckHealthStatus(status)); err != nil {
-				ctx.Errorf(err, "error adding statuses for transformed checks: %v", err)
+				ctx.Error(err, "error adding statuses for transformed checks")
 			}
 			if err := db.RemoveTransformedChecks(ctx.Context, checkIDs); err != nil {
-				ctx.Errorf(err, "error deleting transformed checks for canary %s: %v", canaryID, err)
+				ctx.Error(err, "error deleting transformed checks for canary")
 			}
 		}
 	}

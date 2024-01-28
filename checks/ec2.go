@@ -185,7 +185,7 @@ func (cfg *AWS) GetExistingInstanceIds(idString string) ([]string, error) {
 	return staleIds, nil
 }
 
-func (cfg *AWS) Launch(check v1.EC2Check, name, ami string) (string, *time.Duration, error) {
+func (cfg *AWS) Launch(ctx *context.Context, check v1.EC2Check, name, ami string) (string, *time.Duration, error) {
 	start := NewTimer()
 	userData := base64.StdEncoding.EncodeToString([]byte(check.UserData))
 
@@ -232,7 +232,7 @@ func (cfg *AWS) Launch(check v1.EC2Check, name, ami string) (string, *time.Durat
 	}
 
 	id := runOutput.Instances[0].InstanceId
-	logger.Infof("Created EC2 instance with id %v", *id)
+	ctx.Infof("Created EC2 instance with id %v", *id)
 	return *id, start.Duration(), nil
 }
 
@@ -314,7 +314,7 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	results = append(results, result)
 	prometheusCount.WithLabelValues(check.Region).Inc()
 	namespace := ctx.Canary.Namespace
-	kommonsClient := ctx.Kommons
+	kommonsClient := ctx.Kommons()
 	if kommonsClient == nil {
 		return results.Failf("Kubernetes is not initialized")
 	}
@@ -335,12 +335,12 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
-	logger.Infof("Found %v stale ec2 instances (%s) - terminating", len(ids), strings.Join(ids, ","))
+	ctx.Infof("Found %v stale ec2 instances (%s) - terminating", len(ids), strings.Join(ids, ","))
 	if _, err := aws.TerminateInstances(ids, 5*time.Minute); err != nil {
 		return results.ErrorMessage(err)
 	}
 
-	instanceID, launchTime, err := aws.Launch(check, idString, *ami)
+	instanceID, launchTime, err := aws.Launch(ctx, check, idString, *ami)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
@@ -390,7 +390,7 @@ func (c *EC2Checker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 			return results.Failf("EC2 checks may not be nested to avoid potential recursion.  Skipping inner EC2")
 		}
 
-		innerResults, err := RunChecks(ctx.New(ec2Vars))
+		innerResults, err := RunChecks(ctx.New("ec2", ec2Vars))
 		if err != nil {
 			return results.ErrorMessage(err)
 		}

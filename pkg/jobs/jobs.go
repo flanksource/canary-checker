@@ -14,16 +14,8 @@ import (
 
 var FuncScheduler = cron.New()
 
-const (
-	SyncCanaryJobsSchedule = "@every 2m"
-)
-
 func Start() {
 	logger.Infof("Starting jobs ...")
-
-	topologyJobs.TopologyScheduler.Start()
-	canaryJobs.CanaryScheduler.Start()
-	FuncScheduler.Start()
 
 	if canaryJobs.UpstreamConf.Valid() {
 		// Push checks to upstream in real-time
@@ -56,20 +48,11 @@ func Start() {
 		}
 	}
 
-	for _, j := range []*job.Job{topologyJobs.CleanupComponents, topologyJobs.SyncTopology} {
+	for _, j := range []*job.Job{topologyJobs.CleanupComponents, topologyJobs.SyncTopology, canaryJobs.SyncCanaryJobs} {
 		var job = j
 		job.Context = context.DefaultContext
 		if err := job.AddToScheduler(FuncScheduler); err != nil {
 			logger.Errorf(err.Error())
 		}
 	}
-
-	if err := job.NewJob(context.DefaultContext, "SyncCanaryJobs", "@every 2m", canaryJobs.SyncCanaryJobs).
-		RunOnStart().AddToScheduler(FuncScheduler); err != nil {
-		logger.Fatalf("Failed to schedule job [canaryJobs.SyncCanaryJobs]: %v", err)
-	}
-}
-
-func ScheduleFunc(schedule string, fn func()) (interface{}, error) {
-	return FuncScheduler.AddFunc(schedule, fn)
 }

@@ -52,14 +52,15 @@ var Run = &cobra.Command{
 				if config.Name == "" {
 					config.Name = CleanupFilename(configfile)
 				}
+				log := logger.StandardLogger().Named(config.Name)
 				wg.Add(1)
 				_config := config
 				go func() {
 					defer wg.Done()
 
-					res, err := checks.RunChecks(apicontext.New(apicontext.DefaultContext, _config))
+					res, err := checks.RunChecks(apicontext.New(apicontext.DefaultContext.WithName(_config.Name), _config))
 					if err != nil {
-						logger.Errorf("error running checks: %v", err)
+						log.Errorf("error running checks: %v", err)
 						return
 					}
 
@@ -86,7 +87,7 @@ var Run = &cobra.Command{
 				logFail := result.Canary.IsDebug() || result.Canary.IsTrace() || logFail
 
 				if logPass && result.Pass || logFail && !result.Pass {
-					logger.Infof(result.String())
+					logger.StandardLogger().Named(result.Canary.Name).Named(result.Name).Infof(result.String())
 				}
 				results = append(results, result)
 			}

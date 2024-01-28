@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	k8sTypes "k8s.io/apimachinery/pkg/types"
 )
 
 func PersistTopology(ctx context.Context, t *v1.Topology) (bool, error) {
@@ -20,10 +21,13 @@ func PersistTopology(ctx context.Context, t *v1.Topology) (bool, error) {
 	var changed bool
 
 	model := pkg.TopologyFromV1(t)
-	model.ID, err = uuid.Parse(t.GetPersistedID())
-	if err != nil {
-		return changed, err
+	if t.GetPersistedID() != "" {
+		model.ID, err = uuid.Parse(t.GetPersistedID())
+		if err != nil {
+			return changed, err
+		}
 	}
+
 	tx := ctx.DB().Table("topologies").Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}},
 		UpdateAll: true,
@@ -33,6 +37,9 @@ func PersistTopology(ctx context.Context, t *v1.Topology) (bool, error) {
 	}
 	if tx.RowsAffected > 0 {
 		changed = true
+	}
+	if t.GetPersistedID() == "" {
+		t.SetUID(k8sTypes.UID(model.ID.String()))
 	}
 	return changed, nil
 }

@@ -16,7 +16,6 @@ import (
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -51,7 +50,7 @@ var ComponentCheckRun = &job.Job{
 	},
 }
 
-func createComponentCanaryFromInline(gormDB *gorm.DB, id, name, namespace, schedule, owner string, spec *v1.CanarySpec) (*pkg.Canary, error) {
+func createComponentCanaryFromInline(ctx context.Context, id, name, namespace, schedule, owner string, spec *v1.CanarySpec) (*pkg.Canary, error) {
 	if spec.GetSchedule() == "@never" {
 		spec.Schedule = schedule
 	}
@@ -65,7 +64,7 @@ func createComponentCanaryFromInline(gormDB *gorm.DB, id, name, namespace, sched
 		},
 		Spec: *spec,
 	}
-	canary, err := db.PersistCanary(gormDB, obj, fmt.Sprintf("component/%s", id))
+	canary, err := db.PersistCanary(ctx, obj, fmt.Sprintf("component/%s", id))
 	if err != nil {
 		logger.Errorf("error persisting component inline canary: %v", err)
 		return nil, err
@@ -99,7 +98,7 @@ func GetChecksForComponent(ctx context.Context, component *pkg.Component) ([]mod
 			}
 
 			canaryName := fmt.Sprintf("%s-%d", component.Name, idx)
-			canary, err := createComponentCanaryFromInline(ctx.DB(),
+			canary, err := createComponentCanaryFromInline(ctx,
 				component.ID.String(), canaryName, component.Namespace,
 				inlineSchedule, component.Owner, componentCheck.Inline,
 			)

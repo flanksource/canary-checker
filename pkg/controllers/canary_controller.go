@@ -18,7 +18,6 @@ package controllers
 
 import (
 	gocontext "context"
-	"fmt"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -78,7 +77,7 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 	if runner.IsCanaryIgnored(&canary.ObjectMeta) {
 		return ctrl.Result{}, nil
 	}
-	ctx := r.Context.WithObject(canary.ObjectMeta)
+	ctx := r.Context.WithObject(canary.ObjectMeta).WithName(req.NamespacedName.String())
 
 	canary.SetRunnerName(r.RunnerName)
 
@@ -91,10 +90,10 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 	}
 
 	if !canary.DeletionTimestamp.IsZero() {
-		if err := db.DeleteCanary(ctx.DB(), canary.GetPersistedID()); err != nil {
+		if err := db.DeleteCanary(ctx, canary.GetPersistedID()); err != nil {
 			logger.Error(err, "failed to delete canary")
 		}
-		canaryJobs.DeleteCanaryJob(canary.GetPersistedID())
+		canaryJobs.Unschedule(canary.GetPersistedID())
 		controllerutil.RemoveFinalizer(canary, FinalizerName)
 		return ctrl.Result{}, r.Update(ctx, canary)
 	}
@@ -127,15 +126,7 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 			return ctrl.Result{}, err
 		}
 
-		var syncCanaryJobOptions = []canaryJobs.SyncCanaryJobOption{}
-		syncCanaryJobOptions = append(syncCanaryJobOptions, canaryJobs.WithSchedule(
-			fmt.Sprintf("%d %d %d %d *", runAt.Minute(), runAt.Hour(), runAt.Day(), runAt.Month()),
-		))
-		if !runAt.After(time.Now()) {
-			syncCanaryJobOptions = append(syncCanaryJobOptions, canaryJobs.WithRunNow(true))
-		}
-
-		if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary, syncCanaryJobOptions...); err != nil {
+		if err := canaryJobs.TriggerAt(ctx, *dbCanary, runAt); err != nil {
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}
 
@@ -147,16 +138,16 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 
 	if canaryForStatus.Status.Replicas != canary.Spec.Replicas {
 		if canary.Spec.Replicas == 0 {
-			canaryJobs.DeleteCanaryJob(canary.GetPersistedID())
+			canaryJobs.Unschedule(canary.GetPersistedID())
 			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), true); err != nil {
 				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 			}
 		} else {
-			if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
+			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), false); err != nil {
 				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 			}
-			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), false); err != nil {
-				logger.Error(err, "failed to suspend canary")
+			if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
+				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 			}
 		}
 
@@ -181,7 +172,7 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *CanaryReconciler) persistAndCacheCanary(ctx dutyContext.Context, canary *v1.Canary) (*pkg.Canary, error) {
-	dbCanary, err := db.PersistCanary(ctx.DB(), *canary, "kubernetes/"+canary.GetPersistedID())
+	dbCanary, err := db.PersistCanary(ctx, *canary, "kubernetes/"+canary.GetPersistedID())
 	if err != nil {
 		return nil, err
 	}

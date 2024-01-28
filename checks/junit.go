@@ -20,7 +20,6 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -124,13 +123,13 @@ func deletePod(ctx *context.Context, pod *corev1.Pod) {
 	if ctx.Canary.Annotations["skipDelete"] == "true" { // nolint: goconst
 		return
 	}
-	if err := ctx.Kommons.DeleteByKind(podKind, pod.Namespace, pod.Name); err != nil {
-		logger.Warnf("failed to delete pod %s/%s: %v", pod.Namespace, pod.Name, err)
+	if err := ctx.Kommons().DeleteByKind(podKind, pod.Namespace, pod.Name); err != nil {
+		ctx.Warnf("failed to delete pod %s/%s: %v", pod.Namespace, pod.Name, err)
 	}
 }
 
 func getLogs(ctx *context.Context, pod corev1.Pod) string {
-	message, _ := ctx.Kommons.GetPodLogs(pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
+	message, _ := ctx.Kommons().GetPodLogs(pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
 	if !ctx.IsTrace() && !ctx.IsDebug() && len(message) > 3000 {
 		message = message[len(message)-3000:]
 	}
@@ -139,11 +138,11 @@ func getLogs(ctx *context.Context, pod corev1.Pod) string {
 
 func podExecf(ctx *context.Context, pod corev1.Pod, results pkg.Results, cmd string, args ...interface{}) (string, bool) {
 	if !ctx.IsTrace() {
-		ctx.Kommons.Logger.SetLogLevel(0)
+		ctx.Kommons().Logger.SetLogLevel(0)
 	}
 
 	_cmd := fmt.Sprintf(cmd, args...)
-	stdout, stderr, err := ctx.Kommons.ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", _cmd)
+	stdout, stderr, err := ctx.Kommons().ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", _cmd)
 	if stderr != "" || err != nil {
 		podFail(ctx, pod, results.Failf("error running %s: %v %v %v", _cmd, stdout, stderr, err))
 		return "", false
@@ -179,7 +178,7 @@ func cleanupExistingPods(ctx *context.Context, k8s kubernetes.Interface, selecto
 		}
 	}
 	if skip {
-		logger.Debugf("%s has %d existing pods, skipping", ctx.Canary.Name, len(existingPods.Items))
+		ctx.Debugf("%d existing pods, skipping", len(existingPods.Items))
 	}
 	return skip, err
 }
@@ -190,11 +189,11 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	var results pkg.Results
 	results = append(results, result)
 
-	if ctx.Kommons == nil {
+	if ctx.Kommons() == nil {
 		return results.Failf("Kubernetes is not initialized")
 	}
 
-	k8s := ctx.Kubernetes
+	k8s := ctx.Kubernetes()
 	timeout := time.Duration(check.GetTimeout()) * time.Minute
 	pod, err := newPod(ctx, check)
 	if err != nil {
@@ -217,13 +216,13 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	ctx.Tracef("[%s/%s] waiting for tests to complete", ctx.Namespace, ctx.Canary.Name)
 	if ctx.IsTrace() {
 		go func() {
-			if err := ctx.Kommons.StreamLogsV2(ctx.Namespace, pod.Name, timeout, pod.Spec.InitContainers[0].Name); err != nil {
-				logger.Errorf("error streaming: %s", err)
+			if err := ctx.Kommons().StreamLogsV2(ctx.Namespace, pod.Name, timeout, pod.Spec.InitContainers[0].Name); err != nil {
+				ctx.Error(err, "error streaming")
 			}
 		}()
 	}
 
-	if err := ctx.Kommons.WaitForPod(ctx.Namespace, pod.Name, timeout, corev1.PodRunning, corev1.PodSucceeded, corev1.PodFailed); err != nil {
+	if err := ctx.Kommons().WaitForPod(ctx.Namespace, pod.Name, timeout, corev1.PodRunning, corev1.PodSucceeded, corev1.PodFailed); err != nil {
 		result.ErrorMessage(err)
 	}
 
@@ -277,7 +276,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 		for _, path := range paths {
 			file, err := os.Open(path)
 			if err != nil {
-				logger.Errorf("error opening file. path=%s; %w", path, err)
+				ctx.Error(err, "error opening file. path=%s", path)
 				continue
 			}
 

@@ -11,9 +11,11 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/collections"
-	dutyContext "github.com/flanksource/duty/context"
+	dutyCtx "github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
+
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/gomplate/v3"
 	"github.com/google/uuid"
@@ -178,16 +180,12 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface{}, error) {
 	var results []any
 
-	canarySpec := v1.NewCanaryFromSpec(name, ctx.Namespace, spec)
-	dutyCtx := ctx.Duty.
-		WithNamespace(ctx.Namespace).
-		WithObject(canarySpec.ObjectMeta)
-
-	canaryCtx := context.New(dutyCtx, canarySpec)
-	canaryCtx.Context = ctx
-	canaryCtx.Namespace = ctx.Namespace
-	canaryCtx.Environment = ctx.Environment
-	canaryCtx.Logger = ctx.Logger
+	canarySpec := v1.NewCanaryFromSpec(name, ctx.GetNamespace(), spec)
+	canaryCtx := context.New(ctx.WithObject(canarySpec.ObjectMeta), canarySpec)
+	canaryCtx.Context = ctx.Context
+	canaryCtx.Namespace = ctx.GetNamespace()
+	// canaryCtx.Environment = ctx.
+	// canaryCtx.Logger = ctx.Logger
 
 	checkResults, err := checks.Exec(canaryCtx)
 	if err != nil {
@@ -245,7 +243,7 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*types.Property
 	}
 	pkgConfig := config
 	pkgConfig.Name = configName
-	_config, err := query.FindConfig(ctx.DB, *pkgConfig)
+	_config, err := query.FindConfig(ctx.DB(), *pkgConfig)
 	if err != nil || _config == nil {
 		return prop, err
 	}
@@ -259,7 +257,7 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*types.Property
 	templateEnv["config"] = configJSON
 	templateEnv["config_type"] = _config.Type
 
-	ctx.Duty.Tracef("%s property=%s => %s", ctx, property.Name, _config.String())
+	ctx.Tracef("%s property=%s => %s", ctx, property.Name, _config.String())
 
 	prop.Text, err = gomplate.RunTemplate(templateEnv, property.ConfigLookup.Display.Template.Gomplate())
 	return prop, err
@@ -277,7 +275,7 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) ([]byte, error
 	if property.Lookup != nil {
 		results, err := lookup(ctx, property.Name, *property.Lookup)
 		if err != nil || len(results) == 0 {
-			ctx.Duty.Tracef("%s property=%s => no results", ctx, property.Name)
+			ctx.Logger.V(3).Infof("%s property=%s => no results", ctx, property.Name)
 			return nil, err
 		}
 
@@ -292,10 +290,10 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) ([]byte, error
 		if !isComponentList(data) && !isPropertyList(data) {
 			prop := pkg.NewProperty(*property)
 			prop.Text = dataStr
-			ctx.Duty.Tracef("%s property=%s => %s", ctx, property.Name, prop.Text)
+			ctx.Tracef("%s property=%s => %s", ctx, property.Name, prop.Text)
 			return json.Marshal(types.Properties{prop})
 		}
-		ctx.Duty.Tracef("%s property=%s => %s", ctx, property.Name, dataStr)
+		ctx.Tracef("%s property=%s => %s", ctx, property.Name, dataStr)
 		return data, nil
 	}
 
@@ -368,26 +366,62 @@ func changeComponentParents(c *pkg.Component, parentRefMap map[string]*pkg.Compo
 }
 
 type TopologyRunOptions struct {
-	dutyContext.Context
+	job.JobRuntime
 	Depth     int
 	Namespace string
 }
 
-func Run(opts TopologyRunOptions, t v1.Topology) ([]*pkg.Component, models.JobHistory) {
-	jobHistory := models.NewJobHistory("TopologySync", "topology", t.GetPersistedID()).Start()
-	defer func() {
-		_ = jobHistory.End().Persist(opts.DB())
-	}()
+type TopologyJob struct {
+	Topology  v1.Topology
+	Namespace string
+	Output    pkg.Components
+}
 
-	_ = jobHistory.Persist(opts.DB())
+func Run(ctx dutyCtx.Context, topology v1.Topology) (pkg.Components, *models.JobHistory) {
+	tj := TopologyJob{
+		Topology:  topology,
+		Namespace: topology.Namespace,
+	}
+	j := job.Job{
+		Name:       "topology",
+		Context:    ctx.WithObject(topology.ObjectMeta),
+		JobHistory: false,
+		Fn:         tj.Run,
+	}
+	j.Run()
 
-	if t.Namespace == "" {
-		t.Namespace = opts.Namespace
+	return tj.Output, j.LastJob
+}
+
+func (tj *TopologyJob) Run(job job.JobRuntime) error {
+	t := tj.Topology
+
+	id := t.GetPersistedID()
+	topologyID, err := uuid.Parse(id)
+	if err != nil {
+		return fmt.Errorf("failed to parse topology id: %v", err)
 	}
 
-	ctx := NewComponentContext(opts.Context, t)
-	ctx.JobHistory = jobHistory
-	ctx.Debugf("[%s] running topology depth=%d", t, opts.Depth)
+	// Check if deleted
+	var dbTopology models.Topology
+	if err := job.DB().Where("id = ?", id).First(&dbTopology).Error; err != nil {
+		return fmt.Errorf("failed to query topology %v", err)
+	}
+
+	if dbTopology.DeletedAt != nil {
+		job.Debugf("Skipping topology as its deleted")
+		// TODO: Should we run the db.DeleteTopology function always in this scenario
+		return nil
+	}
+
+	if t.Namespace == "" {
+		t.Namespace = tj.Namespace
+	}
+
+	ctx := NewComponentContext(job.Context, t)
+	ctx.JobHistory = job.History
+
+	ctx.Debugf("running topology")
 
 	var results pkg.Components
 	rootComponent := &pkg.Component{
@@ -406,39 +440,37 @@ func Run(opts TopologyRunOptions, t v1.Topology) ([]*pkg.Component, models.JobHi
 	}
 
 	ignoreLabels := []string{"kustomize.toolkit.fluxcd.io/name", "kustomize.toolkit.fluxcd.io/namespace"}
-	if opts.Depth > 0 {
-		for _, comp := range ctx.Topology.Spec.Components {
-			components, err := lookupComponents(ctx, comp)
-			if err != nil {
-				jobHistory.AddError(fmt.Sprintf("Error looking up component %s: %s", comp.Name, err))
-				continue
-			}
-			// add topology labels to the components
-			for _, component := range components {
-				jobHistory.IncrSuccess()
-				if component.Labels == nil {
-					component.Labels = make(types.JSONStringMap)
-				}
-				for key, value := range ctx.Topology.Labels {
-					// Workaround for avoiding a recursive loop
-					// If resource is added via flux kustomize the label gets added to top level Pods and Nodes
-					if strings.HasPrefix(component.Type, "Kubernetes") && collections.Contains(ignoreLabels, key) {
-						continue
-					}
-
-					// don't overwrite the component labels
-					if _, isPresent := component.Labels[key]; !isPresent {
-						component.Labels[key] = value
-					}
-				}
-			}
-			if comp.Lookup == nil {
-				rootComponent.Components = append(rootComponent.Components, components...)
-				continue
-			}
-
-			rootComponent.Components = append(rootComponent.Components, components...)
+	for _, comp := range ctx.Topology.Spec.Components {
+		components, err := lookupComponents(ctx, comp)
+		if err != nil {
+			job.History.AddError(fmt.Sprintf("Error looking up component %s: %s", comp.Name, err))
+			continue
 		}
+		// add topology labels to the components
+		for _, component := range components {
+			job.History.IncrSuccess()
+			if component.Labels == nil {
+				component.Labels = make(types.JSONStringMap)
+			}
+			for key, value := range ctx.Topology.Labels {
+				// Workaround for avoiding a recursive loop
+				// If resource is added via flux kustomize the label gets added to top level Pods and Nodes
+				if strings.HasPrefix(component.Type, "Kubernetes") && collections.Contains(ignoreLabels, key) {
+					continue
+				}
+
+				// don't overwrite the component labels
+				if _, isPresent := component.Labels[key]; !isPresent {
+					component.Labels[key] = value
+				}
+			}
+		}
+		if comp.Lookup == nil {
+			rootComponent.Components = append(rootComponent.Components, components...)
+			continue
+		}
+
+		rootComponent.Components = append(rootComponent.Components, components...)
 	}
 
 	// Update component parents based on ParentLookup
@@ -449,7 +481,8 @@ func Run(opts TopologyRunOptions, t v1.Topology) ([]*pkg.Component, models.JobHi
 	if len(rootComponent.Components) == 1 && rootComponent.Components[0].Type == "virtual" {
 		// if there is only one component and it is virtual, then we don't need to show it
 		ctx.Components = &rootComponent.Components[0].Components
-		return *ctx.Components, *jobHistory
+		tj.Output = *ctx.Components
+		return nil
 	}
 
 	ctx.Components = &rootComponent.Components
@@ -458,11 +491,11 @@ func Run(opts TopologyRunOptions, t v1.Topology) ([]*pkg.Component, models.JobHi
 		// TODO Yash: Usecase for this
 		props, err := lookupProperty(ctx, &property)
 		if err != nil {
-			jobHistory.AddError(fmt.Sprintf("Failed to lookup property %s: %v", property.Name, err))
+			job.History.AddError(fmt.Sprintf("Failed to lookup property %s: %v", property.Name, err))
 			continue
 		}
 		if err := mergeComponentProperties(pkg.Components{rootComponent}, props); err != nil {
-			jobHistory.AddError(fmt.Sprintf("Failed to merge component property %s: %v", property.Name, err))
+			job.History.AddError(fmt.Sprintf("Failed to merge component property %s: %v", property.Name, err))
 			continue
 		}
 	}
@@ -473,7 +506,7 @@ func Run(opts TopologyRunOptions, t v1.Topology) ([]*pkg.Component, models.JobHi
 	if rootComponent.ID.String() == "" && ctx.Topology.Spec.Id != nil {
 		id, err := gomplate.RunTemplate(rootComponent.GetAsEnvironment(), ctx.Topology.Spec.Id.Gomplate())
 		if err != nil {
-			jobHistory.AddError(fmt.Sprintf("Failed to lookup id: %v", err))
+			job.History.AddError(fmt.Sprintf("Failed to lookup id: %v", err))
 		} else {
 			rootComponent.ID, _ = uuid.Parse(id)
 		}
@@ -491,7 +524,13 @@ func Run(opts TopologyRunOptions, t v1.Topology) ([]*pkg.Component, models.JobHi
 	rootComponent.Status = rootComponent.Summary.GetStatus()
 
 	results = append(results, rootComponent)
-	ctx.Infof("%s id=%s external_id=%s status=%s", rootComponent.Name, rootComponent.ID, rootComponent.ExternalId, rootComponent.Status)
+	ctx.Infof("%s id=%s external_id=%s status=%s %v %d", rootComponent.Name, rootComponent.ID, rootComponent.ExternalId, rootComponent.Status, ctx.IsTrace(), ctx.Logger.GetLevel())
+
+	if ctx.IsTrace() {
+		ctx.Tracef(results.Debug(ctx.Logger.IsLevelEnabled(5), ""))
+	} else if ctx.Logger.IsLevelEnabled(5) {
+		ctx.Infof(results.Debug(ctx.Logger.IsLevelEnabled(5), ""))
+	}
 	for _, c := range results.Walk() {
 		if c.Namespace == "" {
 			c.Namespace = ctx.Topology.GetNamespace()
@@ -499,57 +538,34 @@ func Run(opts TopologyRunOptions, t v1.Topology) ([]*pkg.Component, models.JobHi
 		c.Schedule = ctx.Topology.Spec.Schedule
 	}
 
-	return results, *jobHistory
-}
-
-func SyncComponents(opts TopologyRunOptions, topology v1.Topology) (int, error) {
-	id := topology.GetPersistedID()
-	opts.Context.Debugf("[%s] running topology sync", id)
-	// Check if deleted
-	var dbTopology models.Topology
-	if err := opts.DB().Where("id = ?", id).First(&dbTopology).Error; err != nil {
-		return 0, fmt.Errorf("failed to query topology id: %s: %w", id, err)
-	}
-
-	if dbTopology.DeletedAt != nil {
-		opts.Context.Debugf("Skipping topology[%s] as its deleted", id)
-		// TODO: Should we run the db.DeleteTopology function always in this scenario
-		return 0, nil
-	}
-
-	components, _ := Run(opts, topology)
-	topologyID, err := uuid.Parse(id)
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse topology id: %w", err)
-	}
-
 	var compIDs []uuid.UUID
-	for _, component := range components {
+	for _, component := range results {
 		// Is this step required ever ?
-		component.Name = topology.Name
-		component.Namespace = topology.Namespace
-		component.Labels = topology.Labels
+		component.Name = dbTopology.Name
+		component.Namespace = dbTopology.Namespace
+		component.Labels = dbTopology.Labels
 		component.TopologyID = topologyID
 
-		componentsIDs, err := db.PersistComponent(opts.Context, component)
+		componentsIDs, err := db.PersistComponent(job.Context, component)
 		if err != nil {
-			return 0, fmt.Errorf("failed to persist component(id=%s, name=%s): %w", component.ID, component.Name, err)
+			return fmt.Errorf("failed to persist component(id=%s, name=%s): %v", component.ID, component.Name, err)
 		}
 
 		compIDs = append(compIDs, componentsIDs...)
 	}
 
-	dbCompsIDs, err := db.GetActiveComponentsIDsOfTopology(opts.DB(), id)
+	dbCompsIDs, err := db.GetActiveComponentsIDsOfTopology(ctx.DB(), id)
 	if err != nil {
-		return 0, fmt.Errorf("error getting components for topology (id=%s): %v", id, err)
+		return fmt.Errorf("error getting components %v", err)
 	}
 
 	deleteCompIDs := utils.SetDifference(dbCompsIDs, compIDs)
 	if len(deleteCompIDs) != 0 {
-		if err := db.DeleteComponentsWithIDs(opts.DB(), utils.UUIDsToStrings(deleteCompIDs)); err != nil {
-			return 0, fmt.Errorf("error deleting components: %v", err)
+		if err := db.DeleteComponentsWithIDs(job.DB(), utils.UUIDsToStrings(deleteCompIDs)); err != nil {
+			return fmt.Errorf("error deleting components %v", err)
 		}
 	}
-
-	return len(components), nil
+	job.History.SuccessCount = len(rootComponent.Components)
+	tj.Output = results
+	return nil
 }

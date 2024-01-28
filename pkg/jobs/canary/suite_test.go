@@ -46,7 +46,7 @@ func DelayedResponseHandler(c echo.Context) error {
 }
 
 var _ = ginkgo.BeforeSuite(func() {
-	DefaultContext = setup.BeforeSuiteFn().WithDBLogLevel("trace").WithTrace()
+	DefaultContext = setup.BeforeSuiteFn().WithTrace()
 
 	cache.PostgresCache = cache.NewPostgresCache(DefaultContext)
 

@@ -28,7 +28,7 @@ func TestTopologyJobs(t *testing.T) {
 }
 
 var _ = ginkgo.BeforeSuite(func() {
-	DefaultContext = setup.BeforeSuiteFn().WithDBLogLevel("trace").WithTrace()
+	DefaultContext = setup.BeforeSuiteFn().WithTrace()
 
 })
 var _ = ginkgo.AfterSuite(setup.AfterSuiteFn)

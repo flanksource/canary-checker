@@ -93,7 +93,7 @@ func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	results = append(results, result)
 
 	// Form a dummy connection to get a local filesystem
-	localFS, err := artifacts.GetFSForConnection(ctx.Duty(), models.Connection{Type: models.ConnectionTypeFolder})
+	localFS, err := artifacts.GetFSForConnection(ctx.Context, models.Connection{Type: models.ConnectionTypeFolder})
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

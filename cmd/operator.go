@@ -54,12 +54,6 @@ func init() {
 }
 
 func run(cmd *cobra.Command, args []string) {
-	zapLogger := logger.GetZapLogger()
-	if zapLogger == nil {
-		logger.Fatalf("failed to get zap logger")
-		return
-	}
-
 	loggr := ctrlzap.NewRaw(
 		ctrlzap.Encoder(logger.NewZapEncoder()),
 		ctrlzap.Level(zapcore.Level(k8sLogLevel*-1)),

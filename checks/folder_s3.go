@@ -46,7 +46,7 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		}
 	}
 
-	fs, err := artifacts.GetFSForConnection(ctx.Duty(), *connection)
+	fs, err := artifacts.GetFSForConnection(ctx.Context, *connection)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

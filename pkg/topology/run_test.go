@@ -4,6 +4,7 @@ import (
 	"os"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	ginkgo "github.com/onsi/ginkgo/v2"
@@ -35,11 +36,7 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 		err = DefaultContext.DB().Create(&ci).Error
 		Expect(err).To(BeNil())
 
-		rootComponent, history := Run(TopologyRunOptions{
-			Context:   DefaultContext,
-			Depth:     10,
-			Namespace: "default",
-		}, t)
+		rootComponent, history := Run(DefaultContext.WithTrace(), t)
 
 		Expect(history.Errors).To(HaveLen(0))
 
@@ -60,11 +57,7 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 			ginkgo.Fail("Error converting yaml to v1.Topology:" + err.Error())
 		}
 
-		rootComponent, history := Run(TopologyRunOptions{
-			Context:   DefaultContext,
-			Depth:     10,
-			Namespace: "default",
-		}, t)
+		rootComponent, history := Run(DefaultContext, t)
 
 		Expect(history.Errors).To(HaveLen(0))
 
@@ -112,11 +105,7 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 			ginkgo.Fail("Error converting yaml to v1.Topology:" + err.Error())
 		}
 
-		rootComponent, history := Run(TopologyRunOptions{
-			Context:   DefaultContext,
-			Depth:     10,
-			Namespace: "default",
-		}, t)
+		rootComponent, history := Run(DefaultContext, t)
 
 		Expect(history.Errors).To(HaveLen(0))
 
@@ -156,5 +145,9 @@ func yamlFileToTopology(file string) (t v1.Topology, err error) {
 	if err != nil {
 		return
 	}
+
+	_, err = db.PersistTopology(DefaultContext, &t)
+	Expect(err).To(BeNil())
+	Expect(t.GetPersistedID()).ToNot(BeEmpty())
 	return
 }

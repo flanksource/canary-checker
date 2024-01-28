@@ -21,25 +21,20 @@ var TopologyScheduler = cron.New()
 var topologyJobs sync.Map
 
 func newTopologyJob(ctx context.Context, topology v1.Topology) {
+	tj := pkgTopology.TopologyJob{
+		Topology:  topology,
+		Namespace: topology.Namespace,
+	}
 	j := &job.Job{
-		Name:       "TopologyRun",
-		Context:    ctx.WithObject(topology.ObjectMeta).WithTopology(topology),
-		Schedule:   topology.Spec.Schedule,
-		JobHistory: true,
-		Retention:  job.RetentionHour,
-		ID:         topology.GetPersistedID(),
-		Fn: func(ctx job.JobRuntime) error {
-			ctx.History.ResourceID = topology.GetPersistedID()
-			ctx.History.ResourceType = "topology"
-			opts := pkgTopology.TopologyRunOptions{
-				Context:   ctx.Context,
-				Depth:     10,
-				Namespace: topology.Namespace,
-			}
-			count, err := pkgTopology.SyncComponents(opts, topology)
-			ctx.History.SuccessCount = count
-			return err
-		},
+		Name:         "Topology",
+		Context:      ctx.WithObject(topology.ObjectMeta).WithTopology(topology),
+		Schedule:     topology.Spec.Schedule,
+		JobHistory:   true,
+		Retention:    job.RetentionHour,
+		ResourceID:   topology.GetPersistedID(),
+		ResourceType: "topology",
+		ID:           topology.GetPersistedID(),
+		Fn:           tj.Run,
 	}
 
 	topologyJobs.Store(topology.GetPersistedID(), j)
