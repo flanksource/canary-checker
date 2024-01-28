@@ -20,34 +20,41 @@ var TopologyScheduler = cron.New()
 
 var topologyJobs sync.Map
 
-func newTopologyJob(ctx context.Context, topology v1.Topology) {
+func newTopologyJob(ctx context.Context, topology pkg.Topology) {
+	id := topology.ID.String()
+	v1, err := topology.ToV1()
+	if err != nil {
+		logger.Errorf("[%s] failed to parse topology spec: %v", err)
+		return
+	}
 	tj := pkgTopology.TopologyJob{
-		Topology:  topology,
+		Topology:  *v1,
 		Namespace: topology.Namespace,
 	}
 	j := &job.Job{
 		Name:         "Topology",
-		Context:      ctx.WithObject(topology.ObjectMeta).WithTopology(topology),
-		Schedule:     topology.Spec.Schedule,
+		Context:      ctx.WithObject(v1.ObjectMeta).WithTopology(v1),
+		Schedule:     v1.Spec.Schedule,
 		JobHistory:   true,
 		Retention:    job.RetentionHour,
-		ResourceID:   topology.GetPersistedID(),
+		ResourceID:   id,
 		ResourceType: "topology",
-		ID:           topology.GetPersistedID(),
+		ID:           fmt.Sprintf("%s/%s", topology.Namespace, topology.Name),
 		Fn:           tj.Run,
 	}
 
-	topologyJobs.Store(topology.GetPersistedID(), j)
+	topologyJobs.Store(topology.ID.String(), j)
 	if err := j.AddToScheduler(TopologyScheduler); err != nil {
 		logger.Errorf("[%s] failed to schedule %v", *j, err)
 	}
 }
 
 var SyncTopology = &job.Job{
-	Name:      "SyncTopology",
-	Schedule:  "@every 5m",
-	Singleton: true,
-	RunNow:    true,
+	Name:       "SyncTopology",
+	Schedule:   "@every 5m",
+	JobHistory: true,
+	Singleton:  true,
+	RunNow:     true,
 	Fn: func(ctx job.JobRuntime) error {
 		var topologies []pkg.Topology
 
@@ -57,7 +64,7 @@ var SyncTopology = &job.Job{
 		}
 
 		for _, topology := range topologies {
-			if err := SyncTopologyJob(ctx.Context, topology.ToV1()); err != nil {
+			if err := SyncTopologyJob(ctx.Context, topology); err != nil {
 				ctx.History.AddError(err.Error())
 			} else {
 				ctx.History.IncrSuccess()
@@ -67,13 +74,19 @@ var SyncTopology = &job.Job{
 	},
 }
 
-func SyncTopologyJob(ctx context.Context, t v1.Topology) error {
-	id := t.GetPersistedID()
+func SyncTopologyJob(ctx context.Context, t pkg.Topology) error {
+	id := t.ID
 	var existingJob *job.Job
 	if j, ok := topologyJobs.Load(id); ok {
 		existingJob = j.(*job.Job)
 	}
-	if !t.DeletionTimestamp.IsZero() || t.Spec.GetSchedule() == "@never" {
+
+	v1Topology, err := t.ToV1()
+	if err != nil {
+		return err
+	}
+
+	if t.DeletedAt != nil || v1Topology.Spec.Schedule == "@never" {
 		existingJob.Unschedule()
 		topologyJobs.Delete(id)
 		return nil

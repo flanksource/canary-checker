@@ -377,20 +377,28 @@ type TopologyJob struct {
 	Output    pkg.Components
 }
 
-func Run(ctx dutyCtx.Context, topology v1.Topology) (pkg.Components, *models.JobHistory) {
+func Run(ctx dutyCtx.Context, topology pkg.Topology) (pkg.Components, *models.JobHistory, error) {
+	j := &job.Job{
+		Name:         "topology",
+		ResourceType: "topology",
+		ResourceID:   fmt.Sprintf("%s/%s", topology.Namespace, topology.Name),
+		JobHistory:   false,
+	}
+
+	v1, err := topology.ToV1()
+	if err != nil {
+		return nil, nil, err
+	}
 	tj := TopologyJob{
-		Topology:  topology,
+		Topology:  *v1,
 		Namespace: topology.Namespace,
 	}
-	j := job.Job{
-		Name:       "topology",
-		Context:    ctx.WithObject(topology.ObjectMeta),
-		JobHistory: false,
-		Fn:         tj.Run,
-	}
+	j.Context = ctx.WithObject(v1.ObjectMeta)
+	j.Fn = tj.Run
+
 	j.Run()
 
-	return tj.Output, j.LastJob
+	return tj.Output, j.LastJob, nil
 }
 
 func (tj *TopologyJob) Run(job job.JobRuntime) error {
@@ -524,7 +532,6 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 	rootComponent.Status = rootComponent.Summary.GetStatus()
 
 	results = append(results, rootComponent)
-	ctx.Infof("%s id=%s external_id=%s status=%s %v %d", rootComponent.Name, rootComponent.ID, rootComponent.ExternalId, rootComponent.Status, ctx.IsTrace(), ctx.Logger.GetLevel())
 
 	if ctx.IsTrace() {
 		ctx.Tracef(results.Debug(ctx.Logger.IsLevelEnabled(5), ""))
@@ -553,6 +560,8 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 
 		compIDs = append(compIDs, componentsIDs...)
 	}
+
+	ctx.Infof("%s id=%s external_id=%s status=%s", rootComponent.Name, rootComponent.ID, rootComponent.ExternalId, rootComponent.Status)
 
 	dbCompsIDs, err := db.GetActiveComponentsIDsOfTopology(ctx.DB(), id)
 	if err != nil {

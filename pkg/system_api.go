@@ -6,7 +6,7 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/console"
-	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/commons/utils"
 	"github.com/flanksource/duty/models"
 	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/google/uuid"
@@ -43,25 +43,26 @@ func TopologyFromV1(topology *v1.Topology) *Topology {
 	}
 }
 
-func (s *Topology) ToV1() v1.Topology {
+func (s *Topology) ToV1() (*v1.Topology, error) {
 	var topologySpec v1.TopologySpec
 	id := s.ID.String()
 	if err := json.Unmarshal(s.Spec, &topologySpec); err != nil {
-		logger.Errorf("error unmarshalling topology spec %s", err)
+		return nil, err
 	}
-	return v1.Topology{
+
+	return &v1.Topology{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Topology",
 			APIVersion: "canaries.flanksource.com/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      s.Name,
-			Namespace: s.Namespace,
+			Namespace: utils.Coalesce(s.Namespace, "default"),
 			Labels:    s.Labels,
 			UID:       k8sTypes.UID(id),
 		},
 		Spec: topologySpec,
-	}
+	}, nil
 }
 
 type Object struct {
@@ -341,7 +342,7 @@ func NewProperty(property v1.Property) *dutyTypes.Property {
 
 func (component Component) IsHealthy() bool {
 	s := component.Summarize()
-	return s.Healthy > 0 && s.Unhealthy == 0 && s.Warning == 0
+	return (component.Status == dutyTypes.ComponentStatusHealthy || s.Healthy > 0) && s.Unhealthy == 0 && s.Warning == 0
 }
 
 func (component Component) Summarize() dutyTypes.Summary {

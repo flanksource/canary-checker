@@ -20,6 +20,7 @@ import (
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/topology"
 	dutyContext "github.com/flanksource/duty/context"
@@ -73,7 +74,7 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 		return ctrl.Result{}, r.Update(ctx, topology)
 	}
 
-	changed, err := db.PersistTopology(dCtx, topology)
+	changed, err := db.PersistV1Topology(dCtx, topology)
 	if err != nil {
 		logger.Error(err, "failed to persist topology", "id", topology.GetPersistedID(), "name", topology.GetName())
 		return ctrl.Result{}, err
@@ -81,7 +82,7 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 
 	// Sync jobs if topology is created or updated
 	if changed || topology.Generation == 1 {
-		if err := systemJobs.SyncTopologyJob(dCtx, *topology); err != nil {
+		if err := systemJobs.SyncTopologyJob(dCtx, *pkg.TopologyFromV1(topology)); err != nil {
 			logger.Error(err, "failed to sync topology job")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}

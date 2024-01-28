@@ -88,7 +88,9 @@ func RunTopologyHandler(c echo.Context) error {
 		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
-	if components, history := pkgTopology.Run(ctx, *topology); history.AsError() != nil {
+	if components, history, err := pkgTopology.Run(ctx, *topology); err != nil {
+		return errorResponse(c, err, http.StatusBadRequest)
+	} else if history.AsError() != nil {
 		return errorResponse(c, history.AsError(), http.StatusInternalServerError)
 	} else {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok", "count": fmt.Sprintf("%d", len(components))})
