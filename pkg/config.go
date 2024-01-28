@@ -45,7 +45,7 @@ func template(content string, data map[string]any) (string, error) {
 	})
 }
 
-func ParseSystems(configFile, datafile string) ([]v1.Topology, error) {
+func ParseTopology(configFile, datafile string) ([]*Topology, error) {
 	configs, err := readFile(configFile)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func ParseSystems(configFile, datafile string) ([]v1.Topology, error) {
 		}
 	}
 
-	var systems []v1.Topology
+	var systems []*Topology
 	re := regexp.MustCompile(`(?m)^---\n`)
 	for _, chunk := range re.Split(configs, -1) {
 		if strings.TrimSpace(chunk) == "" {
@@ -87,7 +87,7 @@ func ParseSystems(configFile, datafile string) ([]v1.Topology, error) {
 		if config.Name == "" {
 			config.Name = CleanupFilename(configFile)
 		}
-		systems = append(systems, config)
+		systems = append(systems, TopologyFromV1(&config))
 	}
 
 	return systems, nil

@@ -16,7 +16,7 @@ import (
 	k8sTypes "k8s.io/apimachinery/pkg/types"
 )
 
-func PersistTopology(ctx context.Context, t *v1.Topology) (bool, error) {
+func PersistV1Topology(ctx context.Context, t *v1.Topology) (bool, error) {
 	var err error
 	var changed bool
 
@@ -27,21 +27,20 @@ func PersistTopology(ctx context.Context, t *v1.Topology) (bool, error) {
 			return changed, err
 		}
 	}
+	changed, err = PersistTopology(ctx, model)
+	t.SetUID(k8sTypes.UID(model.ID.String()))
+	return changed, err
+}
 
+func PersistTopology(ctx context.Context, model *pkg.Topology) (bool, error) {
 	tx := ctx.DB().Table("topologies").Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}},
 		UpdateAll: true,
 	}).Create(model)
 	if tx.Error != nil {
-		return changed, tx.Error
+		return false, tx.Error
 	}
-	if tx.RowsAffected > 0 {
-		changed = true
-	}
-	if t.GetPersistedID() == "" {
-		t.SetUID(k8sTypes.UID(model.ID.String()))
-	}
-	return changed, nil
+	return tx.RowsAffected > 0, nil
 }
 
 func PersistComponents(ctx context.Context, results []*pkg.Component) error {
@@ -55,14 +54,13 @@ func PersistComponents(ctx context.Context, results []*pkg.Component) error {
 	return nil
 }
 
-func GetTopology(ctx context.Context, id string) (*v1.Topology, error) {
+func GetTopology(ctx context.Context, id string) (*pkg.Topology, error) {
 	var t pkg.Topology
 	if err := ctx.DB().Table("topologies").Where("id = ? AND deleted_at is NULL", id).First(&t).Error; err != nil {
 		return nil, err
 	}
 
-	tv1 := t.ToV1()
-	return &tv1, nil
+	return &t, nil
 }
 
 // TODO: Simplify logic and improve readability

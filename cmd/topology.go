@@ -9,11 +9,11 @@ import (
 
 	"github.com/flanksource/commons/timer"
 	"github.com/flanksource/duty"
+	"github.com/google/uuid"
 
 	"github.com/spf13/cobra"
 
 	apicontext "github.com/flanksource/canary-checker/api/context"
-	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	configSync "github.com/flanksource/canary-checker/pkg/sync"
@@ -83,7 +83,7 @@ var RunTopology = &cobra.Command{
 		wg := sync.WaitGroup{}
 
 		for _, configfile := range configFiles {
-			configs, err := pkg.ParseSystems(configfile, dataFile)
+			configs, err := pkg.ParseTopology(configfile, dataFile)
 			if err != nil {
 				logger.Errorf("Could not parse %s: %v", configfile, err)
 				continue
@@ -92,13 +92,14 @@ var RunTopology = &cobra.Command{
 			for _, config := range configs {
 				wg.Add(1)
 				_config := config
-				if _config.GetPersistedID() == "" {
-					_config.Status = v1.TopologyStatus{
-						PersistedID: &StaticTemplatedID,
-					}
+				if _config.ID == uuid.Nil {
+					_config.ID = uuid.MustParse(StaticTemplatedID)
 				}
 				go func() {
-					components, _ := topology.Run(apicontext.DefaultContext, _config)
+					components, _, err := topology.Run(apicontext.DefaultContext, *_config)
+					if err != nil {
+						logger.Errorf("[%s] error running %v", configfile, err)
+					}
 					results = append(results, components...)
 					wg.Done()
 				}()

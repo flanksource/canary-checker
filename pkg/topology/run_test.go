@@ -1,18 +1,13 @@
 package topology
 
 import (
-	"os"
-
-	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	ginkgo "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/samber/lo"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/yaml"
 )
 
 var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
@@ -36,7 +31,8 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 		err = DefaultContext.DB().Create(&ci).Error
 		Expect(err).To(BeNil())
 
-		rootComponent, history := Run(DefaultContext.WithTrace(), t)
+		rootComponent, history, err := Run(DefaultContext.WithTrace(), *t)
+		Expect(err).To(BeNil())
 
 		Expect(history.Errors).To(HaveLen(0))
 
@@ -57,7 +53,8 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 			ginkgo.Fail("Error converting yaml to v1.Topology:" + err.Error())
 		}
 
-		rootComponent, history := Run(DefaultContext, t)
+		rootComponent, history, err := Run(DefaultContext, *t)
+		Expect(err).To(BeNil())
 
 		Expect(history.Errors).To(HaveLen(0))
 
@@ -105,7 +102,8 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 			ginkgo.Fail("Error converting yaml to v1.Topology:" + err.Error())
 		}
 
-		rootComponent, history := Run(DefaultContext, t)
+		rootComponent, history, err := Run(DefaultContext, *t)
+		Expect(err).To(BeNil())
 
 		Expect(history.Errors).To(HaveLen(0))
 
@@ -131,23 +129,14 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 
 })
 
-func yamlFileToTopology(file string) (t v1.Topology, err error) {
-	fileContent, err := os.ReadFile(file)
+func yamlFileToTopology(file string) (*pkg.Topology, error) {
+	topology, err := pkg.ParseTopology(file, "")
 	if err != nil {
-		return
-	}
-	var obj unstructured.Unstructured
-	err = yaml.Unmarshal(fileContent, &obj)
-	if err != nil {
-		return
-	}
-	err = runtime.DefaultUnstructuredConverter.FromUnstructured(obj.Object, &t)
-	if err != nil {
-		return
+		return nil, err
 	}
 
-	_, err = db.PersistTopology(DefaultContext, &t)
+	_, err = db.PersistTopology(DefaultContext, topology[0])
 	Expect(err).To(BeNil())
-	Expect(t.GetPersistedID()).ToNot(BeEmpty())
-	return
+	Expect(topology[0].ID).ToNot(BeEmpty())
+	return topology[0], err
 }
