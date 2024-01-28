@@ -64,7 +64,8 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 		}
 		ctx.Tracef("Found  %d %s in namespace %s with label=%s field=%s", len(resources), check.Kind, namespace, check.Resource.LabelSelector, check.Resource.FieldSelector)
 		for _, resource := range resources {
-			resourceHealth, err := health.GetResourceHealth(&resource, nil)
+			_resource := resource
+			resourceHealth, err := health.GetResourceHealth(&_resource, nil)
 			if err == nil {
 				resource.Object["healthStatus"] = resourceHealth
 			}
