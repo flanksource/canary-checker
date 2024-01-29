@@ -107,7 +107,7 @@ func HealthSummary(c echo.Context) error {
 	return c.JSON(http.StatusOK, apiResponse)
 }
 
-func getBestPartitioner(totalChecks int, rangeDuration time.Duration) time.Duration {
+func GetBestPartitioner(totalChecks int, rangeDuration time.Duration) time.Duration {
 	if totalChecks <= desiredNumOfCheckStatuses {
 		return 0 // No need to perform window aggregation
 	}

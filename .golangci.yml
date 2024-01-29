@@ -1,21 +1,21 @@
 run:
   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 20m
-  build-tags:
-    - aws
-  skip-dirs:
-    - pkg/db/models
+  tests: false
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
+  presets:
+    # - bugs
   enable:
     - bodyclose
-    # Disabling depguard due to runtime errors
-    # - depguard
     - dogsled
     - errcheck
+    - exportloopref
+    - reassign
+    - nosprintfhostport
     - goconst
     - gofmt
     - goimports
@@ -37,10 +37,3 @@ linters:
 linters-settings:
   gofmt:
     simplify: false
-  depguard:
-    rules:
-      main:
-        files:
-          - $all
-        deny:
-          image: Do not use image package

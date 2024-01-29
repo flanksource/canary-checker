@@ -83,6 +83,7 @@ var RunTopology = &cobra.Command{
 		wg := sync.WaitGroup{}
 
 		for _, configfile := range configFiles {
+			_configfile := configfile
 			configs, err := pkg.ParseTopology(configfile, dataFile)
 			if err != nil {
 				logger.Errorf("Could not parse %s: %v", configfile, err)
@@ -98,7 +99,7 @@ var RunTopology = &cobra.Command{
 				go func() {
 					components, _, err := topology.Run(apicontext.DefaultContext, *_config)
 					if err != nil {
-						logger.Errorf("[%s] error running %v", configfile, err)
+						logger.Errorf("[%s] error running %v", _configfile, err)
 					}
 					results = append(results, components...)
 					wg.Done()
