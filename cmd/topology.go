@@ -25,14 +25,6 @@ var topologyRunNamespace string
 
 var Topology = &cobra.Command{
 	Use: "topology",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		db.ConnectionString = readFromEnv(db.ConnectionString)
-		var err error
-		apicontext.DefaultContext, err = InitContext()
-		if err != nil {
-			logger.Fatalf(err.Error())
-		}
-	},
 }
 
 var queryParams duty.TopologyOptions
@@ -78,6 +70,11 @@ var RunTopology = &cobra.Command{
 			log.Fatalln("Must specify at least one topology definition")
 		}
 
+		var err error
+		if apicontext.DefaultContext, err = InitContext(); err != nil {
+			logger.Fatalf(err.Error())
+		}
+
 		var results = []*pkg.Component{}
 
 		wg := sync.WaitGroup{}
@@ -89,17 +86,27 @@ var RunTopology = &cobra.Command{
 				logger.Errorf("Could not parse %s: %v", configfile, err)
 				continue
 			}
-			logger.Infof("Checking %s, %d systems found", configfile, len(configs))
+			logger.Infof("Checking %s, %d topologies found", configfile, len(configs))
 			for _, config := range configs {
 				wg.Add(1)
 				_config := config
 				if _config.ID == uuid.Nil {
 					_config.ID = uuid.MustParse(StaticTemplatedID)
+					if _, err := db.PersistTopology(apicontext.DefaultContext, _config); err != nil {
+						logger.Fatalf(err.Error())
+					}
 				}
 				go func() {
-					components, _, err := topology.Run(apicontext.DefaultContext, *_config)
+					ctx, span := apicontext.DefaultContext.StartSpan("Topology")
+					defer span.End()
+					components, _, err := topology.Run(ctx, *_config)
 					if err != nil {
 						logger.Errorf("[%s] error running %v", _configfile, err)
+					}
+					if db.IsConnected() {
+						if err := db.PersistComponents(ctx, components); err != nil {
+							logger.Errorf("error persisting results: %v", err)
+						}
 					}
 					results = append(results, components...)
 					wg.Done()
@@ -110,12 +117,6 @@ var RunTopology = &cobra.Command{
 
 		logger.Infof("Checked %d systems in %v", len(results), timer)
 
-		if db.IsConnected() {
-			if err := db.PersistComponents(apicontext.DefaultContext, results); err != nil {
-				logger.Errorf("error persisting results: %v", err)
-			}
-		}
-
 		if topologyOutput != "" {
 			data, _ := json.Marshal(results)
 			logger.Infof("Writing results to %s", topologyOutput)
@@ -123,6 +124,7 @@ var RunTopology = &cobra.Command{
 				log.Fatalln(err)
 			}
 		}
+		shutdown()
 
 	},
 }

@@ -413,7 +413,7 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 	// Check if deleted
 	var dbTopology models.Topology
 	if err := job.DB().Where("id = ?", id).First(&dbTopology).Error; err != nil {
-		return fmt.Errorf("failed to query topology %v", err)
+		return fmt.Errorf("failed to get topology %v", err)
 	}
 
 	if dbTopology.DeletedAt != nil {
