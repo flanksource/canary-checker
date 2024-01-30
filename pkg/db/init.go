@@ -138,7 +138,11 @@ func Init() (dutyContext.Context, error) {
 		}
 	} else {
 		_, _, err := lo.AttemptWithDelay(5, 5*time.Second, func(i int, d time.Duration) error {
-			return ctx.DB().Limit(1).Find(&[]models.Agent{}).Error
+			err := ctx.DB().Limit(1).Find(&[]models.Agent{}).Error
+			if strings.Contains(err.Error(), "ERROR: relation \"agents\"") {
+				logger.Fatalf("Database migrations not run, use --db-migrations")
+			}
+			return err
 		})
 		if err != nil {
 			logger.Fatalf("Database migrations not run: %v", err)

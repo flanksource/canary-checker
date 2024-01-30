@@ -124,7 +124,7 @@ var RunTopology = &cobra.Command{
 				log.Fatalln(err)
 			}
 		}
-		shutdown()
+		Shutdown()
 
 	},
 }

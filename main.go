@@ -7,6 +7,7 @@ import (
 	"github.com/flanksource/canary-checker/cmd"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/runner"
+	"github.com/flanksource/commons/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -38,6 +39,13 @@ func main() {
 		err := db.StopServer()
 		if err != nil {
 			os.Exit(1)
+		}
+	}()
+
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Errorf("%v", r)
+			cmd.Shutdown()
 		}
 	}()
 
