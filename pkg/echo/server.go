@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/commons/logger"
@@ -11,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echopprof "github.com/sevennt/echo-pprof"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 )
 
 var Debug bool
@@ -28,7 +30,12 @@ func New(ctx context.Context) *echo.Echo {
 		echopprof.Wrap(e)
 	}
 
-	e.Use(middleware.Logger())
+	e.Use(otelecho.Middleware("canary-checker", otelecho.WithSkipper(tracingURLSkipper)))
+
+	echoLogConfig := middleware.DefaultLoggerConfig
+	echoLogConfig.Skipper = tracingURLSkipper
+
+	e.Use(middleware.LoggerWithConfig(echoLogConfig))
 
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -72,4 +79,15 @@ func Forward(e *echo.Echo, prefix string, target string, respModifierFunc func(*
 		}),
 		ModifyResponse: respModifierFunc,
 	}))
+}
+
+// tracingURLSkipper ignores metrics route on some middleware
+func tracingURLSkipper(c echo.Context) bool {
+	pathsToSkip := []string{"/health", "/metrics"}
+	for _, p := range pathsToSkip {
+		if strings.HasPrefix(c.Path(), p) {
+			return true
+		}
+	}
+	return false
 }
