@@ -16,10 +16,17 @@ import (
 	k8sTypes "k8s.io/apimachinery/pkg/types"
 )
 
+const (
+	DefaultTopologySchedule = "@every 10m"
+)
+
 func PersistV1Topology(ctx context.Context, t *v1.Topology) (bool, error) {
 	var err error
 	var changed bool
 
+	if t.Spec.Schedule == "" {
+		t.Spec.Schedule = DefaultTopologySchedule
+	}
 	model := pkg.TopologyFromV1(t)
 	if t.GetPersistedID() != "" {
 		model.ID, err = uuid.Parse(t.GetPersistedID())
