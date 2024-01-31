@@ -96,16 +96,20 @@ var Run = &cobra.Command{
 		if junit {
 			report := output.GetJunitReport(results)
 			if err := output.HandleOutput(report, outputFile); err != nil {
-				logger.Fatalf("error writing output file: %v", err)
+				logger.Errorf("error writing output file: %v", err)
+				os.Exit(1)
 			}
 		}
 		if csv {
 			report, err := output.GetCSVReport(results)
 			if err != nil {
-				logger.Fatalf("error generating CSV file: %v", err)
+				logger.Errorf("error generating CSV file: %v", err)
+				os.Exit(1)
 			}
 			if err := output.HandleOutput(report, outputFile); err != nil {
-				logger.Fatalf("error writing output file: %v", err)
+				logger.Errorf("error writing output file: %v", err)
+				os.Exit(1)
+
 			}
 		}
 		if jsonExport {
@@ -117,7 +121,9 @@ var Run = &cobra.Command{
 
 			data, err := json.Marshal(results)
 			if err != nil {
-				logger.Fatalf("Failed to marshall json: %s", err)
+				logger.Errorf("Failed to marshall json: %s", err)
+				os.Exit(1)
+
 			}
 			_ = output.HandleOutput(string(data), outputFile)
 		}

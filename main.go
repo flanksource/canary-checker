@@ -40,7 +40,6 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-
 	if err := cmd.Root.Execute(); err != nil {
 		os.Exit(1)
 	}

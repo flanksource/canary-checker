@@ -10,6 +10,7 @@ import (
 	"time"
 
 	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
+	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	dutyContext "github.com/flanksource/duty/context"
@@ -137,11 +138,15 @@ func Init() (dutyContext.Context, error) {
 			return dutyContext.New(), err
 		}
 	} else {
-		_, _, err := lo.AttemptWithDelay(5, 5*time.Second, func(i int, d time.Duration) error {
-			return ctx.DB().Limit(1).Find(&[]models.Agent{}).Error
+		_, _, _ = lo.AttemptWithDelay(5, 5*time.Second, func(i int, d time.Duration) error {
+			err := ctx.DB().Limit(1).Find(&[]models.Agent{}).Error
+			if strings.Contains(err.Error(), "ERROR: relation \"agents\"") {
+				runner.ShutdownAndExit(1, "database migrations not run, use --db-migrations")
+			}
+			return err
 		})
 		if err != nil {
-			logger.Fatalf("Database migrations not run: %v", err)
+			runner.ShutdownAndExit(1, err.Error())
 		}
 	}
 	return *ctx, nil

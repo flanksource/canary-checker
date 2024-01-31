@@ -8,7 +8,6 @@ import (
 	"net/http"
 	_ "net/http/pprof" // required by serve
 	"os"
-	"os/signal"
 	"strings"
 	"time"
 
@@ -23,7 +22,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/runner"
 
 	"github.com/flanksource/canary-checker/pkg/cache"
-	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/commons/logger"
 	dutyContext "github.com/flanksource/duty/context"
 	prom "github.com/prometheus/client_golang/prometheus"
@@ -39,6 +37,7 @@ var Serve = &cobra.Command{
 	Use:   "serve config.yaml",
 	Short: "Start a server to execute checks",
 	Run: func(cmd *cobra.Command, configFiles []string) {
+		defer runner.Shutdown()
 		canaryJobs.StartScanCanaryConfigs(setup(), dataFile, configFiles)
 		if executor {
 			jobs.Start()
@@ -51,7 +50,8 @@ func setup() dutyContext.Context {
 	var err error
 
 	if apicontext.DefaultContext, err = InitContext(); err != nil {
-		logger.Fatalf(err.Error())
+		runner.ShutdownAndExit(1, err.Error())
+		return apicontext.DefaultContext
 	}
 
 	apicontext.DefaultContext = apicontext.DefaultContext.WithNamespace(runner.WatchNamespace)
@@ -93,8 +93,6 @@ func serve() {
 	// PostgREST needs to know how it is exposed to create the correct links
 	db.HTTPEndpoint = publicEndpoint + "/db"
 
-	runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheus.PrometheusURL)
-
 	e.GET("/metrics", echov4.WrapHandler(promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{})))
 
 	if !disablePostgrest {
@@ -102,23 +100,16 @@ func serve() {
 		echo.Forward(e, "/db", db.PostgRESTEndpoint(), postgrestResponseModifier)
 	}
 
-	// Start server
-	go func() {
-		if err := e.Start(fmt.Sprintf(":%d", httpPort)); err != nil && err != http.ErrServerClosed {
+	runner.AddShutdownHook(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		defer cancel()
+
+		if err := e.Shutdown(ctx); err != nil {
 			e.Logger.Fatal(err)
 		}
-	}()
+	})
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
-	logger.Infof("Shutting down")
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-	defer cancel()
-	if err := db.StopServer(); err != nil {
-		e.Logger.Fatal("Error stopping embedded postgres: %v", err)
-	}
-	if err := e.Shutdown(ctx); err != nil {
+	if err := e.Start(fmt.Sprintf(":%d", httpPort)); err != nil && err != http.ErrServerClosed {
 		e.Logger.Fatal(err)
 	}
 }

@@ -2,11 +2,15 @@ package telemetry
 
 import (
 	"context"
+	"crypto/tls"
+	"strings"
+	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
 	"google.golang.org/grpc/credentials"
 
@@ -15,24 +19,37 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-func InitTracer(serviceName, collectorURL string, insecure bool) func(context.Context) error {
-	var secureOption otlptracegrpc.Option
-	if !insecure {
-		secureOption = otlptracegrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, ""))
+func InitTracer(serviceName, collectorURL string, insecure bool) func() {
+	var client otlptrace.Client
+	if strings.HasPrefix(collectorURL, "http") {
+		client = otlptracehttp.NewClient(
+			otlptracehttp.WithInsecure(),
+			otlptracehttp.WithEndpoint(strings.ReplaceAll(collectorURL, "https://", "")),
+			otlptracehttp.WithCompression(otlptracehttp.GzipCompression),
+			otlptracehttp.WithTLSClientConfig(&tls.Config{}))
 	} else {
-		secureOption = otlptracegrpc.WithInsecure()
+		var secureOption otlptracegrpc.Option
+
+		if !insecure {
+			secureOption = otlptracegrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, ""))
+		} else {
+			secureOption = otlptracegrpc.WithInsecure()
+		}
+
+		client = otlptracegrpc.NewClient(
+			secureOption,
+			otlptracegrpc.WithEndpoint(collectorURL),
+		)
 	}
 
 	exporter, err := otlptrace.New(
 		context.Background(),
-		otlptracegrpc.NewClient(
-			secureOption,
-			otlptracegrpc.WithEndpoint(collectorURL),
-		),
+		client,
 	)
 
 	if err != nil {
-		logger.Fatalf("Failed to create exporter: %v", err)
+		logger.Errorf("Failed to create opentelemetry exporter: %v", err)
+		return func() {}
 	}
 	resources, err := resource.New(
 		context.Background(),
@@ -41,7 +58,8 @@ func InitTracer(serviceName, collectorURL string, insecure bool) func(context.Co
 		),
 	)
 	if err != nil {
-		logger.Fatalf("Could not set resources: %v", err)
+		logger.Errorf("Could not set opentelemetry resources: %v", err)
+		return func() {}
 	}
 
 	otel.SetTracerProvider(
@@ -55,5 +73,13 @@ func InitTracer(serviceName, collectorURL string, insecure bool) func(context.Co
 	// Register the TraceContext propagator globally.
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 
-	return exporter.Shutdown
+	return func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		defer cancel()
+		err := exporter.Shutdown(ctx)
+		if err != nil {
+			logger.Errorf(err.Error())
+		}
+		defer cancel()
+	}
 }
