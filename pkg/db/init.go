@@ -140,7 +140,7 @@ func Init() (dutyContext.Context, error) {
 	} else {
 		_, _, _ = lo.AttemptWithDelay(5, 5*time.Second, func(i int, d time.Duration) error {
 			err := ctx.DB().Limit(1).Find(&[]models.Agent{}).Error
-			if strings.Contains(err.Error(), "ERROR: relation \"agents\"") {
+			if err != nil && strings.Contains(err.Error(), "ERROR: relation \"agents\"") {
 				runner.ShutdownAndExit(1, "database migrations not run, use --db-migrations")
 			}
 			return err

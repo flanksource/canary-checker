@@ -52,7 +52,7 @@ func Start() {
 		}
 	}
 
-	for _, j := range []*job.Job{topologyJobs.CleanupComponents, topologyJobs.SyncTopology, canaryJobs.SyncCanaryJobs} {
+	for _, j := range []*job.Job{topologyJobs.CleanupDeletedTopologyComponents, topologyJobs.SyncTopology, canaryJobs.SyncCanaryJobs} {
 		var job = j
 		job.Context = context.DefaultContext
 		if err := job.AddToScheduler(FuncScheduler); err != nil {

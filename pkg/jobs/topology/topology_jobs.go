@@ -118,7 +118,7 @@ func DeleteTopologyJob(id string) {
 	}
 }
 
-var CleanupComponents = &job.Job{
+var CleanupDeletedTopologyComponents = &job.Job{
 	Name:       "CleanupComponents",
 	Schedule:   "@every 1h",
 	Singleton:  true,
