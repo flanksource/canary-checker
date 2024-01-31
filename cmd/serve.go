@@ -40,9 +40,7 @@ var Serve = &cobra.Command{
 		defer runner.Shutdown()
 		canaryJobs.StartScanCanaryConfigs(setup(), dataFile, configFiles)
 		if executor {
-			if err := jobs.Start(); err != nil {
-				runner.ShutdownAndExit(1, err.Error())
-			}
+			jobs.Start()
 		}
 		serve()
 	},
