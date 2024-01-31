@@ -137,9 +137,9 @@ func StartUpstreamEventQueueConsumer(ctx context.Context) error {
 		Consumer: func(_ctx postq.Context, e postq.Events) postq.Events {
 			return upstream.NewPushUpstreamConsumer(UpstreamConf)(ctx, e)
 		},
-		BatchSize: 50,
+		BatchSize: ctx.Properties().Int("push_queue.batch.size", 50),
 		ConsumerOption: &postq.ConsumerOption{
-			NumConsumers: 5,
+			NumConsumers: ctx.Properties().Int("push_queue.consumers", 5),
 			ErrorHandler: func(err error) bool {
 				logger.Errorf("error consuming upstream push_queue.create events: %v", err)
 				time.Sleep(time.Second)
