@@ -11,17 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-const (
-	DefaultCheckRetentionDays     = 7
-	DefaultComponentRetentionDays = 7
-	DefaultCanaryRetentionDays    = 7
-)
-
-var (
-	CheckRetentionDays     int
-	ComponentRetentionDays int
-	CanaryRetentionDays    int
-)
+var DefaultRetention = time.Hour * 24 * 7
 
 var CleanupSoftDeletedComponents = &job.Job{
 	Name:       "CleanupSoftDeletedComponents",
@@ -31,9 +21,19 @@ var CleanupSoftDeletedComponents = &job.Job{
 	Retention:  job.Retention3Day,
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = job.ResourceTypeComponent
-		count, err := job.CleanupSoftDeletedComponents(ctx.Context, time.Hour*24*time.Duration(ComponentRetentionDays))
-		ctx.History.SuccessCount = count
-		return err
+		retention := ctx.Properties().Duration("component.retention.period", DefaultRetention)
+
+		tx := ctx.Context.DB().Exec("DELETE FROM component_relationships WHERE deleted_at < NOW() - interval '1 SECONDS' * ?", int64(retention.Seconds()))
+		if tx.Error != nil {
+			return tx.Error
+		}
+
+		tx = ctx.Context.DB().Exec("DELETE FROM components WHERE deleted_at < NOW() - interval '1 SECONDS' * ?", int64(retention.Seconds()))
+		if tx.Error != nil {
+			return tx.Error
+		}
+		ctx.History.SuccessCount = int(tx.RowsAffected)
+		return nil
 	},
 }
 
@@ -44,15 +44,12 @@ var CleanupChecks = &job.Job{
 	JobHistory: true,
 	Retention:  job.Retention3Day,
 	Fn: func(ctx job.JobRuntime) error {
-		if CheckRetentionDays <= 0 {
-			CheckRetentionDays = DefaultCheckRetentionDays
-		}
 		tx := ctx.DB().Exec(`
 					DELETE FROM checks
 					WHERE
 							id NOT IN (SELECT check_id FROM evidences WHERE check_id IS NOT NULL) AND
 							(NOW() - deleted_at) > INTERVAL '1 day' * ?
-					`, CheckRetentionDays)
+					`, ctx.Properties().Duration("check.retention.age", DefaultRetention))
 
 		ctx.History.SuccessCount = int(tx.RowsAffected)
 		return tx.Error
@@ -67,15 +64,12 @@ var CleanupCanaries = &job.Job{
 	Retention:  job.Retention3Day,
 	RunNow:     true,
 	Fn: func(ctx job.JobRuntime) error {
-		if CheckRetentionDays <= 0 {
-			CheckRetentionDays = DefaultCheckRetentionDays
-		}
 		tx := ctx.DB().Exec(`
 		DELETE FROM canaries
 		WHERE
 				id NOT IN (SELECT canary_id FROM checks) AND
 				(NOW() - deleted_at) > INTERVAL '1 day' * ?
-		`, CanaryRetentionDays)
+		`, ctx.Properties().Duration("canary.retention.age", DefaultRetention))
 
 		ctx.History.SuccessCount = int(tx.RowsAffected)
 		return tx.Error

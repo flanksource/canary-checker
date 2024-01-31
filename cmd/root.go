@@ -12,7 +12,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/telemetry"
-	"github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
@@ -115,6 +114,10 @@ func ServerFlags(flags *pflag.FlagSet) {
 	_ = flags.MarkDeprecated("expose-env", "")
 	_ = flags.MarkDeprecated("shared-library", "")
 	_ = flags.MarkDeprecated("maxStatusCheckCount", "")
+	_ = flags.MarkDeprecated("check-retention-period", "")
+	_ = flags.MarkDeprecated("component-retention-period", "")
+	_ = flags.MarkDeprecated("canary-retention-period", "")
+	_ = flags.MarkDeprecated("check-status-retention-period", "")
 
 	flags.StringVar(&publicEndpoint, "public-endpoint", publicEndpoint, "Host on which the health dashboard is exposed. Could be used for generting-links, redirects etc.")
 	flags.StringSliceVar(&runner.IncludeCanaries, "include-check", []string{}, "Run matching canaries - useful for debugging")
@@ -124,10 +127,6 @@ func ServerFlags(flags *pflag.FlagSet) {
 
 	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
 	flags.StringVarP(&query.DefaultCheckQueryWindow, "default-window", "", "1h", "Default search window")
-	flags.IntVar(&db.CheckStatusRetention, "check-status-retention-period", db.CheckStatusRetention, "Check status retention period in days")
-	flags.IntVar(&topology.CheckRetentionDays, "check-retention-period", topology.DefaultCheckRetentionDays, "Check retention period in days")
-	flags.IntVar(&topology.ComponentRetentionDays, "component-retention-period", topology.DefaultComponentRetentionDays, "Component retention period in days")
-	flags.IntVar(&topology.CanaryRetentionDays, "canary-retention-period", topology.DefaultCanaryRetentionDays, "Canary retention period in days")
 	flags.StringVar(&checks.DefaultArtifactConnection, "artifact-connection", "", "Specify the default connection to use for artifacts")
 
 	flags.IntVar(&canary.ReconcilePageSize, "upstream-page-size", 500, "upstream reconciliation page size")

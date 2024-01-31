@@ -55,7 +55,7 @@ var ComponentRelationshipSync = &job.Job{
 		// Cleanup dead relationships
 		componentIDsWithSelectors := lo.Map(components, func(c models.Component, _ int) string { return c.ID.String() })
 		if err := ctx.DB().Table("component_relationships").
-			Where("relationship_id NOT IN ?", componentIDsWithSelectors).
+			Where("deleted_at IS NULL AND relationship_id NOT IN ?", componentIDsWithSelectors).
 			Update("deleted_at", duty.Now()).Error; err != nil {
 			return fmt.Errorf("error cleaning up dead component_relationships: %w", err)
 		}
@@ -86,13 +86,6 @@ var ComponentStatusSummarySync = &job.Job{
 			}
 		}
 
-		return nil
-	},
-}
-
-var SyncComponentRelationships2 = &job.Job{
-	Name: "ComponentStatusSummarySync",
-	Fn: func(ctx job.JobRuntime) error {
 		return nil
 	},
 }

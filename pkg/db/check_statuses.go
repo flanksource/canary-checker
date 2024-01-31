@@ -6,10 +6,6 @@ import (
 	"github.com/flanksource/duty/job"
 )
 
-var (
-	CheckStatusRetention = 60
-)
-
 const CheckStatuses = "check_statuses"
 
 var RefreshCheckStatusSummary = job.Job{
@@ -48,7 +44,7 @@ var DeleteOldCheckStatues = job.Job{
 	Schedule:  "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
-		err, count := job.DeleteOldCheckStatuses1h(ctx.Context, CheckStatusRetention*3)
+		err, count := job.DeleteOldCheckStatuses1h(ctx.Context, ctx.Properties().Int("check.status.retention.days", 30))
 		ctx.History.SuccessCount = count
 		return err
 	},
@@ -60,7 +56,7 @@ var DeleteOldCheckStatues1d = job.Job{
 	Schedule:  "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
-		err, count := job.DeleteOldCheckStatuses1d(ctx.Context, CheckStatusRetention*9)
+		err, count := job.DeleteOldCheckStatuses1d(ctx.Context, ctx.Properties().Int("check.status.retention.days", 30)*9)
 		ctx.History.SuccessCount = count
 		return err
 	},
@@ -73,7 +69,7 @@ var DeleteOldCheckStatues1h = job.Job{
 	Schedule: "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
-		err, count := job.DeleteOldCheckStatuses1h(ctx.Context, CheckStatusRetention*3)
+		err, count := job.DeleteOldCheckStatuses1h(ctx.Context, ctx.Properties().Int("check.status.retention.days", 30)*3)
 		ctx.History.SuccessCount = count
 		return err
 	},
