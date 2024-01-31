@@ -38,6 +38,7 @@ func newTopologyJob(ctx context.Context, topology pkg.Topology) {
 		Name:         "Topology",
 		Context:      ctx.WithObject(v1.ObjectMeta).WithTopology(v1),
 		Schedule:     v1.Spec.Schedule,
+		Singleton:    true,
 		JobHistory:   true,
 		Retention:    job.RetentionHour,
 		ResourceID:   id,
