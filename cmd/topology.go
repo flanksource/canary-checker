@@ -16,6 +16,7 @@ import (
 	apicontext "github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/runner"
 	configSync "github.com/flanksource/canary-checker/pkg/sync"
 	"github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
@@ -67,12 +68,15 @@ var RunTopology = &cobra.Command{
 	Run: func(cmd *cobra.Command, configFiles []string) {
 		timer := timer.NewTimer()
 		if len(configFiles) == 0 {
-			log.Fatalln("Must specify at least one topology definition")
+			logger.Errorf("Must specify at least one topology definition")
+			os.Exit(1)
 		}
 
+		defer runner.Shutdown()
 		var err error
 		if apicontext.DefaultContext, err = InitContext(); err != nil {
-			logger.Fatalf(err.Error())
+			logger.Errorf(err.Error())
+			return
 		}
 
 		var results = []*pkg.Component{}
@@ -88,14 +92,15 @@ var RunTopology = &cobra.Command{
 			}
 			logger.Infof("Checking %s, %d topologies found", configfile, len(configs))
 			for _, config := range configs {
-				wg.Add(1)
 				_config := config
 				if _config.ID == uuid.Nil {
 					_config.ID = uuid.MustParse(StaticTemplatedID)
 					if _, err := db.PersistTopology(apicontext.DefaultContext, _config); err != nil {
-						logger.Fatalf(err.Error())
+						logger.Errorf(err.Error())
+						continue
 					}
 				}
+				wg.Add(1)
 				go func() {
 					ctx, span := apicontext.DefaultContext.StartSpan("Topology")
 					defer span.End()
@@ -124,8 +129,6 @@ var RunTopology = &cobra.Command{
 				log.Fatalln(err)
 			}
 		}
-		Shutdown()
-
 	},
 }
 

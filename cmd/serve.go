@@ -37,12 +37,14 @@ var Serve = &cobra.Command{
 	Use:   "serve config.yaml",
 	Short: "Start a server to execute checks",
 	Run: func(cmd *cobra.Command, configFiles []string) {
-		defer Shutdown()
+		defer runner.Shutdown()
 		canaryJobs.StartScanCanaryConfigs(setup(), dataFile, configFiles)
 		if executor {
-			jobs.Start()
+			if err := jobs.Start(); err != nil {
+				runner.ShutdownAndExit(1, err.Error())
+			}
 		}
-		go serve()
+		serve()
 	},
 }
 
@@ -50,7 +52,8 @@ func setup() dutyContext.Context {
 	var err error
 
 	if apicontext.DefaultContext, err = InitContext(); err != nil {
-		logger.Fatalf(err.Error())
+		runner.ShutdownAndExit(1, err.Error())
+		return apicontext.DefaultContext
 	}
 
 	apicontext.DefaultContext = apicontext.DefaultContext.WithNamespace(runner.WatchNamespace)
@@ -99,7 +102,7 @@ func serve() {
 		echo.Forward(e, "/db", db.PostgRESTEndpoint(), postgrestResponseModifier)
 	}
 
-	shutdownHooks = append(shutdownHooks, func() {
+	runner.AddShutdownHook(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 		defer cancel()
 

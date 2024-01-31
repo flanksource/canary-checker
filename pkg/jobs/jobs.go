@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/pkg/errors"
 
 	"github.com/flanksource/canary-checker/pkg/db"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
@@ -14,13 +15,14 @@ import (
 
 var FuncScheduler = cron.New()
 
-func Start() {
+func Start() error {
 	logger.Infof("Starting jobs ...")
 
 	if canaryJobs.UpstreamConf.Valid() {
 		// Push checks to upstream in real-time
 		if err := canaryJobs.StartUpstreamEventQueueConsumer(context.DefaultContext); err != nil {
-			logger.Fatalf("Failed to start upstream event queue consumer: %v", err)
+			// Cannot continue on failing to start consumers as we may lose events
+			return errors.Wrap(err, "Failed to start upstream event queue consumer")
 		}
 
 		for _, j := range canaryJobs.UpstreamJobs {
@@ -55,4 +57,5 @@ func Start() {
 			logger.Errorf(err.Error())
 		}
 	}
+	return nil
 }

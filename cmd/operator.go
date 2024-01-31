@@ -54,6 +54,7 @@ func init() {
 }
 
 func run(cmd *cobra.Command, args []string) {
+	defer runner.Shutdown()
 	loggr := ctrlzap.NewRaw(
 		ctrlzap.Encoder(logger.NewZapEncoder()),
 		ctrlzap.Level(zapcore.Level(k8sLogLevel*-1)),
@@ -66,14 +67,15 @@ func run(cmd *cobra.Command, args []string) {
 
 	ctx, err := InitContext()
 	if err != nil {
-		logger.Fatalf(err.Error())
+		runner.ShutdownAndExit(1, err.Error())
 	}
 
 	if ctx.DB() == nil {
-		logger.Fatalf("operator requires a db connection")
+		runner.ShutdownAndExit(1, "operator requires a db connection")
 	}
+
 	if ctx.Kommons() == nil {
-		logger.Fatalf("operator requires a kubernetes connection")
+		runner.ShutdownAndExit(1, "operator requires a kubernetes connection")
 	}
 
 	ctx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))

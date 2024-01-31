@@ -48,7 +48,8 @@ func InitTracer(serviceName, collectorURL string, insecure bool) func() {
 	)
 
 	if err != nil {
-		logger.Fatalf("Failed to create exporter: %v", err)
+		logger.Errorf("Failed to create opentelemetry exporter: %v", err)
+		return func() {}
 	}
 	resources, err := resource.New(
 		context.Background(),
@@ -57,7 +58,8 @@ func InitTracer(serviceName, collectorURL string, insecure bool) func() {
 		),
 	)
 	if err != nil {
-		logger.Fatalf("Could not set resources: %v", err)
+		logger.Errorf("Could not set opentelemetry resources: %v", err)
+		return func() {}
 	}
 
 	otel.SetTracerProvider(

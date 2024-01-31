@@ -17,23 +17,11 @@ import (
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/query"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"go.opentelemetry.io/otel"
 )
-
-var shutdownHooks []func()
-
-func Shutdown() {
-	if len(shutdownHooks) == 0 {
-		return
-	}
-	logger.Infof("Shutting down")
-	for _, fn := range shutdownHooks {
-		fn()
-	}
-	shutdownHooks = []func(){}
-}
 
 func InitContext() (context.Context, error) {
 	kommonsClient, k8s, err := pkg.NewKommonsClient()
@@ -43,7 +31,7 @@ func InitContext() (context.Context, error) {
 
 	var ctx context.Context
 
-	shutdownHooks = append(shutdownHooks, func() {
+	runner.AddShutdownHook(func() {
 		if err := db.StopServer(); err != nil {
 			logger.Errorf("failed to stop db, %v", err)
 		}
@@ -54,7 +42,7 @@ func InitContext() (context.Context, error) {
 		ctx = context.New()
 	} else {
 		if err := context.LoadPropertiesFromFile(ctx, propertiesFile); err != nil {
-			logger.Fatalf("Error loading properties: %v", err)
+			return ctx, errors.Wrap(err, "Error loading properties")
 		}
 	}
 
@@ -67,7 +55,7 @@ func InitContext() (context.Context, error) {
 var Root = &cobra.Command{
 	Use: "canary-checker",
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		Shutdown()
+		runner.Shutdown()
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		logger.UseZap()
@@ -89,7 +77,7 @@ var Root = &cobra.Command{
 		if otelcollectorURL != "" {
 			logger.Infof("Sending traces to %s", otelcollectorURL)
 
-			shutdownHooks = append(shutdownHooks, telemetry.InitTracer(otelServiceName, otelcollectorURL, true))
+			runner.AddShutdownHook(telemetry.InitTracer(otelServiceName, otelcollectorURL, true))
 		}
 		if prometheus.PrometheusURL != "" {
 			logger.Infof("Setting default prometheus: %s", prometheus.PrometheusURL)
@@ -102,9 +90,8 @@ var Root = &cobra.Command{
 			<-quit
 			logger.Infof("Caught Ctrl+C")
 			// call shutdown hooks explicitly, post-run cleanup hooks will be a no-op
-			Shutdown()
+			runner.Shutdown()
 		}()
-
 	},
 }
 
