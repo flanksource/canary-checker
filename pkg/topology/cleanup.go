@@ -23,8 +23,8 @@ var (
 	CanaryRetentionDays    int
 )
 
-var CleanupComponents = &job.Job{
-	Name:       "CleanupComponents",
+var CleanupSoftDeletedComponents = &job.Job{
+	Name:       "CleanupSoftDeletedComponents",
 	Schedule:   "@every 24h",
 	Singleton:  true,
 	JobHistory: true,
