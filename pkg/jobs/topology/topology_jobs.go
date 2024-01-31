@@ -31,6 +31,9 @@ func newTopologyJob(ctx context.Context, topology pkg.Topology) {
 		Topology:  *v1,
 		Namespace: topology.Namespace,
 	}
+	if v1.Spec.Schedule == "" {
+		v1.Spec.Schedule = db.DefaultTopologySchedule
+	}
 	j := &job.Job{
 		Name:         "Topology",
 		Context:      ctx.WithObject(v1.ObjectMeta).WithTopology(v1),
