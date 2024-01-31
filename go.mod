@@ -22,7 +22,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.4
 	github.com/flanksource/commons v1.22.0
-	github.com/flanksource/duty v1.0.317
+	github.com/flanksource/duty v1.0.319
 	github.com/flanksource/gomplate/v3 v3.21.0
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
 	github.com/flanksource/kommons v0.31.4
@@ -130,6 +130,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/eko/gocache/store/go_cache/v4 v4.2.1 // indirect
 	github.com/elastic/elastic-transport-go/v8 v8.4.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
