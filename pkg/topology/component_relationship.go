@@ -96,20 +96,14 @@ func syncComponentRelationships(ctx context.Context, id uuid.UUID, relationships
 		return err
 	}
 
-	var existingChildComponentIDs []string
-	for _, r := range existingRelationships {
-		existingChildComponentIDs = append(existingChildComponentIDs, r.ComponentID.String())
-	}
+	existingChildComponentIDs := lo.Map(existingRelationships, func(c models.ComponentRelationship, _ int) string { return c.ComponentID.String() })
 
-	var newChildComponentIDs []string
-	for _, r := range relationships {
-		newChildComponentIDs = append(newChildComponentIDs, r.ComponentID.String())
-	}
+	newChildComponentIDs := lo.Map(relationships, func(c models.ComponentRelationship, _ int) string { return c.ComponentID.String() })
 
 	if len(relationships) > 0 {
 		if err := ctx.DB().Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "component_id"}, {Name: "relationship_id"}, {Name: "selector_id"}},
-			UpdateAll: true,
+			DoUpdates: clause.Assignments(map[string]any{"deleted_at": nil}),
 		}).Create(relationships).Error; err != nil {
 			return err
 		}
@@ -117,12 +111,14 @@ func syncComponentRelationships(ctx context.Context, id uuid.UUID, relationships
 
 	// Take set difference of these child component Ids and delete them
 	childComponentIDsToDelete, _ := lo.Difference(existingChildComponentIDs, newChildComponentIDs)
-	if err := ctx.DB().
-		Table("component_relationships").
-		Where("relationship_id = ? AND component_id IN ?", id, childComponentIDsToDelete).
-		Update("deleted_at", duty.Now()).
-		Error; err != nil {
-		return errors.Wrap(err, "error deleting stale component relationships")
+	if len(childComponentIDsToDelete) > 0 {
+		if err := ctx.DB().
+			Table("component_relationships").
+			Where("relationship_id = ? AND component_id IN ?", id, childComponentIDsToDelete).
+			Update("deleted_at", duty.Now()).
+			Error; err != nil {
+			return errors.Wrap(err, "error deleting stale component relationships")
+		}
 	}
 
 	return nil
