@@ -15,7 +15,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/job"
 	dutyjob "github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"go.opentelemetry.io/otel/trace"
@@ -151,7 +150,6 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		if err := db.RemoveTransformedChecks(ctx.Context, checkIDsToRemove); err != nil {
 			ctx.Error(err, "error deleting transformed checks for canary")
 		}
-
 	}
 
 	// Update last runtime map
@@ -166,13 +164,13 @@ func logIfError(err error, description string) {
 	}
 }
 
-var CleanupDeletedCanaryChecks = &job.Job{
+var CleanupDeletedCanaryChecks = &dutyjob.Job{
 	Name:       "CleanupChecks",
 	Schedule:   "@every 1h",
 	Singleton:  true,
 	JobHistory: true,
-	Retention:  job.RetentionDay,
-	Fn: func(ctx job.JobRuntime) error {
+	Retention:  dutyjob.RetentionDay,
+	Fn: func(ctx dutyjob.JobRuntime) error {
 		var rows []struct {
 			ID string
 		}
