@@ -1,6 +1,7 @@
 package canary
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/job"
 	dutyjob "github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"go.opentelemetry.io/otel/trace"
@@ -130,29 +132,26 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	updateCanaryStatusAndEvent(ctx.Context, j.Canary, results)
 
 	checkDeleteStrategyGroup := make(map[string][]string)
-	checksToRemove := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
-	if len(checksToRemove) > 0 && len(transformedChecksCreated) > 0 {
-		for _, checkID := range checksToRemove {
-			strategy := checkIDDeleteStrategyMap[checkID]
-			// Empty status by default does not effect check status
-			var status string
-			if strategy == v1.OnTransformMarkHealthy {
-				status = models.CheckStatusHealthy
-			} else if strategy == v1.OnTransformMarkUnhealthy {
-				status = models.CheckStatusUnhealthy
-			}
-			if strategy != v1.OnTransformIgnore {
-				checkDeleteStrategyGroup[status] = append(checkDeleteStrategyGroup[status], checkID)
+	checkIDsToRemove := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
+	if len(checkIDsToRemove) > 0 && len(transformedChecksCreated) > 0 {
+		for _, checkID := range checkIDsToRemove {
+			switch checkIDDeleteStrategyMap[checkID] {
+			case v1.OnTransformMarkHealthy:
+				checkDeleteStrategyGroup[models.CheckStatusHealthy] = append(checkDeleteStrategyGroup[models.CheckStatusHealthy], checkID)
+			case v1.OnTransformMarkUnhealthy:
+				checkDeleteStrategyGroup[models.CheckStatusUnhealthy] = append(checkDeleteStrategyGroup[models.CheckStatusUnhealthy], checkID)
 			}
 		}
+
 		for status, checkIDs := range checkDeleteStrategyGroup {
 			if err := db.AddCheckStatuses(ctx.Context, checkIDs, models.CheckHealthStatus(status)); err != nil {
 				ctx.Error(err, "error adding statuses for transformed checks")
 			}
-			if err := db.RemoveTransformedChecks(ctx.Context, checkIDs); err != nil {
-				ctx.Error(err, "error deleting transformed checks for canary")
-			}
 		}
+		if err := db.RemoveTransformedChecks(ctx.Context, checkIDsToRemove); err != nil {
+			ctx.Error(err, "error deleting transformed checks for canary")
+		}
+
 	}
 
 	// Update last runtime map
@@ -165,4 +164,37 @@ func logIfError(err error, description string) {
 	if err != nil {
 		logger.Errorf("%s: %v", description, err)
 	}
+}
+
+var CleanupDeletedCanaryChecks = &job.Job{
+	Name:       "CleanupChecks",
+	Schedule:   "@every 1h",
+	Singleton:  true,
+	JobHistory: true,
+	Retention:  job.RetentionDay,
+	Fn: func(ctx job.JobRuntime) error {
+		var rows []struct {
+			ID string
+		}
+		// Select all checks whose canary ID is deleted but their deleted at is not marked
+		if err := ctx.DB().Raw(`
+        SELECT DISTINCT(canaries.id) FROM canaries
+        INNER JOIN checks ON canaries.id = checks.canary_id
+        WHERE
+            checks.deleted_at IS NULL AND
+            canaries.deleted_at IS NOT NULL
+        `).Scan(&rows).Error; err != nil {
+			return err
+		}
+
+		for _, r := range rows {
+			if err := db.DeleteCanary(ctx.Context, r.ID); err != nil {
+				ctx.History.AddError(fmt.Sprintf("Error deleting components for topology[%s]: %v", r.ID, err))
+			} else {
+				ctx.History.IncrSuccess()
+			}
+			Unschedule(r.ID)
+		}
+		return nil
+	},
 }

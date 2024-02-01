@@ -143,9 +143,9 @@ var CleanupDeletedTopologyComponents = &job.Job{
 			if err := db.DeleteComponentsOfTopology(ctx.DB(), r.ID); err != nil {
 				ctx.History.AddError(fmt.Sprintf("Error deleting components for topology[%s]: %v", r.ID, err))
 			} else {
-				DeleteTopologyJob(r.ID)
 				ctx.History.IncrSuccess()
 			}
+			DeleteTopologyJob(r.ID)
 		}
 		return nil
 	},
