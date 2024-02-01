@@ -5,7 +5,7 @@ resources:
   - _setup.yaml
   - junit_fail.yaml
   - junit_pass.yaml
-  - namespace_pass.yaml
+  - slow/namespace_pass.yaml
   - pod_fail.yaml
   - pod_pass.yaml
   - kubernetes_bundle.yaml
