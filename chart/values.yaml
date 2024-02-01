@@ -142,7 +142,7 @@ serviceAccount:
 
 disableChecks: {}
 
-# a list of db properties to update on startup
+# a list of properties to update on startup
 properties: {}
 
 # a map of extra arguments to the canary-checker cli

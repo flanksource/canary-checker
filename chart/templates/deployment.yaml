@@ -131,9 +131,6 @@ spec:
             - --db-migrations={{ .Values.db.runMigrations }}
             - --cache-timeout={{ .Values.data.cacheTimeoutDays }}
             - --default-window={{ .Values.data.defaultSearchWindow }}
-            - --check-status-retention-period={{ .Values.data.checkStatusRetentionDays }}
-            - --check-retention-period={{ .Values.data.checkRetentionDays }}
-            - --canary-retention-period={{ .Values.data.canaryRetentionDays }}
             {{- if ne .Values.canaryNamespace "" }}
             - --namespace={{ .Values.canaryNamespace }}
             {{- end }}

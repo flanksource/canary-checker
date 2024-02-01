@@ -44,12 +44,14 @@ var CleanupChecks = &job.Job{
 	JobHistory: true,
 	Retention:  job.Retention3Day,
 	Fn: func(ctx job.JobRuntime) error {
+		retention := ctx.Properties().Duration("check.retention.age", DefaultRetention)
 		tx := ctx.DB().Exec(`
 					DELETE FROM checks
 					WHERE
 							id NOT IN (SELECT check_id FROM evidences WHERE check_id IS NOT NULL) AND
-							(NOW() - deleted_at) > INTERVAL '1 day' * ?
-					`, ctx.Properties().Duration("check.retention.age", DefaultRetention))
+							(NOW() - deleted_at) > INTERVAL '1 second' * ?
+					`, int64(retention.Seconds()),
+		)
 
 		ctx.History.SuccessCount = int(tx.RowsAffected)
 		return tx.Error
