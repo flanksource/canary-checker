@@ -36,7 +36,7 @@ func newTopologyJob(ctx context.Context, topology pkg.Topology) {
 	}
 	j := &job.Job{
 		Name:         "Topology",
-		Context:      ctx.WithObject(v1.ObjectMeta).WithTopology(v1),
+		Context:      ctx.WithObject(v1.ObjectMeta).WithTopology(*v1),
 		Schedule:     v1.Spec.Schedule,
 		Singleton:    true,
 		JobHistory:   true,
@@ -81,7 +81,7 @@ var SyncTopology = &job.Job{
 func SyncTopologyJob(ctx context.Context, t pkg.Topology) error {
 	id := t.ID
 	var existingJob *job.Job
-	if j, ok := topologyJobs.Load(id); ok {
+	if j, ok := topologyJobs.Load(id.String()); ok {
 		existingJob = j.(*job.Job)
 	}
 
@@ -102,7 +102,7 @@ func SyncTopologyJob(ctx context.Context, t pkg.Topology) error {
 	}
 
 	existingTopology := existingJob.Context.Value("topology")
-	if existingTopology != nil && !reflect.DeepEqual(existingTopology.(v1.Topology).Spec, t.Spec) {
+	if existingTopology != nil && !reflect.DeepEqual(existingTopology.(v1.Topology).Spec, v1Topology.Spec) {
 		ctx.Debugf("Rescheduling %s topology with updated specs", t)
 		existingJob.Unschedule()
 		newTopologyJob(ctx, t)
