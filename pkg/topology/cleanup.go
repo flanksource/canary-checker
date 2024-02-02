@@ -66,12 +66,13 @@ var CleanupCanaries = &job.Job{
 	Retention:  job.Retention3Day,
 	RunNow:     true,
 	Fn: func(ctx job.JobRuntime) error {
+		retention := ctx.Properties().Duration("canary.retention.age", DefaultRetention)
 		tx := ctx.DB().Exec(`
 		DELETE FROM canaries
 		WHERE
 				id NOT IN (SELECT canary_id FROM checks) AND
-				(NOW() - deleted_at) > INTERVAL '1 day' * ?
-		`, ctx.Properties().Duration("canary.retention.age", DefaultRetention))
+				(NOW() - deleted_at) > INTERVAL '1 second' * ?
+		`, int64(retention.Seconds()))
 
 		ctx.History.SuccessCount = int(tx.RowsAffected)
 		return tx.Error
