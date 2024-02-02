@@ -53,10 +53,16 @@ var ComponentRelationshipSync = &job.Job{
 		}
 
 		// Cleanup dead relationships
-		componentIDsWithSelectors := lo.Map(components, func(c models.Component, _ int) string { return c.ID.String() })
-		if err := ctx.DB().Table("component_relationships").
-			Where("deleted_at IS NULL AND relationship_id NOT IN ?", componentIDsWithSelectors).
-			Update("deleted_at", duty.Now()).Error; err != nil {
+		// TODO: Agent_id matters ? Since logic is same
+		cleanupQuery := `
+            UPDATE component_relationships
+            SET deleted_at = NOW()
+            WHERE relationship_id IN (
+                SELECT id FROM components WHERE
+                selectors = 'null' AND agent_id = ?
+            )
+        `
+		if err := ctx.DB().Exec(cleanupQuery, uuid.Nil).Error; err != nil {
 			return fmt.Errorf("error cleaning up dead component_relationships: %w", err)
 		}
 
@@ -91,26 +97,29 @@ var ComponentStatusSummarySync = &job.Job{
 }
 
 func syncComponentRelationships(ctx context.Context, id uuid.UUID, relationships []models.ComponentRelationship) error {
-	var existingRelationships []models.ComponentRelationship
-	if err := ctx.DB().Where("relationship_id = ? AND deleted_at IS NULL", id).Find(&existingRelationships).Error; err != nil {
+	var existingChildComponentIDs []string
+	if err := ctx.DB().Table("component_relationships").Select("component_id").Where("relationship_id = ? AND deleted_at IS NULL", id).Find(&existingChildComponentIDs).Error; err != nil {
 		return err
 	}
 
-	existingChildComponentIDs := lo.Map(existingRelationships, func(c models.ComponentRelationship, _ int) string { return c.ComponentID.String() })
-
 	newChildComponentIDs := lo.Map(relationships, func(c models.ComponentRelationship, _ int) string { return c.ComponentID.String() })
 
-	if len(relationships) > 0 {
+	// Take set difference of these child component Ids and delete them
+	childComponentIDsToDelete, childComponentIDsToAdd := lo.Difference(existingChildComponentIDs, newChildComponentIDs)
+
+	relationshipsToAdd := lo.Filter(relationships, func(r models.ComponentRelationship, _ int) bool {
+		return lo.Contains(childComponentIDsToAdd, r.ComponentID.String())
+	})
+
+	if len(relationshipsToAdd) > 0 {
 		if err := ctx.DB().Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "component_id"}, {Name: "relationship_id"}, {Name: "selector_id"}},
 			DoUpdates: clause.Assignments(map[string]any{"deleted_at": nil}),
-		}).Create(relationships).Error; err != nil {
+		}).Create(relationshipsToAdd).Error; err != nil {
 			return err
 		}
 	}
 
-	// Take set difference of these child component Ids and delete them
-	childComponentIDsToDelete, _ := lo.Difference(existingChildComponentIDs, newChildComponentIDs)
 	if len(childComponentIDsToDelete) > 0 {
 		if err := ctx.DB().
 			Table("component_relationships").

@@ -2,7 +2,6 @@ package topology
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/duty"
@@ -29,8 +28,8 @@ var ComponentConfigRun = &job.Job{
 		db := run.DB().Session(&gorm.Session{NewDB: true})
 		var components = []pkg.Component{}
 		if err := db.Where(duty.LocalFilter).
-			Where("configs != 'null'").
 			Select("id", "configs").
+			Where("configs != 'null'").
 			Find(&components).Error; err != nil {
 			return fmt.Errorf("error getting components: %v", err)
 		}
@@ -44,12 +43,19 @@ var ComponentConfigRun = &job.Job{
 		}
 
 		// Cleanup dead relationships
-		componentIDsWithConfigs := lo.Map(components, func(c pkg.Component, _ int) string { return c.ID.String() })
-		if err := db.Table("config_component_relationships").
-			Where("component_id NOT IN ?", componentIDsWithConfigs).
-			Update("deleted_at", duty.Now()).Error; err != nil {
+		// TODO: Agent_id matters ? Since logic is same
+		cleanupQuery := `
+            UPDATE config_component_relationships
+            SET deleted_at = NOW()
+            WHERE component_id IN (
+                SELECT id FROM components WHERE
+                configs = 'null' AND agent_id = ?
+            )
+        `
+		if err := db.Exec(cleanupQuery, uuid.Nil).Error; err != nil {
 			return fmt.Errorf("error cleaning up old config_component_relationships: %w", err)
 		}
+
 		return nil
 	},
 }
@@ -59,10 +65,9 @@ func PersistConfigComponentRelationships(db *gorm.DB, rels []models.ConfigCompon
 		return nil
 	}
 
-	updatedAt := time.Now()
 	return db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "config_id"}, {Name: "component_id"}},
-		DoUpdates: clause.Assignments(map[string]any{"deleted_at": nil, "updated_at": updatedAt}),
+		DoUpdates: clause.Assignments(map[string]any{"deleted_at": nil, "updated_at": duty.Now()}),
 	}).Create(&rels).Error
 }
 
