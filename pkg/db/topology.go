@@ -20,7 +20,7 @@ const (
 	DefaultTopologySchedule = "@every 10m"
 )
 
-func PersistV1Topology(ctx context.Context, t *v1.Topology) (bool, error) {
+func PersistV1Topology(ctx context.Context, t *v1.Topology) (pkg.Topology, bool, error) {
 	var err error
 	var changed bool
 
@@ -31,12 +31,12 @@ func PersistV1Topology(ctx context.Context, t *v1.Topology) (bool, error) {
 	if t.GetPersistedID() != "" {
 		model.ID, err = uuid.Parse(t.GetPersistedID())
 		if err != nil {
-			return changed, err
+			return model, changed, err
 		}
 	}
-	changed, err = PersistTopology(ctx, model)
+	changed, err = PersistTopology(ctx, &model)
 	t.SetUID(k8sTypes.UID(model.ID.String()))
-	return changed, err
+	return model, changed, err
 }
 
 func PersistTopology(ctx context.Context, model *pkg.Topology) (bool, error) {

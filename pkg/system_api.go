@@ -6,6 +6,7 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/console"
+	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/utils"
 	"github.com/flanksource/duty/models"
 	dutyTypes "github.com/flanksource/duty/types"
@@ -33,9 +34,14 @@ type Topology struct {
 	DeletedAt *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
 }
 
-func TopologyFromV1(topology *v1.Topology) *Topology {
+func TopologyFromV1(topology *v1.Topology) Topology {
 	spec, _ := json.Marshal(topology.Spec)
-	return &Topology{
+	id, err := uuid.Parse(topology.GetPersistedID())
+	if err != nil {
+		logger.Errorf("Error parsing topology metadata.uid[%s] to uuid: %v", topology.GetPersistedID(), err)
+	}
+	return Topology{
+		ID:        id,
 		Name:      topology.GetName(),
 		Namespace: topology.GetNamespace(),
 		Labels:    dutyTypes.JSONStringMap(topology.GetLabels()),

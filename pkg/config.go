@@ -87,7 +87,8 @@ func ParseTopology(configFile, datafile string) ([]*Topology, error) {
 		if config.Name == "" {
 			config.Name = CleanupFilename(configFile)
 		}
-		systems = append(systems, TopologyFromV1(&config))
+		v1Topology := TopologyFromV1(&config)
+		systems = append(systems, &v1Topology)
 	}
 
 	return systems, nil
