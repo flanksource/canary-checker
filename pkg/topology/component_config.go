@@ -43,16 +43,14 @@ var ComponentConfigRun = &job.Job{
 		}
 
 		// Cleanup dead relationships
-		// TODO: Agent_id matters ? Since logic is same
 		cleanupQuery := `
             UPDATE config_component_relationships
             SET deleted_at = NOW()
             WHERE component_id IN (
-                SELECT id FROM components WHERE
-                configs = 'null' AND agent_id = ?
+                SELECT id FROM components WHERE configs = 'null'
             )
         `
-		if err := db.Exec(cleanupQuery, uuid.Nil).Error; err != nil {
+		if err := db.Exec(cleanupQuery).Error; err != nil {
 			return fmt.Errorf("error cleaning up old config_component_relationships: %w", err)
 		}
 

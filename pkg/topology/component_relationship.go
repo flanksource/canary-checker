@@ -53,16 +53,14 @@ var ComponentRelationshipSync = &job.Job{
 		}
 
 		// Cleanup dead relationships
-		// TODO: Agent_id matters ? Since logic is same
 		cleanupQuery := `
             UPDATE component_relationships
             SET deleted_at = NOW()
             WHERE relationship_id IN (
-                SELECT id FROM components WHERE
-                selectors = 'null' AND agent_id = ?
+                SELECT id FROM components WHERE selectors = 'null'
             )
         `
-		if err := ctx.DB().Exec(cleanupQuery, uuid.Nil).Error; err != nil {
+		if err := ctx.DB().Exec(cleanupQuery).Error; err != nil {
 			return fmt.Errorf("error cleaning up dead component_relationships: %w", err)
 		}
 
