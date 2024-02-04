@@ -18,7 +18,7 @@ var RefreshCheckStatusSummary = job.Job{
 		Interval: 5 * time.Minute,
 		Success:  1,
 		Failed:   3,
-		Age:      time.Hour * 24,
+		Age:      time.Minute * 15,
 	},
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
@@ -27,9 +27,15 @@ var RefreshCheckStatusSummary = job.Job{
 }
 
 var RefreshCheckStatusSummaryAged = job.Job{
-	Name:       "RefreshCheckStatusSummaryAged",
-	Timeout:    60 * time.Minute,
-	Schedule:   "@every 1h",
+	Name:     "RefreshCheckStatusSummaryAged",
+	Timeout:  60 * time.Minute,
+	Schedule: "@every 1h",
+	Retention: job.Retention{
+		Interval: 60 * time.Minute,
+		Success:  1,
+		Failed:   3,
+		Age:      time.Hour * 3,
+	},
 	Singleton:  true,
 	JobHistory: true,
 	Fn: func(ctx job.JobRuntime) error {
@@ -39,21 +45,24 @@ var RefreshCheckStatusSummaryAged = job.Job{
 }
 
 var DeleteOldCheckStatues = job.Job{
-	Name:      "DeleteOldCheckStatuses",
-	Singleton: true,
-	Schedule:  "@every 24h",
+	Name:       "DeleteOldCheckStatuses",
+	Singleton:  true,
+	JobHistory: true,
+	Schedule:   "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
-		err, count := job.DeleteOldCheckStatuses1h(ctx.Context, ctx.Properties().Int("check.status.retention.days", 30))
+		err, count := job.DeleteOldCheckStatuses(ctx.Context, ctx.Properties().Int("check.status.retention.days", 30))
 		ctx.History.SuccessCount = count
 		return err
 	},
 }
 
 var DeleteOldCheckStatues1d = job.Job{
-	Name:      "DeleteOldCheckStatuses1d",
-	Singleton: true,
-	Schedule:  "@every 24h",
+	Name:       "DeleteOldCheckStatuses1d",
+	Singleton:  true,
+	JobHistory: true,
+	Retention:  job.Retention3Day,
+	Schedule:   "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
 		err, count := job.DeleteOldCheckStatuses1d(ctx.Context, ctx.Properties().Int("check.status.retention.days", 30)*9)
@@ -63,10 +72,11 @@ var DeleteOldCheckStatues1d = job.Job{
 }
 
 var DeleteOldCheckStatues1h = job.Job{
-	Name:      "DeleteOldCheckStatuses1h",
-	Singleton: true,
-
-	Schedule: "@every 24h",
+	Name:       "DeleteOldCheckStatuses1h",
+	Singleton:  true,
+	JobHistory: true,
+	Retention:  job.Retention3Day,
+	Schedule:   "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
 		err, count := job.DeleteOldCheckStatuses1h(ctx.Context, ctx.Properties().Int("check.status.retention.days", 30)*3)
@@ -76,8 +86,11 @@ var DeleteOldCheckStatues1h = job.Job{
 }
 
 var AggregateCheckStatues1d = job.Job{
-	Name:     "AggregateCheckStatuses1h",
-	Schedule: "@every 1h",
+	Name:       "AggregateCheckStatuses1h",
+	Singleton:  true,
+	JobHistory: true,
+	Retention:  job.RetentionDay,
+	Schedule:   "@every 1h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
 		err, count := job.AggregateCheckStatus1h(ctx.Context)
@@ -87,8 +100,11 @@ var AggregateCheckStatues1d = job.Job{
 }
 
 var AggregateCheckStatues1h = job.Job{
-	Name:     "AggregateCheckStatuses1d",
-	Schedule: "@every 24h",
+	Name:       "AggregateCheckStatuses1d",
+	Singleton:  true,
+	JobHistory: true,
+	Retention:  job.Retention3Day,
+	Schedule:   "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
 		err, count := job.AggregateCheckStatus1d(ctx.Context)
