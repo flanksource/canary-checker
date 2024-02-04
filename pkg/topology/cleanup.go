@@ -28,7 +28,7 @@ var CleanupSoftDeletedComponents = &job.Job{
 			return tx.Error
 		}
 
-		tx = ctx.Context.DB().Exec("DELETE FROM components WHERE deleted_at < NOW() - interval '1 SECONDS' * ?", int64(retention.Seconds()))
+		tx = ctx.Context.DB().Exec("DELETE FROM components WHERE id NOT IN (SELECT component_id FROM evidences WHERE component_id IS NOT NULL) AND deleted_at < NOW() - interval '1 SECONDS' * ?", int64(retention.Seconds()))
 		if tx.Error != nil {
 			return tx.Error
 		}
