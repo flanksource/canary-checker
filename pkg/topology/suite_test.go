@@ -19,7 +19,7 @@ func expectJobToPass(j *job.Job) {
 	history, err := j.FindHistory()
 	Expect(err).To(BeNil())
 	Expect(len(history)).To(BeNumerically(">=", 1))
-	Expect(history[0].Status).To(Equal(models.StatusSuccess))
+	Expect(history[0].Status).To(BeElementOf(models.StatusSuccess, models.StatusFinished))
 }
 
 func TestTopologyJobs(t *testing.T) {

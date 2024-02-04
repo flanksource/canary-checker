@@ -237,4 +237,10 @@ var _ = ginkgo.Describe("Topology relationships", ginkgo.Ordered, func() {
 		// and old relationship should be deleted
 		Expect(len(relationships)).To(Equal(1))
 	})
+
+	ginkgo.It("should run component relationship cleanup", func() {
+		CleanupSoftDeletedComponents.Context = DefaultContext
+		CleanupSoftDeletedComponents.Run()
+		expectJobToPass(CleanupSoftDeletedComponents)
+	})
 })
