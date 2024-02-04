@@ -23,16 +23,35 @@ var CleanupSoftDeletedComponents = &job.Job{
 		ctx.History.ResourceType = job.ResourceTypeComponent
 		retention := ctx.Properties().Duration("component.retention.period", DefaultRetention)
 
-		tx := ctx.Context.DB().Exec("DELETE FROM component_relationships WHERE deleted_at < NOW() - interval '1 SECONDS' * ?", int64(retention.Seconds()))
+		seconds := int64(retention.Seconds())
+
+		tx := ctx.Context.DB().Exec(
+			`DELETE FROM component_relationships WHERE deleted_at < NOW() - interval '1 SECONDS' * ? OR
+				component_id in (SELECT id FROM components WHERE id NOT IN (SELECT component_id FROM evidences WHERE component_id IS NOT NULL) AND deleted_at < NOW() - interval '1 SECONDS' * ?) OR
+				relationship_id in (SELECT id FROM components WHERE id NOT IN (SELECT component_id FROM evidences WHERE component_id IS NOT NULL) AND deleted_at < NOW() - interval '1 SECONDS' * ?)
+				`, seconds, seconds, seconds)
 		if tx.Error != nil {
 			return tx.Error
 		}
 
-		tx = ctx.Context.DB().Exec("DELETE FROM components WHERE id NOT IN (SELECT component_id FROM evidences WHERE component_id IS NOT NULL) AND deleted_at < NOW() - interval '1 SECONDS' * ?", int64(retention.Seconds()))
-		if tx.Error != nil {
+		// break the parent relationship of any component that was marked as evidence
+		if tx := ctx.Context.DB().Exec("UPDATE components SET parent_id = null WHERE id IN (SELECT component_id FROM evidences WHERE component_id IS NOT NULL) AND parent_id is not null AND deleted_at < NOW() - interval '7 days'"); tx.Error != nil {
 			return tx.Error
 		}
-		ctx.History.SuccessCount = int(tx.RowsAffected)
+
+		for {
+			tx = ctx.Context.DB().Exec(`DELETE FROM components WHERE id in (SELECT id FROM components WHERE
+				id NOT IN (SELECT component_id FROM evidences WHERE component_id IS NOT NULL)
+				AND deleted_at < NOW() - interval '1 SECONDS' * ? ORDER BY length(path) DESC LIMIT 1000)`, seconds)
+			if tx.Error != nil {
+				return tx.Error
+			}
+			ctx.History.SuccessCount += int(tx.RowsAffected)
+
+			if tx.RowsAffected == 0 {
+				break
+			}
+		}
 		return nil
 	},
 }
