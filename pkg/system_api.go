@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/utils"
+	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/google/uuid"
@@ -180,8 +181,8 @@ func (component *Component) FindExisting(db *gorm.DB) (*models.Component, error)
 	return &existing, tx.Error
 }
 
-func (component *Component) GetConfigs(db *gorm.DB) (relationships []models.ConfigComponentRelationship, err error) {
-	err = db.Where("component_id = ? AND deleted_at IS NULL", component.ID).Find(&relationships).Error
+func (component *Component) GetConfigs(ctx context.Context) (relationships []models.ConfigComponentRelationship, err error) {
+	err = ctx.DB().Where("component_id = ? AND deleted_at IS NULL", component.ID).Find(&relationships).Error
 	return relationships, err
 }
 
