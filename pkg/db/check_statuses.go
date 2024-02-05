@@ -8,7 +8,7 @@ import (
 
 const CheckStatuses = "check_statuses"
 
-var RefreshCheckStatusSummary = job.Job{
+var RefreshCheckStatusSummary = &job.Job{
 	Name:       "RefreshCheckStatusSummary",
 	Singleton:  true,
 	Timeout:    1 * time.Minute,
@@ -26,7 +26,7 @@ var RefreshCheckStatusSummary = job.Job{
 	},
 }
 
-var RefreshCheckStatusSummaryAged = job.Job{
+var RefreshCheckStatusSummaryAged = &job.Job{
 	Name:     "RefreshCheckStatusSummaryAged",
 	Timeout:  60 * time.Minute,
 	Schedule: "@every 1h",
@@ -44,7 +44,7 @@ var RefreshCheckStatusSummaryAged = job.Job{
 	},
 }
 
-var DeleteOldCheckStatues = job.Job{
+var DeleteOldCheckStatues = &job.Job{
 	Name:       "DeleteOldCheckStatuses",
 	Singleton:  true,
 	JobHistory: true,
@@ -57,7 +57,7 @@ var DeleteOldCheckStatues = job.Job{
 	},
 }
 
-var DeleteOldCheckStatues1d = job.Job{
+var DeleteOldCheckStatues1d = &job.Job{
 	Name:       "DeleteOldCheckStatuses1d",
 	Singleton:  true,
 	JobHistory: true,
@@ -71,7 +71,7 @@ var DeleteOldCheckStatues1d = job.Job{
 	},
 }
 
-var DeleteOldCheckStatues1h = job.Job{
+var DeleteOldCheckStatues1h = &job.Job{
 	Name:       "DeleteOldCheckStatuses1h",
 	Singleton:  true,
 	JobHistory: true,
@@ -85,7 +85,7 @@ var DeleteOldCheckStatues1h = job.Job{
 	},
 }
 
-var AggregateCheckStatues1d = job.Job{
+var AggregateCheckStatues1d = &job.Job{
 	Name:       "AggregateCheckStatuses1h",
 	Singleton:  true,
 	JobHistory: true,
@@ -99,7 +99,7 @@ var AggregateCheckStatues1d = job.Job{
 	},
 }
 
-var AggregateCheckStatues1h = job.Job{
+var AggregateCheckStatues1h = &job.Job{
 	Name:       "AggregateCheckStatuses1d",
 	Singleton:  true,
 	JobHistory: true,
@@ -113,7 +113,7 @@ var AggregateCheckStatues1h = job.Job{
 	},
 }
 
-var CheckStatusJobs = []job.Job{
+var CheckStatusJobs = []*job.Job{
 	AggregateCheckStatues1d,
 	AggregateCheckStatues1h,
 	DeleteOldCheckStatues,

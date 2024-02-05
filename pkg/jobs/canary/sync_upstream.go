@@ -30,13 +30,13 @@ const (
 	ResourceTypeUpstream    = "upstream"
 )
 
-var UpstreamJobs = []job.Job{
+var UpstreamJobs = []*job.Job{
 	SyncCheckStatuses,
 	PullUpstreamCanaries,
 	ReconcileChecks,
 }
 
-var ReconcileChecks = job.Job{
+var ReconcileChecks = &job.Job{
 	Name:       "PushChecksToUpstream",
 	JobHistory: true,
 	Singleton:  true,
@@ -62,7 +62,7 @@ var ReconcileChecks = job.Job{
 	},
 }
 
-var SyncCheckStatuses = job.Job{
+var SyncCheckStatuses = &job.Job{
 	Name:       "SyncCheckStatusesWithUpstream",
 	JobHistory: true,
 	Singleton:  true,
@@ -79,7 +79,7 @@ var SyncCheckStatuses = job.Job{
 }
 
 var lastRuntime time.Time
-var PullUpstreamCanaries = job.Job{
+var PullUpstreamCanaries = &job.Job{
 	Name:       "PullUpstreamCanaries",
 	JobHistory: true,
 	Singleton:  true,
