@@ -4,7 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/eko/gocache/lib/v4/cache"
+	"github.com/eko/gocache/lib/v4/store"
+	gocache_store "github.com/eko/gocache/store/go_cache/v4"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -12,6 +16,7 @@ import (
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/gomplate/v3"
+	gocache "github.com/patrickmn/go-cache"
 )
 
 var DefaultContext dutyCtx.Context
@@ -142,6 +147,8 @@ func (ctx Context) GetAuthValues(auth connection.Authentication) (connection.Aut
 	return auth, nil
 }
 
+var connectionCache = cache.New[*models.Connection](gocache_store.NewGoCache(gocache.New(30*time.Minute, 30*time.Minute)))
+
 func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Connection, error) {
 	if connectionName == "" {
 		return nil, nil
@@ -155,6 +162,13 @@ func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Conne
 		return nil, errors.New("db has not been initialized")
 	}
 
+	if cacheVal, err := connectionCache.Get(ctx, connectionName); err == nil {
+		if cacheVal == nil {
+			return nil, fmt.Errorf("connection %s not found", connectionName)
+		}
+		return cacheVal, nil
+	}
+
 	connection, err := ctx.Context.HydrateConnectionByURL(connectionName)
 	if err != nil {
 		return nil, err
@@ -163,9 +177,12 @@ func (ctx *Context) HydrateConnectionByURL(connectionName string) (*models.Conne
 	// Connection name was explicitly provided but was not found.
 	// That's an error.
 	if connection == nil {
+		// Setting a smaller cache for connection not found
+		_ = connectionCache.Set(ctx, connectionName, connection, store.WithExpiration(5*time.Minute))
 		return nil, fmt.Errorf("connection %s not found", connectionName)
 	}
 
+	_ = connectionCache.Set(ctx, connectionName, connection)
 	return connection, nil
 }
 
