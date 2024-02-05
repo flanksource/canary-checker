@@ -38,6 +38,7 @@ var _ = ginkgo.Describe("Topology configs", ginkgo.Ordered, func() {
 
 		cr, err := component.GetConfigs(DefaultContext)
 		Expect(err).To(BeNil())
+		Expect(len(cr)).Should(BeNumerically(">", 1))
 
 		ci, err := query.GetCachedConfig(DefaultContext, cr[0].ConfigID.String())
 		Expect(err).To(BeNil())

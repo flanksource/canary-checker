@@ -30,6 +30,7 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 
 		err = DefaultContext.DB().Create(&ci).Error
 		Expect(err).To(BeNil())
+		cleanupQueryCache()
 
 		rootComponent, history, err := Run(DefaultContext.WithTrace(), *t)
 		Expect(err).To(BeNil())

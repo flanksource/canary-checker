@@ -16,7 +16,6 @@ var _ = ginkgo.Describe("Topology checks", ginkgo.Ordered, func() {
 		Name: "Component",
 		ComponentChecks: []v1.ComponentCheck{{
 			Selector: types.ResourceSelector{
-				Name:          "ComponentCheckSelector",
 				LabelSelector: "check-target=api",
 			},
 		}},
