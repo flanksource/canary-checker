@@ -49,7 +49,7 @@ func newTopologyJob(ctx context.Context, topology pkg.Topology) {
 
 	topologyJobs.Store(topology.ID.String(), j)
 	if err := j.AddToScheduler(TopologyScheduler); err != nil {
-		logger.Errorf("[%s] failed to schedule %v", *j, err)
+		logger.Errorf("[%s] failed to schedule %v", j.Name, err)
 	}
 }
 

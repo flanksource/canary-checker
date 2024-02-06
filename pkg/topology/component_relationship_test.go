@@ -40,7 +40,7 @@ var _ = ginkgo.Describe("Topology relationships", ginkgo.Ordered, func() {
 			Selectors: []types.ResourceSelector{
 				{
 					LabelSelector: "service=payments",
-					FieldSelector: "type=api",
+					Types:         []string{"api"},
 				},
 			},
 		},
@@ -48,7 +48,8 @@ var _ = ginkgo.Describe("Topology relationships", ginkgo.Ordered, func() {
 			Name: "Component2",
 			Selectors: []types.ResourceSelector{
 				{
-					FieldSelector: "type=api,agent_id=all",
+					Types: []string{"api"},
+					Agent: "all",
 				},
 			},
 		},
@@ -56,7 +57,7 @@ var _ = ginkgo.Describe("Topology relationships", ginkgo.Ordered, func() {
 			Name: "Component3",
 			Selectors: []types.ResourceSelector{
 				{
-					FieldSelector: "type=api",
+					Types: []string{"api"},
 				},
 			},
 		},
@@ -72,7 +73,7 @@ var _ = ginkgo.Describe("Topology relationships", ginkgo.Ordered, func() {
 			Name: "Component5",
 			Selectors: []types.ResourceSelector{
 				{
-					FieldSelector: "agent_id=" + agent.ID.String(),
+					Agent: agent.ID.String(),
 				},
 			},
 		},
@@ -81,7 +82,7 @@ var _ = ginkgo.Describe("Topology relationships", ginkgo.Ordered, func() {
 			Selectors: []types.ResourceSelector{
 				{
 					LabelSelector: "service=payments",
-					FieldSelector: "type=api",
+					Types:         []string{"api"},
 				},
 				{
 					LabelSelector: "service=logistics",
@@ -200,17 +201,20 @@ var _ = ginkgo.Describe("Topology relationships", ginkgo.Ordered, func() {
 		err := DefaultContext.DB().Delete(&childrenComponents[2]).Error
 		Expect(err).To(BeNil())
 
+		cleanupQueryCache()
+
 		ComponentRelationshipSync.Run()
 		expectJobToPass(ComponentRelationshipSync)
 
 		relationships, err := parentComponents.Find("Component").GetChildren(DefaultContext.DB())
 		Expect(err).To(BeNil())
 
-		// Only child 1 should be present
-		Expect(len(relationships)).To(Equal(1))
+		Expect(len(relationships)).To(Equal(1), "Only child 1 should be present")
 
 		err = DefaultContext.DB().Create(&childrenComponents[2]).Error
 		Expect(err).To(BeNil())
+
+		cleanupQueryCache()
 
 		ComponentRelationshipSync.Run()
 		expectJobToPass(ComponentRelationshipSync)
@@ -218,15 +222,16 @@ var _ = ginkgo.Describe("Topology relationships", ginkgo.Ordered, func() {
 		relationships, err = parentComponents.Find("Component").GetChildren(DefaultContext.DB())
 		Expect(err).To(BeNil())
 
-		// Child-1 and Child-3 should be present but not Child-2
-		Expect(len(relationships)).To(Equal(2))
-
+		Expect(len(relationships)).To(Equal(2), "Child-1 and Child-3 should be present but not Child-2")
 	})
 
 	ginkgo.It("should handle component label updates", func() {
 		childrenComponents[2].Labels = map[string]string{"service": "logistics"}
 		err := DefaultContext.DB().Save(&childrenComponents[2]).Error
 		Expect(err).To(BeNil())
+
+		cleanupQueryCache()
+
 		ComponentRelationshipSync.Run()
 		expectJobToPass(ComponentRelationshipSync)
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
@@ -35,7 +36,7 @@ var ComponentConfigRun = &job.Job{
 		}
 
 		for _, component := range components {
-			if err := SyncComponentConfigRelationship(db, component); err != nil {
+			if err := SyncComponentConfigRelationship(run.Context, component); err != nil {
 				run.History.AddError(fmt.Sprintf("error persisting config relationships: %v", err))
 				continue
 			}
@@ -58,12 +59,12 @@ var ComponentConfigRun = &job.Job{
 	},
 }
 
-func PersistConfigComponentRelationships(db *gorm.DB, rels []models.ConfigComponentRelationship) error {
+func PersistConfigComponentRelationships(ctx context.Context, rels []models.ConfigComponentRelationship) error {
 	if len(rels) == 0 {
 		return nil
 	}
 
-	return db.Clauses(clause.OnConflict{
+	return ctx.DB().Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "config_id"}, {Name: "component_id"}},
 		DoUpdates: clause.Assignments(map[string]any{"deleted_at": nil, "updated_at": duty.Now()}),
 	}).Create(&rels).Error
@@ -82,12 +83,12 @@ func PersistConfigComponentRelationship(db *gorm.DB, configID, componentID uuid.
 	}).Create(&relationship).Error
 }
 
-func SyncComponentConfigRelationship(db *gorm.DB, component pkg.Component) error {
+func SyncComponentConfigRelationship(ctx context.Context, component pkg.Component) error {
 	if len(component.Configs) == 0 {
 		return nil
 	}
 
-	existingRelationships, err := component.GetConfigs(db)
+	existingRelationships, err := component.GetConfigs(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "error fetching config relationships for component[%s]", component.ID)
 	}
@@ -97,10 +98,11 @@ func SyncComponentConfigRelationship(db *gorm.DB, component pkg.Component) error
 	var relationshipsToPersist []models.ConfigComponentRelationship
 
 	for _, config := range component.Configs {
-		dbConfigIDs, err := query.FindConfigIDs(db, *config)
+		dbConfigIDs, err := query.FindConfigIDs(ctx, *config)
 		if err != nil {
 			return errors.Wrap(err, "error fetching config from database")
 		}
+
 		for _, dbConfigID := range dbConfigIDs {
 			newConfigsIDs = append(newConfigsIDs, dbConfigID.String())
 
@@ -115,14 +117,14 @@ func SyncComponentConfigRelationship(db *gorm.DB, component pkg.Component) error
 		}
 	}
 
-	if err := PersistConfigComponentRelationships(db, relationshipsToPersist); err != nil {
+	if err := PersistConfigComponentRelationships(ctx, relationshipsToPersist); err != nil {
 		return errors.Wrapf(err, "error persisting config component relationships for component[%s]", component.ID)
 	}
 
 	// Take set difference of these child component Ids and delete them
 	configIDsToDelete := utils.SetDifference(existingConfigIDs, newConfigsIDs)
 	if len(configIDsToDelete) > 0 {
-		if err := db.Table("config_component_relationships").
+		if err := ctx.DB().Table("config_component_relationships").
 			Where("component_id = ? AND config_id IN ?", component.ID, configIDsToDelete).
 			Update("deleted_at", duty.Now()).
 			Error; err != nil {

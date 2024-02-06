@@ -2,7 +2,7 @@ package topology
 
 import (
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/query"
 	"github.com/flanksource/duty/types"
 	ginkgo "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -36,10 +36,11 @@ var _ = ginkgo.Describe("Topology configs", ginkgo.Ordered, func() {
 		ComponentConfigRun.Run()
 		expectJobToPass(ComponentConfigRun)
 
-		cr, err := component.GetConfigs(DefaultContext.DB())
+		cr, err := component.GetConfigs(DefaultContext)
 		Expect(err).To(BeNil())
+		Expect(len(cr)).Should(BeNumerically(">", 1))
 
-		ci, err := duty.FindCachedConfig(DefaultContext, cr[0].ConfigID.String())
+		ci, err := query.GetCachedConfig(DefaultContext, cr[0].ConfigID.String())
 		Expect(err).To(BeNil())
 
 		tags := *ci.Tags

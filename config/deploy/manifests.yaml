@@ -7490,12 +7490,30 @@ spec:
                   description: Lookup and associcate other components with this component
                   items:
                     properties:
+                      agent:
+                        description: Agent can be the agent id or the name of the agent. Additionally, the special "self" value can be used to select resources without an agent.
+                        type: string
+                      cache:
+                        description: Cache directives 'no-cache' (should not fetch from cache but can be cached) 'no-store' (should not cache) 'max-age=X' (cache for X duration)
+                        type: string
                       fieldSelector:
+                        type: string
+                      id:
                         type: string
                       labelSelector:
                         type: string
                       name:
                         type: string
+                      namespace:
+                        type: string
+                      statuses:
+                        items:
+                          type: string
+                        type: array
+                      types:
+                        items:
+                          type: string
+                        type: array
                     type: object
                   type: array
                 summary:
@@ -7582,12 +7600,30 @@ spec:
                               x-kubernetes-preserve-unknown-fields: true
                             selector:
                               properties:
+                                agent:
+                                  description: Agent can be the agent id or the name of the agent. Additionally, the special "self" value can be used to select resources without an agent.
+                                  type: string
+                                cache:
+                                  description: Cache directives 'no-cache' (should not fetch from cache but can be cached) 'no-store' (should not cache) 'max-age=X' (cache for X duration)
+                                  type: string
                                 fieldSelector:
+                                  type: string
+                                id:
                                   type: string
                                 labelSelector:
                                   type: string
                                 name:
                                   type: string
+                                namespace:
+                                  type: string
+                                statuses:
+                                  items:
+                                    type: string
+                                  type: array
+                                types:
+                                  items:
+                                    type: string
+                                  type: array
                               type: object
                           type: object
                         type: array
@@ -7813,12 +7849,30 @@ spec:
                         description: Lookup and associcate other components with this component
                         items:
                           properties:
+                            agent:
+                              description: Agent can be the agent id or the name of the agent. Additionally, the special "self" value can be used to select resources without an agent.
+                              type: string
+                            cache:
+                              description: Cache directives 'no-cache' (should not fetch from cache but can be cached) 'no-store' (should not cache) 'max-age=X' (cache for X duration)
+                              type: string
                             fieldSelector:
+                              type: string
+                            id:
                               type: string
                             labelSelector:
                               type: string
                             name:
                               type: string
+                            namespace:
+                              type: string
+                            statuses:
+                              items:
+                                type: string
+                              type: array
+                            types:
+                              items:
+                                type: string
+                              type: array
                           type: object
                         type: array
                       summary:

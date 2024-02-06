@@ -14,7 +14,7 @@ import (
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
-	"github.com/flanksource/duty/types"
+	"github.com/flanksource/duty/query"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -77,7 +77,7 @@ func GetChecksForComponent(ctx context.Context, component *pkg.Component) ([]mod
 	for idx, componentCheck := range component.ComponentChecks {
 		hash := componentCheck.Hash()
 		if componentCheck.Selector.LabelSelector != "" {
-			checks, err := duty.FindChecks(ctx, types.ResourceSelectors{componentCheck.Selector}, duty.PickColumns("id", "canary_id"))
+			checks, err := query.FindChecks(ctx, componentCheck.Selector)
 			if err != nil {
 				return nil, err
 			}

@@ -241,9 +241,10 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*types.Property
 	if err := ctx.TemplateConfig(config); err != nil {
 		return nil, err
 	}
+
 	pkgConfig := config
 	pkgConfig.Name = configName
-	_config, err := query.FindConfig(ctx.DB(), *pkgConfig)
+	_config, err := query.FindConfig(ctx.Context, *pkgConfig)
 	if err != nil || _config == nil {
 		return prop, err
 	}

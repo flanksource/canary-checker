@@ -7,6 +7,7 @@ import (
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/query"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -29,7 +30,7 @@ var ComponentRelationshipSync = &job.Job{
 
 		for _, component := range components {
 			hash := component.Selectors.Hash()
-			comps, err := duty.FindComponents(ctx.Context, component.Selectors, duty.PickColumns("id", "path"))
+			comps, err := query.FindComponents(ctx.Context, component.Selectors...)
 			if err != nil {
 				ctx.History.AddError(fmt.Sprintf("error getting components with selectors: %s. err: %v", component.Selectors, err))
 				continue

@@ -6,6 +6,7 @@ import (
 	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/query"
 	"github.com/flanksource/duty/tests/setup"
 	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -14,6 +15,12 @@ import (
 var (
 	DefaultContext dutyContext.Context
 )
+
+func cleanupQueryCache() {
+	Expect(query.FlushComponentCache(DefaultContext)).To(BeNil())
+	Expect(query.FlushConfigCache(DefaultContext)).To(BeNil())
+	query.FlushGettersCache()
+}
 
 func expectJobToPass(j *job.Job) {
 	history, err := j.FindHistory()
