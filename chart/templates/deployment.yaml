@@ -141,7 +141,6 @@ spec:
             - --{{$k}}={{$v}}
             {{- end }}
             {{- if .Values.upstream.enabled }}
-            - --agent-name={{ .Values.upstream.agentName }}
             {{- if .Values.upstream.host }}
             - --upstream-host={{ .Values.upstream.host }}
             {{- end}}
@@ -150,6 +149,9 @@ spec:
             {{- end}}
             {{- if .Values.upstream.password }}
             - --upstream-password={{ .Values.upstream.password }}
+            {{- end}}
+            {{- if .Values.upstream.agentName }}
+            - --agent-name={{ .Values.upstream.agentName }}
             {{- end}}
             {{- if .Values.upstream.insecureSkipVerify}}
             - --upstream-insecure-skip-verify=true
