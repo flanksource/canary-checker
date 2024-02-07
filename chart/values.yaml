@@ -85,7 +85,7 @@ upstream:
   user: ""
   password: ""
   insecureSkipVerify: false
-  # Alternative to inlining values, secret must contain: UPSTREAM_NAME, UPSTREAM_USER, UPSTREAM_PASSWORD & UPSTREAM_HOST
+  # Alternative to inlining values, secret must contain: AGENT_NAME, UPSTREAM_USER, UPSTREAM_PASSWORD & UPSTREAM_HOST
   secretKeyRef:
     name:
 

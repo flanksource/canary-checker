@@ -134,7 +134,7 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringVar(&canary.UpstreamConf.Host, "upstream-host", os.Getenv("UPSTREAM_HOST"), "central canary checker instance to push/pull canaries")
 	flags.StringVar(&canary.UpstreamConf.Username, "upstream-user", os.Getenv("UPSTREAM_USER"), "upstream username")
 	flags.StringVar(&canary.UpstreamConf.Password, "upstream-password", os.Getenv("UPSTREAM_PASSWORD"), "upstream password")
-	flags.StringVar(&canary.UpstreamConf.AgentName, "agent-name", os.Getenv("UPSTREAM_NAME"), "name of this agent")
+	flags.StringVar(&canary.UpstreamConf.AgentName, "agent-name", os.Getenv("AGENT_NAME"), "name of this agent")
 	flags.BoolVar(&canary.UpstreamConf.InsecureSkipVerify, "upstream-insecure-skip-verify", os.Getenv("UPSTREAM_INSECURE_SKIP_VERIFY") == "true", "Skip TLS verification on the upstream servers certificate")
 }
 

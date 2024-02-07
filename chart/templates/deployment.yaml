@@ -141,7 +141,6 @@ spec:
             - --{{$k}}={{$v}}
             {{- end }}
             {{- if .Values.upstream.enabled }}
-            - --agent-name={{ .Values.upstream.agentName }}
             {{- if .Values.upstream.host }}
             - --upstream-host={{ .Values.upstream.host }}
             {{- end}}
