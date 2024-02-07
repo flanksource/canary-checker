@@ -80,7 +80,7 @@ data:
 
 upstream:
   enabled: false
-  agentName: default-agent
+  agentName: ""
   host: ""
   user: ""
   password: ""
