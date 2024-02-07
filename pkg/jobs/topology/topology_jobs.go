@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sync"
 
+	canaryCtx "github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -20,7 +21,7 @@ var TopologyScheduler = cron.New()
 
 var topologyJobs sync.Map
 
-func newTopologyJob(ctx context.Context, topology pkg.Topology) {
+func newTopologyJob(topology pkg.Topology) {
 	id := topology.ID.String()
 	v1, err := topology.ToV1()
 	if err != nil {
@@ -36,7 +37,7 @@ func newTopologyJob(ctx context.Context, topology pkg.Topology) {
 	}
 	j := &job.Job{
 		Name:         "Topology",
-		Context:      ctx.WithObject(v1.ObjectMeta).WithTopology(*v1),
+		Context:      canaryCtx.DefaultContext.WithObject(v1.ObjectMeta).WithTopology(*v1),
 		Schedule:     v1.Spec.Schedule,
 		Singleton:    true,
 		JobHistory:   true,
@@ -97,7 +98,7 @@ func SyncTopologyJob(ctx context.Context, t pkg.Topology) error {
 	}
 
 	if existingJob == nil {
-		newTopologyJob(ctx, t)
+		newTopologyJob(t)
 		return nil
 	}
 
@@ -105,7 +106,7 @@ func SyncTopologyJob(ctx context.Context, t pkg.Topology) error {
 	if existingTopology != nil && !reflect.DeepEqual(existingTopology.(v1.Topology).Spec, v1Topology.Spec) {
 		ctx.Debugf("Rescheduling %s topology with updated specs", t)
 		existingJob.Unschedule()
-		newTopologyJob(ctx, t)
+		newTopologyJob(t)
 	}
 	return nil
 }
