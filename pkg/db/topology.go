@@ -77,7 +77,7 @@ func PersistComponent(ctx context.Context, component *pkg.Component) ([]uuid.UUI
 	var persisted []uuid.UUID
 	db := ctx.DB()
 
-	existing, err = component.FindExisting(db)
+	existing, err = component.FindExisting(ctx)
 	if err != nil {
 		return persisted, fmt.Errorf("error finding component: %v", err)
 	}

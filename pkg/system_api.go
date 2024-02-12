@@ -10,6 +10,7 @@ import (
 	"github.com/flanksource/commons/utils"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
+	dutyQuery "github.com/flanksource/duty/query"
 	dutyTypes "github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
@@ -162,8 +163,25 @@ type Component struct {
 	ParentLookup    *v1.ParentLookup            `json:"parentLookup,omitempty" gorm:"-"`
 }
 
-func (component *Component) FindExisting(db *gorm.DB) (*models.Component, error) {
+func (component *Component) FindExisting(ctx context.Context) (*models.Component, error) {
+	parentID := "nil"
+	if component.ParentId != nil {
+		parentID = component.ParentId.String()
+	}
+	rs := dutyTypes.ResourceSelector{
+		Name:          component.Name,
+		Types:         []string{component.Type},
+		FieldSelector: fmt.Sprintf("topology_id=%s,parent_id=%s", component.TopologyID, parentID),
+		Cache:         "max-age=60m",
+	}
+	if comps, err := dutyQuery.FindComponents(ctx, rs); err == nil && len(comps) > 0 {
+		logger.Infof("YASH ================== FROM CACHE")
+		comp := comps[0]
+		return &comp, nil
+	}
+
 	var existing models.Component
+	db := ctx.DB()
 	tx := db.Model(component).Select("id", "deleted_at").Where("agent_id = ?", uuid.Nil)
 	if component.ID == uuid.Nil {
 		if component.ParentId == nil {
