@@ -175,9 +175,7 @@ func (component *Component) FindExisting(ctx context.Context) (*models.Component
 		Cache:         "max-age=60m",
 	}
 	if comps, err := dutyQuery.FindComponents(ctx, rs); err == nil && len(comps) > 0 {
-		logger.Infof("YASH ================== FROM CACHE")
-		comp := comps[0]
-		return &comp, nil
+		return &comps[0], nil
 	}
 
 	var existing models.Component
