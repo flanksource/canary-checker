@@ -51,7 +51,7 @@ var DeleteOldCheckStatues = &job.Job{
 	Schedule:   "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
-		err, count := job.DeleteOldCheckStatuses(ctx.Context, ctx.Properties().Int("check.status.retention.days", 30))
+		count, err := job.DeleteOldCheckStatuses(ctx.Context, ctx.Properties().Int("check.status.retention.days", 30))
 		ctx.History.SuccessCount = count
 		return err
 	},
@@ -65,7 +65,7 @@ var DeleteOldCheckStatues1d = &job.Job{
 	Schedule:   "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
-		err, count := job.DeleteOldCheckStatuses1d(ctx.Context, ctx.Properties().Int("check.status.retention.days", 30)*9)
+		count, err := job.DeleteOldCheckStatuses1d(ctx.Context, ctx.Properties().Int("check.status.retention.days", 30)*9)
 		ctx.History.SuccessCount = count
 		return err
 	},
@@ -79,7 +79,7 @@ var DeleteOldCheckStatues1h = &job.Job{
 	Schedule:   "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
-		err, count := job.DeleteOldCheckStatuses1h(ctx.Context, ctx.Properties().Int("check.status.retention.days", 30)*3)
+		count, err := job.DeleteOldCheckStatuses1h(ctx.Context, ctx.Properties().Int("check.status.retention.days", 30)*3)
 		ctx.History.SuccessCount = count
 		return err
 	},
@@ -93,7 +93,7 @@ var AggregateCheckStatues1d = &job.Job{
 	Schedule:   "@every 1h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
-		err, count := job.AggregateCheckStatus1h(ctx.Context)
+		count, err := job.AggregateCheckStatus1h(ctx.Context)
 		ctx.History.SuccessCount = count
 		return err
 	},
@@ -107,7 +107,7 @@ var AggregateCheckStatues1h = &job.Job{
 	Schedule:   "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
-		err, count := job.AggregateCheckStatus1d(ctx.Context)
+		count, err := job.AggregateCheckStatus1d(ctx.Context)
 		ctx.History.SuccessCount = count
 		return err
 	},
