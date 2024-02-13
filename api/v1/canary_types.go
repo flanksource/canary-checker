@@ -26,6 +26,7 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/commons/logger"
 	"github.com/robfig/cron/v3"
+	"github.com/samber/lo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -210,6 +211,127 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	return checks
+}
+
+// KeepOnly removes all the checks from the spec that do not
+// match the given name (exactly)
+func (spec CanarySpec) KeepOnly(names ...string) CanarySpec {
+	spec.HTTP = lo.Filter(spec.HTTP, func(c HTTPCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.DNS = lo.Filter(spec.DNS, func(c DNSCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.DockerPull = lo.Filter(spec.DockerPull, func(c DockerPullCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.DockerPush = lo.Filter(spec.DockerPush, func(c DockerPushCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.ContainerdPull = lo.Filter(spec.ContainerdPull, func(c ContainerdPullCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.ContainerdPush = lo.Filter(spec.ContainerdPush, func(c ContainerdPushCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.S3 = lo.Filter(spec.S3, func(c S3Check, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.TCP = lo.Filter(spec.TCP, func(c TCPCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Pod = lo.Filter(spec.Pod, func(c PodCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.LDAP = lo.Filter(spec.LDAP, func(c LDAPCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.ICMP = lo.Filter(spec.ICMP, func(c ICMPCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Postgres = lo.Filter(spec.Postgres, func(c PostgresCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Mssql = lo.Filter(spec.Mssql, func(c MssqlCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Mysql = lo.Filter(spec.Mysql, func(c MysqlCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Restic = lo.Filter(spec.Restic, func(c ResticCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Jmeter = lo.Filter(spec.Jmeter, func(c JmeterCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Junit = lo.Filter(spec.Junit, func(c JunitCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Helm = lo.Filter(spec.Helm, func(c HelmCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Namespace = lo.Filter(spec.Namespace, func(c NamespaceCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Redis = lo.Filter(spec.Redis, func(c RedisCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.EC2 = lo.Filter(spec.EC2, func(c EC2Check, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Prometheus = lo.Filter(spec.Prometheus, func(c PrometheusCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.MongoDB = lo.Filter(spec.MongoDB, func(c MongoDBCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.CloudWatch = lo.Filter(spec.CloudWatch, func(c CloudWatchCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.GitHub = lo.Filter(spec.GitHub, func(c GitHubCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.GitProtocol = lo.Filter(spec.GitProtocol, func(c GitProtocolCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Kubernetes = lo.Filter(spec.Kubernetes, func(c KubernetesCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Folder = lo.Filter(spec.Folder, func(c FolderCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Exec = lo.Filter(spec.Exec, func(c ExecCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.AwsConfig = lo.Filter(spec.AwsConfig, func(c AwsConfigCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.AwsConfigRule = lo.Filter(spec.AwsConfigRule, func(c AwsConfigRuleCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.DatabaseBackup = lo.Filter(spec.DatabaseBackup, func(c DatabaseBackupCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.ConfigDB = lo.Filter(spec.ConfigDB, func(c ConfigDBCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Opensearch = lo.Filter(spec.Opensearch, func(c OpenSearchCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Elasticsearch = lo.Filter(spec.Elasticsearch, func(c ElasticsearchCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.AlertManager = lo.Filter(spec.AlertManager, func(c AlertManagerCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Dynatrace = lo.Filter(spec.Dynatrace, func(c DynatraceCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.AzureDevops = lo.Filter(spec.AzureDevops, func(c AzureDevopsCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+
+	return spec
 }
 
 func (spec CanarySpec) GetSchedule() string {

@@ -4,13 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
+	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	pkgTopology "github.com/flanksource/canary-checker/pkg/topology"
 	dutyContext "github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/models"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
@@ -20,59 +25,52 @@ type CheckErrorMessage struct {
 	Error       string `json:"error"`
 }
 
-// RunCanaryResponse represents the response body for a run now request
-type RunCanaryResponse struct {
-	Total   int                 `json:"total"`
-	Failed  int                 `json:"failed"`
-	Success int                 `json:"success"`
-	Errors  []CheckErrorMessage `json:"errors,omitempty"`
-}
-
-func (t *RunCanaryResponse) FromCheckResults(result []*pkg.CheckResult) {
-	t.Total = len(result)
-	for _, r := range result {
-		if r.Pass {
-			t.Success++
-			continue
-		}
-
-		t.Failed++
-		if r.Error != "" {
-			t.Errors = append(t.Errors, CheckErrorMessage{
-				Description: r.GetDescription(),
-				Error:       r.Error,
-			})
-		}
-	}
-}
-
 func RunCanaryHandler(c echo.Context) error {
-	id := c.Param("id")
-
+	checkID := c.Param("id")
 	duty := c.Request().Context().(dutyContext.Context)
 
-	canaryModel, err := db.FindCanaryByID(duty, id)
+	check, err := db.GetCheck(duty, checkID)
 	if err != nil {
+		return errorResponse(c, err, http.StatusInternalServerError)
+	} else if check == nil {
+		return errorResponse(c, fmt.Errorf("check (%s) was not found", checkID), http.StatusNotFound)
+	}
+
+	var canary *v1.Canary
+	if canaryModel, err := db.FindCanaryByID(duty, check.CanaryID.String()); err != nil {
+		return errorResponse(c, err, http.StatusInternalServerError)
+	} else if canaryModel == nil {
+		return errorResponse(c, fmt.Errorf("canary (%s) was not found", check.CanaryID), http.StatusNotFound)
+	} else if canary, err = canaryModel.ToV1(); err != nil {
 		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
-	if canaryModel == nil {
-		return errorResponse(c, fmt.Errorf("canary with id=%s was not found", id), http.StatusNotFound)
+	canary.Spec = canary.Spec.KeepOnly(check.Name)
+	canary.Status.Checks = map[string]string{
+		check.Name: check.ID.String(),
 	}
 
-	canary, err := canaryModel.ToV1()
 	ctx := context.New(duty, *canary)
+	results, err := checks.RunChecks(ctx)
 	if err != nil {
 		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
-	result, err := checks.RunChecks(ctx)
-	if err != nil {
+	for _, result := range results {
+		_ = cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
+		if err := canaryJobs.FormCheckRelationships(ctx.Context, result); err != nil {
+			ctx.Logger.Named(result.Name).Errorf("error forming check relationships: %v", err)
+		}
+	}
+
+	canaryJobs.UpdateCanaryStatusAndEvent(ctx.Context, *canary, results)
+	canaryJobs.CanaryLastRuntimes.Store(canary.GetUID(), time.Now())
+
+	var response models.CheckSummary
+	if err := ctx.DB().Where("id = ?", checkID).First(&response).Error; err != nil {
 		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
-	var response RunCanaryResponse
-	response.FromCheckResults(result)
 	return c.JSON(http.StatusOK, response)
 }
 
