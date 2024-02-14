@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -15,7 +14,6 @@ import (
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	pkgTopology "github.com/flanksource/canary-checker/pkg/topology"
 	dutyContext "github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/models"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
@@ -56,6 +54,10 @@ func RunCanaryHandler(c echo.Context) error {
 		return errorResponse(c, err, http.StatusInternalServerError)
 	}
 
+	if len(results) == 0 {
+		return nil
+	}
+
 	for _, result := range results {
 		_ = cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
 		if err := canaryJobs.FormCheckRelationships(ctx.Context, result); err != nil {
@@ -64,14 +66,7 @@ func RunCanaryHandler(c echo.Context) error {
 	}
 
 	canaryJobs.UpdateCanaryStatusAndEvent(ctx.Context, *canary, results)
-	canaryJobs.CanaryLastRuntimes.Store(canary.GetUID(), time.Now())
-
-	var response models.CheckSummary
-	if err := ctx.DB().Where("id = ?", checkID).First(&response).Error; err != nil {
-		return errorResponse(c, err, http.StatusInternalServerError)
-	}
-
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, results[0])
 }
 
 func RunTopologyHandler(c echo.Context) error {
