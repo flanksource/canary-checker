@@ -58,7 +58,7 @@ func New(ctx context.Context) *echo.Echo {
 		return c.String(http.StatusOK, "OK")
 	})
 
-	e.POST("/run/canary/:id", api.RunCanaryHandler)
+	e.POST("/run/check/:id", api.RunCanaryHandler)
 	e.POST("/run/topology/:id", api.RunTopologyHandler)
 	return e
 }

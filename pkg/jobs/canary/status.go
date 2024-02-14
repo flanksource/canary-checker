@@ -17,7 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func updateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results []*pkg.CheckResult) {
+func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results []*pkg.CheckResult) {
 	if CanaryStatusChannel == nil {
 		return
 	}

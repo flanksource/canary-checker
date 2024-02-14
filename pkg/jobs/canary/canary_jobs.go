@@ -34,7 +34,7 @@ var FuncScheduler = cron.New()
 
 var CanaryStatusChannel chan CanaryStatusPayload
 
-var canaryLastRuntimes = sync.Map{}
+var CanaryLastRuntimes = sync.Map{}
 
 func StartScanCanaryConfigs(ctx context.Context, dataFile string, configFiles []string) {
 	DataFile = dataFile
@@ -69,7 +69,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	lastRunDelta := MinimumTimeBetweenCanaryRuns
 	// Get last runtime from sync map
 	var lastRuntime time.Time
-	if lastRuntimeVal, exists := canaryLastRuntimes.Load(canaryID); exists {
+	if lastRuntimeVal, exists := CanaryLastRuntimes.Load(canaryID); exists {
 		lastRuntime = lastRuntimeVal.(time.Time)
 		lastRunDelta = time.Since(lastRuntime)
 	}
@@ -123,12 +123,12 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		}
 
 		// Establish relationship with components & configs
-		if err := formCheckRelationships(ctx.Context, result); err != nil {
+		if err := FormCheckRelationships(ctx.Context, result); err != nil {
 			ctx.Logger.Named(result.Name).Errorf("error forming check relationships: %v", err)
 		}
 	}
 
-	updateCanaryStatusAndEvent(ctx.Context, j.Canary, results)
+	UpdateCanaryStatusAndEvent(ctx.Context, j.Canary, results)
 
 	checkDeleteStrategyGroup := make(map[string][]string)
 	checkIDsToRemove := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
@@ -153,7 +153,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	}
 
 	// Update last runtime map
-	canaryLastRuntimes.Store(canaryID, time.Now())
+	CanaryLastRuntimes.Store(canaryID, time.Now())
 	ctx.History.SuccessCount = len(results)
 	return nil
 }

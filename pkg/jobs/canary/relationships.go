@@ -16,9 +16,9 @@ type RelatableCheck interface {
 	GetRelationship() *v1.CheckRelationship
 }
 
-// formCheckRelationships forms check relationships with components and configs
+// FormCheckRelationships forms check relationships with components and configs
 // based on the lookup expressions in the check spec.
-func formCheckRelationships(ctx context.Context, result *pkg.CheckResult) error {
+func FormCheckRelationships(ctx context.Context, result *pkg.CheckResult) error {
 	check := result.Check
 	if result.Transformed {
 		check = result.ParentCheck // because the parent check has the relationship spec.

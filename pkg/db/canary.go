@@ -270,14 +270,14 @@ func FindCanaryByID(ctx context.Context, id string) (*pkg.Canary, error) {
 }
 
 func GetCheck(ctx context.Context, id string) (*pkg.Check, error) {
-	var model *pkg.Check
-	if err := ctx.DB().Where("id = ?", id).First(model).Error; err != nil {
+	var model pkg.Check
+	if err := ctx.DB().Where("id = ?", id).First(&model).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return model, nil
+	return &model, nil
 }
 
 func FindCanary(ctx context.Context, namespace, name string) (*pkg.Canary, error) {
