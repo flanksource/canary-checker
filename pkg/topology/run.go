@@ -110,7 +110,7 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 	for _, _selector := range spec.ForEach.Selectors {
 		selector := _selector
 		if err := ctx.TemplateStruct(&selector); err != nil {
-			ctx.JobHistory.AddError(fmt.Sprintf("Failed to lookup selectors %s: %v", selector, err))
+			ctx.JobHistory.AddError(fmt.Sprintf("Failed to lookup selectors %v: %v", selector, err))
 		} else {
 			component.Selectors = append(component.Selectors, selector)
 		}
