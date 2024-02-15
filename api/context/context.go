@@ -174,7 +174,9 @@ func New(ctx dutyCtx.Context, canary v1.Canary) *Context {
 		canary.Namespace = "default"
 	}
 
-	ctx = ctx.WithObject(canary.ObjectMeta).WithName(fmt.Sprintf("Canary[%s/%s]", canary.Namespace, canary.Name))
+	ctx = ctx.WithObject(canary.ObjectMeta).
+		WithName(fmt.Sprintf("Canary[%s/%s]", canary.Namespace, canary.Name)).
+		WithDB(ctx.DB(), ctx.Pool())
 	c := &Context{
 		Context:     ctx,
 		Namespace:   canary.Namespace,

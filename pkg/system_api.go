@@ -169,10 +169,11 @@ func (component *Component) FindExisting(ctx context.Context) (*models.Component
 		parentID = component.ParentId.String()
 	}
 	rs := dutyTypes.ResourceSelector{
-		Name:          component.Name,
-		Types:         []string{component.Type},
-		FieldSelector: fmt.Sprintf("topology_id=%s,parent_id=%s", component.TopologyID, parentID),
-		Cache:         "max-age=60m",
+		Name:           component.Name,
+		Types:          []string{component.Type},
+		FieldSelector:  fmt.Sprintf("topology_id=%s,parent_id=%s", component.TopologyID, parentID),
+		Cache:          "max-age=60m",
+		IncludeDeleted: true,
 	}
 	if comps, err := dutyQuery.FindComponents(ctx, rs); err == nil && len(comps) > 0 {
 		return &comps[0], nil

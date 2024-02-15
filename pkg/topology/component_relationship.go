@@ -32,7 +32,7 @@ var ComponentRelationshipSync = &job.Job{
 			hash := component.Selectors.Hash()
 			comps, err := query.FindComponents(ctx.Context, component.Selectors...)
 			if err != nil {
-				ctx.History.AddError(fmt.Sprintf("error getting components with selectors: %s. err: %v", component.Selectors, err))
+				ctx.History.AddError(fmt.Sprintf("error getting components with selectors: %v. err: %v", component.Selectors, err))
 				continue
 			}
 			relationships := []models.ComponentRelationship{}
