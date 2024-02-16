@@ -43,6 +43,7 @@ func NewTopologyParams(values url.Values) dutyQuery.TopologyOptions {
 		Flatten:   values.Get("flatten") == "true",
 		SortBy:    dutyQuery.TopologyQuerySortBy(values.Get("sortBy")),
 		SortOrder: values.Get("sortOrder"),
+		NoCache:   values.Has("noCache") || values.Has("no-cache"),
 	}
 }
 
