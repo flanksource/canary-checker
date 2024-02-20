@@ -74,7 +74,15 @@ spec:
               {{- if eq .Values.db.external.enabled true }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.db.external.secretKeyRef.name }}
+                  name: {{- if .Values.db.connectionPooler.enabled -}}
+                          {{- if and .Values.db.connectionPooler.secretKeyRef (ne .Values.db.connectionPooler.secretKeyRef "") -}}
+                            {{- .Values.db.connectionPooler.secretKeyRef.name -}}
+                          {{- else -}}
+                            mission-control-connection-pooler
+                          {{- end -}}
+                        {{- else -}}
+                          {{- .Values.db.external.secretKeyRef.name -}}
+                        {{- end }}
                   key: {{ .Values.db.external.secretKeyRef.key }}
               {{- else }}
               value: "embedded:///opt/database/"
