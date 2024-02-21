@@ -50,7 +50,7 @@ db:
     storage: 20Gi
   external:
     # Setting enabled to true will use a external postgres DB, disabling the embedded DB
-    enabled: false
+    enabled: true
     # Setting create to true will create a postgres stateful set for config-db to connect to.
     # If create=true, the secretKeyRef will be created by helm with the specified name and key
     #   Optionally populate a secret named 'postgres-connection' before install with POSTGRES_USER and POSTGRES_PASSWORD to set the created username and password, otherwise a random password will be created for a 'postgres' user
