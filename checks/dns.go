@@ -202,7 +202,8 @@ func getDialer(check v1.DNSCheck, timeout int) (func(ctx context.Context, networ
 }
 
 func checkResult(got []string, check v1.DNSCheck) (result bool, message string) {
-	expected := check.ExactReply
+	expected := make([]string, len(check.ExactReply))
+	copy(expected, check.ExactReply)
 	count := len(got)
 	var pass = true
 	var errMessage string

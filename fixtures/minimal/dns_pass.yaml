@@ -2,7 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: dns-pass
-  namespace: default
 spec:
   schedule: "@every 1m"
   dns:
@@ -15,13 +14,13 @@ spec:
       exactreply: ["1.2.3.4"]
       timeout: 100
       thresholdMillis: 1000
-    - server: 8.8.8.8
+    - server: 1.1.1.1
       port: 53
       name: ptr query
-      query: "8.8.8.8"
+      query: "1.1.1.1"
       querytype: "PTR"
       minrecords: 1
-      exactreply: ["dns.google."]
+      exactreply: ["one.one.one.one."]
       timeout: 100
       thresholdMillis: 100
     - server: 8.8.8.8

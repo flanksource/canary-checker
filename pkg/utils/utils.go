@@ -1,15 +1,50 @@
 package utils
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net"
+	"path/filepath"
+	"sync"
 	"time"
 
+	"github.com/flanksource/commons/logger"
+
 	"github.com/google/uuid"
+	"golang.org/x/sync/semaphore"
 	"k8s.io/apimachinery/pkg/util/duration"
 )
+
+type NamedLock struct {
+	locks sync.Map
+}
+
+type Unlocker interface {
+	Release()
+}
+
+type unlocker struct {
+	lock *semaphore.Weighted
+}
+
+func (u *unlocker) Release() {
+	u.lock.Release(1)
+}
+
+func (n *NamedLock) TryLock(name string, timeout time.Duration) Unlocker {
+	o, _ := n.locks.LoadOrStore(name, semaphore.NewWeighted(1))
+	lock := o.(*semaphore.Weighted)
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeout))
+	defer cancel()
+	if err := lock.Acquire(ctx, 1); err != nil {
+		return nil
+	}
+	return &unlocker{lock}
+}
 
 func Age(d time.Duration) string {
 	if d.Milliseconds() == 0 {
@@ -65,4 +100,57 @@ func UUIDsToStrings(in []uuid.UUID) []string {
 	}
 
 	return out
+}
+
+func Ptr[T any](t T) *T {
+	return &t
+}
+
+func Deref[T any](v *T, zeroVal ...T) T {
+	if v == nil {
+		if len(zeroVal) > 0 {
+			return zeroVal[0]
+		}
+		var zero T
+		return zero
+	}
+
+	return *v
+}
+
+func MapKeys[T any](m map[string]T) []string {
+	var keys []string
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func UnfoldGlobs(paths ...string) []string {
+	unfoldedPaths := make([]string, 0, len(paths))
+	for _, path := range paths {
+		matched, err := filepath.Glob(path)
+		if err != nil {
+			logger.Warnf("invalid glob pattern. path=%s; %w", path, err)
+			continue
+		}
+
+		unfoldedPaths = append(unfoldedPaths, matched...)
+	}
+
+	return unfoldedPaths
+}
+
+func FreePort() int {
+	// Bind to port 0 to let the OS choose a free port
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer listener.Close()
+
+	// Get the address of the listener
+	address := listener.Addr().(*net.TCPAddr)
+	return address.Port
 }

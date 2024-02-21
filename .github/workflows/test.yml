@@ -7,43 +7,74 @@ on:
   pull_request:
   merge_group:
 name: Test
+permissions:
+  contents: read
 jobs:
+  # build:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Install Go
+  #       uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+  #       with:
+  #         go-version: 1.20.x
+  #     - name: Checkout code
+  #       uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+  #     - uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+  #       with:
+  #         path: |
+  #           ~/go/pkg/mod
+  #           ~/.cache/go-build
+  #           .bin
+  #         key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
+  #         restore-keys: |
+  #           cache-
+  #     - run: make  build
+  #     - run: cd test && make build
+  #     - run: make compress-build
+  #     - uses: actions/upload-artifact@v3
+  #       with:
+  #         name: bin
+  #         path: |
+  #           .bin/canary-checker
+  #           .bin/canary-checker.test
   test:
     strategy:
       fail-fast: false
       matrix:
         suite:
-          - minimal --skip-all
-          - k8s
-          - datasources
-          - git
+          - { name: minimal --skip-all, on: ubuntu-latest }
+          - { name: k8s, on: ubuntu-latest }
+          - { name: datasources, on: ubuntu-latest }
+          - { name: opensearch, on: ubuntu-latest }
+          # - { name: elasticsearch, on: ubuntu-latest }
+          - { name: git, on: ubuntu-latest }
           # - restic
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.suite.on }}
     steps:
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: 1.19.x
+          go-version: 1.20.x
       - name: Checkout code
-        uses: actions/checkout@v3
-      - uses: actions/cache@v2
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
         with:
           path: |
             ~/go/pkg/mod
             ~/.cache/go-build
-            .bin
-          key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
+          key: cache-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             cache-
+      - run: go install github.com/onsi/ginkgo/v2/ginkgo
       - run: make bin
       - name: Test
         env:
           KUBERNETES_VERSION: v1.20.7
           GH_TOKEN: ${{ secrets.CHECKRUNS_TOKEN }}
-        run: ./test/e2e.sh fixtures/${{matrix.suite}}
+        run: ./test/e2e.sh fixtures/${{matrix.suite.name}}
       - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
+        uses: EnricoMi/publish-unit-test-result-action@4e7013f9576bd22ffdae979dc6e68cb9ec2aeece # v2.7.0
         if: always() &&  github.event.repository.fork == 'false'
         with:
           files: test/test-results.xml
-          check_name: E2E - ${{matrix.suite}}
+          check_name: E2E - ${{matrix.suite.name}}

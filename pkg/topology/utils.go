@@ -1,5 +1,7 @@
 package topology
 
+import "strings"
+
 func isComponent(s map[string]interface{}) bool {
 	_, name := s["name"]
 	_, properties := s["properties"]
@@ -32,4 +34,8 @@ func isComponentList(data []byte) bool {
 		return false
 	}
 	return isComponent(s[0])
+}
+
+func genParentKey(name, _type, namespace string) string {
+	return strings.Join([]string{name, _type, namespace}, "/")
 }

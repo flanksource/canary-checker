@@ -1,4 +1,5 @@
 .bin/
+.creds/
 .release/
 bin/
 .idea/
@@ -19,3 +20,12 @@ postgres-db/
 ui/scripts/
 Chart.lock
 chart/charts/
+.downloads
+tmp/
+ginkgo.report
+__debug*
+test-results.xml
+coverprofile.out
+junit-report.xml
+canary-checker.properties
+*.code-workspace

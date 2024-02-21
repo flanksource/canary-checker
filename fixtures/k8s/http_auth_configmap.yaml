@@ -2,18 +2,18 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: http-basic-auth-configmap
+  namespace: canaries
 spec:
   http:
     - endpoint: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
       responseCodes: [200]
-      authentication:
-        username:
-          valueFrom:
-            configMapKeyRef:
-              name: basic-auth
-              key: user
-        password:
-          valueFrom:
-            configMapKeyRef:
-              name: basic-auth
-              key: pass
+      username:
+        valueFrom:
+          configMapKeyRef:
+            name: basic-auth
+            key: user
+      password:
+        valueFrom:
+          configMapKeyRef:
+            name: basic-auth
+            key: pass

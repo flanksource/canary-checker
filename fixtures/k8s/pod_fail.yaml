@@ -17,12 +17,10 @@ spec:
             app: hello-world-fail
         spec:
           containers:
-            - name: hello
-              image: quay.io/toni0/hello-webserver-golang:2.2
-      port: 8080
-      path: /foo/bar
-      ingressName: hello-world-golang
-      ingressHost: "hello-world-golang.127.0.0.1.nip.io"
+            - name: httpbin
+              image: kennethreitz/httpbin
+      port: 80
+      path: /status/500
       scheduleTimeout: 2000
       readyTimeout: 5000
       httpTimeout: 2000
@@ -30,5 +28,5 @@ spec:
       ingressTimeout: 5000
       deadline: 100000
       httpRetryInterval: 1500
-      expectedContent: bar
+      expectedContent: ''
       expectedHttpStatuses: [200, 201, 202]

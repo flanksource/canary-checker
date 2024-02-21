@@ -1,0 +1,35 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: kubernetes-bundle
+spec:
+  interval: 60
+  kubernetes:
+    - kind: Node
+      ready: true
+      name: node-bundle
+      transform:
+        expr: |
+          dyn(results).map(r, {
+            'name': r.Object.metadata.name,
+            'namespace': r.Object.metadata.?namespace.orValue(null),
+            'labels': r.Object.metadata.labels,
+            'pass': k8s.isHealthy(r.Object),
+            'message': k8s.getHealth(r.Object).message,
+            'error': k8s.getHealth(r.Object).message,
+          }).toJSON()
+    - kind: Pod
+      ready: true
+      name: pod-bundle
+      resource:
+        labelSelector: app != k8s-not-ready, app != k8s-ready, Expected-Fail != true, canary-checker.flanksource.com/generated != true, !canary-checker.flanksource.com/check
+      transform:
+        expr: |
+          dyn(results).map(r, {
+            'name': r.Object.metadata.name,
+            'namespace': r.Object.metadata.namespace,
+            'labels': r.Object.metadata.labels,
+            'pass': k8s.isHealthy(r.Object),
+            'message': k8s.getHealth(r.Object).message,
+            'error': k8s.getHealth(r.Object).message,
+          }).toJSON()

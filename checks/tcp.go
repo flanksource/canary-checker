@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/duty"
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -38,12 +36,6 @@ func (t *TCPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	result := pkg.Success(c, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-
-	if connection, err := duty.FindConnectionByURL(ctx, db.Gorm, c.Endpoint); err != nil {
-		return results.Failf("failed to find TCP endpoint from connection %q: %v", c.Endpoint, err)
-	} else if connection != nil {
-		c.Endpoint = connection.URL
-	}
 
 	addr, port, err := extractAddrAndPort(c.Endpoint)
 	if err != nil {

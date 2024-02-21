@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/allegro/bigcache"
-	"github.com/eko/gocache/marshaler"
-	"github.com/eko/gocache/store"
+	"github.com/eko/gocache/lib/v4/marshaler"
+	bcstore "github.com/eko/gocache/store/bigcache/v4"
 	"github.com/flanksource/commons/logger"
 	"github.com/pkg/errors"
 )
@@ -22,7 +22,7 @@ var cache *Cache
 
 func NewCache() (*Cache, error) {
 	bigcacheClient, _ := bigcache.NewBigCache(bigcache.DefaultConfig(60 * time.Minute))
-	bigcacheStore := store.NewBigcache(bigcacheClient, nil) // No options provided (as second argument)
+	bigcacheStore := bcstore.NewBigcache(bigcacheClient)
 	return &Cache{marshaler.New(bigcacheStore)}, nil
 }
 

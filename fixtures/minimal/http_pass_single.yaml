@@ -8,10 +8,33 @@ spec:
   interval: 30
   http:
     - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
-      name: sample-check
-      thresholdMillis: 3000
+      name: http-deprecated-endpoint
+    - name: http-minimal-check
+      url: https://httpbin.demo.aws.flanksource.com/status/200
+      metrics:
+        - name: httpbin_2xx_count
+          type: counter
+          value: "code == 200 ? 1 : 0"
+          labels:
+            - name: name
+              value: httpbin_2xx_count
+            - name: check_name
+              valueExpr: check.name
+            - name: status_class
+              valueExpr: string(code).charAt(0)
+    - name: http-param-tests
+      url: https://httpbin.demo.aws.flanksource.com/status/200
       responseCodes: [201, 200, 301]
       responseContent: ""
       maxSSLExpiry: 7
+    - name: http-expr-tests
+      url: https://httpbin.demo.aws.flanksource.com/status/200
       test:
-        expr: "code == 200"
+        expr: "code in [200,201,301] && sslAge > Duration('7d')"
+      display:
+        template: "code={{.code}}, age={{.sslAge}}"
+
+    - name: http-headers
+      url: https://httpbin.demo.aws.flanksource.com/headers
+      test:
+        expr: json.headers["User-Agent"].startsWith("canary-checker/")

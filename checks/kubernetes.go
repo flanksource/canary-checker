@@ -7,7 +7,7 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/kommons"
+	"github.com/flanksource/is-healthy/pkg/health"
 	"github.com/gobwas/glob"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -37,10 +37,10 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	if ctx.Kommons == nil {
+	if ctx.Kommons() == nil {
 		return results.Failf("Kubernetes is not initialized")
 	}
-	client, err := ctx.Kommons.GetClientByKind(check.Kind)
+	client, err := ctx.Kommons().GetClientByKind(check.Kind)
 	if err != nil {
 		return results.Failf("Failed to get client for kind %s: %v", check.Kind, err)
 	}
@@ -49,8 +49,6 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 		return results.Failf("Failed to get namespaces: %v", err)
 	}
 	var allResources []unstructured.Unstructured
-
-	message := ""
 
 	for _, namespace := range namespaces {
 		resources, err := getResourcesFromNamespace(ctx, client, check, namespace)
@@ -64,16 +62,15 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 				return results
 			}
 		}
-		ctx.Tracef("Found %d resources in namespace %s with label=%s field=%s", len(resources), namespace, check.Resource.LabelSelector, check.Resource.FieldSelector)
-		if check.CheckReady() {
-			for _, resource := range resources {
-				ready, msg := ctx.Kommons.IsReady(&resource)
-				if !ready {
-					if message != "" {
-						message += ", "
-					}
-					message += fmt.Sprintf("%s is not ready: %v", kommons.GetName(resource), msg)
-				}
+		ctx.Tracef("Found  %d %s in namespace %s with label=%s field=%s", len(resources), check.Kind, namespace, check.Resource.LabelSelector, check.Resource.FieldSelector)
+		for _, resource := range resources {
+			_resource := resource
+			resourceHealth, err := health.GetResourceHealth(&_resource, nil)
+			if err == nil {
+				resource.Object["healthStatus"] = resourceHealth
+			}
+			if check.Ready != nil && *check.Ready && resourceHealth.Status != health.HealthStatusHealthy {
+				results.Failf("%s/%s/%s is %s: %s", resource.GetKind(), resource.GetNamespace(), resource.GetName(), resourceHealth.Status, resourceHealth.Message)
 			}
 		}
 		allResources = append(allResources, resources...)
@@ -82,9 +79,6 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 		return results.Failf("no resources found")
 	}
 	result.AddDetails(allResources)
-	if message != "" {
-		return results.Failf(message)
-	}
 	return results
 }
 
@@ -117,14 +111,14 @@ func getNamespaces(ctx *context.Context, check v1.KubernetesCheck) ([]string, er
 	if check.Namespace.FieldSelector == "" && check.Namespace.LabelSelector == "" {
 		return []string{""}, nil
 	}
-	namespeceList, err := ctx.Kubernetes.CoreV1().Namespaces().List(ctx, metav1.ListOptions{
+	namespaceList, err := ctx.Kubernetes().CoreV1().Namespaces().List(ctx, metav1.ListOptions{
 		LabelSelector: check.Namespace.LabelSelector,
 		FieldSelector: check.Namespace.FieldSelector,
 	})
 	if err != nil {
 		return nil, err
 	}
-	for _, namespace := range namespeceList.Items {
+	for _, namespace := range namespaceList.Items {
 		namespaces = append(namespaces, namespace.Name)
 	}
 	return namespaces, nil

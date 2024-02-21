@@ -55,10 +55,6 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 		return results.Failf("unable to write test plan file")
 	}
 
-	if _, err := check.HydrateConnection(ctx); err != nil {
-		return results.Failf("unable to populate JMeter connection: %v", err)
-	}
-
 	var host string
 	var port string
 	if check.Host != "" {

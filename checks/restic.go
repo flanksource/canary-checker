@@ -75,7 +75,7 @@ func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	}
 
 	if check.AWSConnectionName != "" {
-		connection, err := ctx.HydrateConnectionByURL(check.ConnectionName)
+		connection, err := ctx.HydrateConnectionByURL(check.AWSConnectionName)
 		if err != nil {
 			return results.Failf("error getting aws connection: %v", err)
 		}

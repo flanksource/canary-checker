@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/flanksource/canary-checker/pkg/topology"
+	"github.com/flanksource/duty/context"
 	"github.com/labstack/echo/v4"
 )
 
@@ -23,10 +24,11 @@ import (
 // @Success      200  {object}  pkg.Components
 // @Router /api/topology [get]
 func Topology(c echo.Context) error {
+	ctx := c.Request().Context().(context.Context)
 	params := topology.NewTopologyParams(c.QueryParams())
-	results, err := topology.Query(params)
+	results, err := topology.Query(ctx, params)
 	if err != nil {
-		return errorResonse(c, err, http.StatusBadRequest)
+		return errorResponse(c, err, http.StatusBadRequest)
 	}
 
 	return c.JSON(http.StatusOK, results)

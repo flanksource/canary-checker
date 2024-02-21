@@ -7,11 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	awsUtil "github.com/flanksource/artifacts/clients/aws"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	awsUtil "github.com/flanksource/canary-checker/pkg/clients/aws"
 )
 
 type CloudWatchChecker struct {
@@ -38,27 +38,31 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 	var results pkg.Results
 	results = append(results, result)
 
-	if err := check.AWSConnection.Populate(ctx, ctx.Kubernetes, ctx.Namespace); err != nil {
+	if err := check.AWSConnection.Populate(ctx); err != nil {
 		return results.Failf("failed to populate aws connection: %v", err)
 	}
 
-	cfg, err := awsUtil.NewSession(ctx, check.AWSConnection)
+	cfg, err := awsUtil.NewSession(ctx.Context, check.AWSConnection)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
 	client := cloudwatch.NewFromConfig(*cfg)
 	maxRecords := int32(100)
 	alarms, err := client.DescribeAlarms(ctx, &cloudwatch.DescribeAlarmsInput{
-		AlarmNames:      check.Filter.Alarms,
-		AlarmNamePrefix: check.Filter.AlarmPrefix,
-		ActionPrefix:    check.Filter.ActionPrefix,
-		StateValue:      types.StateValue(check.Filter.State),
+		AlarmNames:      check.CloudWatchFilter.Alarms,
+		AlarmNamePrefix: check.CloudWatchFilter.AlarmPrefix,
+		ActionPrefix:    check.CloudWatchFilter.ActionPrefix,
+		StateValue:      types.StateValue(check.CloudWatchFilter.State),
 		MaxRecords:      &maxRecords,
 	})
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
-	result.AddDetails(alarms)
+	if o, err := unstructure(alarms); err != nil {
+		return results.ErrorMessage(err)
+	} else {
+		result.AddDetails(o)
+	}
 	firing := []string{}
 	for _, alarm := range alarms.MetricAlarms {
 		if alarm.StateValue == types.StateValueAlarm {

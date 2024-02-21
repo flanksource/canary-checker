@@ -13,7 +13,7 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
-dockerSocket: true
+dockerSocket: false
 containerdSocket: false
 
 # Set to true if you want to disable the postgrest service
@@ -21,10 +21,19 @@ disablePostgrest: false
 
 # Set to true to enable prometheus service monitor
 serviceMonitor: false
+grafanaDashboards: false
 
 # Turn on pprof /debug endpoint
 debug: false
 logLevel: "-v"
+
+# restrict canary-checker to monitor single namespace for canaries.  Leave blank to monitor all namespaces
+canaryNamespace: ""
+
+otel:
+  # OpenTelemetry gRPC collector endpoint in host:port format
+  collector: ""
+  serviceName: canary-checker
 
 db:
   runMigrations: true
@@ -37,7 +46,7 @@ db:
     # If the database is embedded, setting this to true will persist the contents of the database
     # through a persistent volume
     persist: false
-    storageClass:
+    storageClass: ""
     storage: 20Gi
   external:
     # Setting enabled to true will use a external postgres DB, disabling the embedded DB
@@ -55,12 +64,35 @@ db:
       # this is the key it will look for in the secret(if secretRefKey is
       # mentioned). The name of the key is mandatory to set.
       key: DB_URL
-    storageClass:
+    storageClass: ""
     storage: 20Gi
 
 nameOverride: ""
 
-allowPrivilegeEscalation: true
+# set the mechanism for pings - either privileged, privileged or none
+pingMode: "unprivileged"
+allowPrivilegeEscalation: false
+
+# Prometheus URL
+prometheusURL: ""
+
+data:
+  defaultSearchWindow: 1h
+  cacheTimeoutDays: 90
+  checkStatusRetentionDays: 180
+  checkRetentionDays: 7
+  canaryRetentionDays: 7
+
+upstream:
+  enabled: false
+  agentName: ""
+  host: ""
+  user: ""
+  password: ""
+  insecureSkipVerify: false
+  # Alternative to inlining values, secret must contain: AGENT_NAME, UPSTREAM_USER, UPSTREAM_PASSWORD & UPSTREAM_HOST
+  secretKeyRef:
+    name:
 
 ingress:
   enabled: false
@@ -80,7 +112,13 @@ flanksource-ui:
   nameOverride: "canary-checker-ui"
   fullnameOverride: "canary-checker-ui"
   oryKratosURL: ""
-  # Mandatory.  Set to the name of the service installed by the chart (RFC1035 formatted $RELEASE_NAME)
+  resources:
+    requests:
+      cpu: 10m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 512Mi
   backendURL: "http://canary-checker:8080"
   ingress:
     enabled: true
@@ -99,8 +137,21 @@ resources:
     cpu: 200m
     memory: 200Mi
   limits:
-    memory: 1512Mi
+    memory: 2Gi
 
+serviceAccount:
+  {}
+  # Configures extra annotations on the service account
+  # annotations:
+  #   some: annotation
+
+disableChecks: {}
+
+# a list of properties to update on startup
+properties: {}
+
+# a map of extra arguments to the canary-checker cli
+extraArgs: {}
 extra:
   # nodeSelector:
   #   key: value

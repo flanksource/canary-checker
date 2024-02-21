@@ -3,52 +3,6 @@
   "$id": "https://github.com/flanksource/canary-checker/api/v1/folder-check",
   "$ref": "#/$defs/FolderCheck",
   "$defs": {
-    "AWSConnection": {
-      "properties": {
-        "connection": {
-          "type": "string"
-        },
-        "accessKey": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "secretKey": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "region": {
-          "type": "string"
-        },
-        "endpoint": {
-          "type": "string"
-        },
-        "skipTLSVerify": {
-          "type": "boolean"
-        },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
-    "Authentication": {
-      "properties": {
-        "username": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "password": {
-          "$ref": "#/$defs/EnvVar"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "username",
-        "password"
-      ]
-    },
     "ConfigMapKeySelector": {
       "properties": {
         "name": {
@@ -81,6 +35,12 @@
     },
     "EnvVarSource": {
       "properties": {
+        "serviceAccount": {
+          "type": "string"
+        },
+        "helmRef": {
+          "$ref": "#/$defs/HelmRefKeySelector"
+        },
         "configMapKeyRef": {
           "$ref": "#/$defs/ConfigMapKeySelector"
         },
@@ -99,11 +59,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -116,6 +88,9 @@
         },
         "path": {
           "type": "string"
+        },
+        "recursive": {
+          "type": "boolean"
         },
         "filter": {
           "$ref": "#/$defs/FolderFilter"
@@ -145,10 +120,10 @@
           "type": "string"
         },
         "awsConnection": {
-          "$ref": "#/$defs/AWSConnection"
+          "$ref": "#/$defs/S3Connection"
         },
         "gcpConnection": {
-          "$ref": "#/$defs/GCPConnection"
+          "$ref": "#/$defs/GCSConnection"
         },
         "smbConnection": {
           "$ref": "#/$defs/SMBConnection"
@@ -172,6 +147,9 @@
         "maxAge": {
           "type": "string"
         },
+        "since": {
+          "type": "string"
+        },
         "minSize": {
           "type": "string"
         },
@@ -185,7 +163,7 @@
       "additionalProperties": false,
       "type": "object"
     },
-    "GCPConnection": {
+    "GCSConnection": {
       "properties": {
         "connection": {
           "type": "string"
@@ -195,10 +173,28 @@
         },
         "credentials": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "bucket": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
       "type": "object"
+    },
+    "HelmRefKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
     },
     "Labels": {
       "patternProperties": {
@@ -206,6 +202,84 @@
           "type": "string"
         }
       },
+      "type": "object"
+    },
+    "MetricLabel": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "valueExpr": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "MetricLabels": {
+      "items": {
+        "$ref": "#/$defs/MetricLabel"
+      },
+      "type": "array"
+    },
+    "Metrics": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/MetricLabels"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "S3Connection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "bucket": {
+          "type": "string"
+        },
+        "objectPath": {
+          "type": "string"
+        },
+        "usePathStyle": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
       "type": "object"
     },
     "SFTPConnection": {
@@ -219,15 +293,17 @@
         "host": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "host",
-        "auth"
+        "host"
       ]
     },
     "SMBConnection": {
@@ -238,27 +314,18 @@
         "port": {
           "type": "integer"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "domain": {
-          "type": "string"
-        },
-        "workstation": {
-          "type": "string"
-        },
-        "sharename": {
-          "type": "string"
-        },
-        "searchPath": {
           "type": "string"
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "auth"
-      ]
+      "type": "object"
     },
     "SecretKeySelector": {
       "properties": {

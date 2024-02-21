@@ -2,30 +2,39 @@
 
 set -e
 
-# Install askgit
-curl -L https://github.com/flanksource/askgit/releases/download/v0.4.8-flanksource/askgit-linux-amd64.tar.gz -o askgit.tar.gz
-tar xf askgit.tar.gz
-sudo mv askgit /usr/bin/askgit
-sudo chmod +x /usr/bin/askgit
-rm askgit.tar.gz
+if ! which mergestat  > /dev/null; then
+    if $(uname -a | grep -q Darwin); then
+    curl -L https://github.com/flanksource/askgit/releases/download/v0.61.0-flanksource.1/mergestat-macos-amd64.tar.gz  -o mergestat.tar.gz
+    sudo tar xf mergestat.tar.gz -C /usr/local/bin/
 
-wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.18_amd64.deb
-sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.18_amd64.deb
-
-#verification
-which askgit
-if ! askgit --help > /dev/null; then
-    printf "`askgit --help` failed. Check the binary?"
-    exit 1;
+    else
+    curl -L https://github.com/flanksource/askgit/releases/download/v0.61.0-flanksource.1/mergestat-linux-amd64.tar.gz -o mergestat.tar.gz
+    sudo tar xf mergestat.tar.gz -C  /usr/local/bin/
+    fi
 fi
+
+
+kubectl create namespace canaries || true
 
 # creating a GITHUB_TOKEN Secret
 if [[ -z "${GH_TOKEN}" ]]; then
     printf "\nEnvironment variable for github token (GH_TOKEN) is missing!!!\n"
-    exit 1;
 else
     printf "\nCreating secret from github token ending with '${GH_TOKEN:(-8)}'\n"
+    kubectl create secret generic github-token --from-literal=GITHUB_TOKEN="${GH_TOKEN}" --namespace canaries
 fi
 
-kubectl create secret generic github-token --from-literal=GITHUB_TOKEN="${GH_TOKEN}" --namespace default
-kubectl get secret github-token -o yaml --namespace default
+helm repo add gitea-charts https://dl.gitea.io/charts
+helm repo update
+helm install gitea gitea-charts/gitea  -f fixtures/git/gitea.values --create-namespace --namespace gitea --wait
+
+kubectl port-forward  svc/gitea-http -n gitea 3001:3000 &
+PID=$!
+
+sleep 5
+
+curl -vvv  -u gitea_admin:admin   -H "Content-Type: application/json"  http://localhost:3001/api/v1/user/repos  -d '{"name":"test_repo","auto_init":true}'
+
+kill $PID
+
+kubectl create secret generic gitea --from-literal=username=gitea_admin --from-literal=password=admin --from-literal=url=http://gitea-http.gitea.svc:3000/gitea_admin/test_repo.git --namespace canaries

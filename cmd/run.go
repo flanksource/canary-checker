@@ -1,48 +1,38 @@
 package cmd
 
 import (
-	"fmt"
+	"encoding/json"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/flanksource/commons/timer"
 
 	"github.com/flanksource/canary-checker/cmd/output"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/spf13/cobra"
 
-	"github.com/flanksource/canary-checker/api/context"
+	apicontext "github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/logger"
 )
 
 var outputFile, dataFile, runNamespace string
-var junit, csv bool
+var junit, csv, jsonExport bool
 
 var Run = &cobra.Command{
 	Use:   "run <canary.yaml>",
 	Short: "Execute checks and return",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		logger.ParseFlags(cmd.Flags())
-		db.ConnectionString = readFromEnv(db.ConnectionString)
-		if err := db.Init(); err != nil {
-			logger.Fatalf("error connecting with postgres %v", err)
-		}
-	},
 	Run: func(cmd *cobra.Command, configFiles []string) {
 		timer := timer.NewTimer()
 		if len(configFiles) == 0 {
 			log.Fatalln("Must specify at least one canary")
 		}
-		kommonsClient, k8s, err := pkg.NewKommonsClient()
-		if err != nil {
-			logger.Warnf("Failed to get kubernetes client: %v", err)
-		}
+
+		apicontext.DefaultContext, _ = InitContext()
+
 		var results = []*pkg.CheckResult{}
 
 		wg := sync.WaitGroup{}
@@ -62,11 +52,19 @@ var Run = &cobra.Command{
 				if config.Name == "" {
 					config.Name = CleanupFilename(configfile)
 				}
+				log := logger.StandardLogger().Named(config.Name)
 				wg.Add(1)
 				_config := config
 				go func() {
-					queue <- checks.RunChecks(context.New(kommonsClient, k8s, db.Gorm, _config))
-					wg.Done()
+					defer wg.Done()
+
+					res, err := checks.RunChecks(apicontext.New(apicontext.DefaultContext.WithName(_config.Name), _config))
+					if err != nil {
+						log.Errorf("error running checks: %v", err)
+						return
+					}
+
+					queue <- res
 				}()
 			}
 		}
@@ -85,7 +83,12 @@ var Run = &cobra.Command{
 				} else {
 					passed++
 				}
-				fmt.Printf("%s \t%s\t\n", time.Now().Format(time.RFC3339), result.String())
+				logPass := result.Canary.IsDebug() || result.Canary.IsTrace() || logPass
+				logFail := result.Canary.IsDebug() || result.Canary.IsTrace() || logFail
+
+				if logPass && result.Pass || logFail && !result.Pass {
+					logger.StandardLogger().Named(result.Canary.Name).Named(result.Name).Infof(result.String())
+				}
 				results = append(results, result)
 			}
 		}
@@ -93,17 +96,36 @@ var Run = &cobra.Command{
 		if junit {
 			report := output.GetJunitReport(results)
 			if err := output.HandleOutput(report, outputFile); err != nil {
-				logger.Fatalf("error writing output file: %v", err)
+				logger.Errorf("error writing output file: %v", err)
+				os.Exit(1)
 			}
 		}
 		if csv {
 			report, err := output.GetCSVReport(results)
 			if err != nil {
-				logger.Fatalf("error generating CSV file: %v", err)
+				logger.Errorf("error generating CSV file: %v", err)
+				os.Exit(1)
 			}
 			if err := output.HandleOutput(report, outputFile); err != nil {
-				logger.Fatalf("error writing output file: %v", err)
+				logger.Errorf("error writing output file: %v", err)
+				os.Exit(1)
+
 			}
+		}
+		if jsonExport {
+			for _, result := range results {
+				result.Name = def(result.Name, result.Check.GetName(), result.Canary.Name)
+				result.Description = def(result.Description, result.Check.GetDescription())
+				result.Labels = merge(result.Check.GetLabels(), result.Labels)
+			}
+
+			data, err := json.Marshal(results)
+			if err != nil {
+				logger.Errorf("Failed to marshall json: %s", err)
+				os.Exit(1)
+
+			}
+			_ = output.HandleOutput(string(data), outputFile)
 		}
 
 		logger.Infof("%d passed, %d failed in %s", passed, failed, timer)
@@ -114,11 +136,32 @@ var Run = &cobra.Command{
 	},
 }
 
+func merge(m1, m2 map[string]string) map[string]string {
+	out := make(map[string]string)
+	for k, v := range m1 {
+		out[k] = v
+	}
+	for k, v := range m2 {
+		out[k] = v
+	}
+	return out
+}
+
+func def(a ...string) string {
+	for _, s := range a {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
 func init() {
 	Run.PersistentFlags().StringVarP(&dataFile, "data", "d", "", "Template out each spec using the JSON or YAML data in this file")
 	Run.PersistentFlags().StringVarP(&outputFile, "output-file", "o", "", "file to output the results in")
 	Run.Flags().StringVarP(&runNamespace, "namespace", "n", "", "Namespace to run canary checks in")
-	Run.Flags().BoolVarP(&junit, "junit", "j", false, "output results in junit format")
+	Run.Flags().BoolVar(&junit, "junit", false, "output results in junit format")
+	Run.Flags().BoolVarP(&jsonExport, "json", "j", false, "output results in json format")
 	Run.Flags().BoolVar(&csv, "csv", false, "output results in csv format")
 }
 

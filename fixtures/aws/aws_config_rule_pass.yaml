@@ -5,7 +5,19 @@ metadata:
 spec:
   interval: 30
   awsConfigRule:
-    - description: Test config rules
-      name: non compliant rules
-      complianceTypes:
-        - NON_COMPLIANT
+    - name: AWS Config Rule
+      region: "eu-west-1"
+      complianceTypes: [NON_COMPLIANT]
+      transform:
+        expr: |
+          results.rules.map(i,
+            i.resources.map(r,
+             {
+              'name': i.rule + "/" + r.type + "/" + r.id,
+              'description': i.rule,
+              'icon': 'aws-config-alarm',
+              'duration': time.Since(timestamp(r.recorded)).getMilliseconds(),
+              'labels': {'id': r.id, 'type': r.type},
+              'message': i.description + i.annotation + r.annotation
+            })
+          ).flatten().toJSON()

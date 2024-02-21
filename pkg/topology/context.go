@@ -1,17 +1,19 @@
 package topology
 
 import (
-	"github.com/flanksource/canary-checker/api/context"
+	"fmt"
+
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/kommons"
-	"github.com/flanksource/kommons/ktemplate"
+
+	dutyContext "github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
+	"github.com/flanksource/gomplate/v3"
 	"github.com/pkg/errors"
-	"k8s.io/client-go/kubernetes"
 )
 
 type ComponentContext struct {
-	*context.KubernetesContext
 	Topology     v1.Topology
 	ComponentAPI v1.Component
 	// Components keep track of the components that properties can apply to,
@@ -20,10 +22,19 @@ type ComponentContext struct {
 	Components *pkg.Components
 	// Properties can either be looked up on an individual component, or act as a summary across all components
 	CurrentComponent *pkg.Component
-	templater        *ktemplate.StructTemplater
+	templater        *gomplate.StructTemplater
+	JobHistory       *models.JobHistory
+	dutyContext.Context
 }
 
-func (c *ComponentContext) GetTemplater() ktemplate.StructTemplater {
+func (c *ComponentContext) String() string {
+	if c.CurrentComponent != nil {
+		return fmt.Sprintf("[%s] %s", c.Topology.Name, c.CurrentComponent.Name)
+	}
+	return fmt.Sprintf("[%s]", c.Topology.Name)
+}
+
+func (c *ComponentContext) GetTemplater() gomplate.StructTemplater {
 	if c.templater != nil {
 		return *c.templater
 	}
@@ -31,9 +42,9 @@ func (c *ComponentContext) GetTemplater() ktemplate.StructTemplater {
 	if c.CurrentComponent != nil && c.CurrentComponent.Properties != nil {
 		props = c.CurrentComponent.Properties.AsMap()
 	}
-	c.templater = &ktemplate.StructTemplater{
+	c.templater = &gomplate.StructTemplater{
 		// RequiredTag: "template",
-		DelimSets: []ktemplate.Delims{
+		DelimSets: []gomplate.Delims{
 			{
 				Left:  "${",
 				Right: "}",
@@ -73,7 +84,7 @@ func (c *ComponentContext) TemplateStruct(data interface{}) error {
 	return nil
 }
 
-func (c *ComponentContext) TemplateConfig(config *v1.Config) error {
+func (c *ComponentContext) TemplateConfig(config *types.ConfigQuery) error {
 	templater := c.GetTemplater()
 	if err := templater.Walk(config); err != nil {
 		return errors.Wrapf(err, "failed to template config %s", *config)
@@ -97,12 +108,14 @@ func (c *ComponentContext) TemplateComponent(component *v1.ComponentSpec) error 
 
 func (c *ComponentContext) Clone() *ComponentContext {
 	return &ComponentContext{
-		KubernetesContext: c.KubernetesContext.Clone(),
-		Topology:          c.Topology,
-		ComponentAPI:      c.ComponentAPI,
-		Components:        c.Components,
+		Context:      c.Context,
+		Topology:     c.Topology,
+		ComponentAPI: c.ComponentAPI,
+		Components:   c.Components,
+		JobHistory:   c.JobHistory,
 	}
 }
+
 func (c *ComponentContext) WithComponents(components *pkg.Components, current *pkg.Component) *ComponentContext {
 	cloned := c.Clone()
 	cloned.Components = components
@@ -110,9 +123,9 @@ func (c *ComponentContext) WithComponents(components *pkg.Components, current *p
 	return cloned
 }
 
-func NewComponentContext(client *kommons.Client, kubernetes kubernetes.Interface, system v1.Topology) *ComponentContext {
+func NewComponentContext(ctx dutyContext.Context, system v1.Topology) *ComponentContext {
 	return &ComponentContext{
-		KubernetesContext: context.NewKubernetesContext(client, kubernetes, system.Namespace),
-		Topology:          system,
+		Context:  ctx.WithNamespace(system.Namespace).WithName(fmt.Sprintf("Topology[%s]", system.Name)),
+		Topology: system,
 	}
 }

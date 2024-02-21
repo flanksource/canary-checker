@@ -4,3 +4,38 @@ updates:
     directory: "/"
     schedule:
       interval: daily
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /build/dev
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /build/full
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /build/minimal
+    schedule:
+      interval: daily
+
+  # - package-ecosystem: gomod
+  #   directory: /fixtures/datasources
+  #   schedule:
+  #     interval: daily
+
+  # - package-ecosystem: gomod
+  #   directory: /hack/generate-schemas
+  #   schedule:
+  #     interval: daily
+
+  - package-ecosystem: gomod
+    directory: /sdk
+    schedule:
+      interval: daily

@@ -11,11 +11,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -29,11 +41,17 @@
         "connection": {
           "type": "string"
         },
-        "host": {
+        "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "alerts": {
           "items": {
@@ -42,6 +60,14 @@
           "type": "array"
         },
         "filters": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "exclude_filters": {
           "patternProperties": {
             ".*": {
               "type": "string"
@@ -62,21 +88,23 @@
         "name"
       ]
     },
-    "Authentication": {
+    "CheckRelationship": {
       "properties": {
-        "username": {
-          "$ref": "#/$defs/EnvVar"
+        "components": {
+          "items": {
+            "$ref": "#/$defs/LookupSpec"
+          },
+          "type": "array"
         },
-        "password": {
-          "$ref": "#/$defs/EnvVar"
+        "configs": {
+          "items": {
+            "$ref": "#/$defs/LookupSpec"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "username",
-        "password"
-      ]
+      "type": "object"
     },
     "ConfigMapKeySelector": {
       "properties": {
@@ -110,6 +138,12 @@
     },
     "EnvVarSource": {
       "properties": {
+        "serviceAccount": {
+          "type": "string"
+        },
+        "helmRef": {
+          "$ref": "#/$defs/HelmRefKeySelector"
+        },
         "configMapKeyRef": {
           "$ref": "#/$defs/ConfigMapKeySelector"
         },
@@ -120,12 +154,99 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "HelmRefKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
     "Labels": {
       "patternProperties": {
         ".*": {
           "type": "string"
         }
       },
+      "type": "object"
+    },
+    "Lookup": {
+      "properties": {
+        "expr": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "LookupSpec": {
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "namespace": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "type": {
+          "$ref": "#/$defs/Lookup"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "MetricLabel": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "valueExpr": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "MetricLabels": {
+      "items": {
+        "$ref": "#/$defs/MetricLabel"
+      },
+      "type": "array"
+    },
+    "Metrics": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/MetricLabels"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
       "type": "object"
     },
     "SecretKeySelector": {

@@ -9,7 +9,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
-	"github.com/flanksource/commons/logger"
 	"github.com/prometheus/common/model"
 )
 
@@ -33,15 +32,26 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	var results pkg.Results
 	results = append(results, result)
 
-	if _, err := check.HydrateConnection(ctx); err != nil {
-		return results.Failf("error hydrating connection: %v", err)
+	//nolint:staticcheck
+	if check.Host != "" {
+		return results.Failf("host field is deprecated, use url field instead")
 	}
 
-	if check.Host == "" {
-		return results.Failf("Must specify a prometheus host")
+	// Use global prometheus url if check's url is empty
+	if check.URL == "" {
+		check.URL = prometheus.PrometheusURL
 	}
 
-	promClient, err := prometheus.NewPrometheusAPI(check.Host)
+	connection, err := ctx.GetConnection(check.Connection)
+	if err != nil {
+		return results.Failf("error getting connection: %v", err)
+	}
+
+	if connection.URL == "" {
+		return results.Failf("Must specify a URL")
+	}
+
+	promClient, err := prometheus.NewPrometheusAPI(connection.URL)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
@@ -50,7 +60,7 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 		return results.ErrorMessage(err)
 	}
 	if warning != nil {
-		logger.Debugf("warnings when running the query: %v", warning)
+		ctx.Debugf("warnings when running the query: %v", warning)
 	}
 	var prometheusResults = make([]map[string]interface{}, 0)
 	var data = map[string]interface{}{

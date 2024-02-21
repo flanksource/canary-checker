@@ -5,8 +5,6 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/commons/logger"
 	dutyConfig "github.com/flanksource/duty/config"
 )
 
@@ -29,12 +27,12 @@ func (c *ConfigdbChecker) Check(ctx *canaryContext.Context, extConfig external.C
 	check := extConfig.(v1.ConfigDBCheck)
 	result := pkg.Success(check, ctx.Canary)
 
-	logger.Tracef("query: %v", check.Query)
+	ctx.Tracef("query: %v", check.Query)
 
 	var results pkg.Results
 	results = append(results, result)
 
-	res, err := dutyConfig.Query(ctx, db.Pool, check.Query)
+	res, err := dutyConfig.Query(ctx, ctx.Pool(), check.Query)
 	if err != nil {
 		return results.Failf("failed running query: %v", err)
 	}

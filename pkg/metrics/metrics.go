@@ -1,22 +1,27 @@
 package metrics
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/asecurityteam/rolling"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/runner"
-	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/types"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/samber/lo"
 )
 
 var (
 	CounterType   pkg.MetricType = "counter"
 	GaugeType     pkg.MetricType = "gauge"
 	HistogramType pkg.MetricType = "histogram"
+
+	CustomGauges     map[string]*prometheus.GaugeVec
+	CustomCounters   map[string]*prometheus.CounterVec
+	CustomHistograms map[string]*prometheus.HistogramVec
 
 	OpsCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -99,6 +104,9 @@ var latencies = cmap.New()
 
 func init() {
 	prometheus.MustRegister(Gauge, CanaryCheckInfo, OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency, GenericGauge, GenericCounter, GenericHistogram)
+	CustomCounters = make(map[string]*prometheus.CounterVec)
+	CustomGauges = make(map[string]*prometheus.GaugeVec)
+	CustomHistograms = make(map[string]*prometheus.HistogramVec)
 }
 
 func RemoveCheck(checks v1.Canary) {
@@ -114,8 +122,8 @@ func RemoveCheckByKey(key string) {
 	latencies.Remove(key)
 }
 
-func GetMetrics(key string) (uptime pkg.Uptime, latency pkg.Latency) {
-	uptime = pkg.Uptime{}
+func GetMetrics(key string) (uptime types.Uptime, latency types.Latency) {
+	uptime = types.Uptime{}
 
 	fail, ok := failed.Get(key)
 	if ok {
@@ -129,20 +137,30 @@ func GetMetrics(key string) (uptime pkg.Uptime, latency pkg.Latency) {
 
 	lat, ok := latencies.Get(key)
 	if ok {
-		latency = pkg.Latency{Rolling1H: lat.(*rolling.TimePolicy).Reduce(rolling.Percentile(95))}
+		latency = types.Latency{Rolling1H: lat.(*rolling.TimePolicy).Reduce(rolling.Percentile(95))}
 	}
 	return
 }
 
-func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _latency pkg.Latency) {
+func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_uptime types.Uptime, _latency types.Latency) {
+	defer func() {
+		e := recover()
+		if e != nil {
+			ctx.Errorf("panic recording metrics for %s ==> %s", result, e)
+		}
+	}()
 	if result == nil || result.Check == nil {
-		logger.Warnf("%s/%s returned a nil result", canary.Namespace, canary.Name)
-		return
+		ctx.Warnf("returned a nil result")
+		return _uptime, _latency
 	}
+
 	if canary.GetCheckID(result.Check.GetName()) == "" {
-		logger.Warnf("%s/%s/%s returned a result for a check that does not exist", canary.Namespace, canary.Name, result.Check.GetName())
-		return
+		if val := result.Canary.Labels["transformed"]; val != "true" {
+			ctx.Warnf("%s returned a result for a check that does not exist", result.Check.GetName())
+		}
+		return _uptime, _latency
 	}
+
 	canaryNamespace := canary.Namespace
 	canaryName := canary.Name
 	name := result.Check.GetName()
@@ -178,14 +196,12 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		latency = _latencyV.(*rolling.TimePolicy)
 	}
 
-	if logger.IsTraceEnabled() {
-		logger.Tracef(result.String())
-	}
 	OpsCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 	if result.Duration > 0 {
 		RequestLatency.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Observe(float64(result.Duration))
 		latency.Append(float64(result.Duration))
 	}
+
 	if result.Pass {
 		pass.Append(1)
 		Gauge.WithLabelValues(key, checkType, canaryName, canaryNamespace, name).Set(0)
@@ -197,11 +213,19 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		for _, m := range result.Metrics {
 			switch m.Type {
 			case CounterType:
-				GenericCounter.WithLabelValues(checkType, endpoint, m.Name, strconv.Itoa(int(m.Value)), canaryNamespace, owner, severity, key, name).Inc()
+				if err := getOrCreateCounter(m); err != nil {
+					ctx.Errorf("cannot create counter %s with labels %v: %v", m.Name, m.Labels, err)
+				}
+
 			case GaugeType:
-				GenericGauge.WithLabelValues(checkType, endpoint, m.Name, canaryNamespace, owner, severity, key, name).Set(m.Value)
+				if err := getOrCreateGauge(m); err != nil {
+					ctx.Errorf("cannot create gauge %s with labels %v: %v", m.Name, m.Labels, err)
+				}
+
 			case HistogramType:
-				GenericHistogram.WithLabelValues(checkType, endpoint, m.Name, canaryNamespace, owner, severity, key, name).Observe(m.Value)
+				if err := getOrCreateHistogram(m); err != nil {
+					ctx.Errorf("cannot create histogram %s with labels %v: %v", m.Name, m.Labels, err)
+				}
 			}
 		}
 	} else {
@@ -211,16 +235,79 @@ func Record(canary v1.Canary, result *pkg.CheckResult) (_uptime pkg.Uptime, _lat
 		OpsFailedCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 	}
 
-	_uptime = pkg.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
+	_uptime = types.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
 	if latency != nil {
-		_latency = pkg.Latency{Rolling1H: latency.Reduce(rolling.Percentile(95))}
+		_latency = types.Latency{Rolling1H: latency.Reduce(rolling.Percentile(95))}
 	} else {
-		_latency = pkg.Latency{}
+		_latency = types.Latency{}
 	}
 	return _uptime, _latency
 }
 
-func FillLatencies(checkKey string, duration string, latency *pkg.Latency) error {
+func getOrCreateGauge(m pkg.Metric) error {
+	var gauge *prometheus.GaugeVec
+	var ok bool
+	if gauge, ok = CustomGauges[m.ID()]; !ok {
+		gauge = prometheus.V2.NewGaugeVec(prometheus.GaugeVecOpts{
+			VariableLabels: prometheus.UnconstrainedLabels(m.LabelNames()),
+			GaugeOpts: prometheus.GaugeOpts{
+				Name: m.Name,
+			},
+		})
+		CustomGauges[m.ID()] = gauge
+	}
+
+	if metric, err := gauge.GetMetricWith(m.Labels); err != nil {
+		return err
+	} else {
+		metric.Set(m.Value)
+		return nil
+	}
+}
+
+func getOrCreateCounter(m pkg.Metric) error {
+	var counter *prometheus.CounterVec
+	var ok bool
+
+	if counter, ok = CustomCounters[m.ID()]; !ok {
+		counter = prometheus.V2.NewCounterVec(prometheus.CounterVecOpts{
+			VariableLabels: prometheus.UnconstrainedLabels(m.LabelNames()),
+			CounterOpts: prometheus.CounterOpts{
+				Name: m.Name,
+			},
+		})
+		CustomCounters[m.ID()] = counter
+	}
+
+	if metric, err := counter.GetMetricWith(m.Labels); err != nil {
+		return err
+	} else {
+		metric.Add(m.Value)
+		return nil
+	}
+}
+
+func getOrCreateHistogram(m pkg.Metric) error {
+	var histogram *prometheus.HistogramVec
+	var ok bool
+	if histogram, ok = CustomHistograms[m.ID()]; !ok {
+		histogram = prometheus.V2.NewHistogramVec(prometheus.HistogramVecOpts{
+			VariableLabels: prometheus.UnconstrainedLabels(m.LabelNames()),
+			HistogramOpts: prometheus.HistogramOpts{
+				Name: m.Name,
+			},
+		})
+		CustomHistograms[m.ID()] = histogram
+	}
+	if metric, err := histogram.GetMetricWith(m.Labels); err != nil {
+		return err
+	} else {
+		metric.Observe(m.Value)
+		return nil
+	}
+}
+
+func FillLatencies(checkKey string, duration string, latency *types.Latency) error {
 	if runner.Prometheus == nil || duration == "" {
 		return nil
 	}
@@ -243,7 +330,7 @@ func FillLatencies(checkKey string, duration string, latency *pkg.Latency) error
 	return nil
 }
 
-func FillUptime(checkKey, duration string, uptime *pkg.Uptime) error {
+func FillUptime(checkKey, duration string, uptime *types.Uptime) error {
 	if runner.Prometheus == nil || duration == "" {
 		return nil
 	}
@@ -251,13 +338,13 @@ func FillUptime(checkKey, duration string, uptime *pkg.Uptime) error {
 	if err != nil {
 		return err
 	}
-	uptime.P100 = value
+	uptime.P100 = lo.ToPtr(value)
 	return nil
 }
 
-func UnregisterGauge(checkIDs []string) {
+func UnregisterGauge(ctx context.Context, checkIDs []string) {
 	for _, checkID := range checkIDs {
-		logger.Debugf("Unregistering gauge for checkID %s", checkID)
+		ctx.Debugf("Unregistering gauge for checkID %s", checkID)
 		Gauge.DeletePartialMatch(prometheus.Labels{"key": checkID})
 	}
 }

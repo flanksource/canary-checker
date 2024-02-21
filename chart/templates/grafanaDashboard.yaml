@@ -1,0 +1,14 @@
+{{- if .Values.grafanaDashboards }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "canary-checker.name" . }}-dashboard
+  labels:
+    grafana_dashboard: "1"
+    {{- include "canary-checker.labels" . | nindent 4 }}
+data:
+  canary-checker-overview.json: |-
+{{ .Files.Get "dashboards/Overview.json" | indent 4 }}
+  canary-checker-details.json: |-
+{{ .Files.Get "dashboards/Details.json" | indent 4 }}
+{{- end }}

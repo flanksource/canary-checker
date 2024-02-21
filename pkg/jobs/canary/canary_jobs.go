@@ -2,27 +2,26 @@ package canary
 
 import (
 	"fmt"
-	"path"
-	"reflect"
 	"sync"
 	"time"
 
-	"github.com/flanksource/canary-checker/api/context"
+	canarycontext "github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/canary-checker/pkg/metrics"
-	"github.com/flanksource/canary-checker/pkg/push"
+	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/context"
+	dutyjob "github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
-	"github.com/flanksource/kommons"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/robfig/cron/v3"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"go.opentelemetry.io/otel/attribute"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes"
 )
 
 var CanaryScheduler = cron.New()
@@ -30,315 +29,170 @@ var CanaryConfigFiles []string
 var DataFile string
 var Executor bool
 var LogPass, LogFail bool
-
-var Kommons *kommons.Client
-var Kubernetes kubernetes.Interface
+var MinimumTimeBetweenCanaryRuns = 10 * time.Second
 var FuncScheduler = cron.New()
 
 var CanaryStatusChannel chan CanaryStatusPayload
 
-func StartScanCanaryConfigs(dataFile string, configFiles []string) {
+var CanaryLastRuntimes = sync.Map{}
+
+func StartScanCanaryConfigs(ctx context.Context, dataFile string, configFiles []string) {
 	DataFile = dataFile
 	CanaryConfigFiles = configFiles
-	if _, err := ScheduleFunc("@every 5m", ScanCanaryConfigs); err != nil {
+	if _, err := FuncScheduler.AddFunc("@every 5m", func() {
+		ScanCanaryConfigs(ctx)
+	}); err != nil {
 		logger.Errorf("Failed to schedule scan jobs: %v", err)
 	}
-	ScanCanaryConfigs()
+	ScanCanaryConfigs(ctx)
 }
 
 type CanaryJob struct {
-	*kommons.Client
-	Kubernetes kubernetes.Interface
-	v1.Canary
-	// model   pkg.Canary
-	LogPass bool
-	LogFail bool
+	Canary   v1.Canary
+	DBCanary pkg.Canary
+	// LogPass  bool
+	// LogFail  bool
 }
 
-func (job CanaryJob) GetNamespacedName() types.NamespacedName {
-	return types.NamespacedName{Name: job.Canary.Name, Namespace: job.Canary.Namespace}
+func (j CanaryJob) GetNamespacedName() types.NamespacedName {
+	return types.NamespacedName{Name: j.Canary.Name, Namespace: j.Canary.Namespace}
 }
 
-var minimumTimeBetweenCanaryRuns = 10 * time.Second
-var canaryLastRuntimes = sync.Map{}
+func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
+	if runner.IsCanaryIgnored(&j.Canary.ObjectMeta) {
+		return nil
+	}
+	canaryID := j.DBCanary.ID.String()
+	ctx.History.ResourceID = canaryID
+	ctx.History.ResourceType = "canary"
 
-func (job CanaryJob) Run() {
-	lastRunDelta := minimumTimeBetweenCanaryRuns
+	lastRunDelta := MinimumTimeBetweenCanaryRuns
 	// Get last runtime from sync map
 	var lastRuntime time.Time
-	if lastRuntimeVal, exists := canaryLastRuntimes.Load(job.Canary.GetPersistedID()); exists {
+	if lastRuntimeVal, exists := CanaryLastRuntimes.Load(canaryID); exists {
 		lastRuntime = lastRuntimeVal.(time.Time)
 		lastRunDelta = time.Since(lastRuntime)
 	}
 
 	// Skip run if job ran too recently
-	if lastRunDelta < minimumTimeBetweenCanaryRuns {
-		logger.Infof("Skipping Canary[%s]:%s since it last ran %.2f seconds ago", job.Canary.GetPersistedID(), job.GetNamespacedName(), lastRunDelta.Seconds())
-		return
-	}
-
-	// Get transformed checks before and after, and then delete the olds ones that are not in new set
-	existingTransformedChecks, _ := db.GetTransformedCheckIDs(job.Canary.GetPersistedID())
-	var newChecksCreated []string
-	results := checks.RunChecks(job.NewContext())
-	for _, result := range results {
-		if job.LogPass && result.Pass || job.LogFail && !result.Pass {
-			logger.Infof(result.String())
-		}
-		checkIDsAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.FromResult(*result))
-		newChecksCreated = append(newChecksCreated, checkIDsAdded...)
-	}
-	job.updateStatusAndEvent(results)
-
-	// Checks which are not present now should be marked as healthy
-	checksToMarkHealthy := utils.SetDifference(existingTransformedChecks, newChecksCreated)
-	if err := db.UpdateChecksStatus(checksToMarkHealthy, models.CheckStatusHealthy); err != nil {
-		logger.Errorf("error deleting transformed checks for canary %s: %v", job.Canary.GetPersistedID(), err)
-	}
-
-	// Update last runtime map
-	canaryLastRuntimes.Store(job.Canary.GetPersistedID(), time.Now())
-}
-
-func (job *CanaryJob) NewContext() *context.Context {
-	return context.New(job.Client, job.Kubernetes, db.Gorm, job.Canary)
-}
-
-func (job CanaryJob) updateStatusAndEvent(results []*pkg.CheckResult) {
-	var checkStatus = make(map[string]*v1.CheckStatus)
-	var duration int64
-	var messages, errors []string
-	var failEvents []string
-	var msg, errorMsg string
-	var pass = true
-	var lastTransitionedTime *metav1.Time
-	var highestLatency float64
-	var uptimeAgg pkg.Uptime
-
-	transitioned := false
-	for _, result := range results {
-		// Increment duration
-		duration += result.Duration
-
-		// Set uptime and latency
-		uptime, latency := metrics.Record(job.Canary, result)
-		checkKey := job.Canary.GetKey(result.Check)
-		checkStatus[checkKey] = &v1.CheckStatus{}
-		checkStatus[checkKey].Uptime1H = uptime.String()
-		checkStatus[checkKey].Latency1H = latency.String()
-
-		// Increment aggregate uptime
-		uptimeAgg.Passed += uptime.Passed
-		uptimeAgg.Failed += uptime.Failed
-
-		// Use highest latency for canary status
-		if latency.Rolling1H > highestLatency {
-			highestLatency = latency.Rolling1H
-		}
-
-		// Transition
-		q := cache.QueryParams{Check: checkKey, StatusCount: 1}
-		if job.Canary.Status.LastTransitionedTime != nil {
-			q.Start = job.Canary.Status.LastTransitionedTime.Format(time.RFC3339)
-		}
-		lastStatus, err := cache.PostgresCache.Query(q)
-		if err != nil || len(lastStatus) == 0 || len(lastStatus[0].Statuses) == 0 {
-			transitioned = true
-		} else if len(lastStatus) > 0 && (lastStatus[0].Statuses[0].Status != result.Pass) {
-			transitioned = true
-		}
-		if transitioned {
-			checkStatus[checkKey].LastTransitionedTime = &metav1.Time{Time: time.Now()}
-			lastTransitionedTime = &metav1.Time{Time: time.Now()}
-		}
-
-		push.Queue(pkg.FromV1(job.Canary, result.Check), pkg.FromResult(*result))
-
-		// Update status message
-		if len(messages) == 1 {
-			msg = messages[0]
-		} else if len(messages) > 1 {
-			msg = fmt.Sprintf("%s, (%d more)", messages[0], len(messages)-1)
-		}
-		if len(errors) == 1 {
-			errorMsg = errors[0]
-		} else if len(errors) > 1 {
-			errorMsg = fmt.Sprintf("%s, (%d more)", errors[0], len(errors)-1)
-		}
-
-		if !result.Pass {
-			failEvents = append(failEvents, fmt.Sprintf("%s-%s: %s", result.Check.GetType(), result.Check.GetEndpoint(), result.Message))
-			pass = false
-		}
-	}
-
-	payload := CanaryStatusPayload{
-		Pass:                 pass,
-		CheckStatus:          checkStatus,
-		FailEvents:           failEvents,
-		LastTransitionedTime: lastTransitionedTime,
-		Message:              msg,
-		ErrorMessage:         errorMsg,
-		Uptime:               uptimeAgg.String(),
-		Latency:              utils.Age(time.Duration(highestLatency) * time.Millisecond),
-		NamespacedName:       job.GetNamespacedName(),
-	}
-
-	CanaryStatusChannel <- payload
-}
-
-type CanaryStatusPayload struct {
-	Pass                 bool
-	CheckStatus          map[string]*v1.CheckStatus
-	FailEvents           []string
-	LastTransitionedTime *metav1.Time
-	Message              string
-	ErrorMessage         string
-	Uptime               string
-	Latency              string
-	NamespacedName       types.NamespacedName
-}
-
-func findCronEntry(canary v1.Canary) *cron.Entry {
-	for _, entry := range CanaryScheduler.Entries() {
-		if entry.Job.(CanaryJob).GetPersistedID() == canary.GetPersistedID() {
-			return &entry
-		}
-	}
-	return nil
-}
-
-func ScanCanaryConfigs() {
-	logger.Infof("Syncing canary specs: %v", CanaryConfigFiles)
-	for _, configfile := range CanaryConfigFiles {
-		configs, err := pkg.ParseConfig(configfile, DataFile)
-		if err != nil {
-			logger.Errorf("could not parse %s: %v", configfile, err)
-		}
-
-		for _, canary := range configs {
-			_, _, _, err := db.PersistCanary(canary, path.Base(configfile))
-			if err != nil {
-				logger.Errorf("could not persist %s: %v", canary.Name, err)
-			} else {
-				logger.Infof("[%s] persisted %s", path.Base(configfile), canary.Name)
-			}
-		}
-	}
-}
-
-func SyncCanaryJob(canary v1.Canary) error {
-	if !canary.DeletionTimestamp.IsZero() || canary.Spec.GetSchedule() == "@never" { //nolint:goconst
-		DeleteCanaryJob(canary)
+	if lastRunDelta < MinimumTimeBetweenCanaryRuns {
+		ctx.Debugf("skipping since it last ran %.2f seconds ago", lastRunDelta.Seconds())
 		return nil
 	}
 
-	if Kommons == nil {
-		var err error
-		Kommons, Kubernetes, err = pkg.NewKommonsClient()
-		if err != nil {
-			logger.Warnf("Failed to get kommons client, features that read kubernetes config will fail: %v", err)
-		}
-	}
+	canaryCtx := canarycontext.New(ctx.Context, j.Canary)
+	var span trace.Span
+	ctx.Context, span = ctx.StartSpan("RunCanaryChecks")
+	defer span.End()
+	span.SetAttributes(
+		attribute.String("canary.id", canaryID),
+		attribute.String("canary.name", j.Canary.Name),
+		attribute.String("canary.namespace", j.Canary.Namespace),
+	)
 
-	entry := findCronEntry(canary)
-	if entry != nil {
-		job := entry.Job.(CanaryJob)
-		if !reflect.DeepEqual(job.Canary.Spec, canary.Spec) {
-			logger.Infof("Rescheduling %s canary with updated specs", canary)
-			CanaryScheduler.Remove(entry.ID)
-		} else {
-			return nil
-		}
-	}
-
-	job := CanaryJob{
-		Client:     Kommons,
-		Kubernetes: Kubernetes,
-		Canary:     canary,
-		LogPass:    canary.IsTrace() || canary.IsDebug() || LogPass,
-		LogFail:    canary.IsTrace() || canary.IsDebug() || LogFail,
-	}
-
-	_, err := CanaryScheduler.AddJob(canary.Spec.GetSchedule(), job)
+	results, err := checks.RunChecks(canaryCtx)
 	if err != nil {
-		return fmt.Errorf("failed to schedule canary %s/%s: %v", canary.Namespace, canary.Name, err)
-	}
-	logger.Infof("Scheduled %s: %s", canary, canary.Spec.GetSchedule())
-
-	entry = findCronEntry(canary)
-	if entry != nil && time.Until(entry.Next) < 1*time.Hour {
-		// run all regular canaries on startup
-		job = entry.Job.(CanaryJob)
-		go job.Run()
+		ctx.Error(err)
+		return nil
 	}
 
+	// Get transformed checks before and after, and then delete the olds ones that are not in new set.
+	// NOTE: Webhook checks, although they are transformed, are handled entirely by the webhook caller
+	// and should not be deleted manually in here.
+	existingTransformedChecks, err := db.GetTransformedCheckIDs(ctx.Context, canaryID, checks.WebhookCheckType)
+	if err != nil {
+		ctx.Error(err, "error getting transformed checks")
+	}
+
+	var transformedChecksCreated []string
+	// Transformed checks have a delete strategy
+	// On deletion they can either be marked healthy, unhealthy or left as is
+	checkIDDeleteStrategyMap := make(map[string]string)
+
+	// TODO: Use ctx with object here
+	logPass := j.Canary.IsTrace() || j.Canary.IsDebug() || LogPass
+	logFail := j.Canary.IsTrace() || j.Canary.IsDebug() || LogFail
+	for _, result := range results {
+		if logPass && result.Pass || logFail && !result.Pass {
+			ctx.Logger.Named(result.GetName()).Infof(result.String())
+		}
+		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
+		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded...)
+		for _, checkID := range transformedChecksAdded {
+			checkIDDeleteStrategyMap[checkID] = result.Check.GetTransformDeleteStrategy()
+		}
+
+		// Establish relationship with components & configs
+		if err := FormCheckRelationships(ctx.Context, result); err != nil {
+			ctx.Logger.Named(result.Name).Errorf("error forming check relationships: %v", err)
+		}
+	}
+
+	UpdateCanaryStatusAndEvent(ctx.Context, j.Canary, results)
+
+	checkDeleteStrategyGroup := make(map[string][]string)
+	checkIDsToRemove := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
+	if len(checkIDsToRemove) > 0 && len(transformedChecksCreated) > 0 {
+		for _, checkID := range checkIDsToRemove {
+			switch checkIDDeleteStrategyMap[checkID] {
+			case v1.OnTransformMarkHealthy:
+				checkDeleteStrategyGroup[models.CheckStatusHealthy] = append(checkDeleteStrategyGroup[models.CheckStatusHealthy], checkID)
+			case v1.OnTransformMarkUnhealthy:
+				checkDeleteStrategyGroup[models.CheckStatusUnhealthy] = append(checkDeleteStrategyGroup[models.CheckStatusUnhealthy], checkID)
+			}
+		}
+
+		for status, checkIDs := range checkDeleteStrategyGroup {
+			if err := db.AddCheckStatuses(ctx.Context, checkIDs, models.CheckHealthStatus(status)); err != nil {
+				ctx.Error(err, "error adding statuses for transformed checks")
+			}
+		}
+		if err := db.RemoveTransformedChecks(ctx.Context, checkIDsToRemove); err != nil {
+			ctx.Error(err, "error deleting transformed checks for canary")
+		}
+	}
+
+	// Update last runtime map
+	CanaryLastRuntimes.Store(canaryID, time.Now())
+	ctx.History.SuccessCount = len(results)
 	return nil
 }
 
-func SyncCanaryJobs() {
-	logger.Debugf("Syncing canary jobs")
-
-	jobHistory := models.NewJobHistory("CanarySync", "canary", "").Start()
-	_ = db.PersistJobHistory(jobHistory)
-	canaries, err := db.GetAllCanaries()
+func logIfError(err error, description string) {
 	if err != nil {
-		logger.Errorf("Failed to get canaries: %v", err)
-		jobHistory.AddError(err.Error())
-		_ = db.PersistJobHistory(jobHistory.End())
-		return
+		logger.Errorf("%s: %v", description, err)
 	}
+}
 
-	for _, _c := range canaries {
-		canary, err := _c.ToV1()
-		if err != nil {
-			logger.Errorf("Error parsing canary[%s]: %v", _c.ID, err)
-			jobHistory.AddError(err.Error())
-			continue
+var CleanupDeletedCanaryChecks = &dutyjob.Job{
+	Name:       "CleanupChecks",
+	Schedule:   "@every 1h",
+	Singleton:  true,
+	JobHistory: true,
+	Retention:  dutyjob.RetentionDay,
+	Fn: func(ctx dutyjob.JobRuntime) error {
+		var rows []struct {
+			ID string
 		}
-		if len(canary.Status.Checks) == 0 && len(canary.Spec.GetAllChecks()) > 0 {
-			logger.Infof("Persisting %s as it has no checks", canary.Name)
-			pkgCanary, _, _, err := db.PersistCanary(*canary, canary.Annotations["source"])
-			if err != nil {
-				logger.Errorf("Failed to persist canary %s: %v", canary.Name, err)
-				jobHistory.AddError(err.Error())
-				continue
-			}
-
-			v1canary, err := pkgCanary.ToV1()
-			if err != nil {
-				logger.Errorf("Failed to convert canary to V1 %s: %v", canary.Name, err)
-				jobHistory.AddError(err.Error())
-				continue
-			}
-			if err := SyncCanaryJob(*v1canary); err != nil {
-				logger.Errorf(err.Error())
-				jobHistory.AddError(err.Error())
-			}
-		} else if err := SyncCanaryJob(*canary); err != nil {
-			logger.Errorf(err.Error())
-			jobHistory.AddError(err.Error())
+		// Select all checks whose canary ID is deleted but their deleted at is not marked
+		if err := ctx.DB().Raw(`
+        SELECT DISTINCT(canaries.id) FROM canaries
+        INNER JOIN checks ON canaries.id = checks.canary_id
+        WHERE
+            checks.deleted_at IS NULL AND
+            canaries.deleted_at IS NOT NULL
+        `).Scan(&rows).Error; err != nil {
+			return err
 		}
-	}
-	jobHistory.IncrSuccess()
-	_ = db.PersistJobHistory(jobHistory.End())
-	logger.Infof("Synced canary jobs %d", len(CanaryScheduler.Entries()))
-}
 
-func DeleteCanaryJob(canary v1.Canary) {
-	entry := findCronEntry(canary)
-	if entry == nil {
-		return
-	}
-	logger.Tracef("deleting cron entry for canary %s/%s with entry ID: %v", canary.Name, canary.Namespace, entry.ID)
-	CanaryScheduler.Remove(entry.ID)
-}
-
-func ScheduleFunc(schedule string, fn func()) (interface{}, error) {
-	return FuncScheduler.AddFunc(schedule, fn)
-}
-
-func init() {
-	// We are adding a small buffer to prevent blocking
-	CanaryStatusChannel = make(chan CanaryStatusPayload, 64)
+		for _, r := range rows {
+			if err := db.DeleteCanary(ctx.Context, r.ID); err != nil {
+				ctx.History.AddError(fmt.Sprintf("Error deleting components for topology[%s]: %v", r.ID, err))
+			} else {
+				ctx.History.IncrSuccess()
+			}
+			Unschedule(r.ID)
+		}
+		return nil
+	},
 }

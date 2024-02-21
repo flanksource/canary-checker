@@ -15,15 +15,17 @@ package pkg
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"path/filepath"
 
-	"github.com/flanksource/commons/logger"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/flanksource/commons/files"
+	clogger "github.com/flanksource/commons/logger"
 	"github.com/flanksource/kommons"
+	"github.com/henvic/httpretty"
 	"github.com/pkg/errors"
 	"gopkg.in/flanksource/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,11 +36,30 @@ import (
 
 func NewKommonsClient() (*kommons.Client, kubernetes.Interface, error) {
 	kubeConfig := GetKubeconfig()
+
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
+
+	if clogger.IsLevelEnabled(7) {
+		logger := &httpretty.Logger{
+			Time:           true,
+			TLS:            clogger.IsLevelEnabled(8),
+			RequestHeader:  true,
+			RequestBody:    clogger.IsLevelEnabled(9),
+			ResponseHeader: true,
+			ResponseBody:   clogger.IsLevelEnabled(8),
+			Colors:         true, // erase line if you don't like colors
+			Formatters:     []httpretty.Formatter{&httpretty.JSONFormatter{}},
+		}
+
+		config.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
+			return logger.RoundTripper(rt)
+		}
+	}
+
 	if err != nil {
 		return nil, fake.NewSimpleClientset(), errors.Wrap(err, "Failed to generate rest config")
 	}
-	Client := kommons.NewClient(config, logger.StandardLogger())
+	Client := kommons.NewClient(config, clogger.StandardLogger())
 	if Client == nil {
 		return nil, fake.NewSimpleClientset(), errors.New("could not create kommons client")
 	}

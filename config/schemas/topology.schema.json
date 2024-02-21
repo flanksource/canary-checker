@@ -14,6 +14,9 @@
         "secretKey": {
           "$ref": "#/$defs/EnvVar"
         },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
         "region": {
           "type": "string"
         },
@@ -21,12 +24,6 @@
           "type": "string"
         },
         "skipTLSVerify": {
-          "type": "boolean"
-        },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
           "type": "boolean"
         }
       },
@@ -41,11 +38,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -59,11 +68,17 @@
         "connection": {
           "type": "string"
         },
-        "host": {
+        "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "alerts": {
           "items": {
@@ -72,6 +87,14 @@
           "type": "array"
         },
         "filters": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "exclude_filters": {
           "patternProperties": {
             ".*": {
               "type": "string"
@@ -92,6 +115,18 @@
         "name"
       ]
     },
+    "Artifact": {
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "path"
+      ]
+    },
     "Authentication": {
       "properties": {
         "username": {
@@ -102,11 +137,7 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "username",
-        "password"
-      ]
+      "type": "object"
     },
     "AwsConfigCheck": {
       "properties": {
@@ -116,11 +147,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -134,8 +177,26 @@
         "query": {
           "type": "string"
         },
-        "awsConnection": {
-          "$ref": "#/$defs/AWSConnection"
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
         },
         "aggregatorName": {
           "type": "string"
@@ -156,11 +217,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -189,8 +262,26 @@
           },
           "type": "array"
         },
-        "awsConnection": {
-          "$ref": "#/$defs/AWSConnection"
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -198,6 +289,24 @@
       "required": [
         "name"
       ]
+    },
+    "AzureConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "clientID": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "clientSecret": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "tenantID": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "AzureDevopsCheck": {
       "properties": {
@@ -207,11 +316,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -270,6 +391,9 @@
     },
     "CanarySpec": {
       "properties": {
+        "replicas": {
+          "type": "integer"
+        },
         "env": {
           "patternProperties": {
             ".*": {
@@ -428,6 +552,12 @@
           },
           "type": "array"
         },
+        "gitProtocol": {
+          "items": {
+            "$ref": "#/$defs/GitProtocolCheck"
+          },
+          "type": "array"
+        },
         "kubernetes": {
           "items": {
             "$ref": "#/$defs/KubernetesCheck"
@@ -500,6 +630,9 @@
           },
           "type": "array"
         },
+        "webhook": {
+          "$ref": "#/$defs/WebhookCheck"
+        },
         "interval": {
           "type": "integer"
         },
@@ -522,6 +655,24 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "CheckRelationship": {
+      "properties": {
+        "components": {
+          "items": {
+            "$ref": "#/$defs/LookupSpec"
+          },
+          "type": "array"
+        },
+        "configs": {
+          "items": {
+            "$ref": "#/$defs/LookupSpec"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "CloudWatchCheck": {
       "properties": {
         "description": {
@@ -530,11 +681,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -543,6 +706,9 @@
           "$ref": "#/$defs/EnvVar"
         },
         "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
           "$ref": "#/$defs/EnvVar"
         },
         "region": {
@@ -554,12 +720,6 @@
         "skipTLSVerify": {
           "type": "boolean"
         },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
-          "type": "boolean"
-        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -569,18 +729,6 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
-        "filter": {
-          "$ref": "#/$defs/CloudWatchFilter"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "name"
-      ]
-    },
-    "CloudWatchFilter": {
-      "properties": {
         "actionPrefix": {
           "type": "string"
         },
@@ -598,7 +746,10 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "required": [
+        "name"
+      ]
     },
     "ComponentCheck": {
       "properties": {
@@ -623,6 +774,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "tooltip": {
           "type": "string"
         },
@@ -637,6 +791,17 @@
         },
         "order": {
           "type": "integer"
+        },
+        "labels": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "hidden": {
+          "type": "boolean"
         },
         "type": {
           "type": "string"
@@ -672,10 +837,7 @@
           "$ref": "#/$defs/ComponentChecks"
         },
         "configs": {
-          "items": {
-            "$ref": "#/$defs/Config"
-          },
-          "type": "array"
+          "$ref": "#/$defs/ConfigQueries"
         },
         "summary": {
           "$ref": "#/$defs/Summary"
@@ -685,6 +847,9 @@
         },
         "logs": {
           "$ref": "#/$defs/LogSelectors"
+        },
+        "parentLookup": {
+          "$ref": "#/$defs/ParentLookup"
         }
       },
       "additionalProperties": false,
@@ -695,6 +860,9 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "tooltip": {
           "type": "string"
         },
@@ -709,6 +877,17 @@
         },
         "order": {
           "type": "integer"
+        },
+        "labels": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "hidden": {
+          "type": "boolean"
         },
         "type": {
           "type": "string"
@@ -744,10 +923,7 @@
           "$ref": "#/$defs/ComponentChecks"
         },
         "configs": {
-          "items": {
-            "$ref": "#/$defs/Config"
-          },
-          "type": "array"
+          "$ref": "#/$defs/ConfigQueries"
         },
         "summary": {
           "$ref": "#/$defs/Summary"
@@ -757,35 +933,9 @@
         },
         "logs": {
           "$ref": "#/$defs/LogSelectors"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
-    "Config": {
-      "properties": {
-        "id": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
         },
-        "type": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "namespace": {
-          "type": "string"
-        },
-        "tags": {
-          "patternProperties": {
-            ".*": {
-              "type": "string"
-            }
-          },
-          "type": "object"
+        "parentLookup": {
+          "$ref": "#/$defs/ParentLookup"
         }
       },
       "additionalProperties": false,
@@ -808,11 +958,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "query": {
           "type": "string"
@@ -831,7 +993,7 @@
           "type": "string"
         },
         "config": {
-          "$ref": "#/$defs/Config"
+          "$ref": "#/$defs/ConfigQuery"
         },
         "field": {
           "type": "string"
@@ -861,6 +1023,47 @@
         "key"
       ]
     },
+    "ConfigQueries": {
+      "items": {
+        "$ref": "#/$defs/ConfigQuery"
+      },
+      "type": "array"
+    },
+    "ConfigQuery": {
+      "properties": {
+        "id": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "type": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "external_id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "tags": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "ContainerdPullCheck": {
       "properties": {
         "description": {
@@ -869,11 +1072,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "image": {
           "type": "string"
@@ -903,11 +1118,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "image": {
           "type": "string"
@@ -934,11 +1161,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "server": {
           "type": "string"
@@ -982,11 +1221,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1036,11 +1287,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "image": {
           "type": "string"
@@ -1070,11 +1333,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "image": {
           "type": "string"
@@ -1098,11 +1373,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1113,6 +1400,9 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "connection": {
+          "type": "string"
+        },
         "host": {
           "type": "string"
         },
@@ -1121,9 +1411,6 @@
         },
         "apiKey": {
           "$ref": "#/$defs/EnvVar"
-        },
-        "namespace": {
-          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -1140,11 +1427,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -1155,6 +1454,9 @@
         "secretKey": {
           "$ref": "#/$defs/EnvVar"
         },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
         "region": {
           "type": "string"
         },
@@ -1162,12 +1464,6 @@
           "type": "string"
         },
         "skipTLSVerify": {
-          "type": "boolean"
-        },
-        "objectPath": {
-          "type": "string"
-        },
-        "usePathStyle": {
           "type": "boolean"
         },
         "ami": {
@@ -1209,11 +1505,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1230,8 +1538,11 @@
         "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -1266,6 +1577,12 @@
     },
     "EnvVarSource": {
       "properties": {
+        "serviceAccount": {
+          "type": "string"
+        },
+        "helmRef": {
+          "$ref": "#/$defs/HelmRefKeySelector"
+        },
         "configMapKeyRef": {
           "$ref": "#/$defs/ConfigMapKeySelector"
         },
@@ -1284,11 +1601,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1301,6 +1630,24 @@
         },
         "script": {
           "type": "string"
+        },
+        "connections": {
+          "$ref": "#/$defs/ExecConnections"
+        },
+        "env": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
+        },
+        "checkout": {
+          "$ref": "#/$defs/GitCheckout"
+        },
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
@@ -1309,6 +1656,21 @@
         "name",
         "script"
       ]
+    },
+    "ExecConnections": {
+      "properties": {
+        "aws": {
+          "$ref": "#/$defs/AWSConnection"
+        },
+        "gcp": {
+          "$ref": "#/$defs/GCPConnection"
+        },
+        "azure": {
+          "$ref": "#/$defs/AzureConnection"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "FieldsV1": {
       "properties": {},
@@ -1323,11 +1685,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1340,6 +1714,9 @@
         },
         "path": {
           "type": "string"
+        },
+        "recursive": {
+          "type": "boolean"
         },
         "filter": {
           "$ref": "#/$defs/FolderFilter"
@@ -1369,10 +1746,10 @@
           "type": "string"
         },
         "awsConnection": {
-          "$ref": "#/$defs/AWSConnection"
+          "$ref": "#/$defs/S3Connection"
         },
         "gcpConnection": {
-          "$ref": "#/$defs/GCPConnection"
+          "$ref": "#/$defs/GCSConnection"
         },
         "smbConnection": {
           "$ref": "#/$defs/SMBConnection"
@@ -1394,6 +1771,9 @@
           "type": "string"
         },
         "maxAge": {
+          "type": "string"
+        },
+        "since": {
           "type": "string"
         },
         "minSize": {
@@ -1422,7 +1802,7 @@
         },
         "configs": {
           "items": {
-            "$ref": "#/$defs/Config"
+            "$ref": "#/$defs/ConfigQuery"
           },
           "type": "array"
         },
@@ -1476,6 +1856,48 @@
         "instance"
       ]
     },
+    "GCSConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bucket": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "GitCheckout": {
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "certificate": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "destination": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "GitHubCheck": {
       "properties": {
         "description": {
@@ -1484,11 +1906,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1516,6 +1950,63 @@
         "query"
       ]
     },
+    "GitProtocolCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "filename": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "repository",
+        "username",
+        "password"
+      ]
+    },
     "HTTPCheck": {
       "properties": {
         "description": {
@@ -1524,11 +2015,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1542,10 +2045,16 @@
         "connection": {
           "type": "string"
         },
-        "endpoint": {
+        "url": {
           "type": "string"
         },
-        "namespace": {
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "endpoint": {
           "type": "string"
         },
         "thresholdMillis": {
@@ -1584,11 +2093,17 @@
           },
           "type": "array"
         },
-        "authentication": {
-          "$ref": "#/$defs/Authentication"
-        },
         "templateBody": {
           "type": "boolean"
+        },
+        "env": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
+        },
+        "oauth2": {
+          "$ref": "#/$defs/Oauth2Config"
         }
       },
       "additionalProperties": false,
@@ -1605,11 +2120,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "chartmuseum": {
           "type": "string"
@@ -1630,6 +2157,21 @@
         "name"
       ]
     },
+    "HelmRefKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
     "ICMPCheck": {
       "properties": {
         "description": {
@@ -1638,11 +2180,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "endpoint": {
           "type": "string"
@@ -1687,14 +2241,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
         },
-        "connection": {
+        "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "jmx": {
           "$ref": "#/$defs/EnvVar"
@@ -1736,11 +2299,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "testResults": {
           "type": "string"
@@ -1757,7 +2332,13 @@
         "timeout": {
           "type": "integer"
         },
-        "spec": true
+        "spec": true,
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "type": "array"
+        }
       },
       "additionalProperties": false,
       "type": "object",
@@ -1775,11 +2356,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1790,7 +2383,7 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
-        "namespace": {
+        "namespaceSelector": {
           "$ref": "#/$defs/ResourceSelector"
         },
         "resource": {
@@ -1824,20 +2417,35 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "connection": {
           "type": "string"
         },
-        "host": {
+        "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "bindDN": {
           "type": "string"
@@ -1853,8 +2461,6 @@
       "type": "object",
       "required": [
         "name",
-        "host",
-        "auth",
         "bindDN"
       ]
     },
@@ -1925,6 +2531,36 @@
       },
       "type": "array"
     },
+    "Lookup": {
+      "properties": {
+        "expr": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "LookupSpec": {
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "namespace": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "type": {
+          "$ref": "#/$defs/Lookup"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "ManagedFieldsEntry": {
       "properties": {
         "manager": {
@@ -1952,6 +2588,48 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "MetricLabel": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "valueExpr": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "MetricLabels": {
+      "items": {
+        "$ref": "#/$defs/MetricLabel"
+      },
+      "type": "array"
+    },
+    "Metrics": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/MetricLabels"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "MongoDBCheck": {
       "properties": {
         "description": {
@@ -1960,24 +2638,41 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "connection": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "connection"
+        "name"
       ]
     },
     "MssqlCheck": {
@@ -1988,11 +2683,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2006,8 +2713,14 @@
         "connection": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2019,8 +2732,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "connection"
+        "name"
       ]
     },
     "MysqlCheck": {
@@ -2031,11 +2743,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2049,8 +2773,14 @@
         "connection": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2062,8 +2792,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "connection"
+        "name"
       ]
     },
     "NamespaceCheck": {
@@ -2074,11 +2803,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "namespaceNamePrefix": {
           "type": "string"
@@ -2154,6 +2895,29 @@
         "name",
         "podSpec"
       ]
+    },
+    "Oauth2Config": {
+      "properties": {
+        "scope": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tokenURL": {
+          "type": "string"
+        },
+        "params": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "ObjectFieldSelector": {
       "properties": {
@@ -2248,11 +3012,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2269,8 +3045,11 @@
         "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2285,7 +3064,9 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name"
+        "name",
+        "query",
+        "index"
       ]
     },
     "OwnerReference": {
@@ -2318,6 +3099,21 @@
         "uid"
       ]
     },
+    "ParentLookup": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "PodCheck": {
       "properties": {
         "description": {
@@ -2326,14 +3122,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
         },
-        "namespace": {
+        "transformDeleteStrategy": {
           "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "spec": {
           "type": "string"
@@ -2385,6 +3190,9 @@
         },
         "priorityClass": {
           "type": "string"
+        },
+        "roundRobinNodes": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -2401,11 +3209,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2419,8 +3239,14 @@
         "connection": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "url": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2432,8 +3258,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "connection"
+        "name"
       ]
     },
     "PrometheusCheck": {
@@ -2444,11 +3269,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2459,11 +3296,20 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "host": {
+          "type": "string"
+        },
         "connection": {
           "type": "string"
         },
-        "host": {
+        "url": {
           "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "query": {
           "type": "string"
@@ -2473,7 +3319,6 @@
       "type": "object",
       "required": [
         "name",
-        "host",
         "query"
       ]
     },
@@ -2557,20 +3402,38 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
         },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
         "connection": {
           "type": "string"
         },
-        "addr": {
+        "url": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "addr": {
+          "type": "string"
         },
         "db": {
           "type": "integer"
@@ -2579,9 +3442,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "addr",
-        "db"
+        "name"
       ]
     },
     "RelationshipSpec": {
@@ -2625,11 +3486,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -2676,11 +3549,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -2691,6 +3576,9 @@
         "secretKey": {
           "$ref": "#/$defs/EnvVar"
         },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
         "region": {
           "type": "string"
         },
@@ -2699,6 +3587,9 @@
         },
         "skipTLSVerify": {
           "type": "boolean"
+        },
+        "bucket": {
+          "type": "string"
         },
         "objectPath": {
           "type": "string"
@@ -2716,6 +3607,42 @@
         "name"
       ]
     },
+    "S3Connection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "bucket": {
+          "type": "string"
+        },
+        "objectPath": {
+          "type": "string"
+        },
+        "usePathStyle": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "SFTPConnection": {
       "properties": {
         "connection": {
@@ -2727,15 +3654,17 @@
         "host": {
           "type": "string"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "host",
-        "auth"
+        "host"
       ]
     },
     "SMBConnection": {
@@ -2746,27 +3675,18 @@
         "port": {
           "type": "integer"
         },
-        "auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
         },
         "domain": {
-          "type": "string"
-        },
-        "workstation": {
-          "type": "string"
-        },
-        "sharename": {
-          "type": "string"
-        },
-        "searchPath": {
           "type": "string"
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "auth"
-      ]
+      "type": "object"
     },
     "SecretKeySelector": {
       "properties": {
@@ -2825,6 +3745,14 @@
             }
           },
           "type": "object"
+        },
+        "checks": {
+          "patternProperties": {
+            ".*": {
+              "type": "integer"
+            }
+          },
+          "type": "object"
         }
       },
       "additionalProperties": false,
@@ -2838,11 +3766,23 @@
         "name": {
           "type": "string"
         },
+        "namespace": {
+          "type": "string"
+        },
         "icon": {
           "type": "string"
         },
         "labels": {
           "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
         },
         "endpoint": {
           "type": "string"
@@ -2938,7 +3878,7 @@
         },
         "configs": {
           "items": {
-            "$ref": "#/$defs/Config"
+            "$ref": "#/$defs/ConfigQuery"
           },
           "type": "array"
         }
@@ -2978,6 +3918,51 @@
       },
       "additionalProperties": false,
       "type": "object"
+    },
+    "WebhookCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "token": {
+          "$ref": "#/$defs/EnvVar"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
     }
   }
 }

@@ -19,9 +19,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
+
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/metrics"
-	"github.com/flanksource/commons/logger"
+
 	perrors "github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -60,7 +61,7 @@ func (c *PodChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
 	if len(ctx.Canary.Spec.Pod) > 0 {
 		if c.k8s == nil {
-			c.k8s = ctx.Kubernetes
+			c.k8s = ctx.Kubernetes()
 		}
 		for _, conf := range ctx.Canary.Spec.Pod {
 			results = append(results, c.Check(ctx, conf)...)
@@ -89,9 +90,13 @@ func (c *PodChecker) newPod(podCheck canaryv1.PodCheck, nodeName string) (*v1.Po
 	pod.Labels[nameLabel] = pod.Name
 	pod.Labels[podCheckSelector] = c.podCheckSelectorValue(podCheck)
 	pod.Labels[podGeneralSelector] = "true"
-	pod.Spec.NodeSelector = map[string]string{
-		"kubernetes.io/hostname": nodeName,
+
+	if podCheck.RoundRobinNodes {
+		pod.Spec.NodeSelector = map[string]string{
+			"kubernetes.io/hostname": nodeName,
+		}
 	}
+
 	if podCheck.PriorityClass != "" {
 		pod.Spec.PriorityClassName = podCheck.PriorityClass
 	}
@@ -126,7 +131,7 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	podCheck := extConfig.(canaryv1.PodCheck)
 
 	if !c.lock.TryAcquire(1) {
-		logger.Tracef("Check already in progress, skipping")
+		ctx.Tracef("Check already in progress, skipping")
 		return nil
 	}
 	defer func() { c.lock.Release(1) }()
@@ -182,9 +187,9 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	started := diff(conditions, v1.PodScheduled, v1.ContainersReady)
 	running := diff(conditions, v1.ContainersReady, v1.PodReady)
 
-	logger.Debugf("%s created=%s, scheduled=%d, started=%d, running=%d wall=%s nodeName=%s", pod.Name, created, scheduled, started, running, startTimer, nextNode)
+	ctx.Debugf("%s created=%s, scheduled=%d, started=%d, running=%d wall=%s nodeName=%s", pod.Name, created, scheduled, started, running, startTimer, nextNode)
 
-	if err := c.createServiceAndIngress(podCheck, pod); err != nil {
+	if err := c.createServiceAndIngress(ctx, podCheck, pod); err != nil {
 		return results.Failf("failed to create service or ingress: %v", err)
 	}
 
@@ -194,14 +199,14 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	if host == "" {
 		host = fmt.Sprintf("%s.%s:%d", pod.Name, pod.Namespace, podCheck.Port)
 	}
-	ingressTime, requestTime, ingressResult := c.httpCheck(podCheck, deadline, host)
+	ingressTime, requestTime, ingressResult := c.httpCheck(ctx, podCheck, deadline, host)
 
 	message := ingressResult.Message
 
 	if !ingressResult.Pass {
 		podFailMessage, err := c.podFailMessage(pod)
 		if err != nil {
-			logger.Errorf("failed to get pod fail message: %v", err)
+			ctx.Error(err, "failed to get pod fail message")
 		}
 		if podFailMessage != "" {
 			return results.Failf(message + " " + podFailMessage)
@@ -255,26 +260,26 @@ func (c *PodChecker) Cleanup(ctx *context.Context, podCheck canaryv1.PodCheck) {
 	listOptions := metav1.ListOptions{LabelSelector: c.podCheckSelector(podCheck)}
 
 	if c.k8s == nil {
-		logger.Warnf("connection to k8s not established")
+		ctx.Warnf("connection to k8s not established")
 	}
 	err := c.k8s.CoreV1().Pods(podCheck.Namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, listOptions)
 	if err != nil && !errors.IsNotFound(err) {
-		logger.Warnf("Failed to delete pods for check %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
+		ctx.Warnf("Failed to delete pods for check %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
 	}
 
 	services, err := c.k8s.CoreV1().Services(podCheck.Namespace).List(ctx, listOptions)
 	if err != nil {
-		logger.Warnf("Failed to get services to cleanup %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
+		ctx.Warnf("Failed to get services to cleanup %s in namespace %s : %v", podCheck.Name, podCheck.Namespace, err)
 	}
 
 	for _, s := range services.Items {
-		if err := ctx.Kubernetes.CoreV1().Services(podCheck.Namespace).Delete(ctx, s.Name, metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
-			logger.Warnf("Failed delete services %s in namespace %s : %v", s.Name, podCheck.Namespace, err)
+		if err := ctx.Kubernetes().CoreV1().Services(podCheck.Namespace).Delete(ctx, s.Name, metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
+			ctx.Warnf("Failed delete services %s in namespace %s : %v", s.Name, podCheck.Namespace, err)
 		}
 	}
 }
 
-func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time, host string) (ingressTime float64, requestTime float64, result *pkg.CheckResult) {
+func (c *PodChecker) httpCheck(ctx *context.Context, podCheck canaryv1.PodCheck, deadline time.Time, host string) (ingressTime float64, requestTime float64, result *pkg.CheckResult) {
 	httpTimeout := podCheck.HTTPTimeout
 	if httpTimeout == 0 {
 		httpTimeout = 5000
@@ -305,7 +310,7 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time, h
 		response, responseCode, err := c.getHTTP(url, podCheck.HTTPTimeout, deadline)
 		if err != nil && perrors.Is(err, gocontext.DeadlineExceeded) {
 			if timer.Millis() > podCheck.HTTPTimeout && time.Now().Before(deadline) {
-				logger.Tracef("[%s] request completed in %s, above threshold of %d", podCheck, httpTimer, httpTimeout)
+				ctx.Tracef("[%s] request completed in %s, above threshold of %d", podCheck, httpTimer, httpTimeout)
 				time.Sleep(retry)
 				continue
 			} else if httpTimer.Millis() > httpTimeout && time.Now().After(deadline) {
@@ -316,7 +321,7 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time, h
 				continue
 			}
 		} else if err != nil {
-			logger.Tracef("[%s] failed to get http URL %s: %v", podCheck, url, err)
+			ctx.Tracef("[%s] failed to get http URL %s: %v", podCheck, url, err)
 			time.Sleep(retry)
 			continue
 		}
@@ -345,7 +350,7 @@ func (c *PodChecker) httpCheck(podCheck canaryv1.PodCheck, deadline time.Time, h
 	}
 }
 
-func (c *PodChecker) createServiceAndIngress(podCheck canaryv1.PodCheck, pod *v1.Pod) error {
+func (c *PodChecker) createServiceAndIngress(ctx *context.Context, podCheck canaryv1.PodCheck, pod *v1.Pod) error {
 	if podCheck.Port == 0 {
 		return perrors.Errorf("Pod cannot be empty for pod %s in namespace %s", pod.Name, pod.Namespace)
 	}
@@ -388,7 +393,7 @@ func (c *PodChecker) createServiceAndIngress(podCheck canaryv1.PodCheck, pod *v1
 	if err != nil && !errors.IsNotFound(err) {
 		return perrors.Wrapf(err, "Failed to get ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
 	} else if err == nil {
-		logger.Debugf("Updating ingress: %s", podCheck.IngressName)
+		ctx.Debugf("Updating ingress: %s", podCheck.IngressName)
 		pathType := networkingv1.PathTypePrefix
 		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.Service.Name = svc.Name
 		ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.Service.Port.Number = int32(podCheck.Port)
@@ -400,7 +405,7 @@ func (c *PodChecker) createServiceAndIngress(podCheck canaryv1.PodCheck, pod *v1
 			return perrors.Wrapf(err, "failed to update ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
 		}
 	} else {
-		logger.Debugf("Creating ingress: %s", podCheck.IngressName)
+		ctx.Debugf("Creating ingress: %s", podCheck.IngressName)
 		ingress := c.newIngress(podCheck, svc.Name)
 		if _, err := c.k8s.NetworkingV1().Ingresses(podCheck.Namespace).Create(gocontext.TODO(), ingress, metav1.CreateOptions{}); err != nil {
 			return perrors.Wrapf(err, "failed to create ingress %s in namespace %s", podCheck.IngressName, podCheck.Namespace)
@@ -465,7 +470,8 @@ func (c *PodChecker) getHTTP(url string, timeout int64, deadline time.Time) (str
 		hardDeadline = softTimeoutDeadline
 	}
 
-	ctx, _ := gocontext.WithDeadline(gocontext.Background(), hardDeadline) // nolint: govet
+	ctx, cancelFunc := gocontext.WithDeadline(gocontext.Background(), hardDeadline)
+	defer cancelFunc()
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

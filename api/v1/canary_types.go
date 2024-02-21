@@ -21,10 +21,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/commons/logger"
+	"github.com/robfig/cron/v3"
+	"github.com/samber/lo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 type ResultMode string
@@ -35,6 +39,10 @@ const (
 
 // CanarySpec defines the desired state of Canary
 type CanarySpec struct {
+	//+kubebuilder:default=1
+	//+optional
+	Replicas int `yaml:"replicas,omitempty" json:"replicas,omitempty"`
+
 	Env            map[string]VarSource  `yaml:"env,omitempty" json:"env,omitempty"`
 	HTTP           []HTTPCheck           `yaml:"http,omitempty" json:"http,omitempty"`
 	DNS            []DNSCheck            `yaml:"dns,omitempty" json:"dns,omitempty"`
@@ -61,6 +69,7 @@ type CanarySpec struct {
 	MongoDB        []MongoDBCheck        `yaml:"mongodb,omitempty" json:"mongodb,omitempty"`
 	CloudWatch     []CloudWatchCheck     `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
 	GitHub         []GitHubCheck         `yaml:"github,omitempty" json:"github,omitempty"`
+	GitProtocol    []GitProtocolCheck    `yaml:"gitProtocol,omitempty" json:"gitProtocol,omitempty"`
 	Kubernetes     []KubernetesCheck     `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
 	Folder         []FolderCheck         `yaml:"folder,omitempty" json:"folder,omitempty"`
 	Exec           []ExecCheck           `yaml:"exec,omitempty" json:"exec,omitempty"`
@@ -73,6 +82,7 @@ type CanarySpec struct {
 	AlertManager   []AlertManagerCheck   `yaml:"alertmanager,omitempty" json:"alertmanager,omitempty"`
 	Dynatrace      []DynatraceCheck      `yaml:"dynatrace,omitempty" json:"dynatrace,omitempty"`
 	AzureDevops    []AzureDevopsCheck    `yaml:"azureDevops,omitempty" json:"azureDevops,omitempty"`
+	Webhook        *WebhookCheck         `yaml:"webhook,omitempty" json:"webhook,omitempty"`
 	// interval (in seconds) to run checks on Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
 	// Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
@@ -161,6 +171,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	for _, check := range spec.GitHub {
 		checks = append(checks, check)
 	}
+	for _, check := range spec.GitProtocol {
+		checks = append(checks, check)
+	}
 	for _, check := range spec.Kubernetes {
 		checks = append(checks, check)
 	}
@@ -200,6 +213,127 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	return checks
 }
 
+// KeepOnly removes all the checks from the spec that do not
+// match the given name (exactly)
+func (spec CanarySpec) KeepOnly(names ...string) CanarySpec {
+	spec.HTTP = lo.Filter(spec.HTTP, func(c HTTPCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.DNS = lo.Filter(spec.DNS, func(c DNSCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.DockerPull = lo.Filter(spec.DockerPull, func(c DockerPullCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.DockerPush = lo.Filter(spec.DockerPush, func(c DockerPushCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.ContainerdPull = lo.Filter(spec.ContainerdPull, func(c ContainerdPullCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.ContainerdPush = lo.Filter(spec.ContainerdPush, func(c ContainerdPushCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.S3 = lo.Filter(spec.S3, func(c S3Check, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.TCP = lo.Filter(spec.TCP, func(c TCPCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Pod = lo.Filter(spec.Pod, func(c PodCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.LDAP = lo.Filter(spec.LDAP, func(c LDAPCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.ICMP = lo.Filter(spec.ICMP, func(c ICMPCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Postgres = lo.Filter(spec.Postgres, func(c PostgresCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Mssql = lo.Filter(spec.Mssql, func(c MssqlCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Mysql = lo.Filter(spec.Mysql, func(c MysqlCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Restic = lo.Filter(spec.Restic, func(c ResticCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Jmeter = lo.Filter(spec.Jmeter, func(c JmeterCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Junit = lo.Filter(spec.Junit, func(c JunitCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Helm = lo.Filter(spec.Helm, func(c HelmCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Namespace = lo.Filter(spec.Namespace, func(c NamespaceCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Redis = lo.Filter(spec.Redis, func(c RedisCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.EC2 = lo.Filter(spec.EC2, func(c EC2Check, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Prometheus = lo.Filter(spec.Prometheus, func(c PrometheusCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.MongoDB = lo.Filter(spec.MongoDB, func(c MongoDBCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.CloudWatch = lo.Filter(spec.CloudWatch, func(c CloudWatchCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.GitHub = lo.Filter(spec.GitHub, func(c GitHubCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.GitProtocol = lo.Filter(spec.GitProtocol, func(c GitProtocolCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Kubernetes = lo.Filter(spec.Kubernetes, func(c KubernetesCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Folder = lo.Filter(spec.Folder, func(c FolderCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Exec = lo.Filter(spec.Exec, func(c ExecCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.AwsConfig = lo.Filter(spec.AwsConfig, func(c AwsConfigCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.AwsConfigRule = lo.Filter(spec.AwsConfigRule, func(c AwsConfigRuleCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.DatabaseBackup = lo.Filter(spec.DatabaseBackup, func(c DatabaseBackupCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.ConfigDB = lo.Filter(spec.ConfigDB, func(c ConfigDBCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Opensearch = lo.Filter(spec.Opensearch, func(c OpenSearchCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Elasticsearch = lo.Filter(spec.Elasticsearch, func(c ElasticsearchCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.AlertManager = lo.Filter(spec.AlertManager, func(c AlertManagerCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Dynatrace = lo.Filter(spec.Dynatrace, func(c DynatraceCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.AzureDevops = lo.Filter(spec.AzureDevops, func(c AzureDevopsCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+
+	return spec
+}
+
 func (spec CanarySpec) GetSchedule() string {
 	if spec.Schedule != "" {
 		return spec.Schedule
@@ -232,6 +366,10 @@ func (c Canary) GetDescription(check external.Check) string {
 		return check.GetDescription()
 	}
 	return check.GetEndpoint()
+}
+
+func (c Canary) GetNamespacedName() types.NamespacedName {
+	return types.NamespacedName{Name: c.Name, Namespace: c.Namespace}
 }
 
 func (c *Canary) SetRunnerName(name string) {
@@ -275,6 +413,8 @@ type CanaryStatus struct {
 	Latency1H string `json:"latency1h,omitempty"`
 	// used for keeping history of the checks
 	runnerName string `json:"-"`
+	// Replicas keep track of the number of replicas
+	Replicas int `json:"replicas,omitempty"`
 }
 
 func (c Canary) GetCheckID(checkName string) string {
@@ -299,6 +439,7 @@ type CheckStatus struct {
 // +kubebuilder:object:root=true
 
 // Canary is the Schema for the canaries API
+// +kubebuilder:printcolumn:name="Replicas",type=integer,priority=1,JSONPath=`.spec.replicas`
 // +kubebuilder:printcolumn:name="Interval",type=string,JSONPath=`.spec.interval`
 // +kubebuilder:printcolumn:name="Status",type=string,JSONPath=`.status.status`
 // +kubebuilder:printcolumn:name="Last Check",type=date,JSONPath=`.status.lastCheck`
@@ -308,6 +449,7 @@ type CheckStatus struct {
 // +kubebuilder:printcolumn:name="Message",type=string,priority=1,JSONPath=`.status.message`
 // +kubebuilder:printcolumn:name="Error",type=string,priority=1,JSONPath=`.status.errorMessage`
 // +kubebuilder:subresource:status
+// +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas
 type Canary struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -316,10 +458,11 @@ type Canary struct {
 	Status CanaryStatus `json:"status,omitempty"`
 }
 
-func NewCanaryFromSpec(name string, spec CanarySpec) Canary {
+func NewCanaryFromSpec(name, namespace string, spec CanarySpec) Canary {
 	return Canary{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:      name,
+			Namespace: namespace,
 		},
 		Spec: spec,
 	}
@@ -351,10 +494,20 @@ func (c Canary) ID() string {
 }
 
 func (c Canary) GetPersistedID() string {
-	if c.Status.PersistedID != nil {
-		return *c.Status.PersistedID
+	return string(c.GetUID())
+}
+
+func (c Canary) NextRuntime(lastRuntime time.Time) (*time.Time, error) {
+	if c.Spec.Schedule != "" {
+		schedule, err := cron.ParseStandard(c.Spec.Schedule)
+		if err != nil {
+			return nil, err
+		}
+		t := schedule.Next(time.Now())
+		return &t, nil
 	}
-	return ""
+	t := lastRuntime.Add(time.Duration(c.Spec.Interval) * time.Second)
+	return &t, nil
 }
 
 // +kubebuilder:object:root=true

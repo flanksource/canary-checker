@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	osExec "os/exec"
-	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -49,27 +48,23 @@ func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 		}
 	}
 
-	askGitCmd := fmt.Sprintf("GITHUB_TOKEN=%v askgit \"%v\" --format json", githubToken, check.Query)
+	askGitCmd := fmt.Sprintf("mergestat \"%v\" --format json", check.Query)
+	if ctx.IsTrace() {
+		ctx.Tracef("Executing askgit command: %v", askGitCmd)
+	}
 	cmd := osExec.Command("bash", "-c", askGitCmd)
+	cmd.Env = append(cmd.Env, "GITHUB_TOKEN="+githubToken)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return results.Failf("error executing askgit command. output=%q: %v", output, err)
 	}
 
-	rows := string(output)
-	var rowResults = make([]map[string]string, 0)
-	for _, row := range strings.Split(rows, "\n") {
-		if row == "" {
-			continue
-		}
-		var rowResult map[string]string
-		err := json.Unmarshal([]byte(row), &rowResult)
-		if err != nil {
-			return results.Failf("error parsing askgit result: %v", err)
-		}
-
-		rowResults = append(rowResults, rowResult)
+	var rowResults = make([]map[string]any, 0)
+	err = json.Unmarshal(output, &rowResults)
+	if err != nil {
+		return results.Failf("error parsing mergestat result: %v", err)
 	}
+
 	result.AddDetails(rowResults)
 	return results
 }

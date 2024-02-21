@@ -12,8 +12,10 @@ type Results []*CheckResult
 
 func Fail(check external.Check, canary v1.Canary) *CheckResult {
 	return &CheckResult{
-		Check:  check,
-		Data:   make(map[string]interface{}),
+		Check: check,
+		Data: map[string]interface{}{
+			"results": make(map[string]interface{}),
+		},
 		Start:  time.Now(),
 		Pass:   false,
 		Canary: canary,
@@ -29,18 +31,39 @@ func SetupError(canary v1.Canary, err error) Results {
 			Invalid: true,
 			Error:   err.Error(),
 			Check:   check,
-			Data:    make(map[string]interface{}),
+			Data: map[string]interface{}{
+				"results": make(map[string]interface{}),
+			},
 		})
 	}
 	return results
 }
 
+func Invalid(check external.Check, canary v1.Canary, reason string) Results {
+	return Results{&CheckResult{
+		Start: time.Now(),
+		Pass:  false,
+		Error: reason,
+		Check: check,
+		Data: map[string]interface{}{
+			"results": make(map[string]interface{}),
+		},
+		Canary: canary,
+	}}
+}
 func Success(check external.Check, canary v1.Canary) *CheckResult {
+	result := New(check, canary)
+	result.Pass = true
+	return result
+}
+
+func New(check external.Check, canary v1.Canary) *CheckResult {
 	return &CheckResult{
-		Start:  time.Now(),
-		Pass:   true,
-		Check:  check,
-		Data:   make(map[string]interface{}),
+		Start: time.Now(),
+		Check: check,
+		Data: map[string]interface{}{
+			"results": make(map[string]interface{}),
+		},
 		Canary: canary,
 	}
 }
@@ -99,6 +122,12 @@ func (result *CheckResult) Failf(message string, args ...interface{}) *CheckResu
 	return result
 }
 
+func (result *CheckResult) Invalidf(message string, args ...interface{}) Results {
+	result = result.Failf(message, args...)
+	result.Invalid = true
+	return Results{result}
+}
+
 func (result *CheckResult) AddDetails(detail interface{}) *CheckResult {
 	result.Detail = detail
 	if result.Data == nil {
@@ -136,4 +165,12 @@ func (r Results) Failf(msg string, args ...interface{}) Results {
 func (r Results) ErrorMessage(err error) Results {
 	r[0].ErrorMessage(err)
 	return r
+}
+
+func (r Results) TotalArtifacts() int {
+	var total int
+	for _, result := range r {
+		total += len(result.Artifacts)
+	}
+	return total
 }

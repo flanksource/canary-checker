@@ -3,16 +3,15 @@
 package checks
 
 import (
-	"fmt"
+	"errors"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	awsUtil "github.com/flanksource/canary-checker/pkg/clients/aws"
-	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/models"
 )
 
 type S3 struct {
@@ -25,26 +24,36 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 
-	if check.AWSConnection == nil {
-		check.AWSConnection = &v1.AWSConnection{}
-	} else if err := check.AWSConnection.Populate(ctx, ctx.Kubernetes, ctx.Namespace); err != nil {
-		return results.Failf("failed to populate aws connection: %v", err)
+	if check.S3Connection == nil {
+		return results.ErrorMessage(errors.New("missing AWS connection"))
 	}
 
-	cfg, err := awsUtil.NewSession(ctx, *check.AWSConnection)
+	var bucket string
+	bucket, check.Path = parseS3Path(check.Path)
+
+	connection, err := ctx.HydrateConnectionByURL(check.AWSConnection.ConnectionName)
+	if err != nil {
+		return results.Failf("failed to populate AWS connection: %v", err)
+	} else if connection == nil {
+		connection = &models.Connection{Type: models.ConnectionTypeS3}
+		if check.S3Connection.Bucket == "" {
+			check.S3Connection.Bucket = bucket
+		}
+
+		connection, err = connection.Merge(ctx, check.S3Connection)
+		if err != nil {
+			return results.Failf("failed to populate AWS connection: %v", err)
+		}
+	}
+
+	fs, err := artifacts.GetFSForConnection(ctx.Context, *connection)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
 
-	client := &S3{
-		Client: s3.NewFromConfig(*cfg, func(o *s3.Options) {
-			o.UsePathStyle = check.AWSConnection.UsePathStyle
-		}),
-		Bucket: getS3BucketName(check.Path),
-	}
-	folders, err := client.CheckFolder(ctx, check.Filter)
+	folders, err := genericFolderCheckWithoutPrecheck(fs, check.Path, check.Recursive, check.Filter)
 	if err != nil {
-		return results.ErrorMessage(fmt.Errorf("failed to retrieve s3://%s: %v", getS3BucketName(check.Path), err))
+		return results.ErrorMessage(err)
 	}
 	result.AddDetails(folders)
 
@@ -55,51 +64,14 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	return results
 }
 
-func (conn *S3) CheckFolder(ctx *context.Context, filter v1.FolderFilter) (*FolderCheck, error) {
-	result := FolderCheck{}
-
-	var marker *string = nil
-	parts := strings.Split(conn.Bucket, "/")
-	bucket := parts[0]
-	prefix := ""
-	if len(parts) > 0 {
-		prefix = strings.Join(parts[1:], "/")
+// parseS3Path returns the bucket name and the actual path stripping of the s3:// prefix and the bucket name.
+// The path is expected to be in the format "s3://bucket_name/<actual_path>"
+func parseS3Path(fullpath string) (bucket, path string) {
+	trimmed := strings.TrimPrefix(fullpath, "s3://")
+	splits := strings.SplitN(trimmed, "/", 2)
+	if len(splits) != 2 {
+		return splits[0], ""
 	}
-	maxKeys := 500
-	for {
-		logger.Debugf("%s fetching %d, prefix%s, marker=%s", bucket, maxKeys, prefix, marker)
-		req := &s3.ListObjectsInput{
-			Bucket:  aws.String(conn.Bucket),
-			Marker:  marker,
-			MaxKeys: int32(maxKeys),
-			Prefix:  &prefix,
-		}
-		resp, err := conn.ListObjects(ctx, req)
-		if err != nil {
-			return nil, err
-		}
 
-		_filter, err := filter.New()
-		if err != nil {
-			return nil, err
-		}
-		for _, obj := range resp.Contents {
-			file := awsUtil.S3FileInfo{Object: obj}
-			if !_filter.Filter(file) {
-				continue
-			}
-			result.Append(file)
-		}
-		if resp.IsTruncated && len(resp.Contents) > 0 {
-			marker = resp.Contents[len(resp.Contents)-1].Key
-		} else {
-			break
-		}
-	}
-	// bucketScanTotalSize.WithLabelValues(bucket.Endpoint, bucket.Bucket).Add(float64(aws.Int64Value(obj.Size)))
-	return &result, nil
-}
-
-func getS3BucketName(bucket string) string {
-	return strings.TrimPrefix(bucket, "s3://")
+	return splits[0], splits[1]
 }

@@ -2,10 +2,11 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: redis-succeed
+  namespace: canaries
 spec:
   interval: 30
   redis:
-    - addr: "redis.default.svc.cluster.local:6379"
+    - addr: "redis.canaries.svc.cluster.local:6379"
       name: redis ping check
       db: 0
       description: "The redis pass test"

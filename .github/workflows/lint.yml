@@ -6,20 +6,29 @@ on:
       - main
   pull_request:
   merge_group:
+permissions: read-all
 jobs:
   golangci:
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      pull-requests: read # for golangci/golangci-lint-action to fetch pull requests
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: 1.19.x
+          go-version: 1.20.x
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@3a919529898de77ec3da873e3063ca4b10e7f5cc # v3.7.0
+        with:
+          # Disable caching as a workaround for https://github.com/golangci/golangci-lint-action/issues/135.
+          # The line can be removed once the golangci-lint issue is resolved. version: v1.55.2
+          skip-pkg-cache: true
+
       - name: setup node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@b39b52d1213e96004bfcb1c61a8a6fa8ab84f3e8 # v4.0.1
         with:
           node-version: "12"
       - name: Check auto-generated files
@@ -27,22 +36,24 @@ jobs:
           CI: false
         run: |
           make resources
+          git checkout hack/generate-schemas/go.*
+          git checkout fixtures/datasources/go.*
           git diff
           changed_files=$(git status -s)
           [[ -z "$changed_files" ]] ||  (printf "Change is detected in some files: \n$changed_files\n Did you run 'make resources' before sending the PR?" && exit 1)
   helm:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
       - name: Set up Helm
-        uses: azure/setup-helm@v1
+        uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3.5
         with:
           version: v3.4.0
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@e9aba2c848f5ebd159c070c61ea2c4e2b122355e # v2.3.4
         with:
           python-version: 3.7
       - name: Set up chart-testing
-        uses: helm/chart-testing-action@v2.1.0
+        uses: helm/chart-testing-action@5f16c27cf7a4fa9c776ff73734df3909b2b65127 # v2.1.0
       - name: Lint chart
         run: ct lint --charts ./chart
