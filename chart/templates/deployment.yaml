@@ -75,11 +75,15 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{- if .Values.db.connectionPooler.enabled -}}
-                          {{ default "mission-control-connection-pooler" .Values.db.connectionPooler.secretKeyRef }}
+                          {{ default "mission-control-connection-pooler" .Values.db.connectionPooler.secretKeyRef.name }}
                         {{- else -}}
                           {{ .Values.db.external.secretKeyRef.name -}}
                         {{- end }}
-                  key: {{ .Values.db.external.secretKeyRef.key }}
+                  key: {{- if .Values.db.connectionPooler.enabled -}}
+                          {{ .Values.db.connectionPooler.secretKeyRef.key }}
+                        {{- else -}}
+                          {{ .Values.db.external.secretKeyRef.key -}}
+                        {{- end }}
               {{- else }}
               value: "embedded:///opt/database/"
               {{- end }}
