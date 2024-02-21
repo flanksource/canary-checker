@@ -39,7 +39,7 @@ db:
   runMigrations: true
   connectionPooler:
     enabled: false
-    secretKeyRef: 
+    secretKeyRef:
       name: mission-control-connection-pooler
       key: DB_URL
   embedded:
