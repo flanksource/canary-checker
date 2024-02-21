@@ -31,7 +31,7 @@ db:
   connectionPooler:
     enabled: false
     secretKeyRef: 
-      name: ""
+      name: mission-control-connection-pooler
       key: DB_URL
   embedded:
     # If the database is embedded, setting this to true will persist the contents of the database

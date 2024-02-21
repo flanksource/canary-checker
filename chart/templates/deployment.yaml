@@ -75,7 +75,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{- if .Values.db.connectionPooler.enabled -}}
-                          {{ default "mission-control-connection-pooler" .Values.db.connectionPooler.secretKeyRef.name }}
+                          {{ .Values.db.connectionPooler.secretKeyRef.name }}
                         {{- else -}}
                           {{ .Values.db.external.secretKeyRef.name -}}
                         {{- end }}
