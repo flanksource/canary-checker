@@ -2,6 +2,14 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+global:
+  db:
+    connectionPooler:
+      enabled: false
+      secretKeyRef:
+        name: mission-control-connection-pooler
+        key: DB_URL
+
 replicas: 1
 
 image:
@@ -37,11 +45,6 @@ otel:
 
 db:
   runMigrations: true
-  connectionPooler:
-    enabled: false
-    secretKeyRef:
-      name: mission-control-connection-pooler
-      key: DB_URL
   embedded:
     # If the database is embedded, setting this to true will persist the contents of the database
     # through a persistent volume
