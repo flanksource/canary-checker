@@ -92,8 +92,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 
 	results, err := checks.RunChecks(canaryCtx)
 	if err != nil {
-		ctx.Error(err)
-		return nil
+		return err
 	}
 
 	// Get transformed checks before and after, and then delete the olds ones that are not in new set.
