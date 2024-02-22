@@ -90,16 +90,8 @@ spec:
               {{- if eq .Values.db.external.enabled true }}
               valueFrom:
                 secretKeyRef:
-                  name: {{- if .Values.db.connectionPooler.enabled -}}
-                          {{ .Values.db.connectionPooler.secretKeyRef.name }}
-                        {{- else -}}
-                          {{ .Values.db.external.secretKeyRef.name -}}
-                        {{- end }}
-                  key: {{- if .Values.db.connectionPooler.enabled -}}
-                          {{ .Values.db.connectionPooler.secretKeyRef.key }}
-                        {{- else -}}
-                          {{ .Values.db.external.secretKeyRef.key -}}
-                        {{- end }}
+                  name: {{ if .Values.global.db.connectionPooler.enabled }}{{ .Values.global.db.connectionPooler.secretKeyRef.name }}{{ else }}{{ .Values.db.external.secretKeyRef.name }}{{ end }}
+                  key: {{ if .Values.global.db.connectionPooler.enabled }}{{ .Values.global.db.connectionPooler.secretKeyRef.key }}{{ else }}{{ .Values.db.external.secretKeyRef.key }}{{ end }}
               {{- else }}
               value: "embedded:///opt/database/"
               {{- end }}
