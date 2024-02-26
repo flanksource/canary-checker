@@ -38,23 +38,17 @@ func (c *ComponentContext) GetTemplater() gomplate.StructTemplater {
 	if c.templater != nil {
 		return *c.templater
 	}
-	var props = make(map[string]interface{})
+	var props = make(map[string]any)
 	if c.CurrentComponent != nil && c.CurrentComponent.Properties != nil {
 		props = c.CurrentComponent.Properties.AsMap()
 	}
-	c.templater = &gomplate.StructTemplater{
-		// RequiredTag: "template",
-		DelimSets: []gomplate.Delims{
-			{
-				Left:  "${",
-				Right: "}",
-			},
-		},
-		Values: map[string]interface{}{
-			"component":  c.CurrentComponent,
-			"properties": props,
-		},
+	vals := map[string]any{
+		"component":  c.CurrentComponent,
+		"properties": props,
 	}
+	// TODO: This has delims as ${ }
+	t := c.NewStructTemplater(vals, "", nil)
+	c.templater = &t
 	return *c.templater
 }
 

@@ -33,7 +33,7 @@ spec:
               ].toJSON()
     forEach:
       configs:
-        - name: ${.component.name}
+        - name: $(.component.name)
           type: Service
       components:
         - name: Child-A
