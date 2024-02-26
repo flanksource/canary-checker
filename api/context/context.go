@@ -41,7 +41,7 @@ func (ctx *Context) Template(check external.Check, template string) (string, err
 
 	tpl := gomplate.Template{Template: template}
 	if tpl.Functions == nil {
-		tpl.Functions = make(map[string]func() any)
+		tpl.Functions = make(map[string]any)
 	}
 	for k, v := range ctx.GetContextualFunctions() {
 		tpl.Functions[k] = v
@@ -93,17 +93,7 @@ func (ctx *Context) GetConnection(conn v1.Connection) (*models.Connection, error
 		"password":  _conn.Password,
 		"domain":    getDomain(_conn.Username),
 	}
-	templater := gomplate.StructTemplater{
-		Values: data,
-		// access go values in template requires prefix everything with .
-		// to support $(username) instead of $(.username) we add a function for each var
-		ValueFunctions: true,
-		DelimSets: []gomplate.Delims{
-			{Left: "{{", Right: "}}"},
-			{Left: "$(", Right: ")"},
-		},
-		RequiredTag: "template",
-	}
+	templater := ctx.NewStructTemplater(data, "template", nil)
 	if err := templater.Walk(_conn); err != nil {
 		return nil, err
 	}
@@ -112,17 +102,7 @@ func (ctx *Context) GetConnection(conn v1.Connection) (*models.Connection, error
 }
 
 func (ctx Context) TemplateStruct(o interface{}) error {
-	templater := gomplate.StructTemplater{
-		Values: ctx.Environment,
-		Funcs:  ctx.GetContextualFunctions(),
-		// access go values in template requires prefix everything with .
-		// to support $(username) instead of $(.username) we add a function for each var
-		ValueFunctions: true,
-		DelimSets: []gomplate.Delims{
-			{Left: "{{", Right: "}}"},
-			{Left: "$(", Right: ")"},
-		},
-	}
+	templater := ctx.NewStructTemplater(ctx.Environment, "", ctx.GetContextualFunctions())
 	return templater.Walk(o)
 }
 

@@ -7,8 +7,8 @@ import (
 	"github.com/flanksource/commons/logger"
 )
 
-func (ctx *Context) GetContextualFunctions() map[string]func() any {
-	funcs := make(map[string]func() any)
+func (ctx *Context) GetContextualFunctions() map[string]any {
+	funcs := make(map[string]any)
 	if check, ok := ctx.Environment["check"]; ok {
 		checkID := check.(map[string]any)["id"]
 		funcs["last_result"] = func() any {

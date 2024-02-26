@@ -63,7 +63,7 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 	tpl := template.Gomplate()
 
 	if tpl.Functions == nil {
-		tpl.Functions = make(map[string]func() any)
+		tpl.Functions = make(map[string]any)
 	}
 
 	for k, v := range ctx.GetContextualFunctions() {
