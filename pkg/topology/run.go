@@ -17,7 +17,6 @@ import (
 	"github.com/flanksource/duty/query"
 
 	"github.com/flanksource/duty/types"
-	"github.com/flanksource/gomplate/v3"
 	"github.com/google/uuid"
 	jsontime "github.com/liamylian/jsontime/v2/v2"
 	"github.com/pkg/errors"
@@ -163,7 +162,7 @@ func lookupComponents(ctx *ComponentContext, component v1.ComponentSpec) (compon
 			comp.Lifecycle = component.Lifecycle
 		}
 		if comp.ExternalId == "" && component.Id != nil {
-			id, err := gomplate.RunTemplate(comp.GetAsEnvironment(), component.Id.Gomplate())
+			id, err := ctx.RunTemplate(component.Id.Gomplate(), comp.GetAsEnvironment())
 			if err != nil {
 				return nil, errors.Wrapf(err, "Failed to lookup id: %v", component.Id)
 			} else {
@@ -260,7 +259,7 @@ func lookupConfig(ctx *ComponentContext, property *v1.Property) (*types.Property
 
 	ctx.Tracef("%s property=%s => %s", ctx, property.Name, _config.String())
 
-	prop.Text, err = gomplate.RunTemplate(templateEnv, property.ConfigLookup.Display.Template.Gomplate())
+	prop.Text, err = ctx.RunTemplate(property.ConfigLookup.Display.Template.Gomplate(), templateEnv)
 	return prop, err
 }
 
@@ -513,7 +512,7 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 		rootComponent.Summary = rootComponent.Components.Summarize()
 	}
 	if rootComponent.ID.String() == "" && ctx.Topology.Spec.Id != nil {
-		id, err := gomplate.RunTemplate(rootComponent.GetAsEnvironment(), ctx.Topology.Spec.Id.Gomplate())
+		id, err := ctx.RunTemplate(ctx.Topology.Spec.Id.Gomplate(), rootComponent.GetAsEnvironment())
 		if err != nil {
 			job.History.AddError(fmt.Sprintf("Failed to lookup id: %v", err))
 		} else {

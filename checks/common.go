@@ -13,7 +13,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	cUtils "github.com/flanksource/commons/utils"
-	"github.com/flanksource/gomplate/v3"
 	"github.com/robfig/cron/v3"
 )
 
@@ -70,7 +69,7 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 		tpl.Functions[k] = v
 	}
 
-	return gomplate.RunTemplate(ctx.Environment, tpl)
+	return ctx.RunTemplate(tpl, ctx.Environment)
 }
 
 // transform generates new checks from the transformation template of the parent check
