@@ -25,11 +25,20 @@ var CleanupSoftDeletedComponents = &job.Job{
 
 		seconds := int64(retention.Seconds())
 
+		linkedComponents := `
+		SELECT component_id FROM evidences WHERE component_id IS NOT NULL
+		UNION
+		SELECT component_id FROM playbook_runs WHERE component_id IS NOT NULL
+		`
+
 		tx := ctx.Context.DB().Exec(
-			`DELETE FROM component_relationships WHERE deleted_at < NOW() - interval '1 SECONDS' * ? OR
-				component_id in (SELECT id FROM components WHERE id NOT IN (SELECT component_id FROM evidences WHERE component_id IS NOT NULL) AND deleted_at < NOW() - interval '1 SECONDS' * ?) OR
-				relationship_id in (SELECT id FROM components WHERE id NOT IN (SELECT component_id FROM evidences WHERE component_id IS NOT NULL) AND deleted_at < NOW() - interval '1 SECONDS' * ?)
-				`, seconds, seconds, seconds)
+			fmt.Sprintf(`
+				DELETE FROM component_relationships
+					WHERE deleted_at < NOW() - interval '1 SECONDS' * ? OR
+					component_id in (SELECT id FROM components WHERE id NOT IN (%s) AND deleted_at < NOW() - interval '1 SECONDS' * ?) OR
+					relationship_id in (SELECT id FROM components WHERE id NOT IN (%s) AND deleted_at < NOW() - interval '1 SECONDS' * ?)
+			`, linkedComponents, linkedComponents),
+			seconds, seconds, seconds)
 		if tx.Error != nil {
 			return tx.Error
 		}
@@ -40,9 +49,12 @@ var CleanupSoftDeletedComponents = &job.Job{
 		}
 
 		for {
-			tx = ctx.Context.DB().Exec(`DELETE FROM components WHERE id in (SELECT id FROM components WHERE
-				id NOT IN (SELECT component_id FROM evidences WHERE component_id IS NOT NULL)
-				AND deleted_at < NOW() - interval '1 SECONDS' * ? ORDER BY length(path) DESC LIMIT 1000)`, seconds)
+			tx = ctx.Context.DB().Exec(fmt.Sprintf(`
+				DELETE FROM components WHERE id in (
+					SELECT id FROM components WHERE id NOT IN (%s) 
+					AND deleted_at < NOW() - interval '1 SECONDS' * ?
+					ORDER BY length(path) DESC LIMIT 1000
+				)`, linkedComponents), seconds)
 			if tx.Error != nil {
 				return tx.Error
 			}
@@ -52,6 +64,7 @@ var CleanupSoftDeletedComponents = &job.Job{
 				break
 			}
 		}
+
 		return nil
 	},
 }
