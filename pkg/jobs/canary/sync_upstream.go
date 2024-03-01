@@ -37,7 +37,7 @@ var UpstreamJobs = []*job.Job{
 }
 
 var ReconcileChecks = &job.Job{
-	Name:       "PushChecksToUpstream",
+	Name:       "ReconcileCanaries",
 	JobHistory: true,
 	Singleton:  true,
 	Retention:  job.RetentionDay,
@@ -46,18 +46,19 @@ var ReconcileChecks = &job.Job{
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = ResourceTypeUpstream
 		ctx.History.ResourceID = UpstreamConf.Host
-		if count, err := upstream.NewUpstreamReconciler(UpstreamConf, ReconcilePageSize).
-			Sync(ctx.Context, "canaries"); err != nil {
+
+		if count, err := upstream.ReconcileTable[models.Canary](ctx.Context, UpstreamConf, ReconcilePageSize); err != nil {
 			ctx.History.AddError(err.Error())
 		} else {
 			ctx.History.SuccessCount += count
 		}
-		if count, err := upstream.NewUpstreamReconciler(UpstreamConf, ReconcilePageSize).
-			Sync(ctx.Context, "checks"); err != nil {
+
+		if count, err := upstream.ReconcileTable[models.Check](ctx.Context, UpstreamConf, ReconcilePageSize); err != nil {
 			ctx.History.AddError(err.Error())
 		} else {
 			ctx.History.SuccessCount += count
 		}
+
 		return nil
 	},
 }
@@ -83,6 +84,7 @@ var PullUpstreamCanaries = &job.Job{
 	Name:       "PullUpstreamCanaries",
 	JobHistory: true,
 	Singleton:  true,
+	RunNow:     true,
 	Schedule:   "@every 10m",
 	Retention:  job.RetentionHour,
 	Fn: func(ctx job.JobRuntime) error {
@@ -103,8 +105,8 @@ func pull(ctx context.Context, config upstream.UpstreamConfig) (int, error) {
 	logger.Tracef("pulling canaries from upstream since: %v", lastRuntime)
 
 	client := upstream.NewUpstreamClient(config)
-	req := client.Client.R(ctx).QueryParam("since", lastRuntime.Format(time.RFC3339))
-	resp, err := req.Get(fmt.Sprintf("canary/pull/%s", config.AgentName))
+	req := client.Client.R(ctx).QueryParam("since", lastRuntime.Format(time.RFC3339)).QueryParam(upstream.AgentNameQueryParam, config.AgentName)
+	resp, err := req.Get("canary/pull")
 	if err != nil {
 		return 0, fmt.Errorf("error making request: %w", err)
 	}

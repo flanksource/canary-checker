@@ -133,12 +133,20 @@ func Init() (dutyContext.Context, error) {
 	}
 
 	if RunMigrations {
-		opts := &migrate.MigrateOptions{IgnoreFiles: []string{"007_events.sql", "012_changelog_triggers_others.sql", "012_changelog_triggers_scrapers.sql"}}
+		ignoreMigrations := []string{
+			"007_events.sql",
+			"012_changelog_triggers_others.sql",
+			"012_changelog_triggers_scrapers.sql",
+			"026_is_pushed_agent_config_db.sql",
+			"026_is_pushed_agent_mc.sql",
+		}
+
+		opts := &migrate.MigrateOptions{IgnoreFiles: ignoreMigrations}
 		if err := duty.Migrate(ConnectionString, opts); err != nil {
 			return dutyContext.New(), err
 		}
 	} else {
-		_, _, _ = lo.AttemptWithDelay(5, 5*time.Second, func(i int, d time.Duration) error {
+		_, _, err = lo.AttemptWithDelay(5, 5*time.Second, func(i int, d time.Duration) error {
 			err := ctx.DB().Limit(1).Find(&[]models.Agent{}).Error
 			if err != nil && strings.Contains(err.Error(), "ERROR: relation \"agents\"") {
 				runner.ShutdownAndExit(1, "database migrations not run, use --db-migrations")
