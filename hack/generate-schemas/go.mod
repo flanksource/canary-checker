@@ -11,7 +11,7 @@ require (
 
 require (
 	github.com/emicklei/go-restful/v3 v3.11.1 // indirect
-	github.com/flanksource/gomplate/v3 v3.24.0 // indirect
+	github.com/flanksource/gomplate/v3 v3.24.1-0.20240304114045-bfd15d0aa68e // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/hairyhenderson/yaml v0.0.0-20220618171115-2d35fca545ce // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -50,10 +50,10 @@ require (
 	github.com/evanphx/json-patch v5.7.0+incompatible // indirect
 	github.com/exaring/otelpgx v0.5.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/flanksource/duty v1.0.356 // indirect
+	github.com/flanksource/duty v1.0.359 // indirect
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7 // indirect
 	github.com/flanksource/kommons v0.31.4 // indirect
-	github.com/flanksource/kubectl-neat v1.0.2 // indirect
+	github.com/flanksource/kubectl-neat v1.0.3 // indirect
 	github.com/flanksource/postq v1.0.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
