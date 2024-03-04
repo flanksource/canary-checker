@@ -25,7 +25,29 @@ var (
 const ResourceTypeUpstream = "upstream"
 
 var UpstreamJobs = []*job.Job{
+	ReconcileCanaries,
 	PullUpstreamCanaries,
+}
+
+var ReconcileCanaries = &job.Job{
+	Name:       "ReconcileCanaries",
+	Schedule:   "@every 1m",
+	Retention:  job.Retention3Day,
+	Singleton:  true,
+	JobHistory: true,
+	RunNow:     true,
+	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = job.ResourceTypeUpstream
+		ctx.History.ResourceID = UpstreamConf.Host
+		tablesToReconcile := []string{"canaries", "checks", "check_statuses", "check_config_relationships"}
+		if count, err := upstream.ReconcileSome(ctx.Context, UpstreamConf, ReconcilePageSize, tablesToReconcile...); err != nil {
+			ctx.History.AddError(err.Error())
+		} else {
+			ctx.History.SuccessCount += count
+		}
+
+		return nil
+	},
 }
 
 var lastRuntime time.Time
