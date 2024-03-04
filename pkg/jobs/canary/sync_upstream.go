@@ -31,12 +31,12 @@ const (
 )
 
 var UpstreamJobs = []*job.Job{
-	SyncCheckStatuses,
+	ReconcileCheckStatuses,
+	ReconcileCanaries,
 	PullUpstreamCanaries,
-	ReconcileChecks,
 }
 
-var ReconcileChecks = &job.Job{
+var ReconcileCanaries = &job.Job{
 	Name:       "ReconcileCanaries",
 	JobHistory: true,
 	Singleton:  true,
@@ -63,8 +63,8 @@ var ReconcileChecks = &job.Job{
 	},
 }
 
-var SyncCheckStatuses = &job.Job{
-	Name:       "SyncCheckStatusesWithUpstream",
+var ReconcileCheckStatuses = &job.Job{
+	Name:       "ReconcileCheckStatuses",
 	JobHistory: true,
 	Singleton:  true,
 	Retention:  job.RetentionHour,

@@ -133,15 +133,7 @@ func Init() (dutyContext.Context, error) {
 	}
 
 	if RunMigrations {
-		ignoreMigrations := []string{
-			"007_events.sql",
-			"012_changelog_triggers_others.sql",
-			"012_changelog_triggers_scrapers.sql",
-			"026_is_pushed_agent_config_db.sql",
-			"026_is_pushed_agent_mc.sql",
-		}
-
-		opts := &migrate.MigrateOptions{IgnoreFiles: ignoreMigrations}
+		opts := &migrate.MigrateOptions{IgnoreFiles: []string{"007_events.sql", "012_changelog_triggers_others.sql", "012_changelog_triggers_scrapers.sql"}}
 		if err := duty.Migrate(ConnectionString, opts); err != nil {
 			return dutyContext.New(), err
 		}
