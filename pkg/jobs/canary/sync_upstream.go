@@ -9,8 +9,6 @@ import (
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/upstream"
-	"github.com/flanksource/postq"
-	"github.com/flanksource/postq/pg"
 	"gorm.io/gorm/clause"
 )
 
@@ -24,59 +22,10 @@ var (
 	UpstreamConf upstream.UpstreamConfig
 )
 
-const (
-	EventPushQueueCreate    = "push_queue.create"
-	eventQueueUpdateChannel = "event_queue_updates"
-	ResourceTypeUpstream    = "upstream"
-)
+const ResourceTypeUpstream = "upstream"
 
 var UpstreamJobs = []*job.Job{
-	ReconcileCheckStatuses,
-	ReconcileCanaries,
 	PullUpstreamCanaries,
-}
-
-var ReconcileCanaries = &job.Job{
-	Name:       "ReconcileCanaries",
-	JobHistory: true,
-	Singleton:  true,
-	Retention:  job.RetentionDay,
-	RunNow:     true,
-	Schedule:   "@every 30m",
-	Fn: func(ctx job.JobRuntime) error {
-		ctx.History.ResourceType = ResourceTypeUpstream
-		ctx.History.ResourceID = UpstreamConf.Host
-
-		if count, err := upstream.ReconcileTable[models.Canary](ctx.Context, UpstreamConf, ReconcilePageSize); err != nil {
-			ctx.History.AddError(err.Error())
-		} else {
-			ctx.History.SuccessCount += count
-		}
-
-		if count, err := upstream.ReconcileTable[models.Check](ctx.Context, UpstreamConf, ReconcilePageSize); err != nil {
-			ctx.History.AddError(err.Error())
-		} else {
-			ctx.History.SuccessCount += count
-		}
-
-		return nil
-	},
-}
-
-var ReconcileCheckStatuses = &job.Job{
-	Name:       "ReconcileCheckStatuses",
-	JobHistory: true,
-	Singleton:  true,
-	Retention:  job.RetentionHour,
-	RunNow:     true,
-	Schedule:   "@every 30s",
-	Fn: func(ctx job.JobRuntime) error {
-		ctx.History.ResourceType = ResourceTypeUpstream
-		ctx.History.ResourceID = UpstreamConf.Host
-		count, err := upstream.SyncCheckStatuses(ctx.Context, UpstreamConf, ReconcilePageSize)
-		ctx.History.SuccessCount = count
-		return err
-	},
 }
 
 var lastRuntime time.Time
@@ -131,33 +80,4 @@ func pull(ctx context.Context, config upstream.UpstreamConfig) (int, error) {
 		Columns:   []clause.Column{{Name: "id"}},
 		UpdateAll: true,
 	}).Create(&response.Canaries).Error
-}
-
-func StartUpstreamEventQueueConsumer(ctx context.Context) error {
-	asyncConsumer := postq.AsyncEventConsumer{
-		WatchEvents: []string{EventPushQueueCreate},
-		Consumer: func(_ctx postq.Context, e postq.Events) postq.Events {
-			return upstream.NewPushUpstreamConsumer(UpstreamConf)(ctx, e)
-		},
-		BatchSize: ctx.Properties().Int("push_queue.batch.size", 50),
-		ConsumerOption: &postq.ConsumerOption{
-			NumConsumers: ctx.Properties().Int("push_queue.consumers", 5),
-			ErrorHandler: func(err error) bool {
-				logger.Errorf("error consuming upstream push_queue.create events: %v", err)
-				time.Sleep(time.Second)
-				return true
-			},
-		},
-	}
-
-	eventConsumer, err := asyncConsumer.EventConsumer()
-	if err != nil {
-		return err
-	}
-
-	pgNotifyChannel := make(chan string)
-	go pg.Listen(ctx, eventQueueUpdateChannel, pgNotifyChannel)
-
-	go eventConsumer.Listen(ctx, pgNotifyChannel)
-	return nil
 }
