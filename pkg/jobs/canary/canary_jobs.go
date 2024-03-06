@@ -50,8 +50,6 @@ func StartScanCanaryConfigs(ctx context.Context, dataFile string, configFiles []
 type CanaryJob struct {
 	Canary   v1.Canary
 	DBCanary pkg.Canary
-	// LogPass  bool
-	// LogFail  bool
 }
 
 func (j CanaryJob) GetNamespacedName() types.NamespacedName {

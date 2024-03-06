@@ -101,7 +101,7 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 		j = job.NewJob(jobCtx, "Canary", schedule, canaryJob.Run).
 			SetID(fmt.Sprintf("%s/%s", canary.Namespace, canary.Name))
 		j.Singleton = true
-		j.Retention = job.RetentionFailed
+		j.Retention = job.RetentionDay
 		cronJobs[canary.GetPersistedID()] = j
 		if err := j.AddToScheduler(CanaryScheduler); err != nil {
 			return err
