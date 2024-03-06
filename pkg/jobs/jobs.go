@@ -1,14 +1,11 @@
 package jobs
 
 import (
-	"fmt"
-
 	"github.com/flanksource/canary-checker/api/context"
 
 	"github.com/flanksource/canary-checker/pkg/db"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	topologyJobs "github.com/flanksource/canary-checker/pkg/jobs/topology"
-	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/job"
@@ -22,12 +19,6 @@ func Start() {
 	logger.Infof("Starting jobs ...")
 
 	if canaryJobs.UpstreamConf.Valid() {
-		// Push checks to upstream in real-time
-		if err := canaryJobs.StartUpstreamEventQueueConsumer(context.DefaultContext); err != nil {
-			// Cannot continue on failing to start consumers as we may lose events
-			runner.ShutdownAndExit(1, fmt.Sprintf("Failed to start upstream event queue consumer: %v", err))
-		}
-
 		for _, j := range canaryJobs.UpstreamJobs {
 			var job = j
 			job.Context = context.DefaultContext
