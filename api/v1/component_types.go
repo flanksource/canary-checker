@@ -47,6 +47,7 @@ type ComponentSpec struct {
 	Configs types.ConfigQueries `json:"configs,omitempty"`
 	//
 	Summary *types.Summary `json:"summary,omitempty"`
+	// +kubebuilder:validation:XPreserveUnknownFields
 	// Only applies when using lookup, when specified the components and properties
 	// specified under ForEach will be templated using the components returned by the lookup
 	// ${.properties} can be used to reference the properties of the component
