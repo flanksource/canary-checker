@@ -21,9 +21,9 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.12.0
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.4
-	github.com/flanksource/commons v1.22.0
-	github.com/flanksource/duty v1.0.363
-	github.com/flanksource/gomplate/v3 v3.24.1
+	github.com/flanksource/commons v1.22.1
+	github.com/flanksource/duty v1.0.373
+	github.com/flanksource/gomplate/v3 v3.24.2
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
 	github.com/flanksource/kommons v0.31.4
 	github.com/friendsofgo/errors v0.9.2
@@ -138,7 +138,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.7.0 // indirect
 	github.com/exaring/otelpgx v0.5.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/flanksource/kubectl-neat v1.0.3 // indirect
+	github.com/flanksource/kubectl-neat v1.0.4 // indirect
 	github.com/flanksource/postq v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
