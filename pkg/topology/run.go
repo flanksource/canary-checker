@@ -36,7 +36,7 @@ func mergeComponentLookup(ctx *ComponentContext, component *v1.ComponentSpec, sp
 		switch v := results[0].(type) {
 		case string:
 			if err := json.Unmarshal([]byte(v), &components); err != nil {
-				return nil, errors.Wrapf(err, "component lookup returned invalid json: %s", component)
+				return nil, fmt.Errorf("error unmarshaling data from pkg.Components: %w", err)
 			}
 
 		case checks.ConfigDBQueryResult:
@@ -44,14 +44,19 @@ func mergeComponentLookup(ctx *ComponentContext, component *v1.ComponentSpec, sp
 				var p pkg.Component
 				data, err := json.Marshal(result)
 				if err != nil {
-					return nil, fmt.Errorf("error marshaling result to json: %w", err)
+					return nil, fmt.Errorf("error marshaling result to pkg.Component: %w", err)
 				}
 
 				if err := json.Unmarshal(data, &p); err != nil {
-					return nil, fmt.Errorf("error unmarshaling data from json: %w", err)
+					return nil, fmt.Errorf("error unmarshaling data from pkg.Component: %w", err)
 				}
 
 				components = append(components, &p)
+			}
+
+		case checks.ExecDetails:
+			if err := json.Unmarshal([]byte(v.Stdout), &components); err != nil {
+				return nil, fmt.Errorf("error unmarshaling data from pkg.Components: %w", err)
 			}
 
 		default:
