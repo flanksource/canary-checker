@@ -15,6 +15,7 @@ import (
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
@@ -38,44 +39,22 @@ func mergeComponentLookup(ctx *ComponentContext, component *v1.ComponentSpec, sp
 			if err := json.Unmarshal([]byte(v), &components); err != nil {
 				return nil, fmt.Errorf("error unmarshaling data from pkg.Components: %w", err)
 			}
-
-		case checks.ConfigDBQueryResult:
-			for _, result := range v.Results {
-				var p pkg.Component
-				data, err := json.Marshal(result)
-				if err != nil {
-					return nil, fmt.Errorf("error marshaling result to pkg.Component: %w", err)
-				}
-
-				if err := json.Unmarshal(data, &p); err != nil {
-					return nil, fmt.Errorf("error unmarshaling data from pkg.Component: %w", err)
-				}
-
-				components = append(components, &p)
-			}
-
-		case checks.ExecDetails:
-			if err := json.Unmarshal([]byte(v.Stdout), &components); err != nil {
-				return nil, fmt.Errorf("error unmarshaling data from pkg.Components: %w", err)
-			}
-
-		default:
-			ctx.Warnf("component lookup returned unhandled type: %T", results[0])
+			results = nil
 		}
-	} else {
-		// the property returned a list of new properties
-		for _, result := range results {
-			var p pkg.Component
-			data, err := json.Marshal(result)
-			if err != nil {
-				return nil, fmt.Errorf("error marshaling result to json: %w", err)
-			}
-			if err := json.Unmarshal(data, &p); err != nil {
-				return nil, fmt.Errorf("error unmarshaling data from json: %w", err)
-			}
+	}
 
-			components = append(components, &p)
+	// the property returned a list of new properties
+	for _, result := range results {
+		var p pkg.Component
+		data, err := json.Marshal(result)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling result to json: %w", err)
 		}
+		if err := json.Unmarshal(data, &p); err != nil {
+			return nil, fmt.Errorf("error unmarshaling data from json: %w", err)
+		}
+
+		components = append(components, &p)
 	}
 
 	for _, _c := range components {
@@ -228,9 +207,19 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 		if result.Message != "" {
 			results = append(results, result.Message)
 		} else if result.Detail != nil {
-			switch result.Detail.(type) {
+			switch v := result.Detail.(type) {
 			case []any:
 				results = append(results, result.Detail.([]interface{})...)
+			case checks.ExecDetails:
+				results = append(results, v.Stdout)
+			case checks.ConfigDBQueryResult:
+				for _, item := range v.Results {
+					results = append(results, any(item))
+				}
+			case []unstructured.Unstructured:
+				for _, item := range v {
+					results = append(results, any(item))
+				}
 			case any:
 				results = append(results, result.Detail)
 			default:
@@ -240,6 +229,7 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 			results = append(results, "")
 		}
 	}
+
 	return results, nil
 }
 
