@@ -31,9 +31,31 @@ func mergeComponentLookup(ctx *ComponentContext, component *v1.ComponentSpec, sp
 	if err != nil {
 		return nil, errors.Wrapf(err, "component lookup failed: %s", component)
 	}
+
 	if len(results) == 1 {
-		if err := json.Unmarshal([]byte(results[0].(string)), &components); err != nil {
-			return nil, errors.Wrapf(err, "component lookup returned invalid json: %s", component)
+		switch v := results[0].(type) {
+		case string:
+			if err := json.Unmarshal([]byte(v), &components); err != nil {
+				return nil, errors.Wrapf(err, "component lookup returned invalid json: %s", component)
+			}
+
+		case checks.ConfigDBQueryResult:
+			for _, result := range v.Results {
+				var p pkg.Component
+				data, err := json.Marshal(result)
+				if err != nil {
+					return nil, fmt.Errorf("error marshaling result to json: %w", err)
+				}
+
+				if err := json.Unmarshal(data, &p); err != nil {
+					return nil, fmt.Errorf("error unmarshaling data from json: %w", err)
+				}
+
+				components = append(components, &p)
+			}
+
+		default:
+			ctx.Warnf("component lookup returned unhandled type: %T", results[0])
 		}
 	} else {
 		// the property returned a list of new properties
@@ -50,11 +72,13 @@ func mergeComponentLookup(ctx *ComponentContext, component *v1.ComponentSpec, sp
 			components = append(components, &p)
 		}
 	}
+
 	for _, _c := range components {
 		if err = forEachComponent(ctx, component, _c); err != nil {
 			return nil, err
 		}
 	}
+
 	return components, nil
 }
 
