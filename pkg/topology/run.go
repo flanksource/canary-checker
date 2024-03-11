@@ -115,6 +115,28 @@ func forEachComponent(ctx *ComponentContext, spec *v1.ComponentSpec, component *
 		}
 	}
 
+	for _, _selector := range spec.ForEach.ComponentChecks {
+		selector := _selector
+		var spec v1.CanarySpec
+		if selector.Inline != nil {
+			if err := json.Unmarshal([]byte(selector.Inline), &spec); err != nil {
+				ctx.JobHistory.AddError(fmt.Sprintf("failed to unmarshal inline canary spec: %v", err))
+				continue
+			}
+		}
+
+		cc := v1.ComponentCheck{
+			Selector: selector.Selector,
+			Inline:   &spec,
+		}
+
+		if err := ctx.TemplateStruct(&cc); err != nil {
+			ctx.JobHistory.AddError(fmt.Sprintf("failed to lookup selectors %v: %v", selector, err))
+		} else {
+			component.ComponentChecks = append(component.ComponentChecks, cc)
+		}
+	}
+
 	return nil
 }
 
