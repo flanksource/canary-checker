@@ -9,6 +9,9 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/types"
+	"github.com/google/uuid"
 )
 
 type SQLChecker interface {
@@ -20,7 +23,7 @@ type SQLChecker interface {
 
 type SQLDetails struct {
 	Rows  []map[string]interface{} `json:"rows"`
-	Count int                      `json:"count,omitempty"`
+	Count int                      `json:"count"`
 }
 
 // Package contains common function used by SQL Checks (Currently Postgresql and Mssql)
@@ -48,23 +51,63 @@ func querySQL(driver string, connection string, query string) (SQLDetails, error
 		return result, fmt.Errorf("failed to get columns: %w", err)
 	}
 
+	columnTypes, err := rows.ColumnTypes()
+	if err != nil {
+		return result, fmt.Errorf("failed to get column types: %w", err)
+	}
+
 	for rows.Next() {
-		var rowValues = make([]interface{}, len(columns))
-		for i := range rowValues {
-			var s sql.NullString
-			rowValues[i] = &s
-		}
+		rowValues := getRowValues(columnTypes)
 		if err := rows.Scan(rowValues...); err != nil {
 			return result, err
 		}
 
 		var row = make(map[string]interface{})
 		for i, val := range rowValues {
-			v := *val.(*sql.NullString)
-			if v.Valid {
-				row[columns[i]] = v.String
-			} else {
+			if val == nil {
 				row[columns[i]] = nil
+				continue
+			}
+
+			switch v := val.(type) {
+			case *sql.NullString:
+				if v.Valid {
+					row[columns[i]] = v.String
+				} else {
+					row[columns[i]] = nil
+				}
+			case *sql.NullInt32:
+				if v.Valid {
+					row[columns[i]] = v.Int32
+				} else {
+					row[columns[i]] = nil
+				}
+			case *sql.NullInt64:
+				if v.Valid {
+					row[columns[i]] = v.Int64
+				} else {
+					row[columns[i]] = nil
+				}
+			case *sql.NullFloat64:
+				if v.Valid {
+					row[columns[i]] = v.Float64
+				} else {
+					row[columns[i]] = nil
+				}
+			case *sql.NullBool:
+				if v.Valid {
+					row[columns[i]] = v.Bool
+				} else {
+					row[columns[i]] = nil
+				}
+			case *sql.NullTime:
+				if v.Valid {
+					row[columns[i]] = v.Time
+				} else {
+					row[columns[i]] = nil
+				}
+			default:
+				row[columns[i]] = val
 			}
 		}
 
@@ -122,4 +165,44 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 	}
 
 	return results
+}
+
+// Note: maybe move to duty
+func getRowValues(columnTypes []*sql.ColumnType) []interface{} {
+	rowValues := make([]interface{}, len(columnTypes))
+
+	for i, columnType := range columnTypes {
+		switch columnType.DatabaseTypeName() {
+		case "INT4", "INT8", "INT", "INT16", "INT32":
+			var v sql.NullInt32
+			rowValues[i] = &v
+		case "BIGINT", "INT64":
+			var v sql.NullInt64
+			rowValues[i] = &v
+		case "FLOAT", "FLOAT4", "FLOAT8", "DOUBLE", "DECIMAL", "NUMERIC":
+			var v sql.NullFloat64
+			rowValues[i] = &v
+		case "BOOL":
+			var v sql.NullBool
+			rowValues[i] = &v
+		case "DATETIME", "TIMESTAMP", "TIMESTAMPTZ":
+			var v sql.NullTime
+			rowValues[i] = &v
+		case "JSONB", "JSON":
+			var v types.JSON
+			rowValues[i] = &v
+		case "UUID":
+			var v uuid.UUID
+			rowValues[i] = &v
+		case "TEXT", "VARCHAR", "CHAR":
+			var v sql.NullString
+			rowValues[i] = &v
+		default:
+			logger.Warnf("unhandled database column type: %s", columnType.DatabaseTypeName())
+			var v sql.NullString
+			rowValues[i] = &v
+		}
+	}
+
+	return rowValues
 }
