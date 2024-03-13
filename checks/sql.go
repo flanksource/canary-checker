@@ -2,6 +2,7 @@ package checks
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -105,6 +106,16 @@ func querySQL(driver string, connection string, query string) (SQLDetails, error
 					row[columns[i]] = v.Time
 				} else {
 					row[columns[i]] = nil
+				}
+			case *types.JSON:
+				var jsonObj = make(map[string]any)
+				var jsonArray []any
+				if err := json.Unmarshal(*v, &jsonObj); err == nil {
+					row[columns[i]] = jsonObj
+				} else if err := json.Unmarshal(*v, &jsonArray); err == nil {
+					row[columns[i]] = jsonArray
+				} else {
+					return result, fmt.Errorf("failed to parse json column: %s", *v)
 				}
 			default:
 				row[columns[i]] = val
