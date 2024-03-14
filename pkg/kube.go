@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	"github.com/flanksource/commons/files"
 	clogger "github.com/flanksource/commons/logger"
@@ -34,11 +35,49 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
+func NewKommonsClientWithConfig(kubeConfig string) (*kommons.Client, kubernetes.Interface, error) {
+	getter := func() (*clientcmdapi.Config, error) {
+		clientCfg, err := clientcmd.NewClientConfigFromBytes([]byte(kubeConfig))
+		if err != nil {
+			return nil, err
+		}
+
+		apiCfg, err := clientCfg.RawConfig()
+		if err != nil {
+			return nil, err
+		}
+
+		return &apiCfg, nil
+	}
+
+	config, err := clientcmd.BuildConfigFromKubeconfigGetter("", getter)
+	if err != nil {
+		return nil, fake.NewSimpleClientset(), errors.Wrap(err, "Failed to generate rest config")
+	}
+
+	return newKommonsClient(config)
+}
+
+func NewKommonsClientWithConfigPath(kubeConfigPath string) (*kommons.Client, kubernetes.Interface, error) {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+	if err != nil {
+		return nil, fake.NewSimpleClientset(), errors.Wrap(err, "Failed to generate rest config")
+	}
+
+	return newKommonsClient(config)
+}
+
 func NewKommonsClient() (*kommons.Client, kubernetes.Interface, error) {
 	kubeConfig := GetKubeconfig()
-
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	if err != nil {
+		return nil, fake.NewSimpleClientset(), errors.Wrap(err, "Failed to generate rest config")
+	}
 
+	return newKommonsClient(config)
+}
+
+func newKommonsClient(config *rest.Config) (*kommons.Client, kubernetes.Interface, error) {
 	if clogger.IsLevelEnabled(7) {
 		logger := &httpretty.Logger{
 			Time:           true,
@@ -56,9 +95,6 @@ func NewKommonsClient() (*kommons.Client, kubernetes.Interface, error) {
 		}
 	}
 
-	if err != nil {
-		return nil, fake.NewSimpleClientset(), errors.Wrap(err, "Failed to generate rest config")
-	}
 	Client := kommons.NewClient(config, clogger.StandardLogger())
 	if Client == nil {
 		return nil, fake.NewSimpleClientset(), errors.New("could not create kommons client")
