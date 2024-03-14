@@ -773,6 +773,8 @@ type KubernetesCheck struct {
 	Templatable `yaml:",inline" json:",inline"`
 	Namespace   ResourceSelector `yaml:"namespaceSelector,omitempty" json:"namespaceSelector,omitempty"`
 	Resource    ResourceSelector `yaml:"resource,omitempty" json:"resource,omitempty"`
+	// KubeConfig is the kubeconfig or the path to the kubeconfig file.
+	KubeConfig *types.EnvVar `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
 	// Ignore the specified resources from the fetched resources. Can be a glob pattern.
 	Ignore []string `yaml:"ignore,omitempty" json:"ignore,omitempty"`
 	Kind   string   `yaml:"kind" json:"kind"`

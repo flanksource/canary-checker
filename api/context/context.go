@@ -201,6 +201,11 @@ func (ctx *Context) WithCheckResult(result *pkg.CheckResult) *Context {
 	return ctx
 }
 
+func (ctx *Context) WithDutyContext(c dutyCtx.Context) *Context {
+	ctx.Context = c
+	return ctx
+}
+
 func (ctx *Context) WithCheck(check external.Check) *Context {
 	env := make(map[string]any)
 

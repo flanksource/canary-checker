@@ -2186,6 +2186,9 @@
         "resource": {
           "$ref": "#/$defs/ResourceSelector"
         },
+        "kubeconfig": {
+          "$ref": "#/$defs/EnvVar"
+        },
         "ignore": {
           "items": {
             "type": "string"

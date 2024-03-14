@@ -2,6 +2,7 @@ package checks
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -37,13 +38,41 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
+
+	if check.KubeConfig != nil {
+		val, err := ctx.GetEnvValueFromCache(*check.KubeConfig)
+		if err != nil {
+			return results.Failf("failed to get kubeconfig from env: %v", err)
+		}
+
+		if strings.HasPrefix(val, "/") {
+			kClient, kube, err := pkg.NewKommonsClientWithConfigPath(val)
+			if err != nil {
+				return results.Failf("failed to initialize kubernetes client from the provided kubeconfig: %v", err)
+			}
+
+			ctx = ctx.WithDutyContext(ctx.WithKommons(kClient))
+			ctx = ctx.WithDutyContext(ctx.WithKubernetes(kube))
+		} else {
+			kClient, kube, err := pkg.NewKommonsClientWithConfig(val)
+			if err != nil {
+				return results.Failf("failed to initialize kubernetes client from the provided kubeconfig: %v", err)
+			}
+
+			ctx = ctx.WithDutyContext(ctx.WithKommons(kClient))
+			ctx = ctx.WithDutyContext(ctx.WithKubernetes(kube))
+		}
+	}
+
 	if ctx.Kommons() == nil {
 		return results.Failf("Kubernetes is not initialized")
 	}
+
 	client, err := ctx.Kommons().GetClientByKind(check.Kind)
 	if err != nil {
 		return results.Failf("Failed to get client for kind %s: %v", check.Kind, err)
 	}
+
 	namespaces, err := getNamespaces(ctx, check)
 	if err != nil {
 		return results.Failf("Failed to get namespaces: %v", err)
@@ -62,6 +91,7 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 				return results
 			}
 		}
+
 		ctx.Tracef("Found  %d %s in namespace %s with label=%s field=%s", len(resources), check.Kind, namespace, check.Resource.LabelSelector, check.Resource.FieldSelector)
 		for _, resource := range resources {
 			_resource := resource
@@ -75,9 +105,11 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 		}
 		allResources = append(allResources, resources...)
 	}
+
 	if check.Test.IsEmpty() && len(allResources) == 0 {
 		return results.Failf("no resources found")
 	}
+
 	result.AddDetails(allResources)
 	return results
 }
