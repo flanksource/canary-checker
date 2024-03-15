@@ -748,6 +748,20 @@ func (c GitProtocolCheck) GetEndpoint() string {
 	return strings.ReplaceAll(c.Repository, "/", "-")
 }
 
+type CatalogCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+	Selector    types.ResourceSelectors `yaml:"selector" json:"selector"`
+}
+
+func (c CatalogCheck) GetType() string {
+	return "catalog"
+}
+
+func (c CatalogCheck) GetEndpoint() string {
+	return c.Selector.Hash()
+}
+
 type ConfigDBCheck struct {
 	Templatable `yaml:",inline" json:",inline"`
 	Description `yaml:",inline" json:",inline"`
@@ -1280,6 +1294,7 @@ var AllChecks = []external.Check{
 	AzureDevopsCheck{},
 	CloudWatchCheck{},
 	ConfigDBCheck{},
+	CatalogCheck{},
 	ContainerdPullCheck{},
 	ContainerdPushCheck{},
 	DatabaseBackupCheck{},
