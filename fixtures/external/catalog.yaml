@@ -1,0 +1,14 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: node-catalogs
+spec:
+  interval: 30
+  catalog:
+    - name: ingress-catalog-check
+      selector:
+        - types:
+            - Kubernetes::IngressClass
+      test:
+        expr: "size(results.catalogs) > 0"
+          

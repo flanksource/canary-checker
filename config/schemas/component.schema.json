@@ -600,6 +600,12 @@
           },
           "type": "array"
         },
+        "catalog": {
+          "items": {
+            "$ref": "#/$defs/CatalogCheck"
+          },
+          "type": "array"
+        },
         "opensearch": {
           "items": {
             "$ref": "#/$defs/OpenSearchCheck"
@@ -654,6 +660,52 @@
       },
       "additionalProperties": false,
       "type": "object"
+    },
+    "CatalogCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "selector": {
+          "$ref": "#/$defs/ResourceSelectors"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "selector"
+      ]
     },
     "CheckRelationship": {
       "properties": {

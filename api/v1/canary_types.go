@@ -77,6 +77,7 @@ type CanarySpec struct {
 	AwsConfigRule  []AwsConfigRuleCheck  `yaml:"awsConfigRule,omitempty" json:"awsConfigRule,omitempty"`
 	DatabaseBackup []DatabaseBackupCheck `yaml:"databaseBackup,omitempty" json:"databaseBackup,omitempty"`
 	ConfigDB       []ConfigDBCheck       `yaml:"configDB,omitempty" json:"configDB,omitempty"`
+	Catalog        []CatalogCheck        `yaml:"catalog,omitempty" json:"catalog,omitempty"`
 	Opensearch     []OpenSearchCheck     `yaml:"opensearch,omitempty" json:"opensearch,omitempty"`
 	Elasticsearch  []ElasticsearchCheck  `yaml:"elasticsearch,omitempty" json:"elasticsearch,omitempty"`
 	AlertManager   []AlertManagerCheck   `yaml:"alertmanager,omitempty" json:"alertmanager,omitempty"`
@@ -190,6 +191,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.DatabaseBackup {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.Catalog {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.ConfigDB {
@@ -310,6 +314,9 @@ func (spec CanarySpec) KeepOnly(names ...string) CanarySpec {
 		return lo.Contains(names, c.GetName())
 	})
 	spec.DatabaseBackup = lo.Filter(spec.DatabaseBackup, func(c DatabaseBackupCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.Catalog = lo.Filter(spec.Catalog, func(c CatalogCheck, _ int) bool {
 		return lo.Contains(names, c.GetName())
 	})
 	spec.ConfigDB = lo.Filter(spec.ConfigDB, func(c ConfigDBCheck, _ int) bool {
