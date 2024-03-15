@@ -489,10 +489,15 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 	}
 
 	ignoreLabels := []string{"kustomize.toolkit.fluxcd.io/name", "kustomize.toolkit.fluxcd.io/namespace"}
+	skipComponentDeletion := false
+
 	for _, comp := range ctx.Topology.Spec.Components {
 		components, err := lookupComponents(ctx, comp)
 		if err != nil {
 			job.History.AddError(fmt.Sprintf("Error looking up component %s: %s", comp.Name, err))
+
+			// Do not delete old components in case of lookup errors
+			skipComponentDeletion = true
 			continue
 		}
 		// add topology labels to the components
@@ -610,7 +615,7 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 	}
 
 	deleteCompIDs := utils.SetDifference(dbCompsIDs, compIDs)
-	if len(deleteCompIDs) != 0 {
+	if len(deleteCompIDs) != 0 && !skipComponentDeletion {
 		if err := db.DeleteComponentsWithIDs(job.DB(), utils.UUIDsToStrings(deleteCompIDs)); err != nil {
 			return fmt.Errorf("error deleting components %v", err)
 		}
