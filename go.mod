@@ -37,7 +37,7 @@ require (
 	github.com/google/uuid v1.5.0
 	github.com/hashicorp/go-getter v1.7.3
 	github.com/henvic/httpretty v0.1.3
-	github.com/jackc/pgx/v5 v5.5.4
+	github.com/jackc/pgx/v5 v5.5.5
 	github.com/joshdk/go-junit v1.0.0
 	github.com/jszwec/csvutil v1.9.0
 	github.com/labstack/echo/v4 v4.11.4
