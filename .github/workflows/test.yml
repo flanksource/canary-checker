@@ -73,7 +73,7 @@ jobs:
           GH_TOKEN: ${{ secrets.CHECKRUNS_TOKEN }}
         run: ./test/e2e.sh fixtures/${{matrix.suite.name}}
       - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@4e7013f9576bd22ffdae979dc6e68cb9ec2aeece # v2.7.0
+        uses: EnricoMi/publish-unit-test-result-action@b25bb152254577182a8cc192fe0c5147554a1171 # v2.16.0
         if: always() &&  github.event.repository.fork == 'false'
         with:
           files: test/test-results.xml
