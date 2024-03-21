@@ -20,7 +20,23 @@ jobs:
             BRANCHES="[{name: 'master', channel: 'beta', prerelease: 'beta'}, {name: 'beta-release'}]"
           fi
           echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
-      - uses: cycjimmy/semantic-release-action@61680d0e9b02ff86f5648ade99e01be17f0260a4 # v4.0.0
+      - name: print env
+        run: |
+          echo "$BRANCHES"
+          echo $BRANCHES
+          echo "$b"
+          echo $b
+        env:
+          b: ${{ env.BRANCHES }}
+      - name: Dump job context
+        env:
+          JOB_CONTEXT: ${{ toJson(job) }}
+        run: echo "$JOB_CONTEXT"
+      - name: Dump steps context
+        env:
+          STEPS_CONTEXT: ${{ toJson(steps) }}
+        run: echo "$STEPS_CONTEXT"
+      - uses: codfish/semantic-release-action@cbd853afe12037afb1306caca9d6b1ab6a58cf2a # v1.10.0
         id: semantic
         with:
           branches: ${{ env.BRANCHES }}
