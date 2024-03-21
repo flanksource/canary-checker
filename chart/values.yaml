@@ -143,10 +143,29 @@ resources:
     memory: 2Gi
 
 serviceAccount:
-  {}
   # Configures extra annotations on the service account
   # annotations:
   #   some: annotation
+  rbac:
+    # Whether to create cluster-wide or namespaced roles
+    clusterRole: true
+
+    # for secret management with valueFrom
+    tokenRequest: true
+    secrets: true
+    configmaps: true
+
+    # for use with kubernetes resource lookups
+    readAll: true
+
+    # for pod and junit canaries
+    podsCreateAndDelete: true
+
+    # for pod canary
+    ingressCreateAndDelete: true
+
+    # for namespace canary
+    namespaceCreateAndDelete: true
 
 disableChecks: {}
 

@@ -1,8 +1,53 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: "{{if .Values.serviceAccount.rbac.clusterRole}}Cluster{{end}}Role"
 metadata:
   name: {{ include "canary-checker.name" . }}-role
 rules:
+  {{- if .Values.serviceAccount.rbac.secrets}}
+  - apiGroups:
+      - v1
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+  {{- end}}
+  {{- if .Values.serviceAccount.rbac.configmaps}}
+  - apiGroups:
+      - v1
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+  {{- end}}
+  {{- if .Values.serviceAccount.rbac.exec}}
+  - apiGroups: [""]
+    resources:
+      - pods/attach
+      - pods/exec
+      - pods/log
+    verbs:
+      - '*'
+  {{- end}}
+  {{- if .Values.serviceAccount.rbac.tokenRequest}}
+  - apiGroups:
+      - authentication.k8s.io/v1
+    resources:
+      - serviceaccounts/token
+    verbs:
+      - create
+  {{- end}}
+  {{- if .Values.serviceAccount.rbac.readAll}}
+  - apiGroups:
+      - "*"
+    resources:
+      - "*"
+    verbs:
+      - list
+      - get
+      - watch
+  {{- end}}
   - apiGroups:
       - canaries.flanksource.com
     resources:
@@ -25,6 +70,7 @@ rules:
       - get
       - patch
       - update
+  {{- if .Values.serviceAccount.rbac.podsCreateAndDelete}}
   # for creating and destroying pods during the pod canary test
   - apiGroups:
       - ""
@@ -34,30 +80,10 @@ rules:
       - services
     verbs:
       - "*"
+  {{- end}}
+  {{- if .Values.serviceAccount.rbac.ingressCreateAndDelete }}
   - apiGroups:
-      - "metrics.k8s.io"
-    resources:
-      - pods
-      - nodes
-    verbs:
-      - "*"
-  # for getting the  XML results from junit tests
-  - apiGroups:
-      - ""
-    resources:
-      - pods/exec
-      - pods/log
-    verbs:
-      - "*"
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-    verbs:
-      - get
-      - list
-  - apiGroups:
-      - "networking.k8s.io"
+      - "networking.k8s.io/v1"
     resources:
       - ingresses
     verbs:
@@ -68,12 +94,26 @@ rules:
       - ingresses
     verbs:
       - "*"
-  # for reading configuration from canaries
+  {{- end}}
+  {{- if .Values.serviceAccount.rbac.namespaceCreateAndDelete }}
+  - apiGroups:
+      - "v1"
+    resources:
+      - namespaces
+    verbs:
+      - "*"
+  {{- end}}
+  - apiGroups:
+      - "metrics.k8s.io"
+    resources:
+      - pods
+      - nodes
+    verbs:
+      - "*"
   - apiGroups:
       - ""
     resources:
-      - secrets
-      - configmaps
+      - nodes
     verbs:
       - get
       - list
