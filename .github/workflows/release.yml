@@ -12,8 +12,18 @@ jobs:
       new-release-published: ${{ steps.semantic.outputs.new-release-published }}
     steps:
       - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
+      - name: Set branch variable for semantic release
+        run: |
+          if [[ ${{ github.event_name == 'workflow_dispatch' }} == true ]]; then
+            BRANCHES="['master']"
+          else
+            BRANCHES="[{name: 'master', channel: 'beta', prerelease: 'beta'}, {name: 'beta-release'}]"
+          fi
+          echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
       - uses: cycjimmy/semantic-release-action@61680d0e9b02ff86f5648ade99e01be17f0260a4 # v4.0.0
         id: semantic
+        with:
+          branches: ${{ env.BRANCHES }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   binary:
