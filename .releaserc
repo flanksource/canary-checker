@@ -1,3 +1,7 @@
+# Branches are defined in the github action workflow
+# We create pre-releases on automated push to main and
+# a release is created manually by triggering the workflow
+branches: []
 plugins:
   - - "@semantic-release/commit-analyzer"
     - releaseRules:
