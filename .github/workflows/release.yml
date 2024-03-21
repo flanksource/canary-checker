@@ -19,7 +19,7 @@ jobs:
           if [[ ${{ github.event_name == 'workflow_dispatch' }} == true ]]; then
             BRANCHES="['master']"
           else
-            BRANCHES="[{name: 'master', channel: 'beta', prerelease: 'beta'}]"
+            BRANCHES="[{name: 'master', channel: 'beta', prerelease: 'beta'}, {name: 'dummy-release'}]"
           fi
           echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
       - name: print env
