@@ -67,7 +67,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/cel-go v0.18.2 // indirect
 	github.com/google/gnostic-models v0.6.9-0.20230804172637-c7be7c783f49 // indirect
@@ -94,7 +94,7 @@ require (
 	github.com/itchyny/timefmt-go v0.1.5 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20231201235250-de7065d80cb9 // indirect
-	github.com/jackc/pgx/v5 v5.5.4 // indirect
+	github.com/jackc/pgx/v5 v5.5.5 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jeremywohl/flatten v0.0.0-20180923035001-588fe0d4c603 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
@@ -188,11 +188,11 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/postgres v1.5.4 // indirect
 	gorm.io/gorm v1.25.5 // indirect
-	k8s.io/api v0.28.4 // indirect
+	k8s.io/api v0.28.8 // indirect
 	k8s.io/apiextensions-apiserver v0.28.3 // indirect
-	k8s.io/apimachinery v0.28.4 // indirect
+	k8s.io/apimachinery v0.28.8 // indirect
 	k8s.io/cli-runtime v0.28.2 // indirect
-	k8s.io/client-go v0.28.4 // indirect
+	k8s.io/client-go v0.28.8 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231206194836-bf4651e18aa8 // indirect
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e // indirect
