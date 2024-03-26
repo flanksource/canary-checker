@@ -19,6 +19,7 @@ type Topology struct {
 	Spec              TopologySpec   `json:"spec,omitempty"`
 	Status            TopologyStatus `json:"status,omitempty"`
 }
+
 type TopologySpec struct {
 	Type       string          `json:"type,omitempty"`
 	Id         *Template       `json:"id,omitempty"` //nolint
@@ -89,39 +90,6 @@ type ComponentCheck struct {
 func (c ComponentCheck) Hash() string {
 	h, _ := hash.JSONMD5Hash(c)
 	return h
-}
-
-type Config struct {
-	ID        []string          `json:"id,omitempty"`
-	Type      string            `json:"type,omitempty"`
-	Name      string            `json:"name,omitempty"`
-	Namespace string            `json:"namespace,omitempty"`
-	Tags      map[string]string `json:"tags,omitempty"`
-}
-
-func (c Config) ToDuty() types.ConfigQuery {
-	return types.ConfigQuery{
-		ID:        c.ID,
-		Type:      c.Type,
-		Name:      c.Name,
-		Namespace: c.Namespace,
-		Tags:      c.Tags,
-	}
-}
-
-func (c Config) String() string {
-	s := c.Type
-	if c.Namespace != "" {
-		s += "/" + c.Namespace
-	}
-
-	if c.Name != "" {
-		s += "/" + c.Name
-	}
-	if len(c.Tags) > 0 {
-		s += " " + fmt.Sprintf("%v", c.Tags)
-	}
-	return s
 }
 
 // +kubebuilder:object:root=true
