@@ -1083,25 +1083,37 @@
     },
     "ConfigQuery": {
       "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "cache": {
+          "type": "string"
+        },
         "id": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "type": {
-          "type": "string"
-        },
-        "class": {
-          "type": "string"
-        },
-        "external_id": {
           "type": "string"
         },
         "name": {
           "type": "string"
         },
         "namespace": {
+          "type": "string"
+        },
+        "types": {
+          "$ref": "#/$defs/Items"
+        },
+        "statuses": {
+          "$ref": "#/$defs/Items"
+        },
+        "labelSelector": {
+          "type": "string"
+        },
+        "fieldSelector": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "external_id": {
           "type": "string"
         },
         "tags": {
@@ -1111,6 +1123,9 @@
             }
           },
           "type": "object"
+        },
+        "type": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -2268,6 +2283,12 @@
       "required": [
         "name"
       ]
+    },
+    "Items": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
     },
     "JSONCheck": {
       "properties": {
