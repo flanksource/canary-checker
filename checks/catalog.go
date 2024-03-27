@@ -4,7 +4,6 @@ import (
 	canaryContext "github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
 )
 
@@ -34,11 +33,19 @@ func (c *CatalogChecker) Check(ctx *canaryContext.Context, check v1.CatalogCheck
 		return results.Failf("failed to fetch catalogs: %v", err)
 	}
 
-	queryResult := CatalogResult{Catalogs: items}
+	var configItems []map[string]any
+	for _, item := range items {
+		ci := item.AsMap()
+		// The config should be map[string]any so
+		// that it can be accessed directly in templating
+		ci["config"], _ = item.ConfigJSONStringMap()
+		configItems = append(configItems, ci)
+	}
+	queryResult := CatalogResult{Catalogs: configItems}
 	result.AddDetails(queryResult)
 	return results
 }
 
 type CatalogResult struct {
-	Catalogs []models.ConfigItem `json:"catalogs"`
+	Catalogs []map[string]any `json:"catalogs"`
 }
