@@ -4980,6 +4980,159 @@ spec:
                       - name
                     type: object
                   type: array
+                kubernetesResource:
+                  items:
+                    properties:
+                      description:
+                        description: Description for the check
+                        type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      kubeconfig:
+                        description: Kubeconfig is the kubeconfig or the path to the kubeconfig file.
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
+                            type: object
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        items:
+                          properties:
+                            labels:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
+                            name:
+                              type: string
+                            type:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                      name:
+                        description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
+                      resources:
+                        description: |-
+                          Resources are kubernetes resources that are created & cleared
+                          after every check run.
+                        x-kubernetes-preserve-unknown-fields: true
+                      staticResources:
+                        description: |-
+                          StaticResources are kubernetes resources that are created & only
+                          cleared when the canary is deleted
+                        x-kubernetes-preserve-unknown-fields: true
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      testResults:
+                        items:
+                          properties:
+                            path:
+                              type: string
+                            podSelector:
+                              type: string
+                            type:
+                              type: string
+                          type: object
+                        type: array
+                      timeout:
+                        type: string
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      waitForReady:
+                        type: boolean
+                    required:
+                      - name
+                      - resources
+                    type: object
+                  type: array
                 ldap:
                   items:
                     properties:

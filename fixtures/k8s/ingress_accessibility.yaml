@@ -1,0 +1,28 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: ingress-tests
+  namespace: default
+spec:
+  schedule: '@every 5m'
+  kubernetesResource:
+    - name: ingress-accessibility-check 
+      description: "deploy a pod and check that it is accessible via ingress"
+      namespace: default
+      resources:
+        - apiVersion: v1
+          kind: Pod
+          metadata:
+            name: nginx-pod
+          spec:
+            containers:
+              - name: nginx
+                image: nginx:latest
+                ports:
+                  - containerPort: 80
+      waitForReady: true 
+      timeout: 10m
+      # checks:
+      #   - http:
+      #       url: "{{.staticResources[0].ingress.spec.hostname}}"

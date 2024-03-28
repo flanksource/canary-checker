@@ -44,6 +44,7 @@ var All = []Checker{
 	&JmeterChecker{},
 	&JunitChecker{},
 	&KubernetesChecker{},
+	&KubernetesResourceChecker{},
 	&LdapChecker{},
 	&MongoDBChecker{},
 	&MssqlChecker{},
