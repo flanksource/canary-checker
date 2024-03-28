@@ -43,47 +43,48 @@ type CanarySpec struct {
 	//+optional
 	Replicas int `yaml:"replicas,omitempty" json:"replicas,omitempty"`
 
-	Env            map[string]VarSource  `yaml:"env,omitempty" json:"env,omitempty"`
-	HTTP           []HTTPCheck           `yaml:"http,omitempty" json:"http,omitempty"`
-	DNS            []DNSCheck            `yaml:"dns,omitempty" json:"dns,omitempty"`
-	DockerPull     []DockerPullCheck     `yaml:"docker,omitempty" json:"docker,omitempty"`
-	DockerPush     []DockerPushCheck     `yaml:"dockerPush,omitempty" json:"dockerPush,omitempty"`
-	ContainerdPull []ContainerdPullCheck `yaml:"containerd,omitempty" json:"containerd,omitempty"`
-	ContainerdPush []ContainerdPushCheck `yaml:"containerdPush,omitempty" json:"containerdPush,omitempty"`
-	S3             []S3Check             `yaml:"s3,omitempty" json:"s3,omitempty"`
-	TCP            []TCPCheck            `yaml:"tcp,omitempty" json:"tcp,omitempty"`
-	Pod            []PodCheck            `yaml:"pod,omitempty" json:"pod,omitempty"`
-	LDAP           []LDAPCheck           `yaml:"ldap,omitempty" json:"ldap,omitempty"`
-	ICMP           []ICMPCheck           `yaml:"icmp,omitempty" json:"icmp,omitempty"`
-	Postgres       []PostgresCheck       `yaml:"postgres,omitempty" json:"postgres,omitempty"`
-	Mssql          []MssqlCheck          `yaml:"mssql,omitempty" json:"mssql,omitempty"`
-	Mysql          []MysqlCheck          `yaml:"mysql,omitempty" json:"mysql,omitempty"`
-	Restic         []ResticCheck         `yaml:"restic,omitempty" json:"restic,omitempty"`
-	Jmeter         []JmeterCheck         `yaml:"jmeter,omitempty" json:"jmeter,omitempty"`
-	Junit          []JunitCheck          `yaml:"junit,omitempty" json:"junit,omitempty"`
-	Helm           []HelmCheck           `yaml:"helm,omitempty" json:"helm,omitempty"`
-	Namespace      []NamespaceCheck      `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-	Redis          []RedisCheck          `yaml:"redis,omitempty" json:"redis,omitempty"`
-	EC2            []EC2Check            `yaml:"ec2,omitempty" json:"ec2,omitempty"`
-	Prometheus     []PrometheusCheck     `yaml:"prometheus,omitempty" json:"prometheus,omitempty"`
-	MongoDB        []MongoDBCheck        `yaml:"mongodb,omitempty" json:"mongodb,omitempty"`
-	CloudWatch     []CloudWatchCheck     `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
-	GitHub         []GitHubCheck         `yaml:"github,omitempty" json:"github,omitempty"`
-	GitProtocol    []GitProtocolCheck    `yaml:"gitProtocol,omitempty" json:"gitProtocol,omitempty"`
-	Kubernetes     []KubernetesCheck     `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
-	Folder         []FolderCheck         `yaml:"folder,omitempty" json:"folder,omitempty"`
-	Exec           []ExecCheck           `yaml:"exec,omitempty" json:"exec,omitempty"`
-	AwsConfig      []AwsConfigCheck      `yaml:"awsConfig,omitempty" json:"awsConfig,omitempty"`
-	AwsConfigRule  []AwsConfigRuleCheck  `yaml:"awsConfigRule,omitempty" json:"awsConfigRule,omitempty"`
-	DatabaseBackup []DatabaseBackupCheck `yaml:"databaseBackup,omitempty" json:"databaseBackup,omitempty"`
-	ConfigDB       []ConfigDBCheck       `yaml:"configDB,omitempty" json:"configDB,omitempty"`
-	Catalog        []CatalogCheck        `yaml:"catalog,omitempty" json:"catalog,omitempty"`
-	Opensearch     []OpenSearchCheck     `yaml:"opensearch,omitempty" json:"opensearch,omitempty"`
-	Elasticsearch  []ElasticsearchCheck  `yaml:"elasticsearch,omitempty" json:"elasticsearch,omitempty"`
-	AlertManager   []AlertManagerCheck   `yaml:"alertmanager,omitempty" json:"alertmanager,omitempty"`
-	Dynatrace      []DynatraceCheck      `yaml:"dynatrace,omitempty" json:"dynatrace,omitempty"`
-	AzureDevops    []AzureDevopsCheck    `yaml:"azureDevops,omitempty" json:"azureDevops,omitempty"`
-	Webhook        *WebhookCheck         `yaml:"webhook,omitempty" json:"webhook,omitempty"`
+	Env                map[string]VarSource      `yaml:"env,omitempty" json:"env,omitempty"`
+	HTTP               []HTTPCheck               `yaml:"http,omitempty" json:"http,omitempty"`
+	DNS                []DNSCheck                `yaml:"dns,omitempty" json:"dns,omitempty"`
+	DockerPull         []DockerPullCheck         `yaml:"docker,omitempty" json:"docker,omitempty"`
+	DockerPush         []DockerPushCheck         `yaml:"dockerPush,omitempty" json:"dockerPush,omitempty"`
+	ContainerdPull     []ContainerdPullCheck     `yaml:"containerd,omitempty" json:"containerd,omitempty"`
+	ContainerdPush     []ContainerdPushCheck     `yaml:"containerdPush,omitempty" json:"containerdPush,omitempty"`
+	S3                 []S3Check                 `yaml:"s3,omitempty" json:"s3,omitempty"`
+	TCP                []TCPCheck                `yaml:"tcp,omitempty" json:"tcp,omitempty"`
+	Pod                []PodCheck                `yaml:"pod,omitempty" json:"pod,omitempty"`
+	LDAP               []LDAPCheck               `yaml:"ldap,omitempty" json:"ldap,omitempty"`
+	ICMP               []ICMPCheck               `yaml:"icmp,omitempty" json:"icmp,omitempty"`
+	Postgres           []PostgresCheck           `yaml:"postgres,omitempty" json:"postgres,omitempty"`
+	Mssql              []MssqlCheck              `yaml:"mssql,omitempty" json:"mssql,omitempty"`
+	Mysql              []MysqlCheck              `yaml:"mysql,omitempty" json:"mysql,omitempty"`
+	Restic             []ResticCheck             `yaml:"restic,omitempty" json:"restic,omitempty"`
+	Jmeter             []JmeterCheck             `yaml:"jmeter,omitempty" json:"jmeter,omitempty"`
+	Junit              []JunitCheck              `yaml:"junit,omitempty" json:"junit,omitempty"`
+	Helm               []HelmCheck               `yaml:"helm,omitempty" json:"helm,omitempty"`
+	Namespace          []NamespaceCheck          `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Redis              []RedisCheck              `yaml:"redis,omitempty" json:"redis,omitempty"`
+	EC2                []EC2Check                `yaml:"ec2,omitempty" json:"ec2,omitempty"`
+	Prometheus         []PrometheusCheck         `yaml:"prometheus,omitempty" json:"prometheus,omitempty"`
+	MongoDB            []MongoDBCheck            `yaml:"mongodb,omitempty" json:"mongodb,omitempty"`
+	CloudWatch         []CloudWatchCheck         `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
+	GitHub             []GitHubCheck             `yaml:"github,omitempty" json:"github,omitempty"`
+	GitProtocol        []GitProtocolCheck        `yaml:"gitProtocol,omitempty" json:"gitProtocol,omitempty"`
+	Kubernetes         []KubernetesCheck         `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
+	KubernetesResource []KubernetesResourceCheck `yaml:"kubernetesResource,omitempty" json:"kubernetesResource,omitempty"`
+	Folder             []FolderCheck             `yaml:"folder,omitempty" json:"folder,omitempty"`
+	Exec               []ExecCheck               `yaml:"exec,omitempty" json:"exec,omitempty"`
+	AwsConfig          []AwsConfigCheck          `yaml:"awsConfig,omitempty" json:"awsConfig,omitempty"`
+	AwsConfigRule      []AwsConfigRuleCheck      `yaml:"awsConfigRule,omitempty" json:"awsConfigRule,omitempty"`
+	DatabaseBackup     []DatabaseBackupCheck     `yaml:"databaseBackup,omitempty" json:"databaseBackup,omitempty"`
+	ConfigDB           []ConfigDBCheck           `yaml:"configDB,omitempty" json:"configDB,omitempty"`
+	Catalog            []CatalogCheck            `yaml:"catalog,omitempty" json:"catalog,omitempty"`
+	Opensearch         []OpenSearchCheck         `yaml:"opensearch,omitempty" json:"opensearch,omitempty"`
+	Elasticsearch      []ElasticsearchCheck      `yaml:"elasticsearch,omitempty" json:"elasticsearch,omitempty"`
+	AlertManager       []AlertManagerCheck       `yaml:"alertmanager,omitempty" json:"alertmanager,omitempty"`
+	Dynatrace          []DynatraceCheck          `yaml:"dynatrace,omitempty" json:"dynatrace,omitempty"`
+	AzureDevops        []AzureDevopsCheck        `yaml:"azureDevops,omitempty" json:"azureDevops,omitempty"`
+	Webhook            *WebhookCheck             `yaml:"webhook,omitempty" json:"webhook,omitempty"`
 	// interval (in seconds) to run checks on Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
 	// Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
@@ -176,6 +177,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Kubernetes {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.KubernetesResource {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Folder {

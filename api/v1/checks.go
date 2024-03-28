@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 const (
@@ -774,6 +775,47 @@ func (c ConfigDBCheck) GetType() string {
 
 func (c ConfigDBCheck) GetEndpoint() string {
 	return c.Query
+}
+
+type KubernetesGenericCheckTestResultSelector struct {
+	Path        string `json:"path,omitempty"`
+	Type        string `json:"type,omitempty"`
+	PodSelector string `json:"podSelector,omitempty"`
+}
+
+type KubernetesResourceCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+
+	// StaticResources are kubernetes resources that are created & only
+	// cleared when the canary is deleted
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	StaticResources []unstructured.Unstructured `json:"staticResources,omitempty"`
+
+	// Resources are kubernetes resources that are created & cleared
+	// after every check run.
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Resources []unstructured.Unstructured `json:"resources"`
+
+	// Checks to run agains the kubernetes resources
+	// Checks []CanarySpec `json:"checks,omitempty"`
+
+	// Kubeconfig is the kubeconfig or the path to the kubeconfig file.
+	Kubeconfig *types.EnvVar `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
+
+	WaitForReady bool                                       `json:"waitForReady,omitempty"`
+	Timeout      string                                     `json:"timeout,omitempty"`
+	TestResults  []KubernetesGenericCheckTestResultSelector `json:"testResults,omitempty"`
+}
+
+func (c KubernetesResourceCheck) GetType() string {
+	return "kubernetes_resource"
+}
+
+func (c KubernetesResourceCheck) GetEndpoint() string {
+	return "" // TODO:
 }
 
 type ResourceSelector struct {
