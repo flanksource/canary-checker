@@ -41,11 +41,6 @@ func (c *CatalogChecker) Check(ctx *canaryContext.Context, check v1.CatalogCheck
 		ci["config"], _ = item.ConfigJSONStringMap()
 		configItems = append(configItems, ci)
 	}
-	queryResult := CatalogResult{Catalogs: configItems}
-	result.AddDetails(queryResult)
+	result.AddDetails(configItems)
 	return results
-}
-
-type CatalogResult struct {
-	Catalogs []map[string]any `json:"catalogs"`
 }

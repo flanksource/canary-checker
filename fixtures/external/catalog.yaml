@@ -10,5 +10,5 @@ spec:
         - types:
             - Kubernetes::IngressClass
       test:
-        expr: "size(results.catalogs) > 0"
+        expr: "size(results) > 0"
           
