@@ -1,0 +1,38 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: junit-metrics
+spec:
+  schedule: "@every 2h"
+  severity: high
+  junit:
+    - testResults: "/tmp/junit-results/"
+      name: junit-pass
+      test:
+        expr: results.failed == 0 && results.passed > 0
+      display:
+        expr: "string(results.failed) + ' of ' +  string(results.passed)"
+      spec:
+        containers:
+          - name: jes
+            image: docker.io/tarun18/junit-test-pass
+            command: ["/start.sh"]
+      metrics:
+        - name: junit_check_pass_count
+          type: gauge
+          value: results.passed
+          labels:
+            - name: suite_name
+              valueExpr: results.suites[0].name
+        - name: junit_check_failed_count
+          type: gauge
+          value: results.failed
+          labels:
+            - name: part_of
+              valueExpr: canary.labels['part-of']
+        - name: junit_check_duration_ms
+          type: histogram
+          value: results.duration * 1000.0
+          labels:
+            - name: suite_name
+              valueExpr: results.suites[0].name

@@ -1,0 +1,20 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: cert-manager
+spec:
+  schedule: "@every 15m"
+  kubernetes:
+    - name: cert-manager-check
+      kind: Certificate
+      test:
+        expr: |
+          dyn(results).
+          map(i, i.Object).
+          filter(i, i.status.conditions[0].status != "True").size() == 0
+      display:
+        expr: |
+          dyn(results).
+          map(i, i.Object).
+          filter(i, i.status.conditions[0].status != "True").
+          map(i, "%s/%s -> %s".format([i.metadata.namespace, i.metadata.name, i.status.conditions[0].message])).join('\n')
