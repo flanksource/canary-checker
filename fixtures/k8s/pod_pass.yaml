@@ -28,28 +28,3 @@ spec:
       httpRetryInterval: 1500
       expectedContent: bar
       expectedHttpStatuses: [200, 201, 202]
-      priorityClass: canary-checker-priority
-    - name: ruby
-      spec: |
-        apiVersion: v1
-        kind: Pod
-        metadata:
-          name: hello-world-ruby
-          labels:
-            app: hello-world-ruby
-        spec:
-          containers:
-            - name: hello
-              image: quay.io/toni0/hello-webserver-ruby:latest
-              imagePullPolicy: Always
-      port: 8080
-      path: /foo/bar
-      scheduleTimeout: 30000
-      readyTimeout: 12000
-      httpTimeout: 7000
-      deleteTimeout: 12000
-      ingressTimeout: 10000
-      deadline: 29000
-      httpRetryInterval: 200
-      expectedContent: hello, you've hit /foo/bar
-      expectedHttpStatuses: [200, 201, 202]

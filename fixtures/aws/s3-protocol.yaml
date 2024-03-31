@@ -1,0 +1,21 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: s3-protocol-check
+spec:
+  interval: 30
+  s3:
+    - name: s3-check
+      bucketName: flanksource-public
+      objectPath: dummy
+      region: us-east-1
+      accessKey:
+        valueFrom:
+          secretKeyRef:
+            name: aws-credentials
+            key: AWS_ACCESS_KEY_ID
+      secretKey:
+        valueFrom:
+          secretKeyRef:
+            name: aws-credentials
+            key: AWS_SECRET_ACCESS_KEY
