@@ -22,7 +22,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.4
 	github.com/flanksource/commons v1.22.1
-	github.com/flanksource/duty v1.0.407
+	github.com/flanksource/duty v1.0.408
 	github.com/flanksource/gomplate/v3 v3.24.2
 	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
 	github.com/flanksource/kommons v0.31.4
