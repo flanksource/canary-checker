@@ -4988,6 +4988,7 @@ spec:
                         items:
                           type: object
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       description:
                         description: Description for the check
                         type: string

@@ -151,11 +151,14 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 	}
 
 	// run the actual check now. We need to run this in a canary-checker pod as well
+	logger.Debugf("found %d checks to run", len(check.Checks))
 	for _, c := range check.Checks {
 		virtualCanary := v1.Canary{
 			ObjectMeta: ctx.Canary.ObjectMeta,
 			Spec:       c.CanarySpec,
 		}
+
+		logger.Infof("running check inside kubernetes resource")
 
 		checkCtx := context.New(ctx.Context, virtualCanary)
 		res, err := Exec(checkCtx)

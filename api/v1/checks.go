@@ -778,7 +778,7 @@ func (c ConfigDBCheck) GetEndpoint() string {
 }
 
 type KubernetesResourceChecks struct {
-	CanarySpec `json:",inline"`
+	CanarySpec `yaml:",inline" json:",inline"`
 }
 
 type KubernetesResourceCheck struct {
@@ -798,6 +798,7 @@ type KubernetesResourceCheck struct {
 	Resources []unstructured.Unstructured `json:"resources"`
 
 	// Checks to run against the kubernetes resources.
+	// +kubebuilder:validation:XPreserveUnknownFields
 	Checks []KubernetesResourceChecks `json:"checks,omitempty"`
 
 	// Kubeconfig is the kubeconfig or the path to the kubeconfig file.

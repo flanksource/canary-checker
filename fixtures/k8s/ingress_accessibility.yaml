@@ -26,4 +26,5 @@ spec:
       podChecks:
       checks:
         - http:
-            url: "{{.staticResources[0].ingress.spec.hostname}}"
+          - name: adityathebe.com.np
+            url: "https://adityathebe.com.np"
