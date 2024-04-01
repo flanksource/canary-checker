@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	canaryCtx "github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/duty/models"
@@ -57,13 +58,14 @@ var _ = ginkgo.Describe("Canary Job sync", ginkgo.Ordered, func() {
 	ginkgo.It("schedule the canary job", func() {
 		MinimumTimeBetweenCanaryRuns = 0 // reset this for now so it doesn't hinder test with small schedules
 		SyncCanaryJobs.Context = DefaultContext
+		canaryCtx.DefaultContext = DefaultContext
 		SyncCanaryJobs.Run()
 		setup.ExpectJobToPass(SyncCanaryJobs)
 	})
 
 	ginkgo.It("should verify that the endpoint wasn't called more than once after 3 seconds", func() {
 		time.Sleep(time.Second * 3)
-		CanaryScheduler.Stop()
+		// The job will be called on first schedule and all concurrent jobs would be aborted
 		Expect(requestCount).To(Equal(1))
 	})
 })

@@ -80,9 +80,9 @@ var SyncTopology = &job.Job{
 }
 
 func SyncTopologyJob(ctx context.Context, t pkg.Topology) error {
-	id := t.ID
+	id := t.ID.String()
 	var existingJob *job.Job
-	if j, ok := topologyJobs.Load(id.String()); ok {
+	if j, ok := topologyJobs.Load(id); ok {
 		existingJob = j.(*job.Job)
 	}
 

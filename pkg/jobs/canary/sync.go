@@ -1,11 +1,14 @@
 package canary
 
 import (
-	gocontext "context"
 	"fmt"
 	"path"
+	"reflect"
+	"sync"
 	"time"
 
+	canaryCtx "github.com/flanksource/canary-checker/api/context"
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
@@ -18,12 +21,14 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-var cronJobs = make(map[string]*job.Job)
+var canaryJobs sync.Map
+
+const DefaultCanarySchedule = "@every 5m"
 
 func Unschedule(id string) {
-	if job := cronJobs[id]; job != nil {
-		job.Unschedule()
-		delete(cronJobs, id)
+	if j, exists := canaryJobs.Load(id); exists {
+		j.(*job.Job).Unschedule()
+		canaryJobs.Delete(id)
 	}
 }
 
@@ -48,11 +53,16 @@ func TriggerAt(ctx context.Context, dbCanary pkg.Canary, runAt time.Time) error 
 }
 
 func findJob(dbCanary pkg.Canary) *job.Job {
-	return cronJobs[dbCanary.ID.String()]
+	j, exists := canaryJobs.Load(dbCanary.ID.String())
+	if !exists {
+		return nil
+	}
+	return j.(*job.Job)
 }
 
-// TODO: Refactor to use database object instead of kubernetes
 func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
+	id := dbCanary.ID.String()
+
 	if disabled := ctx.Properties()["check.*.disabled"]; disabled == "true" {
 		return nil
 	}
@@ -71,21 +81,18 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 		_ = cache.PostgresCache.Add(pkg.FromV1(*canary, canary.Spec.Webhook), pkg.CheckStatusFromResult(*result))
 	}
 
-	var schedule = canary.Spec.GetSchedule()
+	var existingJob *job.Job
+	if j, ok := canaryJobs.Load(id); ok {
+		existingJob = j.(*job.Job)
+	}
 
-	j := cronJobs[canary.GetPersistedID()]
-
-	if schedule == "@never" {
-		if j != nil {
-			Unschedule(canary.GetPersistedID())
-		}
+	if canary.Spec.GetSchedule() == "@never" || dbCanary.DeletedAt != nil {
+		Unschedule(id)
 		return nil
 	}
 
 	if runner.IsCanaryIgnored(&canary.ObjectMeta) {
-		if j != nil {
-			Unschedule(canary.GetPersistedID())
-		}
+		Unschedule(id)
 		return nil
 	}
 
@@ -94,28 +101,45 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 		DBCanary: dbCanary,
 	}
 
-	if j == nil {
-		// Create new job context from empty context to create root spans for cronJobs
-		jobCtx := ctx.Wrap(gocontext.Background()).WithObject(canary.ObjectMeta)
-		jobCtx.WithAnyValue("canaryJob", canaryJob)
-		j = job.NewJob(jobCtx, "Canary", schedule, canaryJob.Run).
-			SetID(fmt.Sprintf("%s/%s", canary.Namespace, canary.Name))
-		j.Singleton = true
-		j.Retention = job.RetentionDay
-		cronJobs[canary.GetPersistedID()] = j
-		if err := j.AddToScheduler(CanaryScheduler); err != nil {
-			return err
-		}
-	} else {
-		j.Context = j.Context.WithAnyValue("canaryJob", canaryJob)
+	if existingJob == nil {
+		newCanaryJob(canaryJob)
+		return nil
 	}
 
-	if j.Schedule != schedule {
-		if err := j.Reschedule(schedule, CanaryScheduler); err != nil {
-			return err
-		}
+	existingCanary := existingJob.Context.Value("canary")
+	if existingCanary != nil && !reflect.DeepEqual(existingCanary.(v1.Canary).Spec, canary.Spec) {
+		ctx.Debugf("Rescheduling %s canary with updated specs", canary)
+		Unschedule(id)
+		newCanaryJob(canaryJob)
 	}
+
 	return nil
+}
+
+func newCanaryJob(c CanaryJob) {
+	schedule := c.Canary.Spec.Schedule
+	if schedule == "" {
+		schedule = DefaultCanarySchedule
+	}
+
+	j := &job.Job{
+		Name:         "Canary",
+		Context:      canaryCtx.DefaultContext.WithObject(c.Canary.ObjectMeta).WithAnyValue("canary", c.Canary),
+		Schedule:     schedule,
+		RunNow:       true,
+		Singleton:    true,
+		JobHistory:   true,
+		Retention:    job.RetentionDay,
+		ResourceID:   c.DBCanary.ID.String(),
+		ResourceType: "canary",
+		ID:           fmt.Sprintf("%s/%s", c.Canary.Namespace, c.Canary.Name),
+		Fn:           c.Run,
+	}
+
+	canaryJobs.Store(c.DBCanary.ID.String(), j)
+	if err := j.AddToScheduler(CanaryScheduler); err != nil {
+		logger.Errorf("[%s] failed to schedule %v", j.Name, err)
+	}
 }
 
 var SyncCanaryJobs = &job.Job{
