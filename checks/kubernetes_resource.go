@@ -43,16 +43,16 @@ func (c *KubernetesResourceChecker) Run(ctx *context.Context) pkg.Results {
 	return results
 }
 
-func (c *KubernetesResourceChecker) applyKubeconfig(ctx *context.Context, kubeConfig types.EnvVar) error {
+func (c *KubernetesResourceChecker) applyKubeconfig(ctx *context.Context, kubeConfig types.EnvVar) (*context.Context, error) {
 	val, err := ctx.GetEnvValueFromCache(kubeConfig)
 	if err != nil {
-		return fmt.Errorf("failed to get kubeconfig from env: %w", err)
+		return nil, fmt.Errorf("failed to get kubeconfig from env: %w", err)
 	}
 
 	if strings.HasPrefix(val, "/") {
 		kClient, kube, err := pkg.NewKommonsClientWithConfigPath(val)
 		if err != nil {
-			return fmt.Errorf("failed to initialize kubernetes client from the provided kubeconfig: %w", err)
+			return nil, fmt.Errorf("failed to initialize kubernetes client from the provided kubeconfig: %w", err)
 		}
 
 		ctx = ctx.WithDutyContext(ctx.WithKommons(kClient))
@@ -60,18 +60,19 @@ func (c *KubernetesResourceChecker) applyKubeconfig(ctx *context.Context, kubeCo
 	} else {
 		kClient, kube, err := pkg.NewKommonsClientWithConfig(val)
 		if err != nil {
-			return fmt.Errorf("failed to initialize kubernetes client from the provided kubeconfig: %w", err)
+			return nil, fmt.Errorf("failed to initialize kubernetes client from the provided kubeconfig: %w", err)
 		}
 
 		ctx = ctx.WithDutyContext(ctx.WithKommons(kClient))
 		ctx = ctx.WithDutyContext(ctx.WithKubernetes(kube))
 	}
 
-	return nil
+	return ctx, nil
 }
 
 func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.KubernetesResourceCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
+	var err error
 	var results pkg.Results
 	results = append(results, result)
 
@@ -92,7 +93,8 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 	}
 
 	if check.Kubeconfig != nil {
-		if err := c.applyKubeconfig(ctx, *check.Kubeconfig); err != nil {
+		ctx, err = c.applyKubeconfig(ctx, *check.Kubeconfig)
+		if err != nil {
 			return results.Failf("failed to apply kube config: %v", err)
 		}
 	}

@@ -4986,6 +4986,11 @@ spec:
                       checks:
                         description: Checks to run against the kubernetes resources.
                         items:
+                          description: |-
+                            KubernetesResourceChecks is the canary spec.
+                            NOTE: It's only created to make crd generation possible.
+                            embedding CanarySpec into KubernetesResourceCheck.checks
+                            directly generates an invalid crd.
                           type: object
                         type: array
                         x-kubernetes-preserve-unknown-fields: true
