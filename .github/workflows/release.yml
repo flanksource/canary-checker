@@ -61,6 +61,8 @@ jobs:
   docker:
     needs: semantic-release
     runs-on: ubuntu-latest
+    # Only build docker images on stable release
+    if: "!contains(needs.semantic-release.outputs.release-version, 'beta')"
     steps:
       - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
       - name: Set version
