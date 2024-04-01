@@ -2,6 +2,8 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: junit-metrics
+  labels:
+    part-of: canary-tools
 spec:
   schedule: "@every 2h"
   severity: high
