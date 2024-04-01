@@ -783,6 +783,10 @@ type KubernetesGenericCheckTestResultSelector struct {
 	PodSelector string `json:"podSelector,omitempty"`
 }
 
+type KubernetesResourceChecks struct {
+	CanarySpec `yaml:",inline" json:",inline"`
+}
+
 type KubernetesResourceCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
@@ -799,8 +803,8 @@ type KubernetesResourceCheck struct {
 	// +kubebuilder:pruning:PreserveUnknownFields
 	Resources []unstructured.Unstructured `json:"resources"`
 
-	// Checks to run agains the kubernetes resources
-	// Checks []CanarySpec `json:"checks,omitempty"`
+	// Checks to run against the kubernetes resources
+	Checks []KubernetesResourceChecks `json:"what,omitempty"`
 
 	// Kubeconfig is the kubeconfig or the path to the kubeconfig file.
 	Kubeconfig *types.EnvVar `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`

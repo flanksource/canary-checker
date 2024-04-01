@@ -2583,6 +2583,12 @@
           },
           "type": "array"
         },
+        "what": {
+          "items": {
+            "$ref": "#/$defs/KubernetesResourceChecks"
+          },
+          "type": "array"
+        },
         "kubeconfig": {
           "$ref": "#/$defs/EnvVar"
         },
@@ -2605,6 +2611,284 @@
         "name",
         "resources"
       ]
+    },
+    "KubernetesResourceChecks": {
+      "properties": {
+        "replicas": {
+          "type": "integer"
+        },
+        "env": {
+          "patternProperties": {
+            ".*": {
+              "$ref": "#/$defs/VarSource"
+            }
+          },
+          "type": "object"
+        },
+        "http": {
+          "items": {
+            "$ref": "#/$defs/HTTPCheck"
+          },
+          "type": "array"
+        },
+        "dns": {
+          "items": {
+            "$ref": "#/$defs/DNSCheck"
+          },
+          "type": "array"
+        },
+        "docker": {
+          "items": {
+            "$ref": "#/$defs/DockerPullCheck"
+          },
+          "type": "array"
+        },
+        "dockerPush": {
+          "items": {
+            "$ref": "#/$defs/DockerPushCheck"
+          },
+          "type": "array"
+        },
+        "containerd": {
+          "items": {
+            "$ref": "#/$defs/ContainerdPullCheck"
+          },
+          "type": "array"
+        },
+        "containerdPush": {
+          "items": {
+            "$ref": "#/$defs/ContainerdPushCheck"
+          },
+          "type": "array"
+        },
+        "s3": {
+          "items": {
+            "$ref": "#/$defs/S3Check"
+          },
+          "type": "array"
+        },
+        "tcp": {
+          "items": {
+            "$ref": "#/$defs/TCPCheck"
+          },
+          "type": "array"
+        },
+        "pod": {
+          "items": {
+            "$ref": "#/$defs/PodCheck"
+          },
+          "type": "array"
+        },
+        "ldap": {
+          "items": {
+            "$ref": "#/$defs/LDAPCheck"
+          },
+          "type": "array"
+        },
+        "icmp": {
+          "items": {
+            "$ref": "#/$defs/ICMPCheck"
+          },
+          "type": "array"
+        },
+        "postgres": {
+          "items": {
+            "$ref": "#/$defs/PostgresCheck"
+          },
+          "type": "array"
+        },
+        "mssql": {
+          "items": {
+            "$ref": "#/$defs/MssqlCheck"
+          },
+          "type": "array"
+        },
+        "mysql": {
+          "items": {
+            "$ref": "#/$defs/MysqlCheck"
+          },
+          "type": "array"
+        },
+        "restic": {
+          "items": {
+            "$ref": "#/$defs/ResticCheck"
+          },
+          "type": "array"
+        },
+        "jmeter": {
+          "items": {
+            "$ref": "#/$defs/JmeterCheck"
+          },
+          "type": "array"
+        },
+        "junit": {
+          "items": {
+            "$ref": "#/$defs/JunitCheck"
+          },
+          "type": "array"
+        },
+        "helm": {
+          "items": {
+            "$ref": "#/$defs/HelmCheck"
+          },
+          "type": "array"
+        },
+        "namespace": {
+          "items": {
+            "$ref": "#/$defs/NamespaceCheck"
+          },
+          "type": "array"
+        },
+        "redis": {
+          "items": {
+            "$ref": "#/$defs/RedisCheck"
+          },
+          "type": "array"
+        },
+        "ec2": {
+          "items": {
+            "$ref": "#/$defs/EC2Check"
+          },
+          "type": "array"
+        },
+        "prometheus": {
+          "items": {
+            "$ref": "#/$defs/PrometheusCheck"
+          },
+          "type": "array"
+        },
+        "mongodb": {
+          "items": {
+            "$ref": "#/$defs/MongoDBCheck"
+          },
+          "type": "array"
+        },
+        "cloudwatch": {
+          "items": {
+            "$ref": "#/$defs/CloudWatchCheck"
+          },
+          "type": "array"
+        },
+        "github": {
+          "items": {
+            "$ref": "#/$defs/GitHubCheck"
+          },
+          "type": "array"
+        },
+        "gitProtocol": {
+          "items": {
+            "$ref": "#/$defs/GitProtocolCheck"
+          },
+          "type": "array"
+        },
+        "kubernetes": {
+          "items": {
+            "$ref": "#/$defs/KubernetesCheck"
+          },
+          "type": "array"
+        },
+        "kubernetesResource": {
+          "items": {
+            "$ref": "#/$defs/KubernetesResourceCheck"
+          },
+          "type": "array"
+        },
+        "folder": {
+          "items": {
+            "$ref": "#/$defs/FolderCheck"
+          },
+          "type": "array"
+        },
+        "exec": {
+          "items": {
+            "$ref": "#/$defs/ExecCheck"
+          },
+          "type": "array"
+        },
+        "awsConfig": {
+          "items": {
+            "$ref": "#/$defs/AwsConfigCheck"
+          },
+          "type": "array"
+        },
+        "awsConfigRule": {
+          "items": {
+            "$ref": "#/$defs/AwsConfigRuleCheck"
+          },
+          "type": "array"
+        },
+        "databaseBackup": {
+          "items": {
+            "$ref": "#/$defs/DatabaseBackupCheck"
+          },
+          "type": "array"
+        },
+        "configDB": {
+          "items": {
+            "$ref": "#/$defs/ConfigDBCheck"
+          },
+          "type": "array"
+        },
+        "catalog": {
+          "items": {
+            "$ref": "#/$defs/CatalogCheck"
+          },
+          "type": "array"
+        },
+        "opensearch": {
+          "items": {
+            "$ref": "#/$defs/OpenSearchCheck"
+          },
+          "type": "array"
+        },
+        "elasticsearch": {
+          "items": {
+            "$ref": "#/$defs/ElasticsearchCheck"
+          },
+          "type": "array"
+        },
+        "alertmanager": {
+          "items": {
+            "$ref": "#/$defs/AlertManagerCheck"
+          },
+          "type": "array"
+        },
+        "dynatrace": {
+          "items": {
+            "$ref": "#/$defs/DynatraceCheck"
+          },
+          "type": "array"
+        },
+        "azureDevops": {
+          "items": {
+            "$ref": "#/$defs/AzureDevopsCheck"
+          },
+          "type": "array"
+        },
+        "webhook": {
+          "$ref": "#/$defs/WebhookCheck"
+        },
+        "interval": {
+          "type": "integer"
+        },
+        "schedule": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "resultMode": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "LDAPCheck": {
       "properties": {

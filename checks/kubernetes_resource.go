@@ -20,7 +20,7 @@ const (
 	// maximum number of static & non static resources a canary can have
 	maxResourcesAllowed = 10
 
-	// resourceWaitTimeout is the default timeout to wait for alll resources
+	// resourceWaitTimeout is the default timeout to wait for all resources
 	// to be ready. Timeout on the spec will take precedence over this.
 	resourceWaitTimeout = time.Minute * 10
 
@@ -146,7 +146,21 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 		}
 	}
 
-	// run the actual check now
+	// run the actual check now. We need to run this in a canary-checker pod as well
+	for _, c := range check.Checks {
+		virtualCanary := v1.Canary{
+			ObjectMeta: ctx.Canary.ObjectMeta,
+			Spec:       c.CanarySpec,
+		}
 
-	return nil
+		checkCtx := context.New(ctx.Context, virtualCanary)
+		res, err := Exec(checkCtx)
+		if err != nil {
+			return results.Failf("%v", err)
+		}
+
+		results = append(results, res...)
+	}
+
+	return results
 }
