@@ -139,7 +139,6 @@ func newCanaryJob(c CanaryJob) {
 	if err := j.AddToScheduler(CanaryScheduler); err != nil {
 		logger.Errorf("[%s] failed to schedule %v", j.Name, err)
 	}
-
 }
 
 var SyncCanaryJobs = &job.Job{

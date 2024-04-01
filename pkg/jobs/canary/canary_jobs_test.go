@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	canaryCtx "github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/duty/models"
@@ -57,6 +58,7 @@ var _ = ginkgo.Describe("Canary Job sync", ginkgo.Ordered, func() {
 	ginkgo.It("schedule the canary job", func() {
 		MinimumTimeBetweenCanaryRuns = 0 // reset this for now so it doesn't hinder test with small schedules
 		SyncCanaryJobs.Context = DefaultContext
+		canaryCtx.DefaultContext = DefaultContext
 		SyncCanaryJobs.Run()
 		setup.ExpectJobToPass(SyncCanaryJobs)
 	})
