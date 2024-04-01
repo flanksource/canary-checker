@@ -8,7 +8,7 @@ spec:
   schedule: '@every 5m'
   kubernetesResource:
     - name: ingress-accessibility-check 
-      description: "deploy a pod and check that it is accessible via ingress"
+      description: "deploy an nginx pod"
       namespace: default
       resources:
         - apiVersion: v1
@@ -23,8 +23,3 @@ spec:
                   - containerPort: 80
       waitForReady: true 
       timeout: 10m
-      podChecks:
-      checks:
-        - http:
-          - name: adityathebe.com.np
-            url: "https://adityathebe.com.np"

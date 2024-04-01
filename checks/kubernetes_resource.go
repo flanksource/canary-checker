@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/gomplate/v3"
 	"github.com/flanksource/is-healthy/pkg/health"
 	"golang.org/x/sync/errgroup"
 
@@ -150,7 +151,6 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 		}
 	}
 
-	// run the actual check now. We need to run this in a canary-checker pod as well
 	logger.Debugf("found %d checks to run", len(check.Checks))
 	for _, c := range check.Checks {
 		virtualCanary := v1.Canary{
@@ -158,15 +158,32 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 			Spec:       c.CanarySpec,
 		}
 
-		logger.Infof("running check inside kubernetes resource")
+		templater := gomplate.StructTemplater{
+			Values: map[string]any{
+				"staticResource": check.StaticResources,
+				"resources":      check.Resources,
+			},
+			ValueFunctions: true,
+			DelimSets: []gomplate.Delims{
+				{Left: "{{", Right: "}}"},
+				{Left: "$(", Right: ")"},
+			},
+		}
+		if err := templater.Walk(&virtualCanary); err != nil {
+			return results.Failf("error templating checks %v", err)
+		}
 
 		checkCtx := context.New(ctx.Context, virtualCanary)
 		res, err := Exec(checkCtx)
 		if err != nil {
 			return results.Failf("%v", err)
+		} else {
+			for _, r := range res {
+				if r.Error != "" {
+					results.Failf("check (name:%s) failed with error: %v", r.GetName(), r.Error)
+				}
+			}
 		}
-
-		results = append(results, res...)
 	}
 
 	return results

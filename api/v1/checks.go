@@ -777,6 +777,10 @@ func (c ConfigDBCheck) GetEndpoint() string {
 	return c.Query
 }
 
+// KubernetesResourceChecks is the canary spec.
+// NOTE: It's only created to make crd generation possible.
+// embedding CanarySpec into KubernetesResourceCheck.checks
+// directly generates an invalid crd.
 type KubernetesResourceChecks struct {
 	CanarySpec `yaml:",inline" json:",inline"`
 }
@@ -813,7 +817,7 @@ func (c KubernetesResourceCheck) GetType() string {
 }
 
 func (c KubernetesResourceCheck) GetEndpoint() string {
-	return "" // TODO:
+	return c.Name
 }
 
 type ResourceSelector struct {
