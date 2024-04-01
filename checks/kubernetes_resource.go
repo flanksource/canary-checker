@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/is-healthy/pkg/health"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/flanksource/commons/duration"
@@ -129,12 +130,15 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 
 		logger.Debugf("waiting for %s for %d resources to be ready.", timeout, totalResources)
 
+		kClient := pkg.NewKubeClient(ctx.Kommons().GetRESTConfig)
 		errG, _ := errgroup.WithContext(ctx)
 		for _, r := range append(check.StaticResources, check.Resources...) {
 			r := r
 			errG.Go(func() error {
-				if _, err := ctx.Kommons().WaitForResource(r.GetKind(), r.GetNamespace(), r.GetName(), timeout); err != nil {
-					return fmt.Errorf("error waiting for resource(%s/%s/%s) to be ready", r.GetKind(), r.GetNamespace(), r.GetName())
+				if status, err := kClient.WaitForResource(ctx, r.GetKind(), r.GetNamespace(), r.GetName()); err != nil {
+					return fmt.Errorf("error waiting for resource(%s/%s/%s) to be ready: %w", r.GetKind(), r.GetNamespace(), r.GetName(), err)
+				} else if status.Status != health.HealthStatusHealthy {
+					return fmt.Errorf("resource(%s/%s/%s) didn't become healthy. message (%s)", r.GetKind(), r.GetNamespace(), r.GetName(), status.Message)
 				}
 
 				return nil

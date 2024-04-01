@@ -4983,6 +4983,11 @@ spec:
                 kubernetesResource:
                   items:
                     properties:
+                      checks:
+                        description: Checks to run against the kubernetes resources.
+                        items:
+                          type: object
+                        type: array
                       description:
                         description: Description for the check
                         type: string
@@ -5099,17 +5104,6 @@ spec:
                           template:
                             type: string
                         type: object
-                      testResults:
-                        items:
-                          properties:
-                            path:
-                              type: string
-                            podSelector:
-                              type: string
-                            type:
-                              type: string
-                          type: object
-                        type: array
                       timeout:
                         type: string
                       transform:
@@ -5128,11 +5122,6 @@ spec:
                         type: string
                       waitForReady:
                         type: boolean
-                      what:
-                        description: Checks to run against the kubernetes resources
-                        items:
-                          type: object
-                        type: array
                     required:
                       - name
                       - resources

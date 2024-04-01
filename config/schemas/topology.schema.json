@@ -2491,21 +2491,6 @@
         "kind"
       ]
     },
-    "KubernetesGenericCheckTestResultSelector": {
-      "properties": {
-        "path": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string"
-        },
-        "podSelector": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
     "KubernetesResourceCheck": {
       "properties": {
         "description": {
@@ -2553,7 +2538,7 @@
           },
           "type": "array"
         },
-        "what": {
+        "checks": {
           "items": {
             "$ref": "#/$defs/KubernetesResourceChecks"
           },
@@ -2567,12 +2552,6 @@
         },
         "timeout": {
           "type": "string"
-        },
-        "testResults": {
-          "items": {
-            "$ref": "#/$defs/KubernetesGenericCheckTestResultSelector"
-          },
-          "type": "array"
         }
       },
       "additionalProperties": false,

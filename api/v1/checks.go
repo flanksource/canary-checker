@@ -777,14 +777,8 @@ func (c ConfigDBCheck) GetEndpoint() string {
 	return c.Query
 }
 
-type KubernetesGenericCheckTestResultSelector struct {
-	Path        string `json:"path,omitempty"`
-	Type        string `json:"type,omitempty"`
-	PodSelector string `json:"podSelector,omitempty"`
-}
-
 type KubernetesResourceChecks struct {
-	CanarySpec `yaml:",inline" json:",inline"`
+	CanarySpec `json:",inline"`
 }
 
 type KubernetesResourceCheck struct {
@@ -803,15 +797,14 @@ type KubernetesResourceCheck struct {
 	// +kubebuilder:pruning:PreserveUnknownFields
 	Resources []unstructured.Unstructured `json:"resources"`
 
-	// Checks to run against the kubernetes resources
-	Checks []KubernetesResourceChecks `json:"what,omitempty"`
+	// Checks to run against the kubernetes resources.
+	Checks []KubernetesResourceChecks `json:"checks,omitempty"`
 
 	// Kubeconfig is the kubeconfig or the path to the kubeconfig file.
 	Kubeconfig *types.EnvVar `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
 
-	WaitForReady bool                                       `json:"waitForReady,omitempty"`
-	Timeout      string                                     `json:"timeout,omitempty"`
-	TestResults  []KubernetesGenericCheckTestResultSelector `json:"testResults,omitempty"`
+	WaitForReady bool   `json:"waitForReady,omitempty"`
+	Timeout      string `json:"timeout,omitempty"`
 }
 
 func (c KubernetesResourceCheck) GetType() string {

@@ -23,6 +23,7 @@ spec:
                   - containerPort: 80
       waitForReady: true 
       timeout: 10m
-      # checks:
-      #   - http:
-      #       url: "{{.staticResources[0].ingress.spec.hostname}}"
+      podChecks:
+      checks:
+        - http:
+            url: "{{.staticResources[0].ingress.spec.hostname}}"
