@@ -65,7 +65,7 @@ var _ = ginkgo.Describe("Canary Job sync", ginkgo.Ordered, func() {
 
 	ginkgo.It("should verify that the endpoint wasn't called more than once after 3 seconds", func() {
 		time.Sleep(time.Second * 3)
-		CanaryScheduler.Stop()
+		// The job will be called on first schedule and all concurrent jobs would be aborted
 		Expect(requestCount).To(Equal(1))
 	})
 })
