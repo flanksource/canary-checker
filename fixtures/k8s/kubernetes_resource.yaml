@@ -2,24 +2,27 @@
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
-  name: ingress-tests
+  name: nginx-pod-creation-tests
   namespace: default
+  labels:
+    "Expected-Fail": "false"
 spec:
   schedule: '@every 5m'
   kubernetesResource:
     - name: ingress-accessibility-check 
-      description: "deploy an nginx pod"
       namespace: default
+      description: "deploy an nginx pod"
+      waitForReady: true 
+      timeout: 10m
       resources:
         - apiVersion: v1
           kind: Pod
           metadata:
             name: nginx-pod
+            namespace: default
           spec:
             containers:
               - name: nginx
-                image: nginx:latest
+                image: nginx:1.24.0-alpine-slim
                 ports:
                   - containerPort: 80
-      waitForReady: true 
-      timeout: 10m
