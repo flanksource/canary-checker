@@ -126,6 +126,7 @@ func newCanaryJob(c CanaryJob) {
 		Name:         "Canary",
 		Context:      canaryCtx.DefaultContext.WithObject(c.Canary.ObjectMeta).WithAnyValue("canary", c.Canary),
 		Schedule:     schedule,
+		RunNow:       true,
 		Singleton:    true,
 		JobHistory:   true,
 		Retention:    job.RetentionDay,
