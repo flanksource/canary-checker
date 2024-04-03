@@ -2,7 +2,7 @@
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
-  name: nginx-pod-creation-tests
+  name: ingress-test
   namespace: default
   labels:
     "Expected-Fail": "false"
@@ -22,7 +22,7 @@ spec:
             namespace: default
           spec:
             rules:
-              - host: 'httpbin.test.flanksource.com'
+              - host: "httpbin.127.0.0.1.nip.io"
                 http:
                   paths:
                     - pathType: Prefix
@@ -38,10 +38,12 @@ spec:
           metadata:
             name: httpbin
             namespace: default
+            labels:
+              app: httpbin
           spec:
             containers:
               - name: httpbin
-                image: 'kennethreitz/httpbin:latest'
+                image: "kennethreitz/httpbin:latest"
                 ports:
                   - containerPort: 80
         - apiVersion: v1
@@ -51,18 +53,14 @@ spec:
             namespace: default
           spec:
             selector:
-              name: httpbin
+              app: httpbin
             ports:
               - port: 80
                 targetPort: 80
       checks:
         - http:
-            - url: "http://ingress-nginx.ingress-nginx.svc"
+            - name: Call httpbin via ingress
+              url: "http://ingress-nginx.ingress-nginx.svc"
               headers:
                 - name: Host
-                  value: "nginx.test.flanksource.com"
-            # - url: "http://localhost:1337"
-            #   headers:
-            #     - name: host
-            #       value: "httpbin.test.flanksource.com"
-            #       # value: "{{(index (index .staticResources 0).spec.rules 0).host}}"
+                  value: "{{(index ((index .staticResources 0).Object.spec.rules) 0).host}}"

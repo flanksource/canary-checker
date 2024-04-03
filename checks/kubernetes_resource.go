@@ -11,6 +11,7 @@ import (
 
 	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/commons/utils"
 	"github.com/flanksource/duty/types"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -105,7 +106,7 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 		// annotate the resource with the canary ID so we can easily clean it up later
 		// TODO: see if this is actually needed
 		resource.SetAnnotations(map[string]string{annotationkey: ctx.Canary.ID()})
-		if err := ctx.Kommons().ApplyUnstructured(ctx.Namespace, &resource); err != nil {
+		if err := ctx.Kommons().ApplyUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
 			return results.Failf("failed to apply static resource %s: %v", resource.GetName(), err)
 		}
 	}
@@ -113,12 +114,12 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 	for i := range check.Resources {
 		resource := check.Resources[i]
 		resource.SetAnnotations(map[string]string{annotationkey: ctx.Canary.ID()})
-		if err := ctx.Kommons().ApplyUnstructured(ctx.Namespace, &resource); err != nil {
+		if err := ctx.Kommons().ApplyUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
 			return results.Failf("failed to apply resource %s: %v", resource.GetName(), err)
 		}
 
 		defer func() {
-			if err := ctx.Kommons().DeleteUnstructured(ctx.Namespace, &resource); err != nil {
+			if err := ctx.Kommons().DeleteUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
 				logger.Errorf("failed to delete resource %s: %v", resource.GetName(), err)
 				results.ErrorMessage(fmt.Errorf("failed to delete resource %s: %v", resource.GetName(), err))
 			}
@@ -172,7 +173,7 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 			},
 		}
 		if err := templater.Walk(&virtualCanary); err != nil {
-			return results.Failf("error templating checks %v", err)
+			return results.Failf("error templating checks: %v", err)
 		}
 
 		checkCtx := context.New(ctx.Context, virtualCanary)

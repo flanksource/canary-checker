@@ -9,4 +9,5 @@ resources:
   - pod_fail.yaml
   - pod_pass.yaml
   - kubernetes_bundle.yaml
-  - kuberenetes_resource.yaml
+  - kubernetes_resource_ingress.yaml
+  - kubernetes_resource_service.yaml

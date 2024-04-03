@@ -1,0 +1,45 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: pod-svc-test
+  namespace: default
+  labels:
+    "Expected-Fail": "false"
+spec:
+  schedule: "@every 5m"
+  kubernetesResource:
+    - name: service accessibility test
+      namespace: default
+      description: "deploy httpbin & check that it's accessible via its service"
+      waitForReady: true
+      timeout: 10m
+      resources:
+        - apiVersion: v1
+          kind: Pod
+          metadata:
+            name: httpbin-pod-1
+            namespace: default
+            labels:
+              app: httpbin-pod-1
+          spec:
+            containers:
+              - name: httpbin
+                image: "kennethreitz/httpbin:latest"
+                ports:
+                  - containerPort: 80
+        - apiVersion: v1
+          kind: Service
+          metadata:
+            name: httpbin-svc
+            namespace: default
+          spec:
+            selector:
+              app: httpbin-pod-1
+            ports:
+              - port: 80
+                targetPort: 80
+      checks:
+        - http:
+            - name: Call httpbin service
+              url: "http://httpbin-svc.default.svc"
