@@ -7,22 +7,62 @@ metadata:
   labels:
     "Expected-Fail": "false"
 spec:
-  schedule: '@every 5m'
+  schedule: "@every 5m"
   kubernetesResource:
-    - name: ingress-accessibility-check 
+    - name: ingress-accessibility-check
       namespace: default
-      description: "deploy an nginx pod"
-      waitForReady: true 
+      description: "deploy httpbin & check that it's accessible via ingress"
+      waitForReady: true
       timeout: 10m
+      staticResources:
+        - apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: httpbin
+            namespace: default
+          spec:
+            rules:
+              - host: 'httpbin.test.flanksource.com'
+                http:
+                  paths:
+                    - pathType: Prefix
+                      path: /
+                      backend:
+                        service:
+                          name: httpbin
+                          port:
+                            number: 80
       resources:
         - apiVersion: v1
           kind: Pod
           metadata:
-            name: nginx-pod
+            name: httpbin
             namespace: default
           spec:
             containers:
-              - name: nginx
-                image: nginx:1.24.0-alpine-slim
+              - name: httpbin
+                image: 'kennethreitz/httpbin:latest'
                 ports:
                   - containerPort: 80
+        - apiVersion: v1
+          kind: Service
+          metadata:
+            name: httpbin
+            namespace: default
+          spec:
+            selector:
+              name: httpbin
+            ports:
+              - port: 80
+                targetPort: 80
+      checks:
+        - http:
+            - url: "http://ingress-nginx.ingress-nginx.svc"
+              headers:
+                - name: Host
+                  value: "nginx.test.flanksource.com"
+            # - url: "http://localhost:1337"
+            #   headers:
+            #     - name: host
+            #       value: "httpbin.test.flanksource.com"
+            #       # value: "{{(index (index .staticResources 0).spec.rules 0).host}}"

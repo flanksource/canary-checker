@@ -220,6 +220,8 @@ func DeleteCanary(ctx context.Context, id string) error {
 	}
 	metrics.UnregisterGauge(ctx, checkIDs)
 
+	// TODO: delete all the static resources
+
 	if err := DeleteCheckComponentRelationshipsForCanary(ctx.DB(), id); err != nil {
 		return err
 	}

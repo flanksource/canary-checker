@@ -162,8 +162,8 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 
 		templater := gomplate.StructTemplater{
 			Values: map[string]any{
-				"staticResource": check.StaticResources,
-				"resources":      check.Resources,
+				"staticResources": check.StaticResources,
+				"resources":       check.Resources,
 			},
 			ValueFunctions: true,
 			DelimSets: []gomplate.Delims{
