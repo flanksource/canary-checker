@@ -4,11 +4,11 @@ kind: Service
 metadata:
   name: postgres
   labels:
-    {{- include "canary-checker.labels" . | nindent 4 }}
+    {{- include "postgresql.labels" . | nindent 4 }}
 spec:
   selector:
     app: postgresql
-    {{- include "canary-checker.selectorLabels" . | nindent 4 }}
+    {{- include "postgresql.selectorLabels" . | nindent 4 }}
   ports:
   - port: 5432
     targetPort: 5432

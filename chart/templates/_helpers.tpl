@@ -33,20 +33,36 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Common labels
 */}}
-{{- define "canary-checker.labels" -}}
+{{- define "chart.labels" -}}
 helm.sh/chart: {{ include "canary-checker.chart" . }}
-{{ include "canary-checker.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
+{{- define "canary-checker.labels" -}}
+{{ include "chart.labels" . }}
+{{ include "canary-checker.selectorLabels" . }}
+{{- end }}
+
+{{- define "postgresql.labels" -}}
+{{ include "chart.labels" . }}
+{{ include "postgresql.selectorLabels" . }}
+{{- end }}
+
+
 {{/*
 Selector labels
 */}}
 {{- define "canary-checker.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "canary-checker.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+control-plane: canary-checker
+{{- end }}
+
+{{- define "postgresql.selectorLabels" -}}
+app.kubernetes.io/name: postgresql
 app.kubernetes.io/instance: {{ .Release.Name }}
 control-plane: canary-checker
 {{- end }}
