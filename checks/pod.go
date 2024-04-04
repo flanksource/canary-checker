@@ -141,6 +141,7 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	}
 
 	result := pkg.Success(podCheck, ctx.Canary)
+	result.AppendMsgf("pod check is deprecated. Please use the kubernetes resource check")
 	var results pkg.Results
 	results = append(results, result)
 	startTimer := NewTimer()

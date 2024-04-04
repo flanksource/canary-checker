@@ -15,11 +15,15 @@ spec:
       waitForReady: true
       timeout: 10m
       staticResources:
+        - apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: development
         - apiVersion: networking.k8s.io/v1
           kind: Ingress
           metadata:
             name: httpbin
-            namespace: default
+            namespace: development
           spec:
             rules:
               - host: "httpbin.127.0.0.1.nip.io"
@@ -37,7 +41,7 @@ spec:
           kind: Pod
           metadata:
             name: httpbin
-            namespace: default
+            namespace: development
             labels:
               app: httpbin
           spec:
@@ -50,7 +54,7 @@ spec:
           kind: Service
           metadata:
             name: httpbin
-            namespace: default
+            namespace: development
           spec:
             selector:
               app: httpbin

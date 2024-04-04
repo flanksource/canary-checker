@@ -21,7 +21,7 @@ import (
 
 const (
 	// maximum number of static & non static resources a canary can have
-	maxResourcesAllowed = 10
+	defaultMaxResourcesAllowed = 10
 
 	// resourceWaitTimeout is the default timeout to wait for all resources
 	// to be ready. Timeout on the spec will take precedence over this.
@@ -89,6 +89,7 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 	}
 
 	totalResources := len(check.StaticResources) + len(check.Resources)
+	maxResourcesAllowed := ctx.Properties().Int("checks.kubernetesResource.maxResources", defaultMaxResourcesAllowed)
 	if totalResources > maxResourcesAllowed {
 		return results.Failf("too many resources (%d). only %d allowed", totalResources, maxResourcesAllowed)
 	}

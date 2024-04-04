@@ -366,6 +366,15 @@ func (result CheckResult) String() string {
 	return fmt.Sprintf("%s duration=%d %s %s", console.Redf("FAIL"), result.Duration, result.Message, result.Error)
 }
 
+func (result *CheckResult) AppendMsgf(msg string, args ...any) {
+	if result.Message == "" {
+		result.Message = fmt.Sprintf(msg, args...)
+		return
+	}
+
+	result.Message += "\n" + fmt.Sprintf(msg, args...)
+}
+
 type GenericCheck struct {
 	v1.Description `yaml:",inline" json:",inline"`
 	Type           string
