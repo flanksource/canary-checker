@@ -4,19 +4,19 @@ kind: StatefulSet
 metadata:
   name: postgresql
   labels:
-    {{- include "canary-checker.labels" . | nindent 4 }}
+    {{- include "postgresql.labels" . | nindent 4 }}
 spec:
   serviceName: postgresql
   selector:
     matchLabels:
       app: postgresql
-      {{- include "canary-checker.selectorLabels" . | nindent 6 }}
+      {{- include "postgresql.selectorLabels" . | nindent 6 }}
   replicas: 1
   template:
     metadata:
       labels:
         app: postgresql
-        {{- include "canary-checker.labels" . | nindent 8 }}
+        {{- include "postgresql.selectorLabels" . | nindent 8 }}
     spec:
       containers:
       - name: postgresql
