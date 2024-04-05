@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
+	"github.com/samber/lo"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
@@ -785,6 +788,63 @@ type KubernetesResourceChecks struct {
 	CanarySpec `yaml:",inline" json:",inline"`
 }
 
+type KubernetesResourceCheckWaitFor struct {
+	// Expr is a cel expression that determines whether all the resources
+	// are in their desired state before running checks on them.
+	// 	Default: `dyn(resources).all(r, k8s.isHealthy(r))`
+	Expr string `json:"expr,omitempty"`
+
+	// Disable waiting for resources to get to their desired state.
+	Disable bool `json:"disable,omitempty"`
+
+	// Timeout to wait for all static & non-static resources to be ready.
+	// 	Default: 10m
+	Timeout string `json:"timeout,omitempty"`
+
+	// Interval to check if all static & non-static resources are ready.
+	// 	Default: 30s
+	Interval string `json:"interval,omitempty"`
+
+	parsedTimeout  *time.Duration `json:"-"`
+	parsedInterval *time.Duration `json:"-"`
+}
+
+func (t *KubernetesResourceCheckWaitFor) GetTimeout() (time.Duration, error) {
+	if t.parsedTimeout != nil {
+		return *t.parsedTimeout, nil
+	}
+
+	if t.Timeout == "" {
+		return time.Duration(0), nil
+	}
+
+	tt, err := duration.ParseDuration(t.Timeout)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	t.parsedTimeout = lo.ToPtr(time.Duration(tt))
+
+	return *t.parsedTimeout, nil
+}
+
+func (t *KubernetesResourceCheckWaitFor) GetInterval() (time.Duration, error) {
+	if t.parsedInterval != nil {
+		return *t.parsedInterval, nil
+	}
+
+	if t.Interval == "" {
+		return time.Duration(0), nil
+	}
+
+	tt, err := duration.ParseDuration(t.Interval)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	t.parsedInterval = lo.ToPtr(time.Duration(tt))
+
+	return *t.parsedInterval, nil
+}
+
 type KubernetesResourceCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
@@ -808,8 +868,11 @@ type KubernetesResourceCheck struct {
 	// Kubeconfig is the kubeconfig or the path to the kubeconfig file.
 	Kubeconfig *types.EnvVar `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
 
-	WaitForReady bool   `json:"waitForReady,omitempty"`
-	Timeout      string `json:"timeout,omitempty"`
+	WaitFor KubernetesResourceCheckWaitFor `json:"waitFor,omitempty"`
+}
+
+func (c KubernetesResourceCheck) TotalResources() int {
+	return len(c.Resources) + len(c.StaticResources)
 }
 
 func (c KubernetesResourceCheck) GetType() string {

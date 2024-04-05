@@ -24,7 +24,7 @@ require (
 	github.com/flanksource/commons v1.22.1
 	github.com/flanksource/duty v1.0.408
 	github.com/flanksource/gomplate/v3 v3.24.2
-	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7
+	github.com/flanksource/is-healthy v1.0.2
 	github.com/flanksource/kommons v0.31.4
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-git/go-git/v5 v5.11.0
@@ -238,6 +238,7 @@ require (
 	github.com/rodaine/table v1.1.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
+	github.com/sethvargo/go-retry v0.2.4 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect

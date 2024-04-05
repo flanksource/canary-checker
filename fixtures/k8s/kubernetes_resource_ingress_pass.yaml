@@ -12,8 +12,9 @@ spec:
     - name: ingress-accessibility-check
       namespace: default
       description: "deploy httpbin & check that it's accessible via ingress"
-      waitForReady: true
-      timeout: 10m
+      waitFor: 
+        interval: 2s
+        timeout: 5m
       staticResources:
         - apiVersion: v1
           kind: Namespace
@@ -67,4 +68,4 @@ spec:
               url: "http://ingress-nginx.ingress-nginx.svc"
               headers:
                 - name: Host
-                  value: "{{(index ((index .staticResources 0).Object.spec.rules) 0).host}}"
+                  value: "{{(index ((index .staticResources 1).Object.spec.rules) 0).host}}"

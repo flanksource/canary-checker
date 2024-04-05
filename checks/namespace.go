@@ -48,6 +48,7 @@ func NewNamespaceChecker() *NamespaceChecker {
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
 func (c *NamespaceChecker) Run(ctx *context.Context) pkg.Results {
+	logger.Warnf("namespace check is deprecated. Please use the kubernetes resource check")
 	var err error
 	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Namespace {
@@ -107,7 +108,6 @@ func (c *NamespaceChecker) getConditionTimes(ns *v1.Namespace, pod *v1.Pod) (tim
 func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(canaryv1.NamespaceCheck)
 	result := pkg.Success(check, ctx.Canary)
-	result.AppendMsgf("namespace check is deprecated. Please use the kubernetes resource check")
 	var results pkg.Results
 	results = append(results, result)
 	if !c.lock.TryAcquire(1) {

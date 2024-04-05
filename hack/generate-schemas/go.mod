@@ -51,7 +51,7 @@ require (
 	github.com/exaring/otelpgx v0.5.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/flanksource/duty v1.0.408 // indirect
-	github.com/flanksource/is-healthy v0.0.0-20231003215854-76c51e3a3ff7 // indirect
+	github.com/flanksource/is-healthy v1.0.2 // indirect
 	github.com/flanksource/kommons v0.31.4 // indirect
 	github.com/flanksource/kubectl-neat v1.0.4 // indirect
 	github.com/flanksource/postq v1.0.0 // indirect
@@ -187,7 +187,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/postgres v1.5.4 // indirect
-	gorm.io/gorm v1.25.5 // indirect
+	gorm.io/gorm v1.25.9 // indirect
 	k8s.io/api v0.28.8 // indirect
 	k8s.io/apiextensions-apiserver v0.28.3 // indirect
 	k8s.io/apimachinery v0.28.8 // indirect

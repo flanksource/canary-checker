@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sync/errgroup"
 	"k8s.io/client-go/discovery/cached/disk"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes/fake"
@@ -32,12 +33,14 @@ import (
 	"github.com/flanksource/commons/files"
 	clogger "github.com/flanksource/commons/logger"
 	"github.com/flanksource/is-healthy/pkg/health"
+	"github.com/flanksource/is-healthy/pkg/lua"
 	"github.com/flanksource/kommons"
 	"github.com/henvic/httpretty"
 	"github.com/pkg/errors"
 	"gopkg.in/flanksource/yaml.v3"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -157,6 +160,34 @@ func NewKubeClient(restConfigFn func() (*rest.Config, error)) *kubeClient {
 	return &kubeClient{GetRESTConfig: restConfigFn}
 }
 
+func (c *kubeClient) FetchResources(ctx context.Context, resources ...unstructured.Unstructured) ([]unstructured.Unstructured, error) {
+	if len(resources) == 0 {
+		return nil, nil
+	}
+
+	eg, ctx := errgroup.WithContext(ctx)
+	var items []unstructured.Unstructured
+	for i := range resources {
+		resource := resources[i]
+		client, err := c.GetClientByKind(resource.GetKind())
+		if err != nil {
+			return nil, err
+		}
+
+		eg.Go(func() error {
+			item, err := client.Namespace(resource.GetNamespace()).Get(ctx, resource.GetName(), metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+
+			items = append(items, *item)
+			return nil
+		})
+	}
+
+	return items, eg.Wait()
+}
+
 func (c *kubeClient) WaitForResource(ctx context.Context, kind, namespace, name string) (*health.HealthStatus, error) {
 	client, err := c.GetClientByKind(kind)
 	if err != nil {
@@ -166,10 +197,10 @@ func (c *kubeClient) WaitForResource(ctx context.Context, kind, namespace, name 
 	for {
 		item, err := client.Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
-			return nil, fmt.Errorf("error getting item (kind=%s, namespace=%s, name=%s)", kind, namespace, name)
+			return nil, fmt.Errorf("error getting item (kind=%s, namespace=%s, name=%s): %w", kind, namespace, name, err)
 		}
 
-		status, err := health.GetResourceHealth(item, nil)
+		status, err := health.GetResourceHealth(item, lua.ResourceHealthOverrides{})
 		if err != nil {
 			return nil, fmt.Errorf("error getting resource health: %w", err)
 		}

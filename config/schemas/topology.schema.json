@@ -2547,11 +2547,8 @@
         "kubeconfig": {
           "$ref": "#/$defs/EnvVar"
         },
-        "waitForReady": {
-          "type": "boolean"
-        },
-        "timeout": {
-          "type": "string"
+        "waitFor": {
+          "$ref": "#/$defs/KubernetesResourceCheckWaitFor"
         }
       },
       "additionalProperties": false,
@@ -2560,6 +2557,24 @@
         "name",
         "resources"
       ]
+    },
+    "KubernetesResourceCheckWaitFor": {
+      "properties": {
+        "expr": {
+          "type": "string"
+        },
+        "disable": {
+          "type": "boolean"
+        },
+        "timeout": {
+          "type": "string"
+        },
+        "interval": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "KubernetesResourceChecks": {
       "properties": {

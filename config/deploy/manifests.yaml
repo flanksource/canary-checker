@@ -5109,8 +5109,6 @@ spec:
                           template:
                             type: string
                         type: object
-                      timeout:
-                        type: string
                       transform:
                         properties:
                           expr:
@@ -5125,8 +5123,28 @@ spec:
                       transformDeleteStrategy:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
-                      waitForReady:
-                        type: boolean
+                      waitFor:
+                        properties:
+                          disable:
+                            description: Disable waiting for resources to get to their desired state.
+                            type: boolean
+                          expr:
+                            description: |-
+                              Expr is a cel expression that determines whether all the resources
+                              are in their desired state before running checks on them.
+                              	Default: `dyn(resources).all(r, k8s.isHealthy(r))`
+                            type: string
+                          interval:
+                            description: |-
+                              Interval to check if all static & non-static resources are ready.
+                              	Default: 30s
+                            type: string
+                          timeout:
+                            description: |-
+                              Timeout to wait for all static & non-static resources to be ready.
+                              	Default: 10m
+                            type: string
+                        type: object
                     required:
                       - name
                       - resources
