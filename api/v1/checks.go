@@ -788,6 +788,72 @@ type KubernetesResourceChecks struct {
 	CanarySpec `yaml:",inline" json:",inline"`
 }
 
+type KubernetesResourceCheckRetries struct {
+	// Delay is the initial delay
+	Delay      string `json:"delay,omitempty"`
+	Timeout    string `json:"timeout,omitempty"`
+	Interval   string `json:"interval,omitempty"`
+	MaxRetries int    `json:"maxRetries,omitempty"`
+
+	parsedDelay    *time.Duration `json:"-"`
+	parsedTimeout  *time.Duration `json:"-"`
+	parsedInterval *time.Duration `json:"-"`
+}
+
+func (t *KubernetesResourceCheckRetries) GetInitialDelay() (time.Duration, error) {
+	if t.parsedDelay != nil {
+		return *t.parsedDelay, nil
+	}
+
+	if t.Delay == "" {
+		return time.Duration(0), nil
+	}
+
+	tt, err := duration.ParseDuration(t.Delay)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	t.parsedDelay = lo.ToPtr(time.Duration(tt))
+
+	return *t.parsedDelay, nil
+}
+
+func (t *KubernetesResourceCheckRetries) GetTimeout() (time.Duration, error) {
+	if t.parsedTimeout != nil {
+		return *t.parsedTimeout, nil
+	}
+
+	if t.Timeout == "" {
+		return time.Duration(0), nil
+	}
+
+	tt, err := duration.ParseDuration(t.Timeout)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	t.parsedTimeout = lo.ToPtr(time.Duration(tt))
+
+	return *t.parsedTimeout, nil
+}
+
+func (t *KubernetesResourceCheckRetries) GetInterval() (time.Duration, error) {
+	if t.parsedInterval != nil {
+		return *t.parsedInterval, nil
+	}
+
+	if t.Interval == "" {
+		return time.Duration(0), nil
+	}
+
+	tt, err := duration.ParseDuration(t.Interval)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	t.parsedInterval = lo.ToPtr(time.Duration(tt))
+
+	return *t.parsedInterval, nil
+}
+
 type KubernetesResourceCheckWaitFor struct {
 	// Expr is a cel expression that determines whether all the resources
 	// are in their desired state before running checks on them.
@@ -804,6 +870,8 @@ type KubernetesResourceCheckWaitFor struct {
 	// Interval to check if all static & non-static resources are ready.
 	// 	Default: 30s
 	Interval string `json:"interval,omitempty"`
+
+	MaxRetries int `json:"maxRetries,omitempty"`
 
 	parsedTimeout  *time.Duration `json:"-"`
 	parsedInterval *time.Duration `json:"-"`
@@ -864,6 +932,9 @@ type KubernetesResourceCheck struct {
 	// Checks to run against the kubernetes resources.
 	// +kubebuilder:validation:XPreserveUnknownFields
 	Checks []KubernetesResourceChecks `json:"checks,omitempty"`
+
+	// Set initial delays and retry intervals for checks.
+	CheckRetries KubernetesResourceCheckRetries `json:"checkRetries,omitempty"`
 
 	// Kubeconfig is the kubeconfig or the path to the kubeconfig file.
 	Kubeconfig *types.EnvVar `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`

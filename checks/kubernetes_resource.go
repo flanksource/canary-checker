@@ -115,16 +115,47 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 			return results.Failf("error templating checks: %v", err)
 		}
 
-		checkCtx := context.New(ctx.Context, virtualCanary)
-		res, err := Exec(checkCtx)
-		if err != nil {
-			return results.Failf("%v", err)
-		} else {
-			for _, r := range res {
-				if r.Error != "" {
-					results.Failf("check (name:%s) failed with error: %v", r.GetName(), r.Error)
+		if wt, _ := check.CheckRetries.GetInitialDelay(); wt > 0 {
+			time.Sleep(wt)
+		}
+
+		var backoff retry.Backoff
+		backoff = retry.BackoffFunc(func() (time.Duration, bool) {
+			return 0, true // don't retry by default
+		})
+
+		if retryInterval, _ := check.CheckRetries.GetInterval(); retryInterval > 0 {
+			backoff = retry.NewConstant(retryInterval)
+		}
+
+		if check.CheckRetries.MaxRetries > 0 {
+			backoff = retry.WithMaxRetries(uint64(check.CheckRetries.MaxRetries), backoff)
+		}
+
+		if maxRetryTimeout, _ := check.CheckRetries.GetTimeout(); maxRetryTimeout > 0 {
+			backoff = retry.WithMaxDuration(maxRetryTimeout, backoff)
+		}
+
+		retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
+			ctx.Infof("running check: %s", virtualCanary.Name)
+
+			ctx = _ctx.(*context.Context)
+			checkCtx := context.New(ctx.Context, virtualCanary)
+			res, err := Exec(checkCtx)
+			if err != nil {
+				return err
+			} else {
+				for _, r := range res {
+					if r.Error != "" {
+						return retry.RetryableError(fmt.Errorf("check (name:%s) failed with error: %v", r.GetName(), r.Error))
+					}
 				}
 			}
+
+			return nil
+		})
+		if retryErr != nil {
+			return results.Failf(retryErr.Error())
 		}
 	}
 
@@ -142,15 +173,19 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx *context.Context, check v1.K
 		waitInterval = wt
 	}
 
+	kClient := pkg.NewKubeClient(ctx.Kommons().GetRESTConfig)
+
 	var attempts int
 	backoff := retry.WithMaxDuration(waitTimeout, retry.NewConstant(waitInterval))
+	if check.WaitFor.MaxRetries > 0 {
+		backoff = retry.WithMaxRetries(uint64(check.WaitFor.MaxRetries), backoff)
+	}
 	retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
 		ctx = _ctx.(*context.Context)
 		attempts++
 		ctx.Tracef("waiting for %d resources to be ready. (attempts: %d)", check.TotalResources(), attempts)
 
 		var templateVar = map[string]any{}
-		kClient := pkg.NewKubeClient(ctx.Kommons().GetRESTConfig)
 		if response, err := kClient.FetchResources(ctx, append(check.StaticResources, check.Resources...)...); err != nil {
 			return fmt.Errorf("wait for evaluation. fetching resources: %w", err)
 		} else if len(response) != check.TotalResources() {
@@ -217,6 +252,18 @@ func (c *KubernetesResourceChecker) validate(ctx *context.Context, check v1.Kube
 
 	if _, err := check.WaitFor.GetTimeout(); err != nil {
 		return fmt.Errorf("failed to parse wait for timeout(%s): %w", check.WaitFor.Timeout, err)
+	}
+
+	if _, err := check.CheckRetries.GetTimeout(); err != nil {
+		return fmt.Errorf("failed to parse check retry timeout(%s): %w", check.CheckRetries.Timeout, err)
+	}
+
+	if _, err := check.CheckRetries.GetInterval(); err != nil {
+		return fmt.Errorf("failed to parse check retry interval(%s): %w", check.CheckRetries.Interval, err)
+	}
+
+	if _, err := check.CheckRetries.GetInitialDelay(); err != nil {
+		return fmt.Errorf("failed to parse check retry initial delay(%s): %w", check.CheckRetries.Delay, err)
 	}
 
 	maxResourcesAllowed := ctx.Properties().Int("checks.kubernetesResource.maxResources", defaultMaxResourcesAllowed)

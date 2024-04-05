@@ -69,3 +69,7 @@ spec:
               headers:
                 - name: Host
                   value: "{{(index ((index .staticResources 1).Object.spec.rules) 0).host}}"
+      checkRetries:
+        delay: 3s
+        interval: 2s
+        maxRetries: 3

@@ -2574,6 +2574,9 @@
           },
           "type": "array"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/KubernetesResourceCheckRetries"
+        },
         "kubeconfig": {
           "$ref": "#/$defs/EnvVar"
         },
@@ -2588,6 +2591,24 @@
         "resources"
       ]
     },
+    "KubernetesResourceCheckRetries": {
+      "properties": {
+        "delay": {
+          "type": "string"
+        },
+        "timeout": {
+          "type": "string"
+        },
+        "interval": {
+          "type": "string"
+        },
+        "maxRetries": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "KubernetesResourceCheckWaitFor": {
       "properties": {
         "expr": {
@@ -2601,6 +2622,9 @@
         },
         "interval": {
           "type": "string"
+        },
+        "maxRetries": {
+          "type": "integer"
         }
       },
       "additionalProperties": false,

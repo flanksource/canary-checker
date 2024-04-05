@@ -4983,6 +4983,19 @@ spec:
                 kubernetesResource:
                   items:
                     properties:
+                      checkRetries:
+                        description: Set initial delays and retry intervals for checks.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay
+                            type: string
+                          interval:
+                            type: string
+                          maxRetries:
+                            type: integer
+                          timeout:
+                            type: string
+                        type: object
                       checks:
                         description: Checks to run against the kubernetes resources.
                         items:
@@ -5140,6 +5153,8 @@ spec:
                               Interval to check if all static & non-static resources are ready.
                               	Default: 30s
                             type: string
+                          maxRetries:
+                            type: integer
                           timeout:
                             description: |-
                               Timeout to wait for all static & non-static resources to be ready.
