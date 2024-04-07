@@ -1,0 +1,70 @@
+name: Helm Test
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+
+      - name: Kubernetes KinD Cluster
+        uses: container-tools/kind-action@v1
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: .
+          file: ./build/full/Dockerfile
+          push: true
+          tags: localhost:5000/canary-checker:latest
+          cache-from: type=registry,ref=docker.io/flanksource/canary-checker
+
+      - name: Update canary-checker image in helm chart
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq -i e '.image.repository = "kind-registry:5000/canary-checker"' chart/values.yaml
+
+      - name: Setup Helm
+        uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3.5
+        with:
+          version: v3.11.3
+
+      - name: Package helm chart
+        run: | 
+          helm dependency build ./chart
+          helm package ./chart --version 1.0.0
+
+      - name: Install helm chart
+        run: 'helm install canary-checker canary-checker-1.0.0.tgz -n canary-checker --create-namespace'
+
+      - name: Wait for 30 seconds
+        run: 'kubectl rollout status deploy/canary-checker -n canary-checker --timeout 5m'
+
+      - name: Check canary-checker pods
+        run: 'kubectl describe pods -n canary-checker'
+
+      - name: Apply exec fixture
+        run: 'kubectl apply -f fixtures/minimal/exec_pass.yaml'
+
+      - name: Wait for 60 seconds
+        run: 'sleep 60'
+
+      - name: Check status
+        run: |
+          status=$(kubectl get canaries.canaries.flanksource.com exec-pass -o yaml | yq .status.status)
+          echo $status
+          if [[ $status == "Passed" ]]; then
+            exit 0
+          else
+            exit 1
+          fi
