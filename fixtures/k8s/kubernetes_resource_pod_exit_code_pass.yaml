@@ -1,0 +1,44 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: pod-exit-code-check
+  namespace: default
+  labels:
+    "Expected-Fail": "false"
+spec:
+  schedule: "@every 5m"
+  kubernetesResource:
+    - name: "pod exit code"
+      description: "Create pod & check its exit code"
+      namespace: default
+      resources:
+        - apiVersion: v1
+          kind: Pod
+          metadata:
+            name: hello-world
+            namespace: default
+          spec:
+            restartPolicy: Never
+            containers:
+              - name: hello-world
+                image: hello-world
+      waitFor:
+        expr: 'dyn(resources).all(r, k8s.getHealth(r).status == "Healthy")'
+        interval: "1s"
+        timeout: "20s"
+      checkRetries:
+        delay: 2s
+        maxRetries: 3
+      checks:
+        - kubernetes:
+            - name: exit-code-check
+              kind: Pod
+              namespaceSelector:
+                name: default
+              resource:
+                name: hello-world
+              test:
+                expr: >
+                  size(results) == 1 &&
+                  results[0].Object.status.containerStatuses[0].state.terminated.exitCode == 0

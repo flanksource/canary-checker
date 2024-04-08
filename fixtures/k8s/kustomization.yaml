@@ -12,3 +12,4 @@ resources:
   - kubernetes_resource_ingress_pass.yaml
   - kubernetes_resource_ingress_fail.yaml
   - kubernetes_resource_service_pass.yaml
+  - kubernetes_resource_pod_exit_code_pass.yaml

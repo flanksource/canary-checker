@@ -93,7 +93,7 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 		}
 	}
 
-	logger.Debugf("found %d checks to run", len(check.Checks))
+	ctx.Logger.V(4).Infof("found %d checks to run", len(check.Checks))
 	for _, c := range check.Checks {
 		virtualCanary := v1.Canary{
 			ObjectMeta: ctx.Canary.ObjectMeta,
@@ -137,7 +137,7 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 		}
 
 		retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
-			ctx.Infof("running check: %s", virtualCanary.Name)
+			ctx.Logger.V(4).Infof("running check: %s", virtualCanary.Name)
 
 			ctx = _ctx.(*context.Context)
 			checkCtx := context.New(ctx.Context, virtualCanary)
@@ -146,8 +146,12 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 				return err
 			} else {
 				for _, r := range res {
-					if r.Error != "" {
-						return retry.RetryableError(fmt.Errorf("check (name:%s) failed with error: %v", r.GetName(), r.Error))
+					if !r.Pass {
+						if r.Error != "" {
+							return retry.RetryableError(fmt.Errorf("check (name:%s) failed with error: %v", r.GetName(), r.Error))
+						} else {
+							return retry.RetryableError(fmt.Errorf("check (name:%s) failed", r.GetName()))
+						}
 					}
 				}
 			}
@@ -183,7 +187,7 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx *context.Context, check v1.K
 	retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
 		ctx = _ctx.(*context.Context)
 		attempts++
-		ctx.Tracef("waiting for %d resources to be ready. (attempts: %d)", check.TotalResources(), attempts)
+		ctx.Logger.V(5).Infof("waiting for %d resources to be ready. (attempts: %d)", check.TotalResources(), attempts)
 
 		var templateVar = map[string]any{}
 		if response, err := kClient.FetchResources(ctx, append(check.StaticResources, check.Resources...)...); err != nil {
