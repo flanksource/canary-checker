@@ -115,7 +115,7 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 			return results.Failf("error templating checks: %v", err)
 		}
 
-		if wt, _ := check.CheckRetries.GetInitialDelay(); wt > 0 {
+		if wt, _ := check.CheckRetries.GetDelay(); wt > 0 {
 			time.Sleep(wt)
 		}
 
@@ -251,23 +251,23 @@ func (c *KubernetesResourceChecker) applyKubeconfig(ctx *context.Context, kubeCo
 
 func (c *KubernetesResourceChecker) validate(ctx *context.Context, check v1.KubernetesResourceCheck) error {
 	if _, err := check.WaitFor.GetTimeout(); err != nil {
-		return fmt.Errorf("failed to parse wait for timeout(%s): %w", check.WaitFor.Timeout, err)
+		return fmt.Errorf("invalid wait timeout (%s): %w", check.WaitFor.Timeout, err)
 	}
 
-	if _, err := check.WaitFor.GetTimeout(); err != nil {
-		return fmt.Errorf("failed to parse wait for timeout(%s): %w", check.WaitFor.Timeout, err)
+	if _, err := check.WaitFor.GetInterval(); err != nil {
+		return fmt.Errorf("invalid wait interval (%s): %w", check.WaitFor.Interval, err)
 	}
 
 	if _, err := check.CheckRetries.GetTimeout(); err != nil {
-		return fmt.Errorf("failed to parse check retry timeout(%s): %w", check.CheckRetries.Timeout, err)
+		return fmt.Errorf("invalid check timeout (%s): %w", check.CheckRetries.Timeout, err)
 	}
 
 	if _, err := check.CheckRetries.GetInterval(); err != nil {
-		return fmt.Errorf("failed to parse check retry interval(%s): %w", check.CheckRetries.Interval, err)
+		return fmt.Errorf("invalid check retry interval (%s): %w", check.CheckRetries.Interval, err)
 	}
 
-	if _, err := check.CheckRetries.GetInitialDelay(); err != nil {
-		return fmt.Errorf("failed to parse check retry initial delay(%s): %w", check.CheckRetries.Delay, err)
+	if _, err := check.CheckRetries.GetDelay(); err != nil {
+		return fmt.Errorf("invalid check initial delay (%s): %w", check.CheckRetries.Delay, err)
 	}
 
 	maxResourcesAllowed := ctx.Properties().Int("checks.kubernetesResource.maxResources", defaultMaxResourcesAllowed)

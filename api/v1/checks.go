@@ -800,7 +800,7 @@ type KubernetesResourceCheckRetries struct {
 	parsedInterval *time.Duration `json:"-"`
 }
 
-func (t *KubernetesResourceCheckRetries) GetInitialDelay() (time.Duration, error) {
+func (t *KubernetesResourceCheckRetries) GetDelay() (time.Duration, error) {
 	if t.parsedDelay != nil {
 		return *t.parsedDelay, nil
 	}
