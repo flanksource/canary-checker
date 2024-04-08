@@ -15,21 +15,33 @@ package pkg
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
+	"golang.org/x/sync/errgroup"
+	"k8s.io/client-go/discovery/cached/disk"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/restmapper"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	"github.com/flanksource/commons/files"
 	clogger "github.com/flanksource/commons/logger"
+	"github.com/flanksource/is-healthy/pkg/health"
+	"github.com/flanksource/is-healthy/pkg/lua"
 	"github.com/flanksource/kommons"
 	"github.com/henvic/httpretty"
 	"github.com/pkg/errors"
 	"gopkg.in/flanksource/yaml.v3"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/homedir"
@@ -135,4 +147,126 @@ func GetKubeconfig() string {
 		}
 	}
 	return kubeConfig
+}
+
+// kubeClient is an updated & stripped of kommons client
+type kubeClient struct {
+	restMapper    *restmapper.DeferredDiscoveryRESTMapper
+	dynamicClient *dynamic.DynamicClient
+	GetRESTConfig func() (*rest.Config, error)
+}
+
+func NewKubeClient(restConfigFn func() (*rest.Config, error)) *kubeClient {
+	return &kubeClient{GetRESTConfig: restConfigFn}
+}
+
+func (c *kubeClient) FetchResources(ctx context.Context, resources ...unstructured.Unstructured) ([]unstructured.Unstructured, error) {
+	if len(resources) == 0 {
+		return nil, nil
+	}
+
+	eg, ctx := errgroup.WithContext(ctx)
+	var items []unstructured.Unstructured
+	for i := range resources {
+		resource := resources[i]
+		client, err := c.GetClientByKind(resource.GetKind())
+		if err != nil {
+			return nil, err
+		}
+
+		eg.Go(func() error {
+			item, err := client.Namespace(resource.GetNamespace()).Get(ctx, resource.GetName(), metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+
+			items = append(items, *item)
+			return nil
+		})
+	}
+
+	return items, eg.Wait()
+}
+
+func (c *kubeClient) WaitForResource(ctx context.Context, kind, namespace, name string) (*health.HealthStatus, error) {
+	client, err := c.GetClientByKind(kind)
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		item, err := client.Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("error getting item (kind=%s, namespace=%s, name=%s): %w", kind, namespace, name, err)
+		}
+
+		status, err := health.GetResourceHealth(item, lua.ResourceHealthOverrides{})
+		if err != nil {
+			return nil, fmt.Errorf("error getting resource health: %w", err)
+		}
+
+		if status.Status == health.HealthStatusHealthy {
+			return status, nil
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func (c *kubeClient) GetClientByKind(kind string) (dynamic.NamespaceableResourceInterface, error) {
+	dynamicClient, err := c.GetDynamicClient()
+	if err != nil {
+		return nil, err
+	}
+
+	rm, _ := c.GetRestMapper()
+	gvk, err := rm.KindFor(schema.GroupVersionResource{
+		Resource: kind,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	gk := schema.GroupKind{Group: gvk.Group, Kind: gvk.Kind}
+	mapping, err := rm.RESTMapping(gk, gvk.Version)
+	if err != nil {
+		return nil, err
+	}
+
+	return dynamicClient.Resource(mapping.Resource), nil
+}
+
+// GetDynamicClient creates a new k8s client
+func (c *kubeClient) GetDynamicClient() (dynamic.Interface, error) {
+	if c.dynamicClient != nil {
+		return c.dynamicClient, nil
+	}
+
+	cfg, err := c.GetRESTConfig()
+	if err != nil {
+		return nil, fmt.Errorf("getClientset: failed to get REST config: %v", err)
+	}
+	c.dynamicClient, err = dynamic.NewForConfig(cfg)
+	return c.dynamicClient, err
+}
+
+func (c *kubeClient) GetRestMapper() (meta.RESTMapper, error) {
+	if c.restMapper != nil {
+		return c.restMapper, nil
+	}
+
+	config, _ := c.GetRESTConfig()
+
+	// re-use kubectl cache
+	host := config.Host
+	host = strings.ReplaceAll(host, "https://", "")
+	host = strings.ReplaceAll(host, "-", "_")
+	host = strings.ReplaceAll(host, ":", "_")
+	cacheDir := os.ExpandEnv("$HOME/.kube/cache/discovery/" + host)
+	cache, err := disk.NewCachedDiscoveryClientForConfig(config, cacheDir, "", 10*time.Minute)
+	if err != nil {
+		return nil, err
+	}
+	c.restMapper = restmapper.NewDeferredDiscoveryRESTMapper(cache)
+	return c.restMapper, err
 }

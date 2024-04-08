@@ -208,6 +208,29 @@ func RemoveTransformedChecks(ctx context.Context, ids []string) error {
 		Error
 }
 
+func deleteStaticKubernetesResources(ctx context.Context, id string) error {
+	var canary models.Canary
+	if err := ctx.DB().Where("id = ?", id).First(&canary).Error; err != nil {
+		return err
+	}
+
+	var spec v1.CanarySpec
+	if err := json.Unmarshal(canary.Spec, &spec); err != nil {
+		return err
+	}
+
+	for _, kr := range spec.KubernetesResource {
+		for _, sr := range kr.StaticResources {
+			ctx.Infof("Deleting static resource (kind=%s, namespace=%s, name=%s)", sr.GetKind(), sr.GetNamespace(), sr.GetName())
+			if err := ctx.Kommons().DeleteUnstructured(ctx.GetNamespace(), &sr); err != nil {
+				logger.Errorf("error deleting static resource (kind=%s, namespace=%s, name=%s): %v", sr.GetKind(), ctx.GetNamespace(), sr.GetName(), err)
+			}
+		}
+	}
+
+	return nil
+}
+
 func DeleteCanary(ctx context.Context, id string) error {
 	logger.Infof("Deleting canary[%s]", id)
 
@@ -219,6 +242,10 @@ func DeleteCanary(ctx context.Context, id string) error {
 		return err
 	}
 	metrics.UnregisterGauge(ctx, checkIDs)
+
+	if err := deleteStaticKubernetesResources(ctx, id); err != nil {
+		return fmt.Errorf("failed to delete static kubernetes resources: %w", err)
+	}
 
 	if err := DeleteCheckComponentRelationshipsForCanary(ctx.DB(), id); err != nil {
 		return err

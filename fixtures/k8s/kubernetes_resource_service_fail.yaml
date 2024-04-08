@@ -1,0 +1,43 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: invalid-service-spec-test
+  namespace: default
+  labels:
+    "Expected-Fail": "true"
+spec:
+  schedule: "@every 5m"
+  kubernetesResource:
+    - name: invalid service configuration
+      namespace: default
+      description: "deploy httpbin & check that it's accessible via service"
+      resources:
+        - apiVersion: v1
+          kind: Pod
+          metadata:
+            name: httpbin
+            namespace: default
+            labels:
+              app: httpbin-faulty
+          spec:
+            containers:
+              - name: httpbin
+                image: "kennethreitz/httpbin:latest"
+                ports:
+                  - containerPort: 80
+        - apiVersion: v1
+          kind: Service
+          metadata:
+            name: httpbin-faulty-svc
+            namespace: default
+          spec:
+            selector:
+              app: httpbin-faulty
+            ports:
+              - port: 8080
+                targetPort: 8080
+      checks:
+        - http:
+            - name: Call httpbin service
+              url: "http://httpbin-faulty-svc.default.svc"

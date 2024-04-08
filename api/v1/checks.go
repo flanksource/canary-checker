@@ -5,13 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
+	"github.com/samber/lo"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 const (
@@ -774,6 +778,180 @@ func (c ConfigDBCheck) GetType() string {
 
 func (c ConfigDBCheck) GetEndpoint() string {
 	return c.Query
+}
+
+// KubernetesResourceChecks is the canary spec.
+// NOTE: It's only created to make crd generation possible.
+// embedding CanarySpec into KubernetesResourceCheck.checks
+// directly generates an invalid crd.
+type KubernetesResourceChecks struct {
+	CanarySpec `yaml:",inline" json:",inline"`
+}
+
+type KubernetesResourceCheckRetries struct {
+	// Delay is the initial delay
+	Delay      string `json:"delay,omitempty"`
+	Timeout    string `json:"timeout,omitempty"`
+	Interval   string `json:"interval,omitempty"`
+	MaxRetries int    `json:"maxRetries,omitempty"`
+
+	parsedDelay    *time.Duration `json:"-"`
+	parsedTimeout  *time.Duration `json:"-"`
+	parsedInterval *time.Duration `json:"-"`
+}
+
+func (t *KubernetesResourceCheckRetries) GetDelay() (time.Duration, error) {
+	if t.parsedDelay != nil {
+		return *t.parsedDelay, nil
+	}
+
+	if t.Delay == "" {
+		return time.Duration(0), nil
+	}
+
+	tt, err := duration.ParseDuration(t.Delay)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	t.parsedDelay = lo.ToPtr(time.Duration(tt))
+
+	return *t.parsedDelay, nil
+}
+
+func (t *KubernetesResourceCheckRetries) GetTimeout() (time.Duration, error) {
+	if t.parsedTimeout != nil {
+		return *t.parsedTimeout, nil
+	}
+
+	if t.Timeout == "" {
+		return time.Duration(0), nil
+	}
+
+	tt, err := duration.ParseDuration(t.Timeout)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	t.parsedTimeout = lo.ToPtr(time.Duration(tt))
+
+	return *t.parsedTimeout, nil
+}
+
+func (t *KubernetesResourceCheckRetries) GetInterval() (time.Duration, error) {
+	if t.parsedInterval != nil {
+		return *t.parsedInterval, nil
+	}
+
+	if t.Interval == "" {
+		return time.Duration(0), nil
+	}
+
+	tt, err := duration.ParseDuration(t.Interval)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	t.parsedInterval = lo.ToPtr(time.Duration(tt))
+
+	return *t.parsedInterval, nil
+}
+
+type KubernetesResourceCheckWaitFor struct {
+	// Expr is a cel expression that determines whether all the resources
+	// are in their desired state before running checks on them.
+	// 	Default: `dyn(resources).all(r, k8s.isHealthy(r))`
+	Expr string `json:"expr,omitempty"`
+
+	// Disable waiting for resources to get to their desired state.
+	Disable bool `json:"disable,omitempty"`
+
+	// Timeout to wait for all static & non-static resources to be ready.
+	// 	Default: 10m
+	Timeout string `json:"timeout,omitempty"`
+
+	// Interval to check if all static & non-static resources are ready.
+	// 	Default: 30s
+	Interval string `json:"interval,omitempty"`
+
+	MaxRetries int `json:"maxRetries,omitempty"`
+
+	parsedTimeout  *time.Duration `json:"-"`
+	parsedInterval *time.Duration `json:"-"`
+}
+
+func (t *KubernetesResourceCheckWaitFor) GetTimeout() (time.Duration, error) {
+	if t.parsedTimeout != nil {
+		return *t.parsedTimeout, nil
+	}
+
+	if t.Timeout == "" {
+		return time.Duration(0), nil
+	}
+
+	tt, err := duration.ParseDuration(t.Timeout)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	t.parsedTimeout = lo.ToPtr(time.Duration(tt))
+
+	return *t.parsedTimeout, nil
+}
+
+func (t *KubernetesResourceCheckWaitFor) GetInterval() (time.Duration, error) {
+	if t.parsedInterval != nil {
+		return *t.parsedInterval, nil
+	}
+
+	if t.Interval == "" {
+		return time.Duration(0), nil
+	}
+
+	tt, err := duration.ParseDuration(t.Interval)
+	if err != nil {
+		return time.Duration(0), err
+	}
+	t.parsedInterval = lo.ToPtr(time.Duration(tt))
+
+	return *t.parsedInterval, nil
+}
+
+type KubernetesResourceCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Templatable `yaml:",inline" json:",inline"`
+
+	// StaticResources are kubernetes resources that are created & only
+	// cleared when the canary is deleted
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	StaticResources []unstructured.Unstructured `json:"staticResources,omitempty"`
+
+	// Resources are kubernetes resources that are created & cleared
+	// after every check run.
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Resources []unstructured.Unstructured `json:"resources"`
+
+	// Checks to run against the kubernetes resources.
+	// +kubebuilder:validation:XPreserveUnknownFields
+	Checks []KubernetesResourceChecks `json:"checks,omitempty"`
+
+	// Set initial delays and retry intervals for checks.
+	CheckRetries KubernetesResourceCheckRetries `json:"checkRetries,omitempty"`
+
+	// Kubeconfig is the kubeconfig or the path to the kubeconfig file.
+	Kubeconfig *types.EnvVar `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
+
+	WaitFor KubernetesResourceCheckWaitFor `json:"waitFor,omitempty"`
+}
+
+func (c KubernetesResourceCheck) TotalResources() int {
+	return len(c.Resources) + len(c.StaticResources)
+}
+
+func (c KubernetesResourceCheck) GetType() string {
+	return "kubernetes_resource"
+}
+
+func (c KubernetesResourceCheck) GetEndpoint() string {
+	return c.Name
 }
 
 type ResourceSelector struct {

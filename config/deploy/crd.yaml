@@ -4980,6 +4980,192 @@ spec:
                       - name
                     type: object
                   type: array
+                kubernetesResource:
+                  items:
+                    properties:
+                      checkRetries:
+                        description: Set initial delays and retry intervals for checks.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay
+                            type: string
+                          interval:
+                            type: string
+                          maxRetries:
+                            type: integer
+                          timeout:
+                            type: string
+                        type: object
+                      checks:
+                        description: Checks to run against the kubernetes resources.
+                        items:
+                          description: |-
+                            KubernetesResourceChecks is the canary spec.
+                            NOTE: It's only created to make crd generation possible.
+                            embedding CanarySpec into KubernetesResourceCheck.checks
+                            directly generates an invalid crd.
+                          type: object
+                        type: array
+                        x-kubernetes-preserve-unknown-fields: true
+                      description:
+                        description: Description for the check
+                        type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      icon:
+                        description: Icon for overwriting default icon on the dashboard
+                        type: string
+                      kubeconfig:
+                        description: Kubeconfig is the kubeconfig or the path to the kubeconfig file.
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
+                            type: object
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
+                      metrics:
+                        description: Metrics to expose from check results
+                        items:
+                          properties:
+                            labels:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
+                            name:
+                              type: string
+                            type:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                      name:
+                        description: Name of the check
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
+                      resources:
+                        description: |-
+                          Resources are kubernetes resources that are created & cleared
+                          after every check run.
+                        x-kubernetes-preserve-unknown-fields: true
+                      staticResources:
+                        description: |-
+                          StaticResources are kubernetes resources that are created & only
+                          cleared when the canary is deleted
+                        x-kubernetes-preserve-unknown-fields: true
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transformDeleteStrategy:
+                        description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
+                        type: string
+                      waitFor:
+                        properties:
+                          disable:
+                            description: Disable waiting for resources to get to their desired state.
+                            type: boolean
+                          expr:
+                            description: |-
+                              Expr is a cel expression that determines whether all the resources
+                              are in their desired state before running checks on them.
+                              	Default: `dyn(resources).all(r, k8s.isHealthy(r))`
+                            type: string
+                          interval:
+                            description: |-
+                              Interval to check if all static & non-static resources are ready.
+                              	Default: 30s
+                            type: string
+                          maxRetries:
+                            type: integer
+                          timeout:
+                            description: |-
+                              Timeout to wait for all static & non-static resources to be ready.
+                              	Default: 10m
+                            type: string
+                        type: object
+                    required:
+                      - name
+                      - resources
+                    type: object
+                  type: array
                 ldap:
                   items:
                     properties:

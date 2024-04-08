@@ -12,6 +12,7 @@ import (
 	gocontext "context"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/commons/logger"
 
 	"github.com/flanksource/canary-checker/api/external"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -58,6 +59,8 @@ func NewPodChecker() *PodChecker {
 // Run: Check every entry from config according to Checker interface
 // Returns check result and metrics
 func (c *PodChecker) Run(ctx *context.Context) pkg.Results {
+	logger.Warnf("pod check is deprecated. Please use the kubernetes resource check")
+
 	var results pkg.Results
 	if len(ctx.Canary.Spec.Pod) > 0 {
 		if c.k8s == nil {

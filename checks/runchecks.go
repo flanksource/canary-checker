@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -262,15 +263,14 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 		if tpl.IsEmpty() {
 			break
 		}
+
 		message, err := template(ctx, tpl)
 		if err != nil {
 			r.ErrorMessage(err)
-		} else if message != "true" {
-			if message != "false" {
-				r.Failf("expecting either 'true' or 'false' but got '%v'", message)
-			} else {
-				r.Failf("")
-			}
+		} else if parsed, err := strconv.ParseBool(message); err != nil {
+			r.Failf("test expression did not return a boolean value. got %s", message)
+		} else if !parsed {
+			r.Failf("")
 		}
 	}
 
