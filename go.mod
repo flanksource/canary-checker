@@ -22,7 +22,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.4
 	github.com/flanksource/commons v1.22.1
-	github.com/flanksource/duty v1.0.408
+	github.com/flanksource/duty v1.0.413
 	github.com/flanksource/gomplate/v3 v3.24.2
 	github.com/flanksource/is-healthy v1.0.2
 	github.com/flanksource/kommons v0.31.4
@@ -59,6 +59,7 @@ require (
 	github.com/robertkrimen/otto v0.3.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samber/lo v1.39.0
+	github.com/sethvargo/go-retry v0.2.4
 	github.com/sevennt/echo-pprof v0.1.1-0.20220616082843-66a461746b5f
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
@@ -238,7 +239,6 @@ require (
 	github.com/rodaine/table v1.1.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
-	github.com/sethvargo/go-retry v0.2.4 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect

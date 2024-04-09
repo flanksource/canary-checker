@@ -21,7 +21,7 @@ var TopologyScheduler = cron.New()
 
 var topologyJobs sync.Map
 
-func newTopologyJob(topology pkg.Topology) {
+func newTopologyJob(ctx context.Context, topology pkg.Topology) {
 	id := topology.ID.String()
 	v1, err := topology.ToV1()
 	if err != nil {
@@ -44,6 +44,7 @@ func newTopologyJob(topology pkg.Topology) {
 		Retention:    job.RetentionHour,
 		ResourceID:   id,
 		ResourceType: "topology",
+		RunNow:       ctx.Properties().On("topology.runNow"),
 		ID:           fmt.Sprintf("%s/%s", topology.Namespace, topology.Name),
 		Fn:           tj.Run,
 	}
@@ -98,7 +99,7 @@ func SyncTopologyJob(ctx context.Context, t pkg.Topology) error {
 	}
 
 	if existingJob == nil {
-		newTopologyJob(t)
+		newTopologyJob(ctx, t)
 		return nil
 	}
 
@@ -106,7 +107,7 @@ func SyncTopologyJob(ctx context.Context, t pkg.Topology) error {
 	if existingTopology != nil && !reflect.DeepEqual(existingTopology.(v1.Topology).Spec, v1Topology.Spec) {
 		ctx.Debugf("Rescheduling %s topology with updated specs", t)
 		existingJob.Unschedule()
-		newTopologyJob(t)
+		newTopologyJob(ctx, t)
 	}
 	return nil
 }

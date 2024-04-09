@@ -19,7 +19,7 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 
 		ci := models.ConfigItem{
 			Name: lo.ToPtr("config-item"),
-			Tags: &types.JSONStringMap{
+			Tags: types.JSONStringMap{
 				"tag-1": "a",
 				"tag-2": "b",
 			},
