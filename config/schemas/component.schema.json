@@ -1140,6 +1140,9 @@
         "statuses": {
           "$ref": "#/$defs/Items"
         },
+        "tagSelector": {
+          "type": "string"
+        },
         "labelSelector": {
           "type": "string"
         },
