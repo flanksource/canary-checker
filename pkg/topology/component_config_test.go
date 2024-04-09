@@ -43,7 +43,7 @@ var _ = ginkgo.Describe("Topology configs", ginkgo.Ordered, func() {
 		ci, err := query.GetCachedConfig(DefaultContext, cr[0].ConfigID.String())
 		Expect(err).To(BeNil())
 
-		tags := ci.Tags
+		tags := *ci.Labels
 		Expect(tags["environment"]).To(Equal("production"))
 
 		Expect(len(cr)).Should(BeNumerically(">", 2))
