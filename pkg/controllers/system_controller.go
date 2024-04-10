@@ -23,6 +23,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/topology"
 	dutyContext "github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/query"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -70,6 +71,7 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 		}
 		systemJobs.DeleteTopologyJob(topology.GetPersistedID())
 		controllerutil.RemoveFinalizer(topology, TopologyFinalizerName)
+		query.FlushTopologyCache()
 		return ctrl.Result{}, r.Update(ctx, topology)
 	}
 
