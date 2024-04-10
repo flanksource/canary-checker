@@ -622,5 +622,8 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 	}
 	job.History.SuccessCount = len(rootComponent.Components)
 	tj.Output = results
+
+	query.FlushTopologyCache()
+
 	return nil
 }
