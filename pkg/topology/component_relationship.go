@@ -18,7 +18,7 @@ var ComponentRelationshipSync = &job.Job{
 	Name:       "ComponentRelationshipSync",
 	Schedule:   "@every 5m",
 	JobHistory: true,
-	Retention:  job.RetentionHour,
+	Retention:  job.RetentionFew,
 	Singleton:  true,
 	Fn: func(ctx job.JobRuntime) error {
 		var components []models.Component
@@ -73,7 +73,7 @@ var ComponentStatusSummarySync = &job.Job{
 	Name:       "ComponentStatusSummarySync",
 	Schedule:   "@every 2m",
 	JobHistory: true,
-	Retention:  job.RetentionHour,
+	Retention:  job.RetentionFew,
 	Singleton:  true,
 	Fn: func(ctx job.JobRuntime) error {
 		topology, err := Query(ctx.Context, duty.TopologyOptions{Depth: 3})
@@ -136,7 +136,7 @@ var ComponentCostRun = &job.Job{
 	Name:       "ComponentCostSync",
 	JobHistory: true,
 	Singleton:  true,
-	Retention:  job.RetentionDay,
+	Retention:  job.RetentionBalanced,
 	Schedule:   "@every 1h",
 	Fn: func(ctx job.JobRuntime) error {
 		return ctx.DB().Exec(`

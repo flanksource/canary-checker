@@ -129,7 +129,7 @@ func newCanaryJob(c CanaryJob) {
 		RunNow:       true,
 		Singleton:    true,
 		JobHistory:   true,
-		Retention:    job.RetentionDay,
+		Retention:    job.RetentionBalanced,
 		ResourceID:   c.DBCanary.ID.String(),
 		ResourceType: "canary",
 		ID:           fmt.Sprintf("%s/%s", c.Canary.Namespace, c.Canary.Name),
@@ -148,7 +148,7 @@ var SyncCanaryJobs = &job.Job{
 	Singleton:  true,
 	RunNow:     true,
 	Schedule:   "@every 5m",
-	Retention:  job.RetentionHour,
+	Retention:  job.RetentionFew,
 	Fn: func(ctx job.JobRuntime) error {
 		canaries, err := db.GetAllCanariesForSync(ctx.Context, runner.WatchNamespace)
 		if err != nil {

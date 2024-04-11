@@ -24,7 +24,7 @@ var ComponentConfigRun = &job.Job{
 	Schedule:   "@every 2m",
 	Singleton:  true,
 	JobHistory: true,
-	Retention:  job.RetentionHour,
+	Retention:  job.RetentionFew,
 	Fn: func(run job.JobRuntime) error {
 		db := run.DB().Session(&gorm.Session{NewDB: true})
 		var components = []pkg.Component{}

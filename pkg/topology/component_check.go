@@ -24,7 +24,7 @@ var ComponentCheckRun = &job.Job{
 	Schedule:   "@every 2m",
 	Singleton:  true,
 	JobHistory: true,
-	Retention:  job.RetentionHour,
+	Retention:  job.RetentionFew,
 	Fn: func(run job.JobRuntime) error {
 		var components = []pkg.Component{}
 		if err := run.DB().Table("components").

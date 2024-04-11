@@ -41,7 +41,7 @@ func newTopologyJob(ctx context.Context, topology pkg.Topology) {
 		Schedule:     v1.Spec.Schedule,
 		Singleton:    true,
 		JobHistory:   true,
-		Retention:    job.RetentionHour,
+		Retention:    job.RetentionFew,
 		ResourceID:   id,
 		ResourceType: "topology",
 		RunNow:       ctx.Properties().On("topology.runNow"),
@@ -125,7 +125,7 @@ var CleanupDeletedTopologyComponents = &job.Job{
 	Schedule:   "@every 1h",
 	Singleton:  true,
 	JobHistory: true,
-	Retention:  job.RetentionDay,
+	Retention:  job.RetentionBalanced,
 	Fn: func(ctx job.JobRuntime) error {
 		var rows []struct {
 			ID string

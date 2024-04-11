@@ -166,7 +166,7 @@ var CleanupDeletedCanaryChecks = &dutyjob.Job{
 	Schedule:   "@every 1h",
 	Singleton:  true,
 	JobHistory: true,
-	Retention:  dutyjob.RetentionDay,
+	Retention:  dutyjob.RetentionBalanced,
 	Fn: func(ctx dutyjob.JobRuntime) error {
 		var rows []struct {
 			ID string
