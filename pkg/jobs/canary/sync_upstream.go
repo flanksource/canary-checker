@@ -32,7 +32,7 @@ var UpstreamJobs = []*job.Job{
 var ReconcileCanaries = &job.Job{
 	Name:       "ReconcileCanaries",
 	Schedule:   "@every 1m",
-	Retention:  job.Retention3Day,
+	Retention:  job.RetentionBalanced,
 	Singleton:  true,
 	JobHistory: true,
 	RunNow:     true,
@@ -57,7 +57,7 @@ var PullUpstreamCanaries = &job.Job{
 	Singleton:  true,
 	RunNow:     true,
 	Schedule:   "@every 10m",
-	Retention:  job.RetentionHour,
+	Retention:  job.RetentionFew,
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = ResourceTypeUpstream
 		ctx.History.ResourceID = UpstreamConf.Host

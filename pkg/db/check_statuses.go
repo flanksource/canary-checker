@@ -15,10 +15,8 @@ var RefreshCheckStatusSummary = &job.Job{
 	Schedule:   "@every 1m",
 	JobHistory: true,
 	Retention: job.Retention{
-		Interval: 5 * time.Minute,
-		Success:  1,
-		Failed:   3,
-		Age:      time.Minute * 15,
+		Success: 1,
+		Failed:  3,
 	},
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
@@ -31,10 +29,8 @@ var RefreshCheckStatusSummaryAged = &job.Job{
 	Timeout:  60 * time.Minute,
 	Schedule: "@every 1h",
 	Retention: job.Retention{
-		Interval: 60 * time.Minute,
-		Success:  1,
-		Failed:   3,
-		Age:      time.Hour * 3,
+		Success: 1,
+		Failed:  3,
 	},
 	Singleton:  true,
 	JobHistory: true,
@@ -61,7 +57,7 @@ var DeleteOldCheckStatues1d = &job.Job{
 	Name:       "DeleteOldCheckStatuses1d",
 	Singleton:  true,
 	JobHistory: true,
-	Retention:  job.Retention3Day,
+	Retention:  job.RetentionBalanced,
 	Schedule:   "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
@@ -75,7 +71,7 @@ var DeleteOldCheckStatues1h = &job.Job{
 	Name:       "DeleteOldCheckStatuses1h",
 	Singleton:  true,
 	JobHistory: true,
-	Retention:  job.Retention3Day,
+	Retention:  job.RetentionBalanced,
 	Schedule:   "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
@@ -89,7 +85,7 @@ var AggregateCheckStatues1d = &job.Job{
 	Name:       "AggregateCheckStatuses1h",
 	Singleton:  true,
 	JobHistory: true,
-	Retention:  job.RetentionDay,
+	Retention:  job.RetentionBalanced,
 	Schedule:   "@every 1h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses
@@ -103,7 +99,7 @@ var AggregateCheckStatues1h = &job.Job{
 	Name:       "AggregateCheckStatuses1d",
 	Singleton:  true,
 	JobHistory: true,
-	Retention:  job.Retention3Day,
+	Retention:  job.RetentionBalanced,
 	Schedule:   "@every 24h",
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = CheckStatuses

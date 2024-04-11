@@ -18,7 +18,7 @@ var CleanupSoftDeletedComponents = &job.Job{
 	Schedule:   "@every 24h",
 	Singleton:  true,
 	JobHistory: true,
-	Retention:  job.Retention3Day,
+	Retention:  job.RetentionBalanced,
 	Fn: func(ctx job.JobRuntime) error {
 		ctx.History.ResourceType = job.ResourceTypeComponent
 		retention := ctx.Properties().Duration("component.retention.period", DefaultRetention)
@@ -74,7 +74,7 @@ var CleanupChecks = &job.Job{
 	Schedule:   "@every 12h",
 	Singleton:  true,
 	JobHistory: true,
-	Retention:  job.Retention3Day,
+	Retention:  job.RetentionBalanced,
 	Fn: func(ctx job.JobRuntime) error {
 		retention := ctx.Properties().Duration("check.retention.age", DefaultRetention)
 		tx := ctx.DB().Exec(`
@@ -95,7 +95,7 @@ var CleanupCanaries = &job.Job{
 	Schedule:   "@every 12h",
 	Singleton:  true,
 	JobHistory: true,
-	Retention:  job.Retention3Day,
+	Retention:  job.RetentionBalanced,
 	RunNow:     true,
 	Fn: func(ctx job.JobRuntime) error {
 		retention := ctx.Properties().Duration("canary.retention.age", DefaultRetention)
@@ -117,7 +117,7 @@ var CleanupMetricsGauges = &job.Job{
 	Schedule:   "@every 1h",
 	Singleton:  true,
 	JobHistory: true,
-	Retention:  job.RetentionDay,
+	Retention:  job.RetentionBalanced,
 	RunNow:     true,
 	Fn: func(ctx job.JobRuntime) error {
 
