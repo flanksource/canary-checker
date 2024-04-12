@@ -1,0 +1,55 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: always-failing
+  namespace: default
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          containers:
+          - name: fail
+            image: busybox:1.28
+            imagePullPolicy: IfNotPresent
+            command:
+              - /bin/sh
+              - -c
+              - exit 1 # always fail
+          restartPolicy: OnFailure
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: monitor-always-failing-job
+  namespace: default
+  labels:
+    "Expected-Fail": "true"
+spec:
+  schedule: "@every 1m"
+  kubernetes:
+    - name: "Monitor always-failing job"
+      kind: CronJob
+      namespaceSelector:
+        name: default
+      resource:
+        name: always-failing
+      display:
+        expr: |
+          "Last Scheduled: " + results[0].Object.status.lastScheduleTime +
+          " | Last Success: " + 
+          (has(results[0].Object.status.lastSuccessfulTime) ? results[0].Object.status.lastSuccessfulTime : "Never")
+      test:
+        expr: > 
+          size(results) > 0 && 
+          has(results[0].Object.status.lastSuccessfulTime) &&
+          (
+            time.Parse('2006-01-02T15:04:05Z07:00', string(results[0].Object.status.lastScheduleTime)) 
+            - time.Parse('2006-01-02T15:04:05Z07:00', string(results[0].Object.status.lastSuccessfulTime))
+          )
+          < time.ParseDuration("30s")
+
