@@ -5,7 +5,7 @@ metadata:
   name: always-failing
   namespace: default
 spec:
-  schedule: "* * * * *"
+  schedule: "*/15 * * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
