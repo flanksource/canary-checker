@@ -2,21 +2,25 @@ package checks
 
 import (
 	gocontext "context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/flanksource/gomplate/v3"
 	"github.com/sethvargo/go-retry"
-
-	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/commons/utils"
-	"github.com/flanksource/duty/types"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/watch"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/commons/utils"
+	"github.com/flanksource/duty/types"
 )
 
 const (
@@ -74,15 +78,20 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 
 	for i := range check.Resources {
 		resource := check.Resources[i]
+
+		// attempt to delete the resource in case it already exist
+		if err := deleteResourceSync(ctx, resource); err != nil {
+			results.Failf(err.Error())
+		}
+
 		resource.SetAnnotations(map[string]string{annotationkey: ctx.Canary.ID()})
 		if err := ctx.Kommons().ApplyUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
-			return results.Failf("failed to apply resource %s: %v", resource.GetName(), err)
+			return results.Failf("failed to apply resource (%s/%s/%s): %v", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 		}
 
 		defer func() {
-			if err := ctx.Kommons().DeleteUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
-				logger.Errorf("failed to delete resource %s: %v", resource.GetName(), err)
-				results.ErrorMessage(fmt.Errorf("failed to delete resource %s: %v", resource.GetName(), err))
+			if err := deleteResourceSync(ctx, resource); err != nil {
+				results.Failf(err.Error())
 			}
 		}()
 	}
@@ -275,5 +284,51 @@ func (c *KubernetesResourceChecker) validate(ctx *context.Context, check v1.Kube
 		return fmt.Errorf("too many resources (%d). only %d allowed", check.TotalResources(), maxResourcesAllowed)
 	}
 
+	return nil
+}
+
+// deleteResourceSync deletes the given kubernetes resource and waits for it to be deleted.
+func deleteResourceSync(ctx *context.Context, resource unstructured.Unstructured) error {
+	rc, err := ctx.Kommons().GetRestClient(resource)
+	if err != nil {
+		return fmt.Errorf("failed to get rest client config for (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
+	}
+
+	watcher, err := rc.Watch(resource.GetNamespace(), resource.GetAPIVersion(), &metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to get watcher for (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
+	}
+	defer watcher.Stop()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-watcher.ResultChan():
+				if e.Type == watch.Deleted {
+					return
+				}
+
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	if err := ctx.Kommons().DeleteUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
+		var statusErr *apiErrors.StatusError
+		if errors.As(err, &statusErr) {
+			switch statusErr.ErrStatus.Code {
+			case 404:
+				return nil
+			}
+		}
+
+		return fmt.Errorf("failed to delete resource %s: %w", resource.GetName(), err)
+	}
+
+	wg.Wait()
 	return nil
 }
