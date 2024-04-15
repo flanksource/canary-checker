@@ -11,6 +11,7 @@ import (
 
 	"github.com/flanksource/gomplate/v3"
 	"github.com/sethvargo/go-retry"
+	"golang.org/x/sync/errgroup"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -76,6 +77,22 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 		}
 	}
 
+	// Keep track of all the created resources
+	// so we can delete them together instead of deleting them one by one.
+	var createdResources []unstructured.Unstructured
+	defer func() {
+		eg, _ := errgroup.WithContext(ctx)
+		for i := range createdResources {
+			r := createdResources[i]
+			eg.Go(func() error {
+				return deleteResourceSync(ctx, r)
+			})
+		}
+		if err := eg.Wait(); err != nil {
+			results.Failf(err.Error())
+		}
+	}()
+
 	for i := range check.Resources {
 		resource := check.Resources[i]
 
@@ -89,11 +106,7 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 			return results.Failf("failed to apply resource (%s/%s/%s): %v", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 		}
 
-		defer func() {
-			if err := deleteResourceSync(ctx, resource); err != nil {
-				results.Failf(err.Error())
-			}
-		}()
+		createdResources = append(createdResources, resource)
 	}
 
 	if !check.WaitFor.Disable {
@@ -289,6 +302,8 @@ func (c *KubernetesResourceChecker) validate(ctx *context.Context, check v1.Kube
 
 // deleteResourceSync deletes the given kubernetes resource and waits for it to be deleted.
 func deleteResourceSync(ctx *context.Context, resource unstructured.Unstructured) error {
+	ctx.Logger.V(5).Infof("deleting resource (%s/%s/%s)", resource.GetKind(), resource.GetNamespace(), resource.GetName())
+
 	rc, err := ctx.Kommons().GetRestClient(resource)
 	if err != nil {
 		return fmt.Errorf("failed to get rest client config for (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
@@ -307,6 +322,13 @@ func deleteResourceSync(ctx *context.Context, resource unstructured.Unstructured
 		for {
 			select {
 			case e := <-watcher.ResultChan():
+				if e.Object == nil {
+					// not sure why an empty event is fired.
+					// but this empty event kept coming through the channel
+					// resulting in high cpu usage.
+					return
+				}
+
 				if e.Type == watch.Deleted {
 					return
 				}
