@@ -5012,6 +5012,9 @@ spec:
                           type: object
                         type: array
                         x-kubernetes-preserve-unknown-fields: true
+                      clearResources:
+                        description: Ensure that the resources are deleted before creating them.
+                        type: boolean
                       description:
                         description: Description for the check
                         type: string
@@ -5144,6 +5147,9 @@ spec:
                         type: string
                       waitFor:
                         properties:
+                          delete:
+                            description: Whether to wait for deletion or not
+                            type: boolean
                           disable:
                             description: Disable waiting for resources to get to their desired state.
                             type: boolean

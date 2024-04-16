@@ -2326,6 +2326,9 @@
         "checkRetries": {
           "$ref": "#/$defs/KubernetesResourceCheckRetries"
         },
+        "clearResources": {
+          "type": "boolean"
+        },
         "kubeconfig": {
           "$ref": "#/$defs/EnvVar"
         },
@@ -2364,6 +2367,9 @@
           "type": "string"
         },
         "disable": {
+          "type": "boolean"
+        },
+        "delete": {
           "type": "boolean"
         },
         "timeout": {

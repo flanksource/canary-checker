@@ -6,16 +6,15 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/flanksource/gomplate/v3"
+	"github.com/samber/lo"
 	"github.com/sethvargo/go-retry"
 	"golang.org/x/sync/errgroup"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/watch"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -85,7 +84,7 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 		for i := range createdResources {
 			r := createdResources[i]
 			eg.Go(func() error {
-				return deleteResourceSync(ctx, r)
+				return deleteResource(ctx, r, check.WaitFor.Delete)
 			})
 		}
 		if err := eg.Wait(); err != nil {
@@ -96,9 +95,10 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 	for i := range check.Resources {
 		resource := check.Resources[i]
 
-		// attempt to delete the resource in case it already exist
-		if err := deleteResourceSync(ctx, resource); err != nil {
-			results.Failf(err.Error())
+		if check.ClearResources {
+			if err := deleteResource(ctx, resource, true); err != nil {
+				results.Failf(err.Error())
+			}
 		}
 
 		resource.SetAnnotations(map[string]string{annotationkey: ctx.Canary.ID()})
@@ -300,46 +300,20 @@ func (c *KubernetesResourceChecker) validate(ctx *context.Context, check v1.Kube
 	return nil
 }
 
-// deleteResourceSync deletes the given kubernetes resource and waits for it to be deleted.
-func deleteResourceSync(ctx *context.Context, resource unstructured.Unstructured) error {
-	ctx.Logger.V(5).Infof("deleting resource (%s/%s/%s)", resource.GetKind(), resource.GetNamespace(), resource.GetName())
+func deleteResource(ctx *context.Context, resource unstructured.Unstructured, waitForDelete bool) error {
+	ctx.Logger.V(4).Infof("deleting resource (%s/%s/%s)", resource.GetKind(), resource.GetNamespace(), resource.GetName())
 
 	rc, err := ctx.Kommons().GetRestClient(resource)
 	if err != nil {
-		return fmt.Errorf("failed to get rest client config for (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
+		return fmt.Errorf("failed to get rest client for (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 	}
 
-	watcher, err := rc.Watch(resource.GetNamespace(), resource.GetAPIVersion(), &metav1.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to get watcher for (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
+	namespace := utils.Coalesce(resource.GetNamespace(), ctx.Namespace)
+	deleteOpt := &metav1.DeleteOptions{
+		GracePeriodSeconds: lo.ToPtr(int64(0)),
+		PropagationPolicy:  lo.ToPtr(metav1.DeletePropagationOrphan),
 	}
-	defer watcher.Stop()
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for {
-			select {
-			case e := <-watcher.ResultChan():
-				if e.Object == nil {
-					// not sure why an empty event is fired.
-					// but this empty event kept coming through the channel
-					// resulting in high cpu usage.
-					return
-				}
-
-				if e.Type == watch.Deleted {
-					return
-				}
-
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-
-	if err := ctx.Kommons().DeleteUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
+	if _, err := rc.DeleteWithOptions(namespace, resource.GetName(), deleteOpt); err != nil {
 		var statusErr *apiErrors.StatusError
 		if errors.As(err, &statusErr) {
 			switch statusErr.ErrStatus.Code {
@@ -351,6 +325,28 @@ func deleteResourceSync(ctx *context.Context, resource unstructured.Unstructured
 		return fmt.Errorf("failed to delete resource %s: %w", resource.GetName(), err)
 	}
 
-	wg.Wait()
-	return nil
+	if !waitForDelete {
+		return nil
+	}
+
+	// Poll the resource until it's deleted
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			_, err = rc.Get(resource.GetNamespace(), resource.GetName())
+			if err != nil {
+				if apiErrors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("failed to get resource (%s/%s/%s) while polling for deletion: %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
+			}
+			ctx.Logger.V(5).Infof("resource (%s/%s/%s) still exists, polling...", resource.GetKind(), resource.GetNamespace(), resource.GetName())
+
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
 }
