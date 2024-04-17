@@ -12,6 +12,15 @@ gitea:
     server:
       SSH_LISTEN_PORT: 2222
       SSH_PORT: 22
+    database:
+      DB_TYPE: sqlite3
+    session:
+      PROVIDER: memory
+    cache:
+      ADAPTER: memory
+    queue:
+      TYPE: level
+
 persistence:
   enabled: false
 postgresql-ha:
@@ -19,19 +28,4 @@ postgresql-ha:
 redis-cluster:
   enabled: false
 postgresql:
-  enabled: true
-  persistence:
-    enabled: false
-  global:
-    postgresql:
-      persistence:
-        enabled: false
-      auth:
-        database: gitea
-        password: gitea
-        username: gitea
-      service:
-        ports:
-          postgresql: 5432
-test:
-  enabled: true
+  enabled: false
