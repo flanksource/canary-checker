@@ -4844,6 +4844,9 @@ spec:
                           template:
                             type: string
                         type: object
+                      healthy:
+                        description: Wait for resources to be healthy.
+                        type: boolean
                       icon:
                         description: Icon for overwriting default icon on the dashboard
                         type: string
@@ -4942,6 +4945,7 @@ spec:
                             type: string
                         type: object
                       ready:
+                        description: Wait for resources to be ready.
                         type: boolean
                       resource:
                         properties:

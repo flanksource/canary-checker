@@ -92,17 +92,28 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 			}
 		}
 
-		ctx.Tracef("Found  %d %s in namespace %s with label=%s field=%s", len(resources), check.Kind, namespace, check.Resource.LabelSelector, check.Resource.FieldSelector)
+		ctx.Tracef("Found %d %s in namespace %s with label=%s field=%s", len(resources), check.Kind, namespace, check.Resource.LabelSelector, check.Resource.FieldSelector)
 		for _, resource := range resources {
 			_resource := resource
 			resourceHealth, err := health.GetResourceHealth(&_resource, nil)
-			if err == nil {
+			if err != nil {
+				results.Failf("error getting resource health (%s/%s/%s): %v",
+					resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
+			} else {
 				resource.Object["healthStatus"] = resourceHealth
-			}
-			if check.Ready != nil && *check.Ready && resourceHealth.Status != health.HealthStatusHealthy {
-				results.Failf("%s/%s/%s is %s: %s", resource.GetKind(), resource.GetNamespace(), resource.GetName(), resourceHealth.Status, resourceHealth.Message)
+
+				if check.Healthy && resourceHealth.Health != health.HealthHealthy {
+					results.Failf("%s/%s/%s is not healthy (health: %s, status: %s): %s",
+						resource.GetKind(), resource.GetNamespace(), resource.GetName(), resourceHealth.Health, resourceHealth.Status, resourceHealth.Message)
+				}
+
+				if check.Ready && !resourceHealth.Ready {
+					results.Failf("%s/%s/%s is not ready (status: %s): %s", resource.GetKind(),
+						resource.GetNamespace(), resource.GetName(), resourceHealth.Status, resourceHealth.Message)
+				}
 			}
 		}
+
 		allResources = append(allResources, resources...)
 	}
 
