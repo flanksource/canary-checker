@@ -33,18 +33,18 @@ sleep 300
 kubectl get pods -n gitea
 kubectl describe pods -n gitea
 
-kubectl logs -n gitea deploy/gitea --all-container || true
+kubectl logs -n gitea deploy/gitea --all-containers || true
 
-kubectl logs -n gitea statefulsets/gitea-postgresql --all-container || true
+kubectl logs -n gitea statefulsets/gitea-postgresql --all-containers || true
 
 sleep 100
 
 kubectl get pods -n gitea
 kubectl describe pods -n gitea
 
-kubectl logs -n gitea deploy/gitea --all-container || true
+kubectl logs -n gitea deploy/gitea --all-containers || true
 
-kubectl logs -n gitea statefulsets/gitea-postgresql --all-container || true
+kubectl logs -n gitea statefulsets/gitea-postgresql --all-containers || true
 
 
 kubectl port-forward  svc/gitea-http -n gitea 3001:3000 &
