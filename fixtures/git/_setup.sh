@@ -26,7 +26,17 @@ fi
 
 helm repo add gitea-charts https://dl.gitea.io/charts
 helm repo update
-helm install gitea gitea-charts/gitea  -f fixtures/git/gitea.values --create-namespace --namespace gitea --wait --timeout 10m
+helm install gitea gitea-charts/gitea  -f fixtures/git/gitea.values --create-namespace --namespace gitea
+
+sleep 300
+
+kubectl get pods -n gitea
+kubectl describe pods -n gitea
+
+sleep 100
+
+kubectl get pods -n gitea
+kubectl describe pods -n gitea
 
 kubectl port-forward  svc/gitea-http -n gitea 3001:3000 &
 PID=$!
