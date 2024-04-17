@@ -1,6 +1,6 @@
 module github.com/flanksource/canary-checker/hack/generate-schemas
 
-go 1.20
+go 1.22.2
 
 require (
 	github.com/flanksource/canary-checker v1.0.0
@@ -50,7 +50,7 @@ require (
 	github.com/evanphx/json-patch v5.7.0+incompatible // indirect
 	github.com/exaring/otelpgx v0.5.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/flanksource/duty v1.0.415 // indirect
+	github.com/flanksource/duty v1.0.419 // indirect
 	github.com/flanksource/is-healthy v1.0.2 // indirect
 	github.com/flanksource/kommons v0.31.4 // indirect
 	github.com/flanksource/kubectl-neat v1.0.4 // indirect
