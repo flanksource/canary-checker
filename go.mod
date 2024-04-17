@@ -1,6 +1,6 @@
 module github.com/flanksource/canary-checker
 
-go 1.20
+go 1.22.2
 
 require (
 	cloud.google.com/go/storage v1.36.0
@@ -22,7 +22,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.4
 	github.com/flanksource/commons v1.22.1
-	github.com/flanksource/duty v1.0.415
+	github.com/flanksource/duty v1.0.419
 	github.com/flanksource/gomplate/v3 v3.24.2
 	github.com/flanksource/is-healthy v1.0.2
 	github.com/flanksource/kommons v0.31.4

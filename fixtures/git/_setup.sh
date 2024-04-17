@@ -26,7 +26,26 @@ fi
 
 helm repo add gitea-charts https://dl.gitea.io/charts
 helm repo update
-helm install gitea gitea-charts/gitea  -f fixtures/git/gitea.values --create-namespace --namespace gitea --wait
+helm install gitea gitea-charts/gitea  -f fixtures/git/gitea.values --create-namespace --namespace gitea
+
+sleep 300
+
+kubectl get pods -n gitea
+kubectl describe pods -n gitea
+
+kubectl logs -n gitea deploy/gitea --all-containers || true
+
+kubectl logs -n gitea statefulsets/gitea-postgresql --all-containers || true
+
+sleep 100
+
+kubectl get pods -n gitea
+kubectl describe pods -n gitea
+
+kubectl logs -n gitea deploy/gitea --all-containers || true
+
+kubectl logs -n gitea statefulsets/gitea-postgresql --all-containers || true
+
 
 kubectl port-forward  svc/gitea-http -n gitea 3001:3000 &
 PID=$!
