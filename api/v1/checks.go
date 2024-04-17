@@ -971,10 +971,10 @@ type KubernetesCheck struct {
 	Ignore []string `yaml:"ignore,omitempty" json:"ignore,omitempty"`
 	Kind   string   `yaml:"kind" json:"kind"`
 
-	// Wait for resources to be healthy.
+	// Fail the check if any resources are unhealthy
 	Healthy bool `yaml:"healthy,omitempty" json:"healthy,omitempty"`
 
-	// Wait for resources to be ready.
+	// Fail the check if any resources are not ready
 	Ready bool `yaml:"ready,omitempty" json:"ready,omitempty"`
 }
 

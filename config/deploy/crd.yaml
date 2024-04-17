@@ -4845,7 +4845,7 @@ spec:
                             type: string
                         type: object
                       healthy:
-                        description: Wait for resources to be healthy.
+                        description: Fail the check if any resources are unhealthy
                         type: boolean
                       icon:
                         description: Icon for overwriting default icon on the dashboard
@@ -4945,7 +4945,7 @@ spec:
                             type: string
                         type: object
                       ready:
-                        description: Wait for resources to be ready.
+                        description: Fail the check if any resources are not ready
                         type: boolean
                       resource:
                         properties:
