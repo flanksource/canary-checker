@@ -2256,6 +2256,9 @@
         "kind": {
           "type": "string"
         },
+        "healthy": {
+          "type": "boolean"
+        },
         "ready": {
           "type": "boolean"
         }

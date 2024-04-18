@@ -970,7 +970,12 @@ type KubernetesCheck struct {
 	// Ignore the specified resources from the fetched resources. Can be a glob pattern.
 	Ignore []string `yaml:"ignore,omitempty" json:"ignore,omitempty"`
 	Kind   string   `yaml:"kind" json:"kind"`
-	Ready  *bool    `yaml:"ready,omitempty" json:"ready,omitempty"`
+
+	// Fail the check if any resources are unhealthy
+	Healthy bool `yaml:"healthy,omitempty" json:"healthy,omitempty"`
+
+	// Fail the check if any resources are not ready
+	Ready bool `yaml:"ready,omitempty" json:"ready,omitempty"`
 }
 
 func (c KubernetesCheck) GetType() string {
