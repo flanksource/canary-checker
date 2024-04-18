@@ -790,10 +790,9 @@ type KubernetesResourceChecks struct {
 
 type KubernetesResourceCheckRetries struct {
 	// Delay is the initial delay
-	Delay      string `json:"delay,omitempty"`
-	Timeout    string `json:"timeout,omitempty"`
-	Interval   string `json:"interval,omitempty"`
-	MaxRetries int    `json:"maxRetries,omitempty"`
+	Delay    string `json:"delay,omitempty"`
+	Timeout  string `json:"timeout,omitempty"`
+	Interval string `json:"interval,omitempty"`
 
 	parsedDelay    *time.Duration `json:"-"`
 	parsedTimeout  *time.Duration `json:"-"`
@@ -871,10 +870,8 @@ type KubernetesResourceCheckWaitFor struct {
 	Timeout string `json:"timeout,omitempty"`
 
 	// Interval to check if all static & non-static resources are ready.
-	// 	Default: 30s
+	// 	Default: 5s
 	Interval string `json:"interval,omitempty"`
-
-	MaxRetries int `json:"maxRetries,omitempty"`
 
 	parsedTimeout  *time.Duration `json:"-"`
 	parsedInterval *time.Duration `json:"-"`

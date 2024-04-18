@@ -29,7 +29,7 @@ spec:
         timeout: "20s"
       checkRetries:
         delay: 2s
-        maxRetries: 3
+        timeout: 5m
       checks:
         - kubernetes:
             - name: exit-code-check

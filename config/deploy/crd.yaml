@@ -4997,8 +4997,6 @@ spec:
                             type: string
                           interval:
                             type: string
-                          maxRetries:
-                            type: integer
                           timeout:
                             type: string
                         type: object
@@ -5163,10 +5161,8 @@ spec:
                           interval:
                             description: |-
                               Interval to check if all static & non-static resources are ready.
-                              	Default: 30s
+                              	Default: 5s
                             type: string
-                          maxRetries:
-                            type: integer
                           timeout:
                             description: |-
                               Timeout to wait for all static & non-static resources to be ready.

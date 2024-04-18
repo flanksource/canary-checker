@@ -2353,9 +2353,6 @@
         },
         "interval": {
           "type": "string"
-        },
-        "maxRetries": {
-          "type": "integer"
         }
       },
       "additionalProperties": false,
@@ -2377,9 +2374,6 @@
         },
         "interval": {
           "type": "string"
-        },
-        "maxRetries": {
-          "type": "integer"
         }
       },
       "additionalProperties": false,

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/flanksource/gomplate/v3"
@@ -15,7 +16,6 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	cliresource "k8s.io/cli-runtime/pkg/resource"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -145,10 +145,6 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 			backoff = retry.NewConstant(retryInterval)
 		}
 
-		if check.CheckRetries.MaxRetries > 0 {
-			backoff = retry.WithMaxRetries(uint64(check.CheckRetries.MaxRetries), backoff)
-		}
-
 		if maxRetryTimeout, _ := check.CheckRetries.GetTimeout(); maxRetryTimeout > 0 {
 			backoff = retry.WithMaxDuration(maxRetryTimeout, backoff)
 		}
@@ -198,9 +194,6 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx *context.Context, check v1.K
 
 	var attempts int
 	backoff := retry.WithMaxDuration(waitTimeout, retry.NewConstant(waitInterval))
-	if check.WaitFor.MaxRetries > 0 {
-		backoff = retry.WithMaxRetries(uint64(check.WaitFor.MaxRetries), backoff)
-	}
 	retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
 		ctx = _ctx.(*context.Context)
 		attempts++
@@ -299,7 +292,7 @@ func deleteResources(ctx *context.Context, waitForDelete bool, resources ...unst
 	ctx.Logger.V(4).Infof("deleting %d resources", len(resources))
 
 	// cache dynamic clients
-	clients := map[schema.GroupVersionKind]*cliresource.Helper{}
+	clients := sync.Map{}
 
 	eg, _ := errgroup.WithContext(ctx)
 	for i := range resources {
@@ -311,7 +304,7 @@ func deleteResources(ctx *context.Context, waitForDelete bool, resources ...unst
 				return fmt.Errorf("failed to get rest client for (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 			}
 			gvk := resource.GetObjectKind().GroupVersionKind()
-			clients[gvk] = rc
+			clients.Store(gvk, rc)
 
 			namespace := utils.Coalesce(resource.GetNamespace(), ctx.Namespace)
 			deleteOpt := &metav1.DeleteOptions{
@@ -354,7 +347,9 @@ func deleteResources(ctx *context.Context, waitForDelete bool, resources ...unst
 
 			deleted := make(map[string]struct{})
 			for _, resource := range resources {
-				rc := clients[resource.GetObjectKind().GroupVersionKind()]
+				cachedClient, _ := clients.Load(resource.GetObjectKind().GroupVersionKind())
+				rc := cachedClient.(*cliresource.Helper)
+
 				if _, err := rc.Get(resource.GetNamespace(), resource.GetName()); err != nil {
 					if !apiErrors.IsNotFound(err) {
 						return fmt.Errorf("error getting resource (%s/%s/%s) while polling: %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
