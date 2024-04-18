@@ -15,6 +15,7 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	cliresource "k8s.io/cli-runtime/pkg/resource"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -298,17 +299,19 @@ func deleteResources(ctx *context.Context, waitForDelete bool, resources ...unst
 	ctx.Logger.V(4).Infof("deleting %d resources", len(resources))
 
 	// cache dynamic clients
-	clients := map[string]*cliresource.Helper{}
+	clients := map[schema.GroupVersionKind]*cliresource.Helper{}
 
 	eg, _ := errgroup.WithContext(ctx)
 	for i := range resources {
 		resource := resources[i]
+
 		eg.Go(func() error {
 			rc, err := ctx.Kommons().GetRestClient(resource)
 			if err != nil {
 				return fmt.Errorf("failed to get rest client for (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 			}
-			clients[string(resource.GetUID())] = rc
+			gvk := resource.GetObjectKind().GroupVersionKind()
+			clients[gvk] = rc
 
 			namespace := utils.Coalesce(resource.GetNamespace(), ctx.Namespace)
 			deleteOpt := &metav1.DeleteOptions{
@@ -351,7 +354,7 @@ func deleteResources(ctx *context.Context, waitForDelete bool, resources ...unst
 
 			deleted := make(map[string]struct{})
 			for _, resource := range resources {
-				rc := clients[string(resource.GetUID())]
+				rc := clients[resource.GetObjectKind().GroupVersionKind()]
 				if _, err := rc.Get(resource.GetNamespace(), resource.GetName()); err != nil {
 					if !apiErrors.IsNotFound(err) {
 						return fmt.Errorf("error getting resource (%s/%s/%s) while polling: %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
