@@ -2,21 +2,27 @@ package checks
 
 import (
 	gocontext "context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/flanksource/gomplate/v3"
+	"github.com/samber/lo"
 	"github.com/sethvargo/go-retry"
-
-	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/commons/utils"
-	"github.com/flanksource/duty/types"
+	"golang.org/x/sync/errgroup"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	cliresource "k8s.io/cli-runtime/pkg/resource"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/commons/utils"
+	"github.com/flanksource/duty/types"
 )
 
 const (
@@ -72,19 +78,30 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 		}
 	}
 
+	// Keep track of all the created resources
+	// so we can delete them together instead of deleting them one by one.
+	var createdResources []unstructured.Unstructured
+	defer func() {
+		if err := deleteResources(ctx, check.WaitFor.Delete, createdResources...); err != nil {
+			results.Failf(err.Error())
+		}
+	}()
+
+	if check.ClearResources {
+		if err := deleteResources(ctx, true, check.Resources...); err != nil {
+			results.Failf(err.Error())
+		}
+	}
+
 	for i := range check.Resources {
 		resource := check.Resources[i]
+
 		resource.SetAnnotations(map[string]string{annotationkey: ctx.Canary.ID()})
 		if err := ctx.Kommons().ApplyUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
-			return results.Failf("failed to apply resource %s: %v", resource.GetName(), err)
+			return results.Failf("failed to apply resource (%s/%s/%s): %v", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 		}
 
-		defer func() {
-			if err := ctx.Kommons().DeleteUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
-				logger.Errorf("failed to delete resource %s: %v", resource.GetName(), err)
-				results.ErrorMessage(fmt.Errorf("failed to delete resource %s: %v", resource.GetName(), err))
-			}
-		}()
+		createdResources = append(createdResources, resource)
 	}
 
 	if !check.WaitFor.Disable {
@@ -126,10 +143,6 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 
 		if retryInterval, _ := check.CheckRetries.GetInterval(); retryInterval > 0 {
 			backoff = retry.NewConstant(retryInterval)
-		}
-
-		if check.CheckRetries.MaxRetries > 0 {
-			backoff = retry.WithMaxRetries(uint64(check.CheckRetries.MaxRetries), backoff)
 		}
 
 		if maxRetryTimeout, _ := check.CheckRetries.GetTimeout(); maxRetryTimeout > 0 {
@@ -181,9 +194,6 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx *context.Context, check v1.K
 
 	var attempts int
 	backoff := retry.WithMaxDuration(waitTimeout, retry.NewConstant(waitInterval))
-	if check.WaitFor.MaxRetries > 0 {
-		backoff = retry.WithMaxRetries(uint64(check.WaitFor.MaxRetries), backoff)
-	}
 	retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
 		ctx = _ctx.(*context.Context)
 		attempts++
@@ -276,4 +286,91 @@ func (c *KubernetesResourceChecker) validate(ctx *context.Context, check v1.Kube
 	}
 
 	return nil
+}
+
+func deleteResources(ctx *context.Context, waitForDelete bool, resources ...unstructured.Unstructured) error {
+	ctx.Logger.V(4).Infof("deleting %d resources", len(resources))
+
+	// cache dynamic clients
+	clients := sync.Map{}
+
+	eg, _ := errgroup.WithContext(ctx)
+	for i := range resources {
+		resource := resources[i]
+
+		eg.Go(func() error {
+			rc, err := ctx.Kommons().GetRestClient(resource)
+			if err != nil {
+				return fmt.Errorf("failed to get rest client for (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
+			}
+			gvk := resource.GetObjectKind().GroupVersionKind()
+			clients.Store(gvk, rc)
+
+			namespace := utils.Coalesce(resource.GetNamespace(), ctx.Namespace)
+			deleteOpt := &metav1.DeleteOptions{
+				GracePeriodSeconds: lo.ToPtr(int64(0)),
+				PropagationPolicy:  lo.ToPtr(metav1.DeletePropagationOrphan),
+			}
+			if _, err := rc.DeleteWithOptions(namespace, resource.GetName(), deleteOpt); err != nil {
+				var statusErr *apiErrors.StatusError
+				if errors.As(err, &statusErr) {
+					switch statusErr.ErrStatus.Code {
+					case 404:
+						return nil
+					}
+				}
+
+				return fmt.Errorf("failed to delete resource (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
+			}
+
+			return nil
+		})
+	}
+	if err := eg.Wait(); err != nil {
+		return err
+	}
+
+	if !waitForDelete {
+		return nil
+	}
+
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if len(resources) == 0 {
+				ctx.Logger.V(5).Infof("all the resources have been deleted")
+				return nil
+			}
+
+			deleted := make(map[string]struct{})
+			for _, resource := range resources {
+				cachedClient, _ := clients.Load(resource.GetObjectKind().GroupVersionKind())
+				rc := cachedClient.(*cliresource.Helper)
+
+				if _, err := rc.Get(resource.GetNamespace(), resource.GetName()); err != nil {
+					if !apiErrors.IsNotFound(err) {
+						return fmt.Errorf("error getting resource (%s/%s/%s) while polling: %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
+					}
+
+					deleted[string(resource.GetUID())] = struct{}{}
+					ctx.Logger.V(5).Infof("(%s/%s/%s) has been deleted", resource.GetKind(), resource.GetNamespace(), resource.GetName())
+				} else {
+					ctx.Logger.V(5).Infof("(%s/%s/%s) has not been deleted", resource.GetKind(), resource.GetNamespace(), resource.GetName())
+				}
+			}
+
+			resources = lo.Filter(resources, func(item unstructured.Unstructured, _ int) bool {
+				_, ok := deleted[string(item.GetUID())]
+				return !ok
+			})
+
+			break
+
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
 }

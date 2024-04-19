@@ -2583,6 +2583,9 @@
         "checkRetries": {
           "$ref": "#/$defs/KubernetesResourceCheckRetries"
         },
+        "clearResources": {
+          "type": "boolean"
+        },
         "kubeconfig": {
           "$ref": "#/$defs/EnvVar"
         },
@@ -2607,9 +2610,6 @@
         },
         "interval": {
           "type": "string"
-        },
-        "maxRetries": {
-          "type": "integer"
         }
       },
       "additionalProperties": false,
@@ -2623,14 +2623,14 @@
         "disable": {
           "type": "boolean"
         },
+        "delete": {
+          "type": "boolean"
+        },
         "timeout": {
           "type": "string"
         },
         "interval": {
           "type": "string"
-        },
-        "maxRetries": {
-          "type": "integer"
         }
       },
       "additionalProperties": false,

@@ -72,4 +72,4 @@ spec:
       checkRetries:
         delay: 3s
         interval: 2s
-        maxRetries: 3
+        timeout: 5m

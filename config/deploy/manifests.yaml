@@ -4996,8 +4996,6 @@ spec:
                             type: string
                           interval:
                             type: string
-                          maxRetries:
-                            type: integer
                           timeout:
                             type: string
                         type: object
@@ -5012,6 +5010,9 @@ spec:
                           type: object
                         type: array
                         x-kubernetes-preserve-unknown-fields: true
+                      clearResources:
+                        description: Ensure that the resources are deleted before creating them.
+                        type: boolean
                       description:
                         description: Description for the check
                         type: string
@@ -5144,6 +5145,9 @@ spec:
                         type: string
                       waitFor:
                         properties:
+                          delete:
+                            description: Whether to wait for deletion or not
+                            type: boolean
                           disable:
                             description: Disable waiting for resources to get to their desired state.
                             type: boolean
@@ -5156,10 +5160,8 @@ spec:
                           interval:
                             description: |-
                               Interval to check if all static & non-static resources are ready.
-                              	Default: 30s
+                              	Default: 5s
                             type: string
-                          maxRetries:
-                            type: integer
                           timeout:
                             description: |-
                               Timeout to wait for all static & non-static resources to be ready.

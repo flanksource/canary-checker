@@ -43,5 +43,4 @@ spec:
               url: "http://httpbin-svc.default.svc"
       checkRetries:
         delay: 2s
-        maxRetries: 5
         interval: 3s

@@ -790,10 +790,9 @@ type KubernetesResourceChecks struct {
 
 type KubernetesResourceCheckRetries struct {
 	// Delay is the initial delay
-	Delay      string `json:"delay,omitempty"`
-	Timeout    string `json:"timeout,omitempty"`
-	Interval   string `json:"interval,omitempty"`
-	MaxRetries int    `json:"maxRetries,omitempty"`
+	Delay    string `json:"delay,omitempty"`
+	Timeout  string `json:"timeout,omitempty"`
+	Interval string `json:"interval,omitempty"`
 
 	parsedDelay    *time.Duration `json:"-"`
 	parsedTimeout  *time.Duration `json:"-"`
@@ -863,15 +862,16 @@ type KubernetesResourceCheckWaitFor struct {
 	// Disable waiting for resources to get to their desired state.
 	Disable bool `json:"disable,omitempty"`
 
+	// Whether to wait for deletion or not
+	Delete bool `json:"delete,omitempty"`
+
 	// Timeout to wait for all static & non-static resources to be ready.
 	// 	Default: 10m
 	Timeout string `json:"timeout,omitempty"`
 
 	// Interval to check if all static & non-static resources are ready.
-	// 	Default: 30s
+	// 	Default: 5s
 	Interval string `json:"interval,omitempty"`
-
-	MaxRetries int `json:"maxRetries,omitempty"`
 
 	parsedTimeout  *time.Duration `json:"-"`
 	parsedInterval *time.Duration `json:"-"`
@@ -935,6 +935,9 @@ type KubernetesResourceCheck struct {
 
 	// Set initial delays and retry intervals for checks.
 	CheckRetries KubernetesResourceCheckRetries `json:"checkRetries,omitempty"`
+
+	// Ensure that the resources are deleted before creating them.
+	ClearResources bool `json:"clearResources,omitempty"`
 
 	// Kubeconfig is the kubeconfig or the path to the kubeconfig file.
 	Kubeconfig *types.EnvVar `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
