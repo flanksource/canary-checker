@@ -23,7 +23,7 @@ require (
 	github.com/flanksource/artifacts v1.0.4
 	github.com/flanksource/commons v1.22.1
 	github.com/flanksource/duty v1.0.419
-	github.com/flanksource/gomplate/v3 v3.24.3
+	github.com/flanksource/gomplate/v3 v3.24.5
 	github.com/flanksource/is-healthy v1.0.4
 	github.com/flanksource/kommons v0.31.4
 	github.com/friendsofgo/errors v0.9.2
