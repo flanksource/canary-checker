@@ -64,7 +64,6 @@ type CanarySpec struct {
 	Helm               []HelmCheck               `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace          []NamespaceCheck          `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Redis              []RedisCheck              `yaml:"redis,omitempty" json:"redis,omitempty"`
-	EC2                []EC2Check                `yaml:"ec2,omitempty" json:"ec2,omitempty"`
 	Prometheus         []PrometheusCheck         `yaml:"prometheus,omitempty" json:"prometheus,omitempty"`
 	MongoDB            []MongoDBCheck            `yaml:"mongodb,omitempty" json:"mongodb,omitempty"`
 	CloudWatch         []CloudWatchCheck         `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
@@ -155,9 +154,6 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Junit {
-		checks = append(checks, check)
-	}
-	for _, check := range spec.EC2 {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Prometheus {
@@ -278,9 +274,6 @@ func (spec CanarySpec) KeepOnly(names ...string) CanarySpec {
 		return lo.Contains(names, c.GetName())
 	})
 	spec.Redis = lo.Filter(spec.Redis, func(c RedisCheck, _ int) bool {
-		return lo.Contains(names, c.GetName())
-	})
-	spec.EC2 = lo.Filter(spec.EC2, func(c EC2Check, _ int) bool {
 		return lo.Contains(names, c.GetName())
 	})
 	spec.Prometheus = lo.Filter(spec.Prometheus, func(c PrometheusCheck, _ int) bool {

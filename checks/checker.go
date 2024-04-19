@@ -32,7 +32,6 @@ var All = []Checker{
 	&DatabaseBackupChecker{},
 	&DNSChecker{},
 	&DynatraceChecker{},
-	&EC2Checker{},
 	&ElasticsearchChecker{},
 	&ExecChecker{},
 	&FolderChecker{},
