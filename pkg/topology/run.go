@@ -234,10 +234,6 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 				results = append(results, result.Detail.([]interface{})...)
 			case checks.ExecDetails:
 				results = append(results, v.Stdout)
-			case checks.ConfigDBQueryResult:
-				for _, item := range v.Results {
-					results = append(results, any(item))
-				}
 			case []unstructured.Unstructured:
 				for _, item := range v {
 					results = append(results, any(item))

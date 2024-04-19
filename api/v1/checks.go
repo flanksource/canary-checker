@@ -766,20 +766,6 @@ func (c CatalogCheck) GetEndpoint() string {
 	return c.Selector.Hash()
 }
 
-type ConfigDBCheck struct {
-	Templatable `yaml:",inline" json:",inline"`
-	Description `yaml:",inline" json:",inline"`
-	Query       string `yaml:"query" json:"query"`
-}
-
-func (c ConfigDBCheck) GetType() string {
-	return "configdb"
-}
-
-func (c ConfigDBCheck) GetEndpoint() string {
-	return c.Query
-}
-
 // KubernetesResourceChecks is the canary spec.
 // NOTE: It's only created to make crd generation possible.
 // embedding CanarySpec into KubernetesResourceCheck.checks
@@ -1304,13 +1290,6 @@ type Jmeter struct {
 }
 
 /*
-ConfigDB check will connect to the specified host; run the specified query and return the result
-*/
-type ConfigDB struct {
-	ConfigDBCheck `yaml:",inline" json:",inline"`
-}
-
-/*
 Junit check will wait for the given pod to be completed than parses all the xml files present in the defined testResults directory
 
 [include:k8s/junit_pass.yaml]
@@ -1478,7 +1457,6 @@ var AllChecks = []external.Check{
 	AwsConfigRuleCheck{},
 	AzureDevopsCheck{},
 	CloudWatchCheck{},
-	ConfigDBCheck{},
 	CatalogCheck{},
 	ContainerdPullCheck{},
 	ContainerdPushCheck{},

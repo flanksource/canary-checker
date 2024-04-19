@@ -621,12 +621,6 @@
           },
           "type": "array"
         },
-        "configDB": {
-          "items": {
-            "$ref": "#/$defs/ConfigDBCheck"
-          },
-          "type": "array"
-        },
         "catalog": {
           "items": {
             "$ref": "#/$defs/CatalogCheck"
@@ -904,52 +898,6 @@
       "type": "object",
       "required": [
         "name"
-      ]
-    },
-    "ConfigDBCheck": {
-      "properties": {
-        "test": {
-          "$ref": "#/$defs/Template"
-        },
-        "display": {
-          "$ref": "#/$defs/Template"
-        },
-        "transform": {
-          "$ref": "#/$defs/Template"
-        },
-        "description": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "namespace": {
-          "type": "string"
-        },
-        "icon": {
-          "type": "string"
-        },
-        "labels": {
-          "$ref": "#/$defs/Labels"
-        },
-        "transformDeleteStrategy": {
-          "type": "string"
-        },
-        "metrics": {
-          "items": {
-            "$ref": "#/$defs/Metrics"
-          },
-          "type": "array"
-        },
-        "query": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "name",
-        "query"
       ]
     },
     "ConfigMapKeySelector": {
@@ -2587,12 +2535,6 @@
         "databaseBackup": {
           "items": {
             "$ref": "#/$defs/DatabaseBackupCheck"
-          },
-          "type": "array"
-        },
-        "configDB": {
-          "items": {
-            "$ref": "#/$defs/ConfigDBCheck"
           },
           "type": "array"
         },

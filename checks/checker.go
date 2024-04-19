@@ -29,7 +29,6 @@ var All = []Checker{
 	&AzureDevopsChecker{},
 	&CloudWatchChecker{},
 	&CatalogChecker{},
-	&ConfigdbChecker{},
 	&DatabaseBackupChecker{},
 	&DNSChecker{},
 	&DynatraceChecker{},
