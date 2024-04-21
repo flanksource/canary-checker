@@ -64,7 +64,6 @@ type CanarySpec struct {
 	Helm               []HelmCheck               `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace          []NamespaceCheck          `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	Redis              []RedisCheck              `yaml:"redis,omitempty" json:"redis,omitempty"`
-	EC2                []EC2Check                `yaml:"ec2,omitempty" json:"ec2,omitempty"`
 	Prometheus         []PrometheusCheck         `yaml:"prometheus,omitempty" json:"prometheus,omitempty"`
 	MongoDB            []MongoDBCheck            `yaml:"mongodb,omitempty" json:"mongodb,omitempty"`
 	CloudWatch         []CloudWatchCheck         `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
@@ -77,7 +76,6 @@ type CanarySpec struct {
 	AwsConfig          []AwsConfigCheck          `yaml:"awsConfig,omitempty" json:"awsConfig,omitempty"`
 	AwsConfigRule      []AwsConfigRuleCheck      `yaml:"awsConfigRule,omitempty" json:"awsConfigRule,omitempty"`
 	DatabaseBackup     []DatabaseBackupCheck     `yaml:"databaseBackup,omitempty" json:"databaseBackup,omitempty"`
-	ConfigDB           []ConfigDBCheck           `yaml:"configDB,omitempty" json:"configDB,omitempty"`
 	Catalog            []CatalogCheck            `yaml:"catalog,omitempty" json:"catalog,omitempty"`
 	Opensearch         []OpenSearchCheck         `yaml:"opensearch,omitempty" json:"opensearch,omitempty"`
 	Elasticsearch      []ElasticsearchCheck      `yaml:"elasticsearch,omitempty" json:"elasticsearch,omitempty"`
@@ -158,9 +156,6 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	for _, check := range spec.Junit {
 		checks = append(checks, check)
 	}
-	for _, check := range spec.EC2 {
-		checks = append(checks, check)
-	}
 	for _, check := range spec.Prometheus {
 		checks = append(checks, check)
 	}
@@ -198,9 +193,6 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Catalog {
-		checks = append(checks, check)
-	}
-	for _, check := range spec.ConfigDB {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Elasticsearch {
@@ -284,9 +276,6 @@ func (spec CanarySpec) KeepOnly(names ...string) CanarySpec {
 	spec.Redis = lo.Filter(spec.Redis, func(c RedisCheck, _ int) bool {
 		return lo.Contains(names, c.GetName())
 	})
-	spec.EC2 = lo.Filter(spec.EC2, func(c EC2Check, _ int) bool {
-		return lo.Contains(names, c.GetName())
-	})
 	spec.Prometheus = lo.Filter(spec.Prometheus, func(c PrometheusCheck, _ int) bool {
 		return lo.Contains(names, c.GetName())
 	})
@@ -321,9 +310,6 @@ func (spec CanarySpec) KeepOnly(names ...string) CanarySpec {
 		return lo.Contains(names, c.GetName())
 	})
 	spec.Catalog = lo.Filter(spec.Catalog, func(c CatalogCheck, _ int) bool {
-		return lo.Contains(names, c.GetName())
-	})
-	spec.ConfigDB = lo.Filter(spec.ConfigDB, func(c ConfigDBCheck, _ int) bool {
 		return lo.Contains(names, c.GetName())
 	})
 	spec.Opensearch = lo.Filter(spec.Opensearch, func(c OpenSearchCheck, _ int) bool {

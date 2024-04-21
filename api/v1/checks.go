@@ -14,7 +14,6 @@ import (
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/samber/lo"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -766,20 +765,6 @@ func (c CatalogCheck) GetEndpoint() string {
 	return c.Selector.Hash()
 }
 
-type ConfigDBCheck struct {
-	Templatable `yaml:",inline" json:",inline"`
-	Description `yaml:",inline" json:",inline"`
-	Query       string `yaml:"query" json:"query"`
-}
-
-func (c ConfigDBCheck) GetType() string {
-	return "configdb"
-}
-
-func (c ConfigDBCheck) GetEndpoint() string {
-	return c.Query
-}
-
 // KubernetesResourceChecks is the canary spec.
 // NOTE: It's only created to make crd generation possible.
 // embedding CanarySpec into KubernetesResourceCheck.checks
@@ -1307,13 +1292,6 @@ type Jmeter struct {
 }
 
 /*
-ConfigDB check will connect to the specified host; run the specified query and return the result
-*/
-type ConfigDB struct {
-	ConfigDBCheck `yaml:",inline" json:",inline"`
-}
-
-/*
 Junit check will wait for the given pod to be completed than parses all the xml files present in the defined testResults directory
 
 [include:k8s/junit_pass.yaml]
@@ -1400,33 +1378,6 @@ type DatabaseBackup struct {
 	DatabaseBackupCheck `yaml:",inline" json:",inline"`
 }
 
-/*
-[include:aws/aws_config_pass.yaml]
-*/
-type EC2 struct {
-	EC2Check `yaml:",inline" json:",inline"`
-}
-
-type EC2Check struct {
-	Description              `yaml:",inline" json:",inline"`
-	connection.AWSConnection `yaml:",inline" json:",inline"`
-	AMI                      string                    `yaml:"ami,omitempty" json:"ami,omitempty"`
-	UserData                 string                    `yaml:"userData,omitempty" json:"userData,omitempty"`
-	SecurityGroup            string                    `yaml:"securityGroup,omitempty" json:"securityGroup,omitempty"`
-	KeepAlive                bool                      `yaml:"keepAlive,omitempty" json:"keepAlive,omitempty"`
-	WaitTime                 int                       `yaml:"waitTime,omitempty" json:"waitTime,omitempty"`
-	TimeOut                  int                       `yaml:"timeOut,omitempty" json:"timeOut,omitempty"`
-	CanaryRef                []v1.LocalObjectReference `yaml:"canaryRef,omitempty" json:"canaryRef,omitempty"`
-}
-
-func (c EC2Check) GetEndpoint() string {
-	return c.Region
-}
-
-func (c EC2Check) GetType() string {
-	return "ec2"
-}
-
 type AzureDevopsCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
@@ -1481,7 +1432,6 @@ var AllChecks = []external.Check{
 	AwsConfigRuleCheck{},
 	AzureDevopsCheck{},
 	CloudWatchCheck{},
-	ConfigDBCheck{},
 	CatalogCheck{},
 	ContainerdPullCheck{},
 	ContainerdPushCheck{},
@@ -1490,7 +1440,6 @@ var AllChecks = []external.Check{
 	DockerPullCheck{},
 	DockerPushCheck{},
 	DynatraceCheck{},
-	EC2Check{},
 	ElasticsearchCheck{},
 	ExecCheck{},
 	FolderCheck{},

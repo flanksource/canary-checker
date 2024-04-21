@@ -522,12 +522,6 @@
           },
           "type": "array"
         },
-        "ec2": {
-          "items": {
-            "$ref": "#/$defs/EC2Check"
-          },
-          "type": "array"
-        },
         "prometheus": {
           "items": {
             "$ref": "#/$defs/PrometheusCheck"
@@ -597,12 +591,6 @@
         "databaseBackup": {
           "items": {
             "$ref": "#/$defs/DatabaseBackupCheck"
-          },
-          "type": "array"
-        },
-        "configDB": {
-          "items": {
-            "$ref": "#/$defs/ConfigDBCheck"
           },
           "type": "array"
         },
@@ -1028,52 +1016,6 @@
       },
       "additionalProperties": false,
       "type": "object"
-    },
-    "ConfigDBCheck": {
-      "properties": {
-        "test": {
-          "$ref": "#/$defs/Template"
-        },
-        "display": {
-          "$ref": "#/$defs/Template"
-        },
-        "transform": {
-          "$ref": "#/$defs/Template"
-        },
-        "description": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "namespace": {
-          "type": "string"
-        },
-        "icon": {
-          "type": "string"
-        },
-        "labels": {
-          "$ref": "#/$defs/Labels"
-        },
-        "transformDeleteStrategy": {
-          "type": "string"
-        },
-        "metrics": {
-          "items": {
-            "$ref": "#/$defs/Metrics"
-          },
-          "type": "array"
-        },
-        "query": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "name",
-        "query"
-      ]
     },
     "ConfigLookup": {
       "properties": {
@@ -1517,84 +1459,6 @@
         },
         "apiKey": {
           "$ref": "#/$defs/EnvVar"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "name"
-      ]
-    },
-    "EC2Check": {
-      "properties": {
-        "description": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "namespace": {
-          "type": "string"
-        },
-        "icon": {
-          "type": "string"
-        },
-        "labels": {
-          "$ref": "#/$defs/Labels"
-        },
-        "transformDeleteStrategy": {
-          "type": "string"
-        },
-        "metrics": {
-          "items": {
-            "$ref": "#/$defs/Metrics"
-          },
-          "type": "array"
-        },
-        "connection": {
-          "type": "string"
-        },
-        "accessKey": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "secretKey": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "sessionToken": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "region": {
-          "type": "string"
-        },
-        "endpoint": {
-          "type": "string"
-        },
-        "skipTLSVerify": {
-          "type": "boolean"
-        },
-        "ami": {
-          "type": "string"
-        },
-        "userData": {
-          "type": "string"
-        },
-        "securityGroup": {
-          "type": "string"
-        },
-        "keepAlive": {
-          "type": "boolean"
-        },
-        "waitTime": {
-          "type": "integer"
-        },
-        "timeOut": {
-          "type": "integer"
-        },
-        "canaryRef": {
-          "items": {
-            "$ref": "#/$defs/LocalObjectReference"
-          },
-          "type": "array"
         }
       },
       "additionalProperties": false,
@@ -2769,12 +2633,6 @@
           },
           "type": "array"
         },
-        "ec2": {
-          "items": {
-            "$ref": "#/$defs/EC2Check"
-          },
-          "type": "array"
-        },
         "prometheus": {
           "items": {
             "$ref": "#/$defs/PrometheusCheck"
@@ -2844,12 +2702,6 @@
         "databaseBackup": {
           "items": {
             "$ref": "#/$defs/DatabaseBackupCheck"
-          },
-          "type": "array"
-        },
-        "configDB": {
-          "items": {
-            "$ref": "#/$defs/ConfigDBCheck"
           },
           "type": "array"
         },
@@ -2995,15 +2847,6 @@
           "type": "string"
         },
         "label": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
-    "LocalObjectReference": {
-      "properties": {
-        "name": {
           "type": "string"
         }
       },
