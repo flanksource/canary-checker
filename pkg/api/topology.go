@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/flanksource/canary-checker/pkg/topology"
+	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/context"
 	"github.com/labstack/echo/v4"
 )
@@ -26,6 +27,7 @@ import (
 func Topology(c echo.Context) error {
 	ctx := c.Request().Context().(context.Context)
 	params := topology.NewTopologyParams(c.QueryParams())
+	logger.Infof("YASH 1 %v", params)
 	results, err := topology.Query(ctx, params)
 	if err != nil {
 		return errorResponse(c, err, http.StatusBadRequest)

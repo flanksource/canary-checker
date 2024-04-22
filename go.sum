@@ -648,6 +648,8 @@ github.com/RaveNoX/go-jsonmerge v1.0.0 h1:2e0nqnadoGUP8rAvcA0hkQelZreVO5X3BHomT2
 github.com/RaveNoX/go-jsonmerge v1.0.0/go.mod h1:qYM/NA77LhO4h51JJM7Z+xBU3ovqrNIACZe+SkSNVFo=
 github.com/TomOnTime/utfutil v0.0.0-20230223141146-125e65197b36 h1:vfVc5pSCq58ljNpXXwUcLnHATYi/x+YUdqFc9uBhLbM=
 github.com/TomOnTime/utfutil v0.0.0-20230223141146-125e65197b36/go.mod h1:MwE/QxFCN65F0hKGWFHUh2U2o1p2tMPNR1zHkX6vEh8=
+github.com/WinterYukky/gorm-extra-clause-plugin v0.2.0 h1:s1jobT8PlSyG/FXczfoGSt4r46iPiT4ZShe35k5/2y4=
+github.com/WinterYukky/gorm-extra-clause-plugin v0.2.0/go.mod h1:V6gQk3YkLw4x2kLpe7Azk2OesPPv+yZMYVfz8Cdj/YE=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/ajstarks/deck v0.0.0-20200831202436-30c9fc6549a9/go.mod h1:JynElWSGnm/4RlzPXRlREEwqTHAN3T56Bv2ITsFT3gY=
@@ -856,8 +858,8 @@ github.com/flanksource/artifacts v1.0.4 h1:KjQTwsvQ73uHqTK7o4Jwt/RW8fyxJOTJ6JLgz
 github.com/flanksource/artifacts v1.0.4/go.mod h1:wkbdseaTkDo4Q6k6T86vXd4Uy47M6NPCmexgHvCTDl0=
 github.com/flanksource/commons v1.22.1 h1:Ycg8r26bx537UTdAEFgngDW1r2j5bX6Lr3NGxLICpiw=
 github.com/flanksource/commons v1.22.1/go.mod h1:GD5+yGvmYFPIW3WMNN+y1JkeDMJY74e05pQAsRbrvwY=
-github.com/flanksource/duty v1.0.419 h1:MthaK7jIiykG0T1ORLUH6ZFBpnlv9Jy9W6yOshCqm1c=
-github.com/flanksource/duty v1.0.419/go.mod h1:edkKfwLAGYQAGRYOKkKogHg31vTspOxpId4XNswEB6Y=
+github.com/flanksource/duty v1.0.422 h1:QjgsyGze5gEwlE149Gv5Ace7akC+VkCgK1mL3iArTSE=
+github.com/flanksource/duty v1.0.422/go.mod h1:uXl1FjlZvcpZ8U2ql5nHdy1YYl8P7cI5ohzrxD1U3Ts=
 github.com/flanksource/gomplate/v3 v3.20.4/go.mod h1:27BNWhzzSjDed1z8YShO6W+z6G9oZXuxfNFGd/iGSdc=
 github.com/flanksource/gomplate/v3 v3.24.5 h1:dUurInqE8OTsbcM/Qi2sSreStaGbs/sdjSKMPuG0VWQ=
 github.com/flanksource/gomplate/v3 v3.24.5/go.mod h1:tN4JmAtjcAL9tk4nfSkXELWTpOtiO0SVI4lEjtuOb1k=
@@ -1607,8 +1609,6 @@ github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 h1:nIPpBwaJSVYIxUFsDv3M8ofm
 github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8/go.mod h1:HUYIGzjTL3rfEspMxjDjgmT5uz5wzYJKVo23qUhYTos=
 github.com/xlab/treeprint v1.2.0 h1:HzHnuAF1plUN2zGlAFHbSQP2qJ0ZAD3XF5XD7OesXRQ=
 github.com/xlab/treeprint v1.2.0/go.mod h1:gj5Gd3gPdKtR1ikdDK6fnFLdmIS0X30kTTuNd/WEJu0=
-github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 h1:zzrxE1FKn5ryBNl9eKOeqQ58Y/Qpo3Q9QNxKHX5uzzQ=
-github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2/go.mod h1:hzfGeIUDq/j97IG+FhNqkowIyEcD88LrW6fyU3K3WqY=
 github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d/go.mod h1:rHwXgn7JulP+udvsHwJoVG1YGAP6VLg4y9I5dyZdqmA=
 github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a h1:fZHgsYlfvtyqToslyjUt3VOPF4J7aK/3MPcK7xp3PDk=
 github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a/go.mod h1:ul22v+Nro/R083muKhosV54bj5niojjWZvU8xrevuH4=
@@ -2438,6 +2438,8 @@ gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776/go.mod h1:K4uyk7z7BCEPqu6E+C
 gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+gorm.io/driver/mysql v1.5.2 h1:QC2HRskSE75wBuOxe0+iCkyJZ+RqpudsQtqkp+IMuXs=
+gorm.io/driver/mysql v1.5.2/go.mod h1:pQLhh1Ut/WUAySdTHwBpBv6+JKcj+ua4ZFx1QQTBzb8=
 gorm.io/driver/postgres v1.5.4 h1:Iyrp9Meh3GmbSuyIAGyjkN+n9K+GHX9b9MqsTL4EJCo=
 gorm.io/driver/postgres v1.5.4/go.mod h1:Bgo89+h0CRcdA33Y6frlaHHVuTdOf87pmyzwW9C/BH0=
 gorm.io/gorm v1.25.0/go.mod h1:L4uxeKpfBml98NYqVqwAdmV1a2nBtAec/cf3fpucW/k=
