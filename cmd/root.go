@@ -69,8 +69,8 @@ var Root = &cobra.Command{
 
 		if canary.UpstreamConf.Valid() {
 			logger.Infof("Pushing checks %s", canary.UpstreamConf)
-		} else if canary.UpstreamConf.IsPartiallyFilled() {
-			logger.Debugf("Upstream not fully configured: %s", canary.UpstreamConf)
+		} else if partial, err := canary.UpstreamConf.IsPartiallyFilled(); partial && err != nil {
+			logger.Warnf("Upstream not fully configured: %s", canary.UpstreamConf)
 		}
 
 		if otelcollectorURL != "" {
