@@ -16,6 +16,7 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -70,7 +71,7 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 		}
 	}
 
-	if err := c.templateResources(ctx, &check); err != nil {
+	if err := templateKubernetesResourceCheck(ctx.Canary.GetPersistedID(), ctx.Canary.GetCheckID(check.GetName()), &check); err != nil {
 		return results.Failf("templating error: %v", err)
 	}
 
@@ -81,17 +82,14 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 		}
 	}
 
-	// Keep track of all the created resources
-	// so we can delete them together instead of deleting them one by one.
-	var createdResources []unstructured.Unstructured
 	defer func() {
-		if err := DeleteResources(ctx, check, createdResources...); err != nil {
+		if err := DeleteResources(ctx, check, false); err != nil {
 			results.Failf(err.Error())
 		}
 	}()
 
 	if check.ClearResources {
-		if err := DeleteResources(ctx, check, check.Resources...); err != nil {
+		if err := DeleteResources(ctx, check, false); err != nil {
 			results.Failf(err.Error())
 		}
 	}
@@ -101,8 +99,6 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 		if err := ctx.Kommons().ApplyUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
 			return results.Failf("failed to apply resource (%s/%s/%s): %v", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 		}
-
-		createdResources = append(createdResources, resource)
 	}
 
 	if !check.WaitFor.Disable {
@@ -289,8 +285,13 @@ func (c *KubernetesResourceChecker) validate(ctx *context.Context, check v1.Kube
 	return nil
 }
 
-func DeleteResources(ctx *context.Context, check v1.KubernetesResourceCheck, resources ...unstructured.Unstructured) error {
+func DeleteResources(ctx *context.Context, check v1.KubernetesResourceCheck, deleteStatic bool) error {
 	ctx.Logger.V(4).Infof("deleting resources")
+
+	resources := check.Resources
+	if deleteStatic {
+		resources = append(resources, check.StaticResources...)
+	}
 
 	// firstly, cache dynamic clients by gvk
 	clients := sync.Map{}
@@ -322,23 +323,41 @@ func DeleteResources(ctx *context.Context, check v1.KubernetesResourceCheck, res
 				GracePeriodSeconds: lo.ToPtr(int64(0)),
 				PropagationPolicy:  lo.ToPtr(metav1.DeletePropagationOrphan),
 			}
-			listOpt := metav1.ListOptions{
-				LabelSelector: fmt.Sprintf("%s=%s,%s=%s,!%s",
-					resourceLabelKey("check-id"), ctx.Canary.GetCheckID(check.GetName()),
-					resourceLabelKey("canary-id"), ctx.Canary.GetPersistedID(),
-					resourceLabelKey("is-static"),
-				),
-			}
-			if err := rc.DeleteCollection(ctx, deleteOpt, listOpt); err != nil {
-				var statusErr *apiErrors.StatusError
-				if errors.As(err, &statusErr) {
-					switch statusErr.ErrStatus.Code {
-					case 404:
-						return nil
+
+			switch resource.GetKind() {
+			case "Namespace": // namespace cannot be deleted with `.DeleteCollection()`
+				if err := rc.Delete(ctx, resource.GetName(), deleteOpt); err != nil {
+					var statusErr *apiErrors.StatusError
+					if errors.As(err, &statusErr) {
+						switch statusErr.ErrStatus.Code {
+						case 404:
+							return nil
+						}
 					}
+
+					return fmt.Errorf("failed to delete resource (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 				}
 
-				return fmt.Errorf("failed to delete resource (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
+			default:
+				labelSelector := fmt.Sprintf("%s=%s", resourceLabelKey("canary-id"), ctx.Canary.GetPersistedID())
+				if checkID := ctx.Canary.GetCheckID(check.GetName()); checkID != "" {
+					labelSelector += fmt.Sprintf(",%s=%s", resourceLabelKey("check-id"), checkID)
+				}
+				if !deleteStatic {
+					labelSelector += fmt.Sprintf(",!%s", resourceLabelKey("is-static"))
+				}
+
+				if err := rc.DeleteCollection(ctx, deleteOpt, metav1.ListOptions{LabelSelector: labelSelector}); err != nil {
+					var statusErr *apiErrors.StatusError
+					if errors.As(err, &statusErr) {
+						switch statusErr.ErrStatus.Code {
+						case 404:
+							return nil
+						}
+					}
+
+					return fmt.Errorf("failed to delete resource (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
+				}
 			}
 
 			return nil
@@ -363,29 +382,34 @@ func DeleteResources(ctx *context.Context, check v1.KubernetesResourceCheck, res
 				return nil
 			}
 
-			deleted := make(map[string]struct{})
+			deleted := make(map[schema.GroupVersionKind]struct{})
 			for _, resource := range resources {
-				cachedClient, _ := clients.Load(resource.GetObjectKind().GroupVersionKind())
+				gvk := resource.GetObjectKind().GroupVersionKind()
+				cachedClient, _ := clients.Load(gvk)
 				rc := cachedClient.(dynamic.ResourceInterface)
 
-				if _, err := rc.Get(ctx, resource.GetName(), metav1.GetOptions{}); err != nil {
-					if !apiErrors.IsNotFound(err) {
-						return fmt.Errorf("error getting resource (%s/%s/%s) while polling: %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
-					}
+				labelSelector := fmt.Sprintf("%s=%s", resourceLabelKey("canary-id"), ctx.Canary.GetPersistedID())
+				if checkID := ctx.Canary.GetCheckID(check.GetName()); checkID != "" {
+					labelSelector += fmt.Sprintf(",%s=%s", resourceLabelKey("check-id"), checkID)
+				}
+				if !deleteStatic {
+					labelSelector += fmt.Sprintf(",!%s", resourceLabelKey("is-static"))
+				}
 
-					deleted[string(resource.GetUID())] = struct{}{}
-					ctx.Logger.V(4).Infof("(%s/%s/%s) has been deleted", resource.GetKind(), resource.GetNamespace(), resource.GetName())
+				if listResponse, err := rc.List(ctx, metav1.ListOptions{LabelSelector: labelSelector}); err != nil {
+					return fmt.Errorf("error getting resource (%s/%s/%s) while polling: %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
+				} else if listResponse == nil || len(listResponse.Items) == 0 {
+					ctx.Logger.V(4).Infof("all (%v) have been deleted", gvk)
+					deleted[gvk] = struct{}{}
 				} else {
-					ctx.Logger.V(4).Infof("(%s/%s/%s) has not been deleted", resource.GetKind(), resource.GetNamespace(), resource.GetName())
+					ctx.Logger.V(4).Infof("all (%v) have not been deleted", gvk)
 				}
 			}
 
 			resources = lo.Filter(resources, func(item unstructured.Unstructured, _ int) bool {
-				_, ok := deleted[string(item.GetUID())]
+				_, ok := deleted[item.GetObjectKind().GroupVersionKind()]
 				return !ok
 			})
-
-			break
 
 		case <-ctx.Done():
 			return ctx.Err()
@@ -393,7 +417,7 @@ func DeleteResources(ctx *context.Context, check v1.KubernetesResourceCheck, res
 	}
 }
 
-func (c *KubernetesResourceChecker) templateResources(ctx *context.Context, check *v1.KubernetesResourceCheck) error {
+func templateKubernetesResourceCheck(canaryID, checkID string, check *v1.KubernetesResourceCheck) error {
 	templater := gomplate.StructTemplater{
 		ValueFunctions: true,
 		DelimSets: []gomplate.Delims{
@@ -403,19 +427,19 @@ func (c *KubernetesResourceChecker) templateResources(ctx *context.Context, chec
 	}
 
 	for i, r := range check.Resources {
-		namespace, kind := r.GetNamespace(), r.GetKind()
+		namespace, kind := r.GetNamespace(), r.GetObjectKind().GroupVersionKind()
 		if err := templater.Walk(&r); err != nil {
 			return fmt.Errorf("error templating resource: %w", err)
 		}
 
-		if r.GetNamespace() != namespace || r.GetKind() != kind {
-			return fmt.Errorf("templating the namespace/kind of a resource is not allowed")
+		if r.GetNamespace() != namespace || r.GetObjectKind().GroupVersionKind() != kind {
+			return fmt.Errorf("templating the namespace or group/version/kind of a resource is not allowed")
 		}
-
-		r.SetLabels(collections.MergeMap(r.GetLabels(), map[string]string{
-			resourceLabelKey("canary-id"): ctx.Canary.GetPersistedID(),
-			resourceLabelKey("check-id"):  ctx.Canary.GetCheckID(check.GetName()),
-		}))
+		newLabels := collections.MergeMap(r.GetLabels(), map[string]string{
+			resourceLabelKey("canary-id"): canaryID,
+			resourceLabelKey("check-id"):  checkID,
+		})
+		r.SetLabels(newLabels)
 		check.Resources[i] = r
 	}
 
@@ -426,14 +450,15 @@ func (c *KubernetesResourceChecker) templateResources(ctx *context.Context, chec
 		}
 
 		if r.GetNamespace() != namespace || r.GetKind() != kind {
-			return fmt.Errorf("templating the namespace/kind of a static resource is not allowed")
+			return fmt.Errorf("templating the namespace or group/version/kind of a resource is not allowed")
 		}
 
-		r.SetLabels(collections.MergeMap(r.GetLabels(), map[string]string{
-			resourceLabelKey("canary-id"): ctx.Canary.GetPersistedID(),
-			resourceLabelKey("check-id"):  ctx.Canary.GetCheckID(check.GetName()),
+		newLabels := collections.MergeMap(r.GetLabels(), map[string]string{
+			resourceLabelKey("canary-id"): canaryID,
+			resourceLabelKey("check-id"):  checkID,
 			resourceLabelKey("is-static"): "true",
-		}))
+		})
+		r.SetLabels(newLabels)
 		check.StaticResources[i] = r
 	}
 

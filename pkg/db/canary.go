@@ -7,7 +7,9 @@ import (
 
 	"time"
 
+	apiContext "github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/utils"
@@ -208,9 +210,14 @@ func RemoveTransformedChecks(ctx context.Context, ids []string) error {
 		Error
 }
 
-func deleteStaticKubernetesResources(ctx context.Context, id string) error {
-	var canary models.Canary
+func deleteAllKubernetesResourcesOfCanary(ctx context.Context, id string) error {
+	var canary pkg.Canary
 	if err := ctx.DB().Where("id = ?", id).First(&canary).Error; err != nil {
+		return err
+	}
+
+	canaryV1, err := canary.ToV1()
+	if err != nil {
 		return err
 	}
 
@@ -220,11 +227,9 @@ func deleteStaticKubernetesResources(ctx context.Context, id string) error {
 	}
 
 	for _, kr := range spec.KubernetesResource {
-		for _, sr := range kr.StaticResources {
-			ctx.Infof("Deleting static resource (kind=%s, namespace=%s, name=%s)", sr.GetKind(), sr.GetNamespace(), sr.GetName())
-			if err := ctx.Kommons().DeleteUnstructured(ctx.GetNamespace(), &sr); err != nil {
-				logger.Errorf("error deleting static resource (kind=%s, namespace=%s, name=%s): %v", sr.GetKind(), ctx.GetNamespace(), sr.GetName(), err)
-			}
+		scrapeCtx := apiContext.New(ctx, *canaryV1)
+		if err := checks.DeleteResources(scrapeCtx, kr, true); err != nil {
+			logger.Errorf("error clearing resource: %v", err)
 		}
 	}
 
@@ -243,7 +248,7 @@ func DeleteCanary(ctx context.Context, id string) error {
 	}
 	metrics.UnregisterGauge(ctx, checkIDs)
 
-	if err := deleteStaticKubernetesResources(ctx, id); err != nil {
+	if err := deleteAllKubernetesResourcesOfCanary(ctx, id); err != nil {
 		return fmt.Errorf("failed to delete static kubernetes resources: %w", err)
 	}
 
