@@ -20,7 +20,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.4
 	github.com/flanksource/commons v1.22.1
-	github.com/flanksource/duty v1.0.427
+	github.com/flanksource/duty v1.0.433
 	github.com/flanksource/gomplate/v3 v3.24.7
 	github.com/flanksource/is-healthy v1.0.4
 	github.com/flanksource/kommons v0.31.4
@@ -80,7 +80,6 @@ require (
 	gorm.io/plugin/prometheus v0.1.0
 	k8s.io/api v0.28.8
 	k8s.io/apimachinery v0.28.8
-	k8s.io/cli-runtime v0.28.2
 	k8s.io/client-go v0.28.8
 	sigs.k8s.io/controller-runtime v0.16.3
 	sigs.k8s.io/yaml v1.4.0
@@ -295,6 +294,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/postgres v1.5.4 // indirect
 	k8s.io/apiextensions-apiserver v0.28.3 // indirect
+	k8s.io/cli-runtime v0.28.2 // indirect
 	k8s.io/component-base v0.28.3 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231206194836-bf4651e18aa8 // indirect

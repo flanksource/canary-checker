@@ -123,7 +123,7 @@ type Property struct {
 	Color    string `json:"color,omitempty"`
 	// e.g. milliseconds, bytes, millicores, epoch etc.
 	Unit           string       `json:"unit,omitempty"`
-	Value          int64        `json:"value,omitempty"`
+	Value          *int64       `json:"value,omitempty"`
 	Max            *int64       `json:"max,omitempty"`
 	Min            *int64       `json:"min,omitempty"`
 	Status         string       `json:"status,omitempty"`
