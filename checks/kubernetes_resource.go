@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/flanksource/gomplate/v3"
+	"github.com/flanksource/is-healthy/pkg/health"
+	"github.com/flanksource/is-healthy/pkg/lua"
 	"github.com/samber/lo"
 	"github.com/sethvargo/go-retry"
 	"golang.org/x/sync/errgroup"
@@ -194,20 +196,19 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx *context.Context, check v1.K
 	retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
 		ctx = _ctx.(*context.Context)
 		attempts++
-		ctx.Logger.V(4).Infof("waiting for %d resources to be ready. (attempts: %d)", check.TotalResources(), attempts)
 
-		var templateVar = map[string]any{}
-		if response, err := kClient.FetchResources(ctx, append(check.StaticResources, check.Resources...)...); err != nil {
+		ctx.Logger.V(4).Infof("waiting for %d resources to be in the desired state. (attempts: %d)", check.TotalResources(), attempts)
+
+		resourceObjs, err := kClient.FetchResources(ctx, append(check.StaticResources, check.Resources...)...)
+		if err != nil {
 			return fmt.Errorf("wait for evaluation. fetching resources: %w", err)
-		} else if len(response) != check.TotalResources() {
+		} else if len(resourceObjs) != check.TotalResources() {
 			var got []string
-			for _, r := range response {
+			for _, r := range resourceObjs {
 				got = append(got, fmt.Sprintf("%s/%s/%s", r.GetKind(), r.GetNamespace(), r.GetName()))
 			}
 
-			return fmt.Errorf("unxpected error. expected %d resources, got %d (%s)", check.TotalResources(), len(response), strings.Join(got, ","))
-		} else {
-			templateVar["resources"] = response
+			return fmt.Errorf("unxpected error. expected %d resources, got %d (%s)", check.TotalResources(), len(resourceObjs), strings.Join(got, ","))
 		}
 
 		waitForExpr := check.WaitFor.Expr
@@ -215,12 +216,20 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx *context.Context, check v1.K
 			waitForExpr = waitForExprDefault
 		}
 
+		var templateVar = map[string]any{
+			"resources": resourceObjs,
+		}
 		if response, err := gomplate.RunTemplate(templateVar, gomplate.Template{Expression: waitForExpr}); err != nil {
 			return fmt.Errorf("wait for expression evaluation: %w", err)
 		} else if parsed, err := strconv.ParseBool(response); err != nil {
 			return fmt.Errorf("wait for expression (%q) didn't evaluate to a boolean", check.WaitFor.Expr)
 		} else if !parsed {
-			return retry.RetryableError(fmt.Errorf("not all resources are ready"))
+			for _, r := range resourceObjs {
+				rh, _ := health.GetResourceHealth(&r, lua.ResourceHealthOverrides{})
+				ctx.Logger.V(4).Infof("health for (namespace:%s gvk:%v) = %+v", r.GetNamespace(), r.GetObjectKind().GroupVersionKind(), rh)
+			}
+
+			return retry.RetryableError(fmt.Errorf("not all resources are in their desired state"))
 		}
 
 		return nil
@@ -325,7 +334,14 @@ func DeleteResources(ctx *context.Context, check v1.KubernetesResourceCheck, del
 			}
 
 			switch resource.GetKind() {
-			case "Namespace": // namespace cannot be deleted with `.DeleteCollection()`
+			case "Namespace", "Service":
+				// NOTE: namespace cannot be deleted with `.DeleteCollection()`
+				//
+				// Even though Service can be deleted with `.DeleteCollection()`
+				// it failed on the CI. It's probably due to an older kubernetes
+				// version we're using on the CI (v1.20.7).
+				// Delete it by name for now while we wait upgrade the kubernetes version
+				// on our CI.
 				if err := rc.Delete(ctx, resource.GetName(), deleteOpt); err != nil {
 					var statusErr *apiErrors.StatusError
 					if errors.As(err, &statusErr) {

@@ -24,7 +24,6 @@ spec:
               - name: hello-world
                 image: hello-world
       waitFor:
-        expr: 'dyn(resources).all(r, k8s.getHealth(r).status == "Healthy")'
         interval: "1s"
         timeout: "20s"
       checkRetries:

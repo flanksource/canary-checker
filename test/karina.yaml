@@ -12,7 +12,7 @@ ingressCA:
   privateKey: ../.certs/ingress-ca.key
   password: foobar
 kubernetes:
-  version: v1.29.2
+  version: v1.20.7
   kubeletExtraArgs:
     node-labels: "ingress-ready=true"
     authorization-mode: "AlwaysAllow"
