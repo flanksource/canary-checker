@@ -67,6 +67,10 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 		}
 	}
 
+	if err := c.templateResources(&check); err != nil {
+		return results.Failf("templating error: %v", err)
+	}
+
 	for i := range check.StaticResources {
 		resource := check.StaticResources[i]
 
@@ -95,7 +99,6 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 
 	for i := range check.Resources {
 		resource := check.Resources[i]
-
 		resource.SetAnnotations(map[string]string{annotationkey: ctx.Canary.ID()})
 		if err := ctx.Kommons().ApplyUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
 			return results.Failf("failed to apply resource (%s/%s/%s): %v", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
@@ -373,4 +376,43 @@ func deleteResources(ctx *context.Context, waitForDelete bool, resources ...unst
 			return ctx.Err()
 		}
 	}
+}
+
+func (c *KubernetesResourceChecker) templateResources(check *v1.KubernetesResourceCheck) error {
+	// TODO: Find a better way to delete the resources
+	// because the templating can generate a random resource name.
+	// If the program crashes in the midst of the check, then we do not have
+	// a pointer back to the generated resources to clear them.
+
+	templater := gomplate.StructTemplater{
+		ValueFunctions: true,
+		DelimSets: []gomplate.Delims{
+			{Left: "{{", Right: "}}"},
+			{Left: "$(", Right: ")"},
+		},
+	}
+
+	for i, r := range check.Resources {
+		if err := templater.Walk(&r); err != nil {
+			return fmt.Errorf("error templating resource: %w", err)
+		}
+		check.Resources[i] = r
+	}
+
+	// For the reasons mentioned above, we do not allow changing the
+	// name, namespace & kind of static resources.
+	for i, r := range check.StaticResources {
+		name, namespace, kind := r.GetName(), r.GetNamespace(), r.GetKind()
+		if err := templater.Walk(&r); err != nil {
+			return fmt.Errorf("error templating resource: %w", err)
+		}
+
+		if r.GetName() != name || r.GetNamespace() != namespace || r.GetKind() != kind {
+			return fmt.Errorf("templating the name/namespace/kind of a static resource is not allowed")
+		}
+
+		check.StaticResources[i] = r
+	}
+
+	return nil
 }
