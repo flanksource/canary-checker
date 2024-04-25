@@ -200,7 +200,7 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx *context.Context, check v1.K
 	retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
 		ctx = _ctx.(*context.Context)
 		attempts++
-		ctx.Logger.V(5).Infof("waiting for %d resources to be ready. (attempts: %d)", check.TotalResources(), attempts)
+		ctx.Logger.V(4).Infof("waiting for %d resources to be ready. (attempts: %d)", check.TotalResources(), attempts)
 
 		var templateVar = map[string]any{}
 		if response, err := kClient.FetchResources(ctx, append(check.StaticResources, check.Resources...)...); err != nil {
@@ -344,7 +344,7 @@ func deleteResources(ctx *context.Context, waitForDelete bool, resources ...unst
 		select {
 		case <-ticker.C:
 			if len(resources) == 0 {
-				ctx.Logger.V(5).Infof("all the resources have been deleted")
+				ctx.Logger.V(4).Infof("all the resources have been deleted")
 				return nil
 			}
 

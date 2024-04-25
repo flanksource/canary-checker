@@ -13,6 +13,7 @@ spec:
       namespace: default
       description: "deploy httpbin & check that it's accessible via ingress"
       waitFor: 
+        expr: 'dyn(resources).all(r, k8s.isReady(r))'
         interval: 2s
         timeout: 5m
       staticResources:
