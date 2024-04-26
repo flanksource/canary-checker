@@ -35,7 +35,7 @@ const (
 
 	resourceWaitTimeoutDefault  = time.Minute * 10
 	resourceWaitIntervalDefault = time.Second * 5
-	waitForExprDefault          = `dyn(resources).all(r, k8s.isHealthy(r))`
+	waitForExprDefault          = `dyn(resources).all(r, k8s.isReady(r))`
 )
 
 func resourceLabelKey(key string) string {
@@ -330,14 +330,14 @@ func DeleteResources(ctx *context.Context, check v1.KubernetesResourceCheck, del
 
 			deleteOpt := metav1.DeleteOptions{
 				GracePeriodSeconds: lo.ToPtr(int64(0)),
-				PropagationPolicy:  lo.ToPtr(metav1.DeletePropagationOrphan),
+				PropagationPolicy:  lo.ToPtr(lo.Ternary(check.WaitFor.Delete, metav1.DeletePropagationForeground, metav1.DeletePropagationBackground)),
 			}
 
 			switch resource.GetKind() {
 			case "Namespace", "Service":
 				// NOTE: namespace cannot be deleted with `.DeleteCollection()`
 				//
-				// Even though Service can be deleted with `.DeleteCollection()`
+				// FIXME: Even though Service can be deleted with `.DeleteCollection()`
 				// it failed on the CI. It's probably due to an older kubernetes
 				// version we're using on the CI (v1.20.7).
 				// Delete it by name for now while we wait upgrade the kubernetes version
