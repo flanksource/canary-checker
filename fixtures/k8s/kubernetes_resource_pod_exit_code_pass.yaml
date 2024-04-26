@@ -16,7 +16,7 @@ spec:
         - apiVersion: v1
           kind: Pod
           metadata:
-            name: hello-world
+            name: "hello-world-{{strings.ToLower (random.Alpha 10)}}"
             namespace: default
           spec:
             restartPolicy: Never
@@ -24,7 +24,7 @@ spec:
               - name: hello-world
                 image: hello-world
       waitFor:
-        expr: 'dyn(resources).all(r, k8s.isHealthy(r))'
+        expr: "dyn(resources).all(r, k8s.isHealthy(r))"
         interval: "1s"
         timeout: "20s"
       checkRetries:
@@ -37,7 +37,7 @@ spec:
               namespaceSelector:
                 name: default
               resource:
-                name: hello-world
+                name: "{{(index .resources 0).Object.metadata.name}}"
               test:
                 expr: >
                   size(results) == 1 &&
