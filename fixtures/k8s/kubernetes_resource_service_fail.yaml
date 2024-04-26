@@ -12,6 +12,9 @@ spec:
     - name: invalid service configuration
       namespace: default
       description: "deploy httpbin & check that it's accessible via service"
+      waitFor:
+        interval: 5s
+        timeout: 30s
       resources:
         - apiVersion: v1
           kind: Pod

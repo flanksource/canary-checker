@@ -12,6 +12,10 @@ spec:
     - name: service accessibility test
       namespace: default
       description: "deploy httpbin & check that it's accessible via its service"
+      waitFor: 
+        expr: 'dyn(resources).all(r, k8s.isReady(r))'
+        interval: 2s
+        timeout: 2m
       resources:
         - apiVersion: v1
           kind: Pod
@@ -44,3 +48,4 @@ spec:
       checkRetries:
         delay: 2s
         interval: 3s
+        timeout: 2m
