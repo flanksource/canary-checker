@@ -208,7 +208,7 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx *context.Context, check v1.K
 				got = append(got, fmt.Sprintf("%s/%s/%s", r.GetKind(), r.GetNamespace(), r.GetName()))
 			}
 
-			return fmt.Errorf("unxpected error. expected %d resources, got %d (%s)", check.TotalResources(), len(resourceObjs), strings.Join(got, ","))
+			return fmt.Errorf("unexpected error. expected %d resources, got %d (%s)", check.TotalResources(), len(resourceObjs), strings.Join(got, ","))
 		}
 
 		waitForExpr := check.WaitFor.Expr
