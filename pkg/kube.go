@@ -32,11 +32,10 @@ import (
 
 	"github.com/flanksource/commons/files"
 	clogger "github.com/flanksource/commons/logger"
-	"github.com/flanksource/is-healthy/pkg/health"
-	"github.com/flanksource/is-healthy/pkg/lua"
 	"github.com/flanksource/kommons"
 	"github.com/henvic/httpretty"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"gopkg.in/flanksource/yaml.v3"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -166,10 +165,10 @@ func (c *kubeClient) FetchResources(ctx context.Context, resources ...unstructur
 	}
 
 	eg, ctx := errgroup.WithContext(ctx)
-	var items []unstructured.Unstructured
+	var items = make(chan unstructured.Unstructured, len(resources))
 	for i := range resources {
 		resource := resources[i]
-		client, err := c.GetClientByKind(resource.GetKind())
+		client, err := c.GetClientByGroupVersionKind(resource.GroupVersionKind().Group, resource.GroupVersionKind().Version, resource.GetKind())
 		if err != nil {
 			return nil, err
 		}
@@ -180,40 +179,20 @@ func (c *kubeClient) FetchResources(ctx context.Context, resources ...unstructur
 				return err
 			}
 
-			items = append(items, *item)
+			items <- *item
 			return nil
 		})
 	}
 
-	return items, eg.Wait()
-}
-
-func (c *kubeClient) WaitForResource(ctx context.Context, kind, namespace, name string) (*health.HealthStatus, error) {
-	client, err := c.GetClientByKind(kind)
-	if err != nil {
+	if err := eg.Wait(); err != nil {
 		return nil, err
 	}
 
-	for {
-		item, err := client.Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
-		if err != nil {
-			return nil, fmt.Errorf("error getting item (kind=%s, namespace=%s, name=%s): %w", kind, namespace, name, err)
-		}
-
-		status, err := health.GetResourceHealth(item, lua.ResourceHealthOverrides{})
-		if err != nil {
-			return nil, fmt.Errorf("error getting resource health: %w", err)
-		}
-
-		if status.Status == health.HealthStatusHealthy {
-			return status, nil
-		}
-
-		time.Sleep(1 * time.Second)
-	}
+	output, _, _, _ := lo.Buffer(items, len(items)) //nolint:dogsled
+	return output, nil
 }
 
-func (c *kubeClient) GetClientByKind(kind string) (dynamic.NamespaceableResourceInterface, error) {
+func (c *kubeClient) GetClientByGroupVersionKind(group, version, kind string) (dynamic.NamespaceableResourceInterface, error) {
 	dynamicClient, err := c.GetDynamicClient()
 	if err != nil {
 		return nil, err
@@ -222,6 +201,8 @@ func (c *kubeClient) GetClientByKind(kind string) (dynamic.NamespaceableResource
 	rm, _ := c.GetRestMapper()
 	gvk, err := rm.KindFor(schema.GroupVersionResource{
 		Resource: kind,
+		Group:    group,
+		Version:  version,
 	})
 	if err != nil {
 		return nil, err
