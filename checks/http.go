@@ -124,7 +124,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	//nolint:staticcheck
 	if check.Endpoint != "" && check.URL != "" {
-		return results.Failf("cannot specify both endpoint and url")
+		return results.Invalidf("cannot specify both endpoint and url")
 	}
 
 	//nolint:staticcheck
@@ -134,11 +134,17 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	connection, err := ctx.GetConnection(check.Connection)
 	if err != nil {
-		return results.Failf("error getting connection  %v", err)
+		return results.Errorf("error getting connection  %v", err)
 	}
 
 	if connection.URL == "" {
-		return results.Failf("no url or connection specified")
+		return results.Invalidf("no url or connection specified")
+	}
+
+	if parsed, err := url.Parse(connection.URL); err != nil {
+		return results.Invalidf("failed to parse url: %v", err)
+	} else if parsed.Scheme == "" {
+		return results.Invalidf("missing scheme in url")
 	}
 
 	if ntlm, ok := connection.Properties["ntlm"]; ok {
@@ -147,14 +153,10 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		check.NTLMv2 = ntlm == "true"
 	}
 
-	if _, err := url.Parse(connection.URL); err != nil {
-		return results.Failf("failed to parse url: %v", err)
-	}
-
 	templateEnv := map[string]any{}
 	for _, env := range check.EnvVars {
 		if val, err := ctx.GetEnvValueFromCache(env); err != nil {
-			return results.Failf("failed to get env value: %v", err)
+			return results.Errorf("failed to get env value: %v", err)
 		} else {
 			templateEnv[env.Name] = val
 		}
@@ -162,14 +164,14 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	check.URL, err = template(ctx.WithCheck(check).WithEnvValues(templateEnv), v1.Template{Template: check.URL})
 	if err != nil {
-		return results.Failf("failed to template request url: %v", err)
+		return results.Errorf("failed to template request url: %v", err)
 	}
 
 	body := check.Body
 	if check.TemplateBody {
 		body, err = template(ctx.WithCheck(check).WithEnvValues(templateEnv), v1.Template{Template: body})
 		if err != nil {
-			return results.Failf("failed to template request body: %v", err)
+			return results.Errorf("failed to template request body: %v", err)
 		}
 	}
 
@@ -229,7 +231,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		if err := json.Unmarshal([]byte(responseBody), &jsonContent); err == nil {
 			data["json"] = jsonContent
 		} else if check.Test.IsEmpty() {
-			return results.Failf("invalid json response: %v", err)
+			return results.Errorf("invalid json response: %v", err)
 		} else {
 			ctx.Tracef("ignoring invalid json response %v", err)
 		}
