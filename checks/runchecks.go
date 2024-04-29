@@ -274,7 +274,7 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 		if err != nil {
 			r.ErrorMessage(err)
 		} else if parsed, err := strconv.ParseBool(message); err != nil {
-			r.Failf("test expression did not return a boolean value. got %s", message)
+			r.Invalidf("test expression did not return a boolean value. got %s", message)
 		} else if !parsed {
 			r.Failf("")
 		}

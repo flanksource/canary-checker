@@ -39,7 +39,7 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 	results = append(results, result)
 
 	if err := check.AWSConnection.Populate(ctx); err != nil {
-		return results.Failf("failed to populate aws connection: %v", err)
+		return results.Errorf("failed to populate aws connection: %v", err)
 	}
 
 	cfg, err := awsUtil.NewSession(ctx.Context, check.AWSConnection)

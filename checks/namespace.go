@@ -120,7 +120,7 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 	logger.Debugf("Running namespace check %s", check.Name)
 	five := int64(5)
 	if _, err := c.k8s.CoreV1().Nodes().List(ctx, metav1.ListOptions{TimeoutSeconds: &five}); err != nil {
-		return results.Failf("cannot connect to API server: %v", err)
+		return results.Errorf("cannot connect to API server: %v", err)
 	}
 
 	namespaceName := c.ng.NamespaceName(check.NamespaceNamePrefix)
@@ -134,7 +134,7 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 		},
 	}
 	if _, err := namespaces.Create(ctx, ns, metav1.CreateOptions{}); err != nil {
-		return results.Failf("unable to create namespace: %v", err)
+		return results.Errorf("unable to create namespace: %v", err)
 	}
 	defer func() {
 		c.Cleanup(ns) // nolint: errcheck
@@ -142,20 +142,20 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 
 	pod, err := c.newPod(check, ns)
 	if err != nil {
-		return results.Failf("invalid pod spec: %v", err)
+		return results.Errorf("invalid pod spec: %v", err)
 	}
 
 	pods := c.k8s.CoreV1().Pods(ns.Name)
 
 	if _, err := pods.Create(ctx, pod, metav1.CreateOptions{}); err != nil {
-		return results.Failf("unable to create pod: %v", err)
+		return results.Errorf("unable to create pod: %v", err)
 	}
 	pod, _ = c.WaitForPod(ns.Name, pod.Name, time.Millisecond*time.Duration(check.ScheduleTimeout), v1.PodRunning)
 	created := pod.GetCreationTimestamp()
 
 	conditions, err := c.getConditionTimes(ns, pod)
 	if err != nil {
-		return results.Failf("could not list conditions: %v", err)
+		return results.Errorf("could not list conditions: %v", err)
 	}
 
 	scheduled := diff(conditions, v1.PodInitialized, v1.PodScheduled)
@@ -166,7 +166,7 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 	logger.Tracef("%v", conditions)
 
 	if err := c.createServiceAndIngress(check, ns, pod); err != nil {
-		return results.Failf("failed to create ingress and service: %v", err)
+		return results.Errorf("failed to create ingress and service: %v", err)
 	}
 
 	deadline := time.Now().Add(time.Duration(check.Deadline) * time.Millisecond)
@@ -176,7 +176,7 @@ func (c *NamespaceChecker) Check(ctx *context.Context, extConfig external.Check)
 	deleteOk := true
 	deletion := NewTimer()
 	if err := pods.Delete(c.ctx, pod.Name, metav1.DeleteOptions{}); err != nil {
-		return results.Failf("failed to delete pod: %v", err)
+		return results.Errorf("failed to delete pod: %v", err)
 	}
 	result.Pass = ingressResult.Pass && deleteOk
 	result.Message = ingressResult.Message

@@ -40,7 +40,7 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 		check.AWSConnection = &connection.AWSConnection{}
 	} else {
 		if err := check.AWSConnection.Populate(ctx); err != nil {
-			return results.Failf("failed to populate aws connection: %v", err)
+			return results.Errorf("failed to populate aws connection: %v", err)
 		}
 	}
 

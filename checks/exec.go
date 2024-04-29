@@ -141,7 +141,7 @@ func execPowershell(ctx *context.Context, check v1.ExecCheck, envParams *execEnv
 
 	ps, err := exec.LookPath("powershell.exe")
 	if err != nil {
-		return results.Failf("powershell not found")
+		return results.Errorf("powershell not found")
 	}
 
 	args := []string{check.Script}

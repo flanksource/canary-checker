@@ -30,7 +30,7 @@ func (c *CatalogChecker) Check(ctx *canaryContext.Context, check v1.CatalogCheck
 
 	items, err := query.FindConfigsByResourceSelector(ctx.Context, check.Selector...)
 	if err != nil {
-		return results.Failf("failed to fetch catalogs: %v", err)
+		return results.Errorf("failed to fetch catalogs: %v", err)
 	}
 
 	var configItems []map[string]any

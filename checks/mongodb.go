@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/api/external"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -29,16 +28,14 @@ func (c *MongoDBChecker) Run(ctx *context.Context) pkg.Results {
 	return results
 }
 
-func (c *MongoDBChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
-	check := extConfig.(v1.MongoDBCheck)
+func (c *MongoDBChecker) Check(ctx *context.Context, check v1.MongoDBCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	var err error
 
 	connection, err := ctx.GetConnection(check.Connection)
 	if err != nil {
-		return results.Failf("error getting connection: %v", err)
+		return results.Errorf("error getting connection: %v", err)
 	}
 
 	opts := options.Client().
@@ -57,7 +54,7 @@ func (c *MongoDBChecker) Check(ctx *context.Context, extConfig external.Check) p
 
 	err = client.Ping(_ctx, readpref.Primary())
 	if err != nil {
-		return results.Error(err)
+		return results.Failf("failed to ping: %v", err)
 	}
 
 	return results

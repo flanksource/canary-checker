@@ -32,7 +32,7 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	connection, err := ctx.HydrateConnectionByURL(check.AWSConnection.ConnectionName)
 	if err != nil {
-		return results.Failf("failed to populate AWS connection: %v", err)
+		return results.Errorf("failed to populate AWS connection: %v", err)
 	} else if connection == nil {
 		connection = &models.Connection{Type: models.ConnectionTypeS3}
 		if check.S3Connection.Bucket == "" {
@@ -41,7 +41,7 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 		connection, err = connection.Merge(ctx, check.S3Connection)
 		if err != nil {
-			return results.Failf("failed to populate AWS connection: %v", err)
+			return results.Errorf("failed to populate AWS connection: %v", err)
 		}
 	}
 

@@ -63,49 +63,49 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 	results = append(results, result)
 
 	if err := c.validate(ctx, check); err != nil {
-		return results.Failf("validation: %v", err)
+		return results.Invalidf("validation: %v", err)
 	}
 
 	if check.Kubeconfig != nil {
 		ctx, err = c.applyKubeconfig(ctx, *check.Kubeconfig)
 		if err != nil {
-			return results.Failf("failed to apply kube config: %v", err)
+			return results.Errorf("failed to apply kube config: %v", err)
 		}
 	}
 
 	if err := templateKubernetesResourceCheck(ctx.Canary.GetPersistedID(), ctx.Canary.GetCheckID(check.GetName()), &check); err != nil {
-		return results.Failf("templating error: %v", err)
+		return results.Errorf("templating error: %v", err)
 	}
 
 	for i := range check.StaticResources {
 		resource := check.StaticResources[i]
 		if err := ctx.Kommons().ApplyUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
-			return results.Failf("failed to apply static resource %s: %v", resource.GetName(), err)
+			return results.Errorf("failed to apply static resource %s: %v", resource.GetName(), err)
 		}
 	}
 
 	defer func() {
 		if err := DeleteResources(ctx, check, false); err != nil {
-			results.Failf(err.Error())
+			results.Errorf(err.Error())
 		}
 	}()
 
 	if check.ClearResources {
 		if err := DeleteResources(ctx, check, false); err != nil {
-			results.Failf(err.Error())
+			results.Errorf(err.Error())
 		}
 	}
 
 	for i := range check.Resources {
 		resource := check.Resources[i]
 		if err := ctx.Kommons().ApplyUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
-			return results.Failf("failed to apply resource (%s/%s/%s): %v", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
+			return results.Errorf("failed to apply resource (%s/%s/%s): %v", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 		}
 	}
 
 	if !check.WaitFor.Disable {
 		if err := c.evalWaitFor(ctx, check); err != nil {
-			return results.Failf("%v", err)
+			return results.Errorf("%v", err)
 		}
 	}
 
@@ -128,7 +128,7 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 			},
 		}
 		if err := templater.Walk(&virtualCanary); err != nil {
-			return results.Failf("error templating checks: %v", err)
+			return results.Errorf("error templating checks: %v", err)
 		}
 
 		if wt, _ := check.CheckRetries.GetDelay(); wt > 0 {
@@ -171,7 +171,7 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 			return nil
 		})
 		if retryErr != nil {
-			return results.Failf(retryErr.Error())
+			return results.Errorf(retryErr.Error())
 		}
 	}
 

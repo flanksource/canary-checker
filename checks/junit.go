@@ -144,7 +144,7 @@ func podExecf(ctx *context.Context, pod corev1.Pod, results pkg.Results, cmd str
 	_cmd := fmt.Sprintf(cmd, args...)
 	stdout, stderr, err := ctx.Kommons().ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", _cmd)
 	if stderr != "" || err != nil {
-		podFail(ctx, pod, results.Failf("error running %s: %v %v %v", _cmd, stdout, stderr, err))
+		podFail(ctx, pod, results.Errorf("error running %s: %v %v %v", _cmd, stdout, stderr, err))
 		return "", false
 	}
 	return strings.TrimSpace(stdout), true
@@ -191,7 +191,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	results = append(results, result)
 
 	if ctx.Kommons() == nil {
-		return results.Failf("Kubernetes is not initialized")
+		return results.Errorf("Kubernetes is not initialized")
 	}
 
 	k8s := ctx.Kubernetes()

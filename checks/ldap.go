@@ -40,11 +40,11 @@ func (c *LdapChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	connection, err := ctx.GetConnection(check.Connection)
 	if err != nil {
-		return results.Failf("failed to get connection: %v", err)
+		return results.Errorf("failed to get connection: %v", err)
 	}
 
 	if connection.URL == "" {
-		return results.Failf("Must specify a connection or URL")
+		return results.Invalidf("Must specify a connection or URL")
 	}
 
 	ld, err := ldap.DialURL(connection.URL, ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: check.SkipTLSVerify}))
@@ -63,7 +63,7 @@ func (c *LdapChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	}
 	res, err := ld.Search(req)
 	if err != nil {
-		return results.Failf("Failed to search host %v error: %v", connection.URL, err)
+		return results.Errorf("Failed to search host %v error: %v", connection.URL, err)
 	}
 
 	if len(res.Entries) == 0 {

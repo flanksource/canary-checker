@@ -22,7 +22,7 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	results = append(results, result)
 
 	if check.GCSConnection == nil {
-		return results.Errorf("missing GCS connection")
+		return results.Invalidf("missing GCS connection")
 	}
 
 	var bucket string
@@ -30,7 +30,7 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	connection, err := ctx.HydrateConnectionByURL(check.GCPConnection.ConnectionName)
 	if err != nil {
-		return results.Failf("failed to populate GCS connection: %v", err)
+		return results.Errorf("failed to populate GCS connection: %v", err)
 	} else if connection == nil {
 		connection = &models.Connection{Type: models.ConnectionTypeGCS}
 		if check.GCSConnection.Bucket == "" {
@@ -39,7 +39,7 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 		connection, err = connection.Merge(ctx, check.GCSConnection)
 		if err != nil {
-			return results.Failf("failed to populate GCS connection: %v", err)
+			return results.Errorf("failed to populate GCS connection: %v", err)
 		}
 	}
 

@@ -161,14 +161,14 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	five := int64(5)
 	nodes, err := c.k8s.CoreV1().Nodes().List(ctx, metav1.ListOptions{TimeoutSeconds: &five})
 	if err != nil {
-		return results.Failf("cannot connect to API server: %v", err)
+		return results.Errorf("cannot connect to API server: %v", err)
 	}
 	nextNode, newIndex := c.nextNode(nodes, c.latestNodeIndex)
 	c.latestNodeIndex = newIndex
 
 	pod, err := c.newPod(podCheck, nextNode)
 	if err != nil {
-		return results.Failf("invalid pod spec: %v", err)
+		return results.Errorf("invalid pod spec: %v", err)
 	}
 
 	if _, err := c.k8s.CoreV1().Pods(podCheck.Namespace).Create(ctx, pod, metav1.CreateOptions{}); err != nil {
@@ -177,13 +177,13 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 
 	pod, err = c.WaitForPod(podCheck.Namespace, pod.Name, time.Millisecond*time.Duration(podCheck.ScheduleTimeout), v1.PodRunning)
 	if err != nil {
-		return results.Failf("unable to fetch pod details: %v", err)
+		return results.Errorf("unable to fetch pod details: %v", err)
 	}
 	created := pod.GetCreationTimestamp()
 
 	conditions, err := c.getConditionTimes(podCheck, pod)
 	if err != nil {
-		return results.Failf("could not list conditions: %v", err)
+		return results.Errorf("could not list conditions: %v", err)
 	}
 
 	scheduled := diff(conditions, v1.PodInitialized, v1.PodScheduled)
@@ -193,7 +193,7 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	ctx.Debugf("%s created=%s, scheduled=%d, started=%d, running=%d wall=%s nodeName=%s", pod.Name, created, scheduled, started, running, startTimer, nextNode)
 
 	if err := c.createServiceAndIngress(ctx, podCheck, pod); err != nil {
-		return results.Failf("failed to create service or ingress: %v", err)
+		return results.Errorf("failed to create service or ingress: %v", err)
 	}
 
 	deadline := time.Now().Add(time.Duration(podCheck.Deadline) * time.Millisecond)

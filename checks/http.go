@@ -241,7 +241,11 @@ func (c *HTTPChecker) Check(ctx *context.Context, check v1.HTTPCheck) pkg.Result
 	}
 
 	if ok := response.IsOK(check.ResponseCodes...); !ok {
-		return results.Failf("response code invalid %d != %v", status, check.ResponseCodes)
+		if len(check.ResponseCodes) > 0 {
+			return results.Failf("response code invalid. %d != %v", status, check.ResponseCodes)
+		} else {
+			return results.Failf("response code invalid. %d is not 2xx", status)
+		}
 	}
 
 	if check.ThresholdMillis > 0 && check.ThresholdMillis < int(elapsed.Milliseconds()) {

@@ -34,7 +34,7 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 
 	//nolint:staticcheck
 	if check.Host != "" {
-		return results.Failf("host field is deprecated, use url field instead")
+		return results.Invalidf("host field is deprecated, use url field instead")
 	}
 
 	// Use global prometheus url if check's url is empty
@@ -44,11 +44,11 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 
 	connection, err := ctx.GetConnection(check.Connection)
 	if err != nil {
-		return results.Failf("error getting connection: %v", err)
+		return results.Errorf("error getting connection: %v", err)
 	}
 
 	if connection.URL == "" {
-		return results.Failf("Must specify a URL")
+		return results.Invalidf("Must specify a URL")
 	}
 
 	promClient, err := prometheus.NewPrometheusAPI(connection.URL)

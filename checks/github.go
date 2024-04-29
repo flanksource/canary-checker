@@ -38,13 +38,13 @@ func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 
 	var githubToken string
 	if connection, err := ctx.HydrateConnectionByURL(check.ConnectionName); err != nil {
-		return results.Failf("failed to find connection for github token %q: %v", check.ConnectionName, err)
+		return results.Errorf("failed to find connection for github token %q: %v", check.ConnectionName, err)
 	} else if connection != nil {
 		githubToken = connection.Password
 	} else {
 		githubToken, err = ctx.GetEnvValueFromCache(check.GithubToken)
 		if err != nil {
-			return results.Failf("error fetching github token from env cache: %v", err)
+			return results.Errorf("error fetching github token from env cache: %v", err)
 		}
 	}
 
@@ -56,13 +56,13 @@ func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	cmd.Env = append(cmd.Env, "GITHUB_TOKEN="+githubToken)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return results.Failf("error executing askgit command. output=%q: %v", output, err)
+		return results.Errorf("error executing askgit command. output=%q: %v", output, err)
 	}
 
 	var rowResults = make([]map[string]any, 0)
 	err = json.Unmarshal(output, &rowResults)
 	if err != nil {
-		return results.Failf("error parsing mergestat result: %v", err)
+		return results.Errorf("error parsing mergestat result: %v", err)
 	}
 
 	result.AddDetails(rowResults)

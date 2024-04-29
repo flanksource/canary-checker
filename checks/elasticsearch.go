@@ -35,7 +35,7 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 
 	connection, err := ctx.GetConnection(check.Connection)
 	if err != nil {
-		return results.Failf("error getting connection: %v", err)
+		return results.Errorf("error getting connection: %v", err)
 	}
 
 	cfg := elasticsearch.Config{

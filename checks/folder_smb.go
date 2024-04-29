@@ -23,7 +23,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	foundConn, err := check.SMBConnection.HydrateConnection(ctx)
 	if err != nil {
-		return results.Failf("failed to populate SMB connection: %v", err)
+		return results.Errorf("failed to populate SMB connection: %v", err)
 	}
 
 	auth := check.SMBConnection.Authentication

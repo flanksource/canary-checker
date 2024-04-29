@@ -147,7 +147,7 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 
 	connection, err := ctx.GetConnection(check.Connection)
 	if err != nil {
-		return results.Failf("error getting connection: %v", err)
+		return results.Errorf("error getting connection: %v", err)
 	}
 
 	query := check.GetQuery()
@@ -165,11 +165,10 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 	}
 
 	details, err := querySQL(checker.GetDriver(), connection.URL, query)
-	result.AddDetails(details)
-
 	if err != nil {
 		return results.Error(err)
 	}
+	result.AddDetails(details)
 
 	if details.Count < check.Result {
 		return results.Failf("Query returned %d rows, expected %d", details.Count, check.Result)

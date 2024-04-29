@@ -48,7 +48,7 @@ func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 
 	connection, err := ctx.GetConnection(check.Connection)
 	if err != nil {
-		return results.Failf("error getting connection: %v", err)
+		return results.Errorf("error getting connection: %v", err)
 	}
 
 	redisOpts = &redis.Options{
