@@ -242,9 +242,15 @@ func ProcessResults(ctx *context.Context, results []*pkg.CheckResult) []*pkg.Che
 }
 
 func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult {
+	// The check has to pass for the templates & test to be processed
+	if !r.Pass || r.Invalid {
+		return r
+	}
+
 	if r.Duration == 0 && r.GetDuration() > 0 {
 		r.Duration = r.GetDuration()
 	}
+
 	switch v := r.Check.(type) {
 	case v1.DisplayTemplate:
 		if !v.GetDisplayTemplate().IsEmpty() {
