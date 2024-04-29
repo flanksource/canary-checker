@@ -115,11 +115,14 @@ func (c *ExecChecker) prepareEnvironment(ctx *context.Context, check v1.ExecChec
 }
 
 func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
+	var results pkg.Results
+	results = append(results, pkg.Success(extConfig, ctx.Canary))
+
 	check := extConfig.(v1.ExecCheck)
 
 	env, err := c.prepareEnvironment(ctx, check)
 	if err != nil {
-		return pkg.New(check, ctx.Canary).AddDetails(ExecDetails{}).Invalidf(err.Error())
+		return results.Invalidf(err.Error())
 	}
 
 	switch runtime.GOOS {
@@ -132,9 +135,13 @@ func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 func execPowershell(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.Results {
 	result := pkg.Success(check, ctx.Canary).AddDetails(ExecDetails{ExitCode: -1})
+
+	var results pkg.Results
+	results = append(results, result)
+
 	ps, err := exec.LookPath("powershell.exe")
 	if err != nil {
-		result.Failf("powershell not found")
+		return results.Failf("powershell not found")
 	}
 
 	args := []string{check.Script}
@@ -150,10 +157,13 @@ func execPowershell(ctx *context.Context, check v1.ExecCheck, envParams *execEnv
 }
 
 func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.Results {
+	var results pkg.Results
+	results = append(results, pkg.Success(check, ctx.Canary))
+
 	result := pkg.Success(check, ctx.Canary).AddDetails(ExecDetails{ExitCode: -1})
 	fields := strings.Fields(check.Script)
 	if len(fields) == 0 {
-		return result.Invalidf("no script provided")
+		return results.Invalidf("no script provided")
 	}
 
 	cmd := exec.CommandContext(ctx, "bash", "-c", check.Script)
@@ -165,7 +175,7 @@ func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.
 	}
 
 	if err := setupConnection(ctx, check, cmd); err != nil {
-		return result.Invalidf("failed to setup connection: %v", err)
+		return results.Invalidf("failed to setup connection: %v", err)
 	}
 
 	return checkCmd(ctx, check, cmd, result)

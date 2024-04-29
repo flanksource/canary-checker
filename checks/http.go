@@ -13,7 +13,6 @@ import (
 	"github.com/flanksource/commons/http/middlewares"
 	"github.com/flanksource/duty/models"
 
-	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -115,10 +114,8 @@ func truncate(text string, max int) string {
 	return text[0:max]
 }
 
-func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
-	check := extConfig.(v1.HTTPCheck)
+func (c *HTTPChecker) Check(ctx *context.Context, check v1.HTTPCheck) pkg.Results {
 	var results pkg.Results
-	var err error
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
 

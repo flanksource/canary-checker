@@ -115,10 +115,10 @@ func (result *CheckResult) Failf(message string, args ...interface{}) *CheckResu
 	return result
 }
 
-func (result *CheckResult) Invalidf(message string, args ...interface{}) Results {
+func (result *CheckResult) Invalidf(message string, args ...interface{}) *CheckResult {
 	result = result.Failf(message, args...)
 	result.Invalid = true
-	return Results{result}
+	return result
 }
 
 func (result *CheckResult) Errorf(msg string, args ...any) *CheckResult {
