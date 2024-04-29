@@ -2,7 +2,6 @@ package checks
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -47,7 +46,7 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 
 	es, err := elasticsearch.NewClient(cfg)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	body := strings.NewReader(check.Query)
@@ -58,21 +57,19 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 	)
 
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	if res.IsError() {
 		var e map[string]any
 		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
-			return results.ErrorMessage(
-				fmt.Errorf("Error parsing the response body: %s", err),
-			)
+			return results.Errorf("error parsing the response body: %s", err)
 		} else {
-			return results.ErrorMessage(fmt.Errorf("Error from elasticsearch [%s]: %v, %v",
+			return results.Errorf("error from elasticsearch [%s]: %v, %v",
 				res.Status(),
 				e["error"].(map[string]any)["type"],
 				e["error"].(map[string]any)["reason"],
-			))
+			)
 		}
 	}
 
@@ -81,9 +78,7 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 	defer res.Body.Close()
 	var r map[string]any
 	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
-		return results.ErrorMessage(
-			fmt.Errorf("Error parsing the response body: %s", err),
-		)
+		return results.Errorf("Error parsing the response body: %s", err)
 	}
 
 	count := int(r["hits"].(map[string]any)["total"].(map[string]any)["value"].(float64))

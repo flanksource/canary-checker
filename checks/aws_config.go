@@ -46,7 +46,7 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 
 	cfg, err := awsUtil.NewSession(ctx.Context, *check.AWSConnection)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	client := configservice.NewFromConfig(*cfg)
@@ -56,7 +56,7 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 			Expression:                  &check.Query,
 		})
 		if err != nil {
-			return results.ErrorMessage(err)
+			return results.Error(err)
 		}
 		result.AddDetails(output.Results)
 	} else {
@@ -64,7 +64,7 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 			Expression: &check.Query,
 		})
 		if err != nil {
-			return results.ErrorMessage(err)
+			return results.Error(err)
 		}
 		result.AddDetails(output.Results)
 	}

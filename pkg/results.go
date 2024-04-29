@@ -123,20 +123,12 @@ func (result *CheckResult) Invalidf(message string, args ...interface{}) *CheckR
 
 func (result *CheckResult) Errorf(msg string, args ...any) *CheckResult {
 	result = result.Failf(msg, args...)
-	result.Invalid = true
+	// TODO: mark this is as error
 	return result
 }
 
 func (result *CheckResult) ErrorMessage(err error) *CheckResult {
-	if err == nil {
-		return result
-	}
-	if result.Error != "" {
-		result.Error += ", "
-	}
-	result.Pass = false
-	result.Error += err.Error()
-	return result
+	return result.Errorf(err.Error())
 }
 
 func (result *CheckResult) AddDetails(detail interface{}) *CheckResult {
@@ -183,7 +175,7 @@ func (r Results) Invalidf(msg string, args ...any) Results {
 	return r
 }
 
-func (r Results) ErrorMessage(err error) Results {
+func (r Results) Error(err error) Results {
 	r[0].ErrorMessage(err)
 	return r
 }

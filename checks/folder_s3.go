@@ -3,7 +3,6 @@
 package checks
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -25,7 +24,7 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	results = append(results, result)
 
 	if check.S3Connection == nil {
-		return results.ErrorMessage(errors.New("missing AWS connection"))
+		return results.Errorf("missing AWS connection")
 	}
 
 	var bucket string
@@ -48,12 +47,12 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	fs, err := artifacts.GetFSForConnection(ctx.Context, *connection)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	folders, err := genericFolderCheckWithoutPrecheck(fs, check.Path, check.Recursive, check.Filter)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 	result.AddDetails(folders)
 

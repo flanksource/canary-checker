@@ -150,7 +150,7 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	pods := c.k8s.CoreV1().Pods(podCheck.Namespace)
 
 	if skip, err := cleanupExistingPods(ctx, c.k8s, c.podCheckSelector(podCheck)); err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	} else if skip {
 		return nil
 	}
@@ -172,7 +172,7 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 	}
 
 	if _, err := c.k8s.CoreV1().Pods(podCheck.Namespace).Create(ctx, pod, metav1.CreateOptions{}); err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	pod, err = c.WaitForPod(podCheck.Namespace, pod.Name, time.Millisecond*time.Duration(podCheck.ScheduleTimeout), v1.PodRunning)

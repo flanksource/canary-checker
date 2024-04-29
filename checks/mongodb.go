@@ -51,13 +51,13 @@ func (c *MongoDBChecker) Check(ctx *context.Context, extConfig external.Check) p
 
 	client, err := mongo.Connect(_ctx, opts)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 	defer client.Disconnect(ctx) //nolint: errcheck
 
 	err = client.Ping(_ctx, readpref.Primary())
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	return results

@@ -157,7 +157,7 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 			Template: query,
 		})
 		if err != nil {
-			return results.ErrorMessage(err)
+			return results.Error(err)
 		}
 		if ctx.IsDebug() {
 			ctx.Infof("query: %s", query)
@@ -168,7 +168,7 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 	result.AddDetails(details)
 
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	if details.Count < check.Result {

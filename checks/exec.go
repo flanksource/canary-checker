@@ -122,7 +122,7 @@ func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	env, err := c.prepareEnvironment(ctx, check)
 	if err != nil {
-		return results.Invalidf(err.Error())
+		return results.Error(err)
 	}
 
 	switch runtime.GOOS {
@@ -175,7 +175,7 @@ func execBash(ctx *context.Context, check v1.ExecCheck, envParams *execEnv) pkg.
 	}
 
 	if err := setupConnection(ctx, check, cmd); err != nil {
-		return results.Invalidf("failed to setup connection: %v", err)
+		return results.Errorf("failed to setup connection: %v", err)
 	}
 
 	return checkCmd(ctx, check, cmd, result)

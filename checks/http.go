@@ -174,12 +174,12 @@ func (c *HTTPChecker) Check(ctx *context.Context, check v1.HTTPCheck) pkg.Result
 
 	request, err := c.generateHTTPRequest(ctx, check, connection)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	if body != "" {
 		if err := request.Body(body); err != nil {
-			return results.ErrorMessage(err)
+			return results.Error(err)
 		}
 	}
 
@@ -187,7 +187,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, check v1.HTTPCheck) pkg.Result
 
 	response, err := request.Do(check.GetMethod(), connection.URL)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	elapsed := time.Since(start)
@@ -219,7 +219,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, check v1.HTTPCheck) pkg.Result
 
 	responseBody, err := response.AsString()
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 	data["content"] = responseBody
 

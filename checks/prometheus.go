@@ -53,11 +53,11 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 
 	promClient, err := prometheus.NewPrometheusAPI(connection.URL)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 	modelValue, warning, err := promClient.Query(ctx.Context, check.Query, time.Now())
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 	if warning != nil {
 		ctx.Debugf("warnings when running the query: %v", warning)

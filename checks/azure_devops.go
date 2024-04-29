@@ -51,12 +51,12 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 	connection := azuredevops.NewPatConnection(fmt.Sprintf("https://dev.azure.com/%s", check.Organization), c.Password)
 	coreClient, err := core.NewClient(ctx, connection)
 	if err != nil {
-		return results.ErrorMessage(fmt.Errorf("failed to create core client: %w", err))
+		return results.Errorf("failed to create core client: %w", err)
 	}
 
 	project, err := coreClient.GetProject(ctx, core.GetProjectArgs{ProjectId: &check.Project})
 	if err != nil {
-		return results.ErrorMessage(fmt.Errorf("failed to get project (name=%s): %w", check.Project, err))
+		return results.Errorf("failed to get project (name=%s): %w", check.Project, err)
 	}
 	projectID := project.Id.String()
 
@@ -68,7 +68,7 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 	pipelineClient := pipelines.NewClient(ctx, connection)
 	allPipelines, err := pipelineClient.ListPipelines(ctx, pipelines.ListPipelinesArgs{Project: &projectID})
 	if err != nil {
-		return results.ErrorMessage(fmt.Errorf("failed to get pipeline (project=%s): %w", check.Project, err))
+		return results.Errorf("failed to get pipeline (project=%s): %w", check.Project, err)
 	}
 
 	for _, pipeline := range *allPipelines {
@@ -89,7 +89,7 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 		// https://learn.microsoft.com/en-us/rest/api/azure/devops/pipelines/runs/list?view=azure-devops-rest-7.1
 		runs, err := pipelineClient.ListRuns(ctx, pipelines.ListRunsArgs{PipelineId: pipeline.Id, Project: &projectID})
 		if err != nil {
-			return results.ErrorMessage(fmt.Errorf("failed to get runs (pipeline=%s): %w", check.Pipeline, err))
+			return results.Errorf("failed to get runs (pipeline=%s): %w", check.Pipeline, err)
 		}
 
 		latestRun := getLatestCompletedRun(*runs)
@@ -105,7 +105,7 @@ func (t *AzureDevopsChecker) check(ctx *context.Context, check v1.AzureDevopsChe
 		// because the ListRuns API doesn't return Resources.
 		latestRun, err = pipelineClient.GetRun(ctx, pipelines.GetRunArgs{Project: &projectID, PipelineId: pipeline.Id, RunId: (*runs)[0].Id})
 		if err != nil {
-			return results.ErrorMessage(fmt.Errorf("failed to get run (pipeline=%s): %w", check.Pipeline, err))
+			return results.Errorf("failed to get run (pipeline=%s): %w", check.Pipeline, err)
 		}
 
 		if !matchBranchNames(check.Branches, latestRun.Resources) {
