@@ -1,0 +1,36 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: namespace-creation 
+  namespace: default
+  labels:
+    "Expected-Fail": "false"
+spec:
+  schedule: "@every 5m"
+  kubernetesResource:
+    - name: "namespace creation"
+      namespace: "default"
+      description: "create a namespace and pod in it"
+      waitFor: 
+        timeout: 3m
+        delete: true
+      staticResources:
+        - apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: test
+      resources:
+        - apiVersion: v1
+          kind: Pod
+          metadata:
+            name: httpbin
+            namespace: test
+            labels:
+              app: httpbin
+          spec:
+            containers:
+              - name: httpbin
+                image: "kennethreitz/httpbin:latest"
+                ports:
+                  - containerPort: 80
