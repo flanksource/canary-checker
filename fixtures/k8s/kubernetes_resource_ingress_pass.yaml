@@ -17,15 +17,11 @@ spec:
         interval: 2s
         timeout: 5m
       staticResources:
-        - apiVersion: v1
-          kind: Namespace
-          metadata:
-            name: development
         - apiVersion: networking.k8s.io/v1
           kind: Ingress
           metadata:
             name: httpbin
-            namespace: development
+            namespace: default
           spec:
             rules:
               - host: "httpbin.127.0.0.1.nip.io"
@@ -43,7 +39,7 @@ spec:
           kind: Pod
           metadata:
             name: httpbin
-            namespace: development
+            namespace: default
             labels:
               app: httpbin
           spec:
@@ -56,7 +52,7 @@ spec:
           kind: Service
           metadata:
             name: httpbin
-            namespace: development
+            namespace: default
           spec:
             selector:
               app: httpbin
@@ -69,7 +65,7 @@ spec:
               url: "http://ingress-nginx.ingress-nginx.svc"
               headers:
                 - name: Host
-                  value: "{{(index ((index .staticResources 1).Object.spec.rules) 0).host}}"
+                  value: "{{(index ((index .staticResources 0).Object.spec.rules) 0).host}}"
       checkRetries:
         delay: 3s
         interval: 2s
