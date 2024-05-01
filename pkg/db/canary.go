@@ -374,7 +374,15 @@ func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, err
 	db := ctx.DB()
 	err := db.Clauses(
 		clause.OnConflict{
-			Columns:   []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}, {Name: "source"}},
+			Columns: []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}, {Name: "source"}},
+			TargetWhere: clause.Where{
+				Exprs: []clause.Expression{
+					clause.Or(
+						clause.Eq{Column: "deleted_at", Value: gorm.Expr("NULL")},
+						clause.Not(clause.Eq{Column: "agent_id", Value: uuid.Nil.String()}),
+					),
+				},
+			},
 			DoUpdates: clause.AssignmentColumns([]string{"labels", "spec"}),
 		},
 		clause.Returning{},
