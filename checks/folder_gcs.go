@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"errors"
 	"strings"
 
 	gcs "cloud.google.com/go/storage"
@@ -23,7 +22,7 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	results = append(results, result)
 
 	if check.GCSConnection == nil {
-		return results.ErrorMessage(errors.New("missing GCS connection"))
+		return results.Invalidf("missing GCS connection")
 	}
 
 	var bucket string
@@ -31,7 +30,7 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	connection, err := ctx.HydrateConnectionByURL(check.GCPConnection.ConnectionName)
 	if err != nil {
-		return results.Failf("failed to populate GCS connection: %v", err)
+		return results.Errorf("failed to populate GCS connection: %v", err)
 	} else if connection == nil {
 		connection = &models.Connection{Type: models.ConnectionTypeGCS}
 		if check.GCSConnection.Bucket == "" {
@@ -40,18 +39,18 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 		connection, err = connection.Merge(ctx, check.GCSConnection)
 		if err != nil {
-			return results.Failf("failed to populate GCS connection: %v", err)
+			return results.Errorf("failed to populate GCS connection: %v", err)
 		}
 	}
 
 	fs, err := artifacts.GetFSForConnection(ctx.Context, *connection)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	folders, err := genericFolderCheckWithoutPrecheck(fs, check.Path, check.Recursive, check.Filter)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 	result.AddDetails(folders)
 

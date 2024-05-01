@@ -60,13 +60,13 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	endpoint := check.Endpoint
 	ips, err := dns.Lookup("A", endpoint)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	for _, urlObj := range ips {
 		pingerStats, err := c.checkICMP(urlObj, check.PacketCount)
 		if err != nil {
-			return results.ErrorMessage(err)
+			return results.Error(err)
 		}
 		if pingerStats.PacketsSent == 0 {
 			return results.Failf("Failed to check icmp, no packets sent")

@@ -72,12 +72,12 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 	results = append(results, result)
 
 	if err := check.AWSConnection.Populate(ctx); err != nil {
-		return results.Failf("failed to populate aws connection: %v", err)
+		return results.Errorf("failed to populate aws connection: %v", err)
 	}
 
 	cfg, err := GetAWSConfig(ctx, check.AWSConnection)
 	if err != nil {
-		return results.Failf("Failed to get AWS config: %v", err)
+		return results.Errorf("failed to get AWS config: %v", err)
 	}
 
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
@@ -87,7 +87,7 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 	listTimer := NewTimer()
 	_, err = client.ListObjects(ctx, &s3.ListObjectsInput{Bucket: &check.BucketName})
 	if err != nil {
-		return results.Failf("Failed to list objects in bucket %s: %v", check.BucketName, err)
+		return results.Errorf("failed to list objects in bucket %s: %v", check.BucketName, err)
 	}
 	listHistogram.WithLabelValues(check.AWSConnection.Endpoint, check.BucketName).Observe(listTimer.Elapsed())
 
@@ -103,7 +103,7 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 		Body:   bytes.NewReader([]byte(data)),
 	})
 	if err != nil {
-		return results.Failf("Failed to put object %s in bucket %s: %v", check.ObjectPath, check.BucketName, err)
+		return results.Errorf("failed to put object %s in bucket %s: %v", check.ObjectPath, check.BucketName, err)
 	}
 	updateHistogram.WithLabelValues(check.AWSConnection.Endpoint, check.BucketName).Observe(updateTimer.Elapsed())
 
@@ -112,7 +112,7 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 		Key:    &check.ObjectPath,
 	})
 	if err != nil {
-		return results.Failf("Failed to get object %s in bucket %s: %v", check.ObjectPath, check.BucketName, err)
+		return results.Errorf("failed to get object %s in bucket %s: %v", check.ObjectPath, check.BucketName, err)
 	}
 
 	returnedData, _ := io.ReadAll(obj.Body)

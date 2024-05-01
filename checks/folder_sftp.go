@@ -18,27 +18,27 @@ func CheckSFTP(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	foundConn, err := check.SFTPConnection.HydrateConnection(ctx)
 	if err != nil {
-		return results.Failf("failed to populate SFTP connection: %v", err)
+		return results.Errorf("failed to populate SFTP connection: %v", err)
 	}
 
 	auth := check.SFTPConnection.Authentication
 	if !foundConn {
 		auth, err = ctx.GetAuthValues(check.SFTPConnection.Authentication)
 		if err != nil {
-			return results.ErrorMessage(err)
+			return results.Error(err)
 		}
 	}
 
 	client, err := sftp.SSHConnect(fmt.Sprintf("%s:%d", check.SFTPConnection.Host, check.SFTPConnection.GetPort()), auth.GetUsername(), auth.GetPassword())
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 	defer client.Close()
 
 	session := artifacts.Filesystem(client)
 	folders, err := genericFolderCheck(session, check.Path, check.Recursive, check.Filter)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 	result.AddDetails(folders)
 

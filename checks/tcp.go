@@ -39,7 +39,7 @@ func (t *TCPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 
 	addr, port, err := extractAddrAndPort(c.Endpoint)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	timeout := time.Millisecond * time.Duration(c.ThresholdMillis)

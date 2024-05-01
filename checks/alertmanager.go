@@ -36,12 +36,12 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 
 	connection, err := ctx.GetConnection(check.Connection)
 	if err != nil {
-		return results.Failf("error getting connection: %v", err)
+		return results.Errorf("error getting connection: %v", err)
 	}
 
 	parsedURL, err := url.Parse(connection.URL)
 	if err != nil {
-		return results.Failf("error parsing url: %v", err)
+		return results.Errorf("error parsing url: %v", err)
 	}
 	client := alertmanagerClient.NewHTTPClientWithConfig(nil, &alertmanagerClient.TransportConfig{
 		Host:     parsedURL.Host,
@@ -67,8 +67,7 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 		Filter:  filters,
 	})
 	if err != nil {
-		results.ErrorMessage(fmt.Errorf("Error fetching from alertmanager: %v", err))
-		return results
+		return results.Errorf("error fetching from alertmanager: %v", err)
 	}
 
 	type Alerts struct {

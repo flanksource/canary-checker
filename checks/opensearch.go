@@ -33,11 +33,11 @@ func (t *OpenSearchChecker) check(ctx *context.Context, check v1.OpenSearchCheck
 
 	connection, err := ctx.GetConnection(check.Connection)
 	if err != nil {
-		return results.Failf("error getting connection: %v", err)
+		return results.Errorf("error getting connection: %v", err)
 	}
 
 	if connection.URL == "" {
-		return results.Failf("Must specify a URL")
+		return results.Invalidf("Must specify a URL")
 	}
 
 	cfg := opensearch.Config{
@@ -48,7 +48,7 @@ func (t *OpenSearchChecker) check(ctx *context.Context, check v1.OpenSearchCheck
 
 	osClient, err := opensearch.NewClient(cfg)
 	if err != nil {
-		return results.Failf("error creating the openSearch client: %v", err)
+		return results.Errorf("error creating the openSearch client: %v", err)
 	}
 
 	body := strings.NewReader(check.Query)
@@ -58,7 +58,7 @@ func (t *OpenSearchChecker) check(ctx *context.Context, check v1.OpenSearchCheck
 		osClient.Search.WithBody(body),
 	)
 	if err != nil {
-		return results.Failf("error searching: %v", err)
+		return results.Errorf("error searching: %v", err)
 	}
 	defer res.Body.Close()
 
@@ -73,7 +73,7 @@ func (t *OpenSearchChecker) check(ctx *context.Context, check v1.OpenSearchCheck
 
 	var response OpenSearchResponse
 	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
-		return results.Failf("error parsing the response body: %s", err)
+		return results.Errorf("error parsing the response body: %s", err)
 	}
 
 	if response.Hits.Total.Value != check.Results {

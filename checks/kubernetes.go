@@ -42,13 +42,13 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 	if check.KubeConfig != nil {
 		val, err := ctx.GetEnvValueFromCache(*check.KubeConfig)
 		if err != nil {
-			return results.Failf("failed to get kubeconfig from env: %v", err)
+			return results.Errorf("failed to get kubeconfig from env: %v", err)
 		}
 
 		if strings.HasPrefix(val, "/") {
 			kClient, kube, err := pkg.NewKommonsClientWithConfigPath(val)
 			if err != nil {
-				return results.Failf("failed to initialize kubernetes client from the provided kubeconfig: %v", err)
+				return results.Errorf("failed to initialize kubernetes client from the provided kubeconfig: %v", err)
 			}
 
 			ctx = ctx.WithDutyContext(ctx.WithKommons(kClient))
@@ -56,7 +56,7 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 		} else {
 			kClient, kube, err := pkg.NewKommonsClientWithConfig(val)
 			if err != nil {
-				return results.Failf("failed to initialize kubernetes client from the provided kubeconfig: %v", err)
+				return results.Errorf("failed to initialize kubernetes client from the provided kubeconfig: %v", err)
 			}
 
 			ctx = ctx.WithDutyContext(ctx.WithKommons(kClient))
@@ -65,29 +65,29 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 	}
 
 	if ctx.Kommons() == nil {
-		return results.Failf("Kubernetes is not initialized")
+		return results.Errorf("Kubernetes is not initialized")
 	}
 
 	client, err := ctx.Kommons().GetClientByKind(check.Kind)
 	if err != nil {
-		return results.Failf("Failed to get client for kind %s: %v", check.Kind, err)
+		return results.Errorf("Failed to get client for kind %s: %v", check.Kind, err)
 	}
 
 	namespaces, err := getNamespaces(ctx, check)
 	if err != nil {
-		return results.Failf("Failed to get namespaces: %v", err)
+		return results.Errorf("Failed to get namespaces: %v", err)
 	}
 	var allResources []unstructured.Unstructured
 
 	for _, namespace := range namespaces {
 		resources, err := getResourcesFromNamespace(ctx, client, check, namespace)
 		if err != nil {
-			return results.Failf("failed to get resources: %v. namespace: %v", err, namespace)
+			return results.Errorf("failed to get resources: %v. namespace: %v", err, namespace)
 		}
 		for _, filter := range check.Ignore {
 			resources, err = filterResources(resources, filter)
 			if err != nil {
-				results.Failf("failed to filter resources: %v. filter: %v", err, filter)
+				results.Errorf("failed to filter resources: %v. filter: %v", err, filter)
 				return results
 			}
 		}
@@ -97,7 +97,7 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 			_resource := resource
 			resourceHealth, err := health.GetResourceHealth(&_resource, nil)
 			if err != nil {
-				results.Failf("error getting resource health (%s/%s/%s): %v",
+				results.Errorf("error getting resource health (%s/%s/%s): %v",
 					resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 			} else {
 				resource.Object["healthStatus"] = resourceHealth

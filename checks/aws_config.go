@@ -40,13 +40,13 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 		check.AWSConnection = &connection.AWSConnection{}
 	} else {
 		if err := check.AWSConnection.Populate(ctx); err != nil {
-			return results.Failf("failed to populate aws connection: %v", err)
+			return results.Errorf("failed to populate aws connection: %v", err)
 		}
 	}
 
 	cfg, err := awsUtil.NewSession(ctx.Context, *check.AWSConnection)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	client := configservice.NewFromConfig(*cfg)
@@ -56,7 +56,7 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 			Expression:                  &check.Query,
 		})
 		if err != nil {
-			return results.ErrorMessage(err)
+			return results.Error(err)
 		}
 		result.AddDetails(output.Results)
 	} else {
@@ -64,7 +64,7 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 			Expression: &check.Query,
 		})
 		if err != nil {
-			return results.ErrorMessage(err)
+			return results.Error(err)
 		}
 		result.AddDetails(output.Results)
 	}

@@ -131,7 +131,7 @@ func UnfoldGlobs(paths ...string) []string {
 	for _, path := range paths {
 		matched, err := filepath.Glob(path)
 		if err != nil {
-			logger.Warnf("invalid glob pattern. path=%s; %w", path, err)
+			logger.Warnf("invalid glob pattern. path=%s; %v", path, err)
 			continue
 		}
 

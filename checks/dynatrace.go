@@ -33,7 +33,7 @@ func (t *DynatraceChecker) Check(ctx *context.Context, extConfig external.Check)
 
 	apiKey, err := ctx.GetEnvValueFromCache(check.APIKey)
 	if err != nil {
-		return results.Failf("error getting Dynatrace API key: %v", err)
+		return results.Errorf("error getting Dynatrace API key: %v", err)
 	}
 
 	config := dynatrace.NewConfiguration()
@@ -46,7 +46,7 @@ func (t *DynatraceChecker) Check(ctx *context.Context, extConfig external.Check)
 	apiClient := dynatrace.NewAPIClient(config)
 	problems, apiResponse, err := apiClient.ProblemsApi.GetProblems(ctx).Execute()
 	if err != nil {
-		return results.Failf("error getting Dynatrace problems: %s", err.Error())
+		return results.Errorf("error getting Dynatrace problems: %s", err.Error())
 	}
 	defer apiResponse.Body.Close()
 

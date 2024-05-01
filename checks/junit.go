@@ -144,14 +144,14 @@ func podExecf(ctx *context.Context, pod corev1.Pod, results pkg.Results, cmd str
 	_cmd := fmt.Sprintf(cmd, args...)
 	stdout, stderr, err := ctx.Kommons().ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", _cmd)
 	if stderr != "" || err != nil {
-		podFail(ctx, pod, results.Failf("error running %s: %v %v %v", _cmd, stdout, stderr, err))
+		podFail(ctx, pod, results.Errorf("error running %s: %v %v %v", _cmd, stdout, stderr, err))
 		return "", false
 	}
 	return strings.TrimSpace(stdout), true
 }
 
 func podFail(ctx *context.Context, pod corev1.Pod, results pkg.Results) pkg.Results {
-	return results.ErrorMessage(fmt.Errorf("%s is %s\n %v", pod.Name, pod.Status.Phase, getLogs(ctx, pod)))
+	return results.Errorf("%s is %s\n %v", pod.Name, pod.Status.Phase, getLogs(ctx, pod))
 }
 
 func cleanupExistingPods(ctx *context.Context, k8s kubernetes.Interface, selector string) (bool, error) {
@@ -191,25 +191,25 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	results = append(results, result)
 
 	if ctx.Kommons() == nil {
-		return results.Failf("Kubernetes is not initialized")
+		return results.Errorf("Kubernetes is not initialized")
 	}
 
 	k8s := ctx.Kubernetes()
 	timeout := time.Duration(check.GetTimeout()) * time.Minute
 	pod, err := newPod(ctx, check)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 	pods := k8s.CoreV1().Pods(ctx.Namespace)
 
 	if skip, err := cleanupExistingPods(ctx, k8s, fmt.Sprintf("%s=%s", junitCheckSelector, pod.Labels[junitCheckSelector])); err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	} else if skip {
 		return nil
 	}
 
 	if _, err := k8s.CoreV1().Pods(ctx.Namespace).Create(ctx, pod, metav1.CreateOptions{}); err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	defer deletePod(ctx, pod)
@@ -229,7 +229,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 
 	podObj, err := pods.Get(ctx, pod.Name, metav1.GetOptions{})
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	if !kommons.IsPodHealthy(*podObj) {
@@ -257,7 +257,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 			return results
 		}
 		if suites, err = suites.Ingest(output); err != nil {
-			return results.ErrorMessage(err)
+			return results.Error(err)
 		}
 	}
 

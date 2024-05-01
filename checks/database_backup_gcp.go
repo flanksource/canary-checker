@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -30,13 +29,13 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 	results = append(results, result)
 
 	if err := check.GCP.HydrateConnection(ctx); err != nil {
-		return results.Failf("failed to populate GCP connection: %v", err)
+		return results.Errorf("failed to populate GCP connection: %v", err)
 	}
 
 	svc, err := gcp.NewSQLAdmin(ctx.Context, check.GCP.GCPConnection)
 	if err != nil {
 		databaseScanFailCount.WithLabelValues(check.GCP.Project, check.GCP.Instance).Inc()
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	// Only checking one backup for now, but setting up the logic that this could maybe be configurable.
@@ -44,7 +43,7 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 	backupList, err := svc.BackupRuns.List(check.GCP.Project, check.GCP.Instance).MaxResults(1).Do()
 	if err != nil {
 		databaseScanFailCount.WithLabelValues(check.GCP.Project, check.GCP.Instance).Inc()
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 	var errorMessages []string
 	for _, backup := range backupList.Items {
@@ -103,7 +102,7 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 	}
 	if len(errorMessages) > 0 {
 		databaseScanFailCount.WithLabelValues(check.GCP.Project, check.GCP.Instance).Inc()
-		return results.ErrorMessage(errors.New(strings.Join(errorMessages, ", ")))
+		return results.Errorf(strings.Join(errorMessages, ", "))
 	}
 
 	backupRaw, err := backupList.Items[0].MarshalJSON()

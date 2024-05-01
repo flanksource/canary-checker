@@ -105,12 +105,12 @@ func (c *GitProtocolChecker) Check(ctx *context.Context, extConfig external.Chec
 	// Fetching Git Username
 	username, err := ctx.GetEnvValueFromCache(check.Username)
 	if err != nil {
-		return results.Failf("error fetching git user from env cache: %v", err)
+		return results.Errorf("error fetching git user from env cache: %v", err)
 	}
 	// Fetching Git Password
 	password, err := ctx.GetEnvValueFromCache(check.Password)
 	if err != nil {
-		return results.Failf("error fetching git password from env cache: %v", err)
+		return results.Errorf("error fetching git password from env cache: %v", err)
 	}
 
 	if len(filename) == 0 {
@@ -119,7 +119,7 @@ func (c *GitProtocolChecker) Check(ctx *context.Context, extConfig external.Chec
 
 	// Push Changes
 	if err := pushChanges(check.Repository, username, password, filename); err != nil {
-		return results.Failf("error pushing changes: %v", err)
+		return results.Errorf("error pushing changes: %v", err)
 	}
 
 	details := map[string]string{

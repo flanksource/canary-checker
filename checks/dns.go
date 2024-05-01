@@ -54,7 +54,7 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 	if check.Server != "" {
 		dialer, err := getDialer(check, timeout)
 		if err != nil {
-			return results.Failf("Failed to get dialer, %v", err)
+			return results.Errorf("Failed to get dialer, %v", err)
 		}
 		r = net.Resolver{
 			PreferGo: true,
@@ -71,7 +71,7 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 
 	resultCh := make(chan *pkg.CheckResult, 1)
 	if fn, ok := resolvers[strings.ToUpper(queryType)]; !ok {
-		return results.Failf("unknown query type: %s", queryType)
+		return results.Errorf("unknown query type: %s", queryType)
 	} else {
 		go func() {
 			pass, message, err := fn(ctx, &r, check)

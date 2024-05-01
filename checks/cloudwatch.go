@@ -39,12 +39,12 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 	results = append(results, result)
 
 	if err := check.AWSConnection.Populate(ctx); err != nil {
-		return results.Failf("failed to populate aws connection: %v", err)
+		return results.Errorf("failed to populate aws connection: %v", err)
 	}
 
 	cfg, err := awsUtil.NewSession(ctx.Context, check.AWSConnection)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 	client := cloudwatch.NewFromConfig(*cfg)
 	maxRecords := int32(100)
@@ -56,10 +56,10 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 		MaxRecords:      &maxRecords,
 	})
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 	if o, err := unstructure(alarms); err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	} else {
 		result.AddDetails(o)
 	}

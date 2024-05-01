@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -60,5 +59,5 @@ func FailDatabaseBackupParse(ctx *context.Context, check v1.DatabaseBackupCheck)
 	result := pkg.Fail(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
-	return results.ErrorMessage(errors.New("Could not parse databaseBackup input"))
+	return results.Errorf("Could not parse databaseBackup input")
 }

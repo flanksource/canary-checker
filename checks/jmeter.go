@@ -44,7 +44,7 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	//FIXME: the jmx file should not be cached
 	value, err := ctx.GetEnvValueFromCache(check.Jmx)
 	if err != nil {
-		return results.Failf("Failed to parse the jmx plan: %v", err)
+		return results.Errorf("Failed to parse the jmx plan: %v", err)
 	}
 
 	testPlanFilename := fmt.Sprintf("/tmp/jmx-%s-%s-%d.jmx", namespace, check.Jmx.Name, rand.Int())
@@ -52,7 +52,7 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	err = os.WriteFile(testPlanFilename, []byte(value), 0755)
 	defer os.Remove(testPlanFilename) // nolint: errcheck
 	if err != nil {
-		return results.Failf("unable to write test plan file")
+		return results.Errorf("unable to write test plan file")
 	}
 
 	var host string
@@ -67,21 +67,21 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	_, ok := exec.SafeExec(jmeterCmd)
 	defer os.Remove(logFilename) // nolint: errcheck
 	if !ok {
-		return results.Failf("error running the jmeter command: %v", jmeterCmd)
+		return results.Errorf("error running the jmeter command: %v", jmeterCmd)
 	}
 	raw, err := os.ReadFile(logFilename)
 	if err != nil {
-		return results.Failf("error opening the log file: %v", err)
+		return results.Errorf("error opening the log file: %v", err)
 	}
 	elapsedTime, err := checkLogs(raw)
 	if err != nil {
-		return results.Failf("check failed: %v", err)
+		return results.Errorf("check failed: %v", err)
 	}
 	totalDuration := time.Duration(elapsedTime) * time.Millisecond
 	if check.ResponseDuration != "" {
 		resDuration, err := time.ParseDuration(check.ResponseDuration)
 		if err != nil {
-			return results.Failf("error parsing response duration: %v", err)
+			return results.Errorf("error parsing response duration: %v", err)
 		}
 		if totalDuration > resDuration {
 			return results.Failf("the response took %v longer than specified", (totalDuration - resDuration).String())

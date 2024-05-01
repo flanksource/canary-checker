@@ -18,25 +18,25 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var serverPath = strings.TrimPrefix(check.Path, "smb://")
 	server, sharename, path, err := extractServerDetails(serverPath)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	foundConn, err := check.SMBConnection.HydrateConnection(ctx)
 	if err != nil {
-		return results.Failf("failed to populate SMB connection: %v", err)
+		return results.Errorf("failed to populate SMB connection: %v", err)
 	}
 
 	auth := check.SMBConnection.Authentication
 	if !foundConn {
 		auth, err = ctx.GetAuthValues(check.SMBConnection.Authentication)
 		if err != nil {
-			return results.ErrorMessage(err)
+			return results.Error(err)
 		}
 	}
 
 	session, err := smb.SMBConnect(server, fmt.Sprintf("%d", check.SMBConnection.GetPort()), sharename, auth)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 	if session != nil {
 		defer session.Close()
@@ -44,7 +44,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	folders, err := genericFolderCheck(session, path, check.Recursive, check.Filter)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.Error(err)
 	}
 
 	var totalBlockCount, freeBlockCount, blockSize int // TODO:

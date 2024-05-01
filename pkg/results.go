@@ -68,13 +68,6 @@ func New(check external.Check, canary v1.Canary) *CheckResult {
 	}
 }
 
-func (result *CheckResult) ErrorMessage(err error) *CheckResult {
-	if err == nil {
-		return result
-	}
-	return result.Failf(err.Error())
-}
-
 func (result *CheckResult) UpdateCheck(check external.Check) *CheckResult {
 	result.Check = check
 	return result
@@ -122,10 +115,20 @@ func (result *CheckResult) Failf(message string, args ...interface{}) *CheckResu
 	return result
 }
 
-func (result *CheckResult) Invalidf(message string, args ...interface{}) Results {
+func (result *CheckResult) Invalidf(message string, args ...interface{}) *CheckResult {
 	result = result.Failf(message, args...)
 	result.Invalid = true
-	return Results{result}
+	return result
+}
+
+func (result *CheckResult) Errorf(msg string, args ...any) *CheckResult {
+	result = result.Failf(msg, args...)
+	// TODO: mark this is as error
+	return result
+}
+
+func (result *CheckResult) ErrorMessage(err error) *CheckResult {
+	return result.Errorf(err.Error())
 }
 
 func (result *CheckResult) AddDetails(detail interface{}) *CheckResult {
@@ -162,7 +165,17 @@ func (r Results) Failf(msg string, args ...interface{}) Results {
 	return r
 }
 
-func (r Results) ErrorMessage(err error) Results {
+func (r Results) Errorf(msg string, args ...any) Results {
+	r[0].Errorf(msg, args...)
+	return r
+}
+
+func (r Results) Invalidf(msg string, args ...any) Results {
+	r[0].Invalidf(msg, args...)
+	return r
+}
+
+func (r Results) Error(err error) Results {
 	r[0].ErrorMessage(err)
 	return r
 }

@@ -42,19 +42,15 @@ func (c *AwsConfigRuleChecker) Check(ctx *context.Context, extConfig external.Ch
 	if check.AWSConnection == nil {
 		check.AWSConnection = &connection.AWSConnection{}
 	} else if err := check.AWSConnection.Populate(ctx); err != nil {
-		return results.Failf("failed to populate aws connection: %v", err)
+		return results.Errorf("failed to populate aws connection: %v", err)
 	}
 
 	cfg, err := awsUtil.NewSession(ctx.Context, *check.AWSConnection)
 	if err != nil {
-		return results.Failf("failed to create a session: %v", err)
+		return results.Errorf("failed to create a session: %v", err)
 	}
 
 	client := configservice.NewFromConfig(*cfg)
-	if err != nil {
-		return results.Failf("failed to describe compliance rules: %v", err)
-	}
-
 	var complianceTypes = []types.ComplianceType{}
 	for _, i := range check.ComplianceTypes {
 		complianceTypes = append(complianceTypes, types.ComplianceType(i))
@@ -64,7 +60,7 @@ func (c *AwsConfigRuleChecker) Check(ctx *context.Context, extConfig external.Ch
 		ConfigRuleNames: check.Rules,
 	})
 	if err != nil {
-		return results.Failf("failed to describe compliance rules: %v", err)
+		return results.Errorf("failed to describe compliance rules: %v", err)
 	}
 
 	type ConfigRuleResource struct {

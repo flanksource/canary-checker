@@ -50,7 +50,7 @@ func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	if check.ConnectionName != "" {
 		connection, err := ctx.HydrateConnectionByURL(check.ConnectionName)
 		if err != nil {
-			return results.Failf("error getting restic connection: %v", err)
+			return results.Errorf("error getting restic connection: %v", err)
 		}
 		envVars[resticPasswordEnvKey] = connection.Password
 
@@ -69,7 +69,7 @@ func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	} else {
 		password, err := ctx.GetEnvValueFromCache(*check.Password)
 		if err != nil {
-			return results.Failf("error getting restic password from env: %v", err)
+			return results.Errorf("error getting restic password from env: %v", err)
 		}
 		envVars[resticPasswordEnvKey] = password
 	}
@@ -77,7 +77,7 @@ func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	if check.AWSConnectionName != "" {
 		connection, err := ctx.HydrateConnectionByURL(check.AWSConnectionName)
 		if err != nil {
-			return results.Failf("error getting aws connection: %v", err)
+			return results.Errorf("error getting aws connection: %v", err)
 		}
 
 		envVars[resticAwsAccessKeyIDEnvKey] = connection.Username
@@ -86,7 +86,7 @@ func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pk
 		if !check.AccessKey.IsEmpty() {
 			accessKey, err := ctx.GetEnvValueFromCache(*check.AccessKey)
 			if err != nil {
-				return results.Failf("error getting aws access key from env: %v", err)
+				return results.Errorf("error getting aws access key from env: %v", err)
 			}
 			envVars[resticAwsAccessKeyIDEnvKey] = accessKey
 		}
@@ -94,7 +94,7 @@ func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pk
 		if !check.SecretKey.IsEmpty() {
 			secretKey, err := ctx.GetEnvValueFromCache(*check.SecretKey)
 			if err != nil {
-				return results.Failf("error getting aws secret key from env: %v", err)
+				return results.Errorf("error getting aws secret key from env: %v", err)
 			}
 			envVars[resticAwsSecretAccessKey] = secretKey
 		}
