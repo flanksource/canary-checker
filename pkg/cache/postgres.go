@@ -40,6 +40,10 @@ func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) []string
 			check.Status = "unhealthy"
 		}
 
+		if status.Invalid {
+			check.Status = "invalid"
+		}
+
 		checkID, err := c.AddCheckFromStatus(check, status)
 		if err != nil {
 			logger.Errorf("error persisting check with canary %s: %v", check.CanaryID, err)

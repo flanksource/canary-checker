@@ -18,15 +18,13 @@ func (ctx *Context) GetContextualFunctions() map[string]any {
 			if result, ok := ctx.cache["last_result"]; ok {
 				return result
 			}
-			var status map[string]any
-
 			if checkID == "" {
-				return status
+				return nil
 			}
 
 			if ctx.DB() == nil {
 				logger.Errorf("[last_result] db connection not initialized")
-				return status
+				return nil
 			}
 
 			type CheckStatus struct {
@@ -48,10 +46,10 @@ func (ctx *Context) GetContextualFunctions() map[string]any {
 				Order("time DESC").Limit(1).Scan(&checkStatus).Error
 			if err != nil {
 				logger.Warnf("[last_result] failed => %s", err)
-				return status
+				return nil
 			}
 
-			status = map[string]any{
+			lastResult := map[string]any{
 				"status":    checkStatus.Status,
 				"invalid":   checkStatus.Invalid,
 				"createdAt": checkStatus.CreatedAt,
@@ -64,15 +62,15 @@ func (ctx *Context) GetContextualFunctions() map[string]any {
 			if checkStatus.Details != "" {
 				var details = make(map[string]any)
 				if err := json.Unmarshal([]byte(checkStatus.Details), &details); err == nil {
-					status["results"] = details
+					lastResult["results"] = details
 				} else {
 					if ctx.IsTrace() {
 						ctx.Warnf("[last_result] Failed to unmarshal results: %s", err.Error())
 					}
 				}
 			}
-			ctx.cache["last_result"] = status
-			return status
+			ctx.cache["last_result"] = lastResult
+			return lastResult
 		}
 	}
 	return funcs
