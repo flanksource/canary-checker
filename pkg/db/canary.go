@@ -373,18 +373,7 @@ func CreateCheck(ctx context.Context, canary pkg.Canary, check *pkg.Check) error
 func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, error) {
 	db := ctx.DB()
 	err := db.Clauses(
-		clause.OnConflict{
-			Columns: []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}, {Name: "source"}},
-			TargetWhere: clause.Where{
-				Exprs: []clause.Expression{
-					clause.Or(
-						clause.Eq{Column: "deleted_at", Value: gorm.Expr("NULL")},
-						clause.Not(clause.Eq{Column: "agent_id", Value: uuid.Nil.String()}),
-					),
-				},
-			},
-			DoUpdates: clause.AssignmentColumns([]string{"labels", "spec"}),
-		},
+		models.Canary{}.ConflictClause(),
 		clause.Returning{},
 	).Create(&model).Error
 

@@ -41,18 +41,7 @@ func PersistV1Topology(ctx context.Context, t *v1.Topology) (pkg.Topology, bool,
 
 func PersistTopology(ctx context.Context, model *pkg.Topology) (bool, error) {
 	tx := ctx.DB().
-		Clauses(clause.OnConflict{
-			Columns: []clause.Column{{Name: "agent_id"}, {Name: "name"}, {Name: "namespace"}},
-			TargetWhere: clause.Where{
-				Exprs: []clause.Expression{
-					clause.Or(
-						clause.Eq{Column: "deleted_at", Value: gorm.Expr("NULL")},
-						clause.Not(clause.Eq{Column: "agent_id", Value: uuid.Nil.String()}),
-					),
-				},
-			},
-			DoUpdates: clause.AssignmentColumns([]string{"labels", "spec"}),
-		}).
+		Clauses(models.Topology{}.OnConflictClause()).
 		Create(model)
 	if tx.Error != nil {
 		return false, tx.Error
