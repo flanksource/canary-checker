@@ -37,5 +37,5 @@ func isComponentList(data []byte) bool {
 }
 
 func genParentKey(name, _type, namespace string) string {
-	return strings.Join([]string{name, _type, namespace}, "/")
+	return strings.Join([]string{"parent.key", name, _type, namespace}, "/")
 }

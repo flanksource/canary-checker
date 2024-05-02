@@ -7429,6 +7429,8 @@ spec:
                         type: array
                     type: object
                   type: array
+                externalID:
+                  type: string
                 forEach:
                   description: |-
                     Only applies when using lookup, when specified the components and properties
@@ -7491,6 +7493,8 @@ spec:
                 parentLookup:
                   description: Reference to populate parent_id
                   properties:
+                    externalID:
+                      type: string
                     name:
                       type: string
                     namespace:
@@ -7877,6 +7881,8 @@ spec:
                               type: array
                           type: object
                         type: array
+                      externalID:
+                        type: string
                       forEach:
                         description: |-
                           Only applies when using lookup, when specified the components and properties
@@ -7939,6 +7945,8 @@ spec:
                       parentLookup:
                         description: Reference to populate parent_id
                         properties:
+                          externalID:
+                            type: string
                           name:
                             type: string
                           namespace:

@@ -853,6 +853,9 @@
         "owner": {
           "type": "string"
         },
+        "externalID": {
+          "type": "string"
+        },
         "id": {
           "$ref": "#/$defs/Template"
         },
@@ -937,6 +940,9 @@
           "type": "string"
         },
         "owner": {
+          "type": "string"
+        },
+        "externalID": {
           "type": "string"
         },
         "id": {
@@ -3456,6 +3462,9 @@
           "type": "string"
         },
         "type": {
+          "type": "string"
+        },
+        "externalID": {
           "type": "string"
         }
       },

@@ -116,7 +116,7 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 
 		Expect(len(parent1.Components)).To(Equal(2))
 		Expect(len(parent2.Components)).To(Equal(3))
-		Expect(len(parent3.Components)).To(Equal(1))
+		Expect(len(parent3.Components)).To(Equal(2))
 
 		Expect(parent1.Components[0].Name).To(Equal("Child-1A"))
 		Expect(parent1.Components[1].Name).To(Equal("Child-1B"))
@@ -126,6 +126,7 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 		Expect(parent2.Components[2].Name).To(Equal("Child-1C"))
 
 		Expect(parent3.Components[0].Name).To(Equal("Child-1D"))
+		Expect(parent3.Components[1].Name).To(Equal("Child-2C"))
 	})
 
 })
