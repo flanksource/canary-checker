@@ -277,6 +277,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Namespace:       c.Namespace,
 		Owner:           c.Owner,
 		Type:            c.Type,
+		ExternalId:      c.ExternalID,
 		Order:           c.Order,
 		Hidden:          c.Hidden,
 		Lifecycle:       c.Lifecycle,

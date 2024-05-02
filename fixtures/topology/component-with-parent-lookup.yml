@@ -27,9 +27,9 @@ spec:
     - name: Child-2B
     - name: Child-2C
       parentLookup:
-        external_id: parent-3-external-id
+        externalID: parent-3-external-id
 
   - name: Parent-3
     type: Type3
     namespace: parent3-namespace
-    external_id: parent-3-external-id
+    externalID: parent-3-external-id

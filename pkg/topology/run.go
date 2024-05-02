@@ -381,10 +381,10 @@ func populateParentRefMap(c *pkg.Component, parentRefMap map[string]*pkg.Compone
 	}
 }
 
-func lookupParent(parentRefMap map[string]*pkg.Component, genKey, externalID string) (*pkg.Component, bool) {
+func lookupParent(parentRefMap map[string]*pkg.Component, genKey, parentExternalID string) (*pkg.Component, bool) {
 	// Check External ID first
-	if externalID != "" {
-		c, ok := parentRefMap[externalID]
+	if parentExternalID != "" {
+		c, ok := parentRefMap[parentExternalID]
 		return c, ok
 	}
 
@@ -401,7 +401,7 @@ func changeComponentParents(c *pkg.Component, parentRefMap map[string]*pkg.Compo
 		}
 
 		key := genParentKey(child.ParentLookup.Name, child.ParentLookup.Type, child.ParentLookup.Namespace)
-		if parentComp, exists := lookupParent(parentRefMap, key, child.ExternalId); exists {
+		if parentComp, exists := lookupParent(parentRefMap, key, child.ParentLookup.ExternalID); exists {
 			// Set nil to prevent processing again
 			child.ParentLookup = nil
 			parentComp.Components = append(parentComp.Components, child)
