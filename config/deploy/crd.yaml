@@ -7223,6 +7223,8 @@ spec:
                 parentLookup:
                   description: Reference to populate parent_id
                   properties:
+                    external_id:
+                      type: string
                     name:
                       type: string
                     namespace:
@@ -7671,6 +7673,8 @@ spec:
                       parentLookup:
                         description: Reference to populate parent_id
                         properties:
+                          external_id:
+                            type: string
                           name:
                             type: string
                           namespace:
