@@ -127,6 +127,7 @@ var CheckStatusJobs = []*job.Job{
 	DeleteOldCheckStatues,
 	DeleteOldCheckStatues1h,
 	DeleteOldCheckStatues1d,
+	RefreshCheckSizeSummary,
 	RefreshCheckStatusSummary,
 	RefreshCheckStatusSummaryAged,
 }
