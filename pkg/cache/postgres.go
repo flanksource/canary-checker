@@ -78,7 +78,7 @@ func (c *postgresCache) AddCheckStatus(db *gorm.DB, check pkg.Check, status pkg.
 	if c.DB().Model(&checks).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Where("canary_id = ? AND type = ? AND name = ?", check.CanaryID, check.Type, check.GetName()).
-		Updates(map[string]any{"status": check.Status, "labels": check.Labels, "last_runtime": time.Now(), "next_runtime": nextRuntime}).Error != nil {
+		Updates(map[string]any{"status": check.Status, "labels": check.Labels, "last_runtime": status.Time, "next_runtime": nextRuntime}).Error != nil {
 		logger.Errorf("error updating check: %v", err)
 		return
 	}
