@@ -8,6 +8,18 @@ import (
 
 const CheckStatuses = "check_statuses"
 
+var RefreshCheckSizeSummary = &job.Job{
+	Name:       "RefreshCheckSizeSummary",
+	Singleton:  true,
+	Schedule:   "@every 24h",
+	JobHistory: true,
+	Retention:  job.RetentionFew,
+	Fn: func(ctx job.JobRuntime) error {
+		ctx.History.ResourceType = CheckStatuses
+		return job.RefreshCheckSizeSummary(ctx.Context)
+	},
+}
+
 var RefreshCheckStatusSummary = &job.Job{
 	Name:       "RefreshCheckStatusSummary",
 	Singleton:  true,
