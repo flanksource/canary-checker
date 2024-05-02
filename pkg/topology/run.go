@@ -373,9 +373,23 @@ func mergeComponentProperties(components pkg.Components, propertiesRaw []byte) e
 
 func populateParentRefMap(c *pkg.Component, parentRefMap map[string]*pkg.Component) {
 	parentRefMap[genParentKey(c.Name, c.Type, c.Namespace)] = c
+	if c.ExternalId != "" {
+		parentRefMap[c.ExternalId] = c
+	}
 	for _, child := range c.Components {
 		populateParentRefMap(child, parentRefMap)
 	}
+}
+
+func lookupParent(parentRefMap map[string]*pkg.Component, genKey, externalID string) (*pkg.Component, bool) {
+	// Check External ID first
+	if externalID != "" {
+		c, ok := parentRefMap[externalID]
+		return c, ok
+	}
+
+	c, ok := parentRefMap[genKey]
+	return c, ok
 }
 
 func changeComponentParents(c *pkg.Component, parentRefMap map[string]*pkg.Component) {
@@ -387,7 +401,7 @@ func changeComponentParents(c *pkg.Component, parentRefMap map[string]*pkg.Compo
 		}
 
 		key := genParentKey(child.ParentLookup.Name, child.ParentLookup.Type, child.ParentLookup.Namespace)
-		if parentComp, exists := parentRefMap[key]; exists {
+		if parentComp, exists := lookupParent(parentRefMap, key, child.ExternalId); exists {
 			// Set nil to prevent processing again
 			child.ParentLookup = nil
 			parentComp.Components = append(parentComp.Components, child)

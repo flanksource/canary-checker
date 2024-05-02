@@ -92,9 +92,10 @@ func (f *ForEach) String() string {
 }
 
 type ParentLookup struct {
-	Name      string `json:"name,omitempty"`
-	Namespace string `json:"namespace,omitempty"`
-	Type      string `json:"type,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Namespace  string `json:"namespace,omitempty"`
+	Type       string `json:"type,omitempty"`
+	ExternalID string `json:"external_id,omitempty"`
 }
 
 type ComponentStatus struct {
