@@ -51,12 +51,12 @@ func (c *KubernetesResourceChecker) Type() string {
 func (c *KubernetesResourceChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.KubernetesResource {
-		results = append(results, c.Check(ctx, conf)...)
+		results = append(results, c.Check(*ctx, conf)...)
 	}
 	return results
 }
 
-func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.KubernetesResourceCheck) pkg.Results {
+func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.KubernetesResourceCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	var err error
 	var results pkg.Results
@@ -151,7 +151,7 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 		retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
 			ctx.Logger.V(4).Infof("running check: %s", virtualCanary.Name)
 
-			ctx = _ctx.(*context.Context)
+			ctx = _ctx.(context.Context)
 			checkCtx := context.New(ctx.Context, virtualCanary)
 			res, err := Exec(checkCtx)
 			if err != nil {
@@ -178,7 +178,7 @@ func (c *KubernetesResourceChecker) Check(ctx *context.Context, check v1.Kuberne
 	return results
 }
 
-func (c *KubernetesResourceChecker) evalWaitFor(ctx *context.Context, check v1.KubernetesResourceCheck) error {
+func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.KubernetesResourceCheck) error {
 	waitTimeout := resourceWaitTimeoutDefault
 	if wt, _ := check.WaitFor.GetTimeout(); wt > 0 {
 		waitTimeout = wt
@@ -194,7 +194,7 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx *context.Context, check v1.K
 	var attempts int
 	backoff := retry.WithMaxDuration(waitTimeout, retry.NewConstant(waitInterval))
 	retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
-		ctx = _ctx.(*context.Context)
+		ctx = _ctx.(context.Context)
 		attempts++
 
 		ctx.Logger.V(4).Infof("waiting for %d resources to be in the desired state. (attempts: %d)", check.TotalResources(), attempts)
@@ -238,34 +238,34 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx *context.Context, check v1.K
 	return retryErr
 }
 
-func (c *KubernetesResourceChecker) applyKubeconfig(ctx *context.Context, kubeConfig types.EnvVar) (*context.Context, error) {
+func (c *KubernetesResourceChecker) applyKubeconfig(ctx context.Context, kubeConfig types.EnvVar) (context.Context, error) {
 	val, err := ctx.GetEnvValueFromCache(kubeConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get kubeconfig from env: %w", err)
+		return ctx, fmt.Errorf("failed to get kubeconfig from env: %w", err)
 	}
 
 	if strings.HasPrefix(val, "/") {
 		kClient, kube, err := pkg.NewKommonsClientWithConfigPath(val)
 		if err != nil {
-			return nil, fmt.Errorf("failed to initialize kubernetes client from the provided kubeconfig: %w", err)
+			return ctx, fmt.Errorf("failed to initialize kubernetes client from the provided kubeconfig: %w", err)
 		}
 
-		ctx = ctx.WithDutyContext(ctx.WithKommons(kClient))
-		ctx = ctx.WithDutyContext(ctx.WithKubernetes(kube))
+		ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKommons(kClient)))
+		ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKubernetes(kube)))
 	} else {
 		kClient, kube, err := pkg.NewKommonsClientWithConfig(val)
 		if err != nil {
-			return nil, fmt.Errorf("failed to initialize kubernetes client from the provided kubeconfig: %w", err)
+			return ctx, fmt.Errorf("failed to initialize kubernetes client from the provided kubeconfig: %w", err)
 		}
 
-		ctx = ctx.WithDutyContext(ctx.WithKommons(kClient))
-		ctx = ctx.WithDutyContext(ctx.WithKubernetes(kube))
+		ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKommons(kClient)))
+		ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKubernetes(kube)))
 	}
 
 	return ctx, nil
 }
 
-func (c *KubernetesResourceChecker) validate(ctx *context.Context, check v1.KubernetesResourceCheck) error {
+func (c *KubernetesResourceChecker) validate(ctx context.Context, check v1.KubernetesResourceCheck) error {
 	if _, err := check.WaitFor.GetTimeout(); err != nil {
 		return fmt.Errorf("invalid wait timeout (%s): %w", check.WaitFor.Timeout, err)
 	}
@@ -294,7 +294,7 @@ func (c *KubernetesResourceChecker) validate(ctx *context.Context, check v1.Kube
 	return nil
 }
 
-func DeleteResources(ctx *context.Context, check v1.KubernetesResourceCheck, deleteStatic bool) error {
+func DeleteResources(ctx context.Context, check v1.KubernetesResourceCheck, deleteStatic bool) error {
 	ctx.Logger.V(4).Infof("deleting resources")
 
 	resources := check.Resources

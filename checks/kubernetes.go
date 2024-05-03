@@ -10,6 +10,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/is-healthy/pkg/health"
 	"github.com/gobwas/glob"
+	"github.com/samber/lo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
@@ -26,14 +27,13 @@ func (c *KubernetesChecker) Type() string {
 func (c *KubernetesChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Kubernetes {
-		results = append(results, c.Check(ctx, conf)...)
+		results = append(results, c.Check(*ctx, conf)...)
 	}
+
 	return results
 }
 
-// CheckConfig : Check every ldap entry for lookup and auth
-// Returns check result and metrics
-func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
+func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.KubernetesCheck)
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
@@ -51,16 +51,16 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 				return results.Failf("failed to initialize kubernetes client from the provided kubeconfig: %v", err)
 			}
 
-			ctx = ctx.WithDutyContext(ctx.WithKommons(kClient))
-			ctx = ctx.WithDutyContext(ctx.WithKubernetes(kube))
+			ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKommons(kClient)))
+			ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKubernetes(kube)))
 		} else {
 			kClient, kube, err := pkg.NewKommonsClientWithConfig(val)
 			if err != nil {
 				return results.Failf("failed to initialize kubernetes client from the provided kubeconfig: %v", err)
 			}
 
-			ctx = ctx.WithDutyContext(ctx.WithKommons(kClient))
-			ctx = ctx.WithDutyContext(ctx.WithKubernetes(kube))
+			ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKommons(kClient)))
+			ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKubernetes(kube)))
 		}
 	}
 
@@ -125,7 +125,7 @@ func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check
 	return results
 }
 
-func getResourcesFromNamespace(ctx *context.Context, client dynamic.NamespaceableResourceInterface, check v1.KubernetesCheck, namespace string) ([]unstructured.Unstructured, error) {
+func getResourcesFromNamespace(ctx context.Context, client dynamic.NamespaceableResourceInterface, check v1.KubernetesCheck, namespace string) ([]unstructured.Unstructured, error) {
 	var resources []unstructured.Unstructured
 	if check.Resource.Name != "" {
 		resource, err := client.Namespace(namespace).Get(ctx, check.Resource.Name, metav1.GetOptions{})
@@ -145,7 +145,7 @@ func getResourcesFromNamespace(ctx *context.Context, client dynamic.Namespaceabl
 	return resources, nil
 }
 
-func getNamespaces(ctx *context.Context, check v1.KubernetesCheck) ([]string, error) {
+func getNamespaces(ctx context.Context, check v1.KubernetesCheck) ([]string, error) {
 	var namespaces []string
 	if check.Namespace.Name != "" {
 		return []string{check.Namespace.Name}, nil
