@@ -228,7 +228,7 @@ func deleteAllKubernetesResourcesOfCanary(ctx context.Context, id string) error 
 
 	for _, kr := range spec.KubernetesResource {
 		scrapeCtx := apiContext.New(ctx, *canaryV1)
-		if err := checks.DeleteResources(scrapeCtx, kr, true); err != nil {
+		if err := checks.DeleteResources(*scrapeCtx, kr, true); err != nil {
 			logger.Errorf("error clearing resource: %v", err)
 		}
 	}
