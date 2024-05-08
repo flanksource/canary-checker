@@ -239,7 +239,7 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.Ku
 }
 
 func (c *KubernetesResourceChecker) applyKubeconfig(ctx context.Context, kubeConfig types.EnvVar) (context.Context, error) {
-	val, err := ctx.GetEnvValueFromCache(kubeConfig)
+	val, err := ctx.GetEnvValueFromCache(kubeConfig, ctx.GetNamespace())
 	if err != nil {
 		return ctx, fmt.Errorf("failed to get kubeconfig from env: %w", err)
 	}

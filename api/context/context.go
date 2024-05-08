@@ -113,10 +113,10 @@ func (ctx Context) GetAuthValues(auth connection.Authentication) (connection.Aut
 	}
 	var err error
 
-	if auth.Username.ValueStatic, err = ctx.GetEnvValueFromCache(auth.Username); err != nil {
+	if auth.Username.ValueStatic, err = ctx.GetEnvValueFromCache(auth.Username, ctx.GetNamespace()); err != nil {
 		return auth, err
 	}
-	if auth.Password.ValueStatic, err = ctx.GetEnvValueFromCache(auth.Password); err != nil {
+	if auth.Password.ValueStatic, err = ctx.GetEnvValueFromCache(auth.Password, ctx.GetNamespace()); err != nil {
 		return auth, err
 	}
 	return auth, nil

@@ -67,7 +67,7 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 	client := http.NewClient().UserAgent("canary-checker/" + runner.Version).InsecureSkipVerify(true)
 
 	for _, header := range check.Headers {
-		value, err := ctx.GetEnvValueFromCache(header)
+		value, err := ctx.GetEnvValueFromCache(header, ctx.GetNamespace())
 		if err != nil {
 			return nil, fmt.Errorf("failed getting header (%v): %w", header, err)
 		}
@@ -153,7 +153,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	templateEnv := map[string]any{}
 	for _, env := range check.EnvVars {
-		if val, err := ctx.GetEnvValueFromCache(env); err != nil {
+		if val, err := ctx.GetEnvValueFromCache(env, ctx.GetNamespace()); err != nil {
 			return results.Failf("failed to get env value: %v", err)
 		} else {
 			templateEnv[env.Name] = val
