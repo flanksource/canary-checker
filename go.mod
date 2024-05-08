@@ -16,7 +16,7 @@ require (
 	github.com/dynatrace-ace/dynatrace-go-api-client/api/v2/environment/dynatrace v0.0.0-20210816162345-de2eacc8ac9a
 	github.com/eko/gocache/lib/v4 v4.1.5
 	github.com/eko/gocache/store/bigcache/v4 v4.2.1
-	github.com/elastic/go-elasticsearch/v8 v8.12.0
+	github.com/elastic/go-elasticsearch/v8 v8.13.1
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.5
 	github.com/flanksource/commons v1.22.1
@@ -131,7 +131,7 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/distribution/reference v0.5.0 // indirect
 	github.com/eko/gocache/store/go_cache/v4 v4.2.1 // indirect
-	github.com/elastic/elastic-transport-go/v8 v8.4.0 // indirect
+	github.com/elastic/elastic-transport-go/v8 v8.5.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/evanphx/json-patch v5.7.0+incompatible // indirect
