@@ -67,7 +67,7 @@ func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pk
 			check.MaxAge = maxAge
 		}
 	} else {
-		password, err := ctx.GetEnvValueFromCache(*check.Password)
+		password, err := ctx.GetEnvValueFromCache(*check.Password, ctx.GetNamespace())
 		if err != nil {
 			return results.Failf("error getting restic password from env: %v", err)
 		}
@@ -84,7 +84,7 @@ func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pk
 		envVars[resticAwsSecretAccessKey] = connection.Password
 	} else {
 		if !check.AccessKey.IsEmpty() {
-			accessKey, err := ctx.GetEnvValueFromCache(*check.AccessKey)
+			accessKey, err := ctx.GetEnvValueFromCache(*check.AccessKey, ctx.GetNamespace())
 			if err != nil {
 				return results.Failf("error getting aws access key from env: %v", err)
 			}
@@ -92,7 +92,7 @@ func (c *ResticChecker) Check(ctx *context.Context, extConfig external.Check) pk
 		}
 
 		if !check.SecretKey.IsEmpty() {
-			secretKey, err := ctx.GetEnvValueFromCache(*check.SecretKey)
+			secretKey, err := ctx.GetEnvValueFromCache(*check.SecretKey, ctx.GetNamespace())
 			if err != nil {
 				return results.Failf("error getting aws secret key from env: %v", err)
 			}

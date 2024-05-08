@@ -42,7 +42,7 @@ func (c *GitHubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	} else if connection != nil {
 		githubToken = connection.Password
 	} else {
-		githubToken, err = ctx.GetEnvValueFromCache(check.GithubToken)
+		githubToken, err = ctx.GetEnvValueFromCache(check.GithubToken, ctx.GetNamespace())
 		if err != nil {
 			return results.Failf("error fetching github token from env cache: %v", err)
 		}

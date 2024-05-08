@@ -40,7 +40,7 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 	results = append(results, result)
 
 	if check.KubeConfig != nil {
-		val, err := ctx.GetEnvValueFromCache(*check.KubeConfig)
+		val, err := ctx.GetEnvValueFromCache(*check.KubeConfig, ctx.GetNamespace())
 		if err != nil {
 			return results.Failf("failed to get kubeconfig from env: %v", err)
 		}

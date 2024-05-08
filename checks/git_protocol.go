@@ -103,12 +103,12 @@ func (c *GitProtocolChecker) Check(ctx *context.Context, extConfig external.Chec
 	filename := check.FileName
 
 	// Fetching Git Username
-	username, err := ctx.GetEnvValueFromCache(check.Username)
+	username, err := ctx.GetEnvValueFromCache(check.Username, ctx.GetNamespace())
 	if err != nil {
 		return results.Failf("error fetching git user from env cache: %v", err)
 	}
 	// Fetching Git Password
-	password, err := ctx.GetEnvValueFromCache(check.Password)
+	password, err := ctx.GetEnvValueFromCache(check.Password, ctx.GetNamespace())
 	if err != nil {
 		return results.Failf("error fetching git password from env cache: %v", err)
 	}

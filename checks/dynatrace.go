@@ -31,7 +31,7 @@ func (t *DynatraceChecker) Check(ctx *context.Context, extConfig external.Check)
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
 
-	apiKey, err := ctx.GetEnvValueFromCache(check.APIKey)
+	apiKey, err := ctx.GetEnvValueFromCache(check.APIKey, ctx.GetNamespace())
 	if err != nil {
 		return results.Failf("error getting Dynatrace API key: %v", err)
 	}
