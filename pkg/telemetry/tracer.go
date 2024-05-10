@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"google.golang.org/grpc/credentials"
 
+	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -54,9 +55,13 @@ func InitTracer(serviceName, collectorURL string, insecure bool) func() {
 	}
 
 	attributes := []attribute.KeyValue{attribute.String("service.name", serviceName)}
-	if val, ok := os.LookupEnv("FLANKSOURCE_TENANT_ID"); ok {
-		attributes = append(attributes, attribute.String("flanksource.tenant_id", val))
+	if val, ok := os.LookupEnv("OTEL_LABELS"); ok {
+		kv := collections.KeyValueSliceToMap(strings.Split(val, ","))
+		for k, v := range kv {
+			attributes = append(attributes, attribute.String(k, v))
+		}
 	}
+
 	resources, err := resource.New(context.Background(), resource.WithAttributes(attributes...))
 	if err != nil {
 		logger.Errorf("Could not set opentelemetry resources: %v", err)
