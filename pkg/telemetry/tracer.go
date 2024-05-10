@@ -3,6 +3,7 @@ package telemetry
 import (
 	"context"
 	"crypto/tls"
+	"os"
 	"strings"
 	"time"
 
@@ -51,12 +52,12 @@ func InitTracer(serviceName, collectorURL string, insecure bool) func() {
 		logger.Errorf("Failed to create opentelemetry exporter: %v", err)
 		return func() {}
 	}
-	resources, err := resource.New(
-		context.Background(),
-		resource.WithAttributes(
-			attribute.String("service.name", serviceName),
-		),
-	)
+
+	attributes := []attribute.KeyValue{attribute.String("service.name", serviceName)}
+	if val, ok := os.LookupEnv("FLANKSOURCE_TENANT_ID"); ok {
+		attributes = append(attributes, attribute.String("flanksource.tenant_id", val))
+	}
+	resources, err := resource.New(context.Background(), resource.WithAttributes(attributes...))
 	if err != nil {
 		logger.Errorf("Could not set opentelemetry resources: %v", err)
 		return func() {}
