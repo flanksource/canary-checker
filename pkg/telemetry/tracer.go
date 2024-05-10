@@ -3,6 +3,7 @@ package telemetry
 import (
 	"context"
 	"crypto/tls"
+	"os"
 	"strings"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"google.golang.org/grpc/credentials"
 
+	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/logger"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -51,12 +53,16 @@ func InitTracer(serviceName, collectorURL string, insecure bool) func() {
 		logger.Errorf("Failed to create opentelemetry exporter: %v", err)
 		return func() {}
 	}
-	resources, err := resource.New(
-		context.Background(),
-		resource.WithAttributes(
-			attribute.String("service.name", serviceName),
-		),
-	)
+
+	attributes := []attribute.KeyValue{attribute.String("service.name", serviceName)}
+	if val, ok := os.LookupEnv("OTEL_LABELS"); ok {
+		kv := collections.KeyValueSliceToMap(strings.Split(val, ","))
+		for k, v := range kv {
+			attributes = append(attributes, attribute.String(k, v))
+		}
+	}
+
+	resources, err := resource.New(context.Background(), resource.WithAttributes(attributes...))
 	if err != nil {
 		logger.Errorf("Could not set opentelemetry resources: %v", err)
 		return func() {}
