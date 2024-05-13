@@ -43,6 +43,10 @@ otel:
   collector: ""
   serviceName: canary-checker
 
+# tenant details to be used in the traces
+tenant:
+  id: ""
+
 db:
   runMigrations: true
   embedded:

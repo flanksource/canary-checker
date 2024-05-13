@@ -76,6 +76,10 @@ spec:
           image: {{ include "canary-checker.imageString" . }}
           imagePullPolicy: "{{ .Values.image.pullPolicy }}"
           env:
+            {{- if .Values.tenant.id}}
+            - name: OTEL_LABELS
+              value: '{{ .Values.tenant.id }}'
+            {{- end}}
             - name: PING_MODE
               value:  {{ .Values.pingMode | quote }}
             {{- if eq .Values.debug true }}
