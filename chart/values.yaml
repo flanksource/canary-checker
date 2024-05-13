@@ -42,10 +42,8 @@ otel:
   # OpenTelemetry gRPC collector endpoint in host:port format
   collector: ""
   serviceName: canary-checker
-
-# tenant details to be used in the traces
-tenant:
-  id: ""
+  # labels in "a=b,c=d" format
+  labels: ""
 
 db:
   runMigrations: true
