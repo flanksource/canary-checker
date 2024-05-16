@@ -31,6 +31,7 @@ type Topology struct {
 	Labels    dutyTypes.JSONStringMap
 	Spec      dutyTypes.JSON
 	Schedule  string
+	Source    string     `gorm:"default:UI"`
 	CreatedAt time.Time  `json:"created_at,omitempty" time_format:"postgres_timestamp"`
 	UpdatedAt time.Time  `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
 	DeletedAt *time.Time `json:"deleted_at,omitempty" time_format:"postgres_timestamp"`
@@ -48,6 +49,7 @@ func TopologyFromV1(topology *v1.Topology) Topology {
 		Namespace: topology.GetNamespace(),
 		Labels:    dutyTypes.JSONStringMap(topology.GetLabels()),
 		Spec:      spec,
+		Source:    models.SourceCRD,
 	}
 }
 
