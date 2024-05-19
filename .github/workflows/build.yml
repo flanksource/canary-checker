@@ -13,7 +13,7 @@ jobs:
           - docker-minimal
     steps:
       - name: Checkout code
-        uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       - name: Build Container
         run: make ${{matrix.target}}
         env:
