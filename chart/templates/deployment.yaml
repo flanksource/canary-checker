@@ -128,7 +128,9 @@ spec:
             - /app/canary-checker
           args:
             - operator
-            - {{ .Values.logLevel}}
+            {{- if .Values.logLevel }}
+            - {{ .Values.logLevel }}
+            {{- end }}
             - --httpPort
             - "8080"
             - --disable-postgrest={{ .Values.disablePostgrest }}
