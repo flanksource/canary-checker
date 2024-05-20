@@ -123,17 +123,18 @@ func newCanaryJob(c CanaryJob) {
 	}
 
 	j := &job.Job{
-		Name:         "Canary",
-		Context:      canaryCtx.DefaultContext.WithObject(c.Canary.ObjectMeta).WithAnyValue("canary", c.Canary),
-		Schedule:     schedule,
-		RunNow:       true,
-		Singleton:    true,
-		JobHistory:   true,
-		Retention:    job.RetentionBalanced,
-		ResourceID:   c.DBCanary.ID.String(),
-		ResourceType: "canary",
-		ID:           fmt.Sprintf("%s/%s", c.Canary.Namespace, c.Canary.Name),
-		Fn:           c.Run,
+		Name:                 "Canary",
+		Context:              canaryCtx.DefaultContext.WithObject(c.Canary.ObjectMeta).WithAnyValue("canary", c.Canary),
+		Schedule:             schedule,
+		RunNow:               true,
+		Singleton:            true,
+		JobHistory:           true,
+		IgnoreSuccessHistory: true,
+		Retention:            job.RetentionBalanced,
+		ResourceID:           c.DBCanary.ID.String(),
+		ResourceType:         "canary",
+		ID:                   fmt.Sprintf("%s/%s", c.Canary.Namespace, c.Canary.Name),
+		Fn:                   c.Run,
 	}
 
 	canaryJobs.Store(c.DBCanary.ID.String(), j)
