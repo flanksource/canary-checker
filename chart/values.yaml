@@ -33,8 +33,9 @@ grafanaDashboards: false
 
 # Turn on pprof /debug endpoint
 debug: false
-logLevel: "-v"
 
+# -v, -vv, -vvv
+logLevel: ""
 jsonLogs: true
 
 # restrict canary-checker to monitor single namespace for canaries.  Leave blank to monitor all namespaces
