@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
       - name: Kubernetes KinD Cluster
-        uses: container-tools/kind-action@v1
+        uses: container-tools/kind-action@v2
 
       - name: Build and push Docker image
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
