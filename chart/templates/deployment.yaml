@@ -141,6 +141,9 @@ spec:
             {{- if gt (int .Values.replicas) 1 }}
             - --enable-leader-election=true
             {{- end }}
+            {{- if .Values.jsonLogs }}
+            - --json-logs
+            {{- end }}
             {{- range $k, $v := .Values.extraArgs}}
             - --{{$k}}={{$v}}
             {{- end }}
