@@ -43,7 +43,7 @@ require (
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/c2h5oh/datasize v0.0.0-20231215233829-aa82cc1e6500 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/distribution/reference v0.5.0 // indirect
 	github.com/eko/gocache/lib/v4 v4.1.5 // indirect
@@ -106,7 +106,7 @@ require (
 	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/labstack/echo/v4 v4.11.4 // indirect
+	github.com/labstack/echo/v4 v4.12.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/liamylian/jsontime/v2 v2.0.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -128,9 +128,9 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.19.0 // indirect
-	github.com/prometheus/client_model v0.6.0 // indirect
+	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.53.0 // indirect
-	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/prometheus/procfs v0.13.0 // indirect
 	github.com/robertkrimen/otto v0.3.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/samber/lo v1.39.0 // indirect

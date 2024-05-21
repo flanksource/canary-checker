@@ -38,7 +38,8 @@ require (
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/joshdk/go-junit v1.0.0
 	github.com/jszwec/csvutil v1.9.0
-	github.com/labstack/echo/v4 v4.11.4
+	github.com/labstack/echo-contrib v0.17.1
+	github.com/labstack/echo/v4 v4.12.0
 	github.com/liamylian/jsontime/v2 v2.0.0
 	github.com/lib/pq v1.10.9
 	github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0
@@ -124,7 +125,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -232,8 +233,8 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/sftp v1.13.6 // indirect
-	github.com/prometheus/client_model v0.6.0 // indirect
-	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/prometheus/client_model v0.6.1 // indirect
+	github.com/prometheus/procfs v0.13.0 // indirect
 	github.com/rodaine/table v1.1.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
