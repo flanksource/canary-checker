@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
+	"slices"
 
 	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/context"
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	prom "github.com/prometheus/client_golang/prometheus"
 	echopprof "github.com/sevennt/echo-pprof"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 )
@@ -30,10 +32,14 @@ func New(ctx context.Context) *echo.Echo {
 		echopprof.Wrap(e)
 	}
 
-	e.Use(otelecho.Middleware("canary-checker", otelecho.WithSkipper(tracingURLSkipper)))
+	e.Use(otelecho.Middleware("canary-checker", otelecho.WithSkipper(telemetryURLSkipper)))
+	e.Use(echoprometheus.NewMiddlewareWithConfig(echoprometheus.MiddlewareConfig{
+		Registerer: prom.DefaultRegisterer,
+		Skipper:    telemetryURLSkipper,
+	}))
 
 	echoLogConfig := middleware.DefaultLoggerConfig
-	echoLogConfig.Skipper = tracingURLSkipper
+	echoLogConfig.Skipper = telemetryURLSkipper
 
 	e.Use(middleware.LoggerWithConfig(echoLogConfig))
 
@@ -81,13 +87,8 @@ func Forward(e *echo.Echo, prefix string, target string, respModifierFunc func(*
 	}))
 }
 
-// tracingURLSkipper ignores metrics route on some middleware
-func tracingURLSkipper(c echo.Context) bool {
+// telemetryURLSkipper ignores metrics route on some middleware
+func telemetryURLSkipper(c echo.Context) bool {
 	pathsToSkip := []string{"/health", "/metrics"}
-	for _, p := range pathsToSkip {
-		if strings.HasPrefix(c.Path(), p) {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(pathsToSkip, c.Path())
 }
