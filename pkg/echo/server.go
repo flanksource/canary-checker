@@ -34,8 +34,9 @@ func New(ctx context.Context) *echo.Echo {
 
 	e.Use(otelecho.Middleware("canary-checker", otelecho.WithSkipper(telemetryURLSkipper)))
 	e.Use(echoprometheus.NewMiddlewareWithConfig(echoprometheus.MiddlewareConfig{
-		Registerer: prom.DefaultRegisterer,
-		Skipper:    telemetryURLSkipper,
+		Registerer:                prom.DefaultRegisterer,
+		Skipper:                   telemetryURLSkipper,
+		DoNotUseRequestPathFor404: true,
 	}))
 
 	echoLogConfig := middleware.DefaultLoggerConfig
