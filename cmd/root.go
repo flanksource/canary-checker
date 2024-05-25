@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/telemetry"
+	"github.com/flanksource/commons/http"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
@@ -68,6 +70,9 @@ var Root = &cobra.Command{
 		}
 
 		if canary.UpstreamConf.Valid() {
+			canary.UpstreamConf.Options = append(canary.UpstreamConf.Options, func(c *http.Client) {
+				c.UserAgent(fmt.Sprintf("canary-checker %s", runner.Version))
+			})
 			logger.Infof("Pushing checks %s", canary.UpstreamConf)
 		} else if partial, err := canary.UpstreamConf.IsPartiallyFilled(); partial && err != nil {
 			logger.Warnf("Upstream not fully configured: %s", canary.UpstreamConf)
