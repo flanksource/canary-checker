@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -165,6 +166,32 @@ func LatestCheckStatus(ctx context.Context, checkID string) (*models.CheckStatus
 	}
 
 	return &status, nil
+}
+
+func GetAllValuesForConfigTag(ctx context.Context, tag string) ([]string, error) {
+	rows, err := ctx.DB().Model(&models.ConfigItem{}).Select("DISTINCT tags->>?", tag).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var values []string
+	for rows.Next() {
+		var value sql.NullString
+		if err := rows.Scan(&value); err != nil {
+			return nil, err
+		}
+
+		if value.Valid {
+			values = append(values, value.String)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return values, nil
 }
 
 func AddCheckStatuses(ctx context.Context, ids []string, status models.CheckHealthStatus) error {
