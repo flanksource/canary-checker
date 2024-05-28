@@ -1,0 +1,32 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Topology
+metadata:
+  name: kubernetes-clusters
+spec:
+  icon: flux
+  type: Topology
+  schedule: "@every 5m"
+  groupByTag: cluster
+  components:
+    - icon: nodes
+      name: Nodes
+      components:
+        - name: Nodes Component
+          type: lookup
+          lookup:
+            catalog:
+              - name: ""
+                test: {}
+                display:
+                  expr: >
+                    dyn(results).map(r, {
+                      'name': r.name,
+                      'icon': 'node',
+                      'status': r.status,
+                      'status_reason': r.description,
+                      'selectors': [{'labelSelector': 'app.kubernetes.io/instance='+r.name}],
+                    }).toJSON()
+                selector:
+                  - types:
+                      - Kubernetes::Node

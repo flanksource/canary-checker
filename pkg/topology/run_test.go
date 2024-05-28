@@ -4,6 +4,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/tests/fixtures/dummy"
 	"github.com/flanksource/duty/types"
 	ginkgo "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -129,6 +130,31 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 		Expect(parent3.Components[1].Name).To(Equal("Child-2C"))
 	})
 
+	ginkgo.It("should create two root components with group by", func() {
+		t, err := yamlFileToTopology("../../fixtures/topology/kubernetes-cluster-group-by.yaml")
+		if err != nil {
+			ginkgo.Fail("error converting yaml to v1.Topology:" + err.Error())
+		}
+
+		rootComponents, history, err := Run(DefaultContext, *t)
+		Expect(err).To(BeNil())
+		Expect(history.Errors).To(HaveLen(0))
+
+		Expect(rootComponents).To(HaveLen(2))
+
+		awsCluster := rootComponents[0]
+		Expect(awsCluster.Name).To(Equal("kubernetes-clusters (aws)"))
+		Expect(len(awsCluster.Components)).To(Equal(1))
+		Expect(len(awsCluster.Components[0].Components)).To(Equal(2))
+		Expect(awsCluster.Components[0].Components[0].Name).To(Equal(lo.FromPtr(dummy.KubernetesNodeA.Name)))
+		Expect(awsCluster.Components[0].Components[0].Name).To(Equal(lo.FromPtr(dummy.KubernetesNodeA.Name)))
+
+		demoCluster := rootComponents[1]
+		Expect(len(demoCluster.Components)).To(Equal(1))
+		Expect(demoCluster.Name).To(Equal("kubernetes-clusters (demo)"))
+		Expect(len(demoCluster.Components[0].Components)).To(Equal(1))
+		Expect(demoCluster.Components[0].Components[0].Name).To(Equal(lo.FromPtr(dummy.KubernetesNodeAKSPool1.Name)))
+	})
 })
 
 func yamlFileToTopology(file string) (*pkg.Topology, error) {
