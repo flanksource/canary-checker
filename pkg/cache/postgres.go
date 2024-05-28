@@ -3,6 +3,7 @@ package cache
 import (
 	gocontext "context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg"
@@ -11,6 +12,7 @@ import (
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/query"
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -29,30 +31,40 @@ func NewPostgresCache(context context.Context) *postgresCache {
 	}
 }
 
+func (c *postgresCache) saveCheckAndStatus(check pkg.Check, status pkg.CheckStatus) (string, error) {
+	tx := c.DB().Begin()
+	if tx.Error != nil {
+		return "", fmt.Errorf("error starting transaction: %w", tx.Error)
+	}
+	defer tx.Rollback()
+
+	check.Status = lo.Ternary(status.Status, "healthy", "unhealthy")
+	checkID, err := AddCheckFromStatus(tx, check, status)
+	if err != nil {
+		return "", fmt.Errorf("error persisting check with canary %s: %w", check.CanaryID, err)
+	}
+
+	if err := c.AddCheckStatus(tx, check, status); err != nil {
+		return "", fmt.Errorf("error persisting check status with canary %s: %w", check.CanaryID, err)
+	}
+
+	return checkID.String(), tx.Commit().Error
+}
+
 func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) []string {
 	checkIDs := make([]string, 0, len(statii))
-
-	db := c.DB()
 	for _, status := range statii {
-		if status.Status {
-			check.Status = "healthy"
+		if checkID, err := c.saveCheckAndStatus(check, status); err != nil {
+			logger.Errorf("error saving check and status: %v", err)
 		} else {
-			check.Status = "unhealthy"
+			checkIDs = append(checkIDs, checkID)
 		}
-
-		checkID, err := c.AddCheckFromStatus(check, status)
-		if err != nil {
-			logger.Errorf("error persisting check with canary %s: %v", check.CanaryID, err)
-		} else {
-			checkIDs = append(checkIDs, checkID.String())
-		}
-		c.AddCheckStatus(db, check, status)
 	}
 
 	return checkIDs
 }
 
-func (c *postgresCache) AddCheckFromStatus(check pkg.Check, status pkg.CheckStatus) (uuid.UUID, error) {
+func AddCheckFromStatus(tx *gorm.DB, check pkg.Check, status pkg.CheckStatus) (uuid.UUID, error) {
 	if status.Check == nil {
 		return uuid.Nil, nil
 	}
@@ -61,13 +73,13 @@ func (c *postgresCache) AddCheckFromStatus(check pkg.Check, status pkg.CheckStat
 		return check.ID, nil
 	}
 
-	return db.PersistCheck(c.DB(), check, check.CanaryID)
+	return db.PersistCheck(tx, check, check.CanaryID)
 }
 
-func (c *postgresCache) AddCheckStatus(db *gorm.DB, check pkg.Check, status pkg.CheckStatus) {
+func (c *postgresCache) AddCheckStatus(conn *gorm.DB, check pkg.Check, status pkg.CheckStatus) error {
 	jsonDetails, err := json.Marshal(status.Detail)
 	if err != nil {
-		logger.Errorf("error marshalling details: %v", err)
+		return fmt.Errorf("error marshalling details: %w", err)
 	}
 
 	checks := pkg.Checks{}
@@ -75,19 +87,20 @@ func (c *postgresCache) AddCheckStatus(db *gorm.DB, check pkg.Check, status pkg.
 	if check.Canary != nil {
 		nextRuntime, _ = check.Canary.NextRuntime(time.Now())
 	}
-	if c.DB().Model(&checks).
+
+	if conn.Model(&checks).
 		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 		Where("canary_id = ? AND type = ? AND name = ?", check.CanaryID, check.Type, check.GetName()).
 		Updates(map[string]any{"status": check.Status, "labels": check.Labels, "last_runtime": status.Time, "next_runtime": nextRuntime}).Error != nil {
-		logger.Errorf("error updating check: %v", err)
-		return
+		return fmt.Errorf("error updating check: %w", err)
 	}
 
 	if len(checks) == 0 || checks[0].ID == uuid.Nil {
 		logger.Tracef("%s check not found, skipping status insert", check)
-		return
+		return nil
 	}
-	err = db.Exec(`INSERT INTO check_statuses(
+
+	err = conn.Exec(`INSERT INTO check_statuses(
 		check_id,
 		details,
 		duration,
@@ -112,8 +125,10 @@ func (c *postgresCache) AddCheckStatus(db *gorm.DB, check pkg.Check, status pkg.
 	).Error
 
 	if err != nil {
-		logger.Errorf("error adding check status to postgres: %v", err)
+		return fmt.Errorf("error adding check status to postgres: %w", err)
 	}
+
+	return nil
 }
 
 func (c *postgresCache) GetDetails(checkkey string, time string) interface{} {
