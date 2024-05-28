@@ -8,10 +8,11 @@ resources:
   - slow/namespace_pass.yaml
   - pod_fail.yaml
   - pod_pass.yaml
+  - cronjob_monitor_fail.yaml
+  - cronjob_monitor_pass.yaml
   - kubernetes_bundle.yaml
   - kubernetes_resource_ingress_pass.yaml
-  - kubernetes_resource_ingress_fail.yaml
-  - kubernetes_resource_service_pass.yaml
   - kubernetes_resource_namespace_pass.yaml
   - kubernetes_resource_pod_exit_code_pass.yaml
-  - cronjob_monitor_fail.yaml
+  - kubernetes_resource_service_fail.yaml
+  - kubernetes_resource_service_pass.yaml

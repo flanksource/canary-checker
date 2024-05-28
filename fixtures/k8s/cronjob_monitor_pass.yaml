@@ -2,12 +2,12 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: always-failing
+  name: always-passing
   namespace: canaries
 spec:
   schedule: "0 * * * *"
   concurrencyPolicy: Forbid
-  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
   jobTemplate:
     spec:
       backoffLimit: 1
@@ -20,22 +20,20 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - exit 1 # always fail
+                - exit 0 # always fail
           restartPolicy: OnFailure
 ---
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
-  name: monitor-always-failing-job
-  labels:
-    "Expected-Fail": "true"
+  name: monitor-always-passing-job
 spec:
   schedule: "@every 1m"
   kubernetes:
-    - name: "Monitor always-failing job"
+    - name: "Monitor always-passing job"
       kind: CronJob
       namespaceSelector:
         name: canaries
       resource:
-        name: always-failing
+        name: always-passing
       healthy: true
