@@ -477,11 +477,69 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 		t.Namespace = tj.Namespace
 	}
 
-	ctx := NewComponentContext(job.Context, t)
-	ctx.JobHistory = job.History
+	groupByTags := []string{""}
+	if t.Spec.GroupByTag != "" {
+		tags, err := db.GetAllValuesForConfigTag(job.Context, t.Spec.GroupByTag)
+		if err != nil {
+			return err
+		} else if len(tags) != 0 {
+			groupByTags = tags
+		} else {
+			job.Warnf("no values found for tag: %s", t.Spec.GroupByTag)
+		}
+	}
 
-	ctx.Debugf("running topology")
+	var skipComponentDeletion bool
+	var results pkg.Components
+	for _, tagValue := range groupByTags {
+		ctx := NewComponentContext(job.Context, injectTagFilter(t.Spec.GroupByTag, tagValue, t))
+		ctx.JobHistory = job.History
+		result, skipDeletion := tj.run(ctx, job)
+		if skipDeletion {
+			skipComponentDeletion = true
+		}
 
+		results = append(results, result...)
+	}
+
+	var compIDs []uuid.UUID
+	for _, component := range results {
+		// Is this step required ever ?
+		component.Namespace = dbTopology.Namespace
+		component.Labels = dbTopology.Labels
+		component.TopologyID = topologyID
+
+		componentsIDs, err := db.PersistComponent(job.Context, component)
+		if err != nil {
+			return fmt.Errorf("failed to persist component(id=%s, name=%s): %v", component.ID, component.Name, err)
+		}
+
+		compIDs = append(compIDs, componentsIDs...)
+	}
+
+	dbCompsIDs, err := db.GetActiveComponentsIDsOfTopology(job.DB(), topologyID.String())
+	if err != nil {
+		return fmt.Errorf("error getting components %v", err)
+	}
+
+	deleteCompIDs := utils.SetDifference(dbCompsIDs, compIDs)
+	if len(deleteCompIDs) != 0 && !skipComponentDeletion {
+		if err := db.DeleteComponentsWithIDs(job.DB(), utils.UUIDsToStrings(deleteCompIDs)); err != nil {
+			return fmt.Errorf("error deleting components %v", err)
+		}
+	}
+
+	for _, k := range results {
+		job.History.SuccessCount = len(k.Components)
+	}
+	tj.Output = results
+
+	query.FlushTopologyCache()
+
+	return nil
+}
+
+func (tj *TopologyJob) run(ctx *ComponentContext, job job.JobRuntime) (pkg.Components, bool) {
 	var results pkg.Components
 	rootComponent := &pkg.Component{
 		Name:      ctx.Topology.Spec.Text,
@@ -546,7 +604,7 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 		// if there is only one component and it is virtual, then we don't need to show it
 		ctx.Components = &rootComponent.Components[0].Components
 		tj.Output = *ctx.Components
-		return nil
+		return nil, false
 	}
 
 	ctx.Components = &rootComponent.Components
@@ -601,39 +659,58 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 		c.Schedule = ctx.Topology.Spec.Schedule
 	}
 
-	var compIDs []uuid.UUID
-	for _, component := range results {
-		// Is this step required ever ?
-		component.Name = dbTopology.Name
-		component.Namespace = dbTopology.Namespace
-		component.Labels = dbTopology.Labels
-		component.TopologyID = topologyID
+	return results, skipComponentDeletion
+}
 
-		componentsIDs, err := db.PersistComponent(job.Context, component)
-		if err != nil {
-			return fmt.Errorf("failed to persist component(id=%s, name=%s): %v", component.ID, component.Name, err)
+func injectIntoSelector(key, val, selector string) string {
+	if selector == "" {
+		return fmt.Sprintf("%s=%s", key, val)
+	}
+
+	m := collections.SelectorToMap(selector)
+	m[key] = val
+	return collections.SortedMap(m)
+}
+
+// setTagFilter recursively modifies all the catalog lookups in the given components.
+func setTagFilter(tag, tagValue string, components []v1.ComponentSpecObject) []v1.ComponentSpecObject {
+	for i := range components {
+		if components[i].Lookup == nil {
+			continue
 		}
 
-		compIDs = append(compIDs, componentsIDs...)
-	}
+		for j := range components[i].Lookup.Catalog {
+			for k := range components[i].Lookup.Catalog[j].Selector {
+				tagSelector := components[i].Lookup.Catalog[j].Selector[k].TagSelector
+				components[i].Lookup.Catalog[j].Selector[k].TagSelector = injectIntoSelector(tag, tagValue, tagSelector)
+			}
 
-	ctx.Infof("%s id=%s external_id=%s status=%s", rootComponent.Name, rootComponent.ID, rootComponent.ExternalId, rootComponent.Status)
-
-	dbCompsIDs, err := db.GetActiveComponentsIDsOfTopology(ctx.DB(), id)
-	if err != nil {
-		return fmt.Errorf("error getting components %v", err)
-	}
-
-	deleteCompIDs := utils.SetDifference(dbCompsIDs, compIDs)
-	if len(deleteCompIDs) != 0 && !skipComponentDeletion {
-		if err := db.DeleteComponentsWithIDs(job.DB(), utils.UUIDsToStrings(deleteCompIDs)); err != nil {
-			return fmt.Errorf("error deleting components %v", err)
+			components[i].Components = setTagFilter(tag, tagValue, components[i].Components)
 		}
 	}
-	job.History.SuccessCount = len(rootComponent.Components)
-	tj.Output = results
 
-	query.FlushTopologyCache()
+	return components
+}
 
-	return nil
+// injectTagFilter modifies all the catalog lookup in the given toplogy
+// by injecting the given tag.
+func injectTagFilter(tag, tagValue string, topology v1.Topology) v1.Topology {
+	if tag == "" {
+		return topology
+	}
+
+	topology.Name = fmt.Sprintf("%s (%s)", topology.Name, tagValue)
+	for _, component := range topology.Spec.Components {
+		if component.Lookup != nil {
+			for j := range component.Lookup.Catalog {
+				for k := range component.Lookup.Catalog[j].Selector {
+					component.Lookup.Catalog[j].Selector[k].TagSelector = injectIntoSelector(tag, tagValue, component.Lookup.Catalog[j].Selector[k].TagSelector)
+				}
+			}
+		}
+
+		component.Components = setTagFilter(tag, tagValue, component.Components)
+	}
+
+	return topology
 }

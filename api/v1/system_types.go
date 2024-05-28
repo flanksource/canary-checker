@@ -36,6 +36,8 @@ type TopologySpec struct {
 	Properties Properties `json:"properties,omitempty"`
 	// Lookup and associate config items with this component
 	Configs []types.ConfigQuery `json:"configs,omitempty"`
+
+	GroupByTag string `json:"groupByTag,omitempty"`
 }
 
 func (s Topology) NextRuntime() (*time.Time, error) {

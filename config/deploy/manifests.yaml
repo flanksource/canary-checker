@@ -8234,6 +8234,8 @@ spec:
                         type: array
                     type: object
                   type: array
+                groupByTag:
+                  type: string
                 icon:
                   type: string
                 id:
