@@ -78,7 +78,9 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 	if canary.Spec.Webhook != nil {
 		// Webhook checks can be persisted immediately as they do not require scheduling & running.
 		result := pkg.Success(canary.Spec.Webhook, *canary)
-		_ = cache.PostgresCache.Add(pkg.FromV1(*canary, canary.Spec.Webhook), pkg.CheckStatusFromResult(*result))
+		if _, err := cache.PostgresCache.Add(ctx, pkg.FromV1(*canary, canary.Spec.Webhook), pkg.CheckStatusFromResult(*result)); err != nil {
+			return err
+		}
 	}
 
 	var existingJob *job.Job

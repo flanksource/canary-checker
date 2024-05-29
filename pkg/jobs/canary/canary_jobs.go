@@ -101,11 +101,6 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		ctx.Error(err, "error getting transformed checks")
 	}
 
-	var transformedChecksCreated []string
-	// Transformed checks have a delete strategy
-	// On deletion they can either be marked healthy, unhealthy or left as is
-	checkIDDeleteStrategyMap := make(map[string]string)
-
 	// TODO: Use ctx with object here
 	logPass := j.Canary.IsTrace() || j.Canary.IsDebug() || LogPass
 	logFail := j.Canary.IsTrace() || j.Canary.IsDebug() || LogFail
@@ -113,16 +108,11 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		if logPass && result.Pass || logFail && !result.Pass {
 			ctx.Logger.Named(result.GetName()).Infof(result.String())
 		}
-		transformedChecksAdded := cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
-		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded...)
-		for _, checkID := range transformedChecksAdded {
-			checkIDDeleteStrategyMap[checkID] = result.Check.GetTransformDeleteStrategy()
-		}
+	}
 
-		// Establish relationship with components & configs
-		if err := FormCheckRelationships(ctx.Context, result); err != nil {
-			ctx.Logger.Named(result.Name).Errorf("error forming check relationships: %v", err)
-		}
+	transformedChecksCreated, checkIDDeleteStrategyMap, err := SaveResults(ctx.Context, results)
+	if err != nil {
+		return fmt.Errorf("failed to save results: %w", err)
 	}
 
 	UpdateCanaryStatusAndEvent(ctx.Context, j.Canary, results)
@@ -153,6 +143,40 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	CanaryLastRuntimes.Store(canaryID, time.Now())
 	ctx.History.SuccessCount = len(results)
 	return nil
+}
+
+func SaveResults(ctx context.Context, results []*pkg.CheckResult) ([]string, map[string]string, error) {
+	var transformedChecksCreated []string
+	// Transformed checks have a delete strategy
+	// On deletion they can either be marked healthy, unhealthy or left as is
+	checkIDDeleteStrategyMap := make(map[string]string)
+
+	if len(results) == 0 {
+		return transformedChecksCreated, checkIDDeleteStrategyMap, nil
+	}
+
+	tx := ctx.DB().Begin()
+	if tx.Error != nil {
+		return nil, nil, fmt.Errorf("error starting transaction: %w", tx.Error)
+	}
+	defer tx.Rollback()
+
+	for _, result := range results {
+		transformedChecksAdded, err := cache.PostgresCache.Add(ctx.WithDB(tx, ctx.Pool()), pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
+		if err != nil {
+			return nil, nil, fmt.Errorf("error adding check to cache: %w", err)
+		}
+
+		transformedChecksCreated = append(transformedChecksCreated, transformedChecksAdded)
+		checkIDDeleteStrategyMap[transformedChecksAdded] = result.Check.GetTransformDeleteStrategy()
+
+		// Establish relationship with components & configs
+		if err := FormCheckRelationships(ctx.WithDB(tx, ctx.Pool()), result); err != nil {
+			ctx.Logger.Named(result.Name).Errorf("error forming check relationships: %v", err)
+		}
+	}
+
+	return transformedChecksCreated, checkIDDeleteStrategyMap, tx.Commit().Error
 }
 
 func logIfError(err error, description string) {

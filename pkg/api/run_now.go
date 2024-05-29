@@ -59,7 +59,10 @@ func RunCanaryHandler(c echo.Context) error {
 	}
 
 	for _, result := range results {
-		_ = cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
+		if _, err := cache.PostgresCache.Add(ctx.Context, pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result)); err != nil {
+			return errorResponse(c, err, http.StatusInternalServerError)
+		}
+
 		if err := canaryJobs.FormCheckRelationships(ctx.Context, result); err != nil {
 			ctx.Logger.Named(result.Name).Errorf("error forming check relationships: %v", err)
 		}

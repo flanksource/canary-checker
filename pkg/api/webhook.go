@@ -113,7 +113,10 @@ func webhookHandler(ctx dutyContext.Context, id, authToken string, data CheckDat
 
 	checks.ExportCheckMetrics(scrapeCtx, transformedResults)
 	for _, result := range transformedResults {
-		_ = cache.PostgresCache.Add(pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
+		_, err := cache.PostgresCache.Add(ctx, pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

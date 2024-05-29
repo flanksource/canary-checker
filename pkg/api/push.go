@@ -72,7 +72,11 @@ func PushHandler(c echo.Context) error {
 			}
 		}
 	}
-	cache.PostgresCache.Add(data.Check, data.Status)
+
+	if _, err := cache.PostgresCache.Add(ctx, data.Check, data.Status); err != nil {
+		return errorResponse(c, err, http.StatusInternalServerError)
+	}
+
 	c.Response().WriteHeader(http.StatusCreated)
 	return nil
 }

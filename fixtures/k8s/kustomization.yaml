@@ -9,7 +9,7 @@ resources:
   - pod_fail.yaml
   - pod_pass.yaml
   - cronjob_monitor_fail.yaml
-  - cronjob_monitor_pass.yaml
+  - cronjob_monitor.yaml
   - kubernetes_bundle.yaml
   - kubernetes_resource_ingress_pass.yaml
   - kubernetes_resource_namespace_pass.yaml
