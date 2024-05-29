@@ -31,40 +31,21 @@ func NewPostgresCache(context context.Context) *postgresCache {
 	}
 }
 
-func (c *postgresCache) saveCheckAndStatus(check pkg.Check, status pkg.CheckStatus) (string, error) {
-	tx := c.DB().Begin()
-	if tx.Error != nil {
-		return "", fmt.Errorf("error starting transaction: %w", tx.Error)
-	}
-	defer tx.Rollback()
-
+func (c *postgresCache) Add(ctx context.Context, check pkg.Check, status pkg.CheckStatus) (string, error) {
 	check.Status = lo.Ternary(status.Status, "healthy", "unhealthy")
-	checkID, err := AddCheckFromStatus(tx, check, status)
+	checkID, err := AddCheckFromStatus(ctx, check, status)
 	if err != nil {
 		return "", fmt.Errorf("error persisting check with canary %s: %w", check.CanaryID, err)
 	}
 
-	if err := c.AddCheckStatus(tx, check, status); err != nil {
+	if err := c.AddCheckStatus(ctx.DB(), check, status); err != nil {
 		return "", fmt.Errorf("error persisting check status with canary %s: %w", check.CanaryID, err)
 	}
 
-	return checkID.String(), tx.Commit().Error
+	return checkID.String(), nil
 }
 
-func (c *postgresCache) Add(check pkg.Check, statii ...pkg.CheckStatus) []string {
-	checkIDs := make([]string, 0, len(statii))
-	for _, status := range statii {
-		if checkID, err := c.saveCheckAndStatus(check, status); err != nil {
-			logger.Errorf("error saving check and status: %v", err)
-		} else {
-			checkIDs = append(checkIDs, checkID)
-		}
-	}
-
-	return checkIDs
-}
-
-func AddCheckFromStatus(tx *gorm.DB, check pkg.Check, status pkg.CheckStatus) (uuid.UUID, error) {
+func AddCheckFromStatus(ctx context.Context, check pkg.Check, status pkg.CheckStatus) (uuid.UUID, error) {
 	if status.Check == nil {
 		return uuid.Nil, nil
 	}
@@ -73,7 +54,7 @@ func AddCheckFromStatus(tx *gorm.DB, check pkg.Check, status pkg.CheckStatus) (u
 		return check.ID, nil
 	}
 
-	return db.PersistCheck(tx, check, check.CanaryID)
+	return db.PersistCheck(ctx.DB(), check, check.CanaryID)
 }
 
 func (c *postgresCache) AddCheckStatus(conn *gorm.DB, check pkg.Check, status pkg.CheckStatus) error {
