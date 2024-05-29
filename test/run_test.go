@@ -59,6 +59,15 @@ var _ = ginkgo.Describe("Canary Checks/"+testFolder, func() {
 		if strings.HasPrefix(name, "_") || !strings.HasSuffix(name, ".yaml") || name == "kustomization.yaml" {
 			continue
 		}
+
+		// Only run those fixtures that end in _pass.yaml or _fail.yaml
+		if !strings.HasSuffix(name, "_pass.yaml") &&
+			!strings.HasSuffix(name, "_pass.yml") &&
+			!strings.HasSuffix(name, "_fail.yaml") &&
+			!strings.HasSuffix(name, "_fail.yml") {
+			continue
+		}
+
 		wg.Add(1)
 		go func() {
 			defer ginkgo.GinkgoRecover()
