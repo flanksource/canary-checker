@@ -1,14 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/commons/logger"
-	"github.com/invopop/jsonschema"
+	"github.com/flanksource/duty/schema/openapi"
 	"github.com/spf13/cobra"
 )
 
@@ -22,30 +21,16 @@ var generateSchema = &cobra.Command{
 	Use: "generate-schema",
 	Run: func(cmd *cobra.Command, args []string) {
 		for file, obj := range schemas {
-			schema := jsonschema.Reflect(obj)
-
-			data, err := json.MarshalIndent(schema, "", "  ")
-			if err != nil {
-				logger.Fatalf("error marshalling: %v", err)
-			}
-
-			os.Mkdir(schemaPath, 0755)
 			p := path.Join(schemaPath, file+".schema.json")
-			if err := os.WriteFile(p, data, 0644); err != nil {
+			if err := openapi.WriteSchemaToFile(p, obj); err != nil {
 				logger.Fatalf("unable to save schema: %v", err)
 			}
 			logger.Infof("Saved OpenAPI schema to %s", p)
 		}
 
 		for _, check := range v1.AllChecks {
-			schema := jsonschema.Reflect(check)
-			data, err := json.MarshalIndent(schema, "", "  ")
-			if err != nil {
-				logger.Fatalf("error marshalling (type=%s): %v", check.GetType(), err)
-			}
-
 			p := path.Join(schemaPath, fmt.Sprintf("health_%s.schema.json", check.GetType()))
-			if err := os.WriteFile(p, data, 0644); err != nil {
+			if err := openapi.WriteSchemaToFile(p, check); err != nil {
 				logger.Fatalf("unable to save schema: %v", err)
 			}
 
