@@ -51,7 +51,7 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 		return results.Failf("Must specify a URL")
 	}
 
-	promClient, err := prometheus.NewPrometheusAPI(connection.URL)
+	promClient, err := prometheus.NewPrometheusAPI(ctx.Context, connection.URL, check.Auth)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
