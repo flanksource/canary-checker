@@ -689,12 +689,27 @@ type Prometheus struct {
 	PrometheusCheck `yaml:",inline" json:",inline"`
 }
 
+type PrometheusOauth struct {
+	ClientID     types.EnvVar      `json:"clientID,omitempty"`
+	ClientSecret types.EnvVar      `json:"clientSecret,omitempty"`
+	Scopes       []string          `json:"scope,omitempty" yaml:"scope,omitempty"`
+	TokenURL     string            `json:"tokenURL,omitempty" yaml:"tokenURL,omitempty"`
+	Params       map[string]string `json:"params,omitempty" yaml:"params,omitempty"`
+}
+
+type PrometheusAuth struct {
+	Basic  *Authentication  `json:"basic,omitempty"`
+	Bearer types.EnvVar     `json:"bearer,omitempty"`
+	Oauth  *PrometheusOauth `json:"oauth,omitempty"`
+}
+
 type PrometheusCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 	// Deprecated: use `url` instead
 	Host       string `yaml:"host,omitempty" json:"host,omitempty"`
 	Connection `yaml:",inline" json:",inline"`
+	Auth       *PrometheusAuth `json:"auth,omitempty"`
 	// PromQL query
 	Query string `yaml:"query" json:"query" template:"true"`
 }

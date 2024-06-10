@@ -85,7 +85,7 @@ var Root = &cobra.Command{
 		}
 		if prometheus.PrometheusURL != "" {
 			logger.Infof("Setting default prometheus: %s", prometheus.PrometheusURL)
-			runner.Prometheus, _ = prometheus.NewPrometheusAPI(prometheus.PrometheusURL)
+			runner.Prometheus, _ = prometheus.NewPrometheusAPI(context.New(), prometheus.PrometheusURL, nil)
 		}
 
 		go func() {
