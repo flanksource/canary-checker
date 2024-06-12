@@ -87,6 +87,39 @@ jobs:
           dockerfile: build/full/Dockerfile
           tags: "latest,v${{ env.RELEASE_VERSION }}"
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.ECR_AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          
+      - name: Login to Amazon ECR Public
+        id: login-ecr-public
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Publish Minimal Image to ECR Public
+        env:
+          REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+          REGISTRY_ALIAS: k4y9r6y5
+          REPOSITORY: canary-checker
+          IMAGE_TAG: "v${{ env.RELEASE_VERSION }}"
+        run: |
+          docker build -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG -f build/minimal/Dockerfile . 
+          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
+
+      - name: Publish Minimal Image to ECR Public
+        env:
+          REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+          REGISTRY_ALIAS: k4y9r6y5
+          REPOSITORY: canary-checker-full
+          IMAGE_TAG: "v${{ env.RELEASE_VERSION }}"
+        run: |
+          docker build -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG -f build/full/Dockerfile . 
+          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
+
   helm:
     runs-on: ubuntu-latest
     needs: [semantic-release, docker]
