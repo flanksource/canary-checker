@@ -8,9 +8,9 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/duty/connection"
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	"github.com/flanksource/gomplate/v3"
 )
 
@@ -106,7 +106,7 @@ func (ctx Context) TemplateStruct(o interface{}) error {
 	return templater.Walk(o)
 }
 
-func (ctx Context) GetAuthValues(auth connection.Authentication) (connection.Authentication, error) {
+func (ctx Context) GetAuthValues(auth types.Authentication) (types.Authentication, error) {
 	// in case nil we are sending empty string values for username and password
 	if auth.IsEmpty() {
 		return auth, nil

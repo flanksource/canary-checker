@@ -3,24 +3,6 @@
   "$id": "https://github.com/flanksource/canary-checker/api/v1/http-check",
   "$ref": "#/$defs/HTTPCheck",
   "$defs": {
-    "Authentication": {
-      "properties": {
-        "username": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "password": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
     "ConfigMapKeySelector": {
       "properties": {
         "name": {
@@ -110,8 +92,17 @@
         "url": {
           "type": "string"
         },
-        "Auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
         },
         "endpoint": {
           "type": "string"
@@ -168,8 +159,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "Auth"
+        "name"
       ]
     },
     "HelmRefKeySelector": {

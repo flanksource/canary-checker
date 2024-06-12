@@ -44,8 +44,17 @@
         "url": {
           "type": "string"
         },
-        "Auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -78,27 +87,8 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "Auth"
+        "name"
       ]
-    },
-    "Authentication": {
-      "properties": {
-        "username": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "password": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
     },
     "CheckRelationship": {
       "properties": {

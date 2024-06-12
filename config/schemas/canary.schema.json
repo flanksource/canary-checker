@@ -71,8 +71,17 @@
         "url": {
           "type": "string"
         },
-        "Auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -105,8 +114,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "Auth"
+        "name"
       ]
     },
     "Artifact": {
@@ -128,12 +136,6 @@
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
-        },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
         }
       },
       "additionalProperties": false,
@@ -1282,8 +1284,17 @@
         "url": {
           "type": "string"
         },
-        "Auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
         },
         "query": {
           "type": "string"
@@ -1298,8 +1309,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "Auth"
+        "name"
       ]
     },
     "EnvVar": {
@@ -1757,8 +1767,17 @@
         "url": {
           "type": "string"
         },
-        "Auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
         },
         "endpoint": {
           "type": "string"
@@ -1815,8 +1834,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "Auth"
+        "name"
       ]
     },
     "HelmCheck": {
@@ -2527,8 +2545,17 @@
         "url": {
           "type": "string"
         },
-        "Auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
         },
         "bindDN": {
           "type": "string"
@@ -2544,7 +2571,6 @@
       "type": "object",
       "required": [
         "name",
-        "Auth",
         "bindDN"
       ]
     },
@@ -2685,15 +2711,23 @@
         "url": {
           "type": "string"
         },
-        "Auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "Auth"
+        "name"
       ]
     },
     "MssqlCheck": {
@@ -2737,8 +2771,17 @@
         "url": {
           "type": "string"
         },
-        "Auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
         },
         "query": {
           "type": "string"
@@ -2750,8 +2793,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "Auth"
+        "name"
       ]
     },
     "MysqlCheck": {
@@ -2795,8 +2837,17 @@
         "url": {
           "type": "string"
         },
-        "Auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
         },
         "query": {
           "type": "string"
@@ -2808,8 +2859,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "Auth"
+        "name"
       ]
     },
     "NamespaceCheck": {
@@ -3079,8 +3129,17 @@
         "url": {
           "type": "string"
         },
-        "Auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
         },
         "query": {
           "type": "string"
@@ -3096,7 +3155,6 @@
       "type": "object",
       "required": [
         "name",
-        "Auth",
         "query",
         "index"
       ]
@@ -3259,8 +3317,17 @@
         "url": {
           "type": "string"
         },
-        "Auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
         },
         "query": {
           "type": "string"
@@ -3272,8 +3339,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "Auth"
+        "name"
       ]
     },
     "PrometheusCheck": {
@@ -3320,8 +3386,17 @@
         "url": {
           "type": "string"
         },
-        "Auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
         },
         "query": {
           "type": "string"
@@ -3331,7 +3406,6 @@
       "type": "object",
       "required": [
         "name",
-        "Auth",
         "query"
       ]
     },
@@ -3367,8 +3441,17 @@
         "url": {
           "type": "string"
         },
-        "Auth": {
-          "$ref": "#/$defs/Authentication"
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
         },
         "addr": {
           "type": "string"
@@ -3380,8 +3463,7 @@
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "Auth"
+        "name"
       ]
     },
     "ResourceSelector": {
