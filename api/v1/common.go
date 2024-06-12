@@ -415,8 +415,8 @@ type Connection struct {
 	// Connection name e.g. connection://http/google
 	Connection string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Connection url, interpolated with username,password
-	URL                       string `yaml:"url,omitempty" json:"url,omitempty" template:"true"`
-	connection.Authentication `yaml:",inline" json:",inline"`
+	URL  string               `yaml:"url,omitempty" json:"url,omitempty" template:"true"`
+	Auth types.Authentication `yaml:",inline" json:",inline"`
 }
 
 func (c Connection) GetEndpoint() string {
