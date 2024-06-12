@@ -1,1 +1,167 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://github.com/flanksource/canary-checker/api/v1/catalog-check","$ref":"#/$defs/CatalogCheck","$defs":{"CatalogCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"selector":{"$ref":"#/$defs/ResourceSelectors"}},"additionalProperties":false,"type":"object","required":["name","selector"]},"Items":{"items":{"type":"string"},"type":"array"},"Labels":{"additionalProperties":{"type":"string"},"type":"object"},"MetricLabel":{"properties":{"name":{"type":"string"},"value":{"type":"string"},"valueExpr":{"type":"string"}},"additionalProperties":false,"type":"object","required":["name"]},"MetricLabels":{"items":{"$ref":"#/$defs/MetricLabel"},"type":"array"},"Metrics":{"properties":{"name":{"type":"string"},"labels":{"$ref":"#/$defs/MetricLabels"},"type":{"type":"string"},"value":{"type":"string"}},"additionalProperties":false,"type":"object"},"ResourceSelector":{"properties":{"agent":{"type":"string"},"cache":{"type":"string"},"id":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"types":{"$ref":"#/$defs/Items"},"statuses":{"$ref":"#/$defs/Items"},"tagSelector":{"type":"string"},"labelSelector":{"type":"string"},"fieldSelector":{"type":"string"}},"additionalProperties":false,"type":"object"},"ResourceSelectors":{"items":{"$ref":"#/$defs/ResourceSelector"},"type":"array"},"Template":{"properties":{"template":{"type":"string"},"jsonPath":{"type":"string"},"expr":{"type":"string"},"javascript":{"type":"string"}},"additionalProperties":false,"type":"object"}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/flanksource/canary-checker/api/v1/catalog-check",
+  "$ref": "#/$defs/CatalogCheck",
+  "$defs": {
+    "CatalogCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "selector": {
+          "$ref": "#/$defs/ResourceSelectors"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "selector"
+      ]
+    },
+    "Items": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "Labels": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "MetricLabel": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "valueExpr": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "MetricLabels": {
+      "items": {
+        "$ref": "#/$defs/MetricLabel"
+      },
+      "type": "array"
+    },
+    "Metrics": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/MetricLabels"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ResourceSelector": {
+      "properties": {
+        "agent": {
+          "type": "string"
+        },
+        "cache": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "types": {
+          "$ref": "#/$defs/Items"
+        },
+        "statuses": {
+          "$ref": "#/$defs/Items"
+        },
+        "tagSelector": {
+          "type": "string"
+        },
+        "labelSelector": {
+          "type": "string"
+        },
+        "fieldSelector": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ResourceSelectors": {
+      "items": {
+        "$ref": "#/$defs/ResourceSelector"
+      },
+      "type": "array"
+    },
+    "Template": {
+      "properties": {
+        "template": {
+          "type": "string"
+        },
+        "jsonPath": {
+          "type": "string"
+        },
+        "expr": {
+          "type": "string"
+        },
+        "javascript": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    }
+  }
+}

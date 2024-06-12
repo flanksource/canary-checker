@@ -13,7 +13,6 @@ import (
 	"github.com/c2h5oh/datasize"
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/commons/duration"
-	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/gomplate/v3"
 	"github.com/timberio/go-datemath"

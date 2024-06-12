@@ -852,6 +852,8 @@ github.com/fergusstrange/embedded-postgres v1.25.0 h1:sa+k2Ycrtz40eCRPOzI7Ry7Ttk
 github.com/fergusstrange/embedded-postgres v1.25.0/go.mod h1:t/MLs0h9ukYM6FSt99R7InCHs1nW0ordoVCcnzmpTYw=
 github.com/flanksource/artifacts v1.0.5 h1:SCAURCbnBZoCvGKJRU4IFKokRp+bGkj2h1nfl2eXy1g=
 github.com/flanksource/artifacts v1.0.5/go.mod h1:AaUcGtwsD9JyveJhQ3C9uc/nNlivqz+xRX3UKLbNme0=
+github.com/flanksource/artifacts v1.0.7 h1:tLbY4+7l2H06Td3zSgGSwJy9Vfhto+M7L80cm0aqyyc=
+github.com/flanksource/artifacts v1.0.7/go.mod h1:pzO1hirM9RMrkJMsLbZbZyN6elsCwz8SNOk3z+mpv34=
 github.com/flanksource/commons v1.22.1 h1:Ycg8r26bx537UTdAEFgngDW1r2j5bX6Lr3NGxLICpiw=
 github.com/flanksource/commons v1.22.1/go.mod h1:GD5+yGvmYFPIW3WMNN+y1JkeDMJY74e05pQAsRbrvwY=
 github.com/flanksource/duty v1.0.495 h1:nfaiVRde4KJkJP4YqSjbZtYoYpA9s9Yn7J0qrMBUOoU=

@@ -1,1 +1,3786 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://github.com/flanksource/canary-checker/api/v1/canary","$ref":"#/$defs/Canary","$defs":{"AWSConnection":{"properties":{"connection":{"type":"string"},"accessKey":{"$ref":"#/$defs/EnvVar"},"secretKey":{"$ref":"#/$defs/EnvVar"},"sessionToken":{"$ref":"#/$defs/EnvVar"},"region":{"type":"string"},"endpoint":{"type":"string"},"skipTLSVerify":{"type":"boolean"}},"additionalProperties":false,"type":"object"},"AlertManagerCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"connection":{"type":"string"},"url":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"},"relationships":{"$ref":"#/$defs/CheckRelationship"},"alerts":{"items":{"type":"string"},"type":"array"},"filters":{"additionalProperties":{"type":"string"},"type":"object"},"exclude_filters":{"additionalProperties":{"type":"string"},"type":"object"},"ignore":{"items":{"type":"string"},"type":"array"}},"additionalProperties":false,"type":"object","required":["name"]},"Artifact":{"properties":{"path":{"type":"string"}},"additionalProperties":false,"type":"object","required":["path"]},"Authentication":{"properties":{"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"}},"additionalProperties":false,"type":"object"},"AwsConfigCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"query":{"type":"string"},"connection":{"type":"string"},"accessKey":{"$ref":"#/$defs/EnvVar"},"secretKey":{"$ref":"#/$defs/EnvVar"},"sessionToken":{"$ref":"#/$defs/EnvVar"},"region":{"type":"string"},"endpoint":{"type":"string"},"skipTLSVerify":{"type":"boolean"},"aggregatorName":{"type":"string"}},"additionalProperties":false,"type":"object","required":["name","query"]},"AwsConfigRuleCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"ignoreRules":{"items":{"type":"string"},"type":"array"},"rules":{"items":{"type":"string"},"type":"array"},"complianceTypes":{"items":{"type":"string"},"type":"array"},"connection":{"type":"string"},"accessKey":{"$ref":"#/$defs/EnvVar"},"secretKey":{"$ref":"#/$defs/EnvVar"},"sessionToken":{"$ref":"#/$defs/EnvVar"},"region":{"type":"string"},"endpoint":{"type":"string"},"skipTLSVerify":{"type":"boolean"}},"additionalProperties":false,"type":"object","required":["name"]},"AzureConnection":{"properties":{"connection":{"type":"string"},"clientID":{"$ref":"#/$defs/EnvVar"},"clientSecret":{"$ref":"#/$defs/EnvVar"},"tenantID":{"type":"string"}},"additionalProperties":false,"type":"object"},"AzureDevopsCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"connection":{"type":"string"},"organization":{"type":"string"},"personalAccessToken":{"$ref":"#/$defs/EnvVar"},"project":{"type":"string"},"pipeline":{"type":"string"},"variables":{"additionalProperties":{"type":"string"},"type":"object"},"branch":{"items":{"type":"string"},"type":"array"},"thresholdMillis":{"type":"integer"}},"additionalProperties":false,"type":"object","required":["name","organization","personalAccessToken","project","pipeline","variables","branch","thresholdMillis"]},"Canary":{"properties":{"kind":{"type":"string"},"apiVersion":{"type":"string"},"metadata":{"$ref":"#/$defs/ObjectMeta"},"spec":{"$ref":"#/$defs/CanarySpec"},"status":{"$ref":"#/$defs/CanaryStatus"}},"additionalProperties":false,"type":"object"},"CanarySpec":{"properties":{"replicas":{"type":"integer"},"env":{"additionalProperties":{"$ref":"#/$defs/VarSource"},"type":"object"},"http":{"items":{"$ref":"#/$defs/HTTPCheck"},"type":"array"},"dns":{"items":{"$ref":"#/$defs/DNSCheck"},"type":"array"},"docker":{"items":{"$ref":"#/$defs/DockerPullCheck"},"type":"array"},"dockerPush":{"items":{"$ref":"#/$defs/DockerPushCheck"},"type":"array"},"containerd":{"items":{"$ref":"#/$defs/ContainerdPullCheck"},"type":"array"},"containerdPush":{"items":{"$ref":"#/$defs/ContainerdPushCheck"},"type":"array"},"s3":{"items":{"$ref":"#/$defs/S3Check"},"type":"array"},"tcp":{"items":{"$ref":"#/$defs/TCPCheck"},"type":"array"},"pod":{"items":{"$ref":"#/$defs/PodCheck"},"type":"array"},"ldap":{"items":{"$ref":"#/$defs/LDAPCheck"},"type":"array"},"icmp":{"items":{"$ref":"#/$defs/ICMPCheck"},"type":"array"},"postgres":{"items":{"$ref":"#/$defs/PostgresCheck"},"type":"array"},"mssql":{"items":{"$ref":"#/$defs/MssqlCheck"},"type":"array"},"mysql":{"items":{"$ref":"#/$defs/MysqlCheck"},"type":"array"},"restic":{"items":{"$ref":"#/$defs/ResticCheck"},"type":"array"},"jmeter":{"items":{"$ref":"#/$defs/JmeterCheck"},"type":"array"},"junit":{"items":{"$ref":"#/$defs/JunitCheck"},"type":"array"},"helm":{"items":{"$ref":"#/$defs/HelmCheck"},"type":"array"},"namespace":{"items":{"$ref":"#/$defs/NamespaceCheck"},"type":"array"},"redis":{"items":{"$ref":"#/$defs/RedisCheck"},"type":"array"},"prometheus":{"items":{"$ref":"#/$defs/PrometheusCheck"},"type":"array"},"mongodb":{"items":{"$ref":"#/$defs/MongoDBCheck"},"type":"array"},"cloudwatch":{"items":{"$ref":"#/$defs/CloudWatchCheck"},"type":"array"},"github":{"items":{"$ref":"#/$defs/GitHubCheck"},"type":"array"},"gitProtocol":{"items":{"$ref":"#/$defs/GitProtocolCheck"},"type":"array"},"kubernetes":{"items":{"$ref":"#/$defs/KubernetesCheck"},"type":"array"},"kubernetesResource":{"items":{"$ref":"#/$defs/KubernetesResourceCheck"},"type":"array"},"folder":{"items":{"$ref":"#/$defs/FolderCheck"},"type":"array"},"exec":{"items":{"$ref":"#/$defs/ExecCheck"},"type":"array"},"awsConfig":{"items":{"$ref":"#/$defs/AwsConfigCheck"},"type":"array"},"awsConfigRule":{"items":{"$ref":"#/$defs/AwsConfigRuleCheck"},"type":"array"},"databaseBackup":{"items":{"$ref":"#/$defs/DatabaseBackupCheck"},"type":"array"},"catalog":{"items":{"$ref":"#/$defs/CatalogCheck"},"type":"array"},"opensearch":{"items":{"$ref":"#/$defs/OpenSearchCheck"},"type":"array"},"elasticsearch":{"items":{"$ref":"#/$defs/ElasticsearchCheck"},"type":"array"},"alertmanager":{"items":{"$ref":"#/$defs/AlertManagerCheck"},"type":"array"},"dynatrace":{"items":{"$ref":"#/$defs/DynatraceCheck"},"type":"array"},"azureDevops":{"items":{"$ref":"#/$defs/AzureDevopsCheck"},"type":"array"},"webhook":{"$ref":"#/$defs/WebhookCheck"},"interval":{"type":"integer"},"schedule":{"type":"string"},"icon":{"type":"string"},"severity":{"type":"string"},"owner":{"type":"string"},"resultMode":{"type":"string"}},"additionalProperties":false,"type":"object"},"CanaryStatus":{"properties":{"persistedID":{"type":"string"},"lastTransitionedTime":{"$ref":"#/$defs/Time"},"lastCheck":{"$ref":"#/$defs/Time"},"message":{"type":"string"},"errorMessage":{"type":"string"},"status":{"type":"string"},"checks":{"additionalProperties":{"type":"string"},"type":"object"},"observedGeneration":{"type":"integer"},"checkStatus":{"additionalProperties":{"$ref":"#/$defs/CheckStatus"},"type":"object"},"uptime1h":{"type":"string"},"latency1h":{"type":"string"},"replicas":{"type":"integer"}},"additionalProperties":false,"type":"object"},"CatalogCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"selector":{"$ref":"#/$defs/ResourceSelectors"}},"additionalProperties":false,"type":"object","required":["name","selector"]},"CheckRelationship":{"properties":{"components":{"items":{"$ref":"#/$defs/LookupSpec"},"type":"array"},"configs":{"items":{"$ref":"#/$defs/LookupSpec"},"type":"array"}},"additionalProperties":false,"type":"object"},"CheckStatus":{"properties":{"lastTransitionedTime":{"$ref":"#/$defs/Time"},"lastCheck":{"$ref":"#/$defs/Time"},"message":{"type":"string"},"errorMessage":{"type":"string"},"uptime1h":{"type":"string"},"latency1h":{"type":"string"}},"additionalProperties":false,"type":"object"},"CloudWatchCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"connection":{"type":"string"},"accessKey":{"$ref":"#/$defs/EnvVar"},"secretKey":{"$ref":"#/$defs/EnvVar"},"sessionToken":{"$ref":"#/$defs/EnvVar"},"region":{"type":"string"},"endpoint":{"type":"string"},"skipTLSVerify":{"type":"boolean"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"actionPrefix":{"type":"string"},"alarmPrefix":{"type":"string"},"alarms":{"items":{"type":"string"},"type":"array"},"state":{"type":"string"}},"additionalProperties":false,"type":"object","required":["name"]},"ConfigMapKeySelector":{"properties":{"name":{"type":"string"},"key":{"type":"string"},"optional":{"type":"boolean"}},"additionalProperties":false,"type":"object","required":["key"]},"ContainerdPullCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"image":{"type":"string"},"auth":{"$ref":"#/$defs/Authentication"},"expectedDigest":{"type":"string"},"expectedSize":{"type":"integer"}},"additionalProperties":false,"type":"object","required":["name","image"]},"ContainerdPushCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"image":{"type":"string"},"username":{"type":"string"},"password":{"type":"string"}},"additionalProperties":false,"type":"object","required":["name","image"]},"DNSCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"server":{"type":"string"},"port":{"type":"integer"},"query":{"type":"string"},"querytype":{"type":"string"},"minrecords":{"type":"integer"},"exactreply":{"items":{"type":"string"},"type":"array"},"timeout":{"type":"integer"},"thresholdMillis":{"type":"integer"}},"additionalProperties":false,"type":"object","required":["name"]},"DatabaseBackupCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"gcp":{"$ref":"#/$defs/GCPDatabase"},"maxAge":{"type":"string"}},"additionalProperties":false,"type":"object","required":["name"]},"DockerPullCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"image":{"type":"string"},"auth":{"$ref":"#/$defs/Authentication"},"expectedDigest":{"type":"string"},"expectedSize":{"type":"integer"}},"additionalProperties":false,"type":"object","required":["name","image"]},"DockerPushCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"image":{"type":"string"},"auth":{"$ref":"#/$defs/Authentication"}},"additionalProperties":false,"type":"object","required":["name","image"]},"DynatraceCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"connection":{"type":"string"},"host":{"type":"string"},"scheme":{"type":"string"},"apiKey":{"$ref":"#/$defs/EnvVar"}},"additionalProperties":false,"type":"object","required":["name"]},"ElasticsearchCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"connection":{"type":"string"},"url":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"},"query":{"type":"string"},"index":{"type":"string"},"results":{"type":"integer"}},"additionalProperties":false,"type":"object","required":["name"]},"EnvVar":{"properties":{"name":{"type":"string"},"value":{"type":"string"},"valueFrom":{"$ref":"#/$defs/EnvVarSource"}},"additionalProperties":false,"type":"object"},"EnvVarSource":{"properties":{"serviceAccount":{"type":"string"},"helmRef":{"$ref":"#/$defs/HelmRefKeySelector"},"configMapKeyRef":{"$ref":"#/$defs/ConfigMapKeySelector"},"secretKeyRef":{"$ref":"#/$defs/SecretKeySelector"}},"additionalProperties":false,"type":"object"},"ExecCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"script":{"type":"string"},"connections":{"$ref":"#/$defs/ExecConnections"},"env":{"items":{"$ref":"#/$defs/EnvVar"},"type":"array"},"checkout":{"$ref":"#/$defs/GitCheckout"},"artifacts":{"items":{"$ref":"#/$defs/Artifact"},"type":"array"}},"additionalProperties":false,"type":"object","required":["name","script"]},"ExecConnections":{"properties":{"aws":{"$ref":"#/$defs/AWSConnection"},"gcp":{"$ref":"#/$defs/GCPConnection"},"azure":{"$ref":"#/$defs/AzureConnection"}},"additionalProperties":false,"type":"object"},"FieldsV1":{"properties":{},"additionalProperties":false,"type":"object"},"FolderCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"path":{"type":"string"},"recursive":{"type":"boolean"},"filter":{"$ref":"#/$defs/FolderFilter"},"minAge":{"type":"string"},"maxAge":{"type":"string"},"minCount":{"type":"integer"},"maxCount":{"type":"integer"},"minSize":{"type":"string"},"maxSize":{"type":"string"},"availableSize":{"type":"string"},"totalSize":{"type":"string"},"awsConnection":{"$ref":"#/$defs/S3Connection"},"gcpConnection":{"$ref":"#/$defs/GCSConnection"},"smbConnection":{"$ref":"#/$defs/SMBConnection"},"sftpConnection":{"$ref":"#/$defs/SFTPConnection"}},"additionalProperties":false,"type":"object","required":["name","path"]},"FolderFilter":{"properties":{"minAge":{"type":"string"},"maxAge":{"type":"string"},"since":{"type":"string"},"minSize":{"type":"string"},"maxSize":{"type":"string"},"regex":{"type":"string"}},"additionalProperties":false,"type":"object"},"GCPConnection":{"properties":{"connection":{"type":"string"},"endpoint":{"type":"string"},"credentials":{"$ref":"#/$defs/EnvVar"}},"additionalProperties":false,"type":"object"},"GCPDatabase":{"properties":{"project":{"type":"string"},"instance":{"type":"string"},"gcpConnection":{"$ref":"#/$defs/GCPConnection"}},"additionalProperties":false,"type":"object","required":["project","instance"]},"GCSConnection":{"properties":{"connection":{"type":"string"},"endpoint":{"type":"string"},"credentials":{"$ref":"#/$defs/EnvVar"},"bucket":{"type":"string"}},"additionalProperties":false,"type":"object"},"GitCheckout":{"properties":{"url":{"type":"string"},"connection":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"},"certificate":{"$ref":"#/$defs/EnvVar"},"destination":{"type":"string"}},"additionalProperties":false,"type":"object"},"GitHubCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"connection":{"type":"string"},"query":{"type":"string"},"githubToken":{"$ref":"#/$defs/EnvVar"}},"additionalProperties":false,"type":"object","required":["name","query"]},"GitProtocolCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"filename":{"type":"string"},"repository":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"}},"additionalProperties":false,"type":"object","required":["name","repository","username","password"]},"HTTPCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"connection":{"type":"string"},"url":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"},"endpoint":{"type":"string"},"thresholdMillis":{"type":"integer"},"responseCodes":{"items":{"type":"integer"},"type":"array"},"responseContent":{"type":"string"},"responseJSONContent":{"$ref":"#/$defs/JSONCheck"},"maxSSLExpiry":{"type":"integer"},"method":{"type":"string"},"ntlm":{"type":"boolean"},"ntlmv2":{"type":"boolean"},"body":{"type":"string"},"headers":{"items":{"$ref":"#/$defs/EnvVar"},"type":"array"},"templateBody":{"type":"boolean"},"env":{"items":{"$ref":"#/$defs/EnvVar"},"type":"array"},"oauth2":{"$ref":"#/$defs/Oauth2Config"}},"additionalProperties":false,"type":"object","required":["name"]},"HelmCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"chartmuseum":{"type":"string"},"project":{"type":"string"},"auth":{"$ref":"#/$defs/Authentication"},"cafile":{"type":"string"}},"additionalProperties":false,"type":"object","required":["name"]},"HelmRefKeySelector":{"properties":{"name":{"type":"string"},"key":{"type":"string"}},"additionalProperties":false,"type":"object","required":["key"]},"ICMPCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"endpoint":{"type":"string"},"thresholdMillis":{"type":"integer"},"packetLossThreshold":{"type":"integer"},"packetCount":{"type":"integer"}},"additionalProperties":false,"type":"object","required":["name"]},"JSONCheck":{"properties":{"path":{"type":"string"},"value":{"type":"string"}},"additionalProperties":false,"type":"object","required":["path","value"]},"JmeterCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"jmx":{"$ref":"#/$defs/EnvVar"},"host":{"type":"string"},"port":{"type":"integer"},"properties":{"items":{"type":"string"},"type":"array"},"systemProperties":{"items":{"type":"string"},"type":"array"},"responseDuration":{"type":"string"}},"additionalProperties":false,"type":"object","required":["name","jmx"]},"JunitCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"testResults":{"type":"string"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"timeout":{"type":"integer"},"spec":true,"artifacts":{"items":{"$ref":"#/$defs/Artifact"},"type":"array"}},"additionalProperties":false,"type":"object","required":["name","testResults","spec"]},"KubernetesCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"namespaceSelector":{"$ref":"#/$defs/ResourceSelector"},"resource":{"$ref":"#/$defs/ResourceSelector"},"kubeconfig":{"$ref":"#/$defs/EnvVar"},"ignore":{"items":{"type":"string"},"type":"array"},"kind":{"type":"string"},"healthy":{"type":"boolean"},"ready":{"type":"boolean"}},"additionalProperties":false,"type":"object","required":["name","kind"]},"KubernetesResourceCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"staticResources":{"items":{"$ref":"#/$defs/Unstructured"},"type":"array"},"resources":{"items":{"$ref":"#/$defs/Unstructured"},"type":"array"},"checks":{"items":{"$ref":"#/$defs/KubernetesResourceChecks"},"type":"array"},"checkRetries":{"$ref":"#/$defs/KubernetesResourceCheckRetries"},"clearResources":{"type":"boolean"},"kubeconfig":{"$ref":"#/$defs/EnvVar"},"waitFor":{"$ref":"#/$defs/KubernetesResourceCheckWaitFor"}},"additionalProperties":false,"type":"object","required":["name","resources"]},"KubernetesResourceCheckRetries":{"properties":{"delay":{"type":"string"},"timeout":{"type":"string"},"interval":{"type":"string"}},"additionalProperties":false,"type":"object"},"KubernetesResourceCheckWaitFor":{"properties":{"expr":{"type":"string"},"disable":{"type":"boolean"},"delete":{"type":"boolean"},"timeout":{"type":"string"},"interval":{"type":"string"}},"additionalProperties":false,"type":"object"},"KubernetesResourceChecks":{"properties":{"replicas":{"type":"integer"},"env":{"additionalProperties":{"$ref":"#/$defs/VarSource"},"type":"object"},"http":{"items":{"$ref":"#/$defs/HTTPCheck"},"type":"array"},"dns":{"items":{"$ref":"#/$defs/DNSCheck"},"type":"array"},"docker":{"items":{"$ref":"#/$defs/DockerPullCheck"},"type":"array"},"dockerPush":{"items":{"$ref":"#/$defs/DockerPushCheck"},"type":"array"},"containerd":{"items":{"$ref":"#/$defs/ContainerdPullCheck"},"type":"array"},"containerdPush":{"items":{"$ref":"#/$defs/ContainerdPushCheck"},"type":"array"},"s3":{"items":{"$ref":"#/$defs/S3Check"},"type":"array"},"tcp":{"items":{"$ref":"#/$defs/TCPCheck"},"type":"array"},"pod":{"items":{"$ref":"#/$defs/PodCheck"},"type":"array"},"ldap":{"items":{"$ref":"#/$defs/LDAPCheck"},"type":"array"},"icmp":{"items":{"$ref":"#/$defs/ICMPCheck"},"type":"array"},"postgres":{"items":{"$ref":"#/$defs/PostgresCheck"},"type":"array"},"mssql":{"items":{"$ref":"#/$defs/MssqlCheck"},"type":"array"},"mysql":{"items":{"$ref":"#/$defs/MysqlCheck"},"type":"array"},"restic":{"items":{"$ref":"#/$defs/ResticCheck"},"type":"array"},"jmeter":{"items":{"$ref":"#/$defs/JmeterCheck"},"type":"array"},"junit":{"items":{"$ref":"#/$defs/JunitCheck"},"type":"array"},"helm":{"items":{"$ref":"#/$defs/HelmCheck"},"type":"array"},"namespace":{"items":{"$ref":"#/$defs/NamespaceCheck"},"type":"array"},"redis":{"items":{"$ref":"#/$defs/RedisCheck"},"type":"array"},"prometheus":{"items":{"$ref":"#/$defs/PrometheusCheck"},"type":"array"},"mongodb":{"items":{"$ref":"#/$defs/MongoDBCheck"},"type":"array"},"cloudwatch":{"items":{"$ref":"#/$defs/CloudWatchCheck"},"type":"array"},"github":{"items":{"$ref":"#/$defs/GitHubCheck"},"type":"array"},"gitProtocol":{"items":{"$ref":"#/$defs/GitProtocolCheck"},"type":"array"},"kubernetes":{"items":{"$ref":"#/$defs/KubernetesCheck"},"type":"array"},"kubernetesResource":{"items":{"$ref":"#/$defs/KubernetesResourceCheck"},"type":"array"},"folder":{"items":{"$ref":"#/$defs/FolderCheck"},"type":"array"},"exec":{"items":{"$ref":"#/$defs/ExecCheck"},"type":"array"},"awsConfig":{"items":{"$ref":"#/$defs/AwsConfigCheck"},"type":"array"},"awsConfigRule":{"items":{"$ref":"#/$defs/AwsConfigRuleCheck"},"type":"array"},"databaseBackup":{"items":{"$ref":"#/$defs/DatabaseBackupCheck"},"type":"array"},"catalog":{"items":{"$ref":"#/$defs/CatalogCheck"},"type":"array"},"opensearch":{"items":{"$ref":"#/$defs/OpenSearchCheck"},"type":"array"},"elasticsearch":{"items":{"$ref":"#/$defs/ElasticsearchCheck"},"type":"array"},"alertmanager":{"items":{"$ref":"#/$defs/AlertManagerCheck"},"type":"array"},"dynatrace":{"items":{"$ref":"#/$defs/DynatraceCheck"},"type":"array"},"azureDevops":{"items":{"$ref":"#/$defs/AzureDevopsCheck"},"type":"array"},"webhook":{"$ref":"#/$defs/WebhookCheck"},"interval":{"type":"integer"},"schedule":{"type":"string"},"icon":{"type":"string"},"severity":{"type":"string"},"owner":{"type":"string"},"resultMode":{"type":"string"}},"additionalProperties":false,"type":"object"},"LDAPCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"connection":{"type":"string"},"url":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"},"bindDN":{"type":"string"},"userSearch":{"type":"string"},"skipTLSVerify":{"type":"boolean"}},"additionalProperties":false,"type":"object","required":["name","bindDN"]},"Labels":{"additionalProperties":{"type":"string"},"type":"object"},"Lookup":{"properties":{"expr":{"type":"string"},"value":{"type":"string"},"label":{"type":"string"}},"additionalProperties":false,"type":"object"},"LookupSpec":{"properties":{"name":{"$ref":"#/$defs/Lookup"},"namespace":{"$ref":"#/$defs/Lookup"},"type":{"$ref":"#/$defs/Lookup"}},"additionalProperties":false,"type":"object"},"ManagedFieldsEntry":{"properties":{"manager":{"type":"string"},"operation":{"type":"string"},"apiVersion":{"type":"string"},"time":{"$ref":"#/$defs/Time"},"fieldsType":{"type":"string"},"fieldsV1":{"$ref":"#/$defs/FieldsV1"},"subresource":{"type":"string"}},"additionalProperties":false,"type":"object"},"MetricLabel":{"properties":{"name":{"type":"string"},"value":{"type":"string"},"valueExpr":{"type":"string"}},"additionalProperties":false,"type":"object","required":["name"]},"MetricLabels":{"items":{"$ref":"#/$defs/MetricLabel"},"type":"array"},"Metrics":{"properties":{"name":{"type":"string"},"labels":{"$ref":"#/$defs/MetricLabels"},"type":{"type":"string"},"value":{"type":"string"}},"additionalProperties":false,"type":"object"},"MongoDBCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"connection":{"type":"string"},"url":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"}},"additionalProperties":false,"type":"object","required":["name"]},"MssqlCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"connection":{"type":"string"},"url":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"},"query":{"type":"string"},"results":{"type":"integer"}},"additionalProperties":false,"type":"object","required":["name"]},"MysqlCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"connection":{"type":"string"},"url":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"},"query":{"type":"string"},"results":{"type":"integer"}},"additionalProperties":false,"type":"object","required":["name"]},"NamespaceCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"namespaceNamePrefix":{"type":"string"},"namespaceLabels":{"additionalProperties":{"type":"string"},"type":"object"},"namespaceAnnotations":{"additionalProperties":{"type":"string"},"type":"object"},"podSpec":{"type":"string"},"schedule_timeout":{"type":"integer"},"readyTimeout":{"type":"integer"},"httpTimeout":{"type":"integer"},"deleteTimeout":{"type":"integer"},"ingressTimeout":{"type":"integer"},"httpRetryInterval":{"type":"integer"},"deadline":{"type":"integer"},"port":{"type":"integer"},"path":{"type":"string"},"ingressName":{"type":"string"},"ingressHost":{"type":"string"},"expectedContent":{"type":"string"},"expectedHttpStatuses":{"items":{"type":"integer"},"type":"array"},"priorityClass":{"type":"string"}},"additionalProperties":false,"type":"object","required":["name","podSpec"]},"Oauth2Config":{"properties":{"scope":{"items":{"type":"string"},"type":"array"},"tokenURL":{"type":"string"},"params":{"additionalProperties":{"type":"string"},"type":"object"}},"additionalProperties":false,"type":"object"},"ObjectFieldSelector":{"properties":{"apiVersion":{"type":"string"},"fieldPath":{"type":"string"}},"additionalProperties":false,"type":"object","required":["fieldPath"]},"ObjectMeta":{"properties":{"name":{"type":"string"},"generateName":{"type":"string"},"namespace":{"type":"string"},"selfLink":{"type":"string"},"uid":{"type":"string"},"resourceVersion":{"type":"string"},"generation":{"type":"integer"},"creationTimestamp":{"$ref":"#/$defs/Time"},"deletionTimestamp":{"$ref":"#/$defs/Time"},"deletionGracePeriodSeconds":{"type":"integer"},"labels":{"additionalProperties":{"type":"string"},"type":"object"},"annotations":{"additionalProperties":{"type":"string"},"type":"object"},"ownerReferences":{"items":{"$ref":"#/$defs/OwnerReference"},"type":"array"},"finalizers":{"items":{"type":"string"},"type":"array"},"managedFields":{"items":{"$ref":"#/$defs/ManagedFieldsEntry"},"type":"array"}},"additionalProperties":false,"type":"object"},"OpenSearchCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"connection":{"type":"string"},"url":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"},"query":{"type":"string"},"index":{"type":"string"},"results":{"type":"integer"}},"additionalProperties":false,"type":"object","required":["name","query","index"]},"OwnerReference":{"properties":{"apiVersion":{"type":"string"},"kind":{"type":"string"},"name":{"type":"string"},"uid":{"type":"string"},"controller":{"type":"boolean"},"blockOwnerDeletion":{"type":"boolean"}},"additionalProperties":false,"type":"object","required":["apiVersion","kind","name","uid"]},"PodCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"spec":{"type":"string"},"scheduleTimeout":{"type":"integer"},"readyTimeout":{"type":"integer"},"httpTimeout":{"type":"integer"},"deleteTimeout":{"type":"integer"},"ingressTimeout":{"type":"integer"},"httpRetryInterval":{"type":"integer"},"deadline":{"type":"integer"},"port":{"type":"integer"},"path":{"type":"string"},"ingressName":{"type":"string"},"ingressHost":{"type":"string"},"ingressClass":{"type":"string"},"expectedContent":{"type":"string"},"expectedHttpStatuses":{"items":{"type":"integer"},"type":"array"},"priorityClass":{"type":"string"},"roundRobinNodes":{"type":"boolean"}},"additionalProperties":false,"type":"object","required":["name"]},"PostgresCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"connection":{"type":"string"},"url":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"},"query":{"type":"string"},"results":{"type":"integer"}},"additionalProperties":false,"type":"object","required":["name"]},"PrometheusAuth":{"properties":{"basic":{"$ref":"#/$defs/Authentication"},"bearer":{"$ref":"#/$defs/EnvVar"},"oauth":{"$ref":"#/$defs/PrometheusOauth"}},"additionalProperties":false,"type":"object"},"PrometheusCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"host":{"type":"string"},"connection":{"type":"string"},"url":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"},"auth":{"$ref":"#/$defs/PrometheusAuth"},"query":{"type":"string"}},"additionalProperties":false,"type":"object","required":["name","query"]},"PrometheusOauth":{"properties":{"clientID":{"$ref":"#/$defs/EnvVar"},"clientSecret":{"$ref":"#/$defs/EnvVar"},"scope":{"items":{"type":"string"},"type":"array"},"tokenURL":{"type":"string"},"params":{"additionalProperties":{"type":"string"},"type":"object"}},"additionalProperties":false,"type":"object"},"RedisCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"connection":{"type":"string"},"url":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"},"addr":{"type":"string"},"db":{"type":"integer"}},"additionalProperties":false,"type":"object","required":["name"]},"ResourceSelector":{"properties":{"name":{"type":"string"},"labelSelector":{"type":"string"},"fieldSelector":{"type":"string"}},"additionalProperties":false,"type":"object"},"ResourceSelectors":{"items":{"$ref":"#/$defs/ResourceSelector"},"type":"array"},"ResticCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"connection":{"type":"string"},"awsConnectionName":{"type":"string"},"repository":{"type":"string"},"password":{"$ref":"#/$defs/EnvVar"},"maxAge":{"type":"string"},"checkIntegrity":{"type":"boolean"},"accessKey":{"$ref":"#/$defs/EnvVar"},"secretKey":{"$ref":"#/$defs/EnvVar"},"caCert":{"type":"string"}},"additionalProperties":false,"type":"object","required":["name","repository","password","maxAge"]},"S3Check":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"connection":{"type":"string"},"accessKey":{"$ref":"#/$defs/EnvVar"},"secretKey":{"$ref":"#/$defs/EnvVar"},"sessionToken":{"$ref":"#/$defs/EnvVar"},"region":{"type":"string"},"endpoint":{"type":"string"},"skipTLSVerify":{"type":"boolean"},"bucket":{"type":"string"},"objectPath":{"type":"string"},"usePathStyle":{"type":"boolean"},"bucketName":{"type":"string"}},"additionalProperties":false,"type":"object","required":["name"]},"S3Connection":{"properties":{"connection":{"type":"string"},"accessKey":{"$ref":"#/$defs/EnvVar"},"secretKey":{"$ref":"#/$defs/EnvVar"},"sessionToken":{"$ref":"#/$defs/EnvVar"},"region":{"type":"string"},"endpoint":{"type":"string"},"skipTLSVerify":{"type":"boolean"},"bucket":{"type":"string"},"objectPath":{"type":"string"},"usePathStyle":{"type":"boolean"}},"additionalProperties":false,"type":"object"},"SFTPConnection":{"properties":{"connection":{"type":"string"},"port":{"type":"integer"},"host":{"type":"string"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"}},"additionalProperties":false,"type":"object","required":["host"]},"SMBConnection":{"properties":{"connection":{"type":"string"},"port":{"type":"integer"},"username":{"$ref":"#/$defs/EnvVar"},"password":{"$ref":"#/$defs/EnvVar"},"domain":{"type":"string"}},"additionalProperties":false,"type":"object"},"SecretKeySelector":{"properties":{"name":{"type":"string"},"key":{"type":"string"},"optional":{"type":"boolean"}},"additionalProperties":false,"type":"object","required":["key"]},"TCPCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"endpoint":{"type":"string"},"thresholdMillis":{"type":"integer"}},"additionalProperties":false,"type":"object","required":["name"]},"Template":{"properties":{"template":{"type":"string"},"jsonPath":{"type":"string"},"expr":{"type":"string"},"javascript":{"type":"string"}},"additionalProperties":false,"type":"object"},"Time":{"properties":{},"additionalProperties":false,"type":"object"},"Unstructured":{"properties":{"Object":{"type":"object"}},"additionalProperties":false,"type":"object","required":["Object"]},"VarSource":{"properties":{"fieldRef":{"$ref":"#/$defs/ObjectFieldSelector"},"value":{"type":"string"},"configMapKeyRef":{"$ref":"#/$defs/ConfigMapKeySelector"},"secretKeyRef":{"$ref":"#/$defs/SecretKeySelector"}},"additionalProperties":false,"type":"object"},"WebhookCheck":{"properties":{"description":{"type":"string"},"name":{"type":"string"},"namespace":{"type":"string"},"icon":{"type":"string"},"labels":{"$ref":"#/$defs/Labels"},"transformDeleteStrategy":{"type":"string"},"metrics":{"items":{"$ref":"#/$defs/Metrics"},"type":"array"},"test":{"$ref":"#/$defs/Template"},"display":{"$ref":"#/$defs/Template"},"transform":{"$ref":"#/$defs/Template"},"token":{"$ref":"#/$defs/EnvVar"}},"additionalProperties":false,"type":"object","required":["name"]}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/flanksource/canary-checker/api/v1/canary",
+  "$ref": "#/$defs/Canary",
+  "$defs": {
+    "AWSConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "AlertManagerCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "Auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
+        "alerts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "filters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "exclude_filters": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "ignore": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "Auth"
+      ]
+    },
+    "Artifact": {
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "path"
+      ]
+    },
+    "Authentication": {
+      "properties": {
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "AwsConfigCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "query": {
+          "type": "string"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "aggregatorName": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "query"
+      ]
+    },
+    "AwsConfigRuleCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "ignoreRules": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "rules": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "complianceTypes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "AzureConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "clientID": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "clientSecret": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "tenantID": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "AzureDevopsCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "organization": {
+          "type": "string"
+        },
+        "personalAccessToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "project": {
+          "type": "string"
+        },
+        "pipeline": {
+          "type": "string"
+        },
+        "variables": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "branch": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "thresholdMillis": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "organization",
+        "personalAccessToken",
+        "project",
+        "pipeline",
+        "variables",
+        "branch",
+        "thresholdMillis"
+      ]
+    },
+    "Canary": {
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "apiVersion": {
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/$defs/ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/$defs/CanarySpec"
+        },
+        "status": {
+          "$ref": "#/$defs/CanaryStatus"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "CanarySpec": {
+      "properties": {
+        "replicas": {
+          "type": "integer"
+        },
+        "env": {
+          "additionalProperties": {
+            "$ref": "#/$defs/VarSource"
+          },
+          "type": "object"
+        },
+        "http": {
+          "items": {
+            "$ref": "#/$defs/HTTPCheck"
+          },
+          "type": "array"
+        },
+        "dns": {
+          "items": {
+            "$ref": "#/$defs/DNSCheck"
+          },
+          "type": "array"
+        },
+        "docker": {
+          "items": {
+            "$ref": "#/$defs/DockerPullCheck"
+          },
+          "type": "array"
+        },
+        "dockerPush": {
+          "items": {
+            "$ref": "#/$defs/DockerPushCheck"
+          },
+          "type": "array"
+        },
+        "containerd": {
+          "items": {
+            "$ref": "#/$defs/ContainerdPullCheck"
+          },
+          "type": "array"
+        },
+        "containerdPush": {
+          "items": {
+            "$ref": "#/$defs/ContainerdPushCheck"
+          },
+          "type": "array"
+        },
+        "s3": {
+          "items": {
+            "$ref": "#/$defs/S3Check"
+          },
+          "type": "array"
+        },
+        "tcp": {
+          "items": {
+            "$ref": "#/$defs/TCPCheck"
+          },
+          "type": "array"
+        },
+        "pod": {
+          "items": {
+            "$ref": "#/$defs/PodCheck"
+          },
+          "type": "array"
+        },
+        "ldap": {
+          "items": {
+            "$ref": "#/$defs/LDAPCheck"
+          },
+          "type": "array"
+        },
+        "icmp": {
+          "items": {
+            "$ref": "#/$defs/ICMPCheck"
+          },
+          "type": "array"
+        },
+        "postgres": {
+          "items": {
+            "$ref": "#/$defs/PostgresCheck"
+          },
+          "type": "array"
+        },
+        "mssql": {
+          "items": {
+            "$ref": "#/$defs/MssqlCheck"
+          },
+          "type": "array"
+        },
+        "mysql": {
+          "items": {
+            "$ref": "#/$defs/MysqlCheck"
+          },
+          "type": "array"
+        },
+        "restic": {
+          "items": {
+            "$ref": "#/$defs/ResticCheck"
+          },
+          "type": "array"
+        },
+        "jmeter": {
+          "items": {
+            "$ref": "#/$defs/JmeterCheck"
+          },
+          "type": "array"
+        },
+        "junit": {
+          "items": {
+            "$ref": "#/$defs/JunitCheck"
+          },
+          "type": "array"
+        },
+        "helm": {
+          "items": {
+            "$ref": "#/$defs/HelmCheck"
+          },
+          "type": "array"
+        },
+        "namespace": {
+          "items": {
+            "$ref": "#/$defs/NamespaceCheck"
+          },
+          "type": "array"
+        },
+        "redis": {
+          "items": {
+            "$ref": "#/$defs/RedisCheck"
+          },
+          "type": "array"
+        },
+        "prometheus": {
+          "items": {
+            "$ref": "#/$defs/PrometheusCheck"
+          },
+          "type": "array"
+        },
+        "mongodb": {
+          "items": {
+            "$ref": "#/$defs/MongoDBCheck"
+          },
+          "type": "array"
+        },
+        "cloudwatch": {
+          "items": {
+            "$ref": "#/$defs/CloudWatchCheck"
+          },
+          "type": "array"
+        },
+        "github": {
+          "items": {
+            "$ref": "#/$defs/GitHubCheck"
+          },
+          "type": "array"
+        },
+        "gitProtocol": {
+          "items": {
+            "$ref": "#/$defs/GitProtocolCheck"
+          },
+          "type": "array"
+        },
+        "kubernetes": {
+          "items": {
+            "$ref": "#/$defs/KubernetesCheck"
+          },
+          "type": "array"
+        },
+        "kubernetesResource": {
+          "items": {
+            "$ref": "#/$defs/KubernetesResourceCheck"
+          },
+          "type": "array"
+        },
+        "folder": {
+          "items": {
+            "$ref": "#/$defs/FolderCheck"
+          },
+          "type": "array"
+        },
+        "exec": {
+          "items": {
+            "$ref": "#/$defs/ExecCheck"
+          },
+          "type": "array"
+        },
+        "awsConfig": {
+          "items": {
+            "$ref": "#/$defs/AwsConfigCheck"
+          },
+          "type": "array"
+        },
+        "awsConfigRule": {
+          "items": {
+            "$ref": "#/$defs/AwsConfigRuleCheck"
+          },
+          "type": "array"
+        },
+        "databaseBackup": {
+          "items": {
+            "$ref": "#/$defs/DatabaseBackupCheck"
+          },
+          "type": "array"
+        },
+        "catalog": {
+          "items": {
+            "$ref": "#/$defs/CatalogCheck"
+          },
+          "type": "array"
+        },
+        "opensearch": {
+          "items": {
+            "$ref": "#/$defs/OpenSearchCheck"
+          },
+          "type": "array"
+        },
+        "elasticsearch": {
+          "items": {
+            "$ref": "#/$defs/ElasticsearchCheck"
+          },
+          "type": "array"
+        },
+        "alertmanager": {
+          "items": {
+            "$ref": "#/$defs/AlertManagerCheck"
+          },
+          "type": "array"
+        },
+        "dynatrace": {
+          "items": {
+            "$ref": "#/$defs/DynatraceCheck"
+          },
+          "type": "array"
+        },
+        "azureDevops": {
+          "items": {
+            "$ref": "#/$defs/AzureDevopsCheck"
+          },
+          "type": "array"
+        },
+        "webhook": {
+          "$ref": "#/$defs/WebhookCheck"
+        },
+        "interval": {
+          "type": "integer"
+        },
+        "schedule": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "resultMode": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "CanaryStatus": {
+      "properties": {
+        "persistedID": {
+          "type": "string"
+        },
+        "lastTransitionedTime": {
+          "$ref": "#/$defs/Time"
+        },
+        "lastCheck": {
+          "$ref": "#/$defs/Time"
+        },
+        "message": {
+          "type": "string"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "checks": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "observedGeneration": {
+          "type": "integer"
+        },
+        "checkStatus": {
+          "additionalProperties": {
+            "$ref": "#/$defs/CheckStatus"
+          },
+          "type": "object"
+        },
+        "uptime1h": {
+          "type": "string"
+        },
+        "latency1h": {
+          "type": "string"
+        },
+        "replicas": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "CatalogCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "selector": {
+          "$ref": "#/$defs/ResourceSelectors"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "selector"
+      ]
+    },
+    "CheckRelationship": {
+      "properties": {
+        "components": {
+          "items": {
+            "$ref": "#/$defs/LookupSpec"
+          },
+          "type": "array"
+        },
+        "configs": {
+          "items": {
+            "$ref": "#/$defs/LookupSpec"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "CheckStatus": {
+      "properties": {
+        "lastTransitionedTime": {
+          "$ref": "#/$defs/Time"
+        },
+        "lastCheck": {
+          "$ref": "#/$defs/Time"
+        },
+        "message": {
+          "type": "string"
+        },
+        "errorMessage": {
+          "type": "string"
+        },
+        "uptime1h": {
+          "type": "string"
+        },
+        "latency1h": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "CloudWatchCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "actionPrefix": {
+          "type": "string"
+        },
+        "alarmPrefix": {
+          "type": "string"
+        },
+        "alarms": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "state": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "ConfigMapKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "optional": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
+    "ContainerdPullCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "image": {
+          "type": "string"
+        },
+        "auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "expectedDigest": {
+          "type": "string"
+        },
+        "expectedSize": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "image"
+      ]
+    },
+    "ContainerdPushCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "image": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "image"
+      ]
+    },
+    "DNSCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "server": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "query": {
+          "type": "string"
+        },
+        "querytype": {
+          "type": "string"
+        },
+        "minrecords": {
+          "type": "integer"
+        },
+        "exactreply": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "timeout": {
+          "type": "integer"
+        },
+        "thresholdMillis": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "DatabaseBackupCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "gcp": {
+          "$ref": "#/$defs/GCPDatabase"
+        },
+        "maxAge": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "DockerPullCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "image": {
+          "type": "string"
+        },
+        "auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "expectedDigest": {
+          "type": "string"
+        },
+        "expectedSize": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "image"
+      ]
+    },
+    "DockerPushCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "image": {
+          "type": "string"
+        },
+        "auth": {
+          "$ref": "#/$defs/Authentication"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "image"
+      ]
+    },
+    "DynatraceCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "apiKey": {
+          "$ref": "#/$defs/EnvVar"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "ElasticsearchCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "Auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "query": {
+          "type": "string"
+        },
+        "index": {
+          "type": "string"
+        },
+        "results": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "Auth"
+      ]
+    },
+    "EnvVar": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "valueFrom": {
+          "$ref": "#/$defs/EnvVarSource"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "EnvVarSource": {
+      "properties": {
+        "serviceAccount": {
+          "type": "string"
+        },
+        "helmRef": {
+          "$ref": "#/$defs/HelmRefKeySelector"
+        },
+        "configMapKeyRef": {
+          "$ref": "#/$defs/ConfigMapKeySelector"
+        },
+        "secretKeyRef": {
+          "$ref": "#/$defs/SecretKeySelector"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ExecCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "script": {
+          "type": "string"
+        },
+        "connections": {
+          "$ref": "#/$defs/ExecConnections"
+        },
+        "env": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
+        },
+        "checkout": {
+          "$ref": "#/$defs/GitCheckout"
+        },
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "script"
+      ]
+    },
+    "ExecConnections": {
+      "properties": {
+        "aws": {
+          "$ref": "#/$defs/AWSConnection"
+        },
+        "gcp": {
+          "$ref": "#/$defs/GCPConnection"
+        },
+        "azure": {
+          "$ref": "#/$defs/AzureConnection"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "FieldsV1": {
+      "properties": {},
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "FolderCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "path": {
+          "type": "string"
+        },
+        "recursive": {
+          "type": "boolean"
+        },
+        "filter": {
+          "$ref": "#/$defs/FolderFilter"
+        },
+        "minAge": {
+          "type": "string"
+        },
+        "maxAge": {
+          "type": "string"
+        },
+        "minCount": {
+          "type": "integer"
+        },
+        "maxCount": {
+          "type": "integer"
+        },
+        "minSize": {
+          "type": "string"
+        },
+        "maxSize": {
+          "type": "string"
+        },
+        "availableSize": {
+          "type": "string"
+        },
+        "totalSize": {
+          "type": "string"
+        },
+        "awsConnection": {
+          "$ref": "#/$defs/S3Connection"
+        },
+        "gcpConnection": {
+          "$ref": "#/$defs/GCSConnection"
+        },
+        "smbConnection": {
+          "$ref": "#/$defs/SMBConnection"
+        },
+        "sftpConnection": {
+          "$ref": "#/$defs/SFTPConnection"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "path"
+      ]
+    },
+    "FolderFilter": {
+      "properties": {
+        "minAge": {
+          "type": "string"
+        },
+        "maxAge": {
+          "type": "string"
+        },
+        "since": {
+          "type": "string"
+        },
+        "minSize": {
+          "type": "string"
+        },
+        "maxSize": {
+          "type": "string"
+        },
+        "regex": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "GCPConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/EnvVar"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "GCPDatabase": {
+      "properties": {
+        "project": {
+          "type": "string"
+        },
+        "instance": {
+          "type": "string"
+        },
+        "gcpConnection": {
+          "$ref": "#/$defs/GCPConnection"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "project",
+        "instance"
+      ]
+    },
+    "GCSConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bucket": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "GitCheckout": {
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "certificate": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "destination": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "GitHubCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "query": {
+          "type": "string"
+        },
+        "githubToken": {
+          "$ref": "#/$defs/EnvVar"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "query"
+      ]
+    },
+    "GitProtocolCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "filename": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "repository",
+        "username",
+        "password"
+      ]
+    },
+    "HTTPCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "Auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "thresholdMillis": {
+          "type": "integer"
+        },
+        "responseCodes": {
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "responseContent": {
+          "type": "string"
+        },
+        "responseJSONContent": {
+          "$ref": "#/$defs/JSONCheck"
+        },
+        "maxSSLExpiry": {
+          "type": "integer"
+        },
+        "method": {
+          "type": "string"
+        },
+        "ntlm": {
+          "type": "boolean"
+        },
+        "ntlmv2": {
+          "type": "boolean"
+        },
+        "body": {
+          "type": "string"
+        },
+        "headers": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
+        },
+        "templateBody": {
+          "type": "boolean"
+        },
+        "env": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
+        },
+        "oauth2": {
+          "$ref": "#/$defs/Oauth2Config"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "Auth"
+      ]
+    },
+    "HelmCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "chartmuseum": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        },
+        "auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "cafile": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "HelmRefKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
+    "ICMPCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "thresholdMillis": {
+          "type": "integer"
+        },
+        "packetLossThreshold": {
+          "type": "integer"
+        },
+        "packetCount": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "JSONCheck": {
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "path",
+        "value"
+      ]
+    },
+    "JmeterCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "jmx": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "properties": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "systemProperties": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "responseDuration": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "jmx"
+      ]
+    },
+    "JunitCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "testResults": {
+          "type": "string"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "timeout": {
+          "type": "integer"
+        },
+        "spec": true,
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "testResults",
+        "spec"
+      ]
+    },
+    "KubernetesCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "namespaceSelector": {
+          "$ref": "#/$defs/ResourceSelector"
+        },
+        "resource": {
+          "$ref": "#/$defs/ResourceSelector"
+        },
+        "kubeconfig": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "ignore": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "healthy": {
+          "type": "boolean"
+        },
+        "ready": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "kind"
+      ]
+    },
+    "KubernetesResourceCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "staticResources": {
+          "items": {
+            "$ref": "#/$defs/Unstructured"
+          },
+          "type": "array"
+        },
+        "resources": {
+          "items": {
+            "$ref": "#/$defs/Unstructured"
+          },
+          "type": "array"
+        },
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/KubernetesResourceChecks"
+          },
+          "type": "array"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/KubernetesResourceCheckRetries"
+        },
+        "clearResources": {
+          "type": "boolean"
+        },
+        "kubeconfig": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "waitFor": {
+          "$ref": "#/$defs/KubernetesResourceCheckWaitFor"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "resources"
+      ]
+    },
+    "KubernetesResourceCheckRetries": {
+      "properties": {
+        "delay": {
+          "type": "string"
+        },
+        "timeout": {
+          "type": "string"
+        },
+        "interval": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "KubernetesResourceCheckWaitFor": {
+      "properties": {
+        "expr": {
+          "type": "string"
+        },
+        "disable": {
+          "type": "boolean"
+        },
+        "delete": {
+          "type": "boolean"
+        },
+        "timeout": {
+          "type": "string"
+        },
+        "interval": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "KubernetesResourceChecks": {
+      "properties": {
+        "replicas": {
+          "type": "integer"
+        },
+        "env": {
+          "additionalProperties": {
+            "$ref": "#/$defs/VarSource"
+          },
+          "type": "object"
+        },
+        "http": {
+          "items": {
+            "$ref": "#/$defs/HTTPCheck"
+          },
+          "type": "array"
+        },
+        "dns": {
+          "items": {
+            "$ref": "#/$defs/DNSCheck"
+          },
+          "type": "array"
+        },
+        "docker": {
+          "items": {
+            "$ref": "#/$defs/DockerPullCheck"
+          },
+          "type": "array"
+        },
+        "dockerPush": {
+          "items": {
+            "$ref": "#/$defs/DockerPushCheck"
+          },
+          "type": "array"
+        },
+        "containerd": {
+          "items": {
+            "$ref": "#/$defs/ContainerdPullCheck"
+          },
+          "type": "array"
+        },
+        "containerdPush": {
+          "items": {
+            "$ref": "#/$defs/ContainerdPushCheck"
+          },
+          "type": "array"
+        },
+        "s3": {
+          "items": {
+            "$ref": "#/$defs/S3Check"
+          },
+          "type": "array"
+        },
+        "tcp": {
+          "items": {
+            "$ref": "#/$defs/TCPCheck"
+          },
+          "type": "array"
+        },
+        "pod": {
+          "items": {
+            "$ref": "#/$defs/PodCheck"
+          },
+          "type": "array"
+        },
+        "ldap": {
+          "items": {
+            "$ref": "#/$defs/LDAPCheck"
+          },
+          "type": "array"
+        },
+        "icmp": {
+          "items": {
+            "$ref": "#/$defs/ICMPCheck"
+          },
+          "type": "array"
+        },
+        "postgres": {
+          "items": {
+            "$ref": "#/$defs/PostgresCheck"
+          },
+          "type": "array"
+        },
+        "mssql": {
+          "items": {
+            "$ref": "#/$defs/MssqlCheck"
+          },
+          "type": "array"
+        },
+        "mysql": {
+          "items": {
+            "$ref": "#/$defs/MysqlCheck"
+          },
+          "type": "array"
+        },
+        "restic": {
+          "items": {
+            "$ref": "#/$defs/ResticCheck"
+          },
+          "type": "array"
+        },
+        "jmeter": {
+          "items": {
+            "$ref": "#/$defs/JmeterCheck"
+          },
+          "type": "array"
+        },
+        "junit": {
+          "items": {
+            "$ref": "#/$defs/JunitCheck"
+          },
+          "type": "array"
+        },
+        "helm": {
+          "items": {
+            "$ref": "#/$defs/HelmCheck"
+          },
+          "type": "array"
+        },
+        "namespace": {
+          "items": {
+            "$ref": "#/$defs/NamespaceCheck"
+          },
+          "type": "array"
+        },
+        "redis": {
+          "items": {
+            "$ref": "#/$defs/RedisCheck"
+          },
+          "type": "array"
+        },
+        "prometheus": {
+          "items": {
+            "$ref": "#/$defs/PrometheusCheck"
+          },
+          "type": "array"
+        },
+        "mongodb": {
+          "items": {
+            "$ref": "#/$defs/MongoDBCheck"
+          },
+          "type": "array"
+        },
+        "cloudwatch": {
+          "items": {
+            "$ref": "#/$defs/CloudWatchCheck"
+          },
+          "type": "array"
+        },
+        "github": {
+          "items": {
+            "$ref": "#/$defs/GitHubCheck"
+          },
+          "type": "array"
+        },
+        "gitProtocol": {
+          "items": {
+            "$ref": "#/$defs/GitProtocolCheck"
+          },
+          "type": "array"
+        },
+        "kubernetes": {
+          "items": {
+            "$ref": "#/$defs/KubernetesCheck"
+          },
+          "type": "array"
+        },
+        "kubernetesResource": {
+          "items": {
+            "$ref": "#/$defs/KubernetesResourceCheck"
+          },
+          "type": "array"
+        },
+        "folder": {
+          "items": {
+            "$ref": "#/$defs/FolderCheck"
+          },
+          "type": "array"
+        },
+        "exec": {
+          "items": {
+            "$ref": "#/$defs/ExecCheck"
+          },
+          "type": "array"
+        },
+        "awsConfig": {
+          "items": {
+            "$ref": "#/$defs/AwsConfigCheck"
+          },
+          "type": "array"
+        },
+        "awsConfigRule": {
+          "items": {
+            "$ref": "#/$defs/AwsConfigRuleCheck"
+          },
+          "type": "array"
+        },
+        "databaseBackup": {
+          "items": {
+            "$ref": "#/$defs/DatabaseBackupCheck"
+          },
+          "type": "array"
+        },
+        "catalog": {
+          "items": {
+            "$ref": "#/$defs/CatalogCheck"
+          },
+          "type": "array"
+        },
+        "opensearch": {
+          "items": {
+            "$ref": "#/$defs/OpenSearchCheck"
+          },
+          "type": "array"
+        },
+        "elasticsearch": {
+          "items": {
+            "$ref": "#/$defs/ElasticsearchCheck"
+          },
+          "type": "array"
+        },
+        "alertmanager": {
+          "items": {
+            "$ref": "#/$defs/AlertManagerCheck"
+          },
+          "type": "array"
+        },
+        "dynatrace": {
+          "items": {
+            "$ref": "#/$defs/DynatraceCheck"
+          },
+          "type": "array"
+        },
+        "azureDevops": {
+          "items": {
+            "$ref": "#/$defs/AzureDevopsCheck"
+          },
+          "type": "array"
+        },
+        "webhook": {
+          "$ref": "#/$defs/WebhookCheck"
+        },
+        "interval": {
+          "type": "integer"
+        },
+        "schedule": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "resultMode": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "LDAPCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "Auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "bindDN": {
+          "type": "string"
+        },
+        "userSearch": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "Auth",
+        "bindDN"
+      ]
+    },
+    "Labels": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "Lookup": {
+      "properties": {
+        "expr": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "LookupSpec": {
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "namespace": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "type": {
+          "$ref": "#/$defs/Lookup"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ManagedFieldsEntry": {
+      "properties": {
+        "manager": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "apiVersion": {
+          "type": "string"
+        },
+        "time": {
+          "$ref": "#/$defs/Time"
+        },
+        "fieldsType": {
+          "type": "string"
+        },
+        "fieldsV1": {
+          "$ref": "#/$defs/FieldsV1"
+        },
+        "subresource": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "MetricLabel": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "valueExpr": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "MetricLabels": {
+      "items": {
+        "$ref": "#/$defs/MetricLabel"
+      },
+      "type": "array"
+    },
+    "Metrics": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/MetricLabels"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "MongoDBCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "Auth": {
+          "$ref": "#/$defs/Authentication"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "Auth"
+      ]
+    },
+    "MssqlCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "Auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "query": {
+          "type": "string"
+        },
+        "results": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "Auth"
+      ]
+    },
+    "MysqlCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "Auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "query": {
+          "type": "string"
+        },
+        "results": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "Auth"
+      ]
+    },
+    "NamespaceCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "namespaceNamePrefix": {
+          "type": "string"
+        },
+        "namespaceLabels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "namespaceAnnotations": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "podSpec": {
+          "type": "string"
+        },
+        "schedule_timeout": {
+          "type": "integer"
+        },
+        "readyTimeout": {
+          "type": "integer"
+        },
+        "httpTimeout": {
+          "type": "integer"
+        },
+        "deleteTimeout": {
+          "type": "integer"
+        },
+        "ingressTimeout": {
+          "type": "integer"
+        },
+        "httpRetryInterval": {
+          "type": "integer"
+        },
+        "deadline": {
+          "type": "integer"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "path": {
+          "type": "string"
+        },
+        "ingressName": {
+          "type": "string"
+        },
+        "ingressHost": {
+          "type": "string"
+        },
+        "expectedContent": {
+          "type": "string"
+        },
+        "expectedHttpStatuses": {
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "priorityClass": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "podSpec"
+      ]
+    },
+    "OAuth": {
+      "properties": {
+        "clientID": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "clientSecret": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "scope": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tokenURL": {
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Oauth2Config": {
+      "properties": {
+        "scope": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tokenURL": {
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ObjectFieldSelector": {
+      "properties": {
+        "apiVersion": {
+          "type": "string"
+        },
+        "fieldPath": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "fieldPath"
+      ]
+    },
+    "ObjectMeta": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "generateName": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "selfLink": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "resourceVersion": {
+          "type": "string"
+        },
+        "generation": {
+          "type": "integer"
+        },
+        "creationTimestamp": {
+          "$ref": "#/$defs/Time"
+        },
+        "deletionTimestamp": {
+          "$ref": "#/$defs/Time"
+        },
+        "deletionGracePeriodSeconds": {
+          "type": "integer"
+        },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "annotations": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "ownerReferences": {
+          "items": {
+            "$ref": "#/$defs/OwnerReference"
+          },
+          "type": "array"
+        },
+        "finalizers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "managedFields": {
+          "items": {
+            "$ref": "#/$defs/ManagedFieldsEntry"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "OpenSearchCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "Auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "query": {
+          "type": "string"
+        },
+        "index": {
+          "type": "string"
+        },
+        "results": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "Auth",
+        "query",
+        "index"
+      ]
+    },
+    "OwnerReference": {
+      "properties": {
+        "apiVersion": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "controller": {
+          "type": "boolean"
+        },
+        "blockOwnerDeletion": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "apiVersion",
+        "kind",
+        "name",
+        "uid"
+      ]
+    },
+    "PodCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "spec": {
+          "type": "string"
+        },
+        "scheduleTimeout": {
+          "type": "integer"
+        },
+        "readyTimeout": {
+          "type": "integer"
+        },
+        "httpTimeout": {
+          "type": "integer"
+        },
+        "deleteTimeout": {
+          "type": "integer"
+        },
+        "ingressTimeout": {
+          "type": "integer"
+        },
+        "httpRetryInterval": {
+          "type": "integer"
+        },
+        "deadline": {
+          "type": "integer"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "path": {
+          "type": "string"
+        },
+        "ingressName": {
+          "type": "string"
+        },
+        "ingressHost": {
+          "type": "string"
+        },
+        "ingressClass": {
+          "type": "string"
+        },
+        "expectedContent": {
+          "type": "string"
+        },
+        "expectedHttpStatuses": {
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "priorityClass": {
+          "type": "string"
+        },
+        "roundRobinNodes": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "PostgresCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "Auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "query": {
+          "type": "string"
+        },
+        "results": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "Auth"
+      ]
+    },
+    "PrometheusCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "host": {
+          "type": "string"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "Auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "query": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "Auth",
+        "query"
+      ]
+    },
+    "RedisCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "Auth": {
+          "$ref": "#/$defs/Authentication"
+        },
+        "addr": {
+          "type": "string"
+        },
+        "db": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "Auth"
+      ]
+    },
+    "ResourceSelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labelSelector": {
+          "type": "string"
+        },
+        "fieldSelector": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ResourceSelectors": {
+      "items": {
+        "$ref": "#/$defs/ResourceSelector"
+      },
+      "type": "array"
+    },
+    "ResticCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "awsConnectionName": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "maxAge": {
+          "type": "string"
+        },
+        "checkIntegrity": {
+          "type": "boolean"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "caCert": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "repository",
+        "password",
+        "maxAge"
+      ]
+    },
+    "S3Check": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "bucket": {
+          "type": "string"
+        },
+        "objectPath": {
+          "type": "string"
+        },
+        "usePathStyle": {
+          "type": "boolean"
+        },
+        "bucketName": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "S3Connection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "bucket": {
+          "type": "string"
+        },
+        "objectPath": {
+          "type": "string"
+        },
+        "usePathStyle": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "SFTPConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "host": {
+          "type": "string"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "host"
+      ]
+    },
+    "SMBConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "bearer": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "oauth": {
+          "$ref": "#/$defs/OAuth"
+        },
+        "domain": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "SecretKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "optional": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
+    "TCPCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "thresholdMillis": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "Template": {
+      "properties": {
+        "template": {
+          "type": "string"
+        },
+        "jsonPath": {
+          "type": "string"
+        },
+        "expr": {
+          "type": "string"
+        },
+        "javascript": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Time": {
+      "properties": {},
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Unstructured": {
+      "properties": {
+        "Object": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "Object"
+      ]
+    },
+    "VarSource": {
+      "properties": {
+        "fieldRef": {
+          "$ref": "#/$defs/ObjectFieldSelector"
+        },
+        "value": {
+          "type": "string"
+        },
+        "configMapKeyRef": {
+          "$ref": "#/$defs/ConfigMapKeySelector"
+        },
+        "secretKeyRef": {
+          "$ref": "#/$defs/SecretKeySelector"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "WebhookCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "token": {
+          "$ref": "#/$defs/EnvVar"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    }
+  }
+}

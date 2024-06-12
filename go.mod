@@ -18,7 +18,7 @@ require (
 	github.com/eko/gocache/store/bigcache/v4 v4.2.1
 	github.com/elastic/go-elasticsearch/v8 v8.13.1
 	github.com/fergusstrange/embedded-postgres v1.25.0
-	github.com/flanksource/artifacts v1.0.5
+	github.com/flanksource/artifacts v1.0.7
 	github.com/flanksource/commons v1.22.1
 	github.com/flanksource/duty v1.0.495
 	github.com/flanksource/gomplate/v3 v3.24.8
