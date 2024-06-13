@@ -13,7 +13,6 @@ import (
 	"github.com/c2h5oh/datasize"
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/commons/duration"
-	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/gomplate/v3"
 	"github.com/timberio/go-datemath"
@@ -415,8 +414,8 @@ type Connection struct {
 	// Connection name e.g. connection://http/google
 	Connection string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Connection url, interpolated with username,password
-	URL                       string `yaml:"url,omitempty" json:"url,omitempty" template:"true"`
-	connection.Authentication `yaml:",inline" json:",inline"`
+	URL                  string `yaml:"url,omitempty" json:"url,omitempty" template:"true"`
+	types.Authentication `yaml:",inline" json:",inline"`
 }
 
 func (c Connection) GetEndpoint() string {

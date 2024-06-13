@@ -709,7 +709,6 @@ type PrometheusCheck struct {
 	// Deprecated: use `url` instead
 	Host       string `yaml:"host,omitempty" json:"host,omitempty"`
 	Connection `yaml:",inline" json:",inline"`
-	Auth       *PrometheusAuth `json:"auth,omitempty"`
 	// PromQL query
 	Query string `yaml:"query" json:"query" template:"true"`
 }

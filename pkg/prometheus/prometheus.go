@@ -8,12 +8,11 @@ import (
 	"time"
 
 	dutyContext "github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/types"
 	prometheusapi "github.com/prometheus/client_golang/api"
 	promV1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	prometheusConfig "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
-
-	v1 "github.com/flanksource/canary-checker/api/v1"
 )
 
 type PrometheusClient struct {
@@ -43,62 +42,60 @@ func (p PrometheusClient) GetUptime(checkKey, duration string) (float64, error) 
 	return 100 - float64(uptime.(model.Vector)[0].Value), nil
 }
 
-func NewPrometheusAPI(ctx dutyContext.Context, url string, auth *v1.PrometheusAuth) (*PrometheusClient, error) {
+func NewPrometheusAPI(ctx dutyContext.Context, url string, auth types.Authentication) (*PrometheusClient, error) {
 	if url == "" {
 		return nil, nil
 	}
 
 	roundTripper := prometheusapi.DefaultRoundTripper
-	if auth != nil {
-		username, err := ctx.GetEnvValueFromCache(auth.Basic.Username, ctx.GetNamespace())
+	if !auth.Username.IsEmpty() {
+		username, err := ctx.GetEnvValueFromCache(auth.Username, ctx.GetNamespace())
 		if err != nil {
 			return nil, err
 		}
 
-		password, err := ctx.GetEnvValueFromCache(auth.Basic.Password, ctx.GetNamespace())
+		password, err := ctx.GetEnvValueFromCache(auth.Password, ctx.GetNamespace())
 		if err != nil {
 			return nil, err
 		}
 
-		if auth.Basic != nil {
-			roundTripper = prometheusConfig.NewBasicAuthRoundTripper(
-				username,
-				prometheusConfig.Secret(password),
-				"",
-				"",
-				roundTripper)
-		} else if auth.Oauth != nil {
-			clientID, err := ctx.GetEnvValueFromCache(auth.Oauth.ClientID, ctx.GetNamespace())
-			if err != nil {
-				return nil, err
-			}
-
-			clientSecret, err := ctx.GetEnvValueFromCache(auth.Oauth.ClientSecret, ctx.GetNamespace())
-			if err != nil {
-				return nil, err
-			}
-
-			roundTripper = prometheusConfig.NewOAuth2RoundTripper(
-				&prometheusConfig.OAuth2{
-					ClientID:       clientID,
-					ClientSecret:   prometheusConfig.Secret(clientSecret),
-					Scopes:         auth.Oauth.Scopes,
-					TokenURL:       auth.Oauth.TokenURL,
-					EndpointParams: auth.Oauth.Params,
-				},
-				roundTripper,
-				nil)
-		} else if !auth.Bearer.IsEmpty() {
-			clientID, err := ctx.GetEnvValueFromCache(auth.Bearer, ctx.GetNamespace())
-			if err != nil {
-				return nil, err
-			}
-
-			roundTripper = prometheusConfig.NewAuthorizationCredentialsRoundTripper(
-				"Bearer",
-				prometheusConfig.Secret(clientID),
-				roundTripper)
+		roundTripper = prometheusConfig.NewBasicAuthRoundTripper(
+			username,
+			prometheusConfig.Secret(password),
+			"",
+			"",
+			roundTripper)
+	} else if !auth.OAuth.IsEmpty() {
+		clientID, err := ctx.GetEnvValueFromCache(auth.OAuth.ClientID, ctx.GetNamespace())
+		if err != nil {
+			return nil, err
 		}
+
+		clientSecret, err := ctx.GetEnvValueFromCache(auth.OAuth.ClientSecret, ctx.GetNamespace())
+		if err != nil {
+			return nil, err
+		}
+
+		roundTripper = prometheusConfig.NewOAuth2RoundTripper(
+			&prometheusConfig.OAuth2{
+				ClientID:       clientID,
+				ClientSecret:   prometheusConfig.Secret(clientSecret),
+				Scopes:         auth.OAuth.Scopes,
+				TokenURL:       auth.OAuth.TokenURL,
+				EndpointParams: auth.OAuth.Params,
+			},
+			roundTripper,
+			nil)
+	} else if !auth.Bearer.IsEmpty() {
+		clientID, err := ctx.GetEnvValueFromCache(auth.Bearer, ctx.GetNamespace())
+		if err != nil {
+			return nil, err
+		}
+
+		roundTripper = prometheusConfig.NewAuthorizationCredentialsRoundTripper(
+			"Bearer",
+			prometheusConfig.Secret(clientID),
+			roundTripper)
 	}
 
 	transportConfig := roundTripper.(*http.Transport)
