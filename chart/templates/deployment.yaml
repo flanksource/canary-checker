@@ -37,7 +37,7 @@ spec:
       labels:
         {{- include "canary-checker.selectorLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ include "canary-checker.fullname" . }}-sa
+      serviceAccountName: {{ .Values.serviceAccount.name }}
       volumes:
         {{- if eq .Values.dockerSocket true }}
         - name: dockersock
