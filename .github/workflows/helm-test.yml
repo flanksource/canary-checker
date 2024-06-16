@@ -47,6 +47,17 @@ jobs:
       - name: Install helm chart
         run: 'helm install canary-checker canary-checker-1.0.0.tgz -n canary-checker --create-namespace'
 
+      - name: Debug
+        run: |
+          sleep 30
+          kubectl describe pod -n canary-checker
+          sleep 30
+          kubectl describe pod -n canary-checker
+          sleep 30
+          kubectl describe pod -n canary-checker
+          sleep 30
+          kubectl describe pod -n canary-checker
+
       - name: Wait for 30 seconds
         run: 'kubectl rollout status deploy/canary-checker -n canary-checker --timeout 5m'
 
