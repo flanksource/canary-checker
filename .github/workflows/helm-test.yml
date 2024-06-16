@@ -32,7 +32,7 @@ jobs:
       - name: Update canary-checker image in helm chart
         uses: mikefarah/yq@master
         with:
-          cmd: yq -i e '.image.repository = "kind-registry:5000/canary-checker"' chart/values.yaml
+          cmd: yq -i e '.image.globalRegistry = "kind-registry:5000"' chart/values.yaml
 
       - name: Setup Helm
         uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3.5
