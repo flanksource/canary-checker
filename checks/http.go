@@ -64,7 +64,7 @@ func (c *HTTPChecker) Run(ctx *context.Context) pkg.Results {
 }
 
 func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPCheck, connection *models.Connection) (*http.Request, error) {
-	client := http.NewClient().UserAgent("canary-checker/" + runner.Version).InsecureSkipVerify(true)
+	client := http.NewClient().UserAgent("canary-checker/" + runner.Version)
 
 	for _, header := range check.Headers {
 		value, err := ctx.GetEnvValueFromCache(header, ctx.GetNamespace())
@@ -87,6 +87,43 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 			Scopes:       check.Oauth2.Scopes,
 			Params:       check.Oauth2.Params,
 		})
+	}
+
+	if check.TLSConfig != nil {
+		tlsconfig := http.TLSConfig{
+			InsecureSkipVerify: check.TLSConfig.InsecureSkipVerify,
+			HandshakeTimeout:   check.TLSConfig.HandshakeTimeout,
+		}
+
+		if !check.TLSConfig.CA.IsEmpty() {
+			v, err := ctx.GetEnvValueFromCache(check.TLSConfig.CA, ctx.GetNamespace())
+			if err != nil {
+				return nil, fmt.Errorf("failed getting header (%v): %w", check.TLSConfig.CA, err)
+			}
+			tlsconfig.CA = v
+		}
+
+		if !check.TLSConfig.Cert.IsEmpty() {
+			v, err := ctx.GetEnvValueFromCache(check.TLSConfig.Cert, ctx.GetNamespace())
+			if err != nil {
+				return nil, fmt.Errorf("failed getting header (%v): %w", check.TLSConfig.Cert, err)
+			}
+			tlsconfig.Cert = v
+		}
+
+		if !check.TLSConfig.Key.IsEmpty() {
+			v, err := ctx.GetEnvValueFromCache(check.TLSConfig.Key, ctx.GetNamespace())
+			if err != nil {
+				return nil, fmt.Errorf("failed getting header (%v): %w", check.TLSConfig.Key, err)
+			}
+			tlsconfig.Key = v
+		}
+
+		var err error
+		client, err = client.TLSConfig(tlsconfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to set tls config: %w", err)
+		}
 	}
 
 	client.NTLM(check.NTLM)

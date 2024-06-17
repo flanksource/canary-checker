@@ -154,6 +154,9 @@
         },
         "oauth2": {
           "$ref": "#/$defs/Oauth2Config"
+        },
+        "tlsConfig": {
+          "$ref": "#/$defs/TLSConfig"
         }
       },
       "additionalProperties": false,
@@ -303,6 +306,27 @@
       "required": [
         "key"
       ]
+    },
+    "TLSConfig": {
+      "properties": {
+        "insecureSkipVerify": {
+          "type": "boolean"
+        },
+        "handshakeTimeout": {
+          "type": "integer"
+        },
+        "ca": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "cert": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "key": {
+          "$ref": "#/$defs/EnvVar"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "Template": {
       "properties": {
