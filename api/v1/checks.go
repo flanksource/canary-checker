@@ -74,6 +74,20 @@ type Oauth2Config struct {
 	Params   map[string]string `json:"params,omitempty" yaml:"params,omitempty"`
 }
 
+type TLSConfig struct {
+	// InsecureSkipVerify controls whether a client verifies the server's
+	// certificate chain and host name
+	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty" yaml:"insecureSkipVerify,omitempty"`
+	// HandshakeTimeout defaults to 10 seconds
+	HandshakeTimeout time.Duration `json:"handshakeTimeout,omitempty" yaml:"handshakeTimeout,omitempty"`
+	// PEM encoded certificate of the CA to verify the server certificate
+	CA types.EnvVar `json:"ca,omitempty" yaml:"ca,omitempty"`
+	// PEM encoded client certificate
+	Cert types.EnvVar `json:"cert,omitempty" yaml:"cert,omitempty"`
+	// PEM encoded client private key
+	Key types.EnvVar `json:"key,omitempty" yaml:"key,omitempty"`
+}
+
 type HTTPCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
@@ -106,6 +120,8 @@ type HTTPCheck struct {
 	EnvVars []types.EnvVar `yaml:"env,omitempty" json:"env,omitempty"`
 	// Oauth2 Configuration. The client ID & Client secret should go to username & password respectively.
 	Oauth2 *Oauth2Config `yaml:"oauth2,omitempty" json:"oauth2,omitempty"`
+	// TLS Config
+	TLSConfig *TLSConfig `yaml:"tlsConfig,omitempty" json:"tlsConfig,omitempty"`
 }
 
 func (c HTTPCheck) GetType() string {
