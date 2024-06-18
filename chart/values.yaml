@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 global:
-  imageRegistry: public.ecr.aws/k4y9r6y5
+  imageRegistry: docker.io/flanksource
   db:
     connectionPooler:
       enabled: false
@@ -14,7 +14,6 @@ global:
 replicas: 1
 
 image:
-  repository: docker.io/flanksource/canary-checker
   name: canary-checker
   ## Options: minimal | full
   ## full image is larger and requires more permissions to run, but is required to execute 3rd party checks (jmeter, restic, k6 etc)

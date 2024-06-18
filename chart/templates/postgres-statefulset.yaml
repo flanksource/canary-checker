@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: postgresql
-        image: public.ecr.aws/k4y9r6y5/postgres:14.1.0.21
+        image: {{ tpl .Values.global.imageRegistry . }}/postgres:14.1.0.21
         volumeMounts:
           - name: postgresql
             mountPath: /data
