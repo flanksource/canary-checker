@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: postgresql
-        image: {{ tpl .Values.global.imageRegistry . }}/postgres:14.1.0.21
+        image: {{ include "canary-checker.postgres.imageString" . }}
         volumeMounts:
           - name: postgresql
             mountPath: /data
