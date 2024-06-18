@@ -26,7 +26,7 @@ jobs:
           context: .
           file: ./build/full/Dockerfile
           push: true
-          tags: localhost:5000/canary-checker:latest
+          tags: localhost:5000/flanksource/canary-checker:latest
           cache-from: type=registry,ref=docker.io/flanksource/canary-checker
 
       - name: Update canary-checker image in helm chart
