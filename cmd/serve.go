@@ -17,6 +17,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/echo"
 	"github.com/flanksource/canary-checker/pkg/jobs"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
+	"github.com/flanksource/canary-checker/pkg/jobs/topology"
 	echov4 "github.com/labstack/echo/v4"
 
 	"github.com/flanksource/canary-checker/pkg/runner"
@@ -24,6 +25,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/commons/logger"
 	dutyContext "github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/job"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -99,6 +101,13 @@ func serve() {
 		go db.StartPostgrest()
 		echo.Forward(e, "/db", db.PostgRESTEndpoint(), postgrestResponseModifier)
 	}
+
+	e.GET("/jobs", job.CronDetailsHandler(
+		canaryJobs.CanaryScheduler,
+		canaryJobs.FuncScheduler,
+		jobs.FuncScheduler,
+		topology.TopologyScheduler,
+	))
 
 	runner.AddShutdownHook(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
