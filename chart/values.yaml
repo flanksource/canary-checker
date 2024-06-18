@@ -4,6 +4,7 @@
 
 global:
   imageRegistry: docker.io
+  imagePrefix: flanksource
   db:
     connectionPooler:
       enabled: false
@@ -14,7 +15,7 @@ global:
 replicas: 1
 
 image:
-  name: flanksource/canary-checker
+  name: '{{.Values.global.imagePrefix}}/canary-checker'
   ## Options: minimal | full
   ## full image is larger and requires more permissions to run, but is required to execute 3rd party checks (jmeter, restic, k6 etc)
   type: minimal

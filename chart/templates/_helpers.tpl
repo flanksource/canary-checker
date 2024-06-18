@@ -71,7 +71,7 @@ control-plane: canary-checker
 Image Name
 */}}
 {{- define "canary-checker.imageString" -}}
-{{ tpl .Values.global.imageRegistry . }}/{{ .Values.image.name }}{{- if eq (lower .Values.image.type) "full" }}-full{{- end }}:{{ .Values.image.tag }}
+{{ tpl .Values.global.imageRegistry . }}/{{ tpl .Values.image.name . }}{{- if eq (lower .Values.image.type) "full" }}-full{{- end }}:{{ .Values.image.tag }}
 {{- end }}
 
 {{- define "canary-checker.postgres.imageString" -}}
