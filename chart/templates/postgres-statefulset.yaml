@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: postgresql
-        image: postgres:14
+        image: {{ include "canary-checker.postgres.imageString" . }}
         volumeMounts:
           - name: postgresql
             mountPath: /data

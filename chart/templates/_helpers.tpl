@@ -71,5 +71,9 @@ control-plane: canary-checker
 Image Name
 */}}
 {{- define "canary-checker.imageString" -}}
-{{ .Values.image.repository }}{{- if eq (lower .Values.image.type) "full" }}-full{{- end }}:{{ .Values.image.tag }} 
+{{ tpl .Values.global.imageRegistry . }}/{{ tpl .Values.image.name . }}{{- if eq (lower .Values.image.type) "full" }}-full{{- end }}:{{ .Values.image.tag }}
+{{- end }}
+
+{{- define "canary-checker.postgres.imageString" -}}
+{{ tpl .Values.global.imageRegistry . }}/supabase/postgres:14.1.0.89
 {{- end }}

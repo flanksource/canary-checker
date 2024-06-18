@@ -8,5 +8,5 @@ roleRef:
   name: {{ include "canary-checker.name" . }}-role
 subjects:
   - kind: ServiceAccount
-    name: {{ include "canary-checker.fullname" . }}-sa
+    name: {{ .Values.serviceAccount.name }}
     namespace: {{ .Release.Namespace }}
