@@ -107,9 +107,8 @@ jobs:
           REPOSITORY: canary-checker
           IMAGE_TAG: "v${{ env.RELEASE_VERSION }}"
         run: |
-          docker build -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:latest -f build/minimal/Dockerfile . 
+          docker build -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG -f build/minimal/Dockerfile . 
           docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
-          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:latest
 
       - name: Publish Minimal Image to ECR Public
         env:
@@ -118,9 +117,8 @@ jobs:
           REPOSITORY: canary-checker-full
           IMAGE_TAG: "v${{ env.RELEASE_VERSION }}"
         run: |
-          docker build -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:latest -f build/full/Dockerfile . 
+          docker build -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG -f build/full/Dockerfile . 
           docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
-          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:latest
 
   helm:
     runs-on: ubuntu-latest
