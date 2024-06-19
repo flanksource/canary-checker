@@ -20,7 +20,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.7
 	github.com/flanksource/commons v1.22.2
-	github.com/flanksource/duty v1.0.504
+	github.com/flanksource/duty v1.0.505
 	github.com/flanksource/gomplate/v3 v3.24.8
 	github.com/flanksource/is-healthy v1.0.6
 	github.com/flanksource/kommons v0.31.4
