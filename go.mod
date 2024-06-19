@@ -19,7 +19,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.13.1
 	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.7
-	github.com/flanksource/commons v1.22.2
+	github.com/flanksource/commons v1.23.0
 	github.com/flanksource/duty v1.0.505
 	github.com/flanksource/gomplate/v3 v3.24.8
 	github.com/flanksource/is-healthy v1.0.6
@@ -190,6 +190,7 @@ require (
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.19.1 // indirect
+	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/hirochachacha/go-smb2 v1.1.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

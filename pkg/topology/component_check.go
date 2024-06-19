@@ -64,7 +64,7 @@ func createComponentCanaryFromInline(ctx context.Context, id, name, namespace, s
 		},
 		Spec: *spec,
 	}
-	canary, err := db.PersistCanary(ctx, obj, fmt.Sprintf("component/%s", id))
+	canary, _, err := db.PersistCanary(ctx, obj, fmt.Sprintf("component/%s", id))
 	if err != nil {
 		logger.Errorf("error persisting component inline canary: %v", err)
 		return nil, err

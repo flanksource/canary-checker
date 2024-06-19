@@ -14,6 +14,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/commons/diff"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
@@ -397,9 +398,14 @@ func CreateCheck(ctx context.Context, canary pkg.Canary, check *pkg.Check) error
 	return ctx.DB().Create(&check).Error
 }
 
-func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, error) {
-	db := ctx.DB()
-	err := db.Clauses(
+func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, bool, error) {
+	var existing models.Canary
+	err := ctx.DB().Where("id = ?", model.ID.String()).First(&existing).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, false, err
+	}
+
+	err = ctx.DB().Clauses(
 		models.Canary{}.ConflictClause(),
 		clause.Returning{},
 	).Create(&model).Error
@@ -410,12 +416,21 @@ func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, err
 	// gorm.ErrDuplicatedKey is just for fallback but does not work
 	if err != nil {
 		if !errors.As(err, &PostgresDuplicateKeyError) && !errors.Is(err, gorm.ErrDuplicatedKey) {
-			return nil, fmt.Errorf("error persisting canary to db: %w", err)
+			return nil, false, fmt.Errorf("error persisting canary to db: %w", err)
 		}
 	}
 
+	var changed bool
+	if existing.ID != uuid.Nil {
+		jsonDiff, err := diff.JSONCompare(string(model.Spec), string(existing.Spec))
+		if err != nil {
+			return nil, false, fmt.Errorf("failed to compare old and existing model")
+		}
+		changed = jsonDiff != ""
+	}
+
 	var oldCheckIDs []string
-	err = db.
+	err = ctx.DB().
 		Table("checks").
 		Select("id").
 		Where("canary_id = ? AND deleted_at IS NULL AND transformed = false", model.ID).
@@ -423,12 +438,12 @@ func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, err
 		Error
 	if err != nil {
 		ctx.Error(err, "Error fetching existing checks for canary: %s", model.ID)
-		return nil, err
+		return nil, false, err
 	}
 
 	var spec v1.CanarySpec
 	if err = json.Unmarshal(model.Spec, &spec); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	var checks = make(map[string]string)
@@ -436,7 +451,7 @@ func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, err
 	for _, config := range spec.GetAllChecks() {
 		check := pkg.FromExternalCheck(model, config)
 		check.Spec, _ = json.Marshal(config)
-		id, err := PersistCheck(db, check, model.ID)
+		id, err := PersistCheck(ctx.DB(), check, model.ID)
 		if err != nil {
 			ctx.Error(err, "error persisting check")
 		}
@@ -449,20 +464,20 @@ func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, err
 	checkIDsToRemove := utils.SetDifference(oldCheckIDs, newCheckIDs)
 	if len(checkIDsToRemove) > 0 {
 		ctx.Debugf("removing checks from canary:%s with ids %v", model.ID, checkIDsToRemove)
-		if err := DeleteNonTransformedChecks(db, checkIDsToRemove); err != nil {
+		if err := DeleteNonTransformedChecks(ctx.DB(), checkIDsToRemove); err != nil {
 			ctx.Error(err, "failed to delete non transformed checks")
 		}
 		metrics.UnregisterGauge(ctx, checkIDsToRemove)
 	}
 
 	model.Checks = checks
-	return &model, nil
+	return &model, changed, nil
 }
 
-func PersistCanary(ctx context.Context, canary v1.Canary, source string) (*pkg.Canary, error) {
+func PersistCanary(ctx context.Context, canary v1.Canary, source string) (*pkg.Canary, bool, error) {
 	model, err := pkg.CanaryFromV1(canary)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	if canary.GetPersistedID() != "" {
 		model.ID, _ = uuid.Parse(canary.GetPersistedID())
