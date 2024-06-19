@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	encjson "encoding/json"
 	"fmt"
 	"time"
 
@@ -26,6 +27,7 @@ const ComponentType = "component"
 // Topology mirrors the models.Topology struct except that instead of raw JSON serialized to the DB, it has the full CRD based spec.
 type Topology struct {
 	ID        uuid.UUID `gorm:"default:generate_ulid()"`
+	AgentID   uuid.UUID
 	Name      string
 	Namespace string
 	Labels    dutyTypes.JSONStringMap
@@ -84,7 +86,7 @@ type Object struct {
 func (component *Component) UnmarshalJSON(b []byte) error {
 	type UpstreamUnmarshal Component
 	var c UpstreamUnmarshal
-	if err := json.Unmarshal(b, &c); err != nil {
+	if err := encjson.Unmarshal(b, &c); err != nil {
 		return err
 	}
 	c.TopologyType = ComponentType

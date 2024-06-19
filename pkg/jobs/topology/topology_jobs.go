@@ -65,6 +65,7 @@ var SyncTopology = &job.Job{
 		var topologies []pkg.Topology
 
 		if err := ctx.DB().Table("topologies").Where(duty.LocalFilter).
+			Where("spec IS NOT NULL"). // Pushed topologies will have NULL spec
 			Find(&topologies).Error; err != nil {
 			return err
 		}

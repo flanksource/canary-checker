@@ -56,8 +56,10 @@ func New(ctx context.Context) *echo.Echo {
 	e.GET("/about", api.About)
 	e.GET("/api/graph", api.CheckDetails)
 	e.POST("/api/push", api.PushHandler)
+	e.POST("/api/push/canary", api.PushHandler)
 	e.GET("/api/details", api.DetailsHandler)
 	e.GET("/api/topology", api.Topology)
+	e.POST("/api/push/topology", api.PushTopology)
 
 	e.POST("/webhook/:id", api.WebhookHandler)
 

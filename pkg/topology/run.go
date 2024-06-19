@@ -473,6 +473,11 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 		return nil
 	}
 
+	if dbTopology.Spec == nil {
+		job.Debugf("Skipping topology as its spec is empty")
+		return nil
+	}
+
 	if t.Namespace == "" {
 		t.Namespace = tj.Namespace
 	}

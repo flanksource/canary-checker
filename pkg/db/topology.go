@@ -41,7 +41,12 @@ func PersistV1Topology(ctx context.Context, t *v1.Topology) (pkg.Topology, bool,
 
 func PersistTopology(ctx context.Context, model *pkg.Topology) (bool, error) {
 	tx := ctx.DB().
-		Clauses(models.Topology{}.OnConflictClause()).
+		Clauses(models.Topology{}.OnConflictClause(),
+			clause.OnConflict{
+				Columns:   []clause.Column{{Name: "id"}},
+				DoUpdates: clause.AssignmentColumns([]string{"labels", "spec"}),
+			},
+		).
 		Create(model)
 	if tx.Error != nil {
 		return false, tx.Error
@@ -101,6 +106,10 @@ func PersistComponent(ctx context.Context, component *pkg.Component) ([]uuid.UUI
 		tx = tx.Clauses(
 			clause.OnConflict{
 				Columns:   []clause.Column{{Name: "topology_id"}, {Name: "name"}, {Name: "type"}, {Name: "parent_id"}},
+				UpdateAll: true,
+			},
+			clause.OnConflict{
+				Columns:   []clause.Column{{Name: "id"}},
 				UpdateAll: true,
 			},
 		).Create(component)
