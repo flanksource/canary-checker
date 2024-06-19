@@ -62,6 +62,7 @@ func findJob(dbCanary pkg.Canary) *job.Job {
 
 func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 	id := dbCanary.ID.String()
+	logger.Debugf("SyncCanaryJob (id=%s name=%s)", dbCanary.ID, dbCanary.Name)
 
 	if disabled := ctx.Properties()["check.*.disabled"]; disabled == "true" {
 		return nil
@@ -113,8 +114,10 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 		ctx.Debugf("Rescheduling %s canary with updated specs", canary)
 		Unschedule(id)
 		newCanaryJob(canaryJob)
+		return nil
 	}
 
+	logger.Debugf("%s was not rescheduled", canary.Name)
 	return nil
 }
 
@@ -157,6 +160,8 @@ var SyncCanaryJobs = &job.Job{
 		if err != nil {
 			return err
 		}
+
+		ctx.Logger.V(1).Infof("syncing canary jobs for %d canaries", len(canaries))
 
 		existingIDsInCron := getAllCanaryIDsInCron()
 		idsInNewFetch := make([]string, 0, len(canaries))
@@ -203,7 +208,7 @@ func ScanCanaryConfigs(ctx context.Context) {
 			if runner.IsCanaryIgnored(&canary.ObjectMeta) {
 				continue
 			}
-			_, err := db.PersistCanary(ctx, canary, path.Base(configfile))
+			_, _, err := db.PersistCanary(ctx, canary, path.Base(configfile))
 			if err != nil {
 				logger.Errorf("could not persist %s: %v", canary.Name, err)
 			} else {

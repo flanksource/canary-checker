@@ -80,7 +80,7 @@ func postgrestResponseModifier(r *http.Response) error {
 			return fmt.Errorf("error unmarshaling response body to json: %w", err)
 		}
 		for _, c := range canaries {
-			if _, err := db.PersistCanaryModel(apicontext.DefaultContext, c); err != nil {
+			if _, _, err := db.PersistCanaryModel(apicontext.DefaultContext, c); err != nil {
 				logger.Errorf("Error persisting canary[%s]: %v", c.ID, err)
 			}
 		}

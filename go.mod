@@ -35,6 +35,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-getter v1.7.4
 	github.com/henvic/httpretty v0.1.3
+	github.com/hexops/gotextdiff v1.0.3
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/joshdk/go-junit v1.0.0
 	github.com/jszwec/csvutil v1.9.0

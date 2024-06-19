@@ -172,15 +172,18 @@ func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *CanaryReconciler) persistAndCacheCanary(ctx dutyContext.Context, canary *v1.Canary) (*pkg.Canary, error) {
-	dbCanary, err := db.PersistCanary(ctx, *canary, "kubernetes/"+canary.GetPersistedID())
+	dbCanary, changed, err := db.PersistCanary(ctx, *canary, "kubernetes/"+canary.GetPersistedID())
 	if err != nil {
 		return nil, err
 	}
 	r.CanaryCache.Set(dbCanary.ID.String(), dbCanary, cache.DefaultExpiration)
 
-	if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
-		return nil, err
+	if changed {
+		if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
+			return nil, err
+		}
 	}
+
 	return dbCanary, nil
 }
 

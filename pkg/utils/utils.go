@@ -77,10 +77,8 @@ func GenerateJSONMD5Hash(obj interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	hash := md5.Sum(data)
-	if err != nil {
-		return "", err
-	}
 	return hex.EncodeToString(hash[:]), nil
 }
 
