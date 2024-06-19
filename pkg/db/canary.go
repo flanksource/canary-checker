@@ -14,6 +14,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/commons/diff"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
@@ -421,11 +422,11 @@ func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, boo
 
 	var changed bool
 	if existing.ID != uuid.Nil {
-		diff, err := utils.GenerateDiff(string(model.Spec), string(existing.Spec))
+		jsonDiff, err := diff.JSONCompare(string(model.Spec), string(existing.Spec))
 		if err != nil {
 			return nil, false, fmt.Errorf("failed to compare old and existing model")
 		}
-		changed = diff != ""
+		changed = jsonDiff != ""
 	}
 
 	var oldCheckIDs []string

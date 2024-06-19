@@ -62,7 +62,7 @@ func findJob(dbCanary pkg.Canary) *job.Job {
 
 func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 	id := dbCanary.ID.String()
-	logger.Debugf("SyncCanaryJob (id=%s name=%s)", dbCanary.ID, dbCanary.Name)
+	ctx.Logger.V(2).Infof("SyncCanaryJob (id=%s name=%s)", dbCanary.ID, dbCanary.Name)
 
 	if disabled := ctx.Properties()["check.*.disabled"]; disabled == "true" {
 		return nil
@@ -117,7 +117,7 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 		return nil
 	}
 
-	logger.Debugf("%s was not rescheduled", canary.Name)
+	ctx.Logger.V(2).Infof("canary %s was not rescheduled", canary.Name)
 	return nil
 }
 
