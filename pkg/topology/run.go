@@ -492,7 +492,7 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 	var skipComponentDeletion bool
 	var results pkg.Components
 	for _, tagValue := range groupByTags {
-		ctx := NewComponentContext(job.Context, injectTagFilter(t.Spec.GroupByTag, tagValue, t))
+		ctx := NewComponentContext(job.Context, injectTagFilter(t.Spec.GroupByTag, tagValue, *t.DeepCopy()))
 		ctx.JobHistory = job.History
 		result, skipDeletion := tj.run(ctx, job)
 		if skipDeletion {
@@ -675,17 +675,23 @@ func injectIntoSelector(key, val, selector string) string {
 // setTagFilter recursively modifies all the catalog lookups in the given components.
 func setTagFilter(tag, tagValue string, components []v1.ComponentSpecObject) []v1.ComponentSpecObject {
 	for i := range components {
-		if components[i].Lookup == nil {
-			continue
+		for j, c := range components[i].Configs {
+			components[i].Configs[j].TagSelector = injectIntoSelector(tag, tagValue, c.TagSelector)
 		}
 
-		for j := range components[i].Lookup.Catalog {
-			for k := range components[i].Lookup.Catalog[j].Selector {
-				tagSelector := components[i].Lookup.Catalog[j].Selector[k].TagSelector
-				components[i].Lookup.Catalog[j].Selector[k].TagSelector = injectIntoSelector(tag, tagValue, tagSelector)
-			}
+		for j, c := range components[i].Selectors {
+			components[i].Selectors[j].LabelSelector = injectIntoSelector(tag, tagValue, c.LabelSelector)
+		}
 
-			components[i].Components = setTagFilter(tag, tagValue, components[i].Components)
+		if components[i].Lookup != nil {
+			for j := range components[i].Lookup.Catalog {
+				for k := range components[i].Lookup.Catalog[j].Selector {
+					tagSelector := components[i].Lookup.Catalog[j].Selector[k].TagSelector
+					components[i].Lookup.Catalog[j].Selector[k].TagSelector = injectIntoSelector(tag, tagValue, tagSelector)
+				}
+
+				components[i].Components = setTagFilter(tag, tagValue, components[i].Components)
+			}
 		}
 	}
 
@@ -700,7 +706,20 @@ func injectTagFilter(tag, tagValue string, topology v1.Topology) v1.Topology {
 	}
 
 	topology.Name = fmt.Sprintf("%s (%s)", topology.Name, tagValue)
+
+	for i, c := range topology.Spec.Configs {
+		topology.Spec.Configs[i].TagSelector = injectIntoSelector(tag, tagValue, c.TagSelector)
+	}
+
 	for _, component := range topology.Spec.Components {
+		for j, c := range component.Configs {
+			component.Configs[j].TagSelector = injectIntoSelector(tag, tagValue, c.TagSelector)
+		}
+
+		for j, c := range component.Selectors {
+			component.Selectors[j].LabelSelector = injectIntoSelector(tag, tagValue, c.LabelSelector)
+		}
+
 		if component.Lookup != nil {
 			for j := range component.Lookup.Catalog {
 				for k := range component.Lookup.Catalog[j].Selector {
