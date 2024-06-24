@@ -7,7 +7,8 @@ spec:
   icon: flux
   type: Topology
   schedule: "@every 5m"
-  groupByTag: cluster
+  groupBy:
+    tag: cluster
   components:
     - icon: nodes
       name: Nodes
