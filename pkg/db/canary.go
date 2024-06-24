@@ -19,6 +19,7 @@ import (
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/query"
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -169,8 +170,16 @@ func LatestCheckStatus(ctx context.Context, checkID string) (*models.CheckStatus
 	return &status, nil
 }
 
-func GetAllValuesForConfigTag(ctx context.Context, tag string) ([]string, error) {
-	rows, err := ctx.DB().Model(&models.ConfigItem{}).Select("DISTINCT tags->>?", tag).Rows()
+func GetAllValuesForConfigTag(ctx context.Context, tagSelector v1.TopologyTagSelector) ([]string, error) {
+	q := ctx.DB().Model(&models.ConfigItem{}).Select("DISTINCT tags->>?", tagSelector.Tag)
+
+	if !tagSelector.Selector.IsEmpty() {
+		if err := query.SetResourceSelectorClause(ctx, tagSelector.Selector, q, "config_items", models.AllowedColumnFieldsInConfigs); err != nil {
+			return nil, fmt.Errorf("error seting resource selector on topology group by: %w", err)
+		}
+	}
+
+	rows, err := q.Rows()
 	if err != nil {
 		return nil, err
 	}

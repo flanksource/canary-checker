@@ -20,6 +20,15 @@ type Topology struct {
 	Status            TopologyStatus `json:"status,omitempty"`
 }
 
+type TopologyTagSelector struct {
+	Tag      string                 `json:"tag"`
+	Selector types.ResourceSelector `json:"selector,omitempty"`
+}
+
+func (t *TopologyTagSelector) IsEmpty() bool {
+	return t.Tag == "" && t.Selector.IsEmpty()
+}
+
 type TopologySpec struct {
 	Type       string          `json:"type,omitempty"`
 	Id         *Template       `json:"id,omitempty"` //nolint
@@ -36,8 +45,9 @@ type TopologySpec struct {
 	Properties Properties `json:"properties,omitempty"`
 	// Lookup and associate config items with this component
 	Configs []types.ConfigQuery `json:"configs,omitempty"`
-
-	GroupByTag string `json:"groupByTag,omitempty"`
+	// Specify the catalog tag (& optionally the tag selector) to group
+	// the topology.
+	GroupBy TopologyTagSelector `json:"groupBy,omitempty"`
 }
 
 func (s Topology) NextRuntime() (*time.Time, error) {

@@ -478,21 +478,21 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 	}
 
 	groupByTags := []string{""}
-	if t.Spec.GroupByTag != "" {
-		tags, err := db.GetAllValuesForConfigTag(job.Context, t.Spec.GroupByTag)
+	if !t.Spec.GroupBy.IsEmpty() {
+		tags, err := db.GetAllValuesForConfigTag(job.Context, t.Spec.GroupBy)
 		if err != nil {
 			return err
 		} else if len(tags) != 0 {
 			groupByTags = tags
 		} else {
-			job.Warnf("no values found for tag: %s", t.Spec.GroupByTag)
+			job.Warnf("no values found for tag: %s", t.Spec.GroupBy.Tag)
 		}
 	}
 
 	var skipComponentDeletion bool
 	var results pkg.Components
 	for _, tagValue := range groupByTags {
-		ctx := NewComponentContext(job.Context, injectTagFilter(t.Spec.GroupByTag, tagValue, *t.DeepCopy()))
+		ctx := NewComponentContext(job.Context, injectTagFilter(t.Spec.GroupBy.Tag, tagValue, *t.DeepCopy()))
 		ctx.JobHistory = job.History
 		result, skipDeletion := tj.run(ctx, job)
 		if skipDeletion {

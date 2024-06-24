@@ -4298,8 +4298,8 @@
           },
           "type": "array"
         },
-        "groupByTag": {
-          "type": "string"
+        "groupBy": {
+          "$ref": "#/$defs/TopologyTagSelector"
         }
       },
       "additionalProperties": false,
@@ -4319,6 +4319,21 @@
       },
       "additionalProperties": false,
       "type": "object"
+    },
+    "TopologyTagSelector": {
+      "properties": {
+        "tag": {
+          "type": "string"
+        },
+        "selector": {
+          "$ref": "#/$defs/ResourceSelector"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "tag"
+      ]
     },
     "Unstructured": {
       "properties": {
