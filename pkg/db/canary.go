@@ -170,7 +170,7 @@ func LatestCheckStatus(ctx context.Context, checkID string) (*models.CheckStatus
 }
 
 func GetAllValuesForConfigTag(ctx context.Context, tag string) ([]string, error) {
-	rows, err := ctx.DB().Model(&models.ConfigItem{}).Select("DISTINCT tags->>?", tag).Rows()
+	rows, err := ctx.DB().Model(&models.ConfigItem{}).Select("DISTINCT tags->>?", tag).Where(duty.LocalFilter).Rows()
 	if err != nil {
 		return nil, err
 	}
