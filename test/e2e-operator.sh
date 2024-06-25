@@ -7,7 +7,7 @@ set -e
 export KUBECONFIG=~/.kube/config
 export KARINA="karina -c $(pwd)/test/karina.yaml"
 export DOCKER_API_VERSION=1.39
-export CLUSTER_NAME=kind-test
+export CLUSTER_NAME='kind-test'
 export PATH=$(pwd)/.bin:$PATH
 export ROOT=$(pwd)
 
@@ -23,13 +23,6 @@ docker run --rm -p 5433:5432  --name some-postgres -e POSTGRES_PASSWORD=mysecret
 
 curl https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh -o wait-for-it.sh;
 chmod +x wait-for-it.sh;
-
-if $KARINA provision kind-cluster -e name=$CLUSTER_NAME -v ; then
-echo "::endgroup::"
-else
-echo "::endgroup::"
-exit 1
-fi
 
 cat $KUBECONFIG
 kubectl config use-context kind-$CLUSTER_NAME
