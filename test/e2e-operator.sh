@@ -30,10 +30,12 @@ else
 echo "::endgroup::"
 exit 1
 fi
+
+cat $KUBECONFIG
+kubectl config use-context kind-$CLUSTER_NAME
+
 echo "Waiting for server to accept connections"
 ./wait-for-it.sh 0.0.0.0:5433 --timeout=120;
-
-kubectl config use-context kind-$CLUSTER_NAME
 
 echo "::group::Deploying Base"
 ## applying CRD and a sample fixture for the operator
