@@ -162,7 +162,9 @@ type Component struct {
 	CostTotal7d     float64                     `json:"cost_total_7d,omitempty" gorm:"column:cost_total_7d"`
 	CostTotal30d    float64                     `json:"cost_total_30d,omitempty" gorm:"column:cost_total_30d"`
 	LogSelectors    dutyTypes.LogSelectors      `json:"logs,omitempty" gorm:"column:log_selectors"`
-	ParentLookup    *v1.ParentLookup            `json:"parentLookup,omitempty" gorm:"-"`
+
+	ParentLookup *v1.ParentLookup `json:"parentLookup,omitempty" gorm:"-"`
+	StatusExpr   string           `json:"statusExpr,omitempty" gorm:"-"`
 }
 
 func (component *Component) FindExisting(ctx context.Context) (*models.Component, error) {
@@ -242,6 +244,7 @@ func (component *Component) Clone() Component {
 		Properties:      component.Properties,
 		ExternalId:      component.ExternalId,
 		Schedule:        component.Schedule,
+		StatusExpr:      component.StatusExpr,
 	}
 
 	copy(clone.LogSelectors, component.LogSelectors)

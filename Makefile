@@ -240,7 +240,7 @@ bin: .bin .bin/wait4x .bin/karina
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources
-resources: fmt static manifests
+resources: fmt static
 
 .PHONY: chart
 chart:

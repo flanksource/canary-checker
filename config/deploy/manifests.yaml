@@ -9270,6 +9270,7 @@ spec:
             metadata:
               type: object
             spec:
+              description: ComponentSpec defines the specification for a component.
               properties:
                 checks:
                   items:
@@ -9600,7 +9601,13 @@ spec:
                         type: array
                     type: object
                   type: array
+                statusExpr:
+                  description: |-
+                    statusExpr allows defining a cel expression to evaluate the status of a component
+                    based on the summary and the related config
+                  type: string
                 summary:
+                  description: Summary is the health, incidents, insights & check summary
                   properties:
                     checks:
                       additionalProperties:
@@ -9682,6 +9689,7 @@ spec:
               properties:
                 components:
                   items:
+                    description: ComponentSpec defines the specification for a component.
                     properties:
                       checks:
                         items:
@@ -10052,7 +10060,13 @@ spec:
                               type: array
                           type: object
                         type: array
+                      statusExpr:
+                        description: |-
+                          statusExpr allows defining a cel expression to evaluate the status of a component
+                          based on the summary and the related config
+                        type: string
                       summary:
+                        description: Summary is the health, incidents, insights & check summary
                         properties:
                           checks:
                             additionalProperties:

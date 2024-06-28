@@ -15,6 +15,7 @@ import (
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
+	"github.com/flanksource/gomplate/v3"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/flanksource/duty/types"
@@ -468,7 +469,7 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 	}
 
 	if dbTopology.DeletedAt != nil {
-		job.Debugf("Skipping topology as its deleted")
+		job.Debugf("skipping topology as its deleted")
 		// TODO: Should we run the db.DeleteTopology function always in this scenario
 		return nil
 	}
@@ -657,6 +658,19 @@ func (tj *TopologyJob) run(ctx *ComponentContext, job job.JobRuntime) (pkg.Compo
 			c.Namespace = ctx.Topology.GetNamespace()
 		}
 		c.Schedule = ctx.Topology.Spec.Schedule
+
+		if c.StatusExpr != "" {
+			env := map[string]any{
+				"summary": c.Summary,
+				"config":  nil, // TODO:
+			}
+			statusOut, err := gomplate.RunTemplate(env, gomplate.Template{Expression: c.StatusExpr})
+			if err != nil {
+				job.History.AddError(fmt.Sprintf("Failed to evaluate status expression %s: %v", c.StatusExpr, err))
+			} else {
+				c.Status = types.ComponentStatus(statusOut)
+			}
+		}
 	}
 
 	return results, skipComponentDeletion
