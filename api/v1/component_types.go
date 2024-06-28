@@ -15,6 +15,7 @@ type Component struct {
 	Status            ComponentStatus `json:"status,omitempty"`
 }
 
+// ComponentSpec defines the specification for a component.
 type ComponentSpec struct {
 	Name       string            `json:"name,omitempty"`
 	Namespace  string            `json:"namespace,omitempty"`
@@ -46,7 +47,8 @@ type ComponentSpec struct {
 	ComponentChecks ComponentChecks         `json:"checks,omitempty"`
 	// Lookup and associate config items with this component
 	Configs types.ConfigQueries `json:"configs,omitempty"`
-	//
+
+	// Summary is the health, incidents, insights & check summary
 	Summary *types.Summary `json:"summary,omitempty"`
 	// +kubebuilder:validation:XPreserveUnknownFields
 	// Only applies when using lookup, when specified the components and properties
@@ -54,11 +56,16 @@ type ComponentSpec struct {
 	// ${.properties} can be used to reference the properties of the component
 	// ${.component} can be used to reference the component itself
 	ForEach *ForEach `json:"forEach,omitempty"`
+
 	// Logs is a list of logs selector for apm-hub.
 	LogSelectors types.LogSelectors `json:"logs,omitempty"`
 
 	// Reference to populate parent_id
 	ParentLookup *ParentLookup `json:"parentLookup,omitempty"`
+
+	// statusExpr allows defining a cel expression to evaluate the status of a component
+	// based on the summary and the related config
+	StatusExpr string `json:"statusExpr,omitempty"`
 }
 
 // +kubebuilder:validation:Type=object

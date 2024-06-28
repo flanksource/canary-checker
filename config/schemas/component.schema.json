@@ -916,6 +916,9 @@
         },
         "parentLookup": {
           "$ref": "#/$defs/ParentLookup"
+        },
+        "statusExpr": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -1003,6 +1006,9 @@
         },
         "parentLookup": {
           "$ref": "#/$defs/ParentLookup"
+        },
+        "statusExpr": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
