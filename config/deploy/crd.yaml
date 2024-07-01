@@ -10097,6 +10097,11 @@ spec:
                   type: array
                 schedule:
                   type: string
+                statusExpr:
+                  description: |-
+                    statusExpr allows defining a cel expression to evaluate the status of a component
+                    based on the summary and the related config
+                  type: string
                 text:
                   type: string
                 tooltip:

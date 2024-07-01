@@ -39,6 +39,9 @@ type TopologySpec struct {
 	Label      string          `json:"label,omitempty"`
 	Owner      Owner           `json:"owner,omitempty"`
 	Components []ComponentSpec `json:"components,omitempty"`
+	// statusExpr allows defining a cel expression to evaluate the status of a component
+	// based on the summary and the related config
+	StatusExpr string `json:"statusExpr,omitempty"`
 	// Properties are created once the full component tree is created, property lookup functions
 	// can return a map of coomponent name => properties to allow for bulk property lookups
 	// being applied to multiple components in the tree

@@ -543,14 +543,15 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 func (tj *TopologyJob) run(ctx *ComponentContext, job job.JobRuntime) (pkg.Components, bool) {
 	var results pkg.Components
 	rootComponent := &pkg.Component{
-		Name:      ctx.Topology.Spec.Text,
-		Namespace: ctx.Topology.GetNamespace(),
-		Labels:    ctx.Topology.Labels,
-		Tooltip:   ctx.Topology.Spec.Tooltip,
-		Icon:      ctx.Topology.Spec.Icon,
-		Text:      ctx.Topology.Spec.Text,
-		Type:      ctx.Topology.Spec.Type,
-		Schedule:  ctx.Topology.Spec.Schedule,
+		Name:       ctx.Topology.Spec.Text,
+		Namespace:  ctx.Topology.GetNamespace(),
+		Labels:     ctx.Topology.Labels,
+		Tooltip:    ctx.Topology.Spec.Tooltip,
+		Icon:       ctx.Topology.Spec.Icon,
+		Text:       ctx.Topology.Spec.Text,
+		Type:       ctx.Topology.Spec.Type,
+		Schedule:   ctx.Topology.Spec.Schedule,
+		StatusExpr: ctx.Topology.Spec.StatusExpr,
 	}
 
 	if rootComponent.Name == "" {
@@ -653,6 +654,7 @@ func (tj *TopologyJob) run(ctx *ComponentContext, job job.JobRuntime) (pkg.Compo
 	} else if ctx.Logger.IsLevelEnabled(5) {
 		ctx.Infof(results.Debug(ctx.Logger.IsLevelEnabled(5), ""))
 	}
+
 	for _, c := range results.Walk() {
 		if c.Namespace == "" {
 			c.Namespace = ctx.Topology.GetNamespace()
@@ -661,8 +663,7 @@ func (tj *TopologyJob) run(ctx *ComponentContext, job job.JobRuntime) (pkg.Compo
 
 		if c.StatusExpr != "" {
 			env := map[string]any{
-				"summary": c.Summary,
-				"config":  nil, // TODO:
+				"summary": c.Summary.AsEnv(),
 			}
 			statusOut, err := gomplate.RunTemplate(env, gomplate.Template{Expression: c.StatusExpr})
 			if err != nil {
