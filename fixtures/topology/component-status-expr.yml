@@ -8,14 +8,16 @@ spec:
   type: Topology
   schedule: "@every 5m"
   statusExpr: |
-    summary.healthy > 0 && summary.unhealthy == 0 ? "good" : "bad"
+    summary.healthy > 0 && summary.unhealthy == 0 && summary.warning == 0 ? "healthy" : 
+    summary.healthy == 0 && summary.unhealthy == 0 && summary.warning == 0 ? "unknown" :   
+    summary.healthy > 0 && summary.unhealthy > 0 || summary.warning  > 0 ? "warning" :
+    "unhealthy"
   components:
     - icon: nodes
       name: Nodes
       components:
         - name: Nodes Component
           type: lookup
-          
           lookup:
             catalog:
               - name: ""

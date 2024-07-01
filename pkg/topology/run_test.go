@@ -108,11 +108,11 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 		Expect(err).To(BeNil())
 		Expect(history.Errors).To(HaveLen(0))
 
-		Expect(components[0].Status).To(Equal(types.ComponentStatus("good")))
+		Expect(components[0].Status).To(Equal(types.ComponentStatusHealthy))
 
 		for _, node := range components {
 			if node.Icon == "icon" {
-				Expect(node.Status).To(Equal(types.ComponentStatus("good")))
+				Expect(node.Status).To(Equal(types.ComponentStatusHealthy))
 			}
 		}
 	})

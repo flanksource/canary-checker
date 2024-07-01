@@ -162,9 +162,9 @@ type Component struct {
 	CostTotal7d     float64                     `json:"cost_total_7d,omitempty" gorm:"column:cost_total_7d"`
 	CostTotal30d    float64                     `json:"cost_total_30d,omitempty" gorm:"column:cost_total_30d"`
 	LogSelectors    dutyTypes.LogSelectors      `json:"logs,omitempty" gorm:"column:log_selectors"`
+	StatusExpr      string                      `json:"status_expr,omitempty" gorm:"column:status_expr;default:null"`
 
 	ParentLookup *v1.ParentLookup `json:"parentLookup,omitempty" gorm:"-"`
-	StatusExpr   string           `json:"statusExpr,omitempty" gorm:"-"`
 }
 
 func (component *Component) FindExisting(ctx context.Context) (*models.Component, error) {
@@ -294,6 +294,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Configs:         c.Configs,
 		LogSelectors:    c.LogSelectors,
 		ParentLookup:    c.ParentLookup,
+		StatusExpr:      c.StatusExpr,
 	}
 	if c.Summary != nil {
 		_c.Summary = *c.Summary
