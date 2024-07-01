@@ -98,6 +98,25 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 		Expect(componentC.Configs[0].Type).To(Equal("Service"))
 	})
 
+	ginkgo.It("should set status from expression", func() {
+		t, err := yamlFileToTopology("../../fixtures/topology/component-status-expr.yml")
+		if err != nil {
+			ginkgo.Fail("Error converting yaml to v1.Topology:" + err.Error())
+		}
+
+		components, history, err := Run(DefaultContext, *t)
+		Expect(err).To(BeNil())
+		Expect(history.Errors).To(HaveLen(0))
+
+		Expect(components[0].Status).To(Equal(types.ComponentStatus("good")))
+
+		for _, node := range components {
+			if node.Icon == "icon" {
+				Expect(node.Status).To(Equal(types.ComponentStatus("good")))
+			}
+		}
+	})
+
 	ginkgo.It("should update component's parents", func() {
 		t, err := yamlFileToTopology("../../fixtures/topology/component-with-parent-lookup.yml")
 		if err != nil {

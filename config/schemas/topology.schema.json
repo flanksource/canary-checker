@@ -4295,6 +4295,9 @@
           },
           "type": "array"
         },
+        "statusExpr": {
+          "type": "string"
+        },
         "properties": {
           "$ref": "#/$defs/Properties"
         },

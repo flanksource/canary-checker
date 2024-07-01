@@ -1,0 +1,35 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Topology
+metadata:
+  name: status-expr
+spec:
+  icon: flux
+  type: Topology
+  schedule: "@every 5m"
+  statusExpr: |
+    summary.healthy > 0 && summary.unhealthy == 0 ? "good" : "bad"
+  components:
+    - icon: nodes
+      name: Nodes
+      components:
+        - name: Nodes Component
+          type: lookup
+          
+          lookup:
+            catalog:
+              - name: ""
+                test: {}
+                display:
+                  expr: >
+                    dyn(results).map(r, {
+                      'name': r.name,
+                      'icon': 'node',
+                      'status': r.status,
+                      'status_reason': r.description,
+                      'selectors': [{'labelSelector': 'app.kubernetes.io/instance='+r.name}],
+                      'statusExpr': 'summary.healthy > 0 && summary.unhealthy == 0 ? "good" : "bad"',
+                    }).toJSON()
+                selector:
+                  - types:
+                      - Kubernetes::Node
