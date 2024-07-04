@@ -1,5 +1,8 @@
-FROM golang:1.22-bookworm@sha256:6d71b7c3f884e7b9552bffa852d938315ecca843dcc75a86ee7000567da0923d AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm@sha256:6d71b7c3f884e7b9552bffa852d938315ecca843dcc75a86ee7000567da0923d AS builder
 WORKDIR /app
+
+ARG TARGETOS
+ARG TARGETARCH
 
 ARG NAME
 ARG VERSION
@@ -10,10 +13,11 @@ COPY go.sum /app/go.sum
 RUN go mod download
 
 COPY ./ ./
-RUN make build
+RUN OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
-FROM flanksource/base-image:v0.0.9
+FROM --platform=${BUILDPLATFORM:-linux/amd64} flanksource/base-image:v0.0.9
 WORKDIR /app
+
 RUN mkdir /opt/database && groupadd --gid 1000 canary && \
   useradd canary --uid 1000 -g canary -m -d /var/lib/canary && \
   chown -R 1000:1000 /opt/database && chown -R 1000:1000 /app

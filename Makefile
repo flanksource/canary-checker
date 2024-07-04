@@ -3,8 +3,8 @@
 CRD_OPTIONS ?= ""
 NAME=canary-checker
 YQ=$(shell readlink -f .bin/yq)
-OS   = $(shell uname -s | tr '[:upper:]' '[:lower:]')
-ARCH = $(shell uname -m | sed 's/x86_64/amd64/')
+OS   ?= $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ARCH ?= $(shell uname -m | sed 's/x86_64/amd64/')
 LD_FLAGS=-ldflags "-w -s -X \"main.version=$(VERSION_TAG)\""
 ifeq ($(VERSION),)
   VERSION_TAG=$(shell git describe --abbrev=0 --tags || echo latest)
@@ -166,7 +166,7 @@ dev:
 
 .PHONY: build
 build:
-	go build -o ./.bin/$(NAME) $(LD_FLAGS)  main.go
+	GOOS=$(OS) GOARCH=$(ARCH) go build -o ./.bin/$(NAME) $(LD_FLAGS)  main.go
 
 .PHONY: test-build
 test-build:
