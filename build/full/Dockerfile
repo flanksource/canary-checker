@@ -1,5 +1,8 @@
-FROM golang:1.22-bookworm@sha256:6d71b7c3f884e7b9552bffa852d938315ecca843dcc75a86ee7000567da0923d AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-bookworm@sha256:6d71b7c3f884e7b9552bffa852d938315ecca843dcc75a86ee7000567da0923d AS builder
 WORKDIR /app
+
+ARG TARGETOS
+ARG TARGETARCH
 
 ARG NAME
 ARG VERSION
@@ -10,10 +13,12 @@ COPY go.sum /app/go.sum
 RUN go mod download
 
 COPY ./ ./
-RUN make build
+RUN OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
-FROM flanksource/base-image:v0.0.9
+FROM --platform=${BUILDPLATFORM:-linux/amd64} flanksource/base-image:v0.0.9
 WORKDIR /app
+
+ARG TARGETARCH
 
 RUN apt-get update && \
   apt-get install -y python3 python3-pip zip --no-install-recommends && \
@@ -35,21 +40,22 @@ RUN pip3 install  pip pyyaml lxml requests robotframework \
     PyMySQL
 
 ENV RESTIC_VERSION=0.15.2
-RUN curl -L https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_amd64.bz2 -o restic.bz2 && \
+RUN curl -L https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_${TARGETARCH}.bz2 -o restic.bz2 && \
   bunzip2  /app/restic.bz2 && \
   chmod +x /app/restic && \
   mv /app/restic /usr/local/bin/ && \
   rm -rf /app/restic.bz2
 
+# Unsupported in arm64 as of yet
 RUN curl -L https://github.com/flanksource/askgit/releases/download/v0.61.0-flanksource.1/mergestat-linux-amd64.tar.gz  -o mergestat.tar.gz && \
   tar zxf mergestat.tar.gz -C /usr/local/bin/ && \
   rm mergestat.tar.gz
 
 # The best developer experience for load testing
 ENV K6_VERSION=v0.47.0
-RUN curl -L https://github.com/grafana/k6/releases/download/${K6_VERSION}/k6-${K6_VERSION}-linux-amd64.tar.gz -o k6.tar.gz && \
+RUN curl -L https://github.com/grafana/k6/releases/download/${K6_VERSION}/k6-${K6_VERSION}-linux-${TARGETARCH}.tar.gz -o k6.tar.gz && \
   tar xvf k6.tar.gz && \
-  mv k6-${K6_VERSION}-linux-amd64/k6 /usr/local/bin/k6 && \
+  mv k6-${K6_VERSION}-linux-${TARGETARCH}/k6 /usr/local/bin/k6 && \
   rm k6.tar.gz
 
 # Benthos is a high performance and resilient stream processor
