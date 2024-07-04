@@ -12,7 +12,7 @@ RUN go mod download
 COPY ./ ./
 RUN make build
 
-FROM flanksource/base-image:v0.0.9
+FROM flanksource/base-image:v0.0.10
 WORKDIR /app
 RUN mkdir /opt/database && groupadd --gid 1000 canary && \
   useradd canary --uid 1000 -g canary -m -d /var/lib/canary && \
