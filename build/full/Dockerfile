@@ -12,7 +12,7 @@ RUN go mod download
 COPY ./ ./
 RUN make build
 
-FROM flanksource/base-image:v0.0.9
+FROM flanksource/base-image:v0.2.0
 WORKDIR /app
 
 RUN apt-get update && \
