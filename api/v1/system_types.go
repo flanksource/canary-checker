@@ -58,7 +58,7 @@ type TopologySpec struct {
 	GroupBy TopologyTagSelector `json:"groupBy,omitempty"`
 
 	// Agent will push topology to specified path
-	PushLocation PushLocation `json:"pushLocation,omitempty"`
+	PushLocation PushLocation `json:"push,omitempty"`
 }
 
 func (s Topology) NextRuntime() (*time.Time, error) {

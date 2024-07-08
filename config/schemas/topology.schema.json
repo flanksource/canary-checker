@@ -3868,6 +3868,18 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "PushLocation": {
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "auth": {
+          "$ref": "#/$defs/Authentication"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "RedisCheck": {
       "properties": {
         "description": {
@@ -4432,6 +4444,9 @@
         },
         "groupBy": {
           "$ref": "#/$defs/TopologyTagSelector"
+        },
+        "push": {
+          "$ref": "#/$defs/PushLocation"
         }
       },
       "additionalProperties": false,
