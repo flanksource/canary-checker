@@ -551,7 +551,6 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 }
 
 func pushTopologyToLocation(ctx dutyCtx.Context, target v1.PushLocation, comp pkg.Component) error {
-	ep := fmt.Sprintf("%s/push/topology", target.URL)
 	client := http.NewClient()
 	if !target.Auth.Username.IsEmpty() {
 		user, err := ctx.GetEnvValueFromCache(target.Auth.Username, ctx.GetNamespace())
@@ -569,14 +568,14 @@ func pushTopologyToLocation(ctx dutyCtx.Context, target v1.PushLocation, comp pk
 
 	resp, err := client.R(ctx).
 		Header(echo.HeaderContentType, echo.MIMEApplicationJSON).
-		Post(ep, comp)
+		Post(target.URL, comp)
 
 	if err != nil {
-		return fmt.Errorf("error pushing topology[%s] to %s: %w", comp, ep, err)
+		return fmt.Errorf("error pushing topology[%s] to %s: %w", comp, target.URL, err)
 	}
 	if !resp.IsOK() {
 		body, _ := resp.AsString()
-		return fmt.Errorf("error pushing topology[%s] to %s, non 2xx response received: %s %s", comp, ep, resp.Status, body)
+		return fmt.Errorf("error pushing topology[%s] to %s, non 2xx response received: %s %s", comp, target.URL, resp.Status, body)
 	}
 	return nil
 }
