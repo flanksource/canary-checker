@@ -29,6 +29,11 @@ func (t *TopologyTagSelector) IsEmpty() bool {
 	return t.Tag == "" && t.Selector.IsEmpty()
 }
 
+type PushLocation struct {
+	URL  string               `json:"url,omitempty"`
+	Auth types.Authentication `json:"auth,omitempty"`
+}
+
 type TopologySpec struct {
 	Type       string          `json:"type,omitempty"`
 	Id         *Template       `json:"id,omitempty"` //nolint
@@ -51,6 +56,9 @@ type TopologySpec struct {
 	// Specify the catalog tag (& optionally the tag selector) to group
 	// the topology.
 	GroupBy TopologyTagSelector `json:"groupBy,omitempty"`
+
+	// Agent will push topology to specified path
+	PushLocation PushLocation `json:"pushLocation,omitempty"`
 }
 
 func (s Topology) NextRuntime() (*time.Time, error) {

@@ -11,11 +11,13 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/collections"
+	"github.com/flanksource/commons/http"
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
 	"github.com/flanksource/gomplate/v3"
+	"github.com/labstack/echo/v4"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/flanksource/duty/types"
@@ -537,6 +539,45 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 
 	query.FlushTopologyCache()
 
+	if t.Spec.PushLocation.URL != "" {
+		for _, c := range results {
+			if err := pushTopologyToLocation(job.Context, t.Spec.PushLocation, *c); err != nil {
+				job.History.AddErrorf("error pushing topology: %v", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func pushTopologyToLocation(ctx dutyCtx.Context, target v1.PushLocation, comp pkg.Component) error {
+	ep := fmt.Sprintf("%s/push/topology", target.URL)
+	client := http.NewClient()
+	if !target.Auth.Username.IsEmpty() {
+		user, err := ctx.GetEnvValueFromCache(target.Auth.Username, ctx.GetNamespace())
+		if err != nil {
+			return fmt.Errorf("error getting username for topology[%s] push: %w", comp, err)
+		}
+
+		password, err := ctx.GetEnvValueFromCache(target.Auth.Password, ctx.GetNamespace())
+		if err != nil {
+			return fmt.Errorf("error getting password for topology[%s] push: %w", comp, err)
+		}
+
+		client = client.Auth(user, password)
+	}
+
+	resp, err := client.R(ctx).
+		Header(echo.HeaderContentType, echo.MIMEApplicationJSON).
+		Post(ep, comp)
+
+	if err != nil {
+		return fmt.Errorf("error pushing topology[%s] to %s: %w", comp, ep, err)
+	}
+	if !resp.IsOK() {
+		body, _ := resp.AsString()
+		return fmt.Errorf("error pushing topology[%s] to %s, non 2xx response received: %s %s", comp, ep, resp.Status, body)
+	}
 	return nil
 }
 
