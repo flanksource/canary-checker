@@ -16,6 +16,8 @@ COPY ./ ./
 RUN OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
 FROM --platform=${BUILDPLATFORM:-linux/amd64} flanksource/base-image:v0.2.0
+ARG TARGETARCH
+
 WORKDIR /app
 
 ARG TARGETARCH
@@ -92,5 +94,9 @@ ENV PATH="${PATH}:/var/lib/canary/bin/"
 
 COPY --from=builder /app/.bin/canary-checker /app
 
-RUN /app/canary-checker go-offline
+RUN if [ "$TARGETARCH" = "amd64" ]; then \
+    # This Docker image is built on an amd64 host
+    /app/canary-checker go-offline; \
+  fi
+
 ENTRYPOINT ["/app/canary-checker"]
