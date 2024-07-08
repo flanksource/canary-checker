@@ -15,7 +15,7 @@ RUN go mod download
 COPY ./ ./
 RUN OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
-FROM --platform=${BUILDPLATFORM:-linux/amd64} flanksource/base-image:v0.0.9
+FROM --platform=${BUILDPLATFORM:-linux/amd64} flanksource/base-image:v0.2.0
 WORKDIR /app
 
 RUN mkdir /opt/database && groupadd --gid 1000 canary && \
