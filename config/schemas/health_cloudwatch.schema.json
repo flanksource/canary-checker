@@ -3,6 +3,24 @@
   "$id": "https://github.com/flanksource/canary-checker/api/v1/cloud-watch-check",
   "$ref": "#/$defs/CloudWatchCheck",
   "$defs": {
+    "CheckRelationship": {
+      "properties": {
+        "components": {
+          "items": {
+            "$ref": "#/$defs/RelationshipSelectorTemplate"
+          },
+          "type": "array"
+        },
+        "configs": {
+          "items": {
+            "$ref": "#/$defs/RelationshipSelectorTemplate"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "CloudWatchCheck": {
       "properties": {
         "description": {
@@ -58,6 +76,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "actionPrefix": {
           "type": "string"
@@ -150,6 +171,21 @@
       },
       "type": "object"
     },
+    "Lookup": {
+      "properties": {
+        "expr": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "MetricLabel": {
       "properties": {
         "name": {
@@ -187,6 +223,36 @@
         },
         "value": {
           "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "RelationshipSelectorTemplate": {
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "external_id": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "name": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "namespace": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "type": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "agent": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         }
       },
       "additionalProperties": false,

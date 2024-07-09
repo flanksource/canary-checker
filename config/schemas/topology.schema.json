@@ -176,6 +176,9 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "query": {
           "type": "string"
         },
@@ -245,6 +248,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "ignoreRules": {
           "items": {
@@ -344,6 +350,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "connection": {
           "type": "string"
@@ -688,6 +697,9 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "selector": {
           "$ref": "#/$defs/ResourceSelectors"
         }
@@ -703,13 +715,13 @@
       "properties": {
         "components": {
           "items": {
-            "$ref": "#/$defs/LookupSpec"
+            "$ref": "#/$defs/RelationshipSelectorTemplate"
           },
           "type": "array"
         },
         "configs": {
           "items": {
-            "$ref": "#/$defs/LookupSpec"
+            "$ref": "#/$defs/RelationshipSelectorTemplate"
           },
           "type": "array"
         }
@@ -772,6 +784,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "actionPrefix": {
           "type": "string"
@@ -1112,6 +1127,9 @@
           },
           "type": "array"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "image": {
           "type": "string"
         },
@@ -1158,6 +1176,9 @@
           },
           "type": "array"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "image": {
           "type": "string"
         },
@@ -1200,6 +1221,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "server": {
           "type": "string"
@@ -1270,6 +1294,9 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "gcp": {
           "$ref": "#/$defs/GCPDatabase"
         },
@@ -1327,6 +1354,9 @@
           },
           "type": "array"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "image": {
           "type": "string"
         },
@@ -1372,6 +1402,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "image": {
           "type": "string"
@@ -1421,6 +1454,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "connection": {
           "type": "string"
@@ -1475,6 +1511,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "connection": {
           "type": "string"
@@ -1578,6 +1617,9 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "script": {
           "type": "string"
         },
@@ -1661,6 +1703,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "path": {
           "type": "string"
@@ -1883,6 +1928,9 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "connection": {
           "type": "string"
         },
@@ -1934,6 +1982,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "filename": {
           "type": "string"
@@ -1991,6 +2042,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "connection": {
           "type": "string"
@@ -2097,6 +2151,9 @@
           },
           "type": "array"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "chartmuseum": {
           "type": "string"
         },
@@ -2156,6 +2213,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "endpoint": {
           "type": "string"
@@ -2223,6 +2283,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "jmx": {
           "$ref": "#/$defs/EnvVar"
@@ -2294,6 +2357,9 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "timeout": {
           "type": "integer"
         },
@@ -2347,6 +2413,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "namespaceSelector": {
           "$ref": "#/$defs/ResourceSelector"
@@ -2414,6 +2483,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "staticResources": {
           "items": {
@@ -2779,6 +2851,9 @@
           },
           "type": "array"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "connection": {
           "type": "string"
         },
@@ -2878,21 +2953,6 @@
         },
         "label": {
           "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
-    "LookupSpec": {
-      "properties": {
-        "name": {
-          "$ref": "#/$defs/Lookup"
-        },
-        "namespace": {
-          "$ref": "#/$defs/Lookup"
-        },
-        "type": {
-          "$ref": "#/$defs/Lookup"
         }
       },
       "additionalProperties": false,
@@ -3053,6 +3113,9 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "connection": {
           "type": "string"
         },
@@ -3119,6 +3182,9 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "connection": {
           "type": "string"
         },
@@ -3175,6 +3241,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "namespaceNamePrefix": {
           "type": "string"
@@ -3411,6 +3480,9 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "connection": {
           "type": "string"
         },
@@ -3521,6 +3593,9 @@
           },
           "type": "array"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "spec": {
           "type": "string"
         },
@@ -3617,6 +3692,9 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "connection": {
           "type": "string"
         },
@@ -3682,6 +3760,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "host": {
           "type": "string"
@@ -3813,6 +3894,9 @@
           },
           "type": "array"
         },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
+        },
         "connection": {
           "type": "string"
         },
@@ -3843,6 +3927,36 @@
       "required": [
         "name"
       ]
+    },
+    "RelationshipSelectorTemplate": {
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "external_id": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "name": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "namespace": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "type": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "agent": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "RelationshipSpec": {
       "properties": {
@@ -3902,6 +4016,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "connection": {
           "type": "string"
@@ -3965,6 +4082,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "connection": {
           "type": "string"
@@ -4184,6 +4304,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "endpoint": {
           "type": "string"
@@ -4408,6 +4531,9 @@
         },
         "transform": {
           "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship"
         },
         "token": {
           "$ref": "#/$defs/EnvVar"
