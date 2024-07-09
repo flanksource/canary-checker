@@ -156,28 +156,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -621,28 +603,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -1004,28 +968,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -1339,28 +1285,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -1637,28 +1565,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -1966,28 +1876,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -2373,28 +2265,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -2580,28 +2454,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -2861,28 +2717,10 @@ spec:
                       maxAge:
                         type: string
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -3091,28 +2929,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       minrecords:
@@ -3401,28 +3221,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -3693,28 +3495,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -3954,28 +3738,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -4239,28 +4005,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -5191,28 +4939,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -5656,28 +5386,10 @@ spec:
                         description: MaxSize of the files inside the searchPath
                         type: string
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       minAge:
@@ -6377,28 +6089,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -6744,28 +6438,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -7063,28 +6739,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -7424,28 +7082,10 @@ spec:
                         description: Method to use - defaults to GET
                         type: string
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -8016,28 +7656,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -8279,28 +7901,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -8525,28 +8129,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -8824,28 +8410,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -9150,28 +8718,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -9458,28 +9008,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -9891,28 +9423,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -10178,28 +9692,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -10644,28 +10140,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -11081,28 +10559,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -11368,28 +10828,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -11810,28 +11252,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -12086,28 +11510,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -12555,28 +11961,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -13014,28 +12402,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -13458,28 +12828,10 @@ spec:
                         description: MaxAge for backup freshness
                         type: string
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -13804,28 +13156,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -14110,28 +13444,10 @@ spec:
                         description: Labels for the check
                         type: object
                       metrics:
-                        description: Metrics to expose from check results
+                        description: |-
+                          Metrics to expose from check.
+                          https://canarychecker.io/concepts/metrics-exporter
                         items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
                           type: object
                         type: array
                       name:
@@ -14327,7 +13643,9 @@ spec:
                       description: Labels for the check
                       type: object
                     metrics:
-                      description: Metrics to expose from check results
+                      description: |-
+                        Metrics to expose from check.
+                        https://canarychecker.io/concepts/metrics-exporter
                       items:
                         properties:
                           labels:
