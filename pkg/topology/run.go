@@ -11,7 +11,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/collections"
-	"github.com/flanksource/commons/http"
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
@@ -551,19 +550,9 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 }
 
 func pushTopologyToLocation(ctx dutyCtx.Context, target v1.PushLocation, comp pkg.Component) error {
-	client := http.NewClient()
-	if !target.Auth.Username.IsEmpty() {
-		user, err := ctx.GetEnvValueFromCache(target.Auth.Username, ctx.GetNamespace())
-		if err != nil {
-			return fmt.Errorf("error getting username for topology[%s] push: %w", comp, err)
-		}
-
-		password, err := ctx.GetEnvValueFromCache(target.Auth.Password, ctx.GetNamespace())
-		if err != nil {
-			return fmt.Errorf("error getting password for topology[%s] push: %w", comp, err)
-		}
-
-		client = client.Auth(user, password)
+	client, err := checks.CreateHTTPClient(ctx, target.Authentication)
+	if err != nil {
+		return fmt.Errorf("error creating  http client: %w", err)
 	}
 
 	resp, err := client.R(ctx).
