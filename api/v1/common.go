@@ -360,7 +360,8 @@ type Description struct {
 	Labels Labels `yaml:"labels,omitempty" json:"labels,omitempty"`
 	// Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
 	TransformDeleteStrategy string `yaml:"transformDeleteStrategy,omitempty" json:"transformDeleteStrategy,omitempty"`
-	// Metrics to expose from check results
+	// Metrics to expose from check.
+	// https://canarychecker.io/concepts/metrics-exporter
 	Metrics []external.Metrics `json:"metrics,omitempty" yaml:"metrics,omitempty"`
 }
 
