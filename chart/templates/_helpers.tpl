@@ -59,6 +59,9 @@ Selector labels
 app.kubernetes.io/name: {{ include "canary-checker.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 control-plane: canary-checker
+{{- if .Values.global.labels }}
+{{.Values.global.labels | toYaml}}
+{{- end }}
 {{- end }}
 
 {{- define "postgresql.selectorLabels" -}}
