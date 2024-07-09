@@ -30,8 +30,8 @@ func (t *TopologyTagSelector) IsEmpty() bool {
 }
 
 type PushLocation struct {
-	URL  string               `json:"url,omitempty"`
-	Auth types.Authentication `json:"auth,omitempty"`
+	URL                  string `json:"url,omitempty"`
+	types.Authentication `json:",inline"`
 }
 
 type TopologySpec struct {
