@@ -94,13 +94,13 @@
       "properties": {
         "components": {
           "items": {
-            "$ref": "#/$defs/LookupSpec"
+            "$ref": "#/$defs/RelationshipSelectorTemplate"
           },
           "type": "array"
         },
         "configs": {
           "items": {
-            "$ref": "#/$defs/LookupSpec"
+            "$ref": "#/$defs/RelationshipSelectorTemplate"
           },
           "type": "array"
         }
@@ -192,21 +192,6 @@
       "additionalProperties": false,
       "type": "object"
     },
-    "LookupSpec": {
-      "properties": {
-        "name": {
-          "$ref": "#/$defs/Lookup"
-        },
-        "namespace": {
-          "$ref": "#/$defs/Lookup"
-        },
-        "type": {
-          "$ref": "#/$defs/Lookup"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
     "MetricLabel": {
       "properties": {
         "name": {
@@ -267,6 +252,36 @@
           "type": "string"
         },
         "params": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "RelationshipSelectorTemplate": {
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "external_id": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "name": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "namespace": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "type": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "agent": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "labels": {
           "additionalProperties": {
             "type": "string"
           },

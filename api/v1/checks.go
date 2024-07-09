@@ -91,6 +91,7 @@ type TLSConfig struct {
 type HTTPCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	Connection  `yaml:",inline" json:",inline"`
 	// Deprecated: Use url instead
 	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty" template:"true"`
@@ -137,6 +138,7 @@ func (c HTTPCheck) GetMethod() string {
 
 type TCPCheck struct {
 	Description     `yaml:",inline" json:",inline"`
+	Relatable       `yaml:",inline" json:",inline"`
 	Endpoint        string `yaml:"endpoint" json:"endpoint,omitempty"`
 	ThresholdMillis int64  `yaml:"thresholdMillis,omitempty" json:"thresholdMillis,omitempty"`
 }
@@ -151,6 +153,7 @@ func (t TCPCheck) GetType() string {
 
 type ICMPCheck struct {
 	Description         `yaml:",inline" json:",inline"`
+	Relatable           `yaml:",inline" json:",inline"`
 	Endpoint            string `yaml:"endpoint" json:"endpoint,omitempty"`
 	ThresholdMillis     int64  `yaml:"thresholdMillis,omitempty" json:"thresholdMillis,omitempty"`
 	PacketLossThreshold int64  `yaml:"packetLossThreshold,omitempty" json:"packetLossThreshold,omitempty"`
@@ -173,6 +176,7 @@ type Bucket struct {
 
 type S3Check struct {
 	Description             `yaml:",inline" json:",inline"`
+	Relatable               `yaml:",inline" json:",inline"`
 	connection.S3Connection `yaml:",inline" json:",inline"`
 	BucketName              string `yaml:"bucketName" json:"bucketName,omitempty"`
 }
@@ -189,6 +193,7 @@ type CloudWatchCheck struct {
 	Description              `yaml:",inline" json:",inline"`
 	connection.AWSConnection `yaml:",inline" json:",inline"`
 	Templatable              `yaml:",inline" json:",inline"`
+	Relatable                `yaml:",inline" json:",inline"`
 	CloudWatchFilter         `yaml:",inline" json:",inline"`
 }
 
@@ -216,6 +221,7 @@ func (c CloudWatchCheck) GetType() string {
 
 type ResticCheck struct {
 	Description `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	// Name of the connection used to derive restic password.
 	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Name of the AWS connection used to derive the access key and secret key.
@@ -246,6 +252,7 @@ func (c ResticCheck) GetType() string {
 
 type JmeterCheck struct {
 	Description `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	// Jmx defines the ConfigMap or Secret reference to get the JMX test plan
 	Jmx types.EnvVar `yaml:"jmx" json:"jmx"`
 	// Host is the server against which test plan needs to be executed
@@ -270,6 +277,7 @@ func (c JmeterCheck) GetType() string {
 
 type DockerPullCheck struct {
 	Description    `yaml:",inline" json:",inline"`
+	Relatable      `yaml:",inline" json:",inline"`
 	Image          string          `yaml:"image" json:"image"`
 	Auth           *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 	ExpectedDigest string          `yaml:"expectedDigest" json:"expectedDigest,omitempty"`
@@ -286,6 +294,7 @@ func (c DockerPullCheck) GetType() string {
 
 type DockerPushCheck struct {
 	Description `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	Image       string          `yaml:"image" json:"image"`
 	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 }
@@ -300,6 +309,7 @@ func (c DockerPushCheck) GetType() string {
 
 type ContainerdPullCheck struct {
 	Description    `yaml:",inline" json:",inline"`
+	Relatable      `yaml:",inline" json:",inline"`
 	Image          string         `yaml:"image" json:"image"`
 	Auth           Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
 	ExpectedDigest string         `yaml:"expectedDigest,omitempty" json:"expectedDigest,omitempty"`
@@ -316,6 +326,7 @@ func (c ContainerdPullCheck) GetType() string {
 
 type ContainerdPushCheck struct {
 	Description `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	Image       string `yaml:"image" json:"image"`
 	Username    string `yaml:"username" json:"username,omitempty"`
 	Password    string `yaml:"password" json:"password,omitempty"`
@@ -331,6 +342,7 @@ func (c ContainerdPushCheck) GetType() string {
 
 type RedisCheck struct {
 	Description `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	Connection  `yaml:",inline" json:",inline"`
 	// Deprecated: Use url instead
 	Addr string `yaml:"addr,omitempty" json:"addr,omitempty" template:"true"`
@@ -348,6 +360,7 @@ func (c RedisCheck) GetEndpoint() string {
 type SQLCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	Connection  `yaml:",inline" json:",inline"`
 	Query       string `yaml:"query" json:"query,omitempty" template:"true"`
 	// Number rows to check for
@@ -441,6 +454,7 @@ type Mongo struct {
 type OpenSearchCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	Connection  `yaml:",inline" json:",inline"`
 	Query       string `yaml:"query" json:"query"`
 	Index       string `yaml:"index" json:"index"`
@@ -466,6 +480,7 @@ type Elasticsearch struct {
 type ElasticsearchCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	Connection  `yaml:",inline" json:",inline"`
 	Query       string `yaml:"query" json:"query,omitempty" template:"true"`
 	Index       string `yaml:"index" json:"index,omitempty" template:"true"`
@@ -479,6 +494,7 @@ func (c ElasticsearchCheck) GetType() string {
 type DynatraceCheck struct {
 	Description    `yaml:",inline" json:",inline"`
 	Templatable    `yaml:",inline" json:",inline"`
+	Relatable      `yaml:",inline" json:",inline"`
 	ConnectionName string       `yaml:"connection,omitempty" json:"connection,omitempty"`
 	Host           string       `yaml:"host" json:"host,omitempty" template:"true"`
 	Scheme         string       `yaml:"scheme" json:"scheme,omitempty"`
@@ -505,8 +521,8 @@ type AlertManager struct {
 // CheckRelationship defines a way to link the check results to components and configs
 // using lookup expressions.
 type CheckRelationship struct {
-	Components []duty.LookupSpec `yaml:"components,omitempty" json:"components,omitempty"`
-	Configs    []duty.LookupSpec `yaml:"configs,omitempty" json:"configs,omitempty"`
+	Components []duty.RelationshipSelectorTemplate `yaml:"components,omitempty" json:"components,omitempty"`
+	Configs    []duty.RelationshipSelectorTemplate `yaml:"configs,omitempty" json:"configs,omitempty"`
 }
 
 type Relatable struct {
@@ -536,6 +552,7 @@ func (c AlertManagerCheck) GetType() string {
 
 type PodCheck struct {
 	Description          `yaml:",inline" json:",inline"`
+	Relatable            `yaml:",inline" json:",inline"`
 	Namespace            string `yaml:"namespace" json:"namespace,omitempty" template:"true"`
 	Spec                 string `yaml:"spec" json:"spec,omitempty"`
 	ScheduleTimeout      int64  `yaml:"scheduleTimeout,omitempty" json:"scheduleTimeout,omitempty"`
@@ -570,6 +587,7 @@ func (c PodCheck) GetType() string {
 
 type LDAPCheck struct {
 	Description   `yaml:",inline" json:",inline"`
+	Relatable     `yaml:",inline" json:",inline"`
 	Connection    `yaml:",inline" json:",inline"`
 	BindDN        string `yaml:"bindDN" json:"bindDN"`
 	UserSearch    string `yaml:"userSearch,omitempty" json:"userSearch,omitempty"`
@@ -582,6 +600,7 @@ func (c LDAPCheck) GetType() string {
 
 type NamespaceCheck struct {
 	Description          `yaml:",inline" json:",inline"`
+	Relatable            `yaml:",inline" json:",inline"`
 	NamespaceNamePrefix  string            `yaml:"namespaceNamePrefix,omitempty" json:"namespaceNamePrefix,omitempty"`
 	NamespaceLabels      map[string]string `yaml:"namespaceLabels,omitempty" json:"namespaceLabels,omitempty"`
 	NamespaceAnnotations map[string]string `yaml:"namespaceAnnotations,omitempty" json:"namespaceAnnotations,omitempty"`
@@ -616,6 +635,7 @@ func (c NamespaceCheck) GetType() string {
 
 type DNSCheck struct {
 	Description     `yaml:",inline" json:",inline"`
+	Relatable       `yaml:",inline" json:",inline"`
 	Server          string   `yaml:"server" json:"server,omitempty"`
 	Port            int      `yaml:"port,omitempty" json:"port,omitempty"`
 	Query           string   `yaml:"query,omitempty" json:"query,omitempty"`
@@ -644,6 +664,7 @@ func (c DNSCheck) GetType() string {
 
 type HelmCheck struct {
 	Description `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	Chartmuseum string          `yaml:"chartmuseum" json:"chartmuseum,omitempty"`
 	Project     string          `yaml:"project,omitempty" json:"project,omitempty"`
 	Auth        *Authentication `yaml:"auth,omitempty" json:"auth,omitempty"`
@@ -662,6 +683,7 @@ type JunitCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	TestResults string `yaml:"testResults" json:"testResults"`
 	Templatable `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	// Timeout in minutes to wait for specified container to finish its job. Defaults to 5 minutes
 	Timeout int `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 	// +kubebuilder:validation:Schemaless
@@ -708,6 +730,7 @@ type Prometheus struct {
 type PrometheusCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	// Deprecated: use `url` instead
 	Host       string `yaml:"host,omitempty" json:"host,omitempty"`
 	Connection `yaml:",inline" json:",inline"`
@@ -736,6 +759,7 @@ type Git struct {
 type GitHubCheck struct {
 	Description    `yaml:",inline" json:",inline"`
 	Templatable    `yaml:",inline" json:",inline"`
+	Relatable      `yaml:",inline" json:",inline"`
 	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
 	// Query to be executed. Please see https://github.com/askgitdev/askgit for more details regarding syntax
 	Query       string       `yaml:"query" json:"query"`
@@ -753,6 +777,7 @@ func (c GitHubCheck) GetEndpoint() string {
 type GitProtocolCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	FileName    string       `yaml:"filename,omitempty" json:"filename,omitempty"`
 	Repository  string       `yaml:"repository" json:"repository"`
 	Username    types.EnvVar `yaml:"username" json:"username"`
@@ -770,6 +795,7 @@ func (c GitProtocolCheck) GetEndpoint() string {
 type CatalogCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	Selector    types.ResourceSelectors `yaml:"selector" json:"selector"`
 }
 
@@ -917,7 +943,7 @@ func (t *KubernetesResourceCheckWaitFor) GetInterval() (time.Duration, error) {
 type KubernetesResourceCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
-
+	Relatable   `yaml:",inline" json:",inline"`
 	// StaticResources are kubernetes resources that are created & only
 	// cleared when the canary is deleted
 	// +kubebuilder:validation:Schemaless
@@ -967,6 +993,7 @@ type ResourceSelector struct {
 type KubernetesCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	Namespace   ResourceSelector `yaml:"namespaceSelector,omitempty" json:"namespaceSelector,omitempty"`
 	Resource    ResourceSelector `yaml:"resource,omitempty" json:"resource,omitempty"`
 	// KubeConfig is the kubeconfig or the path to the kubeconfig file.
@@ -1017,6 +1044,7 @@ func (g *AzureConnection) HydrateConnection(ctx checkContext) error {
 type FolderCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	// Path  to folder or object storage, e.g. `s3://<bucket-name>`,  `gcs://<bucket-name>`, `/path/tp/folder`
 	Path string `yaml:"path" json:"path"`
 	// Recursive when set to true will recursively scan the folder to list the files in it.
@@ -1074,6 +1102,7 @@ func (git GitCheckout) GetCertificate() types.EnvVar {
 type ExecCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	// Script can be a inline script or a path to a script that needs to be executed
 	// On windows executed via powershell and in darwin and linux executed using bash
 	Script      string          `yaml:"script" json:"script"`
@@ -1104,6 +1133,7 @@ func (c ExecCheck) GetTestFunction() Template {
 type AwsConfigCheck struct {
 	Description               `yaml:",inline" json:",inline"`
 	Templatable               `yaml:",inline" json:",inline"`
+	Relatable                 `yaml:",inline" json:",inline"`
 	Query                     string `yaml:"query" json:"query"`
 	*connection.AWSConnection `yaml:",inline" json:",inline"`
 	AggregatorName            *string `yaml:"aggregatorName,omitempty" json:"aggregatorName,omitempty"`
@@ -1120,6 +1150,7 @@ func (c AwsConfigCheck) GetEndpoint() string {
 type AwsConfigRuleCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	// List of rules which would be omitted from the fetch result
 	IgnoreRules []string `yaml:"ignoreRules,omitempty" json:"ignoreRules,omitempty"`
 	// Specify one or more Config rule names to filter the results by rule.
@@ -1140,6 +1171,7 @@ func (c AwsConfigRuleCheck) GetEndpoint() string {
 type DatabaseBackupCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
 	GCP         *GCPDatabase `yaml:"gcp,omitempty" json:"gcp,omitempty"`
 	MaxAge      Duration     `yaml:"maxAge,omitempty" json:"maxAge,omitempty"`
 }
@@ -1395,9 +1427,9 @@ type DatabaseBackup struct {
 }
 
 type AzureDevopsCheck struct {
-	Description `yaml:",inline" json:",inline"`
-	Templatable `yaml:",inline" json:",inline"`
-
+	Description         `yaml:",inline" json:",inline"`
+	Templatable         `yaml:",inline" json:",inline"`
+	Relatable           `yaml:",inline" json:",inline"`
 	ConnectionName      string            `yaml:"connection,omitempty" json:"connection,omitempty"`
 	Organization        string            `yaml:"organization" json:"organization"`
 	PersonalAccessToken types.EnvVar      `yaml:"personalAccessToken" json:"personalAccessToken"`
@@ -1429,7 +1461,7 @@ func (c AzureDevopsCheck) GetEndpoint() string {
 type WebhookCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
-
+	Relatable   `yaml:",inline" json:",inline"`
 	// Token is an optional authorization token to run this check
 	Token *types.EnvVar `yaml:"token,omitempty" json:"token,omitempty"`
 }

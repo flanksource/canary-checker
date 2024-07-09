@@ -5,7 +5,7 @@ go 1.22.3
 require (
 	github.com/flanksource/canary-checker v1.0.0
 	github.com/flanksource/commons v1.23.0
-	github.com/flanksource/duty v1.0.531
+	github.com/flanksource/duty v1.0.532
 	github.com/spf13/cobra v1.8.0
 )
 
@@ -214,5 +214,6 @@ replace (
 	github.com/containerd/containerd => github.com/containerd/containerd v1.4.0
 	github.com/docker/docker => github.com/moby/moby v17.12.0-ce-rc1.0.20210128214336-420b1d36250f+incompatible
 	github.com/flanksource/canary-checker => ../../
+	// github.com/flanksource/duty => ../../../duty
 	helm.sh/helm/v3 => helm.sh/helm/v3 v3.5.1
 )
