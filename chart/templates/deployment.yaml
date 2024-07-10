@@ -8,6 +8,7 @@ metadata:
   name: {{ include "canary-checker.name" . }}
   labels:
     {{- include "canary-checker.labels" . | nindent 4 }}
+    {{- include "canary-checker.extraLabels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicas }}
   revisionHistoryLimit: 1
@@ -36,6 +37,7 @@ spec:
     metadata:
       labels:
         {{- include "canary-checker.selectorLabels" . | nindent 8 }}
+        {{- include "canary-checker.extraLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ .Values.serviceAccount.name }}
       volumes:
