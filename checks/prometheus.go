@@ -43,7 +43,7 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	}
 
 	if _, err := check.HTTPConnection.Hydrate(ctx, ctx.GetNamespace()); err != nil {
-		return results.Failf("error hydrating connection: %w", err)
+		return results.Failf("error hydrating connection: %v", err)
 	}
 
 	if check.HTTPConnection.URL == "" {
