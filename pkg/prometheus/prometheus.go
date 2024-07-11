@@ -43,7 +43,7 @@ func (p PrometheusClient) GetUptime(checkKey, duration string) (float64, error) 
 }
 
 func NewPrometheusAPI(ctx dutyContext.Context, conn connection.HTTPConnection) (*PrometheusClient, error) {
-	if conn.URL == "" {
+	if conn.URL.ValueStatic == "" {
 		return nil, nil
 	}
 
@@ -104,7 +104,7 @@ func NewPrometheusAPI(ctx dutyContext.Context, conn connection.HTTPConnection) (
 	}
 
 	cfg := prometheusapi.Config{
-		Address:      conn.URL,
+		Address:      conn.URL.ValueStatic,
 		RoundTripper: transportConfig,
 	}
 	client, err := prometheusapi.NewClient(cfg)

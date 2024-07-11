@@ -221,6 +221,9 @@
         "agent": {
           "$ref": "#/$defs/Lookup"
         },
+        "scope": {
+          "$ref": "#/$defs/Lookup"
+        },
         "labels": {
           "additionalProperties": {
             "type": "string"

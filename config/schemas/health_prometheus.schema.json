@@ -225,7 +225,7 @@
           "$ref": "#/$defs/EnvVar"
         },
         "url": {
-          "type": "string"
+          "$ref": "#/$defs/EnvVar"
         },
         "bearer": {
           "$ref": "#/$defs/EnvVar"
@@ -265,6 +265,9 @@
           "$ref": "#/$defs/Lookup"
         },
         "agent": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "scope": {
           "$ref": "#/$defs/Lookup"
         },
         "labels": {

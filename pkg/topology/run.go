@@ -539,7 +539,7 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 
 	query.FlushTopologyCache()
 
-	if t.Spec.PushLocation.URL != "" {
+	if t.Spec.PushLocation.URL.String() != "" {
 		for _, c := range results {
 			if err := pushTopologyToLocation(job.Context, t.Spec.PushLocation, *c); err != nil {
 				job.History.AddErrorf("error pushing topology: %v", err)
@@ -561,7 +561,7 @@ func pushTopologyToLocation(ctx dutyCtx.Context, conn connection.HTTPConnection,
 
 	resp, err := client.R(ctx).
 		Header(echo.HeaderContentType, echo.MIMEApplicationJSON).
-		Post(conn.URL, comp)
+		Post(conn.URL.ValueStatic, comp)
 
 	if err != nil {
 		return fmt.Errorf("error pushing topology[%s] to %s: %w", comp, conn.URL, err)

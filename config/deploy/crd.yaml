@@ -234,6 +234,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -299,6 +315,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -549,6 +581,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -614,6 +662,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -912,6 +976,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -977,6 +1057,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -1274,6 +1370,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -1339,6 +1451,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -1507,6 +1635,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -1572,6 +1716,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -1820,6 +1980,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -1885,6 +2061,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -2207,6 +2399,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -2272,6 +2480,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -2398,6 +2622,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -2463,6 +2703,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -2659,6 +2915,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -2724,6 +2996,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -2879,6 +3167,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -2944,6 +3248,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -3163,6 +3483,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -3228,6 +3564,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -3437,6 +3789,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -3502,6 +3870,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -3680,6 +4064,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -3745,6 +4145,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -3949,6 +4365,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -4014,6 +4446,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -4745,6 +5193,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -4810,6 +5274,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -5209,6 +5689,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -5274,6 +5770,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -5664,6 +6176,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -5729,6 +6257,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -5975,6 +6519,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -6040,6 +6600,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -6275,6 +6851,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -6340,6 +6932,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -6636,6 +7244,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -6701,6 +7325,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -7059,6 +7699,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -7124,6 +7780,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -7308,6 +7980,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -7373,6 +8061,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -7527,6 +8231,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -7592,6 +8312,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -7820,6 +8556,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -7885,6 +8637,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -8116,6 +8884,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -8181,6 +8965,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -8406,6 +9206,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -8471,6 +9287,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -8820,6 +9652,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -8885,6 +9733,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -9132,6 +9996,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -9197,6 +10077,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -9435,6 +10331,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -9500,6 +10412,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -9684,6 +10612,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -9749,6 +10693,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -9980,6 +10940,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -10045,6 +11021,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -10230,6 +11222,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -10295,6 +11303,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -10681,6 +11705,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -10746,6 +11786,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -10931,7 +11987,46 @@ spec:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
                       url:
-                        type: string
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
+                            type: object
+                        type: object
                       username:
                         properties:
                           name:
@@ -11120,6 +12215,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -11185,6 +12296,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -11452,6 +12579,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -11517,6 +12660,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -11743,6 +12902,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -11808,6 +12983,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -12026,6 +13217,22 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -12091,6 +13298,22 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
+                                  description: |-
+                                    Scope is the id of the parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                    If left empty, the scope is the requester's scope.
+                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -12245,6 +13468,22 @@ spec:
                                   value:
                                     type: string
                                 type: object
+                              scope:
+                                description: |-
+                                  Scope is the id of the parent of the resource to select.
+                                  Example: For config items, the scope is the scraper id
+                                  - for checks, it's canaries and
+                                  - for components, it's topology.
+                                  If left empty, the scope is the requester's scope.
+                                  Use `all` to disregard scope.
+                                properties:
+                                  expr:
+                                    type: string
+                                  label:
+                                    type: string
+                                  value:
+                                    type: string
+                                type: object
                               type:
                                 description: Lookup offers different ways to specify a lookup value
                                 properties:
@@ -12310,6 +13549,22 @@ spec:
                                 type: object
                               namespace:
                                 description: Lookup offers different ways to specify a lookup value
+                                properties:
+                                  expr:
+                                    type: string
+                                  label:
+                                    type: string
+                                  value:
+                                    type: string
+                                type: object
+                              scope:
+                                description: |-
+                                  Scope is the id of the parent of the resource to select.
+                                  Example: For config items, the scope is the scraper id
+                                  - for checks, it's canaries and
+                                  - for components, it's topology.
+                                  If left empty, the scope is the requester's scope.
+                                  Use `all` to disregard scope.
                                 properties:
                                   expr:
                                     type: string
@@ -13918,7 +15173,46 @@ spec:
                           type: object
                       type: object
                     url:
-                      type: string
+                      properties:
+                        name:
+                          type: string
+                        value:
+                          type: string
+                        valueFrom:
+                          properties:
+                            configMapKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                              required:
+                                - key
+                              type: object
+                            helmRef:
+                              properties:
+                                key:
+                                  description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                  type: string
+                                name:
+                                  type: string
+                              required:
+                                - key
+                              type: object
+                            secretKeyRef:
+                              properties:
+                                key:
+                                  type: string
+                                name:
+                                  type: string
+                              required:
+                                - key
+                              type: object
+                            serviceAccount:
+                              description: ServiceAccount specifies the service account whose token should be fetched
+                              type: string
+                          type: object
+                      type: object
                     username:
                       properties:
                         name:

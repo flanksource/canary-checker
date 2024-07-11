@@ -159,6 +159,9 @@
         "agent": {
           "$ref": "#/$defs/Lookup"
         },
+        "scope": {
+          "$ref": "#/$defs/Lookup"
+        },
         "labels": {
           "additionalProperties": {
             "type": "string"
@@ -172,6 +175,9 @@
     "ResourceSelector": {
       "properties": {
         "agent": {
+          "type": "string"
+        },
+        "Scope": {
           "type": "string"
         },
         "cache": {
@@ -203,7 +209,10 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "required": [
+        "Scope"
+      ]
     },
     "ResourceSelectors": {
       "items": {
