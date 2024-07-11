@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/flanksource/commons/hash"
+	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/types"
 	"github.com/robfig/cron/v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,11 +28,6 @@ type TopologyTagSelector struct {
 
 func (t *TopologyTagSelector) IsEmpty() bool {
 	return t.Tag == "" && t.Selector.IsEmpty()
-}
-
-type PushLocation struct {
-	URL                  string `json:"url,omitempty"`
-	types.Authentication `json:",inline"`
 }
 
 type TopologySpec struct {
@@ -58,7 +54,7 @@ type TopologySpec struct {
 	GroupBy TopologyTagSelector `json:"groupBy,omitempty"`
 
 	// Agent will push topology to specified path
-	PushLocation PushLocation `json:"push,omitempty"`
+	PushLocation connection.HTTPConnection `json:"push,omitempty"`
 }
 
 func (s Topology) NextRuntime() (*time.Time, error) {

@@ -732,8 +732,8 @@ type PrometheusCheck struct {
 	Templatable `yaml:",inline" json:",inline"`
 	Relatable   `yaml:",inline" json:",inline"`
 	// Deprecated: use `url` instead
-	Host       string `yaml:"host,omitempty" json:"host,omitempty"`
-	Connection `yaml:",inline" json:",inline"`
+	Host                      string `yaml:"host,omitempty" json:"host,omitempty"`
+	connection.HTTPConnection `yaml:",inline" json:",inline"`
 	// PromQL query
 	Query string `yaml:"query" json:"query" template:"true"`
 }

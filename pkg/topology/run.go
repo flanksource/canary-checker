@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/collections"
+	"github.com/flanksource/duty/connection"
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
@@ -549,22 +550,25 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 	return nil
 }
 
-func pushTopologyToLocation(ctx dutyCtx.Context, target v1.PushLocation, comp pkg.Component) error {
-	client, err := checks.CreateHTTPClient(ctx, target.Authentication)
+func pushTopologyToLocation(ctx dutyCtx.Context, conn connection.HTTPConnection, comp pkg.Component) error {
+	if _, err := conn.Hydrate(ctx, ctx.GetNamespace()); err != nil {
+		return fmt.Errorf("error hydrating connection: %w", err)
+	}
+	client, err := connection.CreateHTTPClient(ctx, conn)
 	if err != nil {
-		return fmt.Errorf("error creating  http client: %w", err)
+		return fmt.Errorf("error creating http client: %w", err)
 	}
 
 	resp, err := client.R(ctx).
 		Header(echo.HeaderContentType, echo.MIMEApplicationJSON).
-		Post(target.URL, comp)
+		Post(conn.URL, comp)
 
 	if err != nil {
-		return fmt.Errorf("error pushing topology[%s] to %s: %w", comp, target.URL, err)
+		return fmt.Errorf("error pushing topology[%s] to %s: %w", comp, conn.URL, err)
 	}
 	if !resp.IsOK() {
 		body, _ := resp.AsString()
-		return fmt.Errorf("error pushing topology[%s] to %s, non 2xx response received: %s %s", comp, target.URL, resp.Status, body)
+		return fmt.Errorf("error pushing topology[%s] to %s, non 2xx response received: %s %s", comp, conn.URL, resp.Status, body)
 	}
 	return nil
 }

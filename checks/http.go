@@ -11,10 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/commons/http"
 	"github.com/flanksource/commons/http/middlewares"
-	dutyctx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
-	"github.com/flanksource/duty/types"
-	"github.com/labstack/echo/v4"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
@@ -66,54 +63,31 @@ func (c *HTTPChecker) Run(ctx *context.Context) pkg.Results {
 	return results
 }
 
-func CreateHTTPClient(ctx dutyctx.Context, auth types.Authentication) (*http.Client, error) {
-	client := http.NewClient()
+func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPCheck, connection *models.Connection) (*http.Request, error) {
+	client := http.NewClient().UserAgent("canary-checker/" + runner.Version)
 
-	if !auth.Username.IsEmpty() {
-		user, err := ctx.GetEnvValueFromCache(auth.Username, ctx.GetNamespace())
+	for _, header := range check.Headers {
+		value, err := ctx.GetEnvValueFromCache(header, ctx.GetNamespace())
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed getting header (%v): %w", header, err)
 		}
-		password, err := ctx.GetEnvValueFromCache(auth.Password, ctx.GetNamespace())
-		if err != nil {
-			return nil, err
-		}
-		client.Auth(user, password)
-	} else if !auth.OAuth.IsEmpty() {
-		client.OAuth(middlewares.OauthConfig{
-			ClientID:     auth.OAuth.ClientID.ValueStatic,
-			ClientSecret: auth.OAuth.ClientSecret.ValueStatic,
-			TokenURL:     auth.OAuth.TokenURL,
-			Scopes:       auth.OAuth.Scopes,
-			Params:       auth.OAuth.Params,
-		})
-	} else if !auth.Bearer.IsEmpty() {
-		client.Header(echo.HeaderAuthorization, "Bearer "+auth.Bearer.ValueStatic)
+
+		client.Header(header.Name, value)
 	}
 
-	return client, nil
-}
-
-func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPCheck, connection *models.Connection) (*http.Request, error) {
-	var auth types.Authentication
 	if connection.Username != "" || connection.Password != "" {
-		auth.Username.ValueStatic = connection.Username
-		auth.Password.ValueStatic = connection.Password
+		client.Auth(connection.Username, connection.Password)
 	}
 
 	if check.Oauth2 != nil {
-		auth.OAuth.ClientID.ValueStatic = connection.Username
-		auth.OAuth.ClientSecret.ValueStatic = connection.Password
-		auth.OAuth.TokenURL = check.Oauth2.TokenURL
-		auth.OAuth.Scopes = check.Oauth2.Scopes
-		auth.OAuth.Params = check.Oauth2.Params
+		client.OAuth(middlewares.OauthConfig{
+			ClientID:     connection.Username,
+			ClientSecret: connection.Password,
+			TokenURL:     check.Oauth2.TokenURL,
+			Scopes:       check.Oauth2.Scopes,
+			Params:       check.Oauth2.Params,
+		})
 	}
-
-	client, err := CreateHTTPClient(ctx.Context, auth)
-	if err != nil {
-		return nil, fmt.Errorf("error creating http client: %w", err)
-	}
-	client.UserAgent("canary-checker/" + runner.Version)
 
 	if check.TLSConfig != nil {
 		tlsconfig := http.TLSConfig{
@@ -154,15 +128,6 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 
 	client.NTLM(check.NTLM)
 	client.NTLMV2(check.NTLMv2)
-
-	for _, header := range check.Headers {
-		value, err := ctx.GetEnvValueFromCache(header, ctx.GetNamespace())
-		if err != nil {
-			return nil, fmt.Errorf("failed getting header (%v): %w", header, err)
-		}
-
-		client.Header(header.Name, value)
-	}
 
 	if check.ThresholdMillis > 0 {
 		client.Timeout(time.Duration(check.ThresholdMillis) * time.Millisecond)
