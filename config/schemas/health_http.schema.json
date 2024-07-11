@@ -119,12 +119,6 @@
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
-        },
         "endpoint": {
           "type": "string"
         },
@@ -275,33 +269,6 @@
         },
         "value": {
           "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
-    "OAuth": {
-      "properties": {
-        "clientID": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "clientSecret": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "scope": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "tokenURL": {
-          "type": "string"
-        },
-        "params": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "type": "object"
         }
       },
       "additionalProperties": false,

@@ -218,20 +218,23 @@
         "connection": {
           "type": "string"
         },
-        "url": {
-          "type": "string"
-        },
         "username": {
           "$ref": "#/$defs/EnvVar"
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
+        "url": {
+          "type": "string"
+        },
         "bearer": {
           "$ref": "#/$defs/EnvVar"
         },
         "oauth": {
           "$ref": "#/$defs/OAuth"
+        },
+        "tls": {
+          "$ref": "#/$defs/TLSConfig"
         },
         "query": {
           "type": "string"
@@ -288,6 +291,27 @@
       "required": [
         "key"
       ]
+    },
+    "TLSConfig": {
+      "properties": {
+        "insecureSkipVerify": {
+          "type": "boolean"
+        },
+        "handshakeTimeout": {
+          "type": "integer"
+        },
+        "ca": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "cert": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "key": {
+          "$ref": "#/$defs/EnvVar"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "Template": {
       "properties": {

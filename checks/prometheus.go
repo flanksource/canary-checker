@@ -42,20 +42,15 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 		check.URL = prometheus.PrometheusURL
 	}
 
-	connection, err := ctx.GetConnection(check.Connection)
-	if err != nil {
-		return results.Failf("error getting connection: %v", err)
+	if _, err := check.HTTPConnection.Hydrate(ctx, ctx.GetNamespace()); err != nil {
+		return results.Failf("error hydrating connection: %w", err)
 	}
 
-	if connection.URL == "" {
+	if check.HTTPConnection.URL == "" {
 		return results.Failf("Must specify a URL")
 	}
 
-	connectionAuth, err := connection.Auth()
-	if err != nil {
-		return results.Failf("error getting connection auth: %v", err)
-	}
-	promClient, err := prometheus.NewPrometheusAPI(ctx.Context, connection.URL, connectionAuth)
+	promClient, err := prometheus.NewPrometheusAPI(ctx.Context, check.HTTPConnection)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

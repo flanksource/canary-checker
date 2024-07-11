@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/flanksource/duty/connection"
 	dutyContext "github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/types"
 	prometheusapi "github.com/prometheus/client_golang/api"
 	promV1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	prometheusConfig "github.com/prometheus/common/config"
@@ -42,19 +42,19 @@ func (p PrometheusClient) GetUptime(checkKey, duration string) (float64, error) 
 	return 100 - float64(uptime.(model.Vector)[0].Value), nil
 }
 
-func NewPrometheusAPI(ctx dutyContext.Context, url string, auth types.Authentication) (*PrometheusClient, error) {
-	if url == "" {
+func NewPrometheusAPI(ctx dutyContext.Context, conn connection.HTTPConnection) (*PrometheusClient, error) {
+	if conn.URL == "" {
 		return nil, nil
 	}
 
 	roundTripper := prometheusapi.DefaultRoundTripper
-	if !auth.Username.IsEmpty() {
-		username, err := ctx.GetEnvValueFromCache(auth.Username, ctx.GetNamespace())
+	if !conn.Username.IsEmpty() {
+		username, err := ctx.GetEnvValueFromCache(conn.Username, ctx.GetNamespace())
 		if err != nil {
 			return nil, err
 		}
 
-		password, err := ctx.GetEnvValueFromCache(auth.Password, ctx.GetNamespace())
+		password, err := ctx.GetEnvValueFromCache(conn.Password, ctx.GetNamespace())
 		if err != nil {
 			return nil, err
 		}
@@ -65,13 +65,13 @@ func NewPrometheusAPI(ctx dutyContext.Context, url string, auth types.Authentica
 			"",
 			"",
 			roundTripper)
-	} else if !auth.OAuth.IsEmpty() {
-		clientID, err := ctx.GetEnvValueFromCache(auth.OAuth.ClientID, ctx.GetNamespace())
+	} else if !conn.OAuth.IsEmpty() {
+		clientID, err := ctx.GetEnvValueFromCache(conn.OAuth.ClientID, ctx.GetNamespace())
 		if err != nil {
 			return nil, err
 		}
 
-		clientSecret, err := ctx.GetEnvValueFromCache(auth.OAuth.ClientSecret, ctx.GetNamespace())
+		clientSecret, err := ctx.GetEnvValueFromCache(conn.OAuth.ClientSecret, ctx.GetNamespace())
 		if err != nil {
 			return nil, err
 		}
@@ -80,14 +80,14 @@ func NewPrometheusAPI(ctx dutyContext.Context, url string, auth types.Authentica
 			&prometheusConfig.OAuth2{
 				ClientID:       clientID,
 				ClientSecret:   prometheusConfig.Secret(clientSecret),
-				Scopes:         auth.OAuth.Scopes,
-				TokenURL:       auth.OAuth.TokenURL,
-				EndpointParams: auth.OAuth.Params,
+				Scopes:         conn.OAuth.Scopes,
+				TokenURL:       conn.OAuth.TokenURL,
+				EndpointParams: conn.OAuth.Params,
 			},
 			roundTripper,
 			nil)
-	} else if !auth.Bearer.IsEmpty() {
-		clientID, err := ctx.GetEnvValueFromCache(auth.Bearer, ctx.GetNamespace())
+	} else if !conn.Bearer.IsEmpty() {
+		clientID, err := ctx.GetEnvValueFromCache(conn.Bearer, ctx.GetNamespace())
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +104,7 @@ func NewPrometheusAPI(ctx dutyContext.Context, url string, auth types.Authentica
 	}
 
 	cfg := prometheusapi.Config{
-		Address:      url,
+		Address:      conn.URL,
 		RoundTripper: transportConfig,
 	}
 	client, err := prometheusapi.NewClient(cfg)

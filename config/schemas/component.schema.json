@@ -77,12 +77,6 @@
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
-        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1557,12 +1551,6 @@
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
-        },
         "query": {
           "type": "string"
         },
@@ -2087,12 +2075,6 @@
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
-        },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
         },
         "endpoint": {
           "type": "string"
@@ -2896,12 +2878,6 @@
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
-        },
         "bindDN": {
           "type": "string"
         },
@@ -3094,12 +3070,6 @@
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
-        },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
         }
       },
       "additionalProperties": false,
@@ -3157,12 +3127,6 @@
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
-        },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
         },
         "query": {
           "type": "string"
@@ -3226,12 +3190,6 @@
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
-        },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
         },
         "query": {
           "type": "string"
@@ -3525,12 +3483,6 @@
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
-        },
         "query": {
           "type": "string"
         },
@@ -3737,12 +3689,6 @@
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
-        },
         "query": {
           "type": "string"
         },
@@ -3800,20 +3746,23 @@
         "connection": {
           "type": "string"
         },
-        "url": {
-          "type": "string"
-        },
         "username": {
           "$ref": "#/$defs/EnvVar"
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
+        "url": {
+          "type": "string"
+        },
         "bearer": {
           "$ref": "#/$defs/EnvVar"
         },
         "oauth": {
           "$ref": "#/$defs/OAuth"
+        },
+        "tls": {
+          "$ref": "#/$defs/TLSConfig"
         },
         "query": {
           "type": "string"
@@ -3938,12 +3887,6 @@
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
-        },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
         },
         "addr": {
           "type": "string"
@@ -4208,12 +4151,6 @@
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
-        },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
         }
       },
       "additionalProperties": false,
@@ -4235,12 +4172,6 @@
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
-        },
-        "bearer": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "oauth": {
-          "$ref": "#/$defs/OAuth"
         },
         "domain": {
           "type": "string"
