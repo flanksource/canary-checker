@@ -1079,7 +1079,7 @@
         "agent": {
           "type": "string"
         },
-        "Scope": {
+        "scope": {
           "type": "string"
         },
         "cache": {
@@ -1126,10 +1126,7 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "Scope"
-      ]
+      "type": "object"
     },
     "ContainerdPullCheck": {
       "properties": {

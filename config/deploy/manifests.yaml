@@ -1777,6 +1777,13 @@ spec:
                               type: string
                             namespace:
                               type: string
+                            scope:
+                              description: |-
+                                Scope is the id parent of the resource to select.
+                                Example: For config items, the scope is the scraper id
+                                - for checks, it's canaries and
+                                - for components, it's topology.
+                              type: string
                             statuses:
                               items:
                                 type: string
@@ -14074,6 +14081,13 @@ spec:
                         type: string
                       namespace:
                         type: string
+                      scope:
+                        description: |-
+                          Scope is the id parent of the resource to select.
+                          Example: For config items, the scope is the scraper id
+                          - for checks, it's canaries and
+                          - for components, it's topology.
+                        type: string
                       statuses:
                         items:
                           type: string
@@ -14204,6 +14218,13 @@ spec:
                               name:
                                 type: string
                               namespace:
+                                type: string
+                              scope:
+                                description: |-
+                                  Scope is the id parent of the resource to select.
+                                  Example: For config items, the scope is the scraper id
+                                  - for checks, it's canaries and
+                                  - for components, it's topology.
                                 type: string
                               statuses:
                                 items:
@@ -14346,6 +14367,13 @@ spec:
                         type: string
                       namespace:
                         type: string
+                      scope:
+                        description: |-
+                          Scope is the id parent of the resource to select.
+                          Example: For config items, the scope is the scraper id
+                          - for checks, it's canaries and
+                          - for components, it's topology.
+                        type: string
                       statuses:
                         items:
                           type: string
@@ -14479,6 +14507,13 @@ spec:
                                   type: string
                                 namespace:
                                   type: string
+                                scope:
+                                  description: |-
+                                    Scope is the id parent of the resource to select.
+                                    Example: For config items, the scope is the scraper id
+                                    - for checks, it's canaries and
+                                    - for components, it's topology.
+                                  type: string
                                 statuses:
                                   items:
                                     type: string
@@ -14532,6 +14567,13 @@ spec:
                             name:
                               type: string
                             namespace:
+                              type: string
+                            scope:
+                              description: |-
+                                Scope is the id parent of the resource to select.
+                                Example: For config items, the scope is the scraper id
+                                - for checks, it's canaries and
+                                - for components, it's topology.
                               type: string
                             statuses:
                               items:
@@ -14663,6 +14705,13 @@ spec:
                                     name:
                                       type: string
                                     namespace:
+                                      type: string
+                                    scope:
+                                      description: |-
+                                        Scope is the id parent of the resource to select.
+                                        Example: For config items, the scope is the scraper id
+                                        - for checks, it's canaries and
+                                        - for components, it's topology.
                                       type: string
                                     statuses:
                                       items:
@@ -14805,6 +14854,13 @@ spec:
                               type: string
                             namespace:
                               type: string
+                            scope:
+                              description: |-
+                                Scope is the id parent of the resource to select.
+                                Example: For config items, the scope is the scraper id
+                                - for checks, it's canaries and
+                                - for components, it's topology.
+                              type: string
                             statuses:
                               items:
                                 type: string
@@ -14892,6 +14948,13 @@ spec:
                         type: string
                       namespace:
                         type: string
+                      scope:
+                        description: |-
+                          Scope is the id parent of the resource to select.
+                          Example: For config items, the scope is the scraper id
+                          - for checks, it's canaries and
+                          - for components, it's topology.
+                        type: string
                       statuses:
                         items:
                           type: string
@@ -14940,6 +15003,13 @@ spec:
                         name:
                           type: string
                         namespace:
+                          type: string
+                        scope:
+                          description: |-
+                            Scope is the id parent of the resource to select.
+                            Example: For config items, the scope is the scraper id
+                            - for checks, it's canaries and
+                            - for components, it's topology.
                           type: string
                         statuses:
                           items:
@@ -15015,6 +15085,13 @@ spec:
                               name:
                                 type: string
                               namespace:
+                                type: string
+                              scope:
+                                description: |-
+                                  Scope is the id parent of the resource to select.
+                                  Example: For config items, the scope is the scraper id
+                                  - for checks, it's canaries and
+                                  - for components, it's topology.
                                 type: string
                               statuses:
                                 items:
