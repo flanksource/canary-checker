@@ -1079,6 +1079,9 @@
         "agent": {
           "type": "string"
         },
+        "scope": {
+          "type": "string"
+        },
         "cache": {
           "type": "string"
         },
@@ -3919,6 +3922,9 @@
           "$ref": "#/$defs/Lookup"
         },
         "agent": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "scope": {
           "$ref": "#/$defs/Lookup"
         },
         "labels": {

@@ -234,6 +234,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -299,6 +308,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -549,6 +567,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -614,6 +641,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -912,6 +948,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -977,6 +1022,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -1274,6 +1328,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -1339,6 +1402,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -1507,6 +1579,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -1580,6 +1661,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -1617,6 +1707,8 @@ spec:
                             name:
                               type: string
                             namespace:
+                              type: string
+                            scope:
                               type: string
                             statuses:
                               items:
@@ -1820,6 +1912,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -1885,6 +1986,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -2207,6 +2317,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -2272,6 +2391,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -2398,6 +2526,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -2463,6 +2600,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -2659,6 +2805,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -2724,6 +2879,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -2879,6 +3043,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -2944,6 +3117,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -3163,6 +3345,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -3228,6 +3419,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -3437,6 +3637,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -3502,6 +3711,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -3680,6 +3898,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -3745,6 +3972,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -3949,6 +4185,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -4014,6 +4259,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -4745,6 +4999,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -4810,6 +5073,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -5209,6 +5481,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -5274,6 +5555,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -5664,6 +5954,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -5729,6 +6028,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -5975,6 +6283,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -6040,6 +6357,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -6275,6 +6601,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -6340,6 +6675,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -6636,6 +6980,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -6701,6 +7054,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -7059,6 +7421,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -7124,6 +7495,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -7308,6 +7688,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -7373,6 +7762,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -7527,6 +7925,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -7592,6 +7999,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -7820,6 +8236,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -7885,6 +8310,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -8116,6 +8550,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -8181,6 +8624,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -8406,6 +8858,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -8471,6 +8932,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -8820,6 +9290,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -8885,6 +9364,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -9132,6 +9620,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -9197,6 +9694,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -9435,6 +9941,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -9500,6 +10015,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -9684,6 +10208,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -9749,6 +10282,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -9980,6 +10522,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -10045,6 +10596,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -10230,6 +10790,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -10295,6 +10864,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -10681,6 +11259,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -10746,6 +11333,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -11120,6 +11716,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -11185,6 +11790,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -11452,6 +12066,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -11517,6 +12140,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -11743,6 +12375,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -11808,6 +12449,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -12026,6 +12676,15 @@ spec:
                                     value:
                                       type: string
                                   type: object
+                                scope:
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
                                 type:
                                   description: Lookup offers different ways to specify a lookup value
                                   properties:
@@ -12091,6 +12750,15 @@ spec:
                                   type: object
                                 namespace:
                                   description: Lookup offers different ways to specify a lookup value
+                                  properties:
+                                    expr:
+                                      type: string
+                                    label:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                scope:
                                   properties:
                                     expr:
                                       type: string
@@ -12245,6 +12913,15 @@ spec:
                                   value:
                                     type: string
                                 type: object
+                              scope:
+                                properties:
+                                  expr:
+                                    type: string
+                                  label:
+                                    type: string
+                                  value:
+                                    type: string
+                                type: object
                               type:
                                 description: Lookup offers different ways to specify a lookup value
                                 properties:
@@ -12310,6 +12987,15 @@ spec:
                                 type: object
                               namespace:
                                 description: Lookup offers different ways to specify a lookup value
+                                properties:
+                                  expr:
+                                    type: string
+                                  label:
+                                    type: string
+                                  value:
+                                    type: string
+                                type: object
+                              scope:
                                 properties:
                                   expr:
                                     type: string
@@ -12551,6 +13237,8 @@ spec:
                         type: string
                       namespace:
                         type: string
+                      scope:
+                        type: string
                       statuses:
                         items:
                           type: string
@@ -12681,6 +13369,8 @@ spec:
                               name:
                                 type: string
                               namespace:
+                                type: string
+                              scope:
                                 type: string
                               statuses:
                                 items:
@@ -12823,6 +13513,8 @@ spec:
                         type: string
                       namespace:
                         type: string
+                      scope:
+                        type: string
                       statuses:
                         items:
                           type: string
@@ -12956,6 +13648,8 @@ spec:
                                   type: string
                                 namespace:
                                   type: string
+                                scope:
+                                  type: string
                                 statuses:
                                   items:
                                     type: string
@@ -13009,6 +13703,8 @@ spec:
                             name:
                               type: string
                             namespace:
+                              type: string
+                            scope:
                               type: string
                             statuses:
                               items:
@@ -13140,6 +13836,8 @@ spec:
                                     name:
                                       type: string
                                     namespace:
+                                      type: string
+                                    scope:
                                       type: string
                                     statuses:
                                       items:
@@ -13282,6 +13980,8 @@ spec:
                               type: string
                             namespace:
                               type: string
+                            scope:
+                              type: string
                             statuses:
                               items:
                                 type: string
@@ -13369,6 +14069,8 @@ spec:
                         type: string
                       namespace:
                         type: string
+                      scope:
+                        type: string
                       statuses:
                         items:
                           type: string
@@ -13417,6 +14119,8 @@ spec:
                         name:
                           type: string
                         namespace:
+                          type: string
+                        scope:
                           type: string
                         statuses:
                           items:
@@ -13492,6 +14196,8 @@ spec:
                               name:
                                 type: string
                               namespace:
+                                type: string
+                              scope:
                                 type: string
                               statuses:
                                 items:
