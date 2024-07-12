@@ -235,13 +235,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -324,13 +317,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -582,13 +568,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -671,13 +650,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -977,13 +949,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -1066,13 +1031,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -1371,13 +1329,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -1460,13 +1411,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -1636,13 +1580,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -1725,13 +1662,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -1779,11 +1709,6 @@ spec:
                             namespace:
                               type: string
                             scope:
-                              description: |-
-                                Scope is the id parent of the resource to select.
-                                Example: For config items, the scope is the scraper id
-                                - for checks, it's canaries and
-                                - for components, it's topology.
                               type: string
                             statuses:
                               items:
@@ -1988,13 +1913,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -2077,13 +1995,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -2407,13 +2318,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -2496,13 +2400,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -2630,13 +2527,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -2719,13 +2609,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -2923,13 +2806,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -3012,13 +2888,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -3175,13 +3044,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -3264,13 +3126,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -3491,13 +3346,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -3580,13 +3428,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -3797,13 +3638,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -3886,13 +3720,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -4072,13 +3899,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -4161,13 +3981,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -4373,13 +4186,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -4462,13 +4268,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -5201,13 +5000,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -5290,13 +5082,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -5697,13 +5482,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -5786,13 +5564,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -6184,13 +5955,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -6273,13 +6037,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -6527,13 +6284,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -6616,13 +6366,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -6859,13 +6602,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -6948,13 +6684,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -7252,13 +6981,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -7341,13 +7063,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -7707,13 +7422,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -7796,13 +7504,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -7988,13 +7689,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -8077,13 +7771,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -8239,13 +7926,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -8328,13 +8008,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -8564,13 +8237,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -8653,13 +8319,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -8892,13 +8551,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -8981,13 +8633,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -9214,13 +8859,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -9303,13 +8941,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -9660,13 +9291,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -9749,13 +9373,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -10004,13 +9621,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -10093,13 +9703,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -10339,13 +9942,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -10428,13 +10024,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -10620,13 +10209,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -10709,13 +10291,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -10948,13 +10523,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -11037,13 +10605,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -11230,13 +10791,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -11319,13 +10873,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -11713,13 +11260,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -11802,13 +11342,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -12223,13 +11756,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -12312,13 +11838,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -12587,13 +12106,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -12676,13 +12188,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -12910,13 +12415,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -12999,13 +12497,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -13225,13 +12716,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -13314,13 +12798,6 @@ spec:
                                       type: string
                                   type: object
                                 scope:
-                                  description: |-
-                                    Scope is the id of the parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
-                                    If left empty, the scope is the requester's scope.
-                                    Use `all` to disregard scope.
                                   properties:
                                     expr:
                                       type: string
@@ -13476,13 +12953,6 @@ spec:
                                     type: string
                                 type: object
                               scope:
-                                description: |-
-                                  Scope is the id of the parent of the resource to select.
-                                  Example: For config items, the scope is the scraper id
-                                  - for checks, it's canaries and
-                                  - for components, it's topology.
-                                  If left empty, the scope is the requester's scope.
-                                  Use `all` to disregard scope.
                                 properties:
                                   expr:
                                     type: string
@@ -13565,13 +13035,6 @@ spec:
                                     type: string
                                 type: object
                               scope:
-                                description: |-
-                                  Scope is the id of the parent of the resource to select.
-                                  Example: For config items, the scope is the scraper id
-                                  - for checks, it's canaries and
-                                  - for components, it's topology.
-                                  If left empty, the scope is the requester's scope.
-                                  Use `all` to disregard scope.
                                 properties:
                                   expr:
                                     type: string
@@ -13814,11 +13277,6 @@ spec:
                       namespace:
                         type: string
                       scope:
-                        description: |-
-                          Scope is the id parent of the resource to select.
-                          Example: For config items, the scope is the scraper id
-                          - for checks, it's canaries and
-                          - for components, it's topology.
                         type: string
                       statuses:
                         items:
@@ -13952,11 +13410,6 @@ spec:
                               namespace:
                                 type: string
                               scope:
-                                description: |-
-                                  Scope is the id parent of the resource to select.
-                                  Example: For config items, the scope is the scraper id
-                                  - for checks, it's canaries and
-                                  - for components, it's topology.
                                 type: string
                               statuses:
                                 items:
@@ -14100,11 +13553,6 @@ spec:
                       namespace:
                         type: string
                       scope:
-                        description: |-
-                          Scope is the id parent of the resource to select.
-                          Example: For config items, the scope is the scraper id
-                          - for checks, it's canaries and
-                          - for components, it's topology.
                         type: string
                       statuses:
                         items:
@@ -14240,11 +13688,6 @@ spec:
                                 namespace:
                                   type: string
                                 scope:
-                                  description: |-
-                                    Scope is the id parent of the resource to select.
-                                    Example: For config items, the scope is the scraper id
-                                    - for checks, it's canaries and
-                                    - for components, it's topology.
                                   type: string
                                 statuses:
                                   items:
@@ -14301,11 +13744,6 @@ spec:
                             namespace:
                               type: string
                             scope:
-                              description: |-
-                                Scope is the id parent of the resource to select.
-                                Example: For config items, the scope is the scraper id
-                                - for checks, it's canaries and
-                                - for components, it's topology.
                               type: string
                             statuses:
                               items:
@@ -14439,11 +13877,6 @@ spec:
                                     namespace:
                                       type: string
                                     scope:
-                                      description: |-
-                                        Scope is the id parent of the resource to select.
-                                        Example: For config items, the scope is the scraper id
-                                        - for checks, it's canaries and
-                                        - for components, it's topology.
                                       type: string
                                     statuses:
                                       items:
@@ -14587,11 +14020,6 @@ spec:
                             namespace:
                               type: string
                             scope:
-                              description: |-
-                                Scope is the id parent of the resource to select.
-                                Example: For config items, the scope is the scraper id
-                                - for checks, it's canaries and
-                                - for components, it's topology.
                               type: string
                             statuses:
                               items:
@@ -14681,11 +14109,6 @@ spec:
                       namespace:
                         type: string
                       scope:
-                        description: |-
-                          Scope is the id parent of the resource to select.
-                          Example: For config items, the scope is the scraper id
-                          - for checks, it's canaries and
-                          - for components, it's topology.
                         type: string
                       statuses:
                         items:
@@ -14737,11 +14160,6 @@ spec:
                         namespace:
                           type: string
                         scope:
-                          description: |-
-                            Scope is the id parent of the resource to select.
-                            Example: For config items, the scope is the scraper id
-                            - for checks, it's canaries and
-                            - for components, it's topology.
                           type: string
                         statuses:
                           items:
@@ -14819,11 +14237,6 @@ spec:
                               namespace:
                                 type: string
                               scope:
-                                description: |-
-                                  Scope is the id parent of the resource to select.
-                                  Example: For config items, the scope is the scraper id
-                                  - for checks, it's canaries and
-                                  - for components, it's topology.
                                 type: string
                               statuses:
                                 items:
