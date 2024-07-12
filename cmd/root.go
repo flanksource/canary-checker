@@ -19,7 +19,6 @@ import (
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/query"
-	"github.com/flanksource/duty/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -87,7 +86,7 @@ var Root = &cobra.Command{
 		}
 		if prometheus.PrometheusURL != "" {
 			logger.Infof("Setting default prometheus: %s", prometheus.PrometheusURL)
-			runner.Prometheus, _ = prometheus.NewPrometheusAPI(context.New(), connection.HTTPConnection{URL: types.EnvVar{ValueStatic: prometheus.PrometheusURL}})
+			runner.Prometheus, _ = prometheus.NewPrometheusAPI(context.New(), connection.HTTPConnection{URL: prometheus.PrometheusURL})
 		}
 
 		go func() {

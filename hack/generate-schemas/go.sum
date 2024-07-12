@@ -736,8 +736,8 @@ github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2
 github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/flanksource/commons v1.24.2 h1:9PZsmqRTignNu56W/ZoBbmNyeR2l12g7pUHe58t63vQ=
 github.com/flanksource/commons v1.24.2/go.mod h1:gCg1cmwnLh3nqi9VmMH1MQ6dhFUGUS01wTduf4tHw6c=
-github.com/flanksource/duty v1.0.544 h1:e7xC9xHAGIkCfKn8hLJXvnUeert1RcLgsVZs5fpM9oQ=
-github.com/flanksource/duty v1.0.544/go.mod h1:MICj5RcXNJdzRG1UWZ7VhNoYJg6kRWjlwqwe5xeqVic=
+github.com/flanksource/duty v1.0.545 h1:EX4vnBlIbT4Oj11FOen/l7lCynpKF1De8iySj8BhsKk=
+github.com/flanksource/duty v1.0.545/go.mod h1:MICj5RcXNJdzRG1UWZ7VhNoYJg6kRWjlwqwe5xeqVic=
 github.com/flanksource/gomplate/v3 v3.20.4/go.mod h1:27BNWhzzSjDed1z8YShO6W+z6G9oZXuxfNFGd/iGSdc=
 github.com/flanksource/gomplate/v3 v3.24.8 h1:77OQfc8LO3UFfEAhpgIaFpuazncbFqHSr72JMCzoGyA=
 github.com/flanksource/gomplate/v3 v3.24.8/go.mod h1:7SJHGdFITvw3I8qf/ppF1BXbL2/ENyI5vpQkWt8MHtU=

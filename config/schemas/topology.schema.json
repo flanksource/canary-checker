@@ -2122,7 +2122,7 @@
           "$ref": "#/$defs/EnvVar"
         },
         "url": {
-          "$ref": "#/$defs/EnvVar"
+          "type": "string"
         },
         "bearer": {
           "$ref": "#/$defs/EnvVar"
@@ -3753,7 +3753,7 @@
           "$ref": "#/$defs/EnvVar"
         },
         "url": {
-          "$ref": "#/$defs/EnvVar"
+          "type": "string"
         },
         "bearer": {
           "$ref": "#/$defs/EnvVar"

@@ -42,11 +42,11 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	}
 
 	// Use global prometheus url if check's url is empty
-	if check.URL.ValueStatic == "" {
-		check.URL.ValueStatic = prometheus.PrometheusURL
+	if check.URL == "" {
+		check.URL = prometheus.PrometheusURL
 	}
 
-	if check.HTTPConnection.URL.ValueStatic == "" {
+	if check.HTTPConnection.URL == "" {
 		return results.Failf("Must specify a URL")
 	}
 
