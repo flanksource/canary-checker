@@ -78,27 +78,11 @@ jobs:
       - name: Set up Docker Buildx #must be executed before a step that contains platforms
         uses: docker/setup-buildx-action@v2
 
-      - name: Publish minimal image to registry
-        uses: elgohr/Publish-Docker-Github-Action@eb53b3ec07136a6ebaed78d8135806da64f7c7e2 # v5
+      - name: Log in to Docker Hub
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
         with:
-          name: flanksource/canary-checker
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          snapshot: true
-          dockerfile: build/minimal/Dockerfile
-          tags: "latest,v${{ env.RELEASE_VERSION }}"
-          platforms: linux/amd64,linux/arm64
-
-      - name: Publish full image to registry
-        uses: elgohr/Publish-Docker-Github-Action@eb53b3ec07136a6ebaed78d8135806da64f7c7e2 # v5
-        with:
-          name: flanksource/canary-checker-full
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          snapshot: true
-          dockerfile: build/full/Dockerfile
-          tags: "latest,v${{ env.RELEASE_VERSION }}"
-          platforms: linux/amd64,linux/arm64
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -113,7 +97,7 @@ jobs:
         with:
           registry-type: public
 
-      - name: Publish Minimal Image to ECR Public
+      - name: Publish Minimal Image to Dockerhub & ECR Public
         env:
           REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
           REGISTRY_ALIAS: k4y9r6y5
@@ -121,13 +105,17 @@ jobs:
           IMAGE_TAG: "v${{ env.RELEASE_VERSION }}"
         run: |
           docker buildx create --use
-          docker buildx build --platform linux/amd64,linux/arm64 \
+          docker buildx build \
+            --cache-from=docker.io/flanksource/$REPOSITORY:latest \
+            --platform linux/amd64,linux/arm64 \
             -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG \
+            -t docker.io/flanksource/$REPOSITORY:$IMAGE_TAG \
+            -t docker.io/flanksource/$REPOSITORY:latest \
             -f build/minimal/Dockerfile \
             --push \
             .
 
-      - name: Publish Full Image to ECR Public
+      - name: Publish Full Image to Dockerhub & ECR Public
         env:
           REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
           REGISTRY_ALIAS: k4y9r6y5
@@ -135,8 +123,12 @@ jobs:
           IMAGE_TAG: "v${{ env.RELEASE_VERSION }}"
         run: |
           docker buildx create --use
-          docker buildx build --platform linux/amd64,linux/arm64 \
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --cache-from=docker.io/flanksource/$REPOSITORY:latest \
             -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG \
+            -t docker.io/flanksource/$REPOSITORY:$IMAGE_TAG \
+            -t docker.io/flanksource/$REPOSITORY:latest \
             -f build/full/Dockerfile \
             --push \
             .
