@@ -7,13 +7,11 @@ import (
 	"net/http"
 
 	"github.com/flanksource/canary-checker/api/context"
-	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
 	dutyContext "github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/models"
 	"github.com/labstack/echo/v4"
 )
 
@@ -63,26 +61,17 @@ func WebhookHandler(c echo.Context) error {
 }
 
 func webhookHandler(ctx dutyContext.Context, id, authToken string, data CheckData) error {
-	webhookChecks, err := db.FindChecks(ctx, id, checks.WebhookCheckType)
+	canaries, err := db.FindCanariesByWebhook(ctx, id)
 	if err != nil {
 		return err
+	} else if len(canaries) == 0 {
+		return nil
+	} else if len(canaries) > 1 {
+		return fmt.Errorf("multiple canaries found for webhook: %s", id)
 	}
 
-	var check models.Check
-	if len(webhookChecks) == 0 {
-		return Errorf(ENOTFOUND, "check (%s) not found", id)
-	} else if len(webhookChecks) > 1 {
-		return Errorf(EINVALID, "multiple checks with name: %s were found. Please use the check id or modify the check to have a unique name", id)
-	} else {
-		check = webhookChecks[0]
-	}
-
-	var canary *v1.Canary
-	if c, err := db.FindCanaryByID(ctx, check.CanaryID.String()); err != nil {
-		return fmt.Errorf("failed to get canary: %w", err)
-	} else if c == nil {
-		return Errorf(ENOTFOUND, "canary was not found (id:%s): %v", check.CanaryID.String(), err)
-	} else if canary, err = c.ToV1(); err != nil {
+	canary, err := canaries[0].ToV1()
+	if err != nil {
 		return err
 	}
 
