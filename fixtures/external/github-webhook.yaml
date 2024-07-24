@@ -8,7 +8,23 @@ spec:
     name: github-status
     transform:
       expr: |
-        [{
-          "name": results.json.component.name,
-          "pass": results.json.component.status == "operational"
-        }].toJSON()
+        has(results.json.component) ?
+          [{
+            "description": results.json.component.description,
+            "detail": results.json,
+            "duration": 1,
+            "icon": results.json.component.name,
+            "name": results.json.component.name,
+            "pass": results.json.component.status == "operational",
+            "start": results.json.component_update.created_at,
+          }].toJSON():
+            results.json.incident.components.map(c, {
+              "description": c.description,
+              "detail": results.json,
+              "icon": c.name,
+              "duration": 1,
+              "message": results.json.incident.incident_updates[0].body,
+              "name": c.name,
+              "pass": c.status == "operational",
+              "start": c.updated_at,
+            }).toJSON()
