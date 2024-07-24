@@ -1,0 +1,14 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: github-status
+spec:
+  webhook:
+    name: github-status
+    transform:
+      expr: |
+        [{
+          "name": results.json.component.name,
+          "pass": results.json.component.status == "operational"
+        }].toJSON()

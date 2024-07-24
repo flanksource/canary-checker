@@ -325,6 +325,15 @@ func GetCanary(ctx context.Context, id string) (pkg.Canary, error) {
 	return model, err
 }
 
+func FindCanariesByWebhook(ctx context.Context, name string) ([]pkg.Canary, error) {
+	var canaries []pkg.Canary
+	if err := ctx.DB().Where("spec->'webhook'->>'name' = ?", name).First(&canaries).Error; err != nil {
+		return nil, err
+	}
+
+	return canaries, nil
+}
+
 func FindCanaryByID(ctx context.Context, id string) (*pkg.Canary, error) {
 	var model *pkg.Canary
 	if err := ctx.DB().Where("id = ?", id).First(&model).Error; err != nil {
