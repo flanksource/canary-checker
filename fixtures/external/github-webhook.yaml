@@ -15,7 +15,7 @@ spec:
             "detail": results.json,
             "duration": 1,
             "icon": "github",
-            "name": "Github " + results.json.component.name,
+            "name": "Github/" + results.json.component.name,
             "pass": results.json.component.status == "operational",
             "start": results.json.component_update.created_at,
           }].toJSON():
@@ -25,7 +25,7 @@ spec:
               "icon": "github",
               "duration": 1,
               "message": results.json.incident.incident_updates[0].body,
-              "name": "Github " + c.name,
+              "name": "Github/" + c.name,
               "pass": c.status == "operational",
               "start": c.updated_at,
             }).toJSON()
