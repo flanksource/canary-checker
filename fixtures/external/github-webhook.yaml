@@ -6,6 +6,7 @@ metadata:
 spec:
   webhook:
     name: github-status
+    transformDeleteStrategy: Ignore
     transform:
       expr: |
         has(results.json.component) ?
@@ -13,18 +14,18 @@ spec:
             "description": results.json.component.description,
             "detail": results.json,
             "duration": 1,
-            "icon": results.json.component.name,
-            "name": results.json.component.name,
+            "icon": "github",
+            "name": "Github/" + results.json.component.name,
             "pass": results.json.component.status == "operational",
             "start": results.json.component_update.created_at,
           }].toJSON():
             results.json.incident.components.map(c, {
               "description": c.description,
               "detail": results.json,
-              "icon": c.name,
+              "icon": "github",
               "duration": 1,
               "message": results.json.incident.incident_updates[0].body,
-              "name": c.name,
+              "name": "Github/" + c.name,
               "pass": c.status == "operational",
               "start": c.updated_at,
             }).toJSON()
