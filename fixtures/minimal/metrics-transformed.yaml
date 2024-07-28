@@ -2,8 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: exchange-rates
-  annotations:
-    trace: "true"
 spec:
   schedule: "every 30 @minutes"
   http:

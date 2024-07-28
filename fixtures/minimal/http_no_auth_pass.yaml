@@ -2,8 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: http-no-auth
-  annotations:
-    trace: "true"
 spec:
   http:
     - name: http-no-auth
