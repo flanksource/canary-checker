@@ -327,7 +327,7 @@ func GetCanary(ctx context.Context, id string) (pkg.Canary, error) {
 
 func FindCanariesByWebhook(ctx context.Context, name string) ([]pkg.Canary, error) {
 	var canaries []pkg.Canary
-	if err := ctx.DB().Where("spec->'webhook'->>'name' = ?", name).First(&canaries).Error; err != nil {
+	if err := ctx.DB().Where("spec->'webhook'->>'name' = ?", name).Find(&canaries).Error; err != nil {
 		return nil, err
 	}
 

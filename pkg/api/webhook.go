@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/duty/api"
 	dutyContext "github.com/flanksource/duty/context"
 	"github.com/labstack/echo/v4"
 )
@@ -40,12 +40,12 @@ func WebhookHandler(c echo.Context) error {
 
 	if c.Request().Header.Get("Content-Type") == "application/json" {
 		if err := json.NewDecoder(c.Request().Body).Decode(&data.JSON); err != nil {
-			return WriteError(c, err)
+			return api.WriteError(c, err)
 		}
 	} else {
 		b, err := io.ReadAll(io.LimitReader(c.Request().Body, webhookBodyLimit))
 		if err != nil {
-			return WriteError(c, err)
+			return api.WriteError(c, err)
 		}
 
 		data.Content = string(b)
@@ -54,10 +54,10 @@ func WebhookHandler(c echo.Context) error {
 	ctx := c.Request().Context().(dutyContext.Context)
 
 	if err := webhookHandler(ctx, id, authToken, data); err != nil {
-		return WriteError(c, err)
+		return api.WriteError(c, err)
 	}
 
-	return c.JSON(http.StatusOK, &HTTPSuccess{Message: "ok"})
+	return c.JSON(http.StatusOK, &api.HTTPSuccess{Message: "ok"})
 }
 
 func webhookHandler(ctx dutyContext.Context, id, authToken string, data CheckData) error {
@@ -65,9 +65,9 @@ func webhookHandler(ctx dutyContext.Context, id, authToken string, data CheckDat
 	if err != nil {
 		return err
 	} else if len(canaries) == 0 {
-		return nil
+		return api.Errorf(api.ENOTFOUND, "no canaries found for webhook: %s", id)
 	} else if len(canaries) > 1 {
-		return fmt.Errorf("multiple canaries found for webhook: %s", id)
+		return api.Errorf(api.EINVALID, "%d canaries were found for webhook: %s. please ensure that the webhook name is unique.", len(canaries), id)
 	}
 
 	canary, err := canaries[0].ToV1()
@@ -76,9 +76,6 @@ func webhookHandler(ctx dutyContext.Context, id, authToken string, data CheckDat
 	}
 
 	webhook := canary.Spec.Webhook
-	if webhook == nil {
-		return Errorf(ENOTFOUND, "no webhook checks found")
-	}
 
 	// Authorization
 	if webhook.Token != nil && !webhook.Token.IsEmpty() {
@@ -88,7 +85,7 @@ func webhookHandler(ctx dutyContext.Context, id, authToken string, data CheckDat
 		}
 
 		if token != "" && token != authToken {
-			return Errorf(EUNAUTHORIZED, "invalid webhook token")
+			return api.Errorf(api.EUNAUTHORIZED, "invalid webhook token")
 		}
 	}
 
