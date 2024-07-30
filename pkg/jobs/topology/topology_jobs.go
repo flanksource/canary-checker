@@ -14,6 +14,7 @@ import (
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
+	"github.com/flanksource/duty/models"
 	"github.com/robfig/cron/v3"
 )
 
@@ -63,8 +64,7 @@ var SyncTopology = &job.Job{
 	RunNow:     true,
 	Fn: func(ctx job.JobRuntime) error {
 		var topologies []pkg.Topology
-
-		if err := ctx.DB().Table("topologies").Where(duty.LocalFilter).
+		if err := ctx.DB().Table("topologies").Where(duty.LocalFilter).Where("source != ?", models.SourcePush).
 			Find(&topologies).Error; err != nil {
 			return err
 		}
