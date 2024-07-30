@@ -26,6 +26,7 @@ const ComponentType = "component"
 // Topology mirrors the models.Topology struct except that instead of raw JSON serialized to the DB, it has the full CRD based spec.
 type Topology struct {
 	ID        uuid.UUID `gorm:"default:generate_ulid()"`
+	AgentID   uuid.UUID `gorm:"default:00000000-0000-0000-0000-000000000000"`
 	Name      string
 	Namespace string
 	Labels    dutyTypes.JSONStringMap
