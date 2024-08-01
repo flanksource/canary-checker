@@ -34,7 +34,7 @@ func Unschedule(id string) {
 
 func TriggerAt(ctx context.Context, dbCanary pkg.Canary, runAt time.Time) error {
 	var job *job.Job
-	if job = findJob(dbCanary); job != nil {
+	if job = findJob(dbCanary); job == nil {
 		ctx.Warnf("job not found for: %v", dbCanary.ID)
 		return nil
 	}
