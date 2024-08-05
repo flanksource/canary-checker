@@ -21,8 +21,8 @@ require (
 	github.com/flanksource/artifacts v1.0.7
 	github.com/flanksource/commons v1.24.2
 	github.com/flanksource/duty v1.0.547
-	github.com/flanksource/gomplate/v3 v3.24.16
-	github.com/flanksource/is-healthy v1.0.23
+	github.com/flanksource/gomplate/v3 v3.24.20
+	github.com/flanksource/is-healthy v1.0.24
 	github.com/flanksource/kommons v0.31.4
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-git/go-git/v5 v5.11.0
