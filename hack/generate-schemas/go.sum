@@ -742,8 +742,8 @@ github.com/flanksource/gomplate/v3 v3.20.4/go.mod h1:27BNWhzzSjDed1z8YShO6W+z6G9
 github.com/flanksource/gomplate/v3 v3.24.16 h1:G7k44tgc5fEPd3F3hYrJ5zh9DfrGtwJxt9XvzcYmd2I=
 github.com/flanksource/gomplate/v3 v3.24.16/go.mod h1:6JfFCkHRqI1WRxHtGUxO8Jkq/YzxDTIGxqCfgfyChgs=
 github.com/flanksource/is-healthy v0.0.0-20230705092916-3b4cf510c5fc/go.mod h1:4pQhmF+TnVqJroQKY8wSnSp+T18oLson6YQ2M0qPHfQ=
-github.com/flanksource/is-healthy v1.0.23 h1:hh7rPUnqno7uMj0TEMukqLAwQbk6pJ1wcCprL0vwGJk=
-github.com/flanksource/is-healthy v1.0.23/go.mod h1:eRPXZShZqaz3Mz+QeoCNbL3857lt9BgCt67jOUQXLOU=
+github.com/flanksource/is-healthy v1.0.24 h1:oey1HmMwNLFDb/265VZYau/9egM+5kzy5HhpbcA3sOc=
+github.com/flanksource/is-healthy v1.0.24/go.mod h1:eRPXZShZqaz3Mz+QeoCNbL3857lt9BgCt67jOUQXLOU=
 github.com/flanksource/kommons v0.31.4 h1:zksAgYjZuwPgS8XTejDIWEYB0nPSU1i3Jxcavm/vovI=
 github.com/flanksource/kommons v0.31.4/go.mod h1:70BPMzjTvejsqRyVyAm/ZCeZ176toCvauaZjU03svnE=
 github.com/flanksource/kubectl-neat v1.0.4 h1:t5/9CqgE84oEtB0KitgJ2+WIeLfD+RhXSxYrqb4X8yI=
