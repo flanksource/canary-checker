@@ -45,7 +45,7 @@ func newTopologyJob(ctx context.Context, topology pkg.Topology) {
 		Retention:    job.RetentionFew,
 		ResourceID:   id,
 		ResourceType: "topology",
-		RunNow:       ctx.Properties().On("topology.runNow"),
+		RunNow:       ctx.Properties().On(false, "topology.runNow"),
 		ID:           fmt.Sprintf("%s/%s", topology.Namespace, topology.Name),
 		Fn:           tj.Run,
 	}
