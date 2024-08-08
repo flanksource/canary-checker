@@ -169,6 +169,7 @@ serviceAccount:
 
     # for pod and junit canaries
     podsCreateAndDelete: true
+    exec: true
 
     # for pod canary
     ingressCreateAndDelete: true

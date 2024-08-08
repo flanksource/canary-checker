@@ -5,7 +5,7 @@ metadata:
 spec:
   interval: 30
   ldap:
-    - url: ldap://apacheds.ldap.svc.cluster.local:10389
+    - url: ldap://apacheds.canaries.svc.cluster.local:10389
       name: ldap user login
       username:
         value: uid=admin,ou=system
@@ -13,7 +13,7 @@ spec:
         value: secret
       bindDN: ou=users,dc=example,dc=com
       userSearch: "(&(objectClass=organizationalPerson))"
-    - url: ldap://apacheds.ldap.svc.cluster.local:10389
+    - url: ldap://apacheds.canaries.svc.cluster.local:10389
       name: ldap group login
       username:
         value: uid=admin,ou=system
