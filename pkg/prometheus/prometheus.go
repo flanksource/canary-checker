@@ -60,10 +60,8 @@ func NewPrometheusAPI(ctx dutyContext.Context, conn connection.HTTPConnection) (
 		}
 
 		roundTripper = prometheusConfig.NewBasicAuthRoundTripper(
-			username,
-			prometheusConfig.Secret(password),
-			"",
-			"",
+			prometheusConfig.NewInlineSecret(username),
+			prometheusConfig.NewInlineSecret(password),
 			roundTripper)
 	} else if !conn.OAuth.IsEmpty() {
 		clientID, err := ctx.GetEnvValueFromCache(conn.OAuth.ClientID, ctx.GetNamespace())
@@ -77,6 +75,7 @@ func NewPrometheusAPI(ctx dutyContext.Context, conn connection.HTTPConnection) (
 		}
 
 		roundTripper = prometheusConfig.NewOAuth2RoundTripper(
+			nil,
 			&prometheusConfig.OAuth2{
 				ClientID:       clientID,
 				ClientSecret:   prometheusConfig.Secret(clientSecret),
@@ -94,7 +93,7 @@ func NewPrometheusAPI(ctx dutyContext.Context, conn connection.HTTPConnection) (
 
 		roundTripper = prometheusConfig.NewAuthorizationCredentialsRoundTripper(
 			"Bearer",
-			prometheusConfig.Secret(clientID),
+			prometheusConfig.NewInlineSecret(clientID),
 			roundTripper)
 	}
 
