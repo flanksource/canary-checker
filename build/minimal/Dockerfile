@@ -15,7 +15,7 @@ RUN go mod download
 COPY ./ ./
 RUN OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
-FROM --platform=${BUILDPLATFORM:-linux/amd64} flanksource/base-image:v0.2.0
+FROM --platform=${BUILDPLATFORM:-linux/amd64} flanksource/base-image:v0.3.2
 ARG TARGETARCH
 
 WORKDIR /app
