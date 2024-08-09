@@ -202,12 +202,13 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		return results.Failf("failed to template request url: %v", err)
 	}
 
-	body := check.Body
 	if check.TemplateBody {
-		body, err = template(ctx.WithCheck(check).WithEnvValues(templateEnv), v1.Template{Template: body})
-		if err != nil {
-			return results.Failf("failed to template request body: %v", err)
-		}
+		ctx.Tracef("TemplateBody is deprecated. The body is templated by default. Use templating escaping if necessary.")
+	}
+
+	body, err := template(ctx.WithCheck(check).WithEnvValues(templateEnv), v1.Template{Template: check.Body})
+	if err != nil {
+		return results.Failf("failed to template request body: %v", err)
 	}
 
 	request, err := c.generateHTTPRequest(ctx, check, connection)
