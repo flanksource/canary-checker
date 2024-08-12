@@ -13,19 +13,30 @@ spec:
           [{
             "description": results.json.component.description,
             "detail": results.json,
+            "message": results.json.page.status_description,
             "duration": 1,
             "icon": "github",
             "name": "Github/" + results.json.component.name,
             "pass": results.json.component.status == "operational",
             "start": results.json.component_update.created_at,
           }].toJSON():
-            results.json.incident.components.map(c, {
-              "description": c.description,
-              "detail": results.json,
-              "icon": "github",
-              "duration": 1,
-              "message": results.json.incident.incident_updates[0].body,
-              "name": "Github/" + c.name,
-              "pass": c.status == "operational",
-              "start": c.updated_at,
-            }).toJSON()
+            has(results.json.incident.components) && results.json.incident.components.size() > 0 ?
+              results.json.incident.components.map(c, {
+                "description": c.description,
+                "detail": results.json,
+                "icon": "github",
+                "duration": 1,
+                "message": c.status + ": " + results.json.incident.incident_updates[0].body + " " + results.json.incident.shortlink,
+                "name": "Github/" + c.name,
+                "pass": c.status == "operational",
+                "start": c.updated_at,
+              }).toJSON():
+              [{
+                "detail": results.json,
+                "icon": "github",
+                "duration": 1,
+                "message": results.json.incident.status + ": " + results.json.incident.incident_updates[0].body + " " + results.json.incident.shortlink,
+                "name": "Github/" + results.json.incident.name,
+                "pass": has(results.json.incident.resolved_at) && results.json.incident.resolved_at != null,
+                "start": results.json.incident.updated_at,
+              }].toJSON()
