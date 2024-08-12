@@ -182,6 +182,10 @@ disableChecks: {}
 # a list of properties to update on startup
 properties: {}
 
+# deployment pod-level annotations
+# podAnnotations: 
+#   some: annotation
+
 # a map of extra arguments to the canary-checker cli
 extraArgs: {}
 extra:
