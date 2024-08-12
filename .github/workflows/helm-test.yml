@@ -61,6 +61,7 @@ jobs:
 
       - name: Check status
         run: |
+          kubectl logs deploy/canary-checker -n canary-checker
           status=$(kubectl get canaries.canaries.flanksource.com exec-pass -o yaml | yq .status.status)
           echo $status
           if [[ $status == "Passed" ]]; then
