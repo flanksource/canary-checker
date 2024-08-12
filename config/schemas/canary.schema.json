@@ -720,6 +720,9 @@
         },
         "replicas": {
           "type": "integer"
+        },
+        "selector": {
+          "type": "string"
         }
       },
       "additionalProperties": false,

@@ -117,7 +117,7 @@ type HTTPCheck struct {
 	Headers []types.EnvVar `yaml:"headers,omitempty" json:"headers,omitempty"`
 	//Template the request body
 	TemplateBody bool `yaml:"templateBody,omitempty" json:"templateBody,omitempty"`
-	// EnvVars are the environment variables that are accesible to templated body
+	// EnvVars are the environment variables that are accessible to templated body
 	EnvVars []types.EnvVar `yaml:"env,omitempty" json:"env,omitempty"`
 	// Oauth2 Configuration. The client ID & Client secret should go to username & password respectively.
 	Oauth2 *Oauth2Config `yaml:"oauth2,omitempty" json:"oauth2,omitempty"`
