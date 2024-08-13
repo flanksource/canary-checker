@@ -13540,6 +13540,8 @@ spec:
                     ${.component} can be used to reference the component itself
                   type: object
                   x-kubernetes-preserve-unknown-fields: true
+                health:
+                  type: string
                 hidden:
                   description: If set to true, do not display in UI
                   type: boolean
@@ -14007,6 +14009,8 @@ spec:
                           ${.component} can be used to reference the component itself
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      health:
+                        type: string
                       hidden:
                         description: If set to true, do not display in UI
                         type: boolean
