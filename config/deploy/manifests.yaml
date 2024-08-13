@@ -1701,6 +1701,8 @@ spec:
                               type: string
                             id:
                               type: string
+                            includeDeleted:
+                              type: boolean
                             labelSelector:
                               type: string
                             name:
@@ -1708,6 +1710,9 @@ spec:
                             namespace:
                               type: string
                             scope:
+                              type: string
+                            search:
+                              description: Search query that applies to the resource name, tag & labels.
                               type: string
                             statuses:
                               items:
@@ -11018,6 +11023,8 @@ spec:
                       description:
                         description: Description for the check
                         type: string
+                      digest:
+                        type: boolean
                       display:
                         properties:
                           expr:
@@ -11053,6 +11060,10 @@ spec:
                       namespace:
                         description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
+                      ntlm:
+                        type: boolean
+                      ntlmv2:
+                        type: boolean
                       oauth:
                         properties:
                           clientID:
@@ -13502,6 +13513,8 @@ spec:
                         type: string
                       id:
                         type: string
+                      includeDeleted:
+                        type: boolean
                       labelSelector:
                         type: string
                       name:
@@ -13509,6 +13522,9 @@ spec:
                       namespace:
                         type: string
                       scope:
+                        type: string
+                      search:
+                        description: Search query that applies to the resource name, tag & labels.
                         type: string
                       statuses:
                         items:
@@ -13637,6 +13653,8 @@ spec:
                                 type: string
                               id:
                                 type: string
+                              includeDeleted:
+                                type: boolean
                               labelSelector:
                                 type: string
                               name:
@@ -13644,6 +13662,9 @@ spec:
                               namespace:
                                 type: string
                               scope:
+                                type: string
+                              search:
+                                description: Search query that applies to the resource name, tag & labels.
                                 type: string
                               statuses:
                                 items:
@@ -13780,6 +13801,8 @@ spec:
                         type: string
                       id:
                         type: string
+                      includeDeleted:
+                        type: boolean
                       labelSelector:
                         type: string
                       name:
@@ -13787,6 +13810,9 @@ spec:
                       namespace:
                         type: string
                       scope:
+                        type: string
+                      search:
+                        description: Search query that applies to the resource name, tag & labels.
                         type: string
                       statuses:
                         items:
@@ -13915,6 +13941,8 @@ spec:
                                   type: string
                                 id:
                                   type: string
+                                includeDeleted:
+                                  type: boolean
                                 labelSelector:
                                   type: string
                                 name:
@@ -13922,6 +13950,9 @@ spec:
                                 namespace:
                                   type: string
                                 scope:
+                                  type: string
+                                search:
+                                  description: Search query that applies to the resource name, tag & labels.
                                   type: string
                                 statuses:
                                   items:
@@ -13971,6 +14002,8 @@ spec:
                               type: string
                             id:
                               type: string
+                            includeDeleted:
+                              type: boolean
                             labelSelector:
                               type: string
                             name:
@@ -13978,6 +14011,9 @@ spec:
                             namespace:
                               type: string
                             scope:
+                              type: string
+                            search:
+                              description: Search query that applies to the resource name, tag & labels.
                               type: string
                             statuses:
                               items:
@@ -14106,6 +14142,8 @@ spec:
                                       type: string
                                     id:
                                       type: string
+                                    includeDeleted:
+                                      type: boolean
                                     labelSelector:
                                       type: string
                                     name:
@@ -14113,6 +14151,9 @@ spec:
                                     namespace:
                                       type: string
                                     scope:
+                                      type: string
+                                    search:
+                                      description: Search query that applies to the resource name, tag & labels.
                                       type: string
                                     statuses:
                                       items:
@@ -14249,6 +14290,8 @@ spec:
                               type: string
                             id:
                               type: string
+                            includeDeleted:
+                              type: boolean
                             labelSelector:
                               type: string
                             name:
@@ -14256,6 +14299,9 @@ spec:
                             namespace:
                               type: string
                             scope:
+                              type: string
+                            search:
+                              description: Search query that applies to the resource name, tag & labels.
                               type: string
                             statuses:
                               items:
@@ -14338,6 +14384,8 @@ spec:
                         type: string
                       id:
                         type: string
+                      includeDeleted:
+                        type: boolean
                       labelSelector:
                         type: string
                       name:
@@ -14345,6 +14393,9 @@ spec:
                       namespace:
                         type: string
                       scope:
+                        type: string
+                      search:
+                        description: Search query that applies to the resource name, tag & labels.
                         type: string
                       statuses:
                         items:
@@ -14389,6 +14440,8 @@ spec:
                           type: string
                         id:
                           type: string
+                        includeDeleted:
+                          type: boolean
                         labelSelector:
                           type: string
                         name:
@@ -14396,6 +14449,9 @@ spec:
                         namespace:
                           type: string
                         scope:
+                          type: string
+                        search:
+                          description: Search query that applies to the resource name, tag & labels.
                           type: string
                         statuses:
                           items:
@@ -14466,6 +14522,8 @@ spec:
                                 type: string
                               id:
                                 type: string
+                              includeDeleted:
+                                type: boolean
                               labelSelector:
                                 type: string
                               name:
@@ -14473,6 +14531,9 @@ spec:
                               namespace:
                                 type: string
                               scope:
+                                type: string
+                              search:
+                                description: Search query that applies to the resource name, tag & labels.
                                 type: string
                               statuses:
                                 items:
@@ -14624,6 +14685,12 @@ spec:
                       type: object
                     connection:
                       type: string
+                    digest:
+                      type: boolean
+                    ntlm:
+                      type: boolean
+                    ntlmv2:
+                      type: boolean
                     oauth:
                       properties:
                         clientID:
