@@ -166,6 +166,9 @@ type Component struct {
 	LogSelectors    dutyTypes.LogSelectors      `json:"logs,omitempty" gorm:"column:log_selectors"`
 	StatusExpr      string                      `json:"status_expr,omitempty" gorm:"column:status_expr;default:null"`
 
+	// ConfigID is the id of the config from which this component is derived
+	ConfigID *uuid.UUID `json:"config_id,omitempty"`
+
 	ParentLookup *v1.ParentLookup `json:"parentLookup,omitempty" gorm:"-"`
 }
 
@@ -234,6 +237,7 @@ func (component *Component) Clone() Component {
 		Namespace:       component.Namespace,
 		Labels:          component.Labels,
 		Tooltip:         component.Tooltip,
+		ConfigID:        component.ConfigID,
 		Icon:            component.Icon,
 		Owner:           component.Owner,
 		Status:          component.Status,
