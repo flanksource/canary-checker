@@ -3,6 +3,7 @@ package v1
 import (
 	"fmt"
 
+	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -66,6 +67,8 @@ type ComponentSpec struct {
 	// statusExpr allows defining a cel expression to evaluate the status of a component
 	// based on the summary and the related config
 	StatusExpr string `json:"statusExpr,omitempty"`
+
+	Health *models.Health `json:"health,omitempty"`
 }
 
 // +kubebuilder:validation:Type=object

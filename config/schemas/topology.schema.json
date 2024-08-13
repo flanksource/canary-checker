@@ -907,6 +907,9 @@
         },
         "statusExpr": {
           "type": "string"
+        },
+        "health": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -996,6 +999,9 @@
           "$ref": "#/$defs/ParentLookup"
         },
         "statusExpr": {
+          "type": "string"
+        },
+        "health": {
           "type": "string"
         }
       },
