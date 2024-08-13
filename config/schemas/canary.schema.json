@@ -3422,6 +3422,15 @@
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
+        "ntlm": {
+          "type": "boolean"
+        },
+        "ntlmv2": {
+          "type": "boolean"
+        },
+        "digest": {
+          "type": "boolean"
+        },
         "url": {
           "type": "string"
         },
