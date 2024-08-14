@@ -16,7 +16,7 @@ global:
 replicas: 1
 
 image:
-  name: '{{.Values.global.imagePrefix}}/canary-checker'
+  name: "{{.Values.global.imagePrefix}}/canary-checker"
   ## Options: minimal | full
   ## full image is larger and requires more permissions to run, but is required to execute 3rd party checks (jmeter, restic, k6 etc)
   type: minimal
@@ -156,6 +156,9 @@ serviceAccount:
   # annotations:
   #   some: annotation
   rbac:
+    # When set to false will not install Roles & Bindings.
+    enable: true
+
     # Whether to create cluster-wide or namespaced roles
     clusterRole: true
 

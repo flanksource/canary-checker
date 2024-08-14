@@ -1,3 +1,4 @@
+{{- if .Values.serviceAccount.rbac.enable }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: "{{if .Values.serviceAccount.rbac.clusterRole}}Cluster{{end}}Role"
 metadata:
@@ -145,3 +146,17 @@ rules:
       - get
       - update
       - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: "{{if .Values.serviceAccount.rbac.clusterRole}}Cluster{{end}}RoleBinding"
+metadata:
+  name: {{ include "canary-checker.fullname" . }}-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: "{{if .Values.serviceAccount.rbac.clusterRole}}Cluster{{end}}Role"
+  name: {{ include "canary-checker.name" . }}-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.serviceAccount.name }}
+    namespace: {{ .Release.Namespace }}
+{{- end}}
