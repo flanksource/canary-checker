@@ -126,10 +126,12 @@ func ServerFlags(flags *pflag.FlagSet) {
 	_ = flags.MarkDeprecated("check-status-retention-period", "")
 
 	flags.StringVar(&publicEndpoint, "public-endpoint", publicEndpoint, "Host on which the health dashboard is exposed. Could be used for generting-links, redirects etc.")
-	flags.StringSliceVar(&runner.IncludeCanaries, "include-check", []string{}, "Run matching canaries - useful for debugging")
-	flags.StringSliceVar(&runner.IncludeTypes, "include-type", []string{}, "Check type to disable")
-	flags.StringSliceVar(&runner.IncludeNamespaces, "include-namespace", []string{}, "a comma separated list of namespaces whose canary should be run")
 	flags.StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
+
+	flags.StringSliceVar(&runner.IncludeCanaries, "include-check", []string{}, "(Deprecated: use --include-canary) Run matching canaries - useful for debugging")
+	flags.StringSliceVar(&runner.IncludeCanaries, "include-canary", []string{}, "Only run canaries matching the given names")
+	flags.StringSliceVar(&runner.IncludeLabels, "include-labels", nil, "Only run canaries matching the given label selector")
+	flags.StringSliceVar(&runner.IncludeNamespaces, "include-namespace", []string{}, "a comma separated list of namespaces whose canary should be run")
 
 	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
 	flags.StringVarP(&query.DefaultCheckQueryWindow, "default-window", "", "1h", "Default search window")

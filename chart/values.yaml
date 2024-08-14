@@ -44,6 +44,13 @@ jsonLogs: true
 # restrict canary-checker to monitor single namespace for canaries.  Leave blank to monitor all namespaces
 canaryNamespace: ""
 
+# Only canaries matching these filters will run.
+# If left empty, all canaries will run.
+canaryFilter:
+  names: '' # comma separated list of match expressions
+  namespaces: '' # comma separated list of match expressions
+  labelSelector: ''
+
 otel:
   # OpenTelemetry gRPC collector endpoint in host:port format
   collector: ""

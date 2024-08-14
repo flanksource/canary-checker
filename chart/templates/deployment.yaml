@@ -143,6 +143,15 @@ spec:
             {{- if ne .Values.canaryNamespace "" }}
             - --namespace={{ .Values.canaryNamespace }}
             {{- end }}
+            {{- if ne .Values.canaryFilter.namespaces "" }}
+            - --include-namespace={{ .Values.canaryFilter.namespaces }}
+            {{- end }}
+            {{- if ne .Values.canaryFilter.names "" }}
+            - --include-canary={{ .Values.canaryFilter.names }}
+            {{- end }}
+            {{- if ne .Values.canaryFilter.labelSelector "" }}
+            - --include-labels={{ .Values.canaryFilter.labelSelector }}
+            {{- end }}
             {{- if gt (int .Values.replicas) 1 }}
             - --enable-leader-election=true
             {{- end }}
