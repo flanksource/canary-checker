@@ -41,19 +41,22 @@ debug: false
 logLevel: ""
 jsonLogs: true
 
-# restrict canary-checker to monitor single namespace for canaries.  Leave blank to monitor all namespaces
+# restrict canary-checker to monitor single namespace for canaries. Leave blank to monitor all namespaces
 canaryNamespace: ""
 
-# Only canaries matching these filters will run.
-# If left empty, all canaries will run.
-canaryFilter:
-  # comma separated list of match expressions
-  names: ""
+# Only canaries matching these namespaces will run.
+# A list of namespaces can be provided with comma separation.
+# Supports [match expression](https://docs.flanksource.com/reference/types/#match-pattern)
+canaryNamespaceSelector: ""
 
-  # comma separated list of match expressions
-  namespaces: ""
+# Only canaries matching these names will run.
+# A list of names can be provided with comma separation.
+# Supports [match expression](https://docs.flanksource.com/reference/types/#match-pattern)
+canarySelector: ""
 
-  labelSelector: ""
+# Only canaries matching these labels will run.
+# Label values support [match expression](https://docs.flanksource.com/reference/types/#match-pattern)
+canaryLabelSelector: ""
 
 otel:
   # OpenTelemetry gRPC collector endpoint in host:port format

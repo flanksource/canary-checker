@@ -33,9 +33,6 @@ linters:
     - whitespace
 
 linters-settings:
-  gofmt:
-    simplify: false
-
   govet:
     disable:
       # printf: non-constant format string in call to fmt.Errorf (govet)
