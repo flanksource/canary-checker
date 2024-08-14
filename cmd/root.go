@@ -128,7 +128,7 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringVar(&publicEndpoint, "public-endpoint", publicEndpoint, "Host on which the health dashboard is exposed. Could be used for generting-links, redirects etc.")
 	flags.StringSliceVar(&runner.IncludeCanaries, "include-check", []string{}, "Run matching canaries - useful for debugging")
 	flags.StringSliceVar(&runner.IncludeTypes, "include-type", []string{}, "Check type to disable")
-	flags.StringSliceVar(&runner.IncludeNamespaces, "include-namespace", []string{}, "Check type to disable")
+	flags.StringSliceVar(&runner.IncludeNamespaces, "include-namespace", []string{}, "a comma separated list of namespaces whose canary should be run")
 	flags.StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 
 	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")

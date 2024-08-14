@@ -16,6 +16,7 @@ var Prometheus *prometheus.PrometheusClient
 
 var IncludeNamespaces []string
 
+// WatchNamespace is the kubernetes operator namespace.
 var WatchNamespace string
 
 var IncludeCanaries []string
