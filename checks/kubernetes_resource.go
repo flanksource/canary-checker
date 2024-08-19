@@ -105,7 +105,7 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 
 	if !check.WaitFor.Disable {
 		if err := c.evalWaitFor(ctx, check); err != nil {
-			return results.Failf("%v", err)
+			return results.Failf("error in evaluating wait for: %v", err)
 		}
 	}
 
@@ -155,7 +155,7 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 			checkCtx := context.New(ctx.Context, virtualCanary)
 			res, err := Exec(checkCtx)
 			if err != nil {
-				return err
+				return fmt.Errorf("error executing check: %w", err)
 			} else {
 				for _, r := range res {
 					if !r.Pass {

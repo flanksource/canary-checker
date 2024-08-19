@@ -1701,6 +1701,8 @@ spec:
                               type: string
                             id:
                               type: string
+                            includeDeleted:
+                              type: boolean
                             labelSelector:
                               type: string
                             name:
@@ -1708,6 +1710,9 @@ spec:
                             namespace:
                               type: string
                             scope:
+                              type: string
+                            search:
+                              description: Search query that applies to the resource name, tag & labels.
                               type: string
                             statuses:
                               items:
@@ -6738,7 +6743,7 @@ spec:
                         description: 'Deprecated: Use url instead'
                         type: string
                       env:
-                        description: EnvVars are the environment variables that are accesible to templated body
+                        description: EnvVars are the environment variables that are accessible to templated body
                         items:
                           properties:
                             name:
@@ -11018,6 +11023,8 @@ spec:
                       description:
                         description: Description for the check
                         type: string
+                      digest:
+                        type: boolean
                       display:
                         properties:
                           expr:
@@ -11053,6 +11060,10 @@ spec:
                       namespace:
                         description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
+                      ntlm:
+                        type: boolean
+                      ntlmv2:
+                        type: boolean
                       oauth:
                         properties:
                           clientID:
@@ -13137,6 +13148,8 @@ spec:
                 replicas:
                   description: Replicas keep track of the number of replicas
                   type: integer
+                selector:
+                  type: string
                 status:
                   type: string
                 uptime1h:
@@ -13148,6 +13161,7 @@ spec:
       storage: true
       subresources:
         scale:
+          labelSelectorPath: .status.selector
           specReplicasPath: .spec.replicas
           statusReplicasPath: .status.replicas
         status: {}
@@ -13499,6 +13513,8 @@ spec:
                         type: string
                       id:
                         type: string
+                      includeDeleted:
+                        type: boolean
                       labelSelector:
                         type: string
                       name:
@@ -13506,6 +13522,9 @@ spec:
                       namespace:
                         type: string
                       scope:
+                        type: string
+                      search:
+                        description: Search query that applies to the resource name, tag & labels.
                         type: string
                       statuses:
                         items:
@@ -13537,6 +13556,8 @@ spec:
                     ${.component} can be used to reference the component itself
                   type: object
                   x-kubernetes-preserve-unknown-fields: true
+                health:
+                  type: string
                 hidden:
                   description: If set to true, do not display in UI
                   type: boolean
@@ -13632,6 +13653,8 @@ spec:
                                 type: string
                               id:
                                 type: string
+                              includeDeleted:
+                                type: boolean
                               labelSelector:
                                 type: string
                               name:
@@ -13639,6 +13662,9 @@ spec:
                               namespace:
                                 type: string
                               scope:
+                                type: string
+                              search:
+                                description: Search query that applies to the resource name, tag & labels.
                                 type: string
                               statuses:
                                 items:
@@ -13775,6 +13801,8 @@ spec:
                         type: string
                       id:
                         type: string
+                      includeDeleted:
+                        type: boolean
                       labelSelector:
                         type: string
                       name:
@@ -13782,6 +13810,9 @@ spec:
                       namespace:
                         type: string
                       scope:
+                        type: string
+                      search:
+                        description: Search query that applies to the resource name, tag & labels.
                         type: string
                       statuses:
                         items:
@@ -13910,6 +13941,8 @@ spec:
                                   type: string
                                 id:
                                   type: string
+                                includeDeleted:
+                                  type: boolean
                                 labelSelector:
                                   type: string
                                 name:
@@ -13917,6 +13950,9 @@ spec:
                                 namespace:
                                   type: string
                                 scope:
+                                  type: string
+                                search:
+                                  description: Search query that applies to the resource name, tag & labels.
                                   type: string
                                 statuses:
                                   items:
@@ -13966,6 +14002,8 @@ spec:
                               type: string
                             id:
                               type: string
+                            includeDeleted:
+                              type: boolean
                             labelSelector:
                               type: string
                             name:
@@ -13973,6 +14011,9 @@ spec:
                             namespace:
                               type: string
                             scope:
+                              type: string
+                            search:
+                              description: Search query that applies to the resource name, tag & labels.
                               type: string
                             statuses:
                               items:
@@ -14004,6 +14045,8 @@ spec:
                           ${.component} can be used to reference the component itself
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      health:
+                        type: string
                       hidden:
                         description: If set to true, do not display in UI
                         type: boolean
@@ -14099,6 +14142,8 @@ spec:
                                       type: string
                                     id:
                                       type: string
+                                    includeDeleted:
+                                      type: boolean
                                     labelSelector:
                                       type: string
                                     name:
@@ -14106,6 +14151,9 @@ spec:
                                     namespace:
                                       type: string
                                     scope:
+                                      type: string
+                                    search:
+                                      description: Search query that applies to the resource name, tag & labels.
                                       type: string
                                     statuses:
                                       items:
@@ -14242,6 +14290,8 @@ spec:
                               type: string
                             id:
                               type: string
+                            includeDeleted:
+                              type: boolean
                             labelSelector:
                               type: string
                             name:
@@ -14249,6 +14299,9 @@ spec:
                             namespace:
                               type: string
                             scope:
+                              type: string
+                            search:
+                              description: Search query that applies to the resource name, tag & labels.
                               type: string
                             statuses:
                               items:
@@ -14331,6 +14384,8 @@ spec:
                         type: string
                       id:
                         type: string
+                      includeDeleted:
+                        type: boolean
                       labelSelector:
                         type: string
                       name:
@@ -14338,6 +14393,9 @@ spec:
                       namespace:
                         type: string
                       scope:
+                        type: string
+                      search:
+                        description: Search query that applies to the resource name, tag & labels.
                         type: string
                       statuses:
                         items:
@@ -14382,6 +14440,8 @@ spec:
                           type: string
                         id:
                           type: string
+                        includeDeleted:
+                          type: boolean
                         labelSelector:
                           type: string
                         name:
@@ -14389,6 +14449,9 @@ spec:
                         namespace:
                           type: string
                         scope:
+                          type: string
+                        search:
+                          description: Search query that applies to the resource name, tag & labels.
                           type: string
                         statuses:
                           items:
@@ -14459,6 +14522,8 @@ spec:
                                 type: string
                               id:
                                 type: string
+                              includeDeleted:
+                                type: boolean
                               labelSelector:
                                 type: string
                               name:
@@ -14466,6 +14531,9 @@ spec:
                               namespace:
                                 type: string
                               scope:
+                                type: string
+                              search:
+                                description: Search query that applies to the resource name, tag & labels.
                                 type: string
                               statuses:
                                 items:
@@ -14617,6 +14685,12 @@ spec:
                       type: object
                     connection:
                       type: string
+                    digest:
+                      type: boolean
+                    ntlm:
+                      type: boolean
+                    ntlmv2:
+                      type: boolean
                     oauth:
                       properties:
                         clientID:

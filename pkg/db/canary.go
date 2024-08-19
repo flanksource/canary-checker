@@ -174,7 +174,9 @@ func GetAllValuesForConfigTag(ctx context.Context, tagSelector v1.TopologyTagSel
 	q := ctx.DB().Model(&models.ConfigItem{}).Select("DISTINCT tags->>?", tagSelector.Tag)
 
 	if !tagSelector.Selector.IsEmpty() {
-		if err := query.SetResourceSelectorClause(ctx, tagSelector.Selector, q, "config_items", models.AllowedColumnFieldsInConfigs); err != nil {
+		var err error
+		q, err = query.SetResourceSelectorClause(ctx, tagSelector.Selector, q, "config_items", models.AllowedColumnFieldsInConfigs)
+		if err != nil {
 			return nil, fmt.Errorf("error seting resource selector on topology group by: %w", err)
 		}
 	}
@@ -404,7 +406,7 @@ func FindChecks(ctx context.Context, idOrName, checkType string) ([]models.Check
 }
 
 func CreateCanary(ctx context.Context, canary *pkg.Canary) error {
-	if canary.Spec == nil || len(canary.Spec) == 0 {
+	if len(canary.Spec) == 0 {
 		empty := []byte("{}")
 		canary.Spec = types.JSON(empty)
 	}

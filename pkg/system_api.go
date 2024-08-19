@@ -134,6 +134,7 @@ type Component struct {
 	// If set to true, do not display in UI
 	Hidden       bool                      `json:"hidden,omitempty"`
 	Status       dutyTypes.ComponentStatus `json:"status,omitempty"`
+	Health       *models.Health            `json:"health,omitempty"`
 	StatusReason dutyTypes.NullString      `json:"status_reason,omitempty"`
 	Path         string                    `json:"path,omitempty"`
 	Order        int                       `json:"order,omitempty"  gorm:"-"`
@@ -164,6 +165,9 @@ type Component struct {
 	CostTotal30d    float64                     `json:"cost_total_30d,omitempty" gorm:"column:cost_total_30d"`
 	LogSelectors    dutyTypes.LogSelectors      `json:"logs,omitempty" gorm:"column:log_selectors"`
 	StatusExpr      string                      `json:"status_expr,omitempty" gorm:"column:status_expr;default:null"`
+
+	// ConfigID is the id of the config from which this component is derived
+	ConfigID *uuid.UUID `json:"config_id,omitempty"`
 
 	ParentLookup *v1.ParentLookup `json:"parentLookup,omitempty" gorm:"-"`
 }
@@ -233,6 +237,7 @@ func (component *Component) Clone() Component {
 		Namespace:       component.Namespace,
 		Labels:          component.Labels,
 		Tooltip:         component.Tooltip,
+		ConfigID:        component.ConfigID,
 		Icon:            component.Icon,
 		Owner:           component.Owner,
 		Status:          component.Status,
@@ -246,6 +251,7 @@ func (component *Component) Clone() Component {
 		ExternalId:      component.ExternalId,
 		Schedule:        component.Schedule,
 		StatusExpr:      component.StatusExpr,
+		Health:          component.Health,
 	}
 
 	copy(clone.LogSelectors, component.LogSelectors)
@@ -296,6 +302,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		LogSelectors:    c.LogSelectors,
 		ParentLookup:    c.ParentLookup,
 		StatusExpr:      c.StatusExpr,
+		Health:          c.Health,
 	}
 	if c.Summary != nil {
 		_c.Summary = *c.Summary

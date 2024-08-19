@@ -137,9 +137,9 @@ func exportMetric(ctx *context.Context, spec pkg.Metric) error {
 	}
 
 	props := ctx.Properties()
-	if ctx.IsDebug() && !props.Off("metrics.debug") {
+	if ctx.IsDebug() && !props.Off("metrics.debug", false) {
 		ctx.Debugf("%s%v=%0.3f", spec.Name, getLabelString(spec.Labels), spec.Value)
-	} else if props.On("metrics.debug") {
+	} else if props.On(false, "metrics.debug") {
 		ctx.Infof("%s%v=%0.3f", spec.Name, getLabelString(spec.Labels), spec.Value)
 	}
 

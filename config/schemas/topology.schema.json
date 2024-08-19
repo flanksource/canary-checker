@@ -907,6 +907,9 @@
         },
         "statusExpr": {
           "type": "string"
+        },
+        "health": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -997,6 +1000,9 @@
         },
         "statusExpr": {
           "type": "string"
+        },
+        "health": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -1054,6 +1060,12 @@
         },
         "cache": {
           "type": "string"
+        },
+        "search": {
+          "type": "string"
+        },
+        "includeDeleted": {
+          "type": "boolean"
         },
         "id": {
           "type": "string"
@@ -2120,6 +2132,15 @@
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "ntlm": {
+          "type": "boolean"
+        },
+        "ntlmv2": {
+          "type": "boolean"
+        },
+        "digest": {
+          "type": "boolean"
         },
         "url": {
           "type": "string"
@@ -3751,6 +3772,15 @@
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "ntlm": {
+          "type": "boolean"
+        },
+        "ntlmv2": {
+          "type": "boolean"
+        },
+        "digest": {
+          "type": "boolean"
         },
         "url": {
           "type": "string"
