@@ -133,7 +133,7 @@ func checkLogs(r []byte) (int64, error) {
 		}
 	}
 	if failure {
-		return elapsedTime, fmt.Errorf(failMessage)
+		return elapsedTime, fmt.Errorf("%s", failMessage)
 	}
 	return elapsedTime, nil
 }
