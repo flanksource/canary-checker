@@ -4,14 +4,14 @@ go 1.22.3
 
 require (
 	github.com/flanksource/canary-checker v1.0.0
-	github.com/flanksource/commons v1.25.0
-	github.com/flanksource/duty v1.0.563
+	github.com/flanksource/commons v1.27.0
+	github.com/flanksource/duty v1.0.581
 	github.com/spf13/cobra v1.8.0
 )
 
 require (
 	github.com/emicklei/go-restful/v3 v3.11.1 // indirect
-	github.com/flanksource/gomplate/v3 v3.24.20 // indirect
+	github.com/flanksource/gomplate/v3 v3.24.22 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/hairyhenderson/yaml v0.0.0-20220618171115-2d35fca545ce // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -53,10 +53,11 @@ require (
 	github.com/evanphx/json-patch v5.7.0+incompatible // indirect
 	github.com/exaring/otelpgx v0.5.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/fergusstrange/embedded-postgres v1.25.0 // indirect
 	github.com/flanksource/is-healthy v1.0.26 // indirect
 	github.com/flanksource/kommons v0.31.4 // indirect
 	github.com/flanksource/kubectl-neat v1.0.4 // indirect
-	github.com/flanksource/postq v1.0.0 // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
@@ -75,6 +76,7 @@ require (
 	github.com/google/gnostic-models v0.6.9-0.20230804172637-c7be7c783f49 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
+	github.com/google/gops v0.3.28 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -112,6 +114,8 @@ require (
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/liamylian/jsontime/v2 v2.0.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
+	github.com/lmittmann/tint v1.0.5 // indirect
+	github.com/lrita/cmap v0.0.0-20231108122212-cb084a67f554 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -125,6 +129,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/ohler55/ojg v1.20.3 // indirect
+	github.com/oklog/ulid/v2 v2.1.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/orcaman/concurrent-map/v2 v2.0.1 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
@@ -137,6 +142,7 @@ require (
 	github.com/robertkrimen/otto v0.3.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/samber/lo v1.46.0 // indirect
+	github.com/samber/oops v1.12.1 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
@@ -147,7 +153,7 @@ require (
 	github.com/tidwall/sjson v1.0.4 // indirect
 	github.com/timberio/go-datemath v0.1.0 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
-	github.com/ulikunitz/xz v0.5.11 // indirect
+	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/vadimi/go-http-ntlm v1.0.3 // indirect
 	github.com/vadimi/go-http-ntlm/v2 v2.4.1 // indirect
 	github.com/vadimi/go-ntlm v1.2.1 // indirect
@@ -157,6 +163,7 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
+	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	github.com/yuin/gopher-lua v1.1.1 // indirect
 	github.com/zclconf/go-cty v1.14.1 // indirect
@@ -172,8 +179,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
 	go.starlark.net v0.0.0-20231121155337-90ade8b19d09 // indirect
-	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
 	golang.org/x/exp v0.0.0-20240716175740-e3f259677ff7 // indirect
 	golang.org/x/mod v0.19.0 // indirect
@@ -199,6 +204,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/postgres v1.5.9 // indirect
 	gorm.io/gorm v1.25.11 // indirect
+	gorm.io/plugin/prometheus v0.1.0 // indirect
 	k8s.io/api v0.28.8 // indirect
 	k8s.io/apiextensions-apiserver v0.28.3 // indirect
 	k8s.io/apimachinery v0.28.8 // indirect
