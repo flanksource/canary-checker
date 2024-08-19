@@ -1,0 +1,42 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: crossplane-kubernetes-resource
+spec:
+  schedule: "@every 10m"
+  kubernetesResource:
+    - name: crossplane-kubernetes-resource
+      namespace: canaries
+      description: "Create an S3 bucket via crossplane and run s3 check on it"
+      waitFor: 
+        expr: 'dyn(resources).all(r, has(r.Object.status.atProvider) && has(r.Object.status.atProvider.arn))'
+        interval: 30s
+        timeout: 5m
+      resources:
+        - apiVersion: s3.aws.crossplane.io/v1beta1
+          kind: Bucket
+          metadata:
+            name: check-bucket
+          spec:
+            forProvider:
+              acl: private
+              locationConstraint: us-east-1
+            providerConfigRef:
+              name: localstack
+
+      checks:
+        - s3:
+          - name: s3-check
+            bucketName: "{{ (index .resources 0).Object.metadata.name }}"
+            objectPath: dummy
+            region: "{{ (index .resources 0).Object.spec.forProvider.locationConstraint }}"
+            endpoint: http://localstack-localstack.localstack.svc.cluster.local:4566
+            usePathStyle: true
+            accessKey:
+              value: test
+            secretKey:
+              value: test
+      checkRetries:
+        delay: 60s
+        interval: 10s
+        timeout: 5m
