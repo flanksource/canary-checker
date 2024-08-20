@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -133,7 +134,7 @@ func checkLogs(r []byte) (int64, error) {
 		}
 	}
 	if failure {
-		return elapsedTime, fmt.Errorf("%s", failMessage)
+		return elapsedTime, errors.New(failMessage)
 	}
 	return elapsedTime, nil
 }

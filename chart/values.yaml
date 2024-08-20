@@ -47,9 +47,13 @@ canaryNamespace: ""
 # Only canaries matching these filters will run.
 # If left empty, all canaries will run.
 canaryFilter:
-  names: '' # comma separated list of match expressions
-  namespaces: '' # comma separated list of match expressions
-  labelSelector: ''
+  # comma separated list of match expressions
+  names: ""
+
+  # comma separated list of match expressions
+  namespaces: ""
+
+  labelSelector: ""
 
 otel:
   # OpenTelemetry gRPC collector endpoint in host:port format
