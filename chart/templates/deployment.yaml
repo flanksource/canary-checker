@@ -35,6 +35,10 @@ spec:
   {{- end }}
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "canary-checker.selectorLabels" . | nindent 8 }}
         {{- include "canary-checker.extraLabels" . | nindent 8 }}

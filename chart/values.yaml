@@ -182,6 +182,13 @@ disableChecks: {}
 # a list of properties to update on startup
 properties: {}
 
+# @schema
+# required: false
+# additionalProperties: true
+# type: object
+# @schema
+podAnnotations: {}
+
 # a map of extra arguments to the canary-checker cli
 extraArgs: {}
 extra:
