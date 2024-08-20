@@ -18,6 +18,7 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
+	dutydb "github.com/flanksource/duty/db"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
 	"github.com/flanksource/duty/types"
@@ -435,9 +436,15 @@ func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, boo
 	// In this scenario PostgresDuplicateKeyError is checked primarily and
 	// gorm.ErrDuplicatedKey is just for fallback but does not work
 	if err != nil {
-		if !errors.As(err, &PostgresDuplicateKeyError) && !errors.Is(err, gorm.ErrDuplicatedKey) {
-			return nil, false, fmt.Errorf("error persisting canary to db: %w", err)
+		if errors.As(err, &PostgresDuplicateKeyError) || errors.Is(err, gorm.ErrDuplicatedKey) {
+			model.ID = existing.ID
+		} else {
+			return nil, false, fmt.Errorf("error persisting canary to db: %w", dutydb.ErrorDetails(err))
 		}
+	}
+
+	if model.ID == uuid.Nil {
+		return nil, false, fmt.Errorf("error persisting canary: nil uuid")
 	}
 
 	var changed bool
