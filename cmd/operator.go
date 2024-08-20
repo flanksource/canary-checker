@@ -44,7 +44,7 @@ var Operator = &cobra.Command{
 
 func init() {
 	ServerFlags(Operator.Flags())
-	Operator.Flags().StringVarP(&runner.WatchNamespace, "namespace", "n", "", "Watch only specified namespaces, otherwise watch all")
+	Operator.Flags().StringVarP(&runner.WatchNamespace, "namespace", "n", "", "Watch only specified namespace, otherwise watch all")
 	Operator.Flags().BoolVar(&operatorExecutor, "executor", true, "If false, only serve the UI and sync the configs")
 	Operator.Flags().IntVar(&webhookPort, "webhookPort", 8082, "Port for webhooks ")
 	Operator.Flags().IntVar(&k8sLogLevel, "k8s-log-level", -1, "Kubernetes controller log level")
@@ -97,7 +97,7 @@ func run(cmd *cobra.Command, args []string) {
 	ctrl.SetLogger(zapr.NewLogger(loggr))
 	setupLog := ctrl.Log.WithName("setup")
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	managerOpt := ctrl.Options{
 		Scheme:                  scheme,
 		LeaderElection:          enableLeaderElection,
 		LeaderElectionNamespace: runner.WatchNamespace,
@@ -107,7 +107,13 @@ func run(cmd *cobra.Command, args []string) {
 		Cache: ctrlCache.Options{
 			SyncPeriod: utils.Ptr(1 * time.Hour),
 		},
-	})
+	}
+
+	if runner.WatchNamespace != "" {
+		managerOpt.Cache.DefaultNamespaces[runner.WatchNamespace] = ctrlCache.Config{}
+	}
+
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), managerOpt)
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)

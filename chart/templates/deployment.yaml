@@ -147,6 +147,15 @@ spec:
             {{- if ne .Values.canaryNamespace "" }}
             - --namespace={{ .Values.canaryNamespace }}
             {{- end }}
+            {{- if ne .Values.canaryNamespaceSelector "" }}
+            - --include-namespace={{ .Values.canaryNamespaceSelector }}
+            {{- end }}
+            {{- if ne .Values.canarySelector "" }}
+            - --include-canary={{ .Values.canarySelector }}
+            {{- end }}
+            {{- if ne .Values.canaryLabelSelector "" }}
+            - --include-labels={{ .Values.canaryLabelSelector }}
+            {{- end }}
             {{- if gt (int .Values.replicas) 1 }}
             - --enable-leader-election=true
             {{- end }}

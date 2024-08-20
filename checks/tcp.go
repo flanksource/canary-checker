@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -56,7 +57,7 @@ func (t *TCPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 func extractAddrAndPort(e string) (string, string, error) {
 	s := strings.Split(e, ":")
 	if len(s) != 2 {
-		return "", "", fmt.Errorf("%s", formatErrorMsg(e))
+		return "", "", errors.New(formatErrorMsg(e))
 	}
 	return s[0], s[1], nil
 }

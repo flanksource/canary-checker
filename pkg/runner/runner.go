@@ -14,13 +14,19 @@ var RunnerLabels map[string]string = make(map[string]string)
 
 var Prometheus *prometheus.PrometheusClient
 
-var IncludeNamespaces []string
-
+// WatchNamespace is the kubernetes operator namespace.
 var WatchNamespace string
 
-var IncludeCanaries []string
+var (
+	// Only canaries matching these namespace will be allowed run
+	IncludeNamespaces []string
 
-var IncludeTypes []string
+	// Only canaries matching these labels will be allowed run
+	IncludeLabels []string
+
+	// Only canaries with these names will be allowed run
+	IncludeCanaries []string
+)
 
 func IsCanaryIgnored(canary *metav1.ObjectMeta) bool {
 	if !collections.MatchItems(canary.Namespace, IncludeNamespaces...) {
@@ -29,6 +35,15 @@ func IsCanaryIgnored(canary *metav1.ObjectMeta) bool {
 
 	if !collections.MatchItems(canary.Name, IncludeCanaries...) {
 		return true
+	}
+
+	labelSelector := collections.KeyValueSliceToMap(IncludeLabels)
+	for k, v := range labelSelector {
+		if lVal, ok := canary.Labels[k]; !ok {
+			return true
+		} else if !collections.MatchItems(lVal, v) {
+			return true
+		}
 	}
 
 	return canary.Annotations != nil && canary.Annotations["suspend"] == "true"

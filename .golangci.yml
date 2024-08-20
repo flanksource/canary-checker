@@ -7,8 +7,6 @@ linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
-  presets:
-    # - bugs
   enable:
     - bodyclose
     - dogsled
@@ -35,8 +33,6 @@ linters:
     - whitespace
 
 linters-settings:
-  gofmt:
-    simplify: false
   govet:
     disable:
       # printf: non-constant format string in call to fmt.Errorf (govet)
