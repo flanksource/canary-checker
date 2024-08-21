@@ -123,6 +123,8 @@ func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Re
 	return results
 }
 
+// nolint:staticcheck
+// FIXME: deprecated global endpoint resolver
 func GetAWSConfig(ctx *context.Context, conn connection.AWSConnection) (cfg aws.Config, err error) {
 	var options []func(*config.LoadOptions) error
 

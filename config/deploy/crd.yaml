@@ -457,6 +457,8 @@ spec:
                         type: object
                       aggregatorName:
                         type: string
+                      assumeRole:
+                        type: string
                       connection:
                         description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                         type: string
@@ -830,6 +832,8 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      assumeRole:
+                        type: string
                       complianceTypes:
                         description: Filters the results by compliance. The allowed values are INSUFFICIENT_DATA, NON_COMPLIANT, NOT_APPLICABLE, COMPLIANT
                         items:
@@ -1809,6 +1813,8 @@ spec:
                         items:
                           type: string
                         type: array
+                      assumeRole:
+                        type: string
                       connection:
                         description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                         type: string
@@ -4627,6 +4633,8 @@ spec:
                                         type: string
                                     type: object
                                 type: object
+                              assumeRole:
+                                type: string
                               connection:
                                 description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                                 type: string
@@ -5192,6 +5200,8 @@ spec:
                                     type: string
                                 type: object
                             type: object
+                          assumeRole:
+                            type: string
                           bucket:
                             type: string
                           connection:
@@ -12282,6 +12292,8 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      assumeRole:
+                        type: string
                       bucket:
                         type: string
                       bucketName:

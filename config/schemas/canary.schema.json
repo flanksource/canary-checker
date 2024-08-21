@@ -17,6 +17,9 @@
         "sessionToken": {
           "$ref": "#/$defs/EnvVar"
         },
+        "assumeRole": {
+          "type": "string"
+        },
         "region": {
           "type": "string"
         },
@@ -188,6 +191,9 @@
         "sessionToken": {
           "$ref": "#/$defs/EnvVar"
         },
+        "assumeRole": {
+          "type": "string"
+        },
         "region": {
           "type": "string"
         },
@@ -275,6 +281,9 @@
         },
         "sessionToken": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "assumeRole": {
+          "type": "string"
         },
         "region": {
           "type": "string"
@@ -856,6 +865,9 @@
         },
         "sessionToken": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "assumeRole": {
+          "type": "string"
         },
         "region": {
           "type": "string"
@@ -3669,6 +3681,9 @@
         "sessionToken": {
           "$ref": "#/$defs/EnvVar"
         },
+        "assumeRole": {
+          "type": "string"
+        },
         "region": {
           "type": "string"
         },
@@ -3710,6 +3725,9 @@
         },
         "sessionToken": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "assumeRole": {
+          "type": "string"
         },
         "region": {
           "type": "string"
