@@ -33,7 +33,6 @@ var webhookPort int
 var k8sLogLevel int
 var enableLeaderElection bool
 var operatorExecutor bool
-var disablePostgrest bool
 var Operator = &cobra.Command{
 	Use:   "operator",
 	Short: "Start the kubernetes operator",
@@ -47,7 +46,6 @@ func init() {
 	Operator.Flags().IntVar(&webhookPort, "webhookPort", 8082, "Port for webhooks ")
 	Operator.Flags().IntVar(&k8sLogLevel, "k8s-log-level", -1, "Kubernetes controller log level")
 	Operator.Flags().BoolVar(&enableLeaderElection, "enable-leader-election", false, "Enabling this will ensure there is only one active controller manager")
-	Operator.Flags().BoolVar(&disablePostgrest, "disable-postgrest", false, "Disable the postgrest server")
 	// +kubebuilder:scaffold:scheme
 }
 
