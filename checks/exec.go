@@ -336,13 +336,13 @@ func checkout(ctx *context.Context, url, dst string) error {
 		Options: []getter.ClientOption{},
 	}
 	if ctx.IsDebug() {
-		ctx.Infof("Downloading %s -> %s", v1.SanitizeEndpoints(url), dst)
+		ctx.Debugf("Downloading %s -> %s", v1.SanitizeEndpoints(url), dst)
 	}
 	if err := client.Get(); err != nil {
 		return err
 	}
 	if ctx.IsTrace() {
-		ctx.Infof("Downloaded %s -> %s", v1.SanitizeEndpoints(url), dst)
+		ctx.Tracef("Downloaded %s -> %s", v1.SanitizeEndpoints(url), dst)
 	}
 	if stashed {
 		if r := run(ctx, dst, "git", "stash", "pop"); r.Error != nil {
