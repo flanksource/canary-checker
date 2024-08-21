@@ -44,7 +44,6 @@ spec:
         - "8080"
         - --disable-postgrest=false
         - --db-migrations=true
-        - --cache-timeout=90
         - --default-window=1h
         - --check-status-retention-period=180
         - --check-retention-period=7

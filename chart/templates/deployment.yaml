@@ -142,7 +142,6 @@ spec:
             - "8080"
             - --disable-postgrest={{ .Values.disablePostgrest }}
             - --db-migrations={{ .Values.db.runMigrations }}
-            - --cache-timeout={{ .Values.data.cacheTimeoutDays }}
             - --default-window={{ .Values.data.defaultSearchWindow }}
             {{- if ne .Values.canaryNamespace "" }}
             - --namespace={{ .Values.canaryNamespace }}
