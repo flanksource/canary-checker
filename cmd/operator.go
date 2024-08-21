@@ -6,7 +6,6 @@ import (
 
 	apicontext "github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/pkg/cache"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/runner"
@@ -25,7 +24,6 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlCache "sigs.k8s.io/controller-runtime/pkg/cache"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	ctrlMetrics "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
 
@@ -138,10 +136,7 @@ func run(cmd *cobra.Command, args []string) {
 		Log:     ctrl.Log.WithName("controllers").WithName("system"),
 		Scheme:  mgr.GetScheme(),
 	}
-	if err = mgr.Add(manager.RunnableFunc(db.Start)); err != nil {
-		setupLog.Error(err, "unable to Add manager")
-		os.Exit(1)
-	}
+
 	if err = canaryReconciler.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Canary")
 		os.Exit(1)

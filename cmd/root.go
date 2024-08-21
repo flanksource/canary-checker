@@ -8,7 +8,6 @@ import (
 
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/canary-checker/pkg/runner"
@@ -57,11 +56,6 @@ var Root = &cobra.Command{
 
 		canary.LogFail = logFail || logger.IsLevelEnabled(3)
 		canary.LogPass = logPass || logger.IsLevelEnabled(4)
-
-		db.ConnectionString = readFromEnv(db.ConnectionString)
-		if db.ConnectionString == "DB_URL" {
-			db.ConnectionString = ""
-		}
 
 		if canary.UpstreamConf.Valid() {
 			canary.UpstreamConf.Options = append(canary.UpstreamConf.Options, func(c *http.Client) {
@@ -126,7 +120,6 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.StringSliceVar(&runner.IncludeLabels, "include-labels", nil, "Only run canaries matching the given label selector")
 	flags.StringSliceVar(&runner.IncludeNamespaces, "include-namespace", []string{}, "a comma separated list of namespaces whose canary should be run")
 
-	flags.IntVar(&db.DefaultExpiryDays, "cache-timeout", 90, "Cache timeout in days")
 	flags.StringVarP(&query.DefaultCheckQueryWindow, "default-window", "", "1h", "Default search window")
 	flags.StringVar(&checks.DefaultArtifactConnection, "artifact-connection", "", "Specify the default connection to use for artifacts")
 
@@ -139,14 +132,6 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.BoolVar(&canary.UpstreamConf.InsecureSkipVerify, "upstream-insecure-skip-verify", os.Getenv("UPSTREAM_INSECURE_SKIP_VERIFY") == "true", "Skip TLS verification on the upstream servers certificate")
 
 	duty.BindPFlags(flags, duty.SkipMigrationByDefaultMode)
-}
-
-func readFromEnv(v string) string {
-	val := os.Getenv(v)
-	if val != "" {
-		return val
-	}
-	return v
 }
 
 func init() {

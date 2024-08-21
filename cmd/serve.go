@@ -27,6 +27,7 @@ import (
 	dutyApi "github.com/flanksource/duty/api"
 	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
+	"github.com/flanksource/duty/postgrest"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -93,14 +94,10 @@ func postgrestResponseModifier(r *http.Response) error {
 func serve() {
 	e := echo.New(apicontext.DefaultContext)
 
-	// PostgREST needs to know how it is exposed to create the correct links
-	db.HTTPEndpoint = publicEndpoint + "/db"
-
 	e.GET("/metrics", echov4.WrapHandler(promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{})))
 
 	if dutyApi.DefaultConfig.Postgrest.URL != "" {
-		go db.StartPostgrest()
-		echo.Forward(e, "/db", db.PostgRESTEndpoint(), postgrestResponseModifier)
+		echo.Forward(e, "/db", postgrest.PostgRESTEndpoint(dutyApi.DefaultConfig), postgrestResponseModifier)
 	}
 
 	e.GET("/jobs", job.CronDetailsHandler(

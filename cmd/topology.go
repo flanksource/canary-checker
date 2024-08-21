@@ -36,8 +36,8 @@ var QueryTopology = &cobra.Command{
 	Short: "Query the topology",
 	Args:  cobra.MinimumNArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		if !db.IsConfigured() {
-			logger.Fatalf("Must specify --db or DB_URL env")
+		if apicontext.DefaultContext.DB() == nil {
+			logger.Fatalf("Database object not found, might have to specify --db or DB_URL env")
 		}
 
 		results, err := topology.Query(apicontext.DefaultContext, queryParams)
@@ -108,7 +108,7 @@ var RunTopology = &cobra.Command{
 					if err != nil {
 						logger.Errorf("[%s] error running %v", _configfile, err)
 					}
-					if db.IsConnected() {
+					if ctx.DB() != nil {
 						if err := db.PersistComponents(ctx, components); err != nil {
 							logger.Errorf("error persisting results: %v", err)
 						}

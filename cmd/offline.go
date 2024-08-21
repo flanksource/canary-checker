@@ -1,7 +1,12 @@
 package cmd
 
 import (
+	"os"
+
+	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/api"
 	"github.com/flanksource/duty/postgrest"
 	"github.com/spf13/cobra"
 )
@@ -13,26 +18,22 @@ var GoOffline = &cobra.Command{
 		if err := postgrest.GoOffline(); err != nil {
 			logger.Fatalf("Failed to go offline: %+v", err)
 		}
-		/***
-		        TODO: Check if this is required
 
-				// Run in embedded mode once to download the postgres binary
-				databaseDir := "temp-database-dir"
-				if err := os.Mkdir(databaseDir, 0755); err != nil {
-					logger.Fatalf("Failed to create database directory[%s]: %+v", err)
-				}
-				defer os.RemoveAll(databaseDir)
+		// Run in embedded mode once to download the postgres binary
+		databaseDir := "temp-database-dir"
+		if err := os.Mkdir(databaseDir, 0755); err != nil {
+			logger.Fatalf("Failed to create database directory[%s]: %+v", err)
+		}
+		defer os.RemoveAll(databaseDir)
 
-				db.ConnectionString = "embedded://" + databaseDir
-				if _, err := db.Connect(); err != nil {
-					logger.Fatalf("Failed to run in embedded mode: %+v", err)
-				}
-				if err := db.PostgresServer.Stop(); err != nil {
-					logger.Fatalf("Failed to stop embedded postgres: %+v", err)
-				}
+		api.DefaultConfig.ConnectionString = "embedded://" + databaseDir
+		_, closer, err := duty.Start("embedded-temp")
+		runner.AddShutdownHook(closer)
+		if err != nil {
+			logger.Fatalf("Failed to run in embedded mode: %+v", err)
+		}
 
-				// Intentionally exit with code 0 for Docker
-				os.Exit(0)
-		        ***/
+		// Intentionally exit with code 0 for Docker
+		runner.ShutdownAndExit(0, "Finished downloading dependencies")
 	},
 }

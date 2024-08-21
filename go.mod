@@ -17,7 +17,6 @@ require (
 	github.com/eko/gocache/lib/v4 v4.1.6
 	github.com/eko/gocache/store/bigcache/v4 v4.2.1
 	github.com/elastic/go-elasticsearch/v8 v8.13.1
-	github.com/fergusstrange/embedded-postgres v1.25.0
 	github.com/flanksource/artifacts v1.0.7
 	github.com/flanksource/commons v1.27.0
 	github.com/flanksource/duty v1.0.588
@@ -28,7 +27,6 @@ require (
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/go-ldap/ldap/v3 v3.4.6
 	github.com/go-logr/logr v1.4.1
-	github.com/go-logr/zapr v1.3.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/gobwas/glob v0.2.3
@@ -71,14 +69,12 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.22.0
 	go.opentelemetry.io/otel/sdk v1.22.0
 	go.opentelemetry.io/otel/trace v1.24.0
-	go.uber.org/zap v1.26.0
 	golang.org/x/net v0.27.0
 	golang.org/x/sync v0.7.0
 	google.golang.org/genproto v0.0.0-20240213162025-012b6fc9bca9
 	google.golang.org/grpc v1.64.0
 	gopkg.in/flanksource/yaml.v3 v3.2.3
 	gorm.io/gorm v1.25.11
-	gorm.io/plugin/prometheus v0.1.0
 	k8s.io/api v0.28.8
 	k8s.io/apimachinery v0.28.8
 	k8s.io/client-go v0.28.8
@@ -139,6 +135,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.7.0 // indirect
 	github.com/exaring/otelpgx v0.5.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/fergusstrange/embedded-postgres v1.25.0 // indirect
 	github.com/flanksource/kubectl-neat v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
@@ -149,6 +146,7 @@ require (
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/go-logr/zapr v1.3.0 // indirect
 	github.com/go-openapi/analysis v0.22.2 // indirect
 	github.com/go-openapi/errors v0.21.0 // indirect
 	github.com/go-openapi/inflect v0.19.0 // indirect
@@ -278,6 +276,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
 	go.starlark.net v0.0.0-20231121155337-90ade8b19d09 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
 	golang.org/x/exp v0.0.0-20240716175740-e3f259677ff7 // indirect
 	golang.org/x/mod v0.19.0 // indirect
@@ -300,6 +299,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/postgres v1.5.9 // indirect
+	gorm.io/plugin/prometheus v0.1.0 // indirect
 	k8s.io/apiextensions-apiserver v0.28.3 // indirect
 	k8s.io/cli-runtime v0.28.2 // indirect
 	k8s.io/component-base v0.28.3 // indirect
