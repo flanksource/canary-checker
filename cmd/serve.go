@@ -24,8 +24,10 @@ import (
 
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/api"
 	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
+	"github.com/flanksource/duty/postgrest"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -97,9 +99,8 @@ func serve() {
 
 	e.GET("/metrics", echov4.WrapHandler(promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{})))
 
-	if !disablePostgrest {
-		go db.StartPostgrest()
-		echo.Forward(e, "/db", db.PostgRESTEndpoint(), postgrestResponseModifier)
+	if !api.DefaultConfig.Postgrest.Disable {
+		echo.Forward(e, "/db", postgrest.PostgRESTEndpoint(api.DefaultConfig), postgrestResponseModifier)
 	}
 
 	e.GET("/jobs", job.CronDetailsHandler(
@@ -131,5 +132,4 @@ func init() {
 	Serve.Flags().StringVar(&echo.AllowedCORS, "allowed-cors", "", "Allowed CORS origin headers")
 	Serve.Flags().StringVarP(&configFile, "configfile", "c", "", "Specify configfile")
 	Serve.Flags().StringVarP(&schedule, "schedule", "s", "", "schedule to run checks on. Supports all cron expression and golang duration support in format: '@every duration'")
-	Serve.Flags().BoolVar(&disablePostgrest, "disable-postgrest", false, "Disable the postgrest server")
 }

@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/flanksource/canary-checker/cmd"
-	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/spf13/cobra"
 )
@@ -34,12 +33,6 @@ func main() {
 	})
 
 	cmd.Root.SetUsageTemplate(cmd.Root.UsageTemplate() + fmt.Sprintf("\nversion: %s\n ", version))
-	defer func() {
-		err := db.StopServer()
-		if err != nil {
-			os.Exit(1)
-		}
-	}()
 	if err := cmd.Root.Execute(); err != nil {
 		os.Exit(1)
 	}

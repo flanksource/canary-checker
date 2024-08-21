@@ -15,6 +15,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/telemetry"
 	"github.com/flanksource/commons/http"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/commons/properties"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/context"
@@ -33,17 +34,11 @@ func InitContext() (context.Context, error) {
 
 	var ctx context.Context
 
-	runner.AddShutdownHook(func() {
-		if err := db.StopServer(); err != nil {
-			logger.Errorf("failed to stop db, %v", err)
-		}
-	})
-
 	if ctx, err = db.Init(); err != nil {
 		logger.Warnf("error connecting to db %v", err)
 		ctx = context.New()
 	} else {
-		if err := context.LoadPropertiesFromFile(ctx, propertiesFile); err != nil {
+		if err := properties.LoadFile(propertiesFile); err != nil {
 			return ctx, errors.Wrap(err, "Error loading properties")
 		}
 	}
@@ -60,15 +55,10 @@ var Root = &cobra.Command{
 		runner.Shutdown()
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		logger.UseZap()
+		logger.UseSlog()
 
 		canary.LogFail = logFail || logger.IsLevelEnabled(3)
 		canary.LogPass = logPass || logger.IsLevelEnabled(4)
-
-		db.ConnectionString = readFromEnv(db.ConnectionString)
-		if db.ConnectionString == "DB_URL" {
-			db.ConnectionString = ""
-		}
 
 		if canary.UpstreamConf.Valid() {
 			canary.UpstreamConf.Options = append(canary.UpstreamConf.Options, func(c *http.Client) {
@@ -111,6 +101,7 @@ var (
 
 func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&httpPort, "httpPort", httpPort, "Port to expose a health dashboard ")
+	duty.BindPFlags(flags, duty.SkipMigrationByDefaultMode)
 
 	_ = flags.MarkDeprecated("devGuiPort", "")
 	_ = flags.MarkDeprecated("metricsPort", "Extra metrics server removed")
@@ -146,21 +137,9 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.BoolVar(&canary.UpstreamConf.InsecureSkipVerify, "upstream-insecure-skip-verify", os.Getenv("UPSTREAM_INSECURE_SKIP_VERIFY") == "true", "Skip TLS verification on the upstream servers certificate")
 }
 
-func readFromEnv(v string) string {
-	val := os.Getenv(v)
-	if val != "" {
-		return val
-	}
-	return v
-}
-
 func init() {
 	logger.BindFlags(Root.PersistentFlags())
-	duty.BindFlags(Root.PersistentFlags())
 
-	Root.PersistentFlags().StringVar(&db.ConnectionString, "db", "DB_URL", "Connection string for the postgres database")
-	Root.PersistentFlags().BoolVar(&db.RunMigrations, "db-migrations", false, "Run database migrations")
-	Root.PersistentFlags().BoolVar(&db.DBMetrics, "db-metrics", false, "Expose db metrics")
 	Root.PersistentFlags().BoolVar(&logFail, "log-fail", false, "Log every failing check")
 	Root.PersistentFlags().BoolVar(&logPass, "log-pass", false, "Log every passing check")
 	Root.PersistentFlags().StringVar(&otelcollectorURL, "otel-collector-url", "", "OpenTelemetry gRPC Collector URL in host:port format")
