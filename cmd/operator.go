@@ -12,21 +12,19 @@ import (
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	gocache "github.com/patrickmn/go-cache"
-	"go.uber.org/zap/zapcore"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/controllers"
 	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/commons/logger"
-	"github.com/go-logr/zapr"
+	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlCache "sigs.k8s.io/controller-runtime/pkg/cache"
-	ctrlzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	ctrlMetrics "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
@@ -55,10 +53,9 @@ func init() {
 
 func run(cmd *cobra.Command, args []string) {
 	defer runner.Shutdown()
-	loggr := ctrlzap.NewRaw(
-		ctrlzap.Encoder(logger.NewZapEncoder()),
-		ctrlzap.Level(zapcore.Level(k8sLogLevel*-1)),
-	).Named("operator")
+
+	logger := logger.GetLogger("operator")
+	logger.SetLogLevel(k8sLogLevel)
 
 	scheme := runtime.NewScheme()
 
@@ -94,7 +91,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 	go serve()
 
-	ctrl.SetLogger(zapr.NewLogger(loggr))
+	ctrl.SetLogger(logr.FromSlogHandler(logger.Handler()))
 	setupLog := ctrl.Log.WithName("setup")
 
 	managerOpt := ctrl.Options{
@@ -122,7 +119,7 @@ func run(cmd *cobra.Command, args []string) {
 	if runner.RunnerName == "" {
 		runner.RunnerName = pkg.GetClusterName(mgr.GetConfig())
 	}
-	loggr.Sugar().Infof("Using runner name: %s", runner.RunnerName)
+	logger.Infof("Using runner name: %s", runner.RunnerName)
 
 	runner.RunnerLabels = labels.LoadFromFile("/etc/podinfo/labels")
 
