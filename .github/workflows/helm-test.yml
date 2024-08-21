@@ -53,7 +53,7 @@ jobs:
           sleep 60
           kubectl describe pod -n canary-checker
           # kubectl set image deployment/canary-checker-ui -n canary-checker flanksource-ui=
-          kubectl logs -p deploy/canary-checker -n canary-checker
+          kubectl logs -p deploy/canary-checker -n canary-checker || true
           kubectl rollout status deploy/canary-checker -n canary-checker --timeout 5m
 
       - name: Check canary-checker pods
