@@ -50,6 +50,8 @@ jobs:
       - name: Wait for 30 seconds
         run: |
           kubectl describe pod -n canary-checker
+          sleep 60
+          kubectl describe pod -n canary-checker
           kubectl rollout status deploy/canary-checker -n canary-checker --timeout 5m
 
       - name: Check canary-checker pods
