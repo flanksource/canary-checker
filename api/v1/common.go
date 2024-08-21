@@ -427,6 +427,7 @@ func (c Connection) GetEndpoint() string {
 // connectionStrings are used as metric labels and we don't want to leak passwords
 // Returns the Connection string with the password replaced by '###'
 func SanitizeEndpoints(connection string) string {
+	connection = strings.TrimPrefix(connection, "git::")
 	if _url, err := url.Parse(connection); err == nil {
 		if _url.User != nil {
 			_url.User = nil
