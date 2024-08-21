@@ -100,7 +100,6 @@ manifests: .bin/controller-gen .bin/yq
 
 tidy:
 	go mod tidy
-	cd hack/generate-schemas && go mod tidy
 
 
 # Run go fmt against code
@@ -262,7 +261,7 @@ bin: .bin .bin/wait4x .bin/karina
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources
-resources: fmt static
+resources: fmt  generate static
 
 .PHONY: chart
 chart:
