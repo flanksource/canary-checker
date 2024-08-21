@@ -62,7 +62,13 @@ static:  generate manifests .bin/yq
 # Generate OpenAPI schema
 .PHONY: gen-schemas
 gen-schemas:
-	cd hack/generate-schemas &&  go mod tidy && go run ./main.go
+	cp go.mod hack/generate-schemas && \
+	cd hack/generate-schemas && \
+	go mod edit -module=github.com/flanksource/canary-checker/hack/generate-schemas && \
+	go mod edit -require=github.com/flanksource/canary-checker@v1.0.0 && \
+ 	go mod edit -replace=github.com/flanksource/canary-checker=../../ && \
+	go mod tidy && \
+	go run ./main.go
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: .bin/controller-gen .bin/yq
@@ -89,7 +95,7 @@ manifests: .bin/controller-gen .bin/yq
 		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.checks.items.properties.inline.properties)' /dev/stdin | \
 		$(YQ) ea 'del(.. | select(has("scope")).scope | .. | select(has("description")).description)' /dev/stdin | \
 		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.properties.items.properties.lookup.properties)' /dev/stdin > crd.slim.yaml
-	
+
 	cd config/deploy && mv crd.slim.yaml crd.yaml
 
 tidy:
@@ -169,7 +175,7 @@ release: binaries
 	cp .bin/canary-checker* .release/
 
 .PHONY: lint
-lint:
+lint: gen-schemas
 	golangci-lint run -v ./...
 
 .PHONY: build-api-docs

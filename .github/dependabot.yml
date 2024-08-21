@@ -30,11 +30,6 @@ updates:
   #   schedule:
   #     interval: daily
 
-  # - package-ecosystem: gomod
-  #   directory: /hack/generate-schemas
-  #   schedule:
-  #     interval: daily
-
   - package-ecosystem: gomod
     directory: /sdk
     schedule:
