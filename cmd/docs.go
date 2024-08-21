@@ -266,7 +266,7 @@ func astFrom(filePath string) *doc.Package {
 	}
 
 	m[filePath] = f
-	apkg, _ := ast.NewPackage(fset, m, nil, nil)
+	apkg, _ := ast.NewPackage(fset, m, nil, nil) //nolint:staticcheck
 
 	return doc.New(apkg, "", 0)
 }
