@@ -37,7 +37,6 @@ jobs:
           CI: false
         run: |
           make resources
-          git checkout hack/generate-schemas/go.*
           git checkout fixtures/datasources/go.*
           git diff
           changed_files=$(git status -s)
