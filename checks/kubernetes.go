@@ -2,7 +2,6 @@ package checks
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -10,7 +9,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/is-healthy/pkg/health"
 	"github.com/gobwas/glob"
-	"github.com/samber/lo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
@@ -40,35 +38,19 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 	results = append(results, result)
 
 	if check.KubeConfig != nil {
-		val, err := ctx.GetEnvValueFromCache(*check.KubeConfig, ctx.GetNamespace())
+		var err error
+		ctx, err = ctx.WithKubeconfig(*check.KubeConfig)
 		if err != nil {
-			return results.Failf("failed to get kubeconfig from env: %v", err)
+			return results.WithError(err).Invalidf("Cannot connect to kubernetes")
 		}
 
-		if strings.HasPrefix(val, "/") {
-			kClient, kube, err := pkg.NewKommonsClientWithConfigPath(val)
-			if err != nil {
-				return results.Failf("failed to initialize kubernetes client from the provided kubeconfig: %v", err)
-			}
-
-			ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKommons(kClient)))
-			ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKubernetes(kube)))
-		} else {
-			kClient, kube, err := pkg.NewKommonsClientWithConfig(val)
-			if err != nil {
-				return results.Failf("failed to initialize kubernetes client from the provided kubeconfig: %v", err)
-			}
-
-			ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKommons(kClient)))
-			ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKubernetes(kube)))
-		}
 	}
 
-	if ctx.Kommons() == nil {
+	if ctx.KubernetesRestConfig() == nil {
 		return results.Failf("Kubernetes is not initialized")
 	}
 
-	client, err := ctx.Kommons().GetClientByKind(check.Kind)
+	client, err := ctx.KubernetesDynamicClient().GetClientByKind(check.Kind)
 	if err != nil {
 		return results.Failf("Failed to get client for kind %s: %v", check.Kind, err)
 	}

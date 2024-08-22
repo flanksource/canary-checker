@@ -26,7 +26,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/utils"
-	"github.com/flanksource/duty/types"
 )
 
 const (
@@ -58,7 +57,6 @@ func (c *KubernetesResourceChecker) Run(ctx *context.Context) pkg.Results {
 
 func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.KubernetesResourceCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
-	var err error
 	var results pkg.Results
 	results = append(results, result)
 
@@ -67,10 +65,12 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 	}
 
 	if check.Kubeconfig != nil {
-		ctx, err = c.applyKubeconfig(ctx, *check.Kubeconfig)
+		var err error
+		ctx, err = ctx.WithKubeconfig(*check.Kubeconfig)
 		if err != nil {
-			return results.Failf("failed to apply kube config: %v", err)
+			return results.WithError(err).Invalidf("Cannot connect to kubernetes")
 		}
+
 	}
 
 	if err := templateKubernetesResourceCheck(ctx.Canary.GetPersistedID(), ctx.Canary.GetCheckID(check.GetName()), &check); err != nil {
@@ -189,8 +189,6 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.Ku
 		waitInterval = wt
 	}
 
-	kClient := pkg.NewKubeClient(ctx.Kommons().GetRESTConfig)
-
 	var attempts int
 	backoff := retry.WithMaxDuration(waitTimeout, retry.NewConstant(waitInterval))
 	retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
@@ -199,7 +197,7 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.Ku
 
 		ctx.Logger.V(4).Infof("waiting for %d resources to be in the desired state. (attempts: %d)", check.TotalResources(), attempts)
 
-		resourceObjs, err := kClient.FetchResources(ctx, append(check.StaticResources, check.Resources...)...)
+		resourceObjs, err := ctx.KubernetesDynamicClient().FetchResources(ctx, append(check.StaticResources, check.Resources...)...)
 		if err != nil {
 			return fmt.Errorf("wait for evaluation. fetching resources: %w", err)
 		} else if len(resourceObjs) != check.TotalResources() {
@@ -236,33 +234,6 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.Ku
 	})
 
 	return retryErr
-}
-
-func (c *KubernetesResourceChecker) applyKubeconfig(ctx context.Context, kubeConfig types.EnvVar) (context.Context, error) {
-	val, err := ctx.GetEnvValueFromCache(kubeConfig, ctx.GetNamespace())
-	if err != nil {
-		return ctx, fmt.Errorf("failed to get kubeconfig from env: %w", err)
-	}
-
-	if strings.HasPrefix(val, "/") {
-		kClient, kube, err := pkg.NewKommonsClientWithConfigPath(val)
-		if err != nil {
-			return ctx, fmt.Errorf("failed to initialize kubernetes client from the provided kubeconfig: %w", err)
-		}
-
-		ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKommons(kClient)))
-		ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKubernetes(kube)))
-	} else {
-		kClient, kube, err := pkg.NewKommonsClientWithConfig(val)
-		if err != nil {
-			return ctx, fmt.Errorf("failed to initialize kubernetes client from the provided kubeconfig: %w", err)
-		}
-
-		ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKommons(kClient)))
-		ctx = lo.FromPtr(ctx.WithDutyContext(ctx.WithKubernetes(kube)))
-	}
-
-	return ctx, nil
 }
 
 func (c *KubernetesResourceChecker) validate(ctx context.Context, check v1.KubernetesResourceCheck) error {
