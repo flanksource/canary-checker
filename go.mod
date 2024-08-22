@@ -18,15 +18,15 @@ require (
 	github.com/eko/gocache/store/bigcache/v4 v4.2.1
 	github.com/elastic/go-elasticsearch/v8 v8.13.1
 	github.com/flanksource/artifacts v1.0.7
-	github.com/flanksource/commons v1.27.0
-	github.com/flanksource/duty v1.0.594
-	github.com/flanksource/gomplate/v3 v3.24.22
+	github.com/flanksource/commons v1.28.0
+	github.com/flanksource/duty v1.0.597
+	github.com/flanksource/gomplate/v3 v3.24.24
 	github.com/flanksource/is-healthy v1.0.28
 	github.com/flanksource/kommons v0.31.4
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/go-ldap/ldap/v3 v3.4.6
-	github.com/go-logr/logr v1.4.1
+	github.com/go-logr/logr v1.4.2
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/gobwas/glob v0.2.3
@@ -43,8 +43,8 @@ require (
 	github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0
 	github.com/microsoft/go-mssqldb v1.6.0
 	github.com/nsf/jsondiff v0.0.0-20230430225905-43f6cf3098c1
-	github.com/onsi/ginkgo/v2 v2.17.2
-	github.com/onsi/gomega v1.33.0
+	github.com/onsi/ginkgo/v2 v2.20.1
+	github.com/onsi/gomega v1.34.1
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -69,8 +69,8 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.22.0
 	go.opentelemetry.io/otel/sdk v1.22.0
 	go.opentelemetry.io/otel/trace v1.24.0
-	golang.org/x/net v0.27.0
-	golang.org/x/sync v0.7.0
+	golang.org/x/net v0.28.0
+	golang.org/x/sync v0.8.0
 	google.golang.org/genproto v0.0.0-20240213162025-012b6fc9bca9
 	google.golang.org/grpc v1.64.0
 	gopkg.in/flanksource/yaml.v3 v3.2.3
@@ -118,8 +118,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.4 // indirect
 	github.com/aws/smithy-go v1.20.4 // indirect
+	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
+	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
@@ -173,7 +175,7 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/gops v0.3.28 // indirect
-	github.com/google/pprof v0.0.0-20240711041743-f6c9dda6c6da // indirect
+	github.com/google/pprof v0.0.0-20240727154555-813a5fbdbec8 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
@@ -192,6 +194,7 @@ require (
 	github.com/hirochachacha/go-smb2 v1.1.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/invopop/jsonschema v0.12.0 // indirect
 	github.com/itchyny/gojq v0.12.16 // indirect
 	github.com/itchyny/timefmt-go v0.1.6 // indirect
 	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa // indirect
@@ -260,10 +263,14 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
+	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
+	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
+	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
+	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
@@ -277,15 +284,15 @@ require (
 	go.starlark.net v0.0.0-20231121155337-90ade8b19d09 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.25.0 // indirect
-	golang.org/x/exp v0.0.0-20240716175740-e3f259677ff7 // indirect
-	golang.org/x/mod v0.19.0 // indirect
+	golang.org/x/crypto v0.26.0 // indirect
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
+	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/term v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/sys v0.23.0 // indirect
+	golang.org/x/term v0.23.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.23.0 // indirect
+	golang.org/x/tools v0.24.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/api v0.169.0 // indirect
@@ -314,6 +321,7 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 
-// replace github.com/flanksource/duty => ../duty
+// replace github.com/flanksource/duty => /Users/moshe/go/src/github.com/flanksource/duty
 
 // replace github.com/flanksource/gomplate/v3 => ../gomplate
+// replace github.com/flanksource/commons => /Users/moshe/go/src/github.com/flanksource/commons

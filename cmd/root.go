@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/checks"
-	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/canary-checker/pkg/runner"
@@ -25,12 +24,7 @@ import (
 )
 
 func InitContext() (context.Context, error) {
-	kommonsClient, k8s, err := pkg.NewKommonsClient()
-	if err != nil {
-		logger.Warnf("Failed to get kubernetes client: %v", err)
-	}
-
-	ctx, closer, err := duty.Start("canary-checker", duty.SkipMigrationByDefaultMode, duty.SkipChangelogMigration)
+	ctx, closer, err := duty.Start("canary-checker", duty.SkipChangelogMigration)
 	if err != nil {
 		logger.Fatalf("Failed to initialize db: %v", err.Error())
 	}
@@ -41,9 +35,8 @@ func InitContext() (context.Context, error) {
 	}
 
 	ctx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))
-	return ctx.
-		WithKubernetes(k8s).
-		WithKommons(kommonsClient), nil
+
+	return ctx, nil
 }
 
 var Root = &cobra.Command{
@@ -136,7 +129,8 @@ func ServerFlags(flags *pflag.FlagSet) {
 
 func init() {
 	logger.BindFlags(Root.PersistentFlags())
-
+	_ = properties.LoadFile("canary-checker.properties")
+	logger.UseSlog()
 	Root.PersistentFlags().BoolVar(&logFail, "log-fail", false, "Log every failing check")
 	Root.PersistentFlags().BoolVar(&logPass, "log-pass", false, "Log every passing check")
 	Root.PersistentFlags().StringVar(&otelcollectorURL, "otel-collector-url", "", "OpenTelemetry gRPC Collector URL in host:port format")

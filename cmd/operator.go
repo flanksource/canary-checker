@@ -13,10 +13,10 @@ import (
 	gocache "github.com/patrickmn/go-cache"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/controllers"
 	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/commons/logger"
+	dutyKubernetes "github.com/flanksource/duty/kubernetes"
 	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel"
@@ -67,7 +67,7 @@ func run(cmd *cobra.Command, args []string) {
 		runner.ShutdownAndExit(1, "operator requires a db connection")
 	}
 
-	if ctx.Kommons() == nil {
+	if ctx.KubernetesRestConfig() == nil {
 		runner.ShutdownAndExit(1, "operator requires a kubernetes connection")
 	}
 
@@ -113,7 +113,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	if runner.RunnerName == "" {
-		runner.RunnerName = pkg.GetClusterName(mgr.GetConfig())
+		runner.RunnerName = dutyKubernetes.GetClusterName(mgr.GetConfig())
 	}
 	logger.Infof("Using runner name: %s", runner.RunnerName)
 
