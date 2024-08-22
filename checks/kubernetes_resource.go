@@ -70,7 +70,6 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 		if err != nil {
 			return results.WithError(err).Invalidf("Cannot connect to kubernetes")
 		}
-
 	}
 
 	if err := templateKubernetesResourceCheck(ctx.Canary.GetPersistedID(), ctx.Canary.GetCheckID(check.GetName()), &check); err != nil {

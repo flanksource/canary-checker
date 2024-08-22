@@ -51,6 +51,7 @@ func TopologyFromV1(topology *v1.Topology) Topology {
 		Labels:    dutyTypes.JSONStringMap(topology.GetLabels()),
 		Spec:      spec,
 		Source:    models.SourceCRD,
+		Schedule:  topology.Spec.Schedule,
 	}
 }
 

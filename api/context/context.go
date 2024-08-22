@@ -58,7 +58,6 @@ func (ctx *Context) CanTemplate() bool {
 }
 
 func (ctx *Context) GetConnectionTemplate(conn v1.Connection) (*models.Connection, map[string]any, error) {
-
 	var _conn *models.Connection
 	var err error
 

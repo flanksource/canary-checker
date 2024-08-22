@@ -43,7 +43,6 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 		if err != nil {
 			return results.WithError(err).Invalidf("Cannot connect to kubernetes")
 		}
-
 	}
 
 	if ctx.KubernetesRestConfig() == nil {
