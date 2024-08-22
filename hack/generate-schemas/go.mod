@@ -5,7 +5,7 @@ go 1.22.3
 require (
 	github.com/flanksource/canary-checker v1.0.0
 	github.com/flanksource/commons v1.27.0
-	github.com/flanksource/duty v1.0.591
+	github.com/flanksource/duty v1.0.592
 	github.com/spf13/cobra v1.8.0
 )
 
