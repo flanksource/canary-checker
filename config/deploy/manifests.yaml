@@ -7118,7 +7118,7 @@ spec:
                           - value
                         type: object
                       templateBody:
-                        description: Template the request body
+                        description: 'Template the request body. Deprecated: Body is always templated by default. Use template escaping if necessary.'
                         type: boolean
                       test:
                         properties:

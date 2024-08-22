@@ -115,7 +115,8 @@ type HTTPCheck struct {
 	Body string `yaml:"body,omitempty" json:"body,omitempty" template:"true"`
 	// Header fields to be used in the query
 	Headers []types.EnvVar `yaml:"headers,omitempty" json:"headers,omitempty"`
-	//Template the request body
+	// Template the request body.
+	//  	Deprecated: Body is always templated by default. Use template escaping if necessary.
 	TemplateBody bool `yaml:"templateBody,omitempty" json:"templateBody,omitempty"`
 	// EnvVars are the environment variables that are accessible to templated body
 	EnvVars []types.EnvVar `yaml:"env,omitempty" json:"env,omitempty"`
