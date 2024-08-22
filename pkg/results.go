@@ -72,6 +72,7 @@ func (result *CheckResult) ErrorMessage(err error) *CheckResult {
 	if err == nil {
 		return result
 	}
+	result.ErrorObject = err
 	return result.Failf(err.Error())
 }
 
@@ -159,6 +160,14 @@ func (result *CheckResult) AddData(data map[string]interface{}) *CheckResult {
 
 func (r Results) Failf(msg string, args ...interface{}) Results {
 	r[0].Failf(msg, args...)
+	return r
+}
+func (r Results) Invalidf(msg string, args ...interface{}) Results {
+	r[0].Invalidf(msg, args...)
+	return r
+}
+func (r Results) WithError(err error) Results {
+	r[0].ErrorObject = err
 	return r
 }
 

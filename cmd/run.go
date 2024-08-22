@@ -9,8 +9,10 @@ import (
 	"sync"
 
 	"github.com/flanksource/commons/timer"
+	"github.com/flanksource/duty"
 
 	"github.com/flanksource/canary-checker/cmd/output"
+	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/spf13/cobra"
 
 	apicontext "github.com/flanksource/canary-checker/api/context"
@@ -31,7 +33,13 @@ var Run = &cobra.Command{
 			log.Fatalln("Must specify at least one canary")
 		}
 
-		apicontext.DefaultContext, _ = InitContext()
+		ctx, closer, err := duty.Start("canary-checker", duty.ClientOnly)
+		if err != nil {
+			logger.Fatalf("Failed to initialize db: %v", err.Error())
+		}
+		runner.AddShutdownHook(closer)
+
+		apicontext.DefaultContext = ctx
 
 		var results = []*pkg.CheckResult{}
 
@@ -87,7 +95,11 @@ var Run = &cobra.Command{
 				logFail := result.Canary.IsDebug() || result.Canary.IsTrace() || logFail
 
 				if logPass && result.Pass || logFail && !result.Pass {
-					logger.StandardLogger().Named(result.Canary.Name).Named(result.Name).Infof(result.String())
+					if result.Pass || result.ErrorObject == nil {
+						logger.GetLogger(result.LoggerName()).Infof("%s", result.String())
+					} else {
+						logger.GetLogger(result.LoggerName()).Infof("%s %+v", result.String(), result.ErrorObject)
+					}
 				}
 				results = append(results, result)
 			}
@@ -159,6 +171,7 @@ func def(a ...string) string {
 func init() {
 	Run.PersistentFlags().StringVarP(&dataFile, "data", "d", "", "Template out each spec using the JSON or YAML data in this file")
 	Run.PersistentFlags().StringVarP(&outputFile, "output-file", "o", "", "file to output the results in")
+	duty.BindPFlags(Run.Flags(), duty.ClientOnly)
 	Run.Flags().StringVarP(&runNamespace, "namespace", "n", "", "Namespace to run canary checks in")
 	Run.Flags().BoolVar(&junit, "junit", false, "output results in junit format")
 	Run.Flags().BoolVarP(&jsonExport, "json", "j", false, "output results in json format")
