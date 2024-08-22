@@ -313,7 +313,6 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		if len(check.ResponseCodes) == 0 {
 			results.Failf("expected %d to be 200..299", status)
 		} else {
-
 			return results.Failf("expected %d to be in %v", status, check.ResponseCodes)
 		}
 	}
