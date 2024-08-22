@@ -30,7 +30,7 @@ func InitContext() (context.Context, error) {
 		logger.Warnf("Failed to get kubernetes client: %v", err)
 	}
 
-	ctx, closer, err := duty.Start("canary-checker", duty.SkipChangelogMigration)
+	ctx, closer, err := duty.Start("canary-checker", duty.SkipMigrationByDefaultMode, duty.SkipChangelogMigration)
 	if err != nil {
 		logger.Fatalf("Failed to initialize db: %v", err.Error())
 	}
