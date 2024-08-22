@@ -57,12 +57,13 @@ func (ctx *Context) CanTemplate() bool {
 	return ctx.Canary.Annotations["template"] != "false"
 }
 
-func (ctx *Context) GetConnection(conn v1.Connection) (*models.Connection, error) {
+func (ctx *Context) GetConnectionTemplate(conn v1.Connection) (*models.Connection, map[string]any, error) {
+
 	var _conn *models.Connection
 	var err error
 
 	if _conn, err = ctx.HydrateConnectionByURL(conn.Connection); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if _conn == nil {
@@ -80,7 +81,7 @@ func (ctx *Context) GetConnection(conn v1.Connection) (*models.Connection, error
 		// no username specified at connection level, use the one from inline connection
 		auth, err := ctx.GetAuthValues(conn.Authentication)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		_conn.Username = auth.Username.ValueStatic
 		_conn.Password = auth.Password.ValueStatic
@@ -93,12 +94,21 @@ func (ctx *Context) GetConnection(conn v1.Connection) (*models.Connection, error
 		"password":  _conn.Password,
 		"domain":    getDomain(_conn.Username),
 	}
+
+	return _conn, data, nil
+}
+
+func (ctx *Context) GetConnection(conn v1.Connection) (*models.Connection, error) {
+	connection, data, err := ctx.GetConnectionTemplate(conn)
+	if err != nil {
+		return nil, err
+	}
 	templater := ctx.NewStructTemplater(data, "template", nil)
-	if err := templater.Walk(_conn); err != nil {
+	if err := templater.Walk(connection); err != nil {
 		return nil, err
 	}
 
-	return _conn, nil
+	return connection, nil
 }
 
 func (ctx Context) TemplateStruct(o interface{}) error {
@@ -204,6 +214,12 @@ func (ctx *Context) WithCheckResult(result *pkg.CheckResult) *Context {
 func (ctx *Context) WithDutyContext(c dutyCtx.Context) *Context {
 	ctx.Context = c
 	return ctx
+}
+
+func (ctx *Context) WithKubeconfig(input types.EnvVar) (Context, error) {
+	c, err := ctx.Context.WithKubeconfig(input)
+	ctx.Context = *c
+	return *ctx, err
 }
 
 func (ctx *Context) WithCheck(check external.Check) *Context {

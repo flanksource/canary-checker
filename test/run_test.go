@@ -11,6 +11,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/checks"
+	"github.com/flanksource/duty"
 	dutyContext "github.com/flanksource/duty/context"
 	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -30,12 +31,9 @@ func TestChecks(t *testing.T) {
 }
 
 var _ = ginkgo.BeforeSuite(func() {
-	kommonsClient, k8s, err := pkg.NewKommonsClient()
-	if err != nil {
-		logger.Warnf("Failed to get kommons client, features that read kubernetes configs will fail: %v", err)
-	}
-
-	DefaultContext = dutyContext.New().WithKubernetes(k8s).WithKommons(kommonsClient).WithNamespace("canaries")
+	var err error
+	DefaultContext, _, err = duty.Start("tests", duty.ClientOnly)
+	Expect(err).To(BeNil())
 
 	logger.StandardLogger().SetLogLevel(verbosity)
 

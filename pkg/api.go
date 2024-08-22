@@ -326,6 +326,7 @@ type CheckResult struct {
 	Description string                 `json:"description,omitempty"`
 	DisplayType string                 `json:"display_type,omitempty"`
 	Message     string                 `json:"message,omitempty"`
+	Namespace   string                 `json:"namespace,omitempty"`
 	Error       string                 `json:"error,omitempty"`
 	Metrics     []Metric               `json:"metrics,omitempty"`
 	Transformed bool                   `json:"transformed,omitempty"`
@@ -336,6 +337,28 @@ type CheckResult struct {
 	Canary v1.Canary      `json:"-"`
 	// ParentCheck is the parent check of a transformed check
 	ParentCheck external.Check `json:"-"`
+	ErrorObject error          `json:"-"`
+}
+
+func (result CheckResult) LoggerName() string {
+	if result.Name != "" {
+		return result.Canary.Name + "." + result.Name
+	} else if result.Check.GetName() != "" {
+		return result.Canary.Name + "." + result.Check.GetName()
+	}
+	return result.Canary.Name
+}
+
+func (result CheckResult) GetContext() map[string]any {
+	c := map[string]any{
+		"name":      result.Name,
+		"data":      result.Data,
+		"details":   result.Detail,
+		"labels":    result.Labels,
+		"namespace": result.Namespace,
+		"metrics":   result.Metrics,
+	}
+	return c
 }
 
 func (result CheckResult) GetDescription() string {
@@ -362,6 +385,8 @@ func (result CheckResult) GetName() string {
 func (result CheckResult) String() string {
 	if result.Pass {
 		return fmt.Sprintf("%s duration=%d %s", console.Greenf("PASS"), result.Duration, result.Message)
+	} else if result.ErrorObject != nil {
+		return fmt.Sprintf("%s duration=%d %s %+v", console.Redf("FAIL"), result.Duration, result.Message, result.ErrorObject)
 	}
 	return fmt.Sprintf("%s duration=%d %s %s", console.Redf("FAIL"), result.Duration, result.Message, result.Error)
 }

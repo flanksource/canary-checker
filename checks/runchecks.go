@@ -189,6 +189,10 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 
 func TransformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.CheckResult) {
 	for _, r := range in {
+		if r.Invalid {
+			out = append(out, r)
+			continue
+		}
 		checkCtx := ctx.WithCheckResult(r)
 		transformed, hasTransformer, err := transform(checkCtx, r)
 		if hasTransformer {
@@ -200,7 +204,9 @@ func TransformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.C
 			out = append(out, r)
 		}
 		if err != nil {
-			r.Failf("transformation failure: %v", err)
+			r.ErrorObject = ctx.Oops().Wrap(err)
+			r.Error = "error transforming result"
+			r.Invalid = true
 		} else {
 			for _, t := range transformed {
 				out = append(out, processTemplates(checkCtx, t))
@@ -241,7 +247,18 @@ func ProcessResults(ctx *context.Context, results []*pkg.CheckResult) []*pkg.Che
 	return results
 }
 
+func contextMapToSlice(c map[string]any) []any {
+	args := []any{}
+	for k, v := range c {
+		args = append(args, k, v)
+	}
+	return args
+}
+
 func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult {
+	if r.Invalid {
+		return r
+	}
 	if r.Duration == 0 && r.GetDuration() > 0 {
 		r.Duration = r.GetDuration()
 	}
@@ -250,7 +267,7 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 		if !v.GetDisplayTemplate().IsEmpty() {
 			message, err := template(ctx, v.GetDisplayTemplate())
 			if err != nil {
-				r.ErrorMessage(err)
+				r.ErrorMessage(ctx.Oops().With(contextMapToSlice(r.GetContext())...).Wrap(err))
 			} else {
 				r.ResultMessage(message)
 			}
@@ -266,7 +283,7 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 
 		message, err := template(ctx, tpl)
 		if err != nil {
-			r.ErrorMessage(err)
+			r.ErrorMessage(ctx.Oops().With(contextMapToSlice(r.GetContext())...).Wrap(err))
 		} else if parsed, err := strconv.ParseBool(message); err != nil {
 			r.Failf("test expression did not return a boolean value. got %s", message)
 		} else if !parsed {

@@ -9,9 +9,12 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/http"
 	"github.com/flanksource/commons/http/middlewares"
+	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/gomplate/v3"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
@@ -141,6 +144,7 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 		client.TraceToStdout(http.TraceHeaders)
 		client.Trace(http.TraceHeaders)
 	}
+
 	return client.R(ctx), nil
 }
 
@@ -169,13 +173,13 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		check.URL = check.Endpoint
 	}
 
-	connection, err := ctx.GetConnection(check.Connection)
+	connection, connectionData, err := ctx.GetConnectionTemplate(check.Connection)
 	if err != nil {
-		return results.Failf("error getting connection  %v", err)
+		return results.Invalidf("error getting connection  %v", err)
 	}
 
 	if connection.URL == "" {
-		return results.Failf("no url or connection specified")
+		return results.Invalidf("no url or connection specified")
 	}
 
 	if ntlm, ok := connection.Properties["ntlm"]; ok {
@@ -184,48 +188,75 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		check.NTLMv2 = ntlm == "true"
 	}
 
-	if _, err := url.Parse(connection.URL); err != nil {
-		return results.Failf("failed to parse url: %v", err)
+	templateEnv := map[string]any{}
+
+	for k, v := range ctx.Environment {
+		templateEnv[k] = v
+	}
+	for k, v := range connectionData {
+		templateEnv[k] = v
 	}
 
-	templateEnv := map[string]any{}
 	for _, env := range check.EnvVars {
 		if val, err := ctx.GetEnvValueFromCache(env, ctx.GetNamespace()); err != nil {
-			return results.Failf("failed to get env value: %v", err)
+			return results.WithError(ctx.Oops().Wrap(err)).Invalidf("failed to get env value: %v", env.Name)
 		} else {
+			ctx.Infof("%s => %s err:%v", env.Name, val, err)
 			templateEnv[env.Name] = val
 		}
 	}
 
-	check.URL, err = template(ctx.WithCheck(check).WithEnvValues(templateEnv), v1.Template{Template: check.URL})
-	if err != nil {
-		return results.Failf("failed to template request url: %v", err)
+	ctx = ctx.WithCheck(check).WithEnvValues(templateEnv)
+
+	oops := ctx.Oops().Hint(logger.Pretty(ctx.Environment))
+
+	templater := ctx.NewStructTemplater(ctx.Environment, "template", nil)
+	if err := templater.Walk(connection); err != nil {
+		return results.WithError(oops.Wrap(err)).Invalidf("failed to template url")
 	}
+
+	uri := connection.URL
+
+	oops = oops.With("url", uri)
+
+	if _uri, err := url.Parse(uri); err != nil {
+		return results.WithError(oops.Wrap(err)).Invalidf("invalid url  '%s'", uri)
+	} else if _uri.Scheme == "" {
+		return results.WithError(oops.Errorf("invalid url")).Invalidf("invalid url, missing scheme '%s'", uri)
+	} else if _uri.Host == "" {
+		return results.WithError(oops.Errorf("invalid url")).Invalidf("invalid url, missing host '%s'", uri)
+	}
+
+	check.URL = uri
 
 	body := check.Body
 	if check.TemplateBody {
-		body, err = template(ctx.WithCheck(check).WithEnvValues(templateEnv), v1.Template{Template: body})
+		body, err = ctx.RunTemplate(gomplate.Template{Template: body}, ctx.Environment)
 		if err != nil {
-			return results.Failf("failed to template request body: %v", err)
+			return results.WithError(oops.Wrap(err)).Invalidf("failed to template request body: %v", err)
 		}
 	}
 
+	oops = oops.Hint(body)
+
 	request, err := c.generateHTTPRequest(ctx, check, connection)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.ErrorMessage(oops.Wrap(err))
 	}
 
 	if body != "" {
 		if err := request.Body(body); err != nil {
-			return results.ErrorMessage(err)
+			return results.ErrorMessage(oops.Wrap(err))
 		}
 	}
 
 	start := time.Now()
 
-	response, err := request.Do(check.GetMethod(), connection.URL)
+	ctx.Infof("%s	%s", console.Greenf(check.GetMethod()), check.URL)
+
+	response, err := request.Do(check.GetMethod(), check.URL)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return results.ErrorMessage(oops.Wrap(err))
 	}
 
 	elapsed := time.Since(start)
@@ -279,7 +310,12 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	}
 
 	if ok := response.IsOK(check.ResponseCodes...); !ok {
-		return results.Failf("response code invalid %d != %v", status, check.ResponseCodes)
+		if len(check.ResponseCodes) == 0 {
+			results.Failf("expected %d to be 200..299", status)
+		} else {
+
+			return results.Failf("expected %d to be in %v", status, check.ResponseCodes)
+		}
 	}
 
 	if check.ThresholdMillis > 0 && check.ThresholdMillis < int(elapsed.Milliseconds()) {
