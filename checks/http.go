@@ -252,7 +252,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	start := time.Now()
 
-	ctx.Infof("%s	%s", console.Greenf(check.GetMethod()), check.URL)
+	ctx.Tracef("%s	%s", console.Greenf(check.GetMethod()), check.URL)
 
 	response, err := request.Do(check.GetMethod(), check.URL)
 	if err != nil {
