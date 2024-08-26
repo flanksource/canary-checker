@@ -91,15 +91,11 @@ var Run = &cobra.Command{
 				} else {
 					passed++
 				}
-				logPass := result.Canary.IsDebug() || result.Canary.IsTrace() || logPass
-				logFail := result.Canary.IsDebug() || result.Canary.IsTrace() || logFail
 
-				if logPass && result.Pass || logFail && !result.Pass {
-					if result.Pass || result.ErrorObject == nil {
-						logger.GetLogger(result.LoggerName()).Infof("%s", result.String())
-					} else {
-						logger.GetLogger(result.LoggerName()).Infof("%s %+v", result.String(), result.ErrorObject)
-					}
+				if result.Pass || result.ErrorObject == nil {
+					logger.GetLogger(result.LoggerName()).Infof("%s", result.String())
+				} else {
+					logger.GetLogger(result.LoggerName()).Infof("%s %+v", result.String(), result.ErrorObject)
 				}
 				results = append(results, result)
 			}
