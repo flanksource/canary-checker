@@ -5691,8 +5691,6 @@ spec:
                                     type: string
                                 type: object
                             type: object
-                        required:
-                          - host
                         type: object
                       smbConnection:
                         properties:
@@ -5700,7 +5698,6 @@ spec:
                             description: ConnectionName of the connection. It'll be used to populate the connection fields.
                             type: string
                           domain:
-                            description: Domain...
                             type: string
                           password:
                             properties:
@@ -5746,6 +5743,8 @@ spec:
                           port:
                             description: Port on which smb server is running. Defaults to 445
                             type: integer
+                          share:
+                            type: string
                           username:
                             properties:
                               name:

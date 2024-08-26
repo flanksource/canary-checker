@@ -3770,26 +3770,26 @@
         }
       },
       "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "host"
-      ]
+      "type": "object"
     },
     "SMBConnection": {
       "properties": {
-        "connection": {
-          "type": "string"
-        },
-        "port": {
-          "type": "integer"
-        },
         "username": {
           "$ref": "#/$defs/EnvVar"
         },
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
+        "connection": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
         "domain": {
+          "type": "string"
+        },
+        "share": {
           "type": "string"
         }
       },
