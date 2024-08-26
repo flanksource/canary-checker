@@ -21,20 +21,12 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.ErrorMessage(err)
 	}
 
-	foundConn, err := check.SMBConnection.HydrateConnection(ctx)
+	err = check.SMBConnection.Populate(ctx)
 	if err != nil {
 		return results.Failf("failed to populate SMB connection: %v", err)
 	}
 
-	auth := check.SMBConnection.Authentication
-	if !foundConn {
-		auth, err = ctx.GetAuthValues(check.SMBConnection.Authentication)
-		if err != nil {
-			return results.ErrorMessage(err)
-		}
-	}
-
-	session, err := smb.SMBConnect(server, fmt.Sprintf("%d", check.SMBConnection.GetPort()), sharename, auth)
+	session, err := smb.SMBConnect(server, fmt.Sprintf("%d", check.SMBConnection.GetPort()), sharename, check.SMBConnection.Authentication)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

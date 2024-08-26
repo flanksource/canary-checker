@@ -16,20 +16,12 @@ func CheckSFTP(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 
-	foundConn, err := check.SFTPConnection.HydrateConnection(ctx)
+	err := check.SFTPConnection.HydrateConnection(ctx)
 	if err != nil {
 		return results.Failf("failed to populate SFTP connection: %v", err)
 	}
 
-	auth := check.SFTPConnection.Authentication
-	if !foundConn {
-		auth, err = ctx.GetAuthValues(check.SFTPConnection.Authentication)
-		if err != nil {
-			return results.ErrorMessage(err)
-		}
-	}
-
-	client, err := sftp.SSHConnect(fmt.Sprintf("%s:%d", check.SFTPConnection.Host, check.SFTPConnection.GetPort()), auth.GetUsername(), auth.GetPassword())
+	client, err := sftp.SSHConnect(fmt.Sprintf("%s:%d", check.SFTPConnection.Host, check.SFTPConnection.GetPort()), check.SFTPConnection.GetUsername(), check.SFTPConnection.GetPassword())
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
