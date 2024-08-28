@@ -11,7 +11,6 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/duty/models"
 )
 
 type S3 struct {
@@ -31,22 +30,14 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var bucket string
 	bucket, check.Path = parseS3Path(check.Path)
 
-	connection, err := ctx.HydrateConnectionByURL(check.AWSConnection.ConnectionName)
-	if err != nil {
-		return results.Failf("failed to populate AWS connection: %v", err)
-	} else if connection == nil {
-		connection = &models.Connection{Type: models.ConnectionTypeS3}
-		if check.S3Connection.Bucket == "" {
-			check.S3Connection.Bucket = bucket
-		}
-
-		connection, err = connection.Merge(ctx, check.S3Connection)
-		if err != nil {
-			return results.Failf("failed to populate AWS connection: %v", err)
-		}
+	if err := check.S3Connection.Populate(ctx); err != nil {
+		return results.ErrorMessage(err)
 	}
 
-	fs, err := artifacts.GetFSForConnection(ctx.Context, *connection)
+	conn := check.S3Connection.ToModel()
+	conn.SetProperty("bucket", bucket)
+
+	fs, err := artifacts.GetFSForConnection(ctx.Context, conn)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
