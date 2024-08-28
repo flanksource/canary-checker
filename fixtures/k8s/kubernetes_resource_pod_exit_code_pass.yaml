@@ -12,6 +12,9 @@ spec:
     - name: "pod exit code"
       description: "Create pod & check its exit code"
       namespace: default
+      display:
+        expr: |
+          "Result of check 'exit-code-check': " + display["exit-code-check"]
       resources:
         - apiVersion: v1
           kind: Pod
