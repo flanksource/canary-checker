@@ -16,7 +16,7 @@ require (
 	github.com/eko/gocache/lib/v4 v4.1.6
 	github.com/eko/gocache/store/bigcache/v4 v4.2.1
 	github.com/elastic/go-elasticsearch/v8 v8.13.1
-	github.com/flanksource/artifacts v1.0.9
+	github.com/flanksource/artifacts v1.0.10
 	github.com/flanksource/commons v1.29.1
 	github.com/flanksource/duty v1.0.607
 	github.com/flanksource/gomplate/v3 v3.24.24
@@ -139,6 +139,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fergusstrange/embedded-postgres v1.25.0 // indirect
 	github.com/flanksource/kubectl-neat v1.0.4 // indirect
+	github.com/flanksource/s3fs/v2 v2.0.0-20240725044221-83a6635a9212 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/geoffgarside/ber v1.1.0 // indirect
