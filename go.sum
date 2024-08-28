@@ -855,8 +855,8 @@ github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2
 github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/fergusstrange/embedded-postgres v1.25.0 h1:sa+k2Ycrtz40eCRPOzI7Ry7TtkWXXJ+YRsxpKMDhxK0=
 github.com/fergusstrange/embedded-postgres v1.25.0/go.mod h1:t/MLs0h9ukYM6FSt99R7InCHs1nW0ordoVCcnzmpTYw=
-github.com/flanksource/artifacts v1.0.10 h1:TqQnYL0gbFmVCeos4v7hUTgW+diPSGJXlG82eSlJ9RI=
-github.com/flanksource/artifacts v1.0.10/go.mod h1:HyPcnBGjpn5+j0F2nMB0pffITzia4OX5REUVF3GUvhU=
+github.com/flanksource/artifacts v1.0.11 h1:ebi4AZWVjyniDW+ECUnbeqHTI/7bJP08FIjEishep/4=
+github.com/flanksource/artifacts v1.0.11/go.mod h1:HyPcnBGjpn5+j0F2nMB0pffITzia4OX5REUVF3GUvhU=
 github.com/flanksource/commons v1.29.1 h1:82vkqo0JFFcOwRXkXrKtMPfUlywOb3YQ+mPSSW9gkpo=
 github.com/flanksource/commons v1.29.1/go.mod h1:Kcw3+JI04cVw2zYlv/XTMM1dkNkAwqLYqTxVb19Y/JA=
 github.com/flanksource/duty v1.0.607 h1:Zvi7aSA943+GfgeIH0D2FVLf3n7Ku58pCx44MKz7TK8=
