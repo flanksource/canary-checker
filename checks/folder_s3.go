@@ -18,6 +18,10 @@ type S3 struct {
 	Bucket string
 }
 
+type Pager interface {
+	SetPageSize(maxList int)
+}
+
 func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
@@ -40,6 +44,10 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	fs, err := artifacts.GetFSForConnection(ctx.Context, conn)
 	if err != nil {
 		return results.ErrorMessage(err)
+	}
+
+	if pagerFS, ok := fs.(Pager); ok {
+		pagerFS.SetPageSize(ctx.Properties().Int("s3.list.max-objects", 1000))
 	}
 
 	folders, err := genericFolderCheckWithoutPrecheck(fs, check.Path, check.Recursive, check.Filter)
