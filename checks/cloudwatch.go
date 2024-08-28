@@ -7,9 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
-	awsUtil "github.com/flanksource/artifacts/clients/aws"
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 )
@@ -32,8 +30,7 @@ func (c *CloudWatchChecker) Type() string {
 	return "cloudwatch"
 }
 
-func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
-	check := extConfig.(v1.CloudWatchCheck)
+func (c *CloudWatchChecker) Check(ctx *context.Context, check v1.CloudWatchCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
@@ -42,11 +39,17 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, extConfig external.Check
 		return results.Failf("failed to populate aws connection: %v", err)
 	}
 
-	cfg, err := awsUtil.NewSession(ctx.Context, check.AWSConnection)
+	cfg, err := check.AWSConnection.Client(ctx.Context)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
-	client := cloudwatch.NewFromConfig(*cfg)
+
+	client := cloudwatch.NewFromConfig(cfg, func(o *cloudwatch.Options) {
+		if check.AWSConnection.Endpoint != "" {
+			o.BaseEndpoint = &check.AWSConnection.Endpoint
+		}
+	})
+
 	maxRecords := int32(100)
 	alarms, err := client.DescribeAlarms(ctx, &cloudwatch.DescribeAlarmsInput{
 		AlarmNames:      check.CloudWatchFilter.Alarms,
