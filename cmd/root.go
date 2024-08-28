@@ -105,6 +105,8 @@ func ServerFlags(flags *pflag.FlagSet) {
 	_ = flags.MarkDeprecated("canary-retention-period", "")
 	_ = flags.MarkDeprecated("check-status-retention-period", "")
 
+	_ = flags.MarkDeprecated("cache-timeout", "")
+
 	flags.StringVar(&publicEndpoint, "public-endpoint", publicEndpoint, "Host on which the health dashboard is exposed. Could be used for generting-links, redirects etc.")
 	flags.StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 
