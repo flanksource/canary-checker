@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/flanksource/artifacts"
+	artifactFS "github.com/flanksource/artifacts/fs"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -16,10 +17,6 @@ import (
 type S3 struct {
 	*s3.Client
 	Bucket string
-}
-
-type Pager interface {
-	SetPageSize(maxList int)
 }
 
 func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
@@ -46,8 +43,8 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.ErrorMessage(err)
 	}
 
-	if pagerFS, ok := fs.(Pager); ok {
-		pagerFS.SetPageSize(ctx.Properties().Int("s3.list.max-objects", 1000))
+	if limitFS, ok := fs.(artifactFS.ListItemLimiter); ok {
+		limitFS.SetMaxListItems(ctx.Properties().Int("s3.list.max-objects", 50_000))
 	}
 
 	folders, err := genericFolderCheckWithoutPrecheck(fs, check.Path, check.Recursive, check.Filter)
