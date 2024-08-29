@@ -109,6 +109,8 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 	}
 
 	ctx.Logger.V(4).Infof("found %d checks to run", len(check.Checks))
+
+	displayPerCheck := map[string]string{}
 	for _, c := range check.Checks {
 		virtualCanary := v1.Canary{
 			ObjectMeta: ctx.Canary.ObjectMeta,
@@ -167,6 +169,9 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 				}
 			}
 
+			for _, r := range res {
+				displayPerCheck[r.Check.GetName()] = r.Message
+			}
 			return nil
 		})
 		if retryErr != nil {
@@ -174,6 +179,9 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 		}
 	}
 
+	result.AddData(map[string]any{
+		"display": displayPerCheck,
+	})
 	return results
 }
 
