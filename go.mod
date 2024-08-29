@@ -1,14 +1,13 @@
 module github.com/flanksource/canary-checker
 
-go 1.22.3
+go 1.22.5
+
+toolchain go1.23.0
 
 require (
 	cloud.google.com/go/storage v1.38.0
 	github.com/allegro/bigcache v1.2.1
 	github.com/asecurityteam/rolling v2.0.4+incompatible
-	github.com/aws/aws-sdk-go-v2 v1.30.4
-	github.com/aws/aws-sdk-go-v2/config v1.27.29
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.29
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.48.0
@@ -17,7 +16,7 @@ require (
 	github.com/eko/gocache/lib/v4 v4.1.6
 	github.com/eko/gocache/store/bigcache/v4 v4.2.1
 	github.com/elastic/go-elasticsearch/v8 v8.13.1
-	github.com/flanksource/artifacts v1.0.7
+	github.com/flanksource/artifacts v1.0.14
 	github.com/flanksource/commons v1.29.1
 	github.com/flanksource/duty v1.0.611
 	github.com/flanksource/gomplate/v3 v3.24.24
@@ -32,7 +31,6 @@ require (
 	github.com/gobwas/glob v0.2.3
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-getter v1.7.5
-	github.com/henvic/httpretty v0.1.3
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/joshdk/go-junit v1.0.0
 	github.com/jszwec/csvutil v1.9.0
@@ -103,8 +101,11 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
-	github.com/aws/aws-sdk-go v1.50.8 // indirect
+	github.com/aws/aws-sdk-go v1.55.1 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.30.4 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.4 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.27.29 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.29 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.12 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.16 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.16 // indirect
@@ -121,6 +122,7 @@ require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
+	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -191,6 +193,7 @@ require (
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.21.0 // indirect
+	github.com/henvic/httpretty v0.1.3 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/hirochachacha/go-smb2 v1.1.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
@@ -329,7 +332,10 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
 
-// replace github.com/flanksource/duty => /Users/moshe/go/src/github.com/flanksource/duty
+// replace github.com/flanksource/duty => ../duty
+
+// replace github.com/flanksource/artifacts => ../artifacts
 
 // replace github.com/flanksource/gomplate/v3 => ../gomplate
+
 // replace github.com/flanksource/commons => /Users/moshe/go/src/github.com/flanksource/commons

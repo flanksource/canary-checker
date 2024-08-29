@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
-	awsUtil "github.com/flanksource/artifacts/clients/aws"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -45,15 +44,16 @@ func (c *AwsConfigRuleChecker) Check(ctx *context.Context, extConfig external.Ch
 		return results.Failf("failed to populate aws connection: %v", err)
 	}
 
-	cfg, err := awsUtil.NewSession(ctx.Context, *check.AWSConnection)
+	cfg, err := check.AWSConnection.Client(ctx.Context)
 	if err != nil {
 		return results.Failf("failed to create a session: %v", err)
 	}
 
-	client := configservice.NewFromConfig(*cfg)
-	if err != nil {
-		return results.Failf("failed to describe compliance rules: %v", err)
-	}
+	client := configservice.NewFromConfig(cfg, func(o *configservice.Options) {
+		if check.AWSConnection.Endpoint != "" {
+			o.BaseEndpoint = &check.AWSConnection.Endpoint
+		}
+	})
 
 	var complianceTypes = []types.ComplianceType{}
 	for _, i := range check.ComplianceTypes {

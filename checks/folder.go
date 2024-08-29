@@ -6,9 +6,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/flanksource/artifacts"
+	artifactFS "github.com/flanksource/artifacts/fs"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -111,18 +112,18 @@ func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	return results
 }
 
-func genericFolderCheck(dirFS artifacts.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
+func genericFolderCheck(dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
 	return _genericFolderCheck(true, dirFS, path, recursive, filter)
 }
 
 // genericFolderCheckWithoutPrecheck is used for those filesystems that do not support fetching the stat of a directory.
 // Eg: s3, gcs.
 // It will not pre check whether the given path is a directory.
-func genericFolderCheckWithoutPrecheck(dirFS artifacts.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
+func genericFolderCheckWithoutPrecheck(dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
 	return _genericFolderCheck(false, dirFS, path, recursive, filter)
 }
 
-func _genericFolderCheck(supportsDirStat bool, dirFS artifacts.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
+func _genericFolderCheck(supportsDirStat bool, dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
 	result := FolderCheck{}
 	_filter, err := filter.New()
 	if err != nil {
@@ -170,7 +171,7 @@ func _genericFolderCheck(supportsDirStat bool, dirFS artifacts.Filesystem, path 
 
 // getFolderContents walks the folder and returns all files.
 // Also supports recursively fetching contents
-func getFolderContents(dirFs artifacts.Filesystem, path string, filter *v1.FolderFilterContext) ([]fs.FileInfo, error) {
+func getFolderContents(dirFs artifactFS.Filesystem, path string, filter *v1.FolderFilterContext) ([]fs.FileInfo, error) {
 	files, err := dirFs.ReadDir(path)
 	if err != nil {
 		return nil, err
