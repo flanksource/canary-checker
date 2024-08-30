@@ -1,87 +1,190 @@
-# Default values for canary-checker.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# yaml-language-server: $schema=values.schema.json
 
+# @schema
+# required: false
+# @schema
 global:
+  # @schema
+  # required: false
+  # @schema
   imageRegistry: docker.io
+  # @schema
+  # required: false
+  # @schema
   imagePrefix: flanksource
+  # @schema
+  # required: false
+  # @schema
   labels: {}
+  # @schema
+  # required: false
+  # @schema
+  # @ignored
   db:
     connectionPooler:
       enabled: false
       secretKeyRef:
         name: mission-control-connection-pooler
         key: DB_URL
+  # @schema
+  # required: false
+  # additionalProperties: true
+  # type: object
+  # @schema
+  # -- node's labels for the pod to be scheduled on that node. See [Node Selector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/)
+  nodeSelector: {}
 
+  # @schema
+  # required: false
+  # type: array
+  # items:
+  #   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Toleration
+  # @schema
+  tolerations: []
+
+  # @schema
+  # required: false
+  # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Affinity
+  # @schema
+  affinity: {}
+# @schema
+# default: 1
+# @schema
 replicas: 1
 
 image:
   name: "{{.Values.global.imagePrefix}}/canary-checker"
-  ## Options: minimal | full
-  ## full image is larger and requires more permissions to run, but is required to execute 3rd party checks (jmeter, restic, k6 etc)
+  # @schema
+  # enum:
+  # - full
+  # - minimal
+  # @schema
+  # -- full image is larger and requires more permissions to run, but is required to execute 3rd party checks (jmeter, restic, k6 etc)
   type: minimal
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
+# @schema
+# required: false
+# @schema
 dockerSocket: false
+# @schema
+# required: false
+# @schema
 containerdSocket: false
 
-# Set to true if you want to disable the postgrest service
+# @schema
+# required: false
+# @schema
+# --  Disable the embedded postgrest service
 disablePostgrest: false
 
-# Set to true to enable prometheus service monitor
+# @schema
+# required: false
+# @schema
+# --  Set to true to enable prometheus service monitor
 serviceMonitor: false
+# @schema
+# required: false
+# additionalProperties: true
+# @schema
+serviceMonitorLabels: {}
+
+# @schema
+# required: false
+# @schema
 grafanaDashboards: false
 
-# Turn on pprof /debug endpoint
+# @schema
+# required: false
+# @schema
+# -- Turn on pprof /debug endpoint
 debug: false
 
-# -v, -vv, -vvv
+# @schema
+# required: false
+# @schema
 logLevel: ""
+
+# @schema
+# required: false
+# @schema
 jsonLogs: true
 
-# restrict canary-checker to monitor single namespace for canaries. Leave blank to monitor all namespaces
+# @schema
+# required: false
+# @schema
+# -- restrict canary-checker to monitor single namespace for canaries. Leave blank to monitor all namespaces
 canaryNamespace: ""
 
+# @schema
+# required: false
+# @schema
 # Only canaries matching these namespaces will run.
 # A list of namespaces can be provided with comma separation.
 # Supports [match expression](https://docs.flanksource.com/reference/types/#match-pattern)
 canaryNamespaceSelector: ""
 
+# @schema
+# required: false
+# @schema
 # Only canaries matching these names will run.
 # A list of names can be provided with comma separation.
 # Supports [match expression](https://docs.flanksource.com/reference/types/#match-pattern)
 canarySelector: ""
 
+# @schema
+# required: false
+# @schema
 # Only canaries matching these labels will run.
 # Label values support [match expression](https://docs.flanksource.com/reference/types/#match-pattern)
 canaryLabelSelector: ""
 
+# @schema
+# required: false
+# @schema
 otel:
-  # OpenTelemetry gRPC collector endpoint in host:port format
+  # -- OpenTelemetry gRPC collector endpoint in host:port format
   collector: ""
   serviceName: canary-checker
-  # labels in "a=b,c=d" format
+  # -- labels in "a=b,c=d" format
+  # @schema
+  # required: false
+  # @schema
   labels: ""
 
+# @schema
+# required: false
+# @schema
 db:
+  # @schema
+  # required: false
+  # @schema
   runMigrations: true
   embedded:
-    # If the database is embedded, setting this to true will persist the contents of the database
-    # through a persistent volume
+    # -- persist the embedded DB with a PVC
     persist: false
+    # @schema
+    # required: false
+    # @schema
     storageClass: ""
+    # @schema
+    # required: false
+    # @schema
     storage: 20Gi
+  # @schema
+  # required: false
+  # @schema
   external:
-    # Setting enabled to true will use a external postgres DB, disabling the embedded DB
+    # -- Setting to true will disable the embedded DB
     enabled: false
     # Setting create to true will create a postgres stateful set for config-db to connect to.
     # If create=true, the secretKeyRef will be created by helm with the specified name and key
-    #   Optionally populate a secret named 'postgres-connection' before install with POSTGRES_USER and POSTGRES_PASSWORD to set the created username and password, otherwise a random password will be created for a 'postgres' user
+    #   Optionally populate a secret named 'postgres-connection' before install with `POSTGRES_USER` and `POSTGRES_PASSWORD` to set the created username and password, otherwise a random password will be created for a 'postgres' user
+    # -- If false and an existing connection must be specified under secretKeyRef
     # If create=false, a prexisting secret containing the URI to an existing postgres database must be provided
-    #   The URI must be in the format 'postgresql://"$user":"$password"@"$host"/"$database"'
-    # Setting this to true will provision a new postgress DB for you
+    #   The URI must be in the format `postgresql://$user:$password@$host/$database`
     create: false
     secretKeyRef:
       name: canary-checker-postgres
@@ -92,21 +195,33 @@ db:
     storageClass: ""
     storage: 20Gi
 
+# @schema
+# required: false
+# @schema
 nameOverride: ""
 
-# set the mechanism for pings - either privileged, privileged or none
+# @schema
+# enum:
+#  - privileged
+#  - unprivileged
+#  - none
+# @schema
+# -- set the mechanism for pings - either privileged, unprivileged or none
 pingMode: "unprivileged"
+# @schema
+# required: false
+# @schema
 allowPrivilegeEscalation: false
 
-# Prometheus URL
+# @schema
+# required: false
+# @schema
+# -- Default Prometheus URL to use in prometheus checks
 prometheusURL: ""
 
-data:
-  defaultSearchWindow: 1h
-  checkStatusRetentionDays: 180
-  checkRetentionDays: 7
-  canaryRetentionDays: 7
-
+# @schema
+# required: false
+# @schema
 upstream:
   enabled: false
   agentName: ""
@@ -114,28 +229,75 @@ upstream:
   user: ""
   password: ""
   insecureSkipVerify: false
-  # Alternative to inlining values, secret must contain: AGENT_NAME, UPSTREAM_USER, UPSTREAM_PASSWORD & UPSTREAM_HOST
+  # -- Alternative to inlining values, secret must contain: AGENT_NAME, UPSTREAM_USER, UPSTREAM_PASSWORD & UPSTREAM_HOST
+  # @schema
+  # required: false
+  # @schema
   secretKeyRef:
+    # @schema
+    # required: false
+    # @schema
     name:
 
+# @schema
+# required: false
+# @schema
 ingress:
+  # @schema
+  # required: false
+  # @schema
+  # -- Expose the canary-checker service on an ingress, normally not needed as the service is exposed through `flanksource-ui.ingress`
   enabled: false
+  # @schema
+  # required: false
+  # @schema
   className: ""
-  annotations:
-    {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
+  # @schema
+  # required: false
+  # @schema
+  annotations: {}
+  # @schema
+  # required: false
+  # default: canary-checker
+  # @schema
   host: canary-checker
+  # @schema
+  # required: false
+  # @schema
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
 
+# @schema
+# required: false
+# $ref: https://raw.githubusercontent.com/flanksource/flanksource-ui/main/chart/values.schema.deref.json
+# additionalProperties: true
+# @schema
 flanksource-ui:
+  # @schema
+  # required: false
+  # default: true
+  # @schema
   enabled: true
+  # @schema
+  # required: false
+  # @schema
+  # @ignored
   nameOverride: "canary-checker-ui"
-  fullnameOverride: "canary-checker-ui"
+  # @schema
+  # required: false
+  # @schema
+  # @ignored
   oryKratosURL: ""
+  # @schema
+  # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.ResourceRequirements
+  # @schema
+  image:
+    name: "{{.Values.global.imagePrefix}}/canary-checker-ui"
+  # @schema
+  # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.ResourceRequirements
+  # @schema
   resources:
     requests:
       cpu: 10m
@@ -143,19 +305,37 @@ flanksource-ui:
     limits:
       cpu: 200m
       memory: 512Mi
+  # @schema
+  # required: false
+  # @schema
   backendURL: "http://canary-checker:8080"
   ingress:
+    # @schema
+    # required: false
+    # default: true
+    # @schema
     enabled: true
+    # @schema
+    # required: false
+    # default: canary-checker-ui.local
+    # @schema
     host: "canary-checker-ui.local"
-    annotations:
-      {}
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
+    # @schema
+    # additionalProperties: true
+    # required: false
+    # @schema
+    annotations: {}
+    # @schema
+    # required: false
+    # @schema
     tls: []
     #  - secretName: chart-example-tls
     #    hosts:
     #      - chart-example.local
 
+# @schema
+# $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.ResourceRequirements
+# @schema
 resources:
   requests:
     cpu: 200m
@@ -163,65 +343,123 @@ resources:
   limits:
     memory: 2Gi
 
+# @schema
+# required: false
+# @schema
 serviceAccount:
+  # @schema
+  # required: false
+  # default: canary-checker-sa
+  # @schema
   name: canary-checker-sa
-  # Configures extra annotations on the service account
-  # annotations:
-  #   some: annotation
+
+  # @schema
+  # additionalProperties: true
+  # required: false
+  # @schema
+  annotations: {}
+
+  # @schema
+  # required: false
+  # @schema
   rbac:
-    # When set to false will not install Roles & Bindings.
+    #
+    # @schema
+    # required: false
+    # default: true
+    # @schema
+    # -- Install (Cluster)Role and RoleBinding for the ServiceAccount
     enable: true
 
-    # Whether to create cluster-wide or namespaced roles
+    # @schema
+    # required: false
+    # default: true
+    # @schema
+    # -- whether to create cluster-wide or namespaced roles
     clusterRole: true
 
-    # for secret management with valueFrom
+    # --  for secret management with valueFrom
     tokenRequest: true
+    # --  for secret management with valueFrom
     secrets: true
+    # --  for secret management with valueFrom
     configmaps: true
 
-    # for use with kubernetes resource lookups
+    # --  for use with kubernetes resource lookups
     readAll: true
 
-    # for pod and junit canaries
+    # -- for pod and junit canaries
     podsCreateAndDelete: true
+    # to collect logs and output from pod and junit canaries
     exec: true
 
-    # for pod canary
+    # -- for pod canary
     ingressCreateAndDelete: true
 
-    # for namespace canary
+    # -- for namespace canary
     namespaceCreateAndDelete: true
 
-disableChecks: {}
+# @schema
+# type: array
+# required: false
+# @schema
+# -- List of check types to disable
+disableChecks: []
 
-# a list of properties to update on startup
+# @schema
+# additionalProperties: true
+# @schema
+# -- A map of properties to update on startup
 properties: {}
+
+# @schema
+# additionalProperties: true
+# @schema
+extraArgs:
+  # cache-timeout: "90"
+  # default-window: 1h
+
+# @schema
+# additionalProperties: true
+# required: false
+# type: object
+# @schema
+extra: {}
+
+# @schema
+# required: false
+# type: array
+# items:
+#   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Volume
+# @schema
+volumes: []
+
+# @schema
+# required: false
+# type: array
+# items:
+#   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.VolumeMount
+# @schema
+volumeMounts: []
 
 # @schema
 # required: false
 # additionalProperties: true
 # type: object
 # @schema
-podAnnotations: {}
+# -- node's labels for the pod to be scheduled on that node. See [Node Selector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/)
+nodeSelector: {}
 
-# a map of extra arguments to the canary-checker cli
-extraArgs: {}
-extra:
-  # nodeSelector:
-  #   key: value
-  # tolerations:
-  #   - key: "key1"
-  #     operator: "Equal"
-  #     value: "value1"
-  #     effect: "NoSchedule"
-  # affinity:
-  #   nodeAffinity:
-  #       requiredDuringSchedulingIgnoredDuringExecution:
-  #         nodeSelectorTerms:
-  #         - matchExpressions:
-  #           - key: kubernetes.io/e2e-az-name
-  #             operator: In
-  #             values:
-  #             - e2e-az1
-  #             - e2e-az2
+# @schema
+# required: false
+# type: array
+# items:
+#   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Toleration
+# @schema
+tolerations: []
+
+# @schema
+# required: false
+# $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Affinity
+# @schema
+affinity: {}
