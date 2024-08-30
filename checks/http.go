@@ -14,7 +14,6 @@ import (
 	"github.com/flanksource/commons/http/middlewares"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
-	"github.com/flanksource/gomplate/v3"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
@@ -231,7 +230,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	body := check.Body
 	if check.TemplateBody {
-		body, err = ctx.RunTemplate(gomplate.Template{Template: body}, ctx.Environment)
+		body, err = template(ctx, v1.Template{Template: body})
 		if err != nil {
 			return results.WithError(oops.Wrap(err)).Invalidf("failed to template request body: %v", err)
 		}
@@ -252,7 +251,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	start := time.Now()
 
-	ctx.Infof("%s	%s", console.Greenf(check.GetMethod()), check.URL)
+	ctx.Tracef("%s	%s", console.Greenf(check.GetMethod()), check.URL)
 
 	response, err := request.Do(check.GetMethod(), check.URL)
 	if err != nil {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/flanksource/artifacts/clients/smb"
+	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -15,34 +15,30 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 
-	var serverPath = strings.TrimPrefix(check.Path, "smb://")
-	server, sharename, path, err := extractServerDetails(serverPath)
+	serverPath := strings.TrimPrefix(check.Path, "smb://")
+	server, share, path, err := extractServerDetails(serverPath)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
 
-	foundConn, err := check.SMBConnection.HydrateConnection(ctx)
-	if err != nil {
+	if err := check.SMBConnection.Populate(ctx); err != nil {
 		return results.Failf("failed to populate SMB connection: %v", err)
 	}
 
-	auth := check.SMBConnection.Authentication
-	if !foundConn {
-		auth, err = ctx.GetAuthValues(check.SMBConnection.Authentication)
-		if err != nil {
-			return results.ErrorMessage(err)
-		}
+	if server != "" {
+		check.SMBConnection.Domain = server
 	}
 
-	session, err := smb.SMBConnect(server, fmt.Sprintf("%d", check.SMBConnection.GetPort()), sharename, auth)
+	if share != "" {
+		check.SMBConnection.Share = share
+	}
+
+	fs, err := artifacts.GetFSForConnection(ctx.Context, check.SMBConnection.ToModel())
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
-	if session != nil {
-		defer session.Close()
-	}
 
-	folders, err := genericFolderCheck(session, path, check.Recursive, check.Filter)
+	folders, err := genericFolderCheck(fs, path, check.Recursive, check.Filter)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

@@ -205,7 +205,7 @@ func getRowValues(columnTypes []*sql.ColumnType) []interface{} {
 		case "UUID":
 			var v uuid.UUID
 			rowValues[i] = &v
-		case "TEXT", "VARCHAR", "CHAR", "NAME":
+		case "TEXT", "VARCHAR", "CHAR", "NAME", "NVARCHAR", "NTEXT":
 			var v sql.NullString
 			rowValues[i] = &v
 		default:

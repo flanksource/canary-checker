@@ -972,6 +972,16 @@ type KubernetesResourceCheck struct {
 	WaitFor KubernetesResourceCheckWaitFor `json:"waitFor,omitempty"`
 }
 
+func (c KubernetesResourceCheck) GetDisplayTemplate() Template {
+	if !c.Templatable.Display.IsEmpty() {
+		return c.Templatable.Display
+	}
+
+	return Template{
+		Expression: "display.keys().map(k, k + ': ' + display[k]).join('\n')",
+	}
+}
+
 func (c KubernetesResourceCheck) TotalResources() int {
 	return len(c.Resources) + len(c.StaticResources)
 }

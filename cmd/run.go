@@ -33,7 +33,7 @@ var Run = &cobra.Command{
 			log.Fatalln("Must specify at least one canary")
 		}
 
-		ctx, closer, err := duty.Start("canary-checker", duty.ClientOnly)
+		ctx, closer, err := duty.Start("canary-checker", duty.ClientOnly, duty.SkipMigrationByDefaultMode)
 		if err != nil {
 			logger.Fatalf("Failed to initialize db: %v", err.Error())
 		}
@@ -91,15 +91,11 @@ var Run = &cobra.Command{
 				} else {
 					passed++
 				}
-				logPass := result.Canary.IsDebug() || result.Canary.IsTrace() || logPass
-				logFail := result.Canary.IsDebug() || result.Canary.IsTrace() || logFail
 
-				if logPass && result.Pass || logFail && !result.Pass {
-					if result.Pass || result.ErrorObject == nil {
-						logger.GetLogger(result.LoggerName()).Infof("%s", result.String())
-					} else {
-						logger.GetLogger(result.LoggerName()).Infof("%s %+v", result.String(), result.ErrorObject)
-					}
+				if result.Pass || result.ErrorObject == nil {
+					logger.GetLogger(result.LoggerName()).Infof("%s", result.String())
+				} else {
+					logger.GetLogger(result.LoggerName()).Infof("%s %+v", result.String(), result.ErrorObject)
 				}
 				results = append(results, result)
 			}
@@ -171,7 +167,7 @@ func def(a ...string) string {
 func init() {
 	Run.PersistentFlags().StringVarP(&dataFile, "data", "d", "", "Template out each spec using the JSON or YAML data in this file")
 	Run.PersistentFlags().StringVarP(&outputFile, "output-file", "o", "", "file to output the results in")
-	duty.BindPFlags(Run.Flags(), duty.ClientOnly)
+	duty.BindPFlags(Run.Flags(), duty.ClientOnly, duty.SkipMigrationByDefaultMode)
 	Run.Flags().StringVarP(&runNamespace, "namespace", "n", "", "Namespace to run canary checks in")
 	Run.Flags().BoolVar(&junit, "junit", false, "output results in junit format")
 	Run.Flags().BoolVarP(&jsonExport, "json", "j", false, "output results in json format")
