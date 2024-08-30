@@ -103,6 +103,9 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	if runner.WatchNamespace != "" {
+		if managerOpt.Cache.DefaultNamespaces == nil {
+			managerOpt.Cache.DefaultNamespaces = make(map[string]ctrlCache.Config)
+		}
 		managerOpt.Cache.DefaultNamespaces[runner.WatchNamespace] = ctrlCache.Config{}
 	}
 
