@@ -74,7 +74,7 @@ var RunTopology = &cobra.Command{
 
 		defer runner.Shutdown()
 		var err error
-		apicontext.DefaultContext, _, err = duty.Start("canary-checker", duty.ClientOnly)
+		apicontext.DefaultContext, _, err = duty.Start("canary-checker", duty.ClientOnly, duty.SkipMigrationByDefaultMode)
 		if err != nil {
 			logger.Errorf(err.Error())
 			return
@@ -134,7 +134,7 @@ var RunTopology = &cobra.Command{
 }
 
 func init() {
-	duty.BindPFlags(Topology.PersistentFlags())
+	duty.BindPFlags(Topology.PersistentFlags(), duty.SkipMigrationByDefaultMode)
 	QueryTopology.Flags().StringVar(&queryParams.ID, "component", "", "The component id to query")
 	QueryTopology.Flags().IntVar(&queryParams.Depth, "depth", 10, "The depth of the components to return")
 	RunTopology.Flags().StringVarP(&topologyOutput, "output", "o", "", "Output file to write results to")

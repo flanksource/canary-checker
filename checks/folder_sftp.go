@@ -1,11 +1,7 @@
 package checks
 
 import (
-	"fmt"
-
 	"github.com/flanksource/artifacts"
-	"github.com/flanksource/artifacts/clients/sftp"
-
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
@@ -16,27 +12,16 @@ func CheckSFTP(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	var results pkg.Results
 	results = append(results, result)
 
-	foundConn, err := check.SFTPConnection.HydrateConnection(ctx)
-	if err != nil {
+	if err := check.SFTPConnection.HydrateConnection(ctx); err != nil {
 		return results.Failf("failed to populate SFTP connection: %v", err)
 	}
 
-	auth := check.SFTPConnection.Authentication
-	if !foundConn {
-		auth, err = ctx.GetAuthValues(check.SFTPConnection.Authentication)
-		if err != nil {
-			return results.ErrorMessage(err)
-		}
-	}
-
-	client, err := sftp.SSHConnect(fmt.Sprintf("%s:%d", check.SFTPConnection.Host, check.SFTPConnection.GetPort()), auth.GetUsername(), auth.GetPassword())
+	fs, err := artifacts.GetFSForConnection(ctx.Context, check.SFTPConnection.ToModel())
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
-	defer client.Close()
 
-	session := artifacts.Filesystem(client)
-	folders, err := genericFolderCheck(session, check.Path, check.Recursive, check.Filter)
+	folders, err := genericFolderCheck(fs, check.Path, check.Recursive, check.Filter)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

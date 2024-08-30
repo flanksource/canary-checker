@@ -4,9 +4,7 @@ package checks
 
 import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
-	awsUtil "github.com/flanksource/artifacts/clients/aws"
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/duty/connection"
@@ -30,8 +28,7 @@ func (c *AwsConfigChecker) Type() string {
 	return "awsconfig"
 }
 
-func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
-	check := extConfig.(v1.AwsConfigCheck)
+func (c *AwsConfigChecker) Check(ctx *context.Context, check v1.AwsConfigCheck) pkg.Results {
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
@@ -44,12 +41,17 @@ func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check)
 		}
 	}
 
-	cfg, err := awsUtil.NewSession(ctx.Context, *check.AWSConnection)
+	cfg, err := check.AWSConnection.Client(ctx.Context)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
 
-	client := configservice.NewFromConfig(*cfg)
+	client := configservice.NewFromConfig(cfg, func(o *configservice.Options) {
+		if check.AWSConnection.Endpoint != "" {
+			o.BaseEndpoint = &check.AWSConnection.Endpoint
+		}
+	})
+
 	if check.AggregatorName != nil {
 		output, err := client.SelectAggregateResourceConfig(ctx, &configservice.SelectAggregateResourceConfigInput{
 			ConfigurationAggregatorName: check.AggregatorName,

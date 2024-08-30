@@ -74,9 +74,8 @@ spec:
       minSize: 25b
     - name: recursive folders
       namespace: default
-      path: s3://recursive-test/developers
-      minCount: 3
-      recursive: true
+      path: s3://recursive-test/developers/**/*.txt
+      minCount: 4
       display:
         expr: results.?files.orValue([]).map(i, i.name).join(", ")
       awsConnection:
