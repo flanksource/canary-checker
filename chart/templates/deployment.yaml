@@ -43,6 +43,8 @@ spec:
         {{- include "canary-checker.selectorLabels" . | nindent 8 }}
         {{- include "canary-checker.extraLabels" . | nindent 8 }}
     spec:
+      # running multiple replicas is not supported: https://github.com/flanksource/canary-checker/issues/2042
+      replicas: 1
       serviceAccountName: {{ .Values.serviceAccount.name }}
       volumes:
         {{- if eq .Values.dockerSocket true }}
@@ -64,6 +66,9 @@ spec:
         - name: config
           configMap:
             name: {{ include "canary-checker.name" . }}
+        {{- with .Values.volumeMounts }}
+          {{- toYaml . | nindent 8}}
+        {{- end }}
       securityContext:
         fsGroup: 1000
         {{- if eq .Values.pingMode "unprivileged" }}
@@ -131,6 +136,9 @@ spec:
             - mountPath: /app/canary-checker.properties
               name: config
               subPath: canary-checker.properties
+            {{- with .Values.volumeMounts }}
+              {{- toYaml . | nindent 12}}
+            {{- end }}
           command:
             - /app/canary-checker
           args:
@@ -142,7 +150,6 @@ spec:
             - "8080"
             - --disable-postgrest={{ .Values.disablePostgrest }}
             - --db-migrations={{ .Values.db.runMigrations }}
-            - --default-window={{ .Values.data.defaultSearchWindow }}
             {{- if ne .Values.canaryNamespace "" }}
             - --namespace={{ .Values.canaryNamespace }}
             {{- end }}
@@ -202,4 +209,16 @@ spec:
               port: 8080
       {{- with .Values.extra }}
       {{- toYaml . | nindent 6 }}
+      {{- end }}
+      {{- with  (merge .Values.nodeSelector .Values.global.nodeSelector ) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with  (merge .Values.affinity .Values.global.affinity) }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with  (concat .Values.tolerations .Values.global.tolerations) }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
       {{- end }}

@@ -1,0 +1,111 @@
+# yaml-language-server: $schema=../values.schema.json
+
+global:
+  imageRegistry: private-repo
+
+image:
+  name: "{{.Values.global.imagePrefix}}/canary-checker"
+  type: full
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+dockerSocket: false
+
+containerdSocket: false
+
+# --  Disable the embedded postgrest service
+disablePostgrest: false
+
+# --  Set to true to enable prometheus service monitor
+serviceMonitor: true
+serviceMonitorLabels:
+  c: d
+
+grafanaDashboards: false
+
+# -- Turn on pprof /debug endpoint
+debug: false
+
+logLevel: "-vv"
+
+jsonLogs: true
+
+# -- restrict canary-checker to monitor single namespace for canaries.  Leave blank to monitor all namespaces
+canaryNamespace: ""
+
+otel:
+  # -- OpenTelemetry gRPC collector endpoint in host:port format
+  collector: "localhost:4417"
+  serviceName: canary-checker
+  labels: "a=b"
+
+db:
+  embedded:
+    persist: true
+    # storageClass: "ebs"
+pingMode: "none"
+
+allowPrivilegeEscalation: false
+
+prometheusURL: http://prometheus:8080
+
+flanksource-ui:
+  ingress:
+    annotations:
+      tls/acme: "true"
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 200Mi
+  limits:
+    memory: 2Gi
+
+disableChecks:
+  - pod
+
+serviceAccount:
+  rbac:
+    clusterRole: true
+    configmaps: true
+    exec: true
+    ingressCreateAndDelete: true
+    namespaceCreateAndDelete: true
+    podsCreateAndDelete: true
+    readAll: true
+    secrets: true
+    tokenRequest: true
+properties:
+  log.caller: true
+
+extraArgs:
+
+extra:
+  automountServiceAccountToken: false
+
+volumes:
+  - name: test-name
+    configMap:
+      name: test
+
+volumeMounts:
+  - name: test
+    mountPath: /test
+
+nodeSelector:
+  sample: a
+
+tolerations:
+  - effect: NoSchedule
+    key: abc
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - preference:
+          matchExpressions:
+            - key: app
+              operator: In
+              values:
+                - canary-checker
+        weight: 1
