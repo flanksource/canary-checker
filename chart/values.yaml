@@ -254,6 +254,7 @@ ingress:
   className: ""
   # @schema
   # required: false
+  # additionalProperties: true
   # @schema
   annotations: {}
   # @schema
@@ -321,8 +322,8 @@ flanksource-ui:
     # @schema
     host: "canary-checker-ui.local"
     # @schema
-    # additionalProperties: true
     # required: false
+    # additionalProperties: true
     # @schema
     annotations: {}
     # @schema
