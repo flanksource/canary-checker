@@ -6,7 +6,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://flanksource.github.io/charts | flanksource-ui | 1.0.751 |
+| https://flanksource.github.io/charts | flanksource-ui | 1.0.757 |
 
 ## Values
 

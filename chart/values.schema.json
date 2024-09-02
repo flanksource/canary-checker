@@ -286,7 +286,7 @@
       "additionalProperties": false,
       "properties": {
         "annotations": {
-          "additionalProperties": false,
+          "additionalProperties": true,
           "title": "annotations"
         },
         "className": {

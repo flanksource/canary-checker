@@ -10,7 +10,8 @@ metadata:
     {{- include "canary-checker.labels" . | nindent 4 }}
     {{- include "canary-checker.extraLabels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicas }}
+  # running multiple replicas is not supported: https://github.com/flanksource/canary-checker/issues/2042
+  replicas: 1
   revisionHistoryLimit: 1
   selector:
     matchLabels:
@@ -43,8 +44,6 @@ spec:
         {{- include "canary-checker.selectorLabels" . | nindent 8 }}
         {{- include "canary-checker.extraLabels" . | nindent 8 }}
     spec:
-      # running multiple replicas is not supported: https://github.com/flanksource/canary-checker/issues/2042
-      replicas: 1
       serviceAccountName: {{ .Values.serviceAccount.name }}
       volumes:
         {{- if eq .Values.dockerSocket true }}
