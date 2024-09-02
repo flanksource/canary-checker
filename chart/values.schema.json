@@ -161,24 +161,23 @@
       "$ref": "https://raw.githubusercontent.com/flanksource/flanksource-ui/main/chart/values.schema.deref.json"
     },
     "global": {
-      "additionalProperties": false,
+      "additionalProperties": true,
       "properties": {
         "affinity": {
           "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Affinity"
         },
         "db": {
-          "additionalProperties": false,
+          "additionalProperties": true,
           "properties": {
             "connectionPooler": {
-              "additionalProperties": false,
+              "additionalProperties": true,
               "properties": {
                 "enabled": {
-                  "default": false,
-                  "title": "enabled",
-                  "type": "boolean"
+                  "default": "false",
+                  "title": "enabled"
                 },
                 "secretKeyRef": {
-                  "additionalProperties": false,
+                  "additionalProperties": true,
                   "properties": {
                     "key": {
                       "default": "DB_URL",
@@ -191,27 +190,20 @@
                       "type": "string"
                     }
                   },
+                  "description": "@ignored",
                   "title": "secretKeyRef",
-                  "type": "object",
                   "required": [
                     "name",
                     "key"
                   ]
                 }
               },
-              "title": "connectionPooler",
-              "type": "object",
-              "required": [
-                "enabled",
-                "secretKeyRef"
-              ]
+              "description": "@ignored",
+              "title": "connectionPooler"
             }
           },
           "description": "@ignored",
-          "title": "db",
-          "required": [
-            "connectionPooler"
-          ]
+          "title": "db"
         },
         "imagePrefix": {
           "default": "flanksource",

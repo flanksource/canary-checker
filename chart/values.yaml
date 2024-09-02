@@ -2,6 +2,7 @@
 
 # @schema
 # required: false
+# additionalProperties: true
 # @schema
 global:
   # @schema
@@ -18,14 +19,29 @@ global:
   labels: {}
   # @schema
   # required: false
+  # additionalProperties: true
   # @schema
   # @ignored
   db:
+    # @schema
+    # required: false
+    # additionalProperties: true
+    # @schema
+    # @ignored
     connectionPooler:
+      # @schema
+      # required: false
+      # @schema
       enabled: false
+      # @schema
+      # required: false
+      # additionalProperties: true
+      # @schema
+      # @ignored
       secretKeyRef:
         name: mission-control-connection-pooler
         key: DB_URL
+
   # @schema
   # required: false
   # additionalProperties: true
