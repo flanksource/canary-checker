@@ -166,6 +166,7 @@ type Component struct {
 	CostTotal30d    float64                     `json:"cost_total_30d,omitempty" gorm:"column:cost_total_30d"`
 	LogSelectors    dutyTypes.LogSelectors      `json:"logs,omitempty" gorm:"column:log_selectors"`
 	StatusExpr      string                      `json:"status_expr,omitempty" gorm:"column:status_expr;default:null"`
+	HealthExpr      string                      `json:"health_expr,omitempty" gorm:"column:health_expr;default:null"`
 
 	// ConfigID is the id of the config from which this component is derived
 	ConfigID *uuid.UUID `json:"config_id,omitempty"`
@@ -251,6 +252,7 @@ func (component *Component) Clone() Component {
 		Properties:      component.Properties,
 		ExternalId:      component.ExternalId,
 		Schedule:        component.Schedule,
+		HealthExpr:      component.HealthExpr,
 		StatusExpr:      component.StatusExpr,
 		Health:          component.Health,
 	}
@@ -302,6 +304,7 @@ func NewComponent(c v1.ComponentSpec) *Component {
 		Configs:         c.Configs,
 		LogSelectors:    c.LogSelectors,
 		ParentLookup:    c.ParentLookup,
+		HealthExpr:      c.HealthExpr,
 		StatusExpr:      c.StatusExpr,
 		Health:          c.Health,
 	}

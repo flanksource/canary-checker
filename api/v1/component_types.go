@@ -65,8 +65,12 @@ type ComponentSpec struct {
 	ParentLookup *ParentLookup `json:"parentLookup,omitempty"`
 
 	// statusExpr allows defining a cel expression to evaluate the status of a component
-	// based on the summary and the related config
+	// based on the summary.
 	StatusExpr string `json:"statusExpr,omitempty"`
+
+	// healthExpr allows defining a cel expression to evaluate the health of a component
+	// based on the summary.
+	HealthExpr string `json:"healthExpr,omitempty"`
 
 	Health *models.Health `json:"health,omitempty"`
 }
