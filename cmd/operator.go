@@ -10,6 +10,7 @@ import (
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/go-logr/logr"
 	gocache "github.com/patrickmn/go-cache"
 
 	canaryv1 "github.com/flanksource/canary-checker/api/v1"
@@ -17,7 +18,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/commons/logger"
 	dutyKubernetes "github.com/flanksource/duty/kubernetes"
-	"github.com/go-logr/logr"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel"
 	"k8s.io/apimachinery/pkg/runtime"

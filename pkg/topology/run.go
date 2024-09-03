@@ -693,7 +693,6 @@ func (tj *TopologyJob) run(ctx *ComponentContext, job job.JobRuntime) (pkg.Compo
 			c.Namespace = ctx.Topology.GetNamespace()
 		}
 		c.Schedule = ctx.Topology.Spec.Schedule
-
 	}
 
 	return results, skipComponentDeletion

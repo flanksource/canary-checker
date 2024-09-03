@@ -13842,6 +13842,11 @@ spec:
                         type: array
                     type: object
                   type: array
+                statusExpr:
+                  description: |-
+                    statusExpr allows defining a cel expression to evaluate the status of a component
+                    based on the summary.
+                  type: string
                 summary:
                   description: Summary is the health, incidents, insights & check summary
                   properties:
@@ -14331,6 +14336,11 @@ spec:
                               type: array
                           type: object
                         type: array
+                      statusExpr:
+                        description: |-
+                          statusExpr allows defining a cel expression to evaluate the status of a component
+                          based on the summary.
+                        type: string
                       summary:
                         description: Summary is the health, incidents, insights & check summary
                         properties:
@@ -15026,6 +15036,11 @@ spec:
                       type: object
                   type: object
                 schedule:
+                  type: string
+                statusExpr:
+                  description: |-
+                    statusExpr allows defining a cel expression to evaluate the status of a component
+                    based on the summary.
                   type: string
                 text:
                   type: string
