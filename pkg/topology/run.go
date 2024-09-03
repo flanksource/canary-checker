@@ -16,7 +16,6 @@ import (
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
-	"github.com/flanksource/gomplate/v3"
 	"github.com/labstack/echo/v4"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
@@ -585,6 +584,7 @@ func (tj *TopologyJob) run(ctx *ComponentContext, job job.JobRuntime) (pkg.Compo
 		Type:       ctx.Topology.Spec.Type,
 		Schedule:   ctx.Topology.Spec.Schedule,
 		StatusExpr: ctx.Topology.Spec.StatusExpr,
+		HealthExpr: ctx.Topology.Spec.HealthExpr,
 	}
 
 	if rootComponent.Name == "" {
@@ -694,17 +694,6 @@ func (tj *TopologyJob) run(ctx *ComponentContext, job job.JobRuntime) (pkg.Compo
 		}
 		c.Schedule = ctx.Topology.Spec.Schedule
 
-		if c.StatusExpr != "" {
-			env := map[string]any{
-				"summary": c.Summary.AsEnv(),
-			}
-			statusOut, err := gomplate.RunTemplate(env, gomplate.Template{Expression: c.StatusExpr})
-			if err != nil {
-				job.History.AddError(fmt.Sprintf("Failed to evaluate status expression %s: %v", c.StatusExpr, err))
-			} else {
-				c.Status = types.ComponentStatus(statusOut)
-			}
-		}
 	}
 
 	return results, skipComponentDeletion

@@ -13301,6 +13301,11 @@ spec:
                   x-kubernetes-preserve-unknown-fields: true
                 health:
                   type: string
+                healthExpr:
+                  description: |-
+                    healthExpr allows defining a cel expression to evaluate the health of a component
+                    based on the summary.
+                  type: string
                 hidden:
                   description: If set to true, do not display in UI
                   type: boolean
@@ -13569,11 +13574,6 @@ spec:
                         type: array
                     type: object
                   type: array
-                statusExpr:
-                  description: |-
-                    statusExpr allows defining a cel expression to evaluate the status of a component
-                    based on the summary and the related config
-                  type: string
                 summary:
                   description: Summary is the health, incidents, insights & check summary
                   properties:
@@ -13789,6 +13789,11 @@ spec:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
                       health:
+                        type: string
+                      healthExpr:
+                        description: |-
+                          healthExpr allows defining a cel expression to evaluate the health of a component
+                          based on the summary.
                         type: string
                       hidden:
                         description: If set to true, do not display in UI
@@ -14058,11 +14063,6 @@ spec:
                               type: array
                           type: object
                         type: array
-                      statusExpr:
-                        description: |-
-                          statusExpr allows defining a cel expression to evaluate the status of a component
-                          based on the summary and the related config
-                        type: string
                       summary:
                         description: Summary is the health, incidents, insights & check summary
                         properties:
@@ -14212,6 +14212,11 @@ spec:
                   required:
                     - tag
                   type: object
+                healthExpr:
+                  description: |-
+                    statusExpr allows defining a cel expression to evaluate the status of a component
+                    based on the summary.
+                  type: string
                 icon:
                   type: string
                 id:
@@ -14753,11 +14758,6 @@ spec:
                       type: object
                   type: object
                 schedule:
-                  type: string
-                statusExpr:
-                  description: |-
-                    statusExpr allows defining a cel expression to evaluate the status of a component
-                    based on the summary and the related config
                   type: string
                 text:
                   type: string
