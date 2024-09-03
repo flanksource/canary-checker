@@ -917,6 +917,9 @@
         "parentLookup": {
           "$ref": "#/$defs/ParentLookup"
         },
+        "statusExpr": {
+          "type": "string"
+        },
         "healthExpr": {
           "type": "string"
         },
@@ -1009,6 +1012,9 @@
         },
         "parentLookup": {
           "$ref": "#/$defs/ParentLookup"
+        },
+        "statusExpr": {
+          "type": "string"
         },
         "healthExpr": {
           "type": "string"
@@ -4431,6 +4437,9 @@
           "type": "array"
         },
         "healthExpr": {
+          "type": "string"
+        },
+        "statusExpr": {
           "type": "string"
         },
         "properties": {
