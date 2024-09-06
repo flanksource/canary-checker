@@ -28,7 +28,7 @@ func (c *CatalogChecker) Check(ctx *canaryContext.Context, check v1.CatalogCheck
 	var results pkg.Results
 	results = append(results, result)
 
-	items, err := query.FindConfigsByResourceSelector(ctx.Context, ctx.Properties().Int("resource.lookup.limit", 1000), check.Selector...)
+	items, err := query.FindConfigsByResourceSelector(ctx.Context, -1, check.Selector...)
 	if err != nil {
 		return results.Failf("failed to fetch catalogs: %v", err)
 	}
