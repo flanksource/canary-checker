@@ -77,7 +77,7 @@ func GetChecksForComponent(ctx context.Context, component *pkg.Component) ([]mod
 	for idx, componentCheck := range component.ComponentChecks {
 		hash := componentCheck.Hash()
 		if componentCheck.Selector.LabelSelector != "" {
-			checks, err := query.FindChecks(ctx, componentCheck.Selector)
+			checks, err := query.FindChecks(ctx, ctx.Properties().Int("resource.lookup.limit", 1000), componentCheck.Selector)
 			if err != nil {
 				return nil, err
 			}
