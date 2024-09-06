@@ -30,7 +30,7 @@ var ComponentRelationshipSync = &job.Job{
 
 		for _, component := range components {
 			hash := component.Selectors.Hash()
-			comps, err := query.FindComponents(ctx.Context, ctx.Properties().Int("resource.lookup.limit", 1000), component.Selectors...)
+			comps, err := query.FindComponents(ctx.Context, -1, component.Selectors...)
 			if err != nil {
 				ctx.History.AddError(fmt.Sprintf("error getting components with selectors: %v. err: %v", component.Selectors, err))
 				continue

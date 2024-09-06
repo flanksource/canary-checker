@@ -98,7 +98,7 @@ func SyncComponentConfigRelationship(ctx context.Context, component pkg.Componen
 	var relationshipsToPersist []models.ConfigComponentRelationship
 
 	for _, config := range component.Configs {
-		dbConfigIDs, err := query.FindConfigIDs(ctx, ctx.Properties().Int("resource.lookup.limit", 1000), *config)
+		dbConfigIDs, err := query.FindConfigIDs(ctx, -1, *config)
 		if err != nil {
 			return errors.Wrap(err, "error fetching config from database")
 		}
