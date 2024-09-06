@@ -186,7 +186,7 @@ func (component *Component) FindExisting(ctx context.Context) (*models.Component
 		Cache:          "max-age=60m",
 		IncludeDeleted: true,
 	}
-	if comps, err := dutyQuery.FindComponents(ctx, rs); err == nil && len(comps) > 0 {
+	if comps, err := dutyQuery.FindComponents(ctx, 1, rs); err == nil && len(comps) > 0 {
 		return &comps[0], nil
 	}
 
