@@ -15,6 +15,7 @@ global:
   imagePrefix: flanksource
   # @schema
   # required: false
+  # additionalProperties: true
   # @schema
   labels: {}
   # @schema
