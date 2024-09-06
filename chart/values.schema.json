@@ -214,7 +214,7 @@
           "title": "imageRegistry"
         },
         "labels": {
-          "additionalProperties": false,
+          "additionalProperties": true,
           "title": "labels"
         },
         "nodeSelector": {
