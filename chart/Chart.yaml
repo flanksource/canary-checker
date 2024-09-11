@@ -10,6 +10,6 @@ maintainers:
 icon: https://github.com/flanksource/docs/blob/main/docs/canary-checker/images/canary-checker-icon.svg
 dependencies:
   - name: flanksource-ui
-    version: "1.0.757"
+    version: "1.0.772"
     repository: https://flanksource.github.io/charts
     condition: flanksource-ui.enabled
