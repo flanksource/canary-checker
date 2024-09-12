@@ -51,6 +51,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | global.imageRegistry | string | `"docker.io"` |  |
 | global.labels | object | `{}` |  |
 | global.nodeSelector | object | `{}` | node's labels for the pod to be scheduled on that node. See [Node Selector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/) |
+| global.podAnnotations | object | `{}` |  |
 | global.tolerations | list | `[]` |  |
 | grafanaDashboards | bool | `false` |  |
 | image.name | string | `"{{.Values.global.imagePrefix}}/canary-checker"` |  |
@@ -63,6 +64,8 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | ingress.host | string | `"canary-checker"` |  |
 | ingress.tls | list | `[]` |  |
 | jsonLogs | bool | `true` |  |
+| livenessProbe.httpGet.path | string | `"/health"` |  |
+| livenessProbe.httpGet.port | int | `8080` |  |
 | logLevel | string | `""` |  |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` | node's labels for the pod to be scheduled on that node. See [Node Selector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/) |
@@ -70,8 +73,13 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | otel.labels | string | `""` | labels in "a=b,c=d" format @schema required: false @schema |
 | otel.serviceName | string | `"canary-checker"` |  |
 | pingMode | string | `"unprivileged"` | set the mechanism for pings - either privileged, unprivileged or none |
+| podAnnotations | object | `{}` |  |
 | prometheusURL | string | `""` | Default Prometheus URL to use in prometheus checks |
 | properties | object | `{}` | A map of properties to update on startup |
+| readinessProbe.failureThreshold | int | `6` |  |
+| readinessProbe.httpGet.path | string | `"/health"` |  |
+| readinessProbe.httpGet.port | int | `8080` |  |
+| readinessProbe.timeoutSeconds | int | `30` |  |
 | replicas | int | `1` |  |
 | resources.limits.memory | string | `"2Gi"` |  |
 | resources.requests.cpu | string | `"200m"` |  |
