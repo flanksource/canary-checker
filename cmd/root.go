@@ -27,6 +27,7 @@ func InitContext() (context.Context, error) {
 	ctx, closer, err := duty.Start("canary-checker", duty.SkipChangelogMigration, duty.SkipMigrationByDefaultMode)
 	if err != nil {
 		logger.Fatalf("Failed to initialize db: %v", err.Error())
+		runner.ShutdownAndExit(1, err.Error())
 	}
 	runner.AddShutdownHook(closer)
 
