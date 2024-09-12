@@ -17,7 +17,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/echo"
 	"github.com/flanksource/canary-checker/pkg/jobs"
 	canaryJobs "github.com/flanksource/canary-checker/pkg/jobs/canary"
-	"github.com/flanksource/canary-checker/pkg/jobs/topology"
 	echov4 "github.com/labstack/echo/v4"
 
 	"github.com/flanksource/canary-checker/pkg/runner"
@@ -26,7 +25,7 @@ import (
 	"github.com/flanksource/commons/logger"
 	dutyApi "github.com/flanksource/duty/api"
 	dutyContext "github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/job"
+	dutyEcho "github.com/flanksource/duty/echo"
 	"github.com/flanksource/duty/postgrest"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -94,18 +93,15 @@ func postgrestResponseModifier(r *http.Response) error {
 func serve() {
 	e := echo.New(apicontext.DefaultContext)
 
+	dutyEcho.AddDebugHandlers(apicontext.DefaultContext, e, func(next echov4.HandlerFunc) echov4.HandlerFunc { return next })
+
 	e.GET("/metrics", echov4.WrapHandler(promhttp.HandlerFor(prom.DefaultGatherer, promhttp.HandlerOpts{})))
 
 	if dutyApi.DefaultConfig.Postgrest.URL != "" {
 		echo.Forward(e, "/db", postgrest.PostgRESTEndpoint(dutyApi.DefaultConfig), postgrestResponseModifier)
+	} else {
+		logger.Tracef("No PostgREST endpoint configured, skipping proxy")
 	}
-
-	e.GET("/jobs", job.CronDetailsHandler(
-		canaryJobs.CanaryScheduler,
-		canaryJobs.FuncScheduler,
-		jobs.FuncScheduler,
-		topology.TopologyScheduler,
-	))
 
 	runner.AddShutdownHook(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)

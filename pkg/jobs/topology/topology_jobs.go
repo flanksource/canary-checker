@@ -13,6 +13,7 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
+	dutyEcho "github.com/flanksource/duty/echo"
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/robfig/cron/v3"
@@ -21,6 +22,10 @@ import (
 var TopologyScheduler = cron.New()
 
 var topologyJobs sync.Map
+
+func init() {
+	dutyEcho.RegisterCron(TopologyScheduler)
+}
 
 func newTopologyJob(ctx context.Context, topology pkg.Topology) {
 	id := topology.ID.String()

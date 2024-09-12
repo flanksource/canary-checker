@@ -15,6 +15,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/context"
+	dutyEcho "github.com/flanksource/duty/echo"
 	dutyjob "github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"go.opentelemetry.io/otel/trace"
@@ -35,6 +36,11 @@ var FuncScheduler = cron.New()
 var CanaryStatusChannel chan CanaryStatusPayload
 
 var CanaryLastRuntimes = sync.Map{}
+
+func init() {
+	dutyEcho.RegisterCron(CanaryScheduler)
+	dutyEcho.RegisterCron(FuncScheduler)
+}
 
 func StartScanCanaryConfigs(ctx context.Context, dataFile string, configFiles []string) {
 	DataFile = dataFile

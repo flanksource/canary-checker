@@ -8,6 +8,7 @@ import (
 	topologyJobs "github.com/flanksource/canary-checker/pkg/jobs/topology"
 	"github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
+	dutyEcho "github.com/flanksource/duty/echo"
 	"github.com/flanksource/duty/job"
 	dutyQuery "github.com/flanksource/duty/query"
 	"github.com/robfig/cron/v3"
@@ -17,7 +18,7 @@ var FuncScheduler = cron.New()
 
 func Start() {
 	logger.Infof("Starting jobs ...")
-
+	dutyEcho.RegisterCron(FuncScheduler)
 	if canaryJobs.UpstreamConf.Valid() {
 		for _, j := range canaryJobs.UpstreamJobs {
 			var job = j
