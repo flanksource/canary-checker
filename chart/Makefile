@@ -29,7 +29,7 @@ README.md: .bin/helm-docs
 .phony: values.schema.deref.json
 values.schema.deref.json: values.schema.json
 	npm i @apidevtools/json-schema-ref-parser
-	npx @digitak/esrun  deref.ts
+	npx @digitak/esrun  deref.ts | jq > values.schema.deref.json
 
 
 .PHONY: lint

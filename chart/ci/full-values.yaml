@@ -2,6 +2,8 @@
 
 global:
   imageRegistry: private-repo
+  podAnnotations:
+    b: "c"
 
 image:
   name: "{{.Values.global.imagePrefix}}/canary-checker"
@@ -92,6 +94,13 @@ volumeMounts:
   - name: test
     mountPath: /test
 
+podAnnotations:
+  b: "c-override"
+  d: "e"
+
+
+serviceMonitorLabels:
+  custom: "label"
 nodeSelector:
   sample: a
 

@@ -223,6 +223,10 @@
           "title": "nodeSelector",
           "type": "object"
         },
+        "podAnnotations": {
+          "additionalProperties": true,
+          "title": "podAnnotations"
+        },
         "tolerations": {
           "items": {
             "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Toleration"
@@ -305,6 +309,9 @@
       "default": "true",
       "title": "jsonLogs"
     },
+    "livenessProbe": {
+      "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Probe"
+    },
     "logLevel": {
       "default": "",
       "title": "logLevel"
@@ -355,6 +362,10 @@
         "none"
       ]
     },
+    "podAnnotations": {
+      "additionalProperties": true,
+      "title": "podAnnotations"
+    },
     "prometheusURL": {
       "default": "",
       "description": "Default Prometheus URL to use in prometheus checks",
@@ -364,6 +375,9 @@
       "additionalProperties": true,
       "description": "A map of properties to update on startup",
       "title": "properties"
+    },
+    "readinessProbe": {
+      "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Probe"
     },
     "replicas": {
       "default": 1,

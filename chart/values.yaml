@@ -44,6 +44,12 @@ global:
         key: DB_URL
 
   # @schema
+  # additionalProperties: true
+  # required: false
+  # @schema
+  podAnnotations: {}
+
+  # @schema
   # required: false
   # additionalProperties: true
   # type: object
@@ -445,6 +451,12 @@ extraArgs:
 extra: {}
 
 # @schema
+# additionalProperties: true
+# required: false
+# @schema
+podAnnotations: {}
+
+# @schema
 # required: false
 # type: array
 # items:
@@ -481,3 +493,23 @@ tolerations: []
 # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Affinity
 # @schema
 affinity: {}
+
+# @schema
+# required: false
+# $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Probe
+# @schema
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+
+# @schema
+# required: false
+# $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Probe
+# @schema
+readinessProbe:
+  failureThreshold: 6
+  timeoutSeconds: 30
+  httpGet:
+    path: /health
+    port: 8080
