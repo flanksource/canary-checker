@@ -18,7 +18,15 @@ func (ctx *Context) GetContextualFunctions() map[string]any {
 			if result, ok := ctx.cache["last_result"]; ok {
 				return result
 			}
-			var status map[string]any
+			status := map[string]any{
+				"status":    "",
+				"invalid":   false,
+				"createdAt": nil,
+				"duration":  0,
+				"message":   "",
+				"error":     "",
+				"results":   make(map[string]any),
+			}
 
 			if checkID == "" {
 				return status
