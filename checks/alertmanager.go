@@ -113,7 +113,7 @@ func generateFullName(name string, labels map[string]string) string {
 	}
 
 	// Only one of these labels must be used
-	level2 := []string{"deployment", "daemonset", "statefulset", "cronjob_name", "job_name", "pod"}
+	level2 := []string{"deployment", "daemonset", "statefulset", "cronjob_name", "job_name", "pod", "nodename"}
 	for _, key := range level2 {
 		if labels[key] != "" {
 			fullName = append(fullName, labels[key])
