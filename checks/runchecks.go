@@ -205,8 +205,9 @@ func TransformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.C
 		}
 		if err != nil {
 			r.ErrorObject = ctx.Oops().Wrap(err)
-			r.Error = "error transforming result"
+			r.Error = fmt.Sprintf("error transforming result: %s", err.Error())
 			r.Invalid = true
+			r.Pass = false
 		} else {
 			for _, t := range transformed {
 				out = append(out, processTemplates(checkCtx, t))
