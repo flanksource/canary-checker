@@ -99,8 +99,6 @@ podAnnotations:
   d: "e"
 
 
-serviceMonitorLabels:
-  custom: "label"
 nodeSelector:
   sample: a
 
