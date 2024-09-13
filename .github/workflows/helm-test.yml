@@ -40,32 +40,22 @@ jobs:
           version: v3.11.3
 
       - name: Package helm chart
-        run: | 
+        run: |
           helm dependency build ./chart
           helm package ./chart --version 1.0.0
 
       - name: Install helm chart
-        run: 'helm install canary-checker canary-checker-1.0.0.tgz -n canary-checker --create-namespace'
+        run: "helm install canary-checker canary-checker-1.0.0.tgz -n canary-checker --create-namespace"
 
       - name: Wait for 30 seconds
-        run: 'kubectl rollout status deploy/canary-checker -n canary-checker --timeout 5m'
+        run: "kubectl rollout status deploy/canary-checker -n canary-checker --timeout 5m"
 
       - name: Check canary-checker pods
-        run: 'kubectl describe pods -n canary-checker'
+        run: "kubectl describe pods -n canary-checker"
 
-      - name: Apply exec fixture
-        run: 'kubectl apply -f fixtures/minimal/exec_pass.yaml'
+      - name: Run tests
+        run: ./chart/test.sh canary-checker
 
-      - name: Wait for 60 seconds
-        run: 'sleep 60'
-
-      - name: Check status
-        run: |
-          kubectl logs deploy/canary-checker -n canary-checker
-          status=$(kubectl get canaries.canaries.flanksource.com exec-pass -o yaml | yq .status.status)
-          echo $status
-          if [[ $status == "Passed" ]]; then
-            exit 0
-          else
-            exit 1
-          fi
+      - name: Check logs
+        run: kubectl logs deploy/canary-checker -n canary-checker
+        if: always()
