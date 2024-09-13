@@ -5,6 +5,15 @@ on:
       - main
       - master
   workflow_dispatch:
+    inputs:
+      channel:
+        description: "Release channel"
+        required: true
+        default: "rc"
+        type: choice
+        options:
+          - stable
+          - rc
 
 jobs:
   semantic-release:
@@ -17,7 +26,11 @@ jobs:
       - name: Set branch variable for semantic release
         run: |
           if [[ ${{ github.event_name == 'workflow_dispatch' }} == true ]]; then
-            BRANCHES="['master']"
+            if [[  "${{ inputs.channel }}" ==  "stable" ]]; then
+              BRANCHES="['master']"
+            else if [[  "${{ inputs.channel }}" ==  "rc" ]]; then
+              BRANCHES="[{name: 'master', channel: 'rc', prerelease: 'rc'}, {name: 'dummy-release'}]"
+            fi
           else
             BRANCHES="[{name: 'master', channel: 'beta', prerelease: 'beta'}, {name: 'dummy-release'}]"
           fi
@@ -28,7 +41,7 @@ jobs:
           branches: ${{ env.BRANCHES }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
+
   binary:
     runs-on: ubuntu-latest
     needs: semantic-release
