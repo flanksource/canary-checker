@@ -28,7 +28,7 @@ jobs:
           if [[ ${{ github.event_name == 'workflow_dispatch' }} == true ]]; then
             if [[  "${{ inputs.channel }}" ==  "stable" ]]; then
               BRANCHES="['master']"
-            else if [[  "${{ inputs.channel }}" ==  "rc" ]]; then
+            elif [[  "${{ inputs.channel }}" ==  "rc" ]]; then
               BRANCHES="[{name: 'master', channel: 'rc', prerelease: 'rc'}, {name: 'dummy-release'}]"
             fi
           else
