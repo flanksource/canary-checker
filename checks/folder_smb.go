@@ -38,7 +38,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.ErrorMessage(err)
 	}
 
-	folders, err := genericFolderCheck(fs, path, check.Recursive, check.Filter)
+	folders, err := genericFolderCheck(ctx, fs, path, check.Recursive, check.Filter)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}

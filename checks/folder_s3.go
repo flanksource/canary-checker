@@ -47,7 +47,7 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		limitFS.SetMaxListItems(ctx.Properties().Int("s3.list.max-objects", 50_000))
 	}
 
-	folders, err := genericFolderCheckWithoutPrecheck(fs, check.Path, check.Recursive, check.Filter)
+	folders, err := genericFolderCheckWithoutPrecheck(ctx, fs, check.Path, check.Recursive, check.Filter)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
