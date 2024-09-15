@@ -115,17 +115,6 @@ func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 }
 
 func genericFolderCheck(ctx *context.Context, dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
-	return _genericFolderCheck(ctx, true, dirFS, path, recursive, filter)
-}
-
-// genericFolderCheckWithoutPrecheck is used for those filesystems that do not support fetching the stat of a directory.
-// Eg: s3, gcs.
-// It will not pre check whether the given path is a directory.
-func genericFolderCheckWithoutPrecheck(ctx *context.Context, dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
-	return _genericFolderCheck(ctx, false, dirFS, path, recursive, filter)
-}
-
-func _genericFolderCheck(ctx *context.Context, supportsDirStat bool, dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
 	result := FolderCheck{}
 	_filter, err := filter.New()
 	if err != nil {
