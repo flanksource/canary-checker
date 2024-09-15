@@ -9,3 +9,12 @@ spec:
       name: min count fail
       minCount: 100000
       maxAge: 4m
+    - path: /etc/
+      recursive: true
+      name: min count recursive
+      minCount: 100000
+      maxAge: 4m
+    - path: /etc/**/*
+      name: min count glob
+      minCount: 100000
+      maxAge: 4m

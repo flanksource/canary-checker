@@ -94,12 +94,14 @@ func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	results = append(results, result)
 
 	// Form a dummy connection to get a local filesystem
-	localFS, err := artifacts.GetFSForConnection(ctx.Context, models.Connection{Type: models.ConnectionTypeFolder})
+	localFS, err := artifacts.GetFSForConnection(ctx.Context, models.Connection{
+		Type: models.ConnectionTypeFolder,
+	})
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
 
-	folders, err := genericFolderCheck(localFS, check.Path, check.Recursive, check.Filter)
+	folders, err := genericFolderCheck(ctx, localFS, check.Path, check.Recursive, check.Filter)
 	result.AddDetails(folders)
 
 	if err != nil {
@@ -112,18 +114,18 @@ func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	return results
 }
 
-func genericFolderCheck(dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
-	return _genericFolderCheck(true, dirFS, path, recursive, filter)
+func genericFolderCheck(ctx *context.Context, dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
+	return _genericFolderCheck(ctx, true, dirFS, path, recursive, filter)
 }
 
 // genericFolderCheckWithoutPrecheck is used for those filesystems that do not support fetching the stat of a directory.
 // Eg: s3, gcs.
 // It will not pre check whether the given path is a directory.
-func genericFolderCheckWithoutPrecheck(dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
-	return _genericFolderCheck(false, dirFS, path, recursive, filter)
+func genericFolderCheckWithoutPrecheck(ctx *context.Context, dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
+	return _genericFolderCheck(ctx, false, dirFS, path, recursive, filter)
 }
 
-func _genericFolderCheck(supportsDirStat bool, dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
+func _genericFolderCheck(ctx *context.Context, supportsDirStat bool, dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
 	result := FolderCheck{}
 	_filter, err := filter.New()
 	if err != nil {
@@ -131,30 +133,24 @@ func _genericFolderCheck(supportsDirStat bool, dirFS artifactFS.Filesystem, path
 	}
 	_filter.AllowDir = recursive
 
-	var fileInfo os.FileInfo
-	if supportsDirStat {
-		fileInfo, err := dirFS.Stat(path)
-		if err != nil {
-			if os.IsNotExist(err) {
-				return result, nil
-			}
-			return result, err
-		} else if !fileInfo.IsDir() {
-			return result, fmt.Errorf("%s is not a directory", path)
-		}
-	}
-
-	files, err := getFolderContents(dirFS, path, _filter)
-	if err != nil {
+	files, err := getFolderContents(ctx, dirFS, path, _filter)
+	if os.IsNotExist(err) {
+		return result, nil
+	} else if err != nil {
 		return result, err
 	}
 
 	if len(files) == 0 {
+		fileInfo, err := dirFS.Stat(path)
+		if err != nil {
+			return result, err
+		}
+
 		if fileInfo == nil {
 			return FolderCheck{}, nil
 		}
 
-		// directory is empty. returning duration of directory
+		// listing is empty, returning duration of directory
 		return FolderCheck{
 			Oldest:        newFile(fileInfo),
 			Newest:        newFile(fileInfo),
@@ -171,7 +167,7 @@ func _genericFolderCheck(supportsDirStat bool, dirFS artifactFS.Filesystem, path
 
 // getFolderContents walks the folder and returns all files.
 // Also supports recursively fetching contents
-func getFolderContents(dirFs artifactFS.Filesystem, path string, filter *v1.FolderFilterContext) ([]fs.FileInfo, error) {
+func getFolderContents(ctx *context.Context, dirFs artifactFS.Filesystem, path string, filter *v1.FolderFilterContext) ([]fs.FileInfo, error) {
 	files, err := dirFs.ReadDir(path)
 	if err != nil {
 		return nil, err
@@ -184,18 +180,11 @@ func getFolderContents(dirFs artifactFS.Filesystem, path string, filter *v1.Fold
 	var result []fs.FileInfo
 	for _, info := range files {
 		if !filter.Filter(info) {
+			ctx.Logger.V(3).Infof("skipping %s, does not match filter", info.Name())
 			continue
 		}
 
 		result = append(result, info)
-		if info.IsDir() { // This excludes even directory symlinks
-			subFiles, err := getFolderContents(dirFs, path+"/"+info.Name(), filter)
-			if err != nil {
-				return nil, err
-			}
-
-			result = append(result, subFiles...)
-		}
 	}
 
 	return result, err

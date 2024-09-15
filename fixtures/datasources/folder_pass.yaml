@@ -5,6 +5,12 @@ metadata:
 spec:
   interval: 300
   folder:
+    - path: /etc/*
+      minCount: 1
+      name: min count glob
+    - path: /etc/**/*
+      minCount: 1
+      name: min count doublestar
     - path: /etc/
       name: Check for updated /etc files
       filter:

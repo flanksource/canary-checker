@@ -49,7 +49,7 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 		return results.ErrorMessage(err)
 	}
 
-	folders, err := genericFolderCheckWithoutPrecheck(fs, check.Path, check.Recursive, check.Filter)
+	folders, err := genericFolderCheckWithoutPrecheck(ctx, fs, check.Path, check.Recursive, check.Filter)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
