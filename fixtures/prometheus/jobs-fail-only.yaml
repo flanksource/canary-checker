@@ -1,0 +1,18 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: prometheus-failing-jobs
+spec:
+  interval: 30
+  prometheus:
+    - name: Jobs
+      query: up{namespace!~"kube-system|monitoring"} == 0
+      url: http://prometheus.monitoring.svc:9090
+      transform:
+        expr: |
+          dyn(results).map(r, {
+            'name': r.job,
+            'namespace': 'namespace' in r ? r.namespace : '',
+            'labels': r.omit(["value", "__name__"]),
+            'pass': false
+          }).toJSON()

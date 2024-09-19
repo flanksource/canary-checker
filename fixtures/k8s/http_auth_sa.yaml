@@ -1,0 +1,13 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-basic-auth-token
+  namespace: canaries
+spec:
+  http:
+    - url: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
+      responseCodes: [200]
+      headers:
+        - name: Authorization
+          valueFrom:
+            serviceAccount: default
