@@ -1,0 +1,18 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-check-template
+spec:
+  interval: 30
+  http:
+    - name: template body
+      url: https://httpbin.demo.aws.flanksource.com/post
+      method: POST
+      templateBody: true
+      body: |
+        {
+          "name": "{{.metadata.name}}"
+        }
+      display:
+        expr: json['json']
+        # template: "Received from: {{.json.origin}}: {{.json.json.name}} in {{.sslAge | div 10000000}}"
