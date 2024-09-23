@@ -8,11 +8,21 @@ import (
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
+	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"gorm.io/gorm/clause"
 )
+
+func injectComponentDataInSelectors(comp models.Component) types.ResourceSelectors {
+	for i, rs := range comp.Selectors {
+		if rs.Functions.ComponentConfigTraversal != nil {
+			comp.Selectors[i].Functions.ComponentConfigTraversal.ComponentID = comp.ID.String()
+		}
+	}
+	return comp.Selectors
+}
 
 var ComponentRelationshipSync = &job.Job{
 	Name:       "ComponentRelationshipSync",
@@ -30,7 +40,8 @@ var ComponentRelationshipSync = &job.Job{
 
 		for _, component := range components {
 			hash := component.Selectors.Hash()
-			comps, err := query.FindComponents(ctx.Context, -1, component.Selectors...)
+			selectors := injectComponentDataInSelectors(component)
+			comps, err := query.FindComponents(ctx.Context, -1, selectors...)
 			if err != nil {
 				ctx.History.AddError(fmt.Sprintf("error getting components with selectors: %v. err: %v", component.Selectors, err))
 				continue
