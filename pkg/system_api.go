@@ -311,6 +311,9 @@ func NewComponent(c v1.ComponentSpec) *Component {
 	if c.Summary != nil {
 		_c.Summary = *c.Summary
 	}
+	if configID, err := uuid.Parse(c.ConfigID); err == nil {
+		_c.ConfigID = &configID
+	}
 	return &_c
 }
 

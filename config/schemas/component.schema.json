@@ -946,6 +946,9 @@
         },
         "health": {
           "type": "string"
+        },
+        "configID": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -1041,6 +1044,9 @@
           "type": "string"
         },
         "health": {
+          "type": "string"
+        },
+        "configID": {
           "type": "string"
         }
       },

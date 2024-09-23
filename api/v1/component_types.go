@@ -73,6 +73,8 @@ type ComponentSpec struct {
 	HealthExpr string `json:"healthExpr,omitempty"`
 
 	Health *models.Health `json:"health,omitempty"`
+
+	ConfigID string `json:"configID,omitempty"`
 }
 
 // +kubebuilder:validation:Type=object
