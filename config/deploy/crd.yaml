@@ -13227,6 +13227,8 @@ spec:
                     type: object
                   type: array
                   x-kubernetes-preserve-unknown-fields: true
+                configID:
+                  type: string
                 configs:
                   description: Lookup and associate config items with this component
                   items:
@@ -13721,6 +13723,8 @@ spec:
                           type: object
                         type: array
                         x-kubernetes-preserve-unknown-fields: true
+                      configID:
+                        type: string
                       configs:
                         description: Lookup and associate config items with this component
                         items:
