@@ -947,7 +947,7 @@
         "health": {
           "type": "string"
         },
-        "configID": {
+        "config_id": {
           "type": "string"
         }
       },
@@ -1046,7 +1046,7 @@
         "health": {
           "type": "string"
         },
-        "configID": {
+        "config_id": {
           "type": "string"
         }
       },
