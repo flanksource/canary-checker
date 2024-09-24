@@ -9,19 +9,24 @@ import (
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
 	"github.com/flanksource/duty/types"
+	"github.com/flanksource/gomplate/v3"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"gorm.io/gorm/clause"
 )
 
-func injectComponentDataInSelectors(comp models.Component) types.ResourceSelectors {
+func templateSelectorSearch(comp models.Component) (types.ResourceSelectors, error) {
 	for i, rs := range comp.Selectors {
-		if rs.Functions.ComponentConfigTraversal != nil {
-			comp.Selectors[i].Functions.ComponentConfigTraversal.ComponentID = comp.ID.String()
+		if rs.Search != "" {
+			output, err := gomplate.RunTemplate(map[string]any{"self": comp.AsMap()}, gomplate.Template{Template: rs.Search})
+			if err != nil {
+				return comp.Selectors, fmt.Errorf("error templating resource selector search for component[%s] search[%s]: %w", comp.ID, rs.Search, err)
+			}
+			comp.Selectors[i].Search = output
 		}
 	}
-	return comp.Selectors
+	return comp.Selectors, nil
 }
 
 var ComponentRelationshipSync = &job.Job{
@@ -40,7 +45,12 @@ var ComponentRelationshipSync = &job.Job{
 
 		for _, component := range components {
 			hash := component.Selectors.Hash()
-			selectors := injectComponentDataInSelectors(component)
+			selectors, err := templateSelectorSearch(component)
+			if err != nil {
+				ctx.History.AddError(err)
+				continue
+			}
+
 			comps, err := query.FindComponents(ctx.Context, -1, selectors...)
 			if err != nil {
 				ctx.History.AddError(fmt.Sprintf("error getting components with selectors: %v. err: %v", component.Selectors, err))
