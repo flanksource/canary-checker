@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: kubernetes-bundle
 spec:
-  interval: 60
+  schedule: "@every 5m"
   kubernetes:
     - kind: Node
       ready: true

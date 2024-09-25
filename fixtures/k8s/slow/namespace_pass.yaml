@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: namespace-pass
 spec:
-  interval: 30
+  schedule: "@every 5m"
   namespace:
     - name: check
       namespaceNamePrefix: "test-foo-"

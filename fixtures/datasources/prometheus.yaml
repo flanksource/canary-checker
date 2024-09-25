@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: prometheus
 spec:
-  interval: 30
+  schedule: "@every 5m"
   prometheus:
     - url: https://prometheus.demo.aws.flanksource.com/
       name: prometheus-check

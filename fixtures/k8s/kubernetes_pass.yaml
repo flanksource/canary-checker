@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: kube-pass
 spec:
-  interval: 30
+  schedule: "@every 5m"
   kubernetes:
     - namspaceSelector:
         name: canaries

@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: ldap-pass
 spec:
-  interval: 30
+  schedule: "@every 5m"
   ldap:
     - url: ldap://apacheds.canaries.svc.cluster.local:10389
       name: ldap user login

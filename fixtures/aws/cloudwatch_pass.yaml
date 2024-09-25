@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: cloudwatch
 spec:
-  interval: 30
+  schedule: "@every 5m"
   cloudwatch:
     region: "eu-west-1"
     transform:

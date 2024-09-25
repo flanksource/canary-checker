@@ -4,7 +4,7 @@ metadata:
   name: http-pass
 spec:
   resultMode: "junit"
-  interval: 30
+  schedule: "@every 5m"
   http:
     - url: https://httpbin.demo.aws.flanksource.com/status/200
       name: http pass response 200 status code

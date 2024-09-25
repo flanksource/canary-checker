@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: azure-devops
 spec:
-  interval: 300
+  schedule: "@every 5m"
   azureDevops:
     - project: Demo1
       pipeline: ^windows-

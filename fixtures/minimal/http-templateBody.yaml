@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: http-check-template
 spec:
-  interval: 30
+  schedule: "@every 5m"
   http:
     - name: template body
       url: https://httpbin.demo.aws.flanksource.com/post
@@ -15,4 +15,3 @@ spec:
         }
       display:
         expr: json['json']
-        # template: "Received from: {{.json.origin}}: {{.json.json.name}} in {{.sslAge | div 10000000}}"

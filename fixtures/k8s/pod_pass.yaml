@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: pod-pass
 spec:
-  interval: 900
+  schedule: "@every 5m"
   pod:
     - name: golang
       spec: |

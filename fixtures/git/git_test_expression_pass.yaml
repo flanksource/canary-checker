@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: github-test-expression-pass
 spec:
-  interval: 30
+  schedule: "@every 5m"
   github:
     - query: "SELECT * FROM github_repo_checks('flanksource/template-operator') where branch='master'"
       name: github-expresion-check

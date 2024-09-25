@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: database-backup-example
 spec:
-  interval: 60
+  schedule: "@every 5m"
   databaseBackup:
     - name: backup
       maxAge: 6h

@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: icmp
 spec:
-  interval: 30
+  schedule: "@every 5m"
   icmp:
     - endpoint: https://api.github.com
       thresholdMillis: 600

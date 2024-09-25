@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: awsconfig-pass
 spec:
-  interval: 30
+  schedule: "@every 5m"
   awsConfig:
     - query: |
         SELECT

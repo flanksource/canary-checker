@@ -4,7 +4,7 @@ metadata:
   name: mongo
   namespace: canaries
 spec:
-  interval: 30
+  schedule: "@every 5m"
   mongodb:
     - url: mongodb://$(username):$(password)@mongo.canaries.svc.cluster.local:27017/?authSource=admin
       name: mongo ping check

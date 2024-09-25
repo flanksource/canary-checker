@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: exec-artifact
 spec:
-  interval: 30
+  schedule: "@every 5m"
   exec:
     - name: exec-pass-with-artifact
       description: "exec dummy check"

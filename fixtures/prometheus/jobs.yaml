@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: prometheus-jobs
 spec:
-  interval: 30
+  schedule: "@every 5m"
   prometheus:
     - name: Jobs
       query: up{namespace!~"kube-system|monitoring"}

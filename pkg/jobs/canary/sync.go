@@ -123,6 +123,9 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 
 func newCanaryJob(c CanaryJob) {
 	schedule := c.Canary.Spec.Schedule
+	if schedule == "" && c.Canary.Spec.Interval > 0 {
+		schedule = fmt.Sprintf("@every %ds", c.Canary.Spec.Interval)
+	}
 	if schedule == "" {
 		schedule = DefaultCanarySchedule
 	}

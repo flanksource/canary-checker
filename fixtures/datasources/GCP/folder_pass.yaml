@@ -4,7 +4,7 @@ kind: Canary
 metadata:
   name: recursive-folder-check
 spec:
-  interval: 30
+  schedule: "@every 5m"
   folder:
     - path: gcs://folder-check-test/recursive-test
       name: recursive folders

@@ -5,7 +5,7 @@ metadata:
   labels:
     canary: http-checks
 spec:
-  interval: 30
+  schedule: "@every 5m"
   http:
     - url: https://httpbin.demo.aws.flanksource.com/status/200
       name: http-pass-single

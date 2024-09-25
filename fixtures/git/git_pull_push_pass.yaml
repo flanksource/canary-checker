@@ -17,4 +17,4 @@ spec:
             key: password
             name: gitea
       repository: http://gitea-http.gitea:3000/gitea_admin/test_repo.git
-  interval: 10
+  schedule: "@every 5m"

@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: s3-protocol-check
 spec:
-  interval: 30
+  schedule: "@every 5m"
   s3:
     - name: s3-check
       bucketName: flanksource-public

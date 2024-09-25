@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: sftp-pass
 spec:
-  interval: 30
+  schedule: "@every 5m"
   folder:
     - path: /tmp/premier-league
       name: sample sftp check

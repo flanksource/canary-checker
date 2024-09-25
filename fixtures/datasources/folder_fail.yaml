@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: folder-fail
 spec:
-  interval: 30
+  schedule: "@every 5m"
   folder:
     - path: /etc/
       name: min count fail

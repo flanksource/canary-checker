@@ -4,7 +4,7 @@ metadata:
   name: namespaced-http-check
   namespace: default
 spec:
-  interval: 30
+  schedule: "@every 5m"
   http:
     - url: https://example.com
       name: first-namespaced-check

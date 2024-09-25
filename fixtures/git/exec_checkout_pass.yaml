@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: exec-checkout
 spec:
-  interval: 30
+  schedule: "@every 5m"
   exec:
     - name: exec-checkout
       description: "exec with git"

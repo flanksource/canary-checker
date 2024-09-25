@@ -5,7 +5,7 @@ metadata:
   labels:
     "Expected-Fail": "true"
 spec:
-  interval: 30
+  schedule: "@every 5m"
   exec:
     - name: exec-fail-check
       description: "exec dummy check"

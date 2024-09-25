@@ -5,7 +5,7 @@ metadata:
   labels:
     "Expected-Fail": "true"
 spec:
-  interval: 30
+  schedule: "@every 5m"
   http:
     - connection: 'connection://HTTP/500'
       name: http fail response code check
