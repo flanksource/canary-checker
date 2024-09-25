@@ -200,7 +200,6 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		if val, err := ctx.GetEnvValueFromCache(env, ctx.GetNamespace()); err != nil {
 			return results.WithError(ctx.Oops().Wrap(err)).Invalidf("failed to get env value: %v", env.Name)
 		} else {
-			ctx.Infof("%s => %s err:%v", env.Name, val, err)
 			templateEnv[env.Name] = val
 		}
 	}
