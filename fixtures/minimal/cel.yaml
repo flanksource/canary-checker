@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: cel-test
 spec:
-  interval: 30
+  schedule: "@every 5m"
   exec:
     - name: cel-test
       script: "echo 'Hello World'"

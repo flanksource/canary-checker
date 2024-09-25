@@ -6,7 +6,7 @@ metadata:
   labels:
     "Expected-Fail": "true"
 spec:
-  interval: 30
+  schedule: "@every 5m"
   mongodb:
     - url: mongodb://mongo2.canaries.svc.cluster.local:27017/?authSource=admin
       name: mongo wrong password

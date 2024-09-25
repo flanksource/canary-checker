@@ -4,7 +4,7 @@ metadata:
   name: postgres-succeed
   namespace: canaries
 spec:
-  interval: 30
+  schedule: "@every 5m"
   postgres:
     - url: "postgres://$(username):$(password)@postgres.canaries.svc.cluster.local:5432/postgres?sslmode=disable"
       name: postgres schemas check

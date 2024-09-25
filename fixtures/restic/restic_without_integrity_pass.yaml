@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: restic-pass-withoutinegrity
 spec:
-  interval: 30
+  schedule: "@every 5m"
   restic:
     - repository: s3:http://minio.minio.svc.cluster.local:9000/restic-canary-checker
       name: restic check

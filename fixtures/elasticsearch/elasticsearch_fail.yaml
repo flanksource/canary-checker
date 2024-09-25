@@ -5,7 +5,7 @@ metadata:
   labels:
     "Expected-Fail": "true"
 spec:
-  interval: 30
+  schedule: "@every 5m"
   elasticsearch:
     - url: http://elasticsearch-wrong-host.example.com:9200
       description: Elasticsearch checker

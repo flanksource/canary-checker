@@ -6,7 +6,7 @@ metadata:
   labels:
     "Expected-Fail": "true"
 spec:
-  interval: 30
+  schedule: "@every 5m"
   mssql:
     - url: "server=mssql.platformsystem;user id=sa;password=S0m3p@sswd;port=32010;database=master" #wrong server name for failure
       name: mssql servername

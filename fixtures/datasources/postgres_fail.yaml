@@ -6,7 +6,7 @@ metadata:
     "Expected-Fail": "true"
 
 spec:
-  interval: 30
+  schedule: "@every 5m"
   postgres:
     - url: "user=$(username) dbname=pqgotest sslmode=verify-full"
       name: postgres blank password

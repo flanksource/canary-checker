@@ -5,7 +5,7 @@ metadata:
   labels:
     "Expected-Fail": "true"
 spec:
-  interval: 30
+  schedule: "@every 5m"
   http:
     - endpoint: https://httpbin.demo.aws.flanksource.com/delay/2
       name: http fail timeout

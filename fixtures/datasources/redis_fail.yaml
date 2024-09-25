@@ -6,7 +6,7 @@ metadata:
   labels:
     "Expected-Fail": "true"
 spec:
-  interval: 30
+  schedule: "@every 5m"
   redis:
     - addr: "redis.default--namespace:32004" #wrong host for the failure
       name: redis host failure

@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: aws-exec-pass
 spec:
-  interval: 30
+  schedule: "@every 5m"
   exec:
     - name: aws-exec-list-s3-buckets-pass-check
       description: List s3 buckets

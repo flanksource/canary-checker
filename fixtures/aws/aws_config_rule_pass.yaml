@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: awsconfigrule-pass
 spec:
-  interval: 30
+  schedule: "@every 5m"
   awsConfigRule:
     - name: AWS Config Rule
       region: "eu-west-1"

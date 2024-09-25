@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: kube-system-checks
 spec:
-  interval: 30
+  schedule: "@every 5m"
   kubernetes:
     - namespace: kube-system
       name: kube-system

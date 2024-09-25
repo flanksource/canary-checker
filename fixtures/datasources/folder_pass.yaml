@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: folder-pass
 spec:
-  interval: 300
+  schedule: "@every 5m"
   folder:
     - path: /etc/*
       minCount: 1
@@ -44,7 +44,7 @@ kind: Canary
 metadata:
   name: folder-pass-empty
 spec:
-  interval: 300
+  schedule: "@every 5m"
   folder:
     - name: folder-nil-handling
       path: /some/folder/that/does/not/exist

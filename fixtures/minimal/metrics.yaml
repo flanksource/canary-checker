@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: http-pass-single
 spec:
-  interval: 30
+  schedule: "@every 5m"
   http:
     - name: http-minimal-check
       url: https://httpbin.demo.aws.flanksource.com/status/200

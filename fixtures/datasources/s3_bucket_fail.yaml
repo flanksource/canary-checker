@@ -5,7 +5,7 @@ metadata:
   labels:
     "Expected-Fail": "true"
 spec:
-  interval: 30
+  schedule: "@every 5m"
   folder:
     # Check for any mysql backup not older than 7 days and min size 100 bytes
     - path: s3://tests-e2e-1

@@ -4,7 +4,7 @@ metadata:
   name: mssql-pass
   namespace: canaries
 spec:
-  interval: 30
+  schedule: "@every 5m"
   mssql:
     - url: "server=mssql.canaries.svc.cluster.local;user id=$(username);password=$(password);port=1433;database=master"
       name: mssql pass

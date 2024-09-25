@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: alertmanager
 spec:
-  interval: 30
+  schedule: "@every 5m"
   alertmanager:
     - url: https://alertmanager.demo.aws.flanksource.com
       name: alertmanager-check
