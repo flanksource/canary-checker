@@ -1,7 +1,7 @@
 .bin/
+bin/
 .creds/
 .release/
-bin/
 .idea/
 .env
 .certs
