@@ -1088,6 +1088,9 @@
         "search": {
           "type": "string"
         },
+        "limit": {
+          "type": "integer"
+        },
         "includeDeleted": {
           "type": "boolean"
         },
@@ -1854,6 +1857,9 @@
         },
         "credentials": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
@@ -1888,6 +1894,9 @@
         },
         "credentials": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
         },
         "bucket": {
           "type": "string"

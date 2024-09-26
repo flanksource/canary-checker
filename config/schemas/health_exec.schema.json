@@ -221,6 +221,9 @@
         },
         "credentials": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
