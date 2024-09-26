@@ -195,6 +195,9 @@
         "credentials": {
           "$ref": "#/$defs/EnvVar"
         },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
         "bucket": {
           "type": "string"
         }
