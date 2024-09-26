@@ -19,7 +19,10 @@ import (
 func templateSelectorSearch(comp models.Component) (types.ResourceSelectors, error) {
 	for i, rs := range comp.Selectors {
 		if rs.Search != "" {
-			output, err := gomplate.RunTemplate(map[string]any{"self": comp.AsMap()}, gomplate.Template{Template: rs.Search})
+			output, err := gomplate.RunTemplate(
+				map[string]any{"self": comp.AsMap()},
+				gomplate.Template{Template: rs.Search, LeftDelim: "$(", RightDelim: ")"},
+			)
 			if err != nil {
 				return comp.Selectors, fmt.Errorf("error templating resource selector search for component[%s] search[%s]: %w", comp.ID, rs.Search, err)
 			}
