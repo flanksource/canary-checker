@@ -97,7 +97,7 @@ func (c *postgresCache) AddCheckStatus(conn *gorm.DB, check pkg.Check, status pk
 		`,
 		checks[0].ID,
 		string(jsonDetails),
-		status.Duration,
+		status.DurationMs,
 		status.Error,
 		status.Invalid,
 		status.Message,
