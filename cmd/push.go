@@ -60,7 +60,7 @@ func init() {
 	Push.Flags().StringVar(&status.Error, "error", "", "Error of check")
 	Push.Flags().StringVar(&status.Message, "message", "", "Message of check")
 	Push.Flags().StringVar(&details, "detail", "", "Detail of check")
-	Push.Flags().Int64Var(&status.DurationMs, "duration", 0, "Duration of check in milliseconds")
+	Push.Flags().Int32Var(&status.DurationMs, "duration", 0, "Duration of check in milliseconds")
 	Push.Flags().BoolVar(&status.Status, "passed", true, "Passed status of check")
 	Root.AddCommand(Push)
 }

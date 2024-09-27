@@ -3,6 +3,7 @@ package pkg
 import (
 	"fmt"
 	"io"
+	"math"
 	"sort"
 	"strings"
 	"time"
@@ -53,7 +54,7 @@ type CheckStatus struct {
 	Status     bool            `json:"status"`
 	Invalid    bool            `json:"invalid,omitempty"`
 	Time       string          `json:"time"`
-	DurationMs int64           `json:"duration"`
+	DurationMs int32           `json:"duration"`
 	Message    string          `json:"message,omitempty"`
 	Error      string          `json:"error,omitempty"`
 	Detail     interface{}     `json:"-"`
@@ -193,16 +194,24 @@ func FromExternalCheck(canary Canary, check external.Check) Check {
 }
 
 func CheckStatusFromResult(result CheckResult) CheckStatus {
-	return CheckStatus{
-		Status:     result.Pass,
-		Invalid:    result.Invalid,
-		DurationMs: result.Duration,
-		Time:       time.Now().UTC().Format(time.RFC3339),
-		Message:    result.Message,
-		Error:      result.Error,
-		Detail:     result.Detail,
-		Check:      &result.Check,
+	cs := CheckStatus{
+		Status:  result.Pass,
+		Invalid: result.Invalid,
+		Time:    time.Now().UTC().Format(time.RFC3339),
+		Message: result.Message,
+		Error:   result.Error,
+		Detail:  result.Detail,
+		Check:   &result.Check,
 	}
+
+	// For check duration over ~25 days, we limit it to MaxInt32 milliseconds.
+	if result.Duration > math.MaxInt32 && false {
+		cs.DurationMs = math.MaxInt32
+	} else {
+		cs.DurationMs = int32(result.Duration)
+	}
+
+	return cs
 }
 
 func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Check {
