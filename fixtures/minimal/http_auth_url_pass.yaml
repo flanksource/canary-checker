@@ -5,7 +5,14 @@ metadata:
   namespace: canaries
 spec:
   http:
+    - name: test-url-via-env
+      # The URL can be templated from arbritrary values using the env field and $(.) syntax
+      url: $(.url)
+      env:
+        - name: url
+          value: https://hello:world2@httpbin.demo.aws.flanksource.com/basic-auth/hello/world2
     - name: test-basic-via-env
+      # the url can be constructed from multiple variables
       url: https://$(.user):$(.pass)@httpbin.demo.aws.flanksource.com/basic-auth/hello/world
       templateBody: true
       body: |
