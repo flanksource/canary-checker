@@ -1,0 +1,18 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-basic-auth-url
+  namespace: canaries
+spec:
+  http:
+    - name: test-basic-via-env
+      url: https://$(.user):$(.pass)@httpbin.demo.aws.flanksource.com/basic-auth/hello/world
+      templateBody: true
+      body: |
+        {{. | toJSONPretty " " }}
+      responseCodes: [200]
+      env:
+        - name: user
+          value: hello
+        - name: pass
+          value: world

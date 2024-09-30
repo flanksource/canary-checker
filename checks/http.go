@@ -223,6 +223,11 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		return results.WithError(oops.Errorf("invalid url")).Invalidf("invalid url, missing scheme '%s'", uri)
 	} else if _uri.Host == "" {
 		return results.WithError(oops.Errorf("invalid url")).Invalidf("invalid url, missing host '%s'", uri)
+	} else if _uri.User != nil {
+		connection.Username = _uri.User.Username()
+		connection.Password, _ = _uri.User.Password()
+		_uri.User = nil
+		uri = _uri.String()
 	}
 
 	check.URL = uri
