@@ -1,0 +1,11 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-check
+  annotations:
+    trace: "true"
+spec:
+  schedule: "@every 30s"
+  http:
+    - name: headers check
+      url: https://httpbin.demo.aws.flanksource.com/headers

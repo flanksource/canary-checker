@@ -1,0 +1,11 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-check
+spec:
+  schedule: "@every 30s"
+  http:
+    - name: basic-check
+      url: https://httpbin.demo.aws.flanksource.com/status/200
+    - name: failing-check
+      url: https://httpbin.demo.aws.flanksource.com/status/500
