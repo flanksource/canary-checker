@@ -4,9 +4,9 @@ resources:
   - dns_fail.yaml
   - dns_pass.yaml
   - http_fail.yaml
-  - http_pass_single.yaml
+  - http_single_pass.yaml
   - http_timeout_fail.yaml
-  - http_auth_static.yaml
-  - display-with-cel.yaml
-  - display-with-gotemplate.yaml
-  - display-with-javascript.yaml
+  - http_auth_static_pass.yaml
+  - display-with-cel_pass.yaml
+  - display-with-gotemplate_pass.yaml
+  - display-with-javascript_pass.yaml
