@@ -1,0 +1,15 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: jmeter-check
+spec:
+  interval: 30
+  jmeter:
+    - name: jmeter check
+      url: 192.168.1.5
+      port: 1099
+      jmx:
+        valueFrom:
+          configMapKeyRef:
+            name: jmeter-config
+            key: sample

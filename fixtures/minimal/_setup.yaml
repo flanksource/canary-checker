@@ -1,8 +1,0 @@
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: httpbin-secret
-stringData:
-  username: hello
-  password: world

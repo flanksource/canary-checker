@@ -1,7 +1,7 @@
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
-  name: http-pass-single
+  name: http-pass
   labels:
     canary: http
 spec:
@@ -33,7 +33,6 @@ spec:
         expr: "code in [200,201,301] && sslAge > Duration('7d')"
       display:
         template: "code={{.code}}, age={{.sslAge}}"
-
     - name: http-headers
       url: https://httpbin.demo.aws.flanksource.com/headers
       test:

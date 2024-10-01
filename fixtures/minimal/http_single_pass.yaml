@@ -1,0 +1,14 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-single
+  labels:
+    canary: http
+spec:
+  schedule: "@every 5m"
+  http:
+    - name: http pass response 200 status code
+      endpoint: https://httpbin.demo.aws.flanksource.com/status/200
+      thresholdMillis: 3000
+      responseCodes: [200]
+      maxSSLExpiry: 7
