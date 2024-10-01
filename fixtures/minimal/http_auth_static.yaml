@@ -1,7 +1,7 @@
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
-  name: http-basic-auth
+  name: http-basic-auth-static
 spec:
   http:
     - name: "basic auth fail"
@@ -11,12 +11,6 @@ spec:
       endpoint: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
       responseCodes: [200]
       username:
-        valueFrom:
-          secretKeyRef:
-            name: httpbin-secret
-            key: username
+        value: hello
       password:
-        valueFrom:
-          secretKeyRef:
-            name: httpbin-secret
-            key: password
+        value: world
