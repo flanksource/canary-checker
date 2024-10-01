@@ -10,3 +10,5 @@ spec:
       gcp:
         project: google-project-name
         instance: cloudsql-instance-name
+        gcpConnection:
+          connection: connection://gcp/internal

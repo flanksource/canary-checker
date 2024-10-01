@@ -5,7 +5,8 @@ metadata:
   namespace: canaries
 spec:
   http:
-    - endpoint: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
+    - name: http basic auth check
+      url: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
       responseCodes: [200]
       username:
         valueFrom:

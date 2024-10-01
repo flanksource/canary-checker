@@ -7,7 +7,7 @@ metadata:
 spec:
   schedule: "@every 5m"
   http:
-    - endpoint: https://httpbin.demo.aws.flanksource.com/status/200
+    - url: https://httpbin.demo.aws.flanksource.com/status/200
       name: http-deprecated-endpoint
     - name: http-minimal-check
       url: https://httpbin.demo.aws.flanksource.com/status/200

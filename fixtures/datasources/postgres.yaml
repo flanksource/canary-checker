@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: postgres-check
 spec:
-  interval: 30
+  schedule: '@every 30s'
   postgres: # or mysql, mssql
     - name: postgres schemas check
       url: "postgres://$(username):$(password)@postgres.default.svc:5432/postgres?sslmode=disable"

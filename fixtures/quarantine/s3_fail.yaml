@@ -5,11 +5,13 @@ metadata:
 spec:
   schedule: "@every 5m"
   s3:
-    - bucket:
-        name: "test-bucket"
-        region: "us-east-1"
-        endpoint: "https://test-bucket.s3.us-east-1.amazonaws.com"
-      secretKey: "****************"
-      accessKey: "~~~~~~~~~~~~~~~~"
+    - name: s3 check
+      bucket: "test-bucket"
+      region: "us-east-1"
+      endpoint: "https://test-bucket.s3.us-east-1.amazonaws.com"
+      secretKey:
+        value: "****************"
+      accessKey:
+        value: "~~~~~~~~~~~~~~~~"
       objectPath: "path/to/object"
       skipTLSVerify: true

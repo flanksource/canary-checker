@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: jmeter-check
 spec:
-  interval: 30
+  schedule: '@every 30s'
   jmeter:
     - name: jmeter check
       url: 192.168.1.5

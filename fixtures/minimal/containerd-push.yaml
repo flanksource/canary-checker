@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: containerd-push-check
 spec:
-  interval: 30
+  schedule: '@every 30s'
   containerdPush: # use dockerPush if running outside kubernetes / docker
     - name: ContainerdPush Check
       image: docker.io/library/busybox:1.31.1

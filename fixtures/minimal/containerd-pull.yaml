@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: containerd-pull-check
 spec:
-  interval: 30
+  schedule: '@every 30s'
   containerd: # use docker if running outside kubernetes / docker
     - name: pull image
       image: docker.io/library/busybox:1.31.1

@@ -8,7 +8,8 @@ spec:
   schedule: "@every 5m"
   folder:
     # Check for any backup not older than 7 days and min size 25 bytes
-    - path: s3://flanksource-public
+    - name: folder check
+      path: s3://flanksource-public
       awsConnection:
         region: eu-central-1
       minSize: 50M

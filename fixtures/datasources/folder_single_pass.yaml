@@ -1,0 +1,11 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: folder-check
+spec:
+  schedule: "@every 5m"
+  folder:
+    - path: /etc/
+      name: folder-check-min
+      description: Checks if there are at least 10 files in the folder
+      minCount: 10

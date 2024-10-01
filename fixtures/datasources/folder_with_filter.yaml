@@ -1,0 +1,13 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: folder-check
+spec:
+  schedule: "@every 5m"
+  folder:
+    - name: pg-backup checks
+      path: /data/backups
+      filter:
+        regex: "pg-backups-.*.zip"
+      maxAge: 1d # require a daily backup
+      minSize: 10mb # the backup should be at least 10mb
