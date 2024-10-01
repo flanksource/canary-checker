@@ -1,0 +1,23 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-basic-auth
+spec:
+  schedule: "@every 1m"
+  http:
+    - name: "basic auth fail"
+      url: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
+      responseCodes: [401]
+    - name: "basic auth pass"
+      url: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
+      responseCodes: [200]
+      username:
+        valueFrom:
+          configMapKeyRef:
+            name: basic-auth
+            key: username
+      password:
+        valueFrom:
+          configMapKeyRef:
+            name: basic-auth
+            key: password

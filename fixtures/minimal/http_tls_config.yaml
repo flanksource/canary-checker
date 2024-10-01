@@ -1,0 +1,15 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-check
+spec:
+  schedule: "@every 30s"
+  http:
+    - name: http pass response 200 status code
+      url: https://httpbin.demo.aws.flanksource.com/status/200
+      tlsConfig:
+        ca:
+          valueFrom:
+            secretKeyRef:
+              name: ca-cert
+              key: ca.pem
