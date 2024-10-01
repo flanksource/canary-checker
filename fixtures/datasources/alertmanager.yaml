@@ -1,0 +1,25 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: alertmanager-check
+spec:
+  schedule: "@every 5m"
+  alertmanager:
+    - url: alertmanager.example.com
+      name: alert-manager-transform
+      alerts:
+        - .*
+      ignore:
+        - KubeScheduler.*
+      transform:
+        javascript: |
+          var out = _.map(results, function(r) {
+            return {
+              name: r.name,
+              labels: r.labels,
+              icon: 'alert',
+              message: r.message,
+              description: r.message,
+            }
+          })
+          JSON.stringify(out);

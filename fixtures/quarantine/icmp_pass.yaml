@@ -5,7 +5,8 @@ metadata:
 spec:
   schedule: "@every 5m"
   icmp:
-    - endpoint: https://api.github.com
+    - name: ICMP test
+      url: https://api.github.com
       thresholdMillis: 600
       packetLossThreshold: 10
       packetCount: 2

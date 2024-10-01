@@ -1,0 +1,19 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: currency-converter-display-js
+spec:
+  http:
+    - name: USD
+      url: https://api.frankfurter.app/latest?from=USD&to=GBP,EUR,ILS
+      display:
+        javascript: |
+          currencyCodes = { "EUR": "€", "GBP": "£", "ILS": "₪"}
+
+          display = []
+          for (var currency in json.rates) {
+            display.push(currency + " = " + currencyCodes[currency] + json.rates[currency])
+          }
+
+          // final output to display
+          "$1 = " + display.join(", ")

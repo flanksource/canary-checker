@@ -6,3 +6,7 @@ resources:
   - http_fail.yaml
   - http_pass_single.yaml
   - http_timeout_fail.yaml
+  - http_auth_static.yaml
+  - display-with-cel.yaml
+  - display-with-gotemplate.yaml
+  - display-with-javascript.yaml

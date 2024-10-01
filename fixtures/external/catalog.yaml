@@ -3,7 +3,7 @@ kind: Canary
 metadata:
   name: node-catalogs
 spec:
-  interval: 30
+  schedule: '@every 30s'
   catalog:
     - name: ingress-catalog-check
       selector:

@@ -30,7 +30,7 @@ spec:
             bucketName: "{{ (index .resources 0).Object.metadata.name }}"
             objectPath: dummy
             region: "{{ (index .resources 0).Object.spec.forProvider.locationConstraint }}"
-            endpoint: http://localstack-localstack.localstack.svc.cluster.local:4566
+            url: http://localstack-localstack.localstack.svc.cluster.local:4566
             usePathStyle: true
             accessKey:
               value: test

@@ -1,0 +1,11 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: currency-converter-display-gotemplate
+spec:
+  http:
+    - name: USD
+      url: https://api.frankfurter.app/latest?from=USD&to=GBP,EUR,ILS,ZAR
+      display:
+        template: "$1 = €{{.json.rates.EUR}}, £{{.json.rates.GBP}}, ₪{{.json.rates.ILS}}"

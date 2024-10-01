@@ -1,0 +1,11 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: containerd-push-check
+spec:
+  schedule: '@every 30s'
+  containerdPush: # use dockerPush if running outside kubernetes / docker
+    - name: ContainerdPush Check
+      image: docker.io/library/busybox:1.31.1
+      username: <insert-username>
+      password: <insert-password>

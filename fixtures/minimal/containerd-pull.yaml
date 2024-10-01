@@ -1,0 +1,11 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: containerd-pull-check
+spec:
+  schedule: '@every 30s'
+  containerd: # use docker if running outside kubernetes / docker
+    - name: pull image
+      image: docker.io/library/busybox:1.31.1
+      expectedDigest: sha256:95cf004f559831017cdf4628aaf1bb30133677be8702a8c5f2994629f637a209
+      expectedSize: 764556

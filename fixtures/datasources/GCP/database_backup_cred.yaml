@@ -10,3 +10,9 @@ spec:
       gcp:
         project: google-project-name
         instance: cloudsql-instance-name
+        gcpConnection:
+          credentials:
+            valueFrom:
+              secretKeyRef:
+                name: gcp-credentials
+                key: AUTH_ACCESS_TOKEN
