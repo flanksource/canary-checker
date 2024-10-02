@@ -122,8 +122,8 @@ func (components Components) Walk() Components {
 // Component mirrors the models.Component struct except that instead of raw JSON serialized to the DB, it has the full CRD based spec.
 type Component struct {
 	Name         string                  `json:"name,omitempty"`
-	ID           uuid.UUID               `json:"id,omitempty" gorm:"default:generate_ulid()"` //nolint
-	AgentID      uuid.UUID               `json:"agent_id,omitempty"`                          //nolint
+	ID           uuid.UUID               `json:"id,omitempty" gorm:"default:generate_ulid()"`
+	AgentID      uuid.UUID               `json:"agent_id,omitempty"`
 	Text         string                  `json:"text,omitempty"`
 	Schedule     string                  `json:"schedule,omitempty"`
 	TopologyType string                  `json:"topology_type,omitempty"`
@@ -147,11 +147,11 @@ type Component struct {
 	Properties      dutyTypes.Properties        `json:"properties,omitempty" gorm:"type:properties"`
 	Components      Components                  `json:"components,omitempty" gorm:"-"`
 	ParentId        *uuid.UUID                  `json:"parent_id,omitempty"` //nolint
-	Selectors       dutyTypes.ResourceSelectors `json:"selectors,omitempty" gorm:"resourceSelectors" swaggerignore:"true"`
-	ComponentChecks v1.ComponentChecks          `json:"-" gorm:"componentChecks" swaggerignore:"true"`
+	Selectors       dutyTypes.ResourceSelectors `json:"selectors,omitempty" swaggerignore:"true"`
+	ComponentChecks v1.ComponentChecks          `json:"component_checks" swaggerignore:"true"`
 	Checks          Checks                      `json:"checks,omitempty" gorm:"-"`
 	Configs         dutyTypes.ConfigQueries     `json:"configs,omitempty" gorm:"type:configs"`
-	TopologyID      uuid.UUID                   `json:"topology_id,omitempty"` //nolint
+	TopologyID      uuid.UUID                   `json:"topology_id,omitempty"`
 	CreatedAt       time.Time                   `json:"created_at,omitempty" time_format:"postgres_timestamp"`
 	UpdatedAt       time.Time                   `json:"updated_at,omitempty" time_format:"postgres_timestamp"`
 	DeletedAt       *time.Time                  `json:"deleted_at,omitempty" time_format:"postgres_timestamp" swaggerignore:"true"`
