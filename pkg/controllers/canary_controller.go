@@ -18,9 +18,11 @@ package controllers
 
 import (
 	gocontext "context"
+	"fmt"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -121,12 +123,12 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 	patch := client.MergeFrom(canaryForStatus.DeepCopy())
 
 	if val, ok := canary.Annotations["next-runtime"]; ok {
-		runAt, err := time.Parse(time.RFC3339, val)
-		if err != nil {
-			return ctrl.Result{}, err
+		runAt := utils.ParseTime(val)
+		if runAt == nil {
+			return ctrl.Result{}, fmt.Errorf("invalid next-runtime: %s", val)
 		}
 
-		if err := canaryJobs.TriggerAt(ctx, *dbCanary, runAt); err != nil {
+		if err := canaryJobs.TriggerAt(ctx, *dbCanary, *runAt); err != nil {
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}
 
