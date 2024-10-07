@@ -90,23 +90,70 @@ var (
 	otelServiceName  string
 )
 
+func deprecatedFlags(flags *pflag.FlagSet) {
+	_ = flags.Int("devGuiPort", 3004, "Port used by a local npm server in development mode")
+	if err := flags.MarkDeprecated("devGuiPort", "the flag used to be a no-op"); err != nil {
+		panic(err)
+	}
+
+	_ = flags.Int("metricsPort", 8081, "Port to expose a health dashboard ")
+	if err := flags.MarkDeprecated("metricsPort", "Extra metrics server removed"); err != nil {
+		panic(err)
+	}
+
+	_ = flags.Bool("dev", false, "")
+	if err := flags.MarkDeprecated("dev", "the flag used to be a no-op"); err != nil {
+		panic(err)
+	}
+
+	_ = flags.StringSlice("push-servers", []string{}, "push check results to multiple canary servers")
+	if err := flags.MarkDeprecated("push-servers", "this feature has been deprecated."); err != nil {
+		panic(err)
+	}
+
+	_ = flags.StringSlice("pull-servers", []string{}, "pull check results from multiple canary servers")
+	if err := flags.MarkDeprecated("pull-servers", "this feature has been deprecated."); err != nil {
+		panic(err)
+	}
+
+	_ = flags.Bool("expose-env", false, "Expose environment variables for use in all templates. Note this has serious security implications with untrusted canaries")
+	if err := flags.MarkDeprecated("expose-env", "the flag used to be a no-op"); err != nil {
+		panic(err)
+	}
+
+	flags.StringArray("shared-library", []string{}, "Add javascript files to be shared by all javascript templates")
+	if err := flags.MarkDeprecated("shared-library", "running custom scripts isn't allowed"); err != nil {
+		panic(err)
+	}
+
+	_ = flags.Int("maxStatusCheckCount", 5, "Maximum number of past checks in the in memory cache")
+	if err := flags.MarkDeprecated("maxStatusCheckCount", "use the `start` and `until` query params"); err != nil {
+		panic(err)
+	}
+
+	_ = flags.Int("check-retention-period", 7, "Check retention period in days")
+	if err := flags.MarkDeprecated("check-retention-period", "Use property check.retention.age"); err != nil {
+		panic(err)
+	}
+
+	_ = flags.Int("canary-retention-period", 7, "Canary retention period in days")
+	if err := flags.MarkDeprecated("canary-retention-period", "use property canary.retention.age"); err != nil {
+		panic(err)
+	}
+
+	_ = flags.Int("check-status-retention-period", 30, "Check status retention period in days")
+	if err := flags.MarkDeprecated("check-status-retention-period", "use property check.status.retention.days"); err != nil {
+		panic(err)
+	}
+
+	_ = flags.Int("cache-timeout", 90, "Cache timeout in days")
+	if err := flags.MarkDeprecated("cache-timeout", "the flag used to be a no-op"); err != nil {
+		panic(err)
+	}
+}
+
 func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&httpPort, "httpPort", httpPort, "Port to expose a health dashboard ")
-
-	_ = flags.MarkDeprecated("devGuiPort", "")
-	_ = flags.MarkDeprecated("metricsPort", "Extra metrics server removed")
-	_ = flags.MarkDeprecated("dev", "")
-	_ = flags.MarkDeprecated("push-servers", "")
-	_ = flags.MarkDeprecated("pull-servers", "")
-	_ = flags.MarkDeprecated("expose-env", "")
-	_ = flags.MarkDeprecated("shared-library", "")
-	_ = flags.MarkDeprecated("maxStatusCheckCount", "")
-	_ = flags.MarkDeprecated("check-retention-period", "")
-	_ = flags.MarkDeprecated("component-retention-period", "")
-	_ = flags.MarkDeprecated("canary-retention-period", "")
-	_ = flags.MarkDeprecated("check-status-retention-period", "")
-
-	_ = flags.MarkDeprecated("cache-timeout", "")
 
 	flags.StringVar(&publicEndpoint, "public-endpoint", publicEndpoint, "Host on which the health dashboard is exposed. Could be used for generting-links, redirects etc.")
 	flags.StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
@@ -128,6 +175,8 @@ func ServerFlags(flags *pflag.FlagSet) {
 	flags.BoolVar(&canary.UpstreamConf.InsecureSkipVerify, "upstream-insecure-skip-verify", os.Getenv("UPSTREAM_INSECURE_SKIP_VERIFY") == "true", "Skip TLS verification on the upstream servers certificate")
 
 	duty.BindPFlags(flags, duty.SkipMigrationByDefaultMode)
+
+	deprecatedFlags(flags)
 }
 
 func init() {
