@@ -5,6 +5,7 @@ import (
 
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
+	dutydb "github.com/flanksource/duty/db"
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
@@ -132,7 +133,7 @@ func syncComponentRelationships(ctx context.Context, id uuid.UUID, relationships
 			Columns:   []clause.Column{{Name: "component_id"}, {Name: "relationship_id"}, {Name: "selector_id"}},
 			DoUpdates: clause.Assignments(map[string]any{"deleted_at": nil}),
 		}).Create(relationshipsToAdd).Error; err != nil {
-			return err
+			return fmt.Errorf("error upserting relationships: %w", dutydb.ErrorDetails(err))
 		}
 	}
 
