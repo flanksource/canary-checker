@@ -79,6 +79,7 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 	if runner.IsCanaryIgnored(&canary.ObjectMeta) {
 		return ctrl.Result{}, nil
 	}
+
 	ctx := r.Context.WithObject(canary.ObjectMeta).WithName(req.NamespacedName.String())
 
 	canary.SetRunnerName(r.RunnerName)
@@ -203,14 +204,9 @@ func (r *CanaryReconciler) updateCanaryInDB(ctx dutyContext.Context, canary *v1.
 		dbCanary = cacheObj.(*pkg.Canary)
 	}
 
-	// Compare canary spec and spec in database
-	// If they do not match, persist the canary in database
-	canarySpecJSON, err := json.Marshal(canary.Spec)
-	if err != nil {
+	if changed, err := hasCanaryChanged(canary, dbCanary); err != nil {
 		return nil, err
-	}
-	opts := jsondiff.DefaultJSONOptions()
-	if diff, _ := jsondiff.Compare(canarySpecJSON, dbCanary.Spec, &opts); diff != jsondiff.FullMatch {
+	} else if changed {
 		dbCanary, err = r.persistAndCacheCanary(ctx, canary)
 		if err != nil {
 			return nil, err
@@ -218,6 +214,24 @@ func (r *CanaryReconciler) updateCanaryInDB(ctx dutyContext.Context, canary *v1.
 	}
 
 	return dbCanary, nil
+}
+
+func hasCanaryChanged(canary *v1.Canary, dbCanary *pkg.Canary) (bool, error) {
+	if !utils.IsMapIdentical(canary.Annotations, dbCanary.Annotations) {
+		return true, nil
+	}
+
+	// Compare canary spec and spec in database
+	// If they do not match, persist the canary in database
+	canarySpecJSON, err := json.Marshal(canary.Spec)
+	if err != nil {
+		return false, err
+	}
+
+	opts := jsondiff.DefaultJSONOptions()
+	diff, _ := jsondiff.Compare(canarySpecJSON, dbCanary.Spec, &opts)
+	specChanged := diff != jsondiff.FullMatch
+	return specChanged, nil
 }
 
 func (r *CanaryReconciler) Report() {

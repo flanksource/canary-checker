@@ -46,5 +46,9 @@ func IsCanaryIgnored(canary *metav1.ObjectMeta) bool {
 		}
 	}
 
+	return false
+}
+
+func IsCanarySuspended(canary *metav1.ObjectMeta) bool {
 	return canary.Annotations != nil && canary.Annotations["suspend"] == "true"
 }
