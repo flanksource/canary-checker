@@ -3,6 +3,7 @@ package topology
 import (
 	"fmt"
 
+	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
 	dutydb "github.com/flanksource/duty/db"
@@ -54,10 +55,11 @@ var ComponentRelationshipSync = &job.Job{
 				continue
 			}
 			relationships := []models.ComponentRelationship{}
-			for _, c := range comps {
+			compIDs := collections.Dedup(lo.Map(comps, func(comp models.Component, _ int) uuid.UUID { return comp.ID }))
+			for _, cID := range compIDs {
 				relationships = append(relationships, models.ComponentRelationship{
 					RelationshipID:   component.ID,
-					ComponentID:      c.ID,
+					ComponentID:      cID,
 					SelectorID:       hash,
 					RelationshipPath: component.Path + "." + component.ID.String(),
 				})
