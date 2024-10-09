@@ -172,3 +172,17 @@ func ParseTime(t string) *time.Time {
 
 	return nil
 }
+
+func IsMapIdentical[K comparable](map1, map2 map[string]K) bool {
+	if len(map1) != len(map2) {
+		return false
+	}
+
+	for k, v1 := range map1 {
+		if v2, exists := map2[k]; !exists || v1 != v2 {
+			return false
+		}
+	}
+
+	return true
+}

@@ -449,11 +449,15 @@ func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, boo
 
 	var changed bool
 	if existing.ID != uuid.Nil {
-		jsonDiff, err := diff.JSONCompare(string(model.Spec), string(existing.Spec))
-		if err != nil {
-			return nil, false, fmt.Errorf("failed to compare old and existing model")
+		if !utils.IsMapIdentical(model.Annotations, existing.Annotations) {
+			changed = true
+		} else {
+			jsonDiff, err := diff.JSONCompare(string(model.Spec), string(existing.Spec))
+			if err != nil {
+				return nil, false, fmt.Errorf("failed to compare old and existing model")
+			}
+			changed = jsonDiff != ""
 		}
-		changed = jsonDiff != ""
 	}
 
 	var oldCheckIDs []string
