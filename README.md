@@ -293,7 +293,7 @@ Your feedback is always welcome!
 | [Ping/ICMP](https://canarychecker.io/reference/icmp)                               | GA         | Duration and packet loss                                     |
 | [TCP](https://canarychecker.io/reference/tcp)                                      | GA         | Port is open and connectable                                 |
 | **Data Sources**                                             |            |                                                              |
-| SQL ([MySQL](https://canarychecker.io/reference/mysql), [Postgres](https://canarychecker.io/reference/postgres), [SQL Server](https://canarychecker.io/reference/mssql)) | GA         | Ability to login, results, duration, health exposed via stored procedures |
+| [SQL](https://canarychecker.io/reference/sql) (MySQL, Postgres, SQL Server) | GA         | Ability to login, results, duration, health exposed via stored procedures |
 | [LDAP](https://canarychecker.io/reference/ldap)                                    | GA         | Ability to login, response time                              |
 | [ElasticSearch / Opensearch](https://canarychecker.io/reference/elasticsearch)     | GA         | Ability to login, response time, size of search results      |
 | [Mongo](https://canarychecker.io/reference/mongo)                                  | Beta       | Ability to login, results, duration,                         |
@@ -301,30 +301,30 @@ Your feedback is always welcome!
 | [Prometheus](https://canarychecker.io/reference/prometheus)                        | GA         | Ability to login, results, duration,                         |
 | **Alerts**                                                   |            | Prometheus                                                   |
 | [Prometheus Alert Manager](https://canarychecker.io/reference/alert-manager)       | GA         | Pending and firing alerts                                    |
-| [AWS Cloudwatch Alarms](https://canarychecker.io/reference/cloudwatch)             | GA         | Pending and firing alarms                                    |
-| [Dynatrace Problems](./reference/dynatrace.md)               | Beta       | Problems deteced                                             |
+| [AWS Cloudwatch Alarms](https://canarychecker.io/reference/aws-cloudwatch)             | GA         | Pending and firing alarms                                    |
+| [Dynatrace Problems](./fixtures/external/dynatrace.yaml)               | Beta       | Problems deteced                                             |
 | **DevOps**                                                   |            |                                                              |
 | [Git](https://canarychecker.io/reference/git)                                      | GA         | Query Git and Github repositories via SQL                    |
-| [Azure Devops](https://canarychecker.io/reference)                                 | Beta |                                                              |
+| [Azure Devops](https://canarychecker.io/reference/azure-devops)                                 | Beta |                                                              |
 | **Integration Testing**                                      |            |                                                              |
 | [JMeter](https://canarychecker.io/reference/jmeter)                                | Beta       | Runs and checks the result of a JMeter test                  |
 | [JUnit / BYO](https://canarychecker.io/reference/junit)                            | Beta       | Run a pod that saves Junit test results                      |
-| [K6](https://canarychecker.io/reference/k6) | Beta | Runs K6 tests that export JUnit via a container |
-| [Newman](https://canarychecker.io/reference/newman) | Beta |  Runs Newman / Postman tests that export JUnit via a container  |
-| [Playwright](https://canarychecker.io/reference/Playwright) | Beta |  Runs Playwright tests that export JUnit via a container  |
+| [K6](https://canarychecker.io/examples/k6) | Beta | Runs K6 tests that export JUnit via a container |
+| [Newman](https://canarychecker.io/examples/newman) | Beta |  Runs Newman / Postman tests that export JUnit via a container  |
+| [Playwright](https://canarychecker.io/examples/Playwright) | Beta |  Runs Playwright tests that export JUnit via a container  |
 | **File Systems / Batch**                                     |            |                                                              |
 | [Local Disk / NFS](https://canarychecker.io/reference/folder)                      | GA         | Check folders for files that are:  too few/many, too old/new, too small/large |
-| [S3](https://canarychecker.io/reference/s3-bucket)                                 | GA         | Check contents of AWS S3 Buckets                             |
-| [GCS](https://canarychecker.io/reference/gcs-bucket)                               | GA         | Check contents of Google Cloud Storage Buckets               |
-| [SFTP](https://canarychecker.io/reference/sftp)                                    | GA         | Check contents of folders over SFTP                          |
-| [SMB / CIFS](../smb)                                         | GA         | Check contents of folders over SMB/CIFS                      |
+| [S3](https://canarychecker.io/reference/folder#s3)                                 | GA         | Check contents of AWS S3 Buckets                             |
+| [GCS](https://canarychecker.io/reference/folder#gcs)                               | GA         | Check contents of Google Cloud Storage Buckets               |
+| [SFTP](https://canarychecker.io/reference/folder#sftp)                                    | GA         | Check contents of folders over SFTP                          |
+| [SMB / CIFS](https://canarychecker.io/reference/folder#smb)                                         | GA         | Check contents of folders over SMB/CIFS                      |
 | **Config**                                                   |            |                                                              |
 | [AWS Config](https://canarychecker.io/reference/aws-config)                        | GA         | Query AWS config using SQL                                   |
 | [AWS Config Rule](https://canarychecker.io/reference/aws-config-rule)              | GA         | AWS Config Rules that are firing, Custom AWS Config queries  |
-| [Config DB](https://canarychecker.io/reference/configdb)                           | GA         | Custom config queries for Mission Control Config D           |
+| [Config DB](https://canarychecker.io/reference/catalog)                           | GA         | Custom config queries for Mission Control Config D           |
 | [Kubernetes Resources](https://canarychecker.io/reference/kubernetes)              | GA         | Kubernetes resources that are missing or are in a non-ready state |
 | **Backups**                                                  |            |                                                              |
-| [GCP Databases](..refere)                                    | GA         | Backup freshness                                             |
+| [GCP Databases](https://canarychecker.io/reference/gcs-database-backup#gcpdatabase)                                    | GA         | Backup freshness                                             |
 | [Restic](https://canarychecker.io/reference/restic)                                | Beta       | Backup freshness and integrity                               |
 | **Infrastructure**                                           |            |                                                              |
 | [EC2](https://canarychecker.io/reference/ec2)                                      | GA         | Ability to launch new EC2 instances                          |
