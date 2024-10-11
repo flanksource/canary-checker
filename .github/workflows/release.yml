@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: New version to create
+        description: New version to create (e.g. 1.0.0)
         required: false
         default: ""
       channel:
@@ -55,7 +55,7 @@ jobs:
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: 'refs/tags/${{ inputs.version }}',
+              ref: 'refs/tags/v${{ inputs.version }}',
               sha: context.sha
             })
   binary:
