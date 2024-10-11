@@ -31,7 +31,12 @@ jobs:
         run: |
           if [[ "${{ inputs.version }}" != "" ]]; then
             echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
-          elif [[ ${{ github.event_name == 'workflow_dispatch' }} == true ]]; then
+            echo "TAG=v${{ inputs.version }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=" >> $GITHUB_ENV
+          fi
+
+          if [[ ${{ github.event_name == 'workflow_dispatch' }} == true ]]; then
             if [[  "${{ inputs.channel }}" ==  "stable" ]]; then
               BRANCHES="['master']"
             elif [[  "${{ inputs.channel }}" ==  "rc" ]]; then
@@ -41,8 +46,9 @@ jobs:
             BRANCHES="[{name: 'master', channel: 'beta', prerelease: 'beta'}, {name: 'dummy-release'}]"
           fi
           echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
+          cat $GITHUB_ENV
       - uses: cycjimmy/semantic-release-action@61680d0e9b02ff86f5648ade99e01be17f0260a4 # v4.0.0
-        if: ${{ inputs.version }}  == ''
+        if: ${{ ! env.TAG }}
         id: semantic
         with:
           branches: ${{ env.BRANCHES }}
@@ -50,14 +56,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create tag
-        if: ${{ inputs.version }}  != ''
+        if: ${{ env.TAG }}
         uses: actions/github-script@v5
         with:
           script: |
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: 'refs/tags/v${{ inputs.version }}',
+              ref: 'refs/tags/${{ env.TAG }}',
               sha: context.sha
             })
   binary:
