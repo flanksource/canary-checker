@@ -40,7 +40,7 @@ jobs:
           fi
           echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
       - uses: cycjimmy/semantic-release-action@61680d0e9b02ff86f5648ade99e01be17f0260a4 # v4.0.0
-        if: ${{ inputs.version == '' }}
+        if: ${{ inputs.version }}  == ''
         id: semantic
         with:
           branches: ${{ env.BRANCHES }}
@@ -48,7 +48,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create tag
-        if: ${{ inputs.version != '' }}
+        if: ${{ inputs.version }} != ''
         uses: actions/github-script@v5
         with:
           script: |
