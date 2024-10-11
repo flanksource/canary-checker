@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: New version to create (e.g. 1.0.0)
+        description: New version to create
         required: false
         default: ""
       channel:
@@ -23,7 +23,7 @@ jobs:
   semantic-release:
     runs-on: ubuntu-latest
     outputs:
-      release-version: ${{ inputs.version == '' && steps.semantic.outputs.new_release_version || inputs.version }}
+      release-version: ${{ inputs.version == '' && steps.semantic.outputs.new_release_version || ( 'v' + inputs.version) }}
       new-release-published: ${{ steps.semantic.outputs.new-release-published }}
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
@@ -40,7 +40,7 @@ jobs:
           fi
           echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
       - uses: cycjimmy/semantic-release-action@61680d0e9b02ff86f5648ade99e01be17f0260a4 # v4.0.0
-        if: ${{ inputs.version }}  == ''
+        if: ${{ inputs.version == "" }}
         id: semantic
         with:
           branches: ${{ env.BRANCHES }}
@@ -48,7 +48,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create tag
-        if: ${{ inputs.version }} != ''
+        if: ${{ inputs.version != "" }}
         uses: actions/github-script@v5
         with:
           script: |
