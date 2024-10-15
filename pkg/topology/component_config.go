@@ -10,6 +10,7 @@ import (
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -17,6 +18,12 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
 )
+
+// ComponentConfigsRelationship
+type ComponentConfigsRelationship struct {
+	ComponentID string
+	ConfigIDs   pq.StringArray `gorm:"type:[]text"`
+}
 
 var ComponentConfigRun = &job.Job{
 	Name:       "ComponentConfigRun",
@@ -35,10 +42,7 @@ var ComponentConfigRun = &job.Job{
 			return fmt.Errorf("error getting components: %w", err)
 		}
 
-		var existingRelationships []struct {
-			ComponentID uuid.UUID
-			ConfigIDs   []uuid.UUID
-		}
+		var existingRelationships []ComponentConfigsRelationship
 		if err := db.Model(&models.ConfigComponentRelationship{}).
 			Select("component_id, ARRAY_AGG(config_id) AS config_ids").
 			Where("deleted_at IS NULL").
@@ -46,13 +50,13 @@ var ComponentConfigRun = &job.Job{
 			return fmt.Errorf("error fetching existing config_component_relationships: %w", err)
 		}
 
-		existingConfigIDsByComponentID := make(map[uuid.UUID][]uuid.UUID)
+		existingConfigIDsByComponentID := make(map[string][]string)
 		for _, er := range existingRelationships {
 			existingConfigIDsByComponentID[er.ComponentID] = er.ConfigIDs
 		}
 
 		for _, component := range components {
-			if err := SyncComponentConfigRelationship(run.Context, component, existingConfigIDsByComponentID[component.ID]); err != nil {
+			if err := SyncComponentConfigRelationship(run.Context, component, existingConfigIDsByComponentID[component.ID.String()]); err != nil {
 				run.History.AddError(fmt.Sprintf("error persisting config relationships: %v", err))
 				continue
 			}
@@ -99,12 +103,12 @@ func PersistConfigComponentRelationship(db *gorm.DB, configID, componentID uuid.
 	}).Create(&relationship).Error
 }
 
-func SyncComponentConfigRelationship(ctx context.Context, component pkg.Component, existingConfigIDs []uuid.UUID) error {
+func SyncComponentConfigRelationship(ctx context.Context, component pkg.Component, existingConfigIDs []string) error {
 	if len(component.Configs) == 0 {
 		return nil
 	}
 
-	var newConfigsIDs []uuid.UUID
+	var newConfigsIDs []string
 	var relationshipsToPersist []models.ConfigComponentRelationship
 
 	for _, config := range component.Configs {
@@ -114,9 +118,9 @@ func SyncComponentConfigRelationship(ctx context.Context, component pkg.Componen
 		}
 
 		for _, dbConfigID := range dbConfigIDs {
-			newConfigsIDs = append(newConfigsIDs, dbConfigID)
+			newConfigsIDs = append(newConfigsIDs, dbConfigID.String())
 
-			if collections.Contains(existingConfigIDs, dbConfigID) {
+			if collections.Contains(existingConfigIDs, dbConfigID.String()) {
 				continue
 			}
 
