@@ -47,7 +47,7 @@ jobs:
           fi
           echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
           cat $GITHUB_ENV
-      - uses: cycjimmy/semantic-release-action@61680d0e9b02ff86f5648ade99e01be17f0260a4 # v4.0.0
+      - uses: cycjimmy/semantic-release-action@b1b432f13acb7768e0c8efdec416d363a57546f2 # v4.1.1
         if: ${{ ! env.TAG }}
         id: semantic
         with:
