@@ -7,6 +7,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// OperatorExecutor when true means the application is serving as the k8s operator
+var OperatorExecutor bool
+
 var RunnerName string
 
 var Version string

@@ -32,9 +32,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var schedule, configFile string
-var executor bool
-var propertiesFile = "canary-checker.properties"
+var (
+	schedule, configFile string
+	executor             bool
+	propertiesFile       = "canary-checker.properties"
+)
 
 var Serve = &cobra.Command{
 	Use:   "serve config.yaml",
