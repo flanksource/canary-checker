@@ -40,11 +40,8 @@ const (
 // CanarySpec defines the desired state of Canary
 type CanarySpec struct {
 	//+kubebuilder:default=1
-	// Replicas to scale down the canary.
-	//
-	// This is a pointer to distinguish between explicit
-	// zero and not specified. Defaults to 1.
-	// +optional
+	//+optional
+	// Replicas pauses the canary if = 0.
 	Replicas *int `yaml:"replicas,omitempty" json:"replicas,omitempty"`
 
 	Env                map[string]VarSource      `yaml:"env,omitempty" json:"env,omitempty"`
@@ -358,7 +355,7 @@ func (c Canary) GetKey(check external.Check) string {
 	if err != nil {
 		logger.Debugf("error marshalling the check")
 	}
-	var hash = md5.Sum(data)
+	hash := md5.Sum(data)
 	return fmt.Sprintf("%s/%s:%s/%s:%s", c.ID(), check.GetType(), check.GetName(), c.GetDescription(check), hex.EncodeToString(hash[:]))
 }
 

@@ -11906,12 +11906,7 @@ spec:
                   type: array
                 replicas:
                   default: 1
-                  description: |-
-                    Replicas to scale down the canary.
-
-
-                    This is a pointer to distinguish between explicit
-                    zero and not specified. Defaults to 1.
+                  description: Replicas pauses the canary if = 0.
                   type: integer
                 restic:
                   items:
