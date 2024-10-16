@@ -40,8 +40,12 @@ const (
 // CanarySpec defines the desired state of Canary
 type CanarySpec struct {
 	//+kubebuilder:default=1
-	//+optional
-	Replicas int `yaml:"replicas,omitempty" json:"replicas,omitempty"`
+	// Replicas to scale down the canary.
+	//
+	// This is a pointer to distinguish between explicit
+	// zero and not specified. Defaults to 1.
+	// +optional
+	Replicas *int `yaml:"replicas,omitempty" json:"replicas,omitempty"`
 
 	Env                map[string]VarSource      `yaml:"env,omitempty" json:"env,omitempty"`
 	HTTP               []HTTPCheck               `yaml:"http,omitempty" json:"http,omitempty"`

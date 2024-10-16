@@ -94,7 +94,7 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 		return nil
 	}
 
-	if runner.IsCanarySuspended(&canary.ObjectMeta) || runner.IsCanaryIgnored(&canary.ObjectMeta) {
+	if runner.IsCanarySuspended(*canary) || runner.IsCanaryIgnored(&canary.ObjectMeta) {
 		Unschedule(id)
 		return nil
 	}
@@ -208,7 +208,7 @@ func ScanCanaryConfigs(ctx context.Context) {
 		}
 
 		for _, canary := range configs {
-			if runner.IsCanarySuspended(&canary.ObjectMeta) || runner.IsCanaryIgnored(&canary.ObjectMeta) {
+			if runner.IsCanarySuspended(canary) || runner.IsCanaryIgnored(&canary.ObjectMeta) {
 				continue
 			}
 
