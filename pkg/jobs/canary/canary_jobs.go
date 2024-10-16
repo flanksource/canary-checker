@@ -200,7 +200,7 @@ func logIfError(err error, description string) {
 
 var CleanupCRDDeleteCanaries = &dutyjob.Job{
 	Name:       "CleanupCRDDeletedCanaries",
-	Schedule:   "@every 1h",
+	Schedule:   "@every 1d",
 	RunNow:     true,
 	Singleton:  true,
 	JobHistory: true,
