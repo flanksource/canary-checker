@@ -1,6 +1,7 @@
 package runner
 
 import (
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/commons/collections"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,6 +50,7 @@ func IsCanaryIgnored(canary *metav1.ObjectMeta) bool {
 	return false
 }
 
-func IsCanarySuspended(canary *metav1.ObjectMeta) bool {
-	return canary.Annotations != nil && canary.Annotations["suspend"] == "true"
+func IsCanarySuspended(c v1.Canary) bool {
+	return (c.Spec.Replicas != nil && *c.Spec.Replicas == 0) ||
+		(c.ObjectMeta.Annotations != nil && c.ObjectMeta.Annotations["suspend"] == "true")
 }

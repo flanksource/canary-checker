@@ -11906,6 +11906,7 @@ spec:
                   type: array
                 replicas:
                   default: 1
+                  description: Replicas pauses the canary if = 0.
                   type: integer
                 restic:
                   items:

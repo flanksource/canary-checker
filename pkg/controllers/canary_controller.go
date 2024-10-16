@@ -139,22 +139,16 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 		}
 	}
 
-	if canaryForStatus.Status.Replicas != canary.Spec.Replicas {
-		if canary.Spec.Replicas == 0 {
+	if canary.Spec.Replicas != nil && canaryForStatus.Status.Replicas != *canary.Spec.Replicas {
+		if *canary.Spec.Replicas == 0 {
 			canaryJobs.Unschedule(canary.GetPersistedID())
-			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), true); err != nil {
-				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
-			}
 		} else {
-			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), false); err != nil {
-				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
-			}
 			if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
 				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 			}
 		}
 
-		canaryForStatus.Status.Replicas = canary.Spec.Replicas
+		canaryForStatus.Status.Replicas = *canary.Spec.Replicas
 	}
 
 	canaryForStatus.Status.Checks = dbCanary.Checks

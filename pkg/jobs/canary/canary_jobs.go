@@ -65,7 +65,7 @@ func (j CanaryJob) GetNamespacedName() types.NamespacedName {
 }
 
 func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
-	if runner.IsCanarySuspended(&j.Canary.ObjectMeta) || runner.IsCanaryIgnored(&j.Canary.ObjectMeta) {
+	if runner.IsCanarySuspended(j.Canary) || runner.IsCanaryIgnored(&j.Canary.ObjectMeta) {
 		return nil
 	}
 

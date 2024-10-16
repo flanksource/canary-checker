@@ -41,7 +41,8 @@ const (
 type CanarySpec struct {
 	//+kubebuilder:default=1
 	//+optional
-	Replicas int `yaml:"replicas,omitempty" json:"replicas,omitempty"`
+	// Replicas pauses the canary if = 0.
+	Replicas *int `yaml:"replicas,omitempty" json:"replicas,omitempty"`
 
 	Env                map[string]VarSource      `yaml:"env,omitempty" json:"env,omitempty"`
 	HTTP               []HTTPCheck               `yaml:"http,omitempty" json:"http,omitempty"`
@@ -354,7 +355,7 @@ func (c Canary) GetKey(check external.Check) string {
 	if err != nil {
 		logger.Debugf("error marshalling the check")
 	}
-	var hash = md5.Sum(data)
+	hash := md5.Sum(data)
 	return fmt.Sprintf("%s/%s:%s/%s:%s", c.ID(), check.GetType(), check.GetName(), c.GetDescription(check), hex.EncodeToString(hash[:]))
 }
 

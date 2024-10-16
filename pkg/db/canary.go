@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"time"
 
 	apiContext "github.com/flanksource/canary-checker/api/context"
@@ -29,9 +28,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-var (
-	PostgresDuplicateKeyError = &pgconn.PgError{Code: "23505"}
-)
+var PostgresDuplicateKeyError = &pgconn.PgError{Code: "23505"}
 
 func GetAllCanariesForSync(ctx context.Context, namespace string) ([]pkg.Canary, error) {
 	query := `
@@ -50,6 +47,7 @@ func GetAllCanariesForSync(ctx context.Context, namespace string) ([]pkg.Canary,
         WHERE
             deleted_at IS NULL AND
             agent_id = '00000000-0000-0000-0000-000000000000' AND
+            (spec->>'replicas' != '0' OR spec->'replicas' IS NULL) AND
 						(annotations->>'suspend' != 'true' OR annotations->>'suspend' IS NULL)
     `
 
@@ -430,7 +428,6 @@ func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, boo
 		models.Canary{}.ConflictClause(),
 		clause.Returning{},
 	).Create(&model).Error
-
 	// Duplicate key happens when an already created canary is persisted
 	// We will ignore this error but act on other errors
 	// In this scenario PostgresDuplicateKeyError is checked primarily and
@@ -477,7 +474,7 @@ func PersistCanaryModel(ctx context.Context, model pkg.Canary) (*pkg.Canary, boo
 		return nil, false, err
 	}
 
-	var checks = make(map[string]string)
+	checks := make(map[string]string)
 	var newCheckIDs []string
 	for _, config := range spec.GetAllChecks() {
 		check := pkg.FromExternalCheck(model, config)
@@ -516,28 +513,4 @@ func PersistCanary(ctx context.Context, canary v1.Canary, source string) (*pkg.C
 	model.Source = source
 
 	return PersistCanaryModel(ctx, model)
-}
-
-// SuspendCanary sets the suspend annotation on the canary table.
-func SuspendCanary(ctx context.Context, id string, suspend bool) error {
-	query := `
-	UPDATE canaries
-		SET annotations =
-			CASE
-				WHEN annotations IS NULL THEN '{"suspend": "true"}'::jsonb
-				ELSE jsonb_set(annotations, '{suspend}', '"true"')
-			END
-		WHERE id = ?;
-	`
-
-	if !suspend {
-		query = `
-		UPDATE canaries
-			SET annotations =
-				CASE WHEN annotations IS NOT NULL THEN annotations - 'suspend' END
-			WHERE id = ?;
-		`
-	}
-
-	return ctx.DB().Exec(query, id).Error
 }
