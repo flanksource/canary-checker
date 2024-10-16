@@ -1,6 +1,7 @@
 package canary
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -18,10 +19,13 @@ import (
 	dutyEcho "github.com/flanksource/duty/echo"
 	dutyjob "github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
+	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/trace"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/robfig/cron/v3"
 	"go.opentelemetry.io/otel/attribute"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -194,6 +198,56 @@ func logIfError(err error, description string) {
 	}
 }
 
+var CleanupCRDDeleteCanaries = &dutyjob.Job{
+	Name:       "CleanupCRDDeletedCanaries",
+	Schedule:   "@every 1d",
+	RunNow:     true,
+	Singleton:  true,
+	JobHistory: true,
+	Retention:  dutyjob.RetentionBalanced,
+	Fn: func(ctx dutyjob.JobRuntime) error {
+		var crdCanaries []models.Canary
+		if err := ctx.DB().Select("id", "name", "namespace").
+			Where("deleted_at IS NULL").
+			Where("agent_id = ?", uuid.Nil.String()).
+			Where("source LIKE 'kubernetes/%'").Find(&crdCanaries).Error; err != nil {
+			return fmt.Errorf("failed to list all canaries with source=CRD: %w", err)
+		}
+
+		if len(crdCanaries) == 0 {
+			return nil
+		}
+
+		canaryClient, err := ctx.KubernetesDynamicClient().GetClientByGroupVersionKind(v1.GroupVersion.Group, v1.GroupVersion.Version, "Canary")
+		if err != nil {
+			return fmt.Errorf("failed to get kubernetes client for canaries: %w", err)
+		}
+
+		for _, canary := range crdCanaries {
+			if _, err := canaryClient.Namespace(canary.Namespace).Get(ctx, canary.Name, metav1.GetOptions{}); err != nil {
+				var statusErr *apierrors.StatusError
+				if errors.As(err, &statusErr) {
+					if statusErr.ErrStatus.Reason == metav1.StatusReasonNotFound {
+						if err := db.DeleteCanary(ctx.Context, canary.ID.String()); err != nil {
+							ctx.History.AddErrorf("error deleting canary[%s]: %v", canary.ID, err)
+						} else {
+							ctx.History.IncrSuccess()
+						}
+
+						Unschedule(canary.ID.String())
+
+						continue
+					}
+				}
+
+				return fmt.Errorf("failed to delete canary %s/%s from kubernetes: %w", canary.Namespace, canary.Name, err)
+			}
+		}
+
+		return nil
+	},
+}
+
 var CleanupDeletedCanaryChecks = &dutyjob.Job{
 	Name:       "CleanupDeletedCanaryChecks",
 	Schedule:   "@every 1h",
@@ -217,7 +271,7 @@ var CleanupDeletedCanaryChecks = &dutyjob.Job{
 
 		for _, r := range rows {
 			if err := db.DeleteCanary(ctx.Context, r.ID); err != nil {
-				ctx.History.AddError(fmt.Sprintf("Error deleting components for topology[%s]: %v", r.ID, err))
+				ctx.History.AddErrorf("error deleting canary[%s]: %v", r.ID, err)
 			} else {
 				ctx.History.IncrSuccess()
 			}

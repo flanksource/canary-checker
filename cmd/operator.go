@@ -27,20 +27,21 @@ import (
 	ctrlMetrics "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
 
-var webhookPort int
-var k8sLogLevel int
-var enableLeaderElection bool
-var operatorExecutor bool
-var Operator = &cobra.Command{
-	Use:   "operator",
-	Short: "Start the kubernetes operator",
-	Run:   run,
-}
+var (
+	webhookPort          int
+	k8sLogLevel          int
+	enableLeaderElection bool
+	Operator             = &cobra.Command{
+		Use:   "operator",
+		Short: "Start the kubernetes operator",
+		Run:   run,
+	}
+)
 
 func init() {
 	ServerFlags(Operator.Flags())
 	Operator.Flags().StringVarP(&runner.WatchNamespace, "namespace", "n", "", "Watch only specified namespace, otherwise watch all")
-	Operator.Flags().BoolVar(&operatorExecutor, "executor", true, "If false, only serve the UI and sync the configs")
+	Operator.Flags().BoolVar(&runner.OperatorExecutor, "executor", true, "If false, only serve the UI and sync the configs")
 	Operator.Flags().IntVar(&webhookPort, "webhookPort", 8082, "Port for webhooks ")
 	Operator.Flags().IntVar(&k8sLogLevel, "k8s-log-level", -1, "Kubernetes controller log level")
 	Operator.Flags().BoolVar(&enableLeaderElection, "enable-leader-election", false, "Enabling this will ensure there is only one active controller manager")
@@ -77,7 +78,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	cache.PostgresCache = cache.NewPostgresCache(apicontext.DefaultContext)
 
-	if operatorExecutor {
+	if runner.OperatorExecutor {
 		logger.Infof("Starting executors")
 
 		// Some synchronous jobs can take time
@@ -85,6 +86,7 @@ func run(cmd *cobra.Command, args []string) {
 		// to prevent health check from failing
 		go jobs.Start()
 	}
+
 	go serve()
 
 	ctrl.SetLogger(logr.FromSlogHandler(logger.Handler()))
