@@ -25,13 +25,15 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var CanaryScheduler = cron.New()
-var CanaryConfigFiles []string
-var DataFile string
-var Executor bool
-var LogPass, LogFail bool
-var MinimumTimeBetweenCanaryRuns = 10 * time.Second
-var FuncScheduler = cron.New()
+var (
+	CanaryScheduler              = cron.New()
+	CanaryConfigFiles            []string
+	DataFile                     string
+	Executor                     bool
+	LogPass, LogFail             bool
+	MinimumTimeBetweenCanaryRuns = 10 * time.Second
+	FuncScheduler                = cron.New()
+)
 
 var CanaryStatusChannel chan CanaryStatusPayload
 
@@ -193,7 +195,7 @@ func logIfError(err error, description string) {
 }
 
 var CleanupDeletedCanaryChecks = &dutyjob.Job{
-	Name:       "CleanupChecks",
+	Name:       "CleanupDeletedCanaryChecks",
 	Schedule:   "@every 1h",
 	Singleton:  true,
 	JobHistory: true,
