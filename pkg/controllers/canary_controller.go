@@ -142,13 +142,15 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 	if canaryForStatus.Status.Replicas != canary.Spec.Replicas {
 		if canary.Spec.Replicas == 0 {
 			canaryJobs.Unschedule(canary.GetPersistedID())
-			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), true); err != nil {
+
+			if err := r.suspendCanary(ctx, canary, true); err != nil {
 				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 			}
 		} else {
-			if err := db.SuspendCanary(ctx, canary.GetPersistedID(), false); err != nil {
+			if err := r.suspendCanary(ctx, canary, false); err != nil {
 				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 			}
+
 			if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
 				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 			}
@@ -165,6 +167,23 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *CanaryReconciler) suspendCanary(ctx dutyContext.Context, canary *v1.Canary, suspend bool) error {
+	if suspend {
+		if canary.Annotations == nil {
+			canary.Annotations = make(map[string]string)
+		}
+		canary.Annotations["suspend"] = "true"
+	} else {
+		delete(canary.Annotations, "suspend")
+	}
+
+	if err := r.Update(ctx, canary); err != nil {
+		return err
+	}
+
+	return db.SuspendCanary(ctx, canary.GetPersistedID(), false)
 }
 
 func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
