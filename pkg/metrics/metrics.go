@@ -55,6 +55,14 @@ var (
 		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
 	)
 
+	OpsInvalidCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "canary_check_invalid_count",
+			Help: "The total number of invalid checks",
+		},
+		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
+	)
+
 	RequestLatency = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "canary_check_duration",
@@ -98,12 +106,24 @@ var (
 	)
 )
 
-var failed = cmap.New()
-var passed = cmap.New()
-var latencies = cmap.New()
+var (
+	failed    = cmap.New()
+	passed    = cmap.New()
+	latencies = cmap.New()
+)
 
 func init() {
-	prometheus.MustRegister(Gauge, CanaryCheckInfo, OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency, GenericGauge, GenericCounter, GenericHistogram)
+	prometheus.MustRegister(
+		Gauge,
+		CanaryCheckInfo,
+		OpsCount,
+		OpsSuccessCount,
+		OpsFailedCount,
+		RequestLatency,
+		GenericGauge,
+		GenericCounter,
+		GenericHistogram,
+	)
 	CustomCounters = make(map[string]*prometheus.CounterVec)
 	CustomGauges = make(map[string]*prometheus.GaugeVec)
 	CustomHistograms = make(map[string]*prometheus.HistogramVec)
@@ -142,7 +162,11 @@ func GetMetrics(key string) (uptime types.Uptime, latency types.Latency) {
 	return
 }
 
-func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_uptime types.Uptime, _latency types.Latency) {
+func Record(
+	ctx context.Context,
+	canary v1.Canary,
+	result *pkg.CheckResult,
+) (_uptime types.Uptime, _latency types.Latency) {
 	defer func() {
 		e := recover()
 		if e != nil {
@@ -198,7 +222,8 @@ func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_up
 
 	OpsCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 	if result.Duration > 0 {
-		RequestLatency.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Observe(float64(result.Duration))
+		RequestLatency.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).
+			Observe(float64(result.Duration))
 		latency.Append(float64(result.Duration))
 	}
 
@@ -229,10 +254,15 @@ func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_up
 			}
 		}
 	} else {
+		if result.Invalid {
+			OpsFailedCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
+		} else {
+			OpsInvalidCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
+		}
+
 		fail.Append(1)
 		Gauge.WithLabelValues(key, checkType, canaryName, canaryNamespace, name).Set(1)
 		CanaryCheckInfo.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Set(1)
-		OpsFailedCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 	}
 
 	_uptime = types.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
@@ -241,6 +271,7 @@ func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_up
 	} else {
 		_latency = types.Latency{}
 	}
+
 	return _uptime, _latency
 }
 
