@@ -79,31 +79,6 @@ var (
 		},
 		[]string{"key", "type", "canary_name", "canary_namespace", "name"},
 	)
-
-	GenericGauge = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "canary_check_gauge",
-			Help: "A gauge representing duration",
-		},
-		[]string{"type", "canary_name", "metric", "canary_namespace", "owner", "severity", "key", "name"},
-	)
-
-	GenericCounter = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "canary_check_counter",
-			Help: "A gauge representing counters",
-		},
-		[]string{"type", "canary_name", "metric", "value", "canary_namespace", "owner", "severity", "key", "name"},
-	)
-
-	GenericHistogram = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "canary_check_histogram",
-			Help:    "A histogram representing durations",
-			Buckets: []float64{5, 10, 25, 50, 200, 500, 1000, 2500, 5000, 10000, 20000},
-		},
-		[]string{"type", "canary_name", "metric", "canary_namespace", "owner", "severity", "key", "name"},
-	)
 )
 
 var (
@@ -118,11 +93,9 @@ func init() {
 		CanaryCheckInfo,
 		OpsCount,
 		OpsSuccessCount,
+		OpsInvalidCount,
 		OpsFailedCount,
 		RequestLatency,
-		GenericGauge,
-		GenericCounter,
-		GenericHistogram,
 	)
 	CustomCounters = make(map[string]*prometheus.CounterVec)
 	CustomGauges = make(map[string]*prometheus.GaugeVec)
@@ -255,9 +228,9 @@ func Record(
 		}
 	} else {
 		if result.Invalid {
-			OpsFailedCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
-		} else {
 			OpsInvalidCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
+		} else {
+			OpsFailedCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 		}
 
 		fail.Append(1)
