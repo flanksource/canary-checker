@@ -55,6 +55,14 @@ var (
 		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
 	)
 
+	OpsInvalidCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "canary_check_invalid_count",
+			Help: "The total number of invalid checks",
+		},
+		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
+	)
+
 	RequestLatency = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "canary_check_duration",
@@ -71,39 +79,24 @@ var (
 		},
 		[]string{"key", "type", "canary_name", "canary_namespace", "name"},
 	)
-
-	GenericGauge = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "canary_check_gauge",
-			Help: "A gauge representing duration",
-		},
-		[]string{"type", "canary_name", "metric", "canary_namespace", "owner", "severity", "key", "name"},
-	)
-
-	GenericCounter = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "canary_check_counter",
-			Help: "A gauge representing counters",
-		},
-		[]string{"type", "canary_name", "metric", "value", "canary_namespace", "owner", "severity", "key", "name"},
-	)
-
-	GenericHistogram = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "canary_check_histogram",
-			Help:    "A histogram representing durations",
-			Buckets: []float64{5, 10, 25, 50, 200, 500, 1000, 2500, 5000, 10000, 20000},
-		},
-		[]string{"type", "canary_name", "metric", "canary_namespace", "owner", "severity", "key", "name"},
-	)
 )
 
-var failed = cmap.New()
-var passed = cmap.New()
-var latencies = cmap.New()
+var (
+	failed    = cmap.New()
+	passed    = cmap.New()
+	latencies = cmap.New()
+)
 
 func init() {
-	prometheus.MustRegister(Gauge, CanaryCheckInfo, OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency, GenericGauge, GenericCounter, GenericHistogram)
+	prometheus.MustRegister(
+		Gauge,
+		CanaryCheckInfo,
+		OpsCount,
+		OpsSuccessCount,
+		OpsInvalidCount,
+		OpsFailedCount,
+		RequestLatency,
+	)
 	CustomCounters = make(map[string]*prometheus.CounterVec)
 	CustomGauges = make(map[string]*prometheus.GaugeVec)
 	CustomHistograms = make(map[string]*prometheus.HistogramVec)
@@ -142,7 +135,11 @@ func GetMetrics(key string) (uptime types.Uptime, latency types.Latency) {
 	return
 }
 
-func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_uptime types.Uptime, _latency types.Latency) {
+func Record(
+	ctx context.Context,
+	canary v1.Canary,
+	result *pkg.CheckResult,
+) (_uptime types.Uptime, _latency types.Latency) {
 	defer func() {
 		e := recover()
 		if e != nil {
@@ -198,7 +195,8 @@ func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_up
 
 	OpsCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 	if result.Duration > 0 {
-		RequestLatency.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Observe(float64(result.Duration))
+		RequestLatency.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).
+			Observe(float64(result.Duration))
 		latency.Append(float64(result.Duration))
 	}
 
@@ -229,10 +227,15 @@ func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_up
 			}
 		}
 	} else {
+		if result.Invalid {
+			OpsInvalidCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
+		} else {
+			OpsFailedCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
+		}
+
 		fail.Append(1)
 		Gauge.WithLabelValues(key, checkType, canaryName, canaryNamespace, name).Set(1)
 		CanaryCheckInfo.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Set(1)
-		OpsFailedCount.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Inc()
 	}
 
 	_uptime = types.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
@@ -241,6 +244,7 @@ func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_up
 	} else {
 		_latency = types.Latency{}
 	}
+
 	return _uptime, _latency
 }
 
