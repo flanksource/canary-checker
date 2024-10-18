@@ -49,15 +49,11 @@ func NewNamespaceChecker() *NamespaceChecker {
 // Returns check result and metrics
 func (c *NamespaceChecker) Run(ctx *context.Context) pkg.Results {
 	logger.Warnf("namespace check is deprecated. Please use the kubernetes resource check")
-	var err error
 	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Namespace {
 		if c.k8s == nil {
 			c.k8s = ctx.Kubernetes()
 			c.ctx = ctx
-			if err != nil {
-				return pkg.SetupError(ctx.Canary, err)
-			}
 		}
 		results = append(results, c.Check(c.ctx, conf)...)
 	}
