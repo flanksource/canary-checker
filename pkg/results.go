@@ -10,47 +10,20 @@ import (
 
 type Results []*CheckResult
 
-func Fail(check external.Check, canary v1.Canary) *CheckResult {
-	return &CheckResult{
-		Check: check,
-		Data: map[string]interface{}{
-			"results": make(map[string]interface{}),
-		},
-		Start:  time.Now(),
-		Pass:   false,
-		Canary: canary,
-	}
-}
-
-func SetupError(canary v1.Canary, err error) Results {
-	var results Results
-	for _, check := range canary.Spec.GetAllChecks() {
-		results = append(results, &CheckResult{
-			Start:   time.Now(),
-			Pass:    false,
-			Invalid: true,
-			Error:   err.Error(),
-			Check:   check,
-			Data: map[string]interface{}{
-				"results": make(map[string]interface{}),
-			},
-		})
-	}
-	return results
-}
-
 func Invalid(check external.Check, canary v1.Canary, reason string) Results {
 	return Results{&CheckResult{
-		Start: time.Now(),
-		Pass:  false,
-		Error: reason,
-		Check: check,
+		Start:   time.Now(),
+		Pass:    false,
+		Invalid: true,
+		Error:   reason,
+		Check:   check,
 		Data: map[string]interface{}{
 			"results": make(map[string]interface{}),
 		},
 		Canary: canary,
 	}}
 }
+
 func Success(check external.Check, canary v1.Canary) *CheckResult {
 	result := New(check, canary)
 	result.Pass = true
@@ -162,10 +135,12 @@ func (r Results) Failf(msg string, args ...interface{}) Results {
 	r[0].Failf(msg, args...)
 	return r
 }
+
 func (r Results) Invalidf(msg string, args ...interface{}) Results {
 	r[0].Invalidf(msg, args...)
 	return r
 }
+
 func (r Results) WithError(err error) Results {
 	r[0].ErrorObject = err
 	return r

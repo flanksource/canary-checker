@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -52,13 +51,6 @@ func (c *DatabaseBackupChecker) Check(ctx *context.Context, extConfig external.C
 	case check.GCP != nil:
 		return GCPDatabaseBackupCheck(ctx, check)
 	default:
-		return FailDatabaseBackupParse(ctx, check)
+		return pkg.Invalid(check, ctx.Canary, "GCP details not provided in check")
 	}
-}
-
-func FailDatabaseBackupParse(ctx *context.Context, check v1.DatabaseBackupCheck) pkg.Results {
-	result := pkg.Fail(check, ctx.Canary)
-	var results pkg.Results
-	results = append(results, result)
-	return results.ErrorMessage(errors.New("Could not parse databaseBackup input"))
 }

@@ -67,7 +67,7 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 		Filter:  filters,
 	})
 	if err != nil {
-		results.ErrorMessage(fmt.Errorf("Error fetching from alertmanager: %v", err))
+		results.ErrorMessage(fmt.Errorf("error fetching from alertmanager: %v", err))
 		return results
 	}
 
