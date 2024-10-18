@@ -1,22 +1,93 @@
 package metrics
 
 import (
-	"fmt"
-	"sort"
-	"strings"
+	"slices"
 	"time"
 
 	"github.com/asecurityteam/rolling"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/runner"
-	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/types"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/samber/lo"
 )
+
+func init() {
+	CustomCounters = make(map[string]*prometheus.CounterVec)
+	CustomGauges = make(map[string]*prometheus.GaugeVec)
+	CustomHistograms = make(map[string]*prometheus.HistogramVec)
+
+	// Register the metrics with a delay because
+	// v1.AdditionalCheckMetricLabels is nil during init.
+	go func() {
+		time.Sleep(time.Second)
+
+		slices.Sort(v1.AdditionalCheckMetricLabels)
+		setupMetrics()
+	}()
+}
+
+func setupMetrics() {
+	RequestLatency = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "canary_check_duration",
+			Help:    "A histogram of the response latency in milliseconds.",
+			Buckets: []float64{5, 10, 25, 50, 200, 500, 1000, 3000, 10000, 30000},
+		},
+		append(
+			[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
+			v1.AdditionalCheckMetricLabels...,
+		),
+	)
+
+	Gauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "canary_check",
+			Help: "A gauge representing the canaries success (0) or failure (1)",
+		},
+		append([]string{"key", "type", "canary_name", "canary_namespace", "name"}, v1.AdditionalCheckMetricLabels...),
+	)
+
+	checkLabels := []string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"}
+	checkLabels = append(checkLabels, v1.AdditionalCheckMetricLabels...)
+
+	OpsCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "canary_check_count",
+			Help: "The total number of checks",
+		},
+		checkLabels,
+	)
+
+	CanaryCheckInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "canary_check_info",
+			Help: "Information about the canary check",
+		},
+		checkLabels,
+	)
+
+	OpsSuccessCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "canary_check_success_count",
+			Help: "The total number of successful checks",
+		},
+		checkLabels,
+	)
+
+	OpsFailedCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "canary_check_failed_count",
+			Help: "The total number of failed checks",
+		},
+		checkLabels,
+	)
+
+	prometheus.MustRegister(Gauge, CanaryCheckInfo, OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency)
+}
 
 var (
 	CounterType   pkg.MetricType = "counter"
@@ -27,47 +98,15 @@ var (
 	CustomCounters   map[string]*prometheus.CounterVec
 	CustomHistograms map[string]*prometheus.HistogramVec
 
-	RequestLatency = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "canary_check_duration",
-			Help:    "A histogram of the response latency in milliseconds.",
-			Buckets: []float64{5, 10, 25, 50, 200, 500, 1000, 3000, 10000, 30000},
-		},
-		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
-	)
+	// Global metrics
+	CanaryCheckInfo *prometheus.GaugeVec
+	Gauge           *prometheus.GaugeVec
 
-	Gauge = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "canary_check",
-			Help: "A gauge representing the canaries success (0) or failure (1)",
-		},
-		[]string{"key", "type", "canary_name", "canary_namespace", "name"},
-	)
-
-	GenericGauge = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "canary_check_gauge",
-			Help: "A gauge representing duration",
-		},
-		[]string{"type", "canary_name", "metric", "canary_namespace", "owner", "severity", "key", "name"},
-	)
-
-	GenericCounter = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "canary_check_counter",
-			Help: "A gauge representing counters",
-		},
-		[]string{"type", "canary_name", "metric", "value", "canary_namespace", "owner", "severity", "key", "name"},
-	)
-
-	GenericHistogram = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Name:    "canary_check_histogram",
-			Help:    "A histogram representing durations",
-			Buckets: []float64{5, 10, 25, 50, 200, 500, 1000, 2500, 5000, 10000, 20000},
-		},
-		[]string{"type", "canary_name", "metric", "canary_namespace", "owner", "severity", "key", "name"},
-	)
+	// Check specific metrics
+	OpsCount        *prometheus.CounterVec
+	OpsFailedCount  *prometheus.CounterVec
+	OpsSuccessCount *prometheus.CounterVec
+	RequestLatency  *prometheus.HistogramVec
 )
 
 var (
@@ -75,13 +114,6 @@ var (
 	passed    = cmap.New()
 	latencies = cmap.New()
 )
-
-func init() {
-	prometheus.MustRegister(Gauge, RequestLatency, GenericGauge, GenericCounter, GenericHistogram)
-	CustomCounters = make(map[string]*prometheus.CounterVec)
-	CustomGauges = make(map[string]*prometheus.GaugeVec)
-	CustomHistograms = make(map[string]*prometheus.HistogramVec)
-}
 
 func RemoveCheck(checks v1.Canary) {
 	for _, check := range checks.Spec.GetAllChecks() {
@@ -116,13 +148,18 @@ func GetMetrics(key string) (uptime types.Uptime, latency types.Latency) {
 	return
 }
 
-func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_uptime types.Uptime, _latency types.Latency) {
+func Record(
+	ctx context.Context,
+	canary v1.Canary,
+	result *pkg.CheckResult,
+) (_uptime types.Uptime, _latency types.Latency) {
 	defer func() {
 		e := recover()
 		if e != nil {
 			ctx.Errorf("panic recording metrics for %s ==> %s", result, e)
 		}
 	}()
+
 	if result == nil || result.Check == nil {
 		ctx.Warnf("returned a nil result")
 		return _uptime, _latency
@@ -170,33 +207,38 @@ func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_up
 		latency = _latencyV.(*rolling.TimePolicy)
 	}
 
-	metricSuffix, keyValuePairs := metricLabels(result.Check.GetLabels())
-	labels := append([]string{
-		"type", checkType,
-		"endpoint", endpoint,
-		"canary_name", canaryName,
-		"canary_namespace", canaryNamespace,
-		"owner", owner,
-		"severity", severity,
-		"key", key,
-		"name", name,
-	}, keyValuePairs...)
+	var additionalLabels []string
+	for _, key := range v1.AdditionalCheckMetricLabels {
+		if v, ok := result.Check.GetLabels()[key]; ok {
+			additionalLabels = append(additionalLabels, v)
+		} else {
+			// just insert an empty value
+			additionalLabels = append(additionalLabels, "")
+		}
+	}
 
-	ctx.Counter(metricName("canary_check_count", metricSuffix), labels...).Add(1)
+	checkMetricLabels := append(
+		[]string{checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name},
+		additionalLabels...)
+
+	OpsCount.WithLabelValues(checkMetricLabels...).Inc()
+
 	if result.Duration > 0 {
-		RequestLatency.WithLabelValues(checkType, endpoint, canaryName, canaryNamespace, owner, severity, key, name).Observe(float64(result.Duration))
+		RequestLatency.WithLabelValues(checkMetricLabels...).Observe(float64(result.Duration))
 		latency.Append(float64(result.Duration))
 	}
 
+	gaugeLabels := append([]string{key, checkType, canaryName, canaryNamespace, name}, v1.AdditionalCheckMetricLabels...)
+
 	if result.Pass {
 		pass.Append(1)
-		Gauge.WithLabelValues(key, checkType, canaryName, canaryNamespace, name).Set(0)
-		ctx.Gauge(metricName("canary_check_info", metricSuffix), labels...).Set(0)
+		Gauge.WithLabelValues(gaugeLabels...).Set(0)
 
-		ctx.Counter(metricName("canary_check_success_count", metricSuffix), labels...).Add(1)
+		CanaryCheckInfo.WithLabelValues(checkMetricLabels...).Set(0)
+		OpsSuccessCount.WithLabelValues(checkMetricLabels...).Inc()
 		// always add a failed count to ensure the metric is present in prometheus
 		// for an uptime calculation
-		ctx.Counter(metricName("canary_check_failed_count", metricSuffix), labels...).Add(0)
+		OpsFailedCount.WithLabelValues(checkMetricLabels...).Add(0)
 
 		for _, m := range result.Metrics {
 			switch m.Type {
@@ -218,9 +260,10 @@ func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_up
 		}
 	} else {
 		fail.Append(1)
-		Gauge.WithLabelValues(key, checkType, canaryName, canaryNamespace, name).Set(1)
-		ctx.Gauge(metricName("canary_check_info", metricSuffix), labels...).Set(1)
-		ctx.Counter(metricName("canary_check_failed_count", metricSuffix), labels...).Add(1)
+		Gauge.WithLabelValues(gaugeLabels...).Set(1)
+
+		CanaryCheckInfo.WithLabelValues(checkMetricLabels...).Set(1)
+		OpsFailedCount.WithLabelValues(checkMetricLabels...).Inc()
 	}
 
 	_uptime = types.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
@@ -230,31 +273,6 @@ func Record(ctx context.Context, canary v1.Canary, result *pkg.CheckResult) (_up
 		_latency = types.Latency{}
 	}
 	return _uptime, _latency
-}
-
-func metricName(metric, sortedLabelKeys string) string {
-	if sortedLabelKeys == "" {
-		return metric
-	}
-
-	return fmt.Sprintf("%s_%s", metric, sortedLabelKeys)
-}
-
-func metricLabels(m map[string]string) (string, []string) {
-	if len(m) == 0 {
-		return "", nil
-	}
-
-	keys := collections.MapKeys(m)
-	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
-
-	var sortedKeyValue []string
-	for _, k := range keys {
-		sortedKeyValue = append(sortedKeyValue, k)
-		sortedKeyValue = append(sortedKeyValue, m[k])
-	}
-
-	return strings.Join(keys, "_"), sortedKeyValue
 }
 
 func getOrCreateGauge(m pkg.Metric) error {
