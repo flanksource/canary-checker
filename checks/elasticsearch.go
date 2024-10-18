@@ -56,7 +56,6 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 		es.Search.WithIndex(check.Index),
 		es.Search.WithBody(body),
 	)
-
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
@@ -65,10 +64,10 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 		var e map[string]any
 		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
 			return results.ErrorMessage(
-				fmt.Errorf("Error parsing the response body: %s", err),
+				fmt.Errorf("error parsing the response body: %s", err),
 			)
 		} else {
-			return results.ErrorMessage(fmt.Errorf("Error from elasticsearch [%s]: %v, %v",
+			return results.ErrorMessage(fmt.Errorf("error from elasticsearch [%s]: %v, %v",
 				res.Status(),
 				e["error"].(map[string]any)["type"],
 				e["error"].(map[string]any)["reason"],
@@ -82,7 +81,7 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 	var r map[string]any
 	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
 		return results.ErrorMessage(
-			fmt.Errorf("Error parsing the response body: %s", err),
+			fmt.Errorf("error parsing the response body: %s", err),
 		)
 	}
 
