@@ -136,9 +136,15 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		for _, checkID := range checkIDsToRemove {
 			switch checkIDDeleteStrategyMap[checkID] {
 			case v1.OnTransformMarkHealthy:
-				checkDeleteStrategyGroup[models.CheckStatusHealthy] = append(checkDeleteStrategyGroup[models.CheckStatusHealthy], checkID)
+				checkDeleteStrategyGroup[models.CheckStatusHealthy] = append(
+					checkDeleteStrategyGroup[models.CheckStatusHealthy],
+					checkID,
+				)
 			case v1.OnTransformMarkUnhealthy:
-				checkDeleteStrategyGroup[models.CheckStatusUnhealthy] = append(checkDeleteStrategyGroup[models.CheckStatusUnhealthy], checkID)
+				checkDeleteStrategyGroup[models.CheckStatusUnhealthy] = append(
+					checkDeleteStrategyGroup[models.CheckStatusUnhealthy],
+					checkID,
+				)
 			}
 		}
 
@@ -175,7 +181,11 @@ func SaveResults(ctx context.Context, results []*pkg.CheckResult) ([]string, map
 	defer tx.Rollback()
 
 	for _, result := range results {
-		transformedChecksAdded, err := cache.PostgresCache.Add(ctx.WithDB(tx, ctx.Pool()), pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result))
+		transformedChecksAdded, err := cache.PostgresCache.Add(
+			ctx.WithDB(tx, ctx.Pool()),
+			pkg.FromV1(result.Canary, result.Check),
+			pkg.CheckStatusFromResult(*result),
+		)
 		if err != nil {
 			return nil, nil, fmt.Errorf("error adding check to cache: %w", err)
 		}
@@ -200,7 +210,7 @@ func logIfError(err error, description string) {
 
 var CleanupCRDDeleteCanaries = &dutyjob.Job{
 	Name:       "CleanupCRDDeletedCanaries",
-	Schedule:   "@every 1d",
+	Schedule:   "@every 24h",
 	RunNow:     true,
 	Singleton:  true,
 	JobHistory: true,
@@ -218,7 +228,8 @@ var CleanupCRDDeleteCanaries = &dutyjob.Job{
 			return nil
 		}
 
-		canaryClient, err := ctx.KubernetesDynamicClient().GetClientByGroupVersionKind(v1.GroupVersion.Group, v1.GroupVersion.Version, "Canary")
+		canaryClient, err := ctx.KubernetesDynamicClient().
+			GetClientByGroupVersionKind(v1.GroupVersion.Group, v1.GroupVersion.Version, "Canary")
 		if err != nil {
 			return fmt.Errorf("failed to get kubernetes client for canaries: %w", err)
 		}
