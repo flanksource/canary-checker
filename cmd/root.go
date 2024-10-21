@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"os/signal"
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -19,6 +18,7 @@ import (
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/query"
+	"github.com/flanksource/duty/shutdown"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"go.opentelemetry.io/otel"
@@ -27,10 +27,9 @@ import (
 func InitContext() (context.Context, error) {
 	ctx, closer, err := duty.Start("canary-checker", duty.SkipChangelogMigration, duty.SkipMigrationByDefaultMode)
 	if err != nil {
-		logger.Fatalf("Failed to initialize db: %v", err.Error())
-		runner.ShutdownAndExit(1, err.Error())
+		return ctx, fmt.Errorf("Failed to initialize db: %v", err.Error())
 	}
-	runner.AddShutdownHook(closer)
+	shutdown.AddHook(closer)
 
 	if err := properties.LoadFile(propertiesFile); err != nil {
 		return ctx, fmt.Errorf("failed to load properties: %v", err)
@@ -43,11 +42,9 @@ func InitContext() (context.Context, error) {
 
 var Root = &cobra.Command{
 	Use: "canary-checker",
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		runner.Shutdown()
-	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		logger.UseSlog()
+		shutdown.WaitForSignal()
 
 		canary.LogFail = logFail || logger.IsLevelEnabled(3)
 		canary.LogPass = logPass || logger.IsLevelEnabled(4)
@@ -64,7 +61,7 @@ var Root = &cobra.Command{
 		if otelcollectorURL != "" {
 			logger.Infof("Sending traces to %s", otelcollectorURL)
 
-			runner.AddShutdownHook(telemetry.InitTracer(otelServiceName, otelcollectorURL, true))
+			shutdown.AddHook(telemetry.InitTracer(otelServiceName, otelcollectorURL, true))
 		}
 		if prometheus.PrometheusURL != "" {
 			logger.Infof("Setting default prometheus: %s", prometheus.PrometheusURL)
@@ -73,15 +70,6 @@ var Root = &cobra.Command{
 				connection.HTTPConnection{URL: prometheus.PrometheusURL},
 			)
 		}
-
-		go func() {
-			quit := make(chan os.Signal, 1)
-			signal.Notify(quit, os.Interrupt)
-			<-quit
-			logger.Infof("Caught Ctrl+C")
-			// call shutdown hooks explicitly, post-run cleanup hooks will be a no-op
-			runner.Shutdown()
-		}()
 	},
 }
 
