@@ -193,6 +193,9 @@ spec:
             {{- if (tpl .Values.otel.collector .) }}
             - --otel-collector-url={{ tpl .Values.otel.collector . | default "" }}
             {{- end }}
+            {{- if .Values.labelsAllowList}}
+            - --metric-labels-allowlist={{ join "," .Values.labelsAllowList }}
+            {{- end}}
             {{- if (tpl .Values.otel.serviceName .) }}
             - --otel-service-name={{ tpl .Values.otel.serviceName . | default "canary-checker" }}
             {{- end }}

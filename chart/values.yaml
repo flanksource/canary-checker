@@ -237,6 +237,13 @@ pingMode: "unprivileged"
 allowPrivilegeEscalation: false
 
 # @schema
+# type: array
+# required: false
+# @schema
+# -- List of additional check label keys that should be included in the check metrics
+labelsAllowList: []
+
+# @schema
 # required: false
 # @schema
 # -- Default Prometheus URL to use in prometheus checks
