@@ -94,7 +94,7 @@ func setupMetrics() {
 		checkLabels,
 	)
 
-	prometheus.MustRegister(Gauge, CanaryCheckInfo, OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency)
+	prometheus.MustRegister(Gauge, CanaryCheckInfo, OpsCount, OpsSuccessCount, OpsInvalidCount, OpsFailedCount, RequestLatency)
 }
 
 var (
@@ -123,21 +123,6 @@ var (
 	passed    = cmap.New()
 	latencies = cmap.New()
 )
-
-func init() {
-	prometheus.MustRegister(
-		CanaryCheckInfo,
-		Gauge,
-		OpsCount,
-		OpsFailedCount,
-		OpsInvalidCount,
-		OpsSuccessCount,
-		RequestLatency,
-	)
-	CustomCounters = make(map[string]*prometheus.CounterVec)
-	CustomGauges = make(map[string]*prometheus.GaugeVec)
-	CustomHistograms = make(map[string]*prometheus.HistogramVec)
-}
 
 func RemoveCheck(checks v1.Canary) {
 	for _, check := range checks.Spec.GetAllChecks() {
@@ -284,9 +269,9 @@ func Record(
 		}
 	} else {
 		if result.Invalid {
-			OpsFailedCount.WithLabelValues(checkMetricLabels...).Inc()
-		} else {
 			OpsInvalidCount.WithLabelValues(checkMetricLabels...).Inc()
+		} else {
+			OpsFailedCount.WithLabelValues(checkMetricLabels...).Inc()
 		}
 
 		fail.Append(1)
