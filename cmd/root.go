@@ -24,10 +24,12 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+const app = "canary-checker"
+
 func InitContext() (context.Context, error) {
-	ctx, closer, err := duty.Start("canary-checker", duty.SkipChangelogMigration, duty.SkipMigrationByDefaultMode)
+	ctx, closer, err := duty.Start(app, duty.SkipChangelogMigration, duty.SkipMigrationByDefaultMode)
 	if err != nil {
-		return ctx, fmt.Errorf("Failed to initialize db: %v", err.Error())
+		return ctx, fmt.Errorf("failed to initialize db: %v", err.Error())
 	}
 	shutdown.AddHook(closer)
 
@@ -35,13 +37,13 @@ func InitContext() (context.Context, error) {
 		return ctx, fmt.Errorf("failed to load properties: %v", err)
 	}
 
-	ctx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))
+	ctx.WithTracer(otel.GetTracerProvider().Tracer(app))
 
 	return ctx, nil
 }
 
 var Root = &cobra.Command{
-	Use: "canary-checker",
+	Use: app,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		logger.UseSlog()
 		shutdown.WaitForSignal()
