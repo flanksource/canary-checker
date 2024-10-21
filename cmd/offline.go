@@ -3,11 +3,11 @@ package cmd
 import (
 	"os"
 
-	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/api"
 	"github.com/flanksource/duty/postgrest"
+	"github.com/flanksource/duty/shutdown"
 	"github.com/spf13/cobra"
 )
 
@@ -28,12 +28,12 @@ var GoOffline = &cobra.Command{
 
 		api.DefaultConfig.ConnectionString = "embedded://" + databaseDir
 		_, closer, err := duty.Start("embedded-temp")
-		runner.AddShutdownHook(closer)
+		shutdown.AddHook(closer)
 		if err != nil {
 			logger.Fatalf("Failed to run in embedded mode: %+v", err)
 		}
 
 		// Intentionally exit with code 0 for Docker
-		runner.ShutdownAndExit(0, "Finished downloading dependencies")
+		shutdown.ShutdownAndExit(0, "Finished downloading dependencies")
 	},
 }
