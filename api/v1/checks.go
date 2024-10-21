@@ -17,6 +17,10 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
+// List of additional check label keys that should be included in the check metrics.
+// By default the labels metrics are not exposed.
+var AdditionalCheckMetricLabels []string
+
 const (
 	OnTransformMarkHealthy   = "MarkHealthy"
 	OnTransformMarkUnhealthy = "MarkUnhealthy"

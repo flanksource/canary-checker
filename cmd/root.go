@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"time"
 
+	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg/jobs/canary"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
@@ -67,7 +68,10 @@ var Root = &cobra.Command{
 		}
 		if prometheus.PrometheusURL != "" {
 			logger.Infof("Setting default prometheus: %s", prometheus.PrometheusURL)
-			runner.Prometheus, _ = prometheus.NewPrometheusAPI(context.New(), connection.HTTPConnection{URL: prometheus.PrometheusURL})
+			runner.Prometheus, _ = prometheus.NewPrometheusAPI(
+				context.New(),
+				connection.HTTPConnection{URL: prometheus.PrometheusURL},
+			)
 		}
 
 		go func() {
@@ -116,7 +120,11 @@ func deprecatedFlags(flags *pflag.FlagSet) {
 		panic(err)
 	}
 
-	_ = flags.Bool("expose-env", false, "Expose environment variables for use in all templates. Note this has serious security implications with untrusted canaries")
+	_ = flags.Bool(
+		"expose-env",
+		false,
+		"Expose environment variables for use in all templates. Note this has serious security implications with untrusted canaries",
+	)
 	if err := flags.MarkDeprecated("expose-env", "the flag used to be a no-op"); err != nil {
 		panic(err)
 	}
@@ -155,24 +163,75 @@ func deprecatedFlags(flags *pflag.FlagSet) {
 func ServerFlags(flags *pflag.FlagSet) {
 	flags.IntVar(&httpPort, "httpPort", httpPort, "Port to expose a health dashboard ")
 
-	flags.StringVar(&publicEndpoint, "public-endpoint", publicEndpoint, "Host on which the health dashboard is exposed. Could be used for generting-links, redirects etc.")
+	flags.StringSliceVar(&v1.AdditionalCheckMetricLabels,
+		"metric-labels-allowlist",
+		nil,
+		"comma-separated list of additional check label keys that should be included in the check metrics",
+	)
+
+	flags.StringVar(
+		&publicEndpoint,
+		"public-endpoint",
+		publicEndpoint,
+		"Host on which the health dashboard is exposed. Could be used for generting-links, redirects etc.",
+	)
 	flags.StringVar(&runner.RunnerName, "name", "local", "Server name shown in aggregate dashboard")
 
-	flags.StringSliceVar(&runner.IncludeCanaries, "include-check", []string{}, "(Deprecated: use --include-canary) Run matching canaries - useful for debugging")
-	flags.StringSliceVar(&runner.IncludeCanaries, "include-canary", []string{}, "Only run canaries matching the given names")
-	flags.StringSliceVar(&runner.IncludeLabels, "include-labels", nil, "Only run canaries matching the given label selector")
-	flags.StringSliceVar(&runner.IncludeNamespaces, "include-namespace", []string{}, "a comma separated list of namespaces whose canary should be run")
+	flags.StringSliceVar(
+		&runner.IncludeCanaries,
+		"include-check",
+		[]string{},
+		"(Deprecated: use --include-canary) Run matching canaries - useful for debugging",
+	)
+	flags.StringSliceVar(
+		&runner.IncludeCanaries,
+		"include-canary",
+		[]string{},
+		"Only run canaries matching the given names",
+	)
+	flags.StringSliceVar(
+		&runner.IncludeLabels,
+		"include-labels",
+		nil,
+		"Only run canaries matching the given label selector",
+	)
+	flags.StringSliceVar(
+		&runner.IncludeNamespaces,
+		"include-namespace",
+		[]string{},
+		"a comma separated list of namespaces whose canary should be run",
+	)
 
 	flags.StringVarP(&query.DefaultCheckQueryWindow, "default-window", "", "1h", "Default search window")
-	flags.StringVar(&checks.DefaultArtifactConnection, "artifact-connection", "", "Specify the default connection to use for artifacts")
+	flags.StringVar(
+		&checks.DefaultArtifactConnection,
+		"artifact-connection",
+		"",
+		"Specify the default connection to use for artifacts",
+	)
 
 	flags.IntVar(&canary.ReconcilePageSize, "upstream-page-size", 500, "upstream reconciliation page size")
 	flags.DurationVar(&canary.ReconcileMaxAge, "upstream-max-age", time.Hour*48, "upstream reconciliation max age")
-	flags.StringVar(&canary.UpstreamConf.Host, "upstream-host", os.Getenv("UPSTREAM_HOST"), "central canary checker instance to push/pull canaries")
+	flags.StringVar(
+		&canary.UpstreamConf.Host,
+		"upstream-host",
+		os.Getenv("UPSTREAM_HOST"),
+		"central canary checker instance to push/pull canaries",
+	)
 	flags.StringVar(&canary.UpstreamConf.Username, "upstream-user", os.Getenv("UPSTREAM_USER"), "upstream username")
-	flags.StringVar(&canary.UpstreamConf.Password, "upstream-password", os.Getenv("UPSTREAM_PASSWORD"), "upstream password")
+	flags.StringVar(
+		&canary.UpstreamConf.Password,
+		"upstream-password",
+		os.Getenv("UPSTREAM_PASSWORD"),
+		"upstream password",
+	)
 	flags.StringVar(&canary.UpstreamConf.AgentName, "agent-name", os.Getenv("AGENT_NAME"), "name of this agent")
-	flags.BoolVar(&canary.UpstreamConf.InsecureSkipVerify, "upstream-insecure-skip-verify", os.Getenv("UPSTREAM_INSECURE_SKIP_VERIFY") == "true", "Skip TLS verification on the upstream servers certificate")
+	flags.BoolVar(
+		&canary.UpstreamConf.InsecureSkipVerify,
+		"upstream-insecure-skip-verify",
+		os.Getenv("UPSTREAM_INSECURE_SKIP_VERIFY") == "true",
+		"Skip TLS verification on the upstream servers certificate",
+	)
 
 	duty.BindPFlags(flags, duty.SkipMigrationByDefaultMode)
 
@@ -185,9 +244,12 @@ func init() {
 	logger.UseSlog()
 	Root.PersistentFlags().BoolVar(&logFail, "log-fail", false, "Log every failing check")
 	Root.PersistentFlags().BoolVar(&logPass, "log-pass", false, "Log every passing check")
-	Root.PersistentFlags().StringVar(&otelcollectorURL, "otel-collector-url", "", "OpenTelemetry gRPC Collector URL in host:port format")
-	Root.PersistentFlags().StringVar(&otelServiceName, "otel-service-name", "canary-checker", "OpenTelemetry service name for the resource")
-	Root.PersistentFlags().StringVar(&prometheus.PrometheusURL, "prometheus", "", "URL of the prometheus server that is scraping this instance")
+	Root.PersistentFlags().
+		StringVar(&otelcollectorURL, "otel-collector-url", "", "OpenTelemetry gRPC Collector URL in host:port format")
+	Root.PersistentFlags().
+		StringVar(&otelServiceName, "otel-service-name", "canary-checker", "OpenTelemetry service name for the resource")
+	Root.PersistentFlags().
+		StringVar(&prometheus.PrometheusURL, "prometheus", "", "URL of the prometheus server that is scraping this instance")
 	Root.AddCommand(Docs)
 	Root.AddCommand(Run, Serve, Operator)
 	Root.AddCommand(Serve, GoOffline)

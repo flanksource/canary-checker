@@ -1,35 +1,43 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
     "affinity": {
-      "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Affinity"
+      "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Affinity",
+      "required": []
     },
     "allowPrivilegeEscalation": {
       "default": "false",
+      "required": [],
       "title": "allowPrivilegeEscalation"
     },
     "canaryLabelSelector": {
       "default": "",
       "description": "Only canaries matching these labels will run.\nLabel values support [match expression](https://docs.flanksource.com/reference/types/#match-pattern)",
+      "required": [],
       "title": "canaryLabelSelector"
     },
     "canaryNamespace": {
       "default": "",
       "description": "restrict canary-checker to monitor single namespace for canaries. Leave blank to monitor all namespaces",
+      "required": [],
       "title": "canaryNamespace"
     },
     "canaryNamespaceSelector": {
       "default": "",
       "description": "Only canaries matching these namespaces will run.\nA list of namespaces can be provided with comma separation.\nSupports [match expression](https://docs.flanksource.com/reference/types/#match-pattern)",
+      "required": [],
       "title": "canaryNamespaceSelector"
     },
     "canarySelector": {
       "default": "",
       "description": "Only canaries matching these names will run.\nA list of names can be provided with comma separation.\nSupports [match expression](https://docs.flanksource.com/reference/types/#match-pattern)",
+      "required": [],
       "title": "canarySelector"
     },
     "containerdSocket": {
       "default": "false",
+      "required": [],
       "title": "containerdSocket"
     },
     "db": {
@@ -41,23 +49,26 @@
             "persist": {
               "default": false,
               "description": "persist the embedded DB with a PVC",
+              "required": [],
               "title": "persist",
               "type": "boolean"
             },
             "storage": {
               "default": "20Gi",
+              "required": [],
               "title": "storage"
             },
             "storageClass": {
               "default": "",
+              "required": [],
               "title": "storageClass"
             }
           },
-          "title": "embedded",
-          "type": "object",
           "required": [
             "persist"
-          ]
+          ],
+          "title": "embedded",
+          "type": "object"
         },
         "external": {
           "additionalProperties": false,
@@ -65,12 +76,14 @@
             "create": {
               "default": false,
               "description": "Setting create to true will create a postgres stateful set for config-db to connect to.\nIf create=true, the secretKeyRef will be created by helm with the specified name and key\n  Optionally populate a secret named 'postgres-connection' before install with `POSTGRES_USER` and `POSTGRES_PASSWORD` to set the created username and password, otherwise a random password will be created for a 'postgres' user\nIf false and an existing connection must be specified under secretKeyRef\nIf create=false, a prexisting secret containing the URI to an existing postgres database must be provided\n  The URI must be in the format `postgresql://$user:$password@$host/$database`",
+              "required": [],
               "title": "create",
               "type": "boolean"
             },
             "enabled": {
               "default": false,
               "description": "Setting to true will disable the embedded DB",
+              "required": [],
               "title": "enabled",
               "type": "boolean"
             },
@@ -80,91 +93,106 @@
                 "key": {
                   "default": "DB_URL",
                   "description": "This is the key that either the secret will create(if create is true) or\nthis is the key it will look for in the secret(if secretRefKey is\nmentioned). The name of the key is mandatory to set.",
+                  "required": [],
                   "title": "key",
                   "type": "string"
                 },
                 "name": {
                   "default": "canary-checker-postgres",
+                  "required": [],
                   "title": "name",
                   "type": "string"
                 }
               },
-              "title": "secretKeyRef",
-              "type": "object",
               "required": [
                 "name",
                 "key"
-              ]
+              ],
+              "title": "secretKeyRef",
+              "type": "object"
             },
             "storage": {
               "default": "20Gi",
+              "required": [],
               "title": "storage",
               "type": "string"
             },
             "storageClass": {
               "default": "",
+              "required": [],
               "title": "storageClass",
               "type": "string"
             }
           },
-          "title": "external",
           "required": [
             "enabled",
             "create",
             "secretKeyRef",
             "storageClass",
             "storage"
-          ]
+          ],
+          "title": "external"
         },
         "runMigrations": {
           "default": "true",
+          "required": [],
           "title": "runMigrations"
         }
       },
-      "title": "db",
       "required": [
         "embedded"
-      ]
+      ],
+      "title": "db"
     },
     "debug": {
       "default": "false",
       "description": "Turn on pprof /debug endpoint",
+      "required": [],
       "title": "debug"
     },
     "disableChecks": {
-      "items": {},
       "description": "List of check types to disable",
+      "items": {
+        "required": []
+      },
+      "required": [],
       "title": "disableChecks",
       "type": "array"
     },
     "disablePostgrest": {
       "default": "false",
       "description": " Disable the embedded postgrest service",
+      "required": [],
       "title": "disablePostgrest"
     },
     "dockerSocket": {
       "default": "false",
+      "required": [],
       "title": "dockerSocket"
     },
     "extra": {
       "additionalProperties": true,
+      "required": [],
       "title": "extra",
       "type": "object"
     },
     "extraArgs": {
       "additionalProperties": true,
       "default": "",
+      "required": [],
       "title": "extraArgs"
     },
     "flanksource-ui": {
+      "$ref": "https://raw.githubusercontent.com/flanksource/flanksource-ui/main/chart/values.schema.deref.json",
       "additionalProperties": true,
-      "$ref": "https://raw.githubusercontent.com/flanksource/flanksource-ui/main/chart/values.schema.deref.json"
+      "required": []
     },
     "global": {
       "additionalProperties": true,
       "properties": {
         "affinity": {
-          "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Affinity"
+          "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Affinity",
+          "required": []
         },
         "db": {
           "additionalProperties": true,
@@ -174,6 +202,7 @@
               "properties": {
                 "enabled": {
                   "default": "false",
+                  "required": [],
                   "title": "enabled"
                 },
                 "secretKeyRef": {
@@ -181,64 +210,74 @@
                   "properties": {
                     "key": {
                       "default": "DB_URL",
+                      "required": [],
                       "title": "key",
                       "type": "string"
                     },
                     "name": {
                       "default": "mission-control-connection-pooler",
+                      "required": [],
                       "title": "name",
                       "type": "string"
                     }
                   },
-                  "description": "@ignored",
-                  "title": "secretKeyRef",
                   "required": [
                     "name",
                     "key"
-                  ]
+                  ],
+                  "title": "secretKeyRef"
                 }
               },
-              "description": "@ignored",
+              "required": [],
               "title": "connectionPooler"
             }
           },
-          "description": "@ignored",
+          "required": [],
           "title": "db"
         },
         "imagePrefix": {
           "default": "flanksource",
+          "required": [],
           "title": "imagePrefix"
         },
         "imageRegistry": {
           "default": "docker.io",
+          "required": [],
           "title": "imageRegistry"
         },
         "labels": {
           "additionalProperties": true,
+          "required": [],
           "title": "labels"
         },
         "nodeSelector": {
           "additionalProperties": true,
           "description": "node's labels for the pod to be scheduled on that node. See [Node Selector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/)",
+          "required": [],
           "title": "nodeSelector",
           "type": "object"
         },
         "podAnnotations": {
           "additionalProperties": true,
+          "required": [],
           "title": "podAnnotations"
         },
         "tolerations": {
           "items": {
-            "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Toleration"
+            "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Toleration",
+            "required": []
           },
+          "required": [],
           "title": "tolerations",
           "type": "array"
         }
       },
+      "required": [],
       "title": "global"
     },
     "grafanaDashboards": {
       "default": "false",
+      "required": [],
       "title": "grafanaDashboards"
     },
     "image": {
@@ -246,83 +285,108 @@
       "properties": {
         "name": {
           "default": "{{.Values.global.imagePrefix}}/canary-checker",
+          "required": [],
           "title": "name",
           "type": "string"
         },
         "pullPolicy": {
           "default": "IfNotPresent",
+          "required": [],
           "title": "pullPolicy",
           "type": "string"
         },
         "tag": {
           "default": "latest",
           "description": "Overrides the image tag whose default is the chart appVersion.",
+          "required": [],
           "title": "tag",
           "type": "string"
         },
         "type": {
           "default": "minimal",
           "description": "full image is larger and requires more permissions to run, but is required to execute 3rd party checks (jmeter, restic, k6 etc)",
-          "title": "type",
           "enum": [
             "full",
             "minimal"
-          ]
+          ],
+          "required": [],
+          "title": "type"
         }
       },
-      "title": "image",
-      "type": "object",
       "required": [
         "name",
         "pullPolicy",
         "tag"
-      ]
+      ],
+      "title": "image",
+      "type": "object"
     },
     "ingress": {
       "additionalProperties": false,
       "properties": {
         "annotations": {
           "additionalProperties": true,
+          "required": [],
           "title": "annotations"
         },
         "className": {
           "default": "",
+          "required": [],
           "title": "className"
         },
         "enabled": {
           "default": "false",
           "description": "Expose the canary-checker service on an ingress, normally not needed as the service is exposed through `flanksource-ui.ingress`",
+          "required": [],
           "title": "enabled"
         },
         "host": {
           "default": "canary-checker",
+          "required": [],
           "title": "host"
         },
         "tls": {
-          "items": {},
+          "items": {
+            "required": []
+          },
+          "required": [],
           "title": "tls"
         }
       },
+      "required": [],
       "title": "ingress"
     },
     "jsonLogs": {
       "default": "true",
+      "required": [],
       "title": "jsonLogs"
     },
+    "labelsAllowList": {
+      "description": "List of additional check label keys that should be included in the check metrics",
+      "items": {
+        "required": []
+      },
+      "required": [],
+      "title": "labelsAllowList"
+    },
     "livenessProbe": {
-      "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Probe"
+      "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Probe",
+      "required": []
     },
     "logLevel": {
       "default": "",
+      "required": [],
       "title": "logLevel"
     },
     "nameOverride": {
       "default": "",
+      "required": [],
       "title": "nameOverride"
     },
     "nodeSelector": {
       "additionalProperties": true,
       "description": "node's labels for the pod to be scheduled on that node. See [Node Selector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/)",
+      "required": [],
       "title": "nodeSelector",
       "type": "object"
     },
@@ -332,69 +396,81 @@
         "collector": {
           "default": "",
           "description": "OpenTelemetry gRPC collector endpoint in host:port format",
+          "required": [],
           "title": "collector",
           "type": "string"
         },
         "labels": {
           "default": "",
           "description": "labels in \"a=b,c=d\" format",
+          "required": [],
           "title": "labels"
         },
         "serviceName": {
           "default": "canary-checker",
+          "required": [],
           "title": "serviceName",
           "type": "string"
         }
       },
-      "title": "otel",
       "required": [
         "collector",
         "serviceName"
-      ]
+      ],
+      "title": "otel"
     },
     "pingMode": {
       "default": "unprivileged",
       "description": "set the mechanism for pings - either privileged, unprivileged or none",
-      "title": "pingMode",
       "enum": [
         "privileged",
         "unprivileged",
         "none"
-      ]
+      ],
+      "required": [],
+      "title": "pingMode"
     },
     "podAnnotations": {
       "additionalProperties": true,
+      "required": [],
       "title": "podAnnotations"
     },
     "prometheusURL": {
       "default": "",
       "description": "Default Prometheus URL to use in prometheus checks",
+      "required": [],
       "title": "prometheusURL"
     },
     "properties": {
       "additionalProperties": true,
       "description": "A map of properties to update on startup",
+      "required": [],
       "title": "properties"
     },
     "readinessProbe": {
-      "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Probe"
+      "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Probe",
+      "required": []
     },
     "replicas": {
       "default": 1,
+      "required": [],
       "title": "replicas"
     },
     "resources": {
-      "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.ResourceRequirements"
+      "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.ResourceRequirements",
+      "required": []
     },
     "serviceAccount": {
       "additionalProperties": false,
       "properties": {
         "annotations": {
           "additionalProperties": true,
+          "required": [],
           "title": "annotations"
         },
         "name": {
           "default": "canary-checker-sa",
+          "required": [],
           "title": "name"
         },
         "rbac": {
@@ -403,63 +479,72 @@
             "clusterRole": {
               "default": true,
               "description": "whether to create cluster-wide or namespaced roles",
+              "required": [],
               "title": "clusterRole"
             },
             "configmaps": {
               "default": true,
               "description": " for secret management with valueFrom",
+              "required": [],
               "title": "configmaps",
               "type": "boolean"
             },
             "enable": {
               "default": true,
-              "description": "#\nInstall (Cluster)Role and RoleBinding for the ServiceAccount",
+              "description": "\nInstall (Cluster)Role and RoleBinding for the ServiceAccount",
+              "required": [],
               "title": "enable"
             },
             "exec": {
               "default": true,
               "description": "to collect logs and output from pod and junit canaries",
+              "required": [],
               "title": "exec",
               "type": "boolean"
             },
             "ingressCreateAndDelete": {
               "default": true,
               "description": "for pod canary",
+              "required": [],
               "title": "ingressCreateAndDelete",
               "type": "boolean"
             },
             "namespaceCreateAndDelete": {
               "default": true,
               "description": "for namespace canary",
+              "required": [],
               "title": "namespaceCreateAndDelete",
               "type": "boolean"
             },
             "podsCreateAndDelete": {
               "default": true,
               "description": "for pod and junit canaries",
+              "required": [],
               "title": "podsCreateAndDelete",
               "type": "boolean"
             },
             "readAll": {
               "default": true,
               "description": " for use with kubernetes resource lookups",
+              "required": [],
               "title": "readAll",
               "type": "boolean"
             },
             "secrets": {
               "default": true,
               "description": " for secret management with valueFrom",
+              "required": [],
               "title": "secrets",
               "type": "boolean"
             },
             "tokenRequest": {
               "default": true,
               "description": " for secret management with valueFrom",
+              "required": [],
               "title": "tokenRequest",
               "type": "boolean"
             }
           },
-          "title": "rbac",
           "required": [
             "tokenRequest",
             "secrets",
@@ -469,24 +554,30 @@
             "exec",
             "ingressCreateAndDelete",
             "namespaceCreateAndDelete"
-          ]
+          ],
+          "title": "rbac"
         }
       },
+      "required": [],
       "title": "serviceAccount"
     },
     "serviceMonitor": {
       "default": "false",
       "description": " Set to true to enable prometheus service monitor",
+      "required": [],
       "title": "serviceMonitor"
     },
     "serviceMonitorLabels": {
       "additionalProperties": true,
+      "required": [],
       "title": "serviceMonitorLabels"
     },
     "tolerations": {
       "items": {
-        "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Toleration"
+        "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Toleration",
+        "required": []
       },
+      "required": [],
       "title": "tolerations",
       "type": "array"
     },
@@ -495,47 +586,54 @@
       "properties": {
         "agentName": {
           "default": "",
+          "required": [],
           "title": "agentName",
           "type": "string"
         },
         "enabled": {
           "default": false,
+          "required": [],
           "title": "enabled",
           "type": "boolean"
         },
         "host": {
           "default": "",
+          "required": [],
           "title": "host",
           "type": "string"
         },
         "insecureSkipVerify": {
           "default": false,
+          "required": [],
           "title": "insecureSkipVerify",
           "type": "boolean"
         },
         "password": {
           "default": "",
+          "required": [],
           "title": "password",
           "type": "string"
         },
         "secretKeyRef": {
           "additionalProperties": false,
+          "description": "Alternative to inlining values, secret must contain: AGENT_NAME, UPSTREAM_USER, UPSTREAM_PASSWORD \u0026 UPSTREAM_HOST",
           "properties": {
             "name": {
               "default": "",
+              "required": [],
               "title": "name"
             }
           },
-          "description": "Alternative to inlining values, secret must contain: AGENT_NAME, UPSTREAM_USER, UPSTREAM_PASSWORD \u0026 UPSTREAM_HOST",
+          "required": [],
           "title": "secretKeyRef"
         },
         "user": {
           "default": "",
+          "required": [],
           "title": "user",
           "type": "string"
         }
       },
-      "title": "upstream",
       "required": [
         "enabled",
         "agentName",
@@ -543,26 +641,30 @@
         "user",
         "password",
         "insecureSkipVerify"
-      ]
+      ],
+      "title": "upstream"
     },
     "volumeMounts": {
       "items": {
-        "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.VolumeMount"
+        "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.VolumeMount",
+        "required": []
       },
+      "required": [],
       "title": "volumeMounts",
       "type": "array"
     },
     "volumes": {
       "items": {
-        "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Volume"
+        "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Volume",
+        "required": []
       },
+      "required": [],
       "title": "volumes",
       "type": "array"
     }
   },
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
   "required": [
     "image"
-  ]
+  ],
+  "type": "object"
 }
