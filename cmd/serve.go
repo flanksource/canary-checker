@@ -24,9 +24,9 @@ import (
 	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/commons/logger"
 	dutyApi "github.com/flanksource/duty/api"
-	dutyContext "github.com/flanksource/duty/context"
 	dutyEcho "github.com/flanksource/duty/echo"
 	"github.com/flanksource/duty/postgrest"
+	"github.com/flanksource/duty/shutdown"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -42,28 +42,31 @@ var Serve = &cobra.Command{
 	Use:   "serve config.yaml",
 	Short: "Start a server to execute checks",
 	Run: func(cmd *cobra.Command, configFiles []string) {
-		defer runner.Shutdown()
-		canaryJobs.StartScanCanaryConfigs(setup(), dataFile, configFiles)
+		if err := setupDefaultContext(); err != nil {
+			shutdown.ShutdownAndExit(1, err.Error())
+		}
+
+		canaryJobs.StartScanCanaryConfigs(apicontext.DefaultContext, dataFile, configFiles)
 		if executor {
 			jobs.Start()
 		}
+
 		serve()
 	},
 }
 
-func setup() dutyContext.Context {
+func setupDefaultContext() error {
 	var err error
 
 	if apicontext.DefaultContext, err = InitContext(); err != nil {
-		runner.ShutdownAndExit(1, err.Error())
-		return apicontext.DefaultContext
+		return err
 	}
 
 	apicontext.DefaultContext = apicontext.DefaultContext.WithNamespace(runner.WatchNamespace)
 
 	cache.PostgresCache = cache.NewPostgresCache(apicontext.DefaultContext)
 
-	return apicontext.DefaultContext
+	return nil
 }
 
 func postgrestResponseModifier(r *http.Response) error {
@@ -105,7 +108,7 @@ func serve() {
 		logger.Tracef("No PostgREST endpoint configured, skipping proxy")
 	}
 
-	runner.AddShutdownHook(func() {
+	shutdown.AddHook(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 		defer cancel()
 
