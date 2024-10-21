@@ -33,7 +33,7 @@ var Run = &cobra.Command{
 			log.Fatalln("Must specify at least one canary")
 		}
 
-		ctx, closer, err := duty.Start("canary-checker", duty.ClientOnly, duty.SkipMigrationByDefaultMode)
+		ctx, closer, err := duty.Start(app, duty.ClientOnly, duty.SkipMigrationByDefaultMode)
 		if err != nil {
 			logger.Fatalf("Failed to initialize db: %v", err.Error())
 		}

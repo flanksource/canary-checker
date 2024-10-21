@@ -18,7 +18,9 @@ import (
 	"github.com/flanksource/canary-checker/pkg/controllers"
 	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/job"
 	dutyKubernetes "github.com/flanksource/duty/kubernetes"
+	"github.com/flanksource/duty/leader"
 	"github.com/flanksource/duty/shutdown"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel"
@@ -37,10 +39,10 @@ var (
 		Use:   "operator",
 		Short: "Start the kubernetes operator",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := run(cmd, args); err != nil {
+			if err := run(); err != nil {
 				shutdown.ShutdownAndExit(1, err.Error())
 			} else {
-				shutdown.ShutdownAndExit(0, err.Error())
+				shutdown.ShutdownAndExit(0, "")
 			}
 		},
 	}
@@ -56,15 +58,7 @@ func init() {
 	// +kubebuilder:scaffold:scheme
 }
 
-func run(cmd *cobra.Command, args []string) error {
-	logger := logger.GetLogger("operator")
-	logger.SetLogLevel(k8sLogLevel)
-
-	scheme := runtime.NewScheme()
-
-	_ = clientgoscheme.AddToScheme(scheme)
-	_ = canaryv1.AddToScheme(scheme)
-
+func run() error {
 	ctx, err := InitContext()
 	if err != nil {
 		return err
@@ -78,11 +72,22 @@ func run(cmd *cobra.Command, args []string) error {
 		return errors.New("operator requires a kubernetes connection")
 	}
 
-	ctx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))
+	ctx.WithTracer(otel.GetTracerProvider().Tracer(app))
 
 	apicontext.DefaultContext = ctx.WithNamespace(runner.WatchNamespace)
 
 	cache.PostgresCache = cache.NewPostgresCache(apicontext.DefaultContext)
+
+	if enableLeaderElection {
+		job.DisableCronStartOnSchedule()
+
+		go func() {
+			err := leader.Register(ctx, app, runner.WatchNamespace, nil, nil, nil)
+			if err != nil {
+				shutdown.ShutdownAndExit(1, fmt.Sprintf("leader election failed: %v", err))
+			}
+		}()
+	}
 
 	if runner.OperatorExecutor {
 		logger.Infof("Starting executors")
@@ -94,6 +99,16 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	go serve()
+	return startControllers()
+}
+
+func startControllers() error {
+	scheme := runtime.NewScheme()
+	_ = clientgoscheme.AddToScheme(scheme)
+	_ = canaryv1.AddToScheme(scheme)
+
+	logger := logger.GetLogger("operator")
+	logger.SetLogLevel(k8sLogLevel)
 
 	ctrl.SetLogger(logr.FromSlogHandler(logger.Handler()))
 	setupLog := ctrl.Log.WithName("setup")
@@ -102,6 +117,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Scheme:                  scheme,
 		LeaderElection:          enableLeaderElection,
 		LeaderElectionNamespace: runner.WatchNamespace,
+		LeaderElectionID:        "fa62cd4d.flanksource.com",
 		Metrics: ctrlMetrics.Options{
 			BindAddress: ":0",
 		},
