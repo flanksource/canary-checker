@@ -149,6 +149,12 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 			backoff = retry.WithMaxDuration(maxRetryTimeout, backoff)
 		}
 
+		// We do this before virtual check run in case the check times out
+		// and returns an err, the default templating requires 'display' in env
+		result.AddData(map[string]any{
+			"display": make(map[string]any),
+		})
+
 		retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
 			ctx.Logger.V(4).Infof("running check: %s", virtualCanary.Name)
 
