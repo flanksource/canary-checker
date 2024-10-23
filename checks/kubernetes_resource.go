@@ -123,6 +123,9 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 				"resources":       check.Resources,
 			},
 			ValueFunctions: true,
+			IgnoreFields: map[string]string{
+				"URL": "string", // Avoid templating URL which might have non-templated username, password etc.
+			},
 			DelimSets: []gomplate.Delims{
 				{Left: "{{", Right: "}}"},
 				{Left: "$(", Right: ")"},
