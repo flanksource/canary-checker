@@ -88,6 +88,7 @@ manifests: .bin/controller-gen .bin/yq
 		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.checks.items.properties)' crd.yaml | \
 		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.forEach.properties)' /dev/stdin | \
 		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.[].items.properties.metrics.items.properties)' /dev/stdin | \
+		$(YQ) ea '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties[] |= (select(.items.properties.metrics != null) | .items.properties.metrics.items.additionalProperties = true)' /dev/stdin | \
 		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.lookup.properties)' /dev/stdin | \
 		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.properties.items.properties.lookup.properties)' /dev/stdin | \
 		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.forEach.properties)' /dev/stdin | \
