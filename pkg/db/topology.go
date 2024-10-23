@@ -121,7 +121,7 @@ func PersistComponent(ctx context.Context, component *pkg.Component) ([]uuid.UUI
 
 		child.ParentId = &component.ID
 		if childIDs, err := PersistComponent(ctx, child); err != nil {
-			return persisted, fmt.Errorf("error persisting child component of [%s]: %w", component.ID, dutydb.ErrorDetails(err))
+			return persisted, fmt.Errorf("error persisting child component[%s] of component[%s]: %w", child.String(), component.ID, dutydb.ErrorDetails(err))
 		} else {
 			persisted = append(persisted, childIDs...)
 		}
