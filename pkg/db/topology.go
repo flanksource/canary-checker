@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/context"
+	dutydb "github.com/flanksource/duty/db"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
@@ -78,7 +79,7 @@ func PersistComponent(ctx context.Context, component *pkg.Component) ([]uuid.UUI
 
 	existing, err = component.FindExisting(ctx)
 	if err != nil {
-		return persisted, fmt.Errorf("error finding component: %v", err)
+		return persisted, fmt.Errorf("error finding component: %w", err)
 	}
 
 	tx := db.Table("components")
@@ -94,7 +95,7 @@ func PersistComponent(ctx context.Context, component *pkg.Component) ([]uuid.UUI
 		if existing.DeletedAt != component.DeletedAt {
 			// Since gorm ignores nil fields, we are setting deleted_at explicitly
 			if err := db.Table("components").Where("id = ?", existing.ID).UpdateColumn("deleted_at", nil).Error; err != nil {
-				return nil, fmt.Errorf("failed to undelete: %v", err)
+				return nil, fmt.Errorf("failed to undelete: %w", err)
 			}
 		}
 	} else {
@@ -106,7 +107,7 @@ func PersistComponent(ctx context.Context, component *pkg.Component) ([]uuid.UUI
 		).Create(component)
 	}
 	if tx.Error != nil {
-		return persisted, tx.Error
+		return persisted, dutydb.ErrorDetails(tx.Error)
 	}
 
 	persisted = append(persisted, component.ID)
@@ -120,13 +121,13 @@ func PersistComponent(ctx context.Context, component *pkg.Component) ([]uuid.UUI
 
 		child.ParentId = &component.ID
 		if childIDs, err := PersistComponent(ctx, child); err != nil {
-			logger.Errorf("Error persisting child component of %v, :v", component.ID, err)
+			return persisted, fmt.Errorf("error persisting child component of [%s]: %w", component.ID, dutydb.ErrorDetails(err))
 		} else {
 			persisted = append(persisted, childIDs...)
 		}
 	}
 
-	return persisted, tx.Error
+	return persisted, dutydb.ErrorDetails(tx.Error)
 }
 
 func UpdateStatusAndSummaryForComponent(db *gorm.DB, id uuid.UUID, status types.ComponentStatus, summary types.Summary) (int64, error) {
