@@ -6,8 +6,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/samber/lo"
-	"github.com/samber/oops"
+	"github.com/flanksource/duty/db"
 )
 
 type Results []*CheckResult
@@ -94,9 +93,7 @@ func (result *CheckResult) Failf(message string, args ...interface{}) *CheckResu
 		result.Error += ", "
 	}
 
-	if oe, ok := oops.AsOops(fmt.Errorf(message, args...)); ok {
-		result.InternalError = lo.Contains(oe.Tags(), "db")
-	}
+	result.InternalError = db.IsDBError(fmt.Errorf(message, args...))
 
 	result.Pass = false
 	result.Error += fmt.Sprintf(message, args...)

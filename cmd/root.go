@@ -39,9 +39,9 @@ func InitContext() (context.Context, error) {
 	}
 
 	ctx.WithTracer(otel.GetTracerProvider().Tracer(app))
-	ctx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))
-	ctx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))
-	ctx.DB().Use(db.NewPlugin())
+	if err := ctx.DB().Use(db.NewOopsPlugin()); err != nil {
+		return ctx, fmt.Errorf("failed to use oops gorm plugin: %w", err)
+	}
 
 	return ctx, nil
 }
