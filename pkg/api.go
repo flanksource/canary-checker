@@ -347,6 +347,8 @@ type CheckResult struct {
 	// ParentCheck is the parent check of a transformed check
 	ParentCheck external.Check `json:"-"`
 	ErrorObject error          `json:"-"`
+
+	InternalError bool `json:"-"`
 }
 
 func (result CheckResult) LoggerName() string {

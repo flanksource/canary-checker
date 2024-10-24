@@ -18,6 +18,7 @@ import (
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/db"
 	"github.com/flanksource/duty/query"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -37,6 +38,7 @@ func InitContext() (context.Context, error) {
 	}
 
 	ctx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))
+	ctx.DB().Use(db.NewOopsPlugin())
 
 	return ctx, nil
 }
