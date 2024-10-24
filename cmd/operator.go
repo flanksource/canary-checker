@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"os"
+	"errors"
+	"fmt"
 	"time"
 
 	apicontext "github.com/flanksource/canary-checker/api/context"
@@ -17,7 +18,10 @@ import (
 	"github.com/flanksource/canary-checker/pkg/controllers"
 	"github.com/flanksource/canary-checker/pkg/labels"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/job"
 	dutyKubernetes "github.com/flanksource/duty/kubernetes"
+	"github.com/flanksource/duty/leader"
+	"github.com/flanksource/duty/shutdown"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -34,7 +38,13 @@ var (
 	Operator             = &cobra.Command{
 		Use:   "operator",
 		Short: "Start the kubernetes operator",
-		Run:   run,
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := run(); err != nil {
+				shutdown.ShutdownAndExit(1, err.Error())
+			} else {
+				shutdown.ShutdownAndExit(0, "")
+			}
+		},
 	}
 )
 
@@ -48,35 +58,36 @@ func init() {
 	// +kubebuilder:scaffold:scheme
 }
 
-func run(cmd *cobra.Command, args []string) {
-	defer runner.Shutdown()
-
-	logger := logger.GetLogger("operator")
-	logger.SetLogLevel(k8sLogLevel)
-
-	scheme := runtime.NewScheme()
-
-	_ = clientgoscheme.AddToScheme(scheme)
-	_ = canaryv1.AddToScheme(scheme)
-
+func run() error {
 	ctx, err := InitContext()
 	if err != nil {
-		runner.ShutdownAndExit(1, err.Error())
+		return err
 	}
 
 	if ctx.DB() == nil {
-		runner.ShutdownAndExit(1, "operator requires a db connection")
+		return errors.New("operator requires a db connection")
 	}
 
 	if ctx.KubernetesRestConfig() == nil {
-		runner.ShutdownAndExit(1, "operator requires a kubernetes connection")
+		return errors.New("operator requires a kubernetes connection")
 	}
 
-	ctx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))
+	ctx.WithTracer(otel.GetTracerProvider().Tracer(app))
 
 	apicontext.DefaultContext = ctx.WithNamespace(runner.WatchNamespace)
 
 	cache.PostgresCache = cache.NewPostgresCache(apicontext.DefaultContext)
+
+	if enableLeaderElection {
+		job.DisableCronStartOnSchedule()
+
+		go func() {
+			err := leader.Register(ctx, app, runner.WatchNamespace, nil, nil, nil)
+			if err != nil {
+				shutdown.ShutdownAndExit(1, fmt.Sprintf("leader election failed: %v", err))
+			}
+		}()
+	}
 
 	if runner.OperatorExecutor {
 		logger.Infof("Starting executors")
@@ -88,6 +99,16 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	go serve()
+	return startControllers()
+}
+
+func startControllers() error {
+	scheme := runtime.NewScheme()
+	_ = clientgoscheme.AddToScheme(scheme)
+	_ = canaryv1.AddToScheme(scheme)
+
+	logger := logger.GetLogger("operator")
+	logger.SetLogLevel(k8sLogLevel)
 
 	ctrl.SetLogger(logr.FromSlogHandler(logger.Handler()))
 	setupLog := ctrl.Log.WithName("setup")
@@ -96,6 +117,7 @@ func run(cmd *cobra.Command, args []string) {
 		Scheme:                  scheme,
 		LeaderElection:          enableLeaderElection,
 		LeaderElectionNamespace: runner.WatchNamespace,
+		LeaderElectionID:        "fa62cd4d.flanksource.com",
 		Metrics: ctrlMetrics.Options{
 			BindAddress: ":0",
 		},
@@ -114,7 +136,7 @@ func run(cmd *cobra.Command, args []string) {
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), managerOpt)
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
-		os.Exit(1)
+		return fmt.Errorf("unable to start manager: %v", err)
 	}
 
 	if runner.RunnerName == "" {
@@ -144,7 +166,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	if err = canaryReconciler.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Canary")
-		os.Exit(1)
+		return fmt.Errorf("unable to create canary controller: %v", err)
 	}
 
 	// Instantiate the canary status channel so the canary job can send updates on it.
@@ -156,10 +178,14 @@ func run(cmd *cobra.Command, args []string) {
 
 	if err = systemReconciler.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "System")
-		os.Exit(1)
+		return fmt.Errorf("unable to create topology controller: %v", err)
 	}
+
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
+		return fmt.Errorf("problem running controller manager: %v", err)
 	}
+
+	return nil
 }

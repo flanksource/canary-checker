@@ -10,9 +10,9 @@ import (
 
 	"github.com/flanksource/commons/timer"
 	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/shutdown"
 
 	"github.com/flanksource/canary-checker/cmd/output"
-	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/spf13/cobra"
 
 	apicontext "github.com/flanksource/canary-checker/api/context"
@@ -33,11 +33,11 @@ var Run = &cobra.Command{
 			log.Fatalln("Must specify at least one canary")
 		}
 
-		ctx, closer, err := duty.Start("canary-checker", duty.ClientOnly, duty.SkipMigrationByDefaultMode)
+		ctx, closer, err := duty.Start(app, duty.ClientOnly, duty.SkipMigrationByDefaultMode)
 		if err != nil {
 			logger.Fatalf("Failed to initialize db: %v", err.Error())
 		}
-		runner.AddShutdownHook(closer)
+		shutdown.AddHook(closer)
 
 		apicontext.DefaultContext = ctx
 
