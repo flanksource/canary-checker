@@ -121,6 +121,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -494,6 +500,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -880,6 +892,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -1216,6 +1234,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -1515,6 +1539,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -1858,6 +1888,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -2266,6 +2302,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -2474,6 +2516,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -2759,6 +2807,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -2990,6 +3044,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       minrecords:
                         type: integer
@@ -3301,6 +3361,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -3594,6 +3660,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -3856,6 +3928,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -4101,6 +4179,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -4964,6 +5048,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -5435,6 +5525,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       minAge:
                         description: MinAge the latest object should be older than defined age
@@ -5884,6 +5980,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -6252,6 +6354,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -6572,6 +6680,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -6893,6 +7007,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -7391,6 +7511,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -7655,6 +7781,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -7902,6 +8034,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -8202,6 +8340,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -8529,6 +8673,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -8797,6 +8947,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -9095,6 +9251,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -9229,6 +9391,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -9560,6 +9728,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -9903,6 +10077,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -10150,6 +10330,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -10498,6 +10684,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -10734,6 +10926,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -11110,6 +11308,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -11670,6 +11874,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -12021,6 +12231,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -12370,6 +12586,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
@@ -12677,6 +12899,12 @@ spec:
                         items:
                           type: object
                           additionalProperties: true
+                          properties:
+                            labels:
+                              type: array
+                              items:
+                                type: object
+                                additionalProperties: true
                         type: array
                       name:
                         description: Name of the check
