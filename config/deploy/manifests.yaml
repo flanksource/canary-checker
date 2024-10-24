@@ -119,6 +119,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -492,6 +498,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -878,6 +890,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -1214,6 +1232,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -1513,6 +1537,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -1856,6 +1886,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -2264,6 +2300,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -2472,6 +2514,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -2757,6 +2805,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -2988,6 +3042,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       minrecords:
@@ -3299,6 +3359,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -3592,6 +3658,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -3854,6 +3926,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -4099,6 +4177,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -4962,6 +5046,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -5433,6 +5523,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       minAge:
@@ -5882,6 +5978,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -6250,6 +6352,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -6570,6 +6678,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -6891,6 +7005,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -7389,6 +7509,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -7653,6 +7779,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -7900,6 +8032,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -8200,6 +8338,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -8527,6 +8671,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -8795,6 +8945,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -9093,6 +9249,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -9227,6 +9389,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -9558,6 +9726,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -9901,6 +10075,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -10148,6 +10328,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -10496,6 +10682,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -10732,6 +10924,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -11108,6 +11306,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -11668,6 +11872,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -12019,6 +12229,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -12368,6 +12584,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
@@ -12675,6 +12897,12 @@ spec:
                           https://canarychecker.io/concepts/metrics-exporter
                         items:
                           additionalProperties: true
+                          properties:
+                            labels:
+                              items:
+                                additionalProperties: true
+                                type: object
+                              type: array
                           type: object
                         type: array
                       name:
