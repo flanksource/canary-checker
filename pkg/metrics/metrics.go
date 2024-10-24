@@ -86,7 +86,15 @@ func setupMetrics() {
 		checkLabels,
 	)
 
-	prometheus.MustRegister(Gauge, CanaryCheckInfo, OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency)
+	OpsErrorCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "canary_check_error_count",
+			Help: "The total number of error occured during checks",
+		},
+		checkLabels,
+	)
+
+	prometheus.MustRegister(Gauge, CanaryCheckInfo, OpsCount, OpsSuccessCount, OpsErrorCount, OpsFailedCount, RequestLatency)
 }
 
 var (
@@ -106,6 +114,7 @@ var (
 	OpsCount        *prometheus.CounterVec
 	OpsFailedCount  *prometheus.CounterVec
 	OpsSuccessCount *prometheus.CounterVec
+	OpsErrorCount   *prometheus.CounterVec
 	RequestLatency  *prometheus.HistogramVec
 )
 
@@ -259,11 +268,16 @@ func Record(
 			}
 		}
 	} else {
-		fail.Append(1)
 		Gauge.WithLabelValues(gaugeLabels...).Set(1)
 
 		CanaryCheckInfo.WithLabelValues(checkMetricLabels...).Set(1)
-		OpsFailedCount.WithLabelValues(checkMetricLabels...).Inc()
+
+		if result.InternalError {
+			OpsErrorCount.WithLabelValues(checkMetricLabels...).Inc()
+		} else {
+			fail.Append(1)
+			OpsFailedCount.WithLabelValues(checkMetricLabels...).Inc()
+		}
 	}
 
 	_uptime = types.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}

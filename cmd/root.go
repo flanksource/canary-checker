@@ -38,7 +38,7 @@ func InitContext() (context.Context, error) {
 	}
 
 	ctx.WithTracer(otel.GetTracerProvider().Tracer("canary-checker"))
-	ctx.DB().Use(db.NewPlugin())
+	ctx.DB().Use(db.NewOopsPlugin())
 
 	return ctx, nil
 }
