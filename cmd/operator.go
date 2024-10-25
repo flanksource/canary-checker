@@ -96,6 +96,10 @@ func run() error {
 		// so we use a goroutine to unblock server start
 		// to prevent health check from failing
 		go jobs.Start()
+
+		shutdown.AddHookWithPriority("check jobs", shutdown.PriorityJobs, func() {
+			canaryJobs.AcquireAllCheckLocks(ctx)
+		})
 	}
 
 	go serve()
