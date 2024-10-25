@@ -88,7 +88,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | serviceAccount.name | string | `"canary-checker-sa"` |  |
 | serviceAccount.rbac.clusterRole | bool | `true` | whether to create cluster-wide or namespaced roles |
 | serviceAccount.rbac.configmaps | bool | `true` | for secret management with valueFrom |
-| serviceAccount.rbac.enable | bool | `true` | Install (Cluster)Role and RoleBinding for the ServiceAccount |
+| serviceAccount.rbac.enabled | bool | `true` | Install (Cluster)Role and RoleBinding for the ServiceAccount |
 | serviceAccount.rbac.exec | bool | `true` |  |
 | serviceAccount.rbac.ingressCreateAndDelete | bool | `true` | for pod canary |
 | serviceAccount.rbac.namespaceCreateAndDelete | bool | `true` | for namespace canary |
