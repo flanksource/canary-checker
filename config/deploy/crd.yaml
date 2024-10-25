@@ -128,6 +128,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -507,6 +508,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -899,6 +901,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -1241,6 +1244,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -1546,6 +1550,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -1895,6 +1900,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -2309,6 +2315,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -2523,6 +2530,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -2814,6 +2822,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -3051,6 +3060,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       minrecords:
                         type: integer
                       name:
@@ -3368,6 +3378,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -3667,6 +3678,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -3935,6 +3947,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -4186,6 +4199,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -5055,6 +5069,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -5532,6 +5547,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       minAge:
                         description: MinAge the latest object should be older than defined age
                         type: string
@@ -5987,6 +6003,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -6361,6 +6378,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -6687,6 +6705,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -7014,6 +7033,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -7518,6 +7538,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -7788,6 +7809,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -8041,6 +8063,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -8347,6 +8370,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -8680,6 +8704,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -8954,6 +8979,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -9258,6 +9284,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -9398,6 +9425,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -9735,6 +9763,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -10084,6 +10113,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -10337,6 +10367,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -10691,6 +10722,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -10933,6 +10965,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -11315,6 +11348,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -11881,6 +11915,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -12238,6 +12273,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -12593,6 +12629,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -12906,6 +12943,7 @@ spec:
                                 type: object
                                 additionalProperties: true
                         type: array
+                        x-kubernetes-preserve-unknown-fields: true
                       name:
                         description: Name of the check
                         type: string
@@ -13143,6 +13181,7 @@ spec:
                             type: string
                         type: object
                       type: array
+                      x-kubernetes-preserve-unknown-fields: true
                     name:
                       description: Name of the check
                       type: string

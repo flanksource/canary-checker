@@ -362,6 +362,7 @@ type Description struct {
 	TransformDeleteStrategy string `yaml:"transformDeleteStrategy,omitempty" json:"transformDeleteStrategy,omitempty"`
 	// Metrics to expose from check.
 	// https://canarychecker.io/concepts/metrics-exporter
+	// +kubebuilder:validation:XPreserveUnknownFields
 	Metrics []external.Metrics `json:"metrics,omitempty" yaml:"metrics,omitempty"`
 }
 
