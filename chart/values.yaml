@@ -430,6 +430,15 @@ serviceAccount:
     # -- for namespace canary
     namespaceCreateAndDelete: true
 
+    # @schema
+    # required: false
+    # default: []
+    # type: array
+    # items:
+    #   type: object
+    # @schema
+    extra: []
+
 # @schema
 # type: array
 # required: false
