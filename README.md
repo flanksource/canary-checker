@@ -50,7 +50,7 @@ helm install \
 
 2. Create a new check
 
-  ```yaml title="canary.yaml"
+```yaml title="canary.yaml"
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
@@ -62,7 +62,7 @@ spec:
       url: https://httpbin.demo.aws.flanksource.com/status/200
     - name: failing-check
       url: https://httpbin.demo.aws.flanksource.com/status/500
-  ```
+```
 
 2a. Run the check locally (Optional)
 
