@@ -6,7 +6,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://flanksource.github.io/charts | flanksource-ui | 1.0.757 |
+| https://flanksource.github.io/charts | flanksource-ui | 1.0.772 |
 
 ## Values
 
@@ -64,6 +64,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | ingress.host | string | `"canary-checker"` |  |
 | ingress.tls | list | `[]` |  |
 | jsonLogs | bool | `true` |  |
+| labelsAllowList | list | `[]` | List of additional check label keys that should be included in the check metrics |
 | livenessProbe.httpGet.path | string | `"/health"` |  |
 | livenessProbe.httpGet.port | int | `8080` |  |
 | logLevel | string | `""` |  |
