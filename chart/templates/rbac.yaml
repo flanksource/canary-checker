@@ -104,6 +104,9 @@ rules:
     verbs:
       - "*"
   {{- end}}
+  {{- if .Values.serviceAccount.rbac.extra }}
+  {{ .Values.serviceAccount.rbac.extra | toYaml | nindent 2 }}
+  {{- end}}
   - apiGroups:
       - "metrics.k8s.io"
     resources:

@@ -503,6 +503,16 @@
               "title": "exec",
               "type": "boolean"
             },
+            "extra": {
+              "default": [],
+              "items": {
+                "required": [],
+                "type": "object"
+              },
+              "required": [],
+              "title": "extra",
+              "type": "array"
+            },
             "ingressCreateAndDelete": {
               "default": true,
               "description": "for pod canary",

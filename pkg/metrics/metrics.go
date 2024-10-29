@@ -62,6 +62,14 @@ func setupMetrics() {
 		checkLabels,
 	)
 
+	OpsInvalidCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "canary_check_invalid_count",
+			Help: "The total number of invalid checks",
+		},
+		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
+	)
+
 	CanaryCheckInfo = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "canary_check_info",
@@ -86,7 +94,7 @@ func setupMetrics() {
 		checkLabels,
 	)
 
-	prometheus.MustRegister(Gauge, CanaryCheckInfo, OpsCount, OpsSuccessCount, OpsFailedCount, RequestLatency)
+	prometheus.MustRegister(Gauge, CanaryCheckInfo, OpsCount, OpsSuccessCount, OpsInvalidCount, OpsFailedCount, RequestLatency)
 }
 
 var (
@@ -103,6 +111,7 @@ var (
 	Gauge           *prometheus.GaugeVec
 
 	// Check specific metrics
+	OpsInvalidCount *prometheus.CounterVec
 	OpsCount        *prometheus.CounterVec
 	OpsFailedCount  *prometheus.CounterVec
 	OpsSuccessCount *prometheus.CounterVec
@@ -259,6 +268,12 @@ func Record(
 			}
 		}
 	} else {
+		if result.Invalid {
+			OpsInvalidCount.WithLabelValues(checkMetricLabels...).Inc()
+		} else {
+			OpsFailedCount.WithLabelValues(checkMetricLabels...).Inc()
+		}
+
 		fail.Append(1)
 		Gauge.WithLabelValues(gaugeLabels...).Set(1)
 
@@ -272,6 +287,7 @@ func Record(
 	} else {
 		_latency = types.Latency{}
 	}
+
 	return _uptime, _latency
 }
 

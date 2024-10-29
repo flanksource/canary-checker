@@ -164,7 +164,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	//nolint:staticcheck
 	if check.Endpoint != "" && check.URL != "" {
-		return results.Failf("cannot specify both endpoint and url")
+		return results.Invalidf("cannot specify both endpoint and url")
 	}
 
 	//nolint:staticcheck

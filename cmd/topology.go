@@ -9,6 +9,7 @@ import (
 
 	"github.com/flanksource/commons/timer"
 	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/shutdown"
 	"github.com/google/uuid"
 
 	"github.com/spf13/cobra"
@@ -16,7 +17,6 @@ import (
 	apicontext "github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
-	"github.com/flanksource/canary-checker/pkg/runner"
 	configSync "github.com/flanksource/canary-checker/pkg/sync"
 	"github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
@@ -72,9 +72,9 @@ var RunTopology = &cobra.Command{
 			os.Exit(1)
 		}
 
-		defer runner.Shutdown()
+		defer shutdown.Shutdown()
 		var err error
-		apicontext.DefaultContext, _, err = duty.Start("canary-checker", duty.ClientOnly, duty.SkipMigrationByDefaultMode)
+		apicontext.DefaultContext, _, err = duty.Start(app, duty.ClientOnly, duty.SkipMigrationByDefaultMode)
 		if err != nil {
 			logger.Errorf(err.Error())
 			return
