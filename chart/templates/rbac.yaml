@@ -4,7 +4,7 @@ kind: "{{if .Values.serviceAccount.rbac.clusterRole}}Cluster{{end}}Role"
 metadata:
   name: {{ include "canary-checker.name" . }}-role
 rules:
-  {{- if .Values.serviceAccount.rbac.secrets}}
+  {{- if .Values.serviceAccount.rbac.secrets }}
   - apiGroups:
       - ""
     resources:
@@ -12,8 +12,8 @@ rules:
     verbs:
       - get
       - list
-  {{- end}}
-  {{- if .Values.serviceAccount.rbac.configmaps}}
+  {{- end }}
+  {{- if .Values.serviceAccount.rbac.configmaps }}
   - apiGroups:
       - ""
     resources:
@@ -21,8 +21,8 @@ rules:
     verbs:
       - get
       - list
-  {{- end}}
-  {{- if .Values.serviceAccount.rbac.exec}}
+  {{- end }}
+  {{- if .Values.serviceAccount.rbac.exec }}
   - apiGroups: [""]
     resources:
       - pods/attach
@@ -30,16 +30,16 @@ rules:
       - pods/log
     verbs:
       - '*'
-  {{- end}}
-  {{- if .Values.serviceAccount.rbac.tokenRequest}}
+  {{- end }}
+  {{- if .Values.serviceAccount.rbac.tokenRequest }}
   - apiGroups:
       - authentication.k8s.io
     resources:
       - serviceaccounts/token
     verbs:
       - create
-  {{- end}}
-  {{- if .Values.serviceAccount.rbac.readAll}}
+  {{- end }}
+  {{- if .Values.serviceAccount.rbac.readAll }}
   - apiGroups:
       - "*"
     resources:
@@ -48,7 +48,7 @@ rules:
       - list
       - get
       - watch
-  {{- end}}
+  {{- end }}
   - apiGroups:
       - canaries.flanksource.com
     resources:
@@ -71,7 +71,7 @@ rules:
       - get
       - patch
       - update
-  {{- if .Values.serviceAccount.rbac.podsCreateAndDelete}}
+  {{- if .Values.serviceAccount.rbac.podsCreateAndDelete }}
   # for creating and destroying pods during the pod canary test
   - apiGroups:
       - ""
@@ -81,7 +81,7 @@ rules:
       - services
     verbs:
       - "*"
-  {{- end}}
+  {{- end }}
   {{- if .Values.serviceAccount.rbac.ingressCreateAndDelete }}
   - apiGroups:
       - "networking.k8s.io"
@@ -95,7 +95,7 @@ rules:
       - ingresses
     verbs:
       - "*"
-  {{- end}}
+  {{- end }}
   {{- if .Values.serviceAccount.rbac.namespaceCreateAndDelete }}
   - apiGroups:
       - ""
@@ -103,10 +103,20 @@ rules:
       - namespaces
     verbs:
       - "*"
-  {{- end}}
+  {{- end }}
+  {{- if .Values.serviceAccount.rbac.deploymentCreateAndDelete }}
+  # for creating and deleting deployments
+  - apiGroups:
+      - "apps"
+    resources:
+      - deployments
+    verbs:
+      - create
+      - delete
+  {{- end }}
   {{- if .Values.serviceAccount.rbac.extra }}
   {{ .Values.serviceAccount.rbac.extra | toYaml | nindent 2 }}
-  {{- end}}
+  {{- end }}
   - apiGroups:
       - "metrics.k8s.io"
     resources:
@@ -162,4 +172,4 @@ subjects:
   - kind: ServiceAccount
     name: {{ .Values.serviceAccount.name }}
     namespace: {{ .Release.Namespace }}
-{{- end}}
+{{- end }}

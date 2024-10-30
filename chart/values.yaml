@@ -430,6 +430,9 @@ serviceAccount:
     # -- for namespace canary
     namespaceCreateAndDelete: true
 
+    # -- for deployment canary
+    deploymentCreateAndDelete: true
+
     # @schema
     # required: false
     # default: []

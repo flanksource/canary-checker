@@ -92,6 +92,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | serviceAccount.rbac.exec | bool | `true` |  |
 | serviceAccount.rbac.ingressCreateAndDelete | bool | `true` | for pod canary |
 | serviceAccount.rbac.namespaceCreateAndDelete | bool | `true` | for namespace canary |
+| serviceAccount.rbac.deploymentCreateAndDelete | bool | `true` | for deployment canary |
 | serviceAccount.rbac.podsCreateAndDelete | bool | `true` | for pod and junit canaries |
 | serviceAccount.rbac.readAll | bool | `true` | for use with kubernetes resource lookups |
 | serviceAccount.rbac.secrets | bool | `true` | for secret management with valueFrom |

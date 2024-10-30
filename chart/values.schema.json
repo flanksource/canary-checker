@@ -526,6 +526,13 @@
               "title": "namespaceCreateAndDelete",
               "type": "boolean"
             },
+            "deploymentCreateAndDelete": {
+              "default": true,
+              "description": "for deployment canary",
+              "required": [],
+              "title": "deploymentCreateAndDelete",
+              "type": "boolean"
+            },
             "podsCreateAndDelete": {
               "default": true,
               "description": "for pod and junit canaries",
@@ -563,7 +570,8 @@
             "podsCreateAndDelete",
             "exec",
             "ingressCreateAndDelete",
-            "namespaceCreateAndDelete"
+            "namespaceCreateAndDelete",
+            "deploymentCreateAndDelete"
           ],
           "title": "rbac"
         }

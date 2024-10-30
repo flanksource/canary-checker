@@ -73,6 +73,7 @@ serviceAccount:
     exec: true
     ingressCreateAndDelete: true
     namespaceCreateAndDelete: true
+    deploymentCreateAndDelete: true
     podsCreateAndDelete: true
     readAll: true
     secrets: true
