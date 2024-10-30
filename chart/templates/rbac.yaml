@@ -48,7 +48,7 @@ rules:
       - list
       - get
       - watch
-  {{- end }}
+  {{- end}}
   - apiGroups:
       - canaries.flanksource.com
     resources:
@@ -120,7 +120,7 @@ rules:
   {{- end }}
   {{- if .Values.serviceAccount.rbac.extra }}
   {{ .Values.serviceAccount.rbac.extra | toYaml | nindent 2 }}
-  {{- end }}
+  {{- end}}
   - apiGroups:
       - "metrics.k8s.io"
     resources:
