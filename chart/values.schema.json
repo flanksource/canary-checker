@@ -367,7 +367,8 @@
         "required": []
       },
       "required": [],
-      "title": "labelsAllowList"
+      "title": "labelsAllowList",
+      "type": "array"
     },
     "livenessProbe": {
       "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Probe",
@@ -489,11 +490,11 @@
               "title": "configmaps",
               "type": "boolean"
             },
-            "enable": {
+            "enabled": {
               "default": true,
               "description": "\nInstall (Cluster)Role and RoleBinding for the ServiceAccount",
               "required": [],
-              "title": "enable"
+              "title": "enabled"
             },
             "exec": {
               "default": true,

@@ -6,7 +6,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://flanksource.github.io/charts | flanksource-ui | 1.0.757 |
+| https://flanksource.github.io/charts | flanksource-ui | 1.0.772 |
 
 ## Values
 
@@ -64,6 +64,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | ingress.host | string | `"canary-checker"` |  |
 | ingress.tls | list | `[]` |  |
 | jsonLogs | bool | `true` |  |
+| labelsAllowList | list | `[]` | List of additional check label keys that should be included in the check metrics |
 | livenessProbe.httpGet.path | string | `"/health"` |  |
 | livenessProbe.httpGet.port | int | `8080` |  |
 | logLevel | string | `""` |  |
@@ -88,7 +89,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | serviceAccount.name | string | `"canary-checker-sa"` |  |
 | serviceAccount.rbac.clusterRole | bool | `true` | whether to create cluster-wide or namespaced roles |
 | serviceAccount.rbac.configmaps | bool | `true` | for secret management with valueFrom |
-| serviceAccount.rbac.enable | bool | `true` | Install (Cluster)Role and RoleBinding for the ServiceAccount |
+| serviceAccount.rbac.enabled | bool | `true` | Install (Cluster)Role and RoleBinding for the ServiceAccount |
 | serviceAccount.rbac.exec | bool | `true` |  |
 | serviceAccount.rbac.ingressCreateAndDelete | bool | `true` | for pod canary |
 | serviceAccount.rbac.namespaceCreateAndDelete | bool | `true` | for namespace canary |
