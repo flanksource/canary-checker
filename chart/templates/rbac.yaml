@@ -104,6 +104,20 @@ rules:
     verbs:
       - "*"
   {{- end}}
+  {{- if .Values.serviceAccount.rbac.deploymentCreateAndDelete }}
+  - apiGroups:
+      - "apps"
+    resources:
+      - deployments
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  {{- end }}
   {{- if .Values.serviceAccount.rbac.extra }}
   {{ .Values.serviceAccount.rbac.extra | toYaml | nindent 2 }}
   {{- end}}
