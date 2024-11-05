@@ -122,6 +122,7 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      ctx.Canary.ObjectMeta.Name,
 				Namespace: ctx.Canary.ObjectMeta.Namespace,
+				Labels:    ctx.Canary.ObjectMeta.Labels,
 			},
 			Spec: c.CanarySpec,
 		}
