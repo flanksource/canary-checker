@@ -1,4 +1,4 @@
-{{- if .Values.serviceAccount.rbac.enable }}
+{{- if .Values.serviceAccount.rbac.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: "{{if .Values.serviceAccount.rbac.clusterRole}}Cluster{{end}}Role"
 metadata:

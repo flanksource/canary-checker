@@ -400,7 +400,7 @@ serviceAccount:
     # default: true
     # @schema
     # -- Install (Cluster)Role and RoleBinding for the ServiceAccount
-    enable: true
+    enabled: true
 
     # @schema
     # required: false

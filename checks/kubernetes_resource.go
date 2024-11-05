@@ -60,6 +60,12 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 	var results pkg.Results
 	results = append(results, result)
 
+	// We do this before virtual check run in case the check times out
+	// and returns an err, the default templating requires 'display' in env
+	result.AddData(map[string]any{
+		"display": make(map[string]any),
+	})
+
 	if err := c.validate(ctx, check); err != nil {
 		return results.Failf("validation: %v", err)
 	}
@@ -113,8 +119,12 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 	displayPerCheck := map[string]string{}
 	for _, c := range check.Checks {
 		virtualCanary := v1.Canary{
-			ObjectMeta: ctx.Canary.ObjectMeta,
-			Spec:       c.CanarySpec,
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      ctx.Canary.ObjectMeta.Name,
+				Namespace: ctx.Canary.ObjectMeta.Namespace,
+				Labels:    ctx.Canary.ObjectMeta.Labels,
+			},
+			Spec: c.CanarySpec,
 		}
 
 		templater := gomplate.StructTemplater{
@@ -151,12 +161,6 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 		if maxRetryTimeout, _ := check.CheckRetries.GetTimeout(); maxRetryTimeout > 0 {
 			backoff = retry.WithMaxDuration(maxRetryTimeout, backoff)
 		}
-
-		// We do this before virtual check run in case the check times out
-		// and returns an err, the default templating requires 'display' in env
-		result.AddData(map[string]any{
-			"display": make(map[string]any),
-		})
 
 		retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
 			ctx.Logger.V(4).Infof("running check: %s", virtualCanary.Name)
