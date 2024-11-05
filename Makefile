@@ -234,8 +234,8 @@ ginkgo:
 		CONTROLLER_GEN=$(GOBIN)/controller-gen
 
 .bin/yq: .bin
-	curl -sSLo $(YQ) https://github.com/mikefarah/yq/releases/download/v4.40.5/yq_$(OS)_$(ARCH) && \
-	chmod +x $(YQ)
+	curl -sSLo .bin/yq https://github.com/mikefarah/yq/releases/download/v4.40.5/yq_$(OS)_$(ARCH) && \
+	chmod +x .bin/yq
 
 
 .bin/go-junit-report: .bin

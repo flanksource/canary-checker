@@ -105,16 +105,15 @@ func newPod(ctx *context.Context, check v1.JunitCheck) (*corev1.Pod, error) {
 				`, mountPath, mountPath),
 			},
 		}}
-	pod.Spec.Volumes = []corev1.Volume{
-		{
-			Name: volumeName,
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
+	pod.Spec.Volumes = append(pod.Spec.Volumes, corev1.Volume{
+		Name: volumeName,
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
 		},
-	}
+	})
 	pod.Spec.RestartPolicy = corev1.RestartPolicyNever
-	pod.Spec.InitContainers[0].VolumeMounts = []corev1.VolumeMount{{Name: volumeName, MountPath: filepath.Dir(check.TestResults)}}
+	//
+	pod.Spec.InitContainers[0].VolumeMounts = append(pod.Spec.InitContainers[0].VolumeMounts, corev1.VolumeMount{Name: volumeName, MountPath: filepath.Dir(check.TestResults)})
 	pod.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{{Name: volumeName, MountPath: mountPath}}
 	return pod, nil
 }
