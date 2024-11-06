@@ -6,6 +6,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/duty/db"
 )
 
 type Results []*CheckResult
@@ -91,6 +92,9 @@ func (result *CheckResult) Failf(message string, args ...interface{}) *CheckResu
 	if result.Error != "" {
 		result.Error += ", "
 	}
+
+	result.InternalError = db.IsDBError(fmt.Errorf(message, args...))
+
 	result.Pass = false
 	result.Error += fmt.Sprintf(message, args...)
 	return result
