@@ -10,3 +10,4 @@ resources:
   - ldap
   - opensearch
   - elasticsearch
+  - namespaces/sdsadsa

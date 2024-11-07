@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sdsadsa
+  annotations:
+    "mission-control/playbook": kustomize-create-namespace
+    "mission-control/run": 019305f7-f10c-3164-9b2e-165f179bfcc0
+    "mission-control/createdBy": Admin
