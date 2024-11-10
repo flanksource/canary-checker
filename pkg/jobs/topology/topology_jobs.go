@@ -157,3 +157,48 @@ var CleanupDeletedTopologyComponents = &job.Job{
 		return nil
 	},
 }
+
+var TopologyCRDReconcile = &job.Job{
+	Name:       "TopologyCRDReconcile",
+	Schedule:   "@every 1h",
+	Singleton:  true,
+	JobHistory: true,
+	Retention:  job.RetentionBalanced,
+	Fn: func(ctx job.JobRuntime) error {
+		var topologies []models.Topology
+
+		if err := ctx.DB().
+			Select("id", "name", "namespace").
+			Where("source IN (?, ?)", models.SourceCRD, models.SourceTopology).
+			Where(duty.LocalFilter).
+			Find(&topologies).Error; err != nil {
+			return err
+		}
+
+		for _, t := range topologies {
+			obj, err := ctx.Kommons().GetByKind("Topology", t.Namespace, t.Name)
+			if obj != nil {
+				if string(obj.GetUID()) == t.ID.String() {
+					ctx.History.IncrSuccess()
+					continue
+				}
+			}
+
+			// If there is an error with GetByKind func, it indicates a problem with kube-api
+			// so we report it but do not delete the topology
+			if err != nil {
+				ctx.History.AddErrorf("error fetching resource from k8s[Topology/%s/%s]: %v", t.Namespace, t.Name, err)
+				continue
+			}
+
+			// id mismatch or object not found in k8s, delete current topology
+			if err := db.DeleteTopology(ctx.DB(), t.ID.String()); err != nil {
+				ctx.History.AddErrorf("error deleting topology[%s]: %v", t.ID, err)
+				continue
+			}
+			ctx.History.IncrSuccess()
+			DeleteTopologyJob(t.ID.String())
+		}
+		return nil
+	},
+}
