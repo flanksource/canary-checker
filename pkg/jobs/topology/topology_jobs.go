@@ -189,9 +189,9 @@ var TopologyCRDReconcile = &job.Job{
 			return fmt.Errorf("error listing Topology kind: %w", err)
 		}
 		k8sIDs := lo.Map(objs.Items, func(obj unstructured.Unstructured, _ int) string { return string(obj.GetUID()) })
-		if len(topologies) == 0 {
-		   // a misconfiguration or intermittent error could cause unnecessary deletion of all topologies
-		   ctx.Warnf("Skipping topology CRD cleanup due to zero topologies returned" 
+		if len(k8sIDs) == 0 {
+			// a misconfiguration or intermittent error could cause unnecessary deletion of all topologies
+			ctx.Warnf("Skipping topology CRD cleanup due to zero topologies returned")
 		}
 		for _, t := range topologies {
 			if !slices.Contains(k8sIDs, t.ID.String()) {
