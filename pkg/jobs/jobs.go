@@ -47,7 +47,12 @@ func Start() {
 		}
 	}
 
-	for _, j := range []*job.Job{topologyJobs.CleanupDeletedTopologyComponents, topologyJobs.SyncTopology, canaryJobs.SyncCanaryJobs, canaryJobs.CleanupDeletedCanaryChecks, dutyQuery.SyncComponentCacheJob} {
+	miscJobs := []*job.Job{
+		topologyJobs.CleanupDeletedTopologyComponents, topologyJobs.SyncTopology,
+		topologyJobs.TopologyCRDReconcile, canaryJobs.SyncCanaryJobs,
+		canaryJobs.CleanupDeletedCanaryChecks, dutyQuery.SyncComponentCacheJob,
+	}
+	for _, j := range miscJobs {
 		job := j
 		job.Context = context.DefaultContext
 		if err := job.AddToScheduler(FuncScheduler); err != nil {
