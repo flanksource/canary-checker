@@ -164,7 +164,7 @@ var CleanupDeletedTopologyComponents = &job.Job{
 
 var TopologyCRDReconcile = &job.Job{
 	Name:       "TopologyCRDReconcile",
-	Schedule:   "@every 1h",
+	Schedule:   "@every 8h",
 	Singleton:  true,
 	JobHistory: true,
 	Retention:  job.RetentionBalanced,
