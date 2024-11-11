@@ -3,6 +3,7 @@ package topology
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"sync"
 
 	canaryCtx "github.com/flanksource/canary-checker/api/context"
@@ -17,6 +18,9 @@ import (
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/robfig/cron/v3"
+	"github.com/samber/lo"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 var TopologyScheduler = cron.New()
@@ -175,29 +179,27 @@ var TopologyCRDReconcile = &job.Job{
 			return err
 		}
 
+		client, err := ctx.KubernetesDynamicClient().GetClientByKind("Topology")
+		if err != nil {
+			return fmt.Errorf("error creating dynamic client for Topology: %w", err)
+		}
+
+		objs, err := client.List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return fmt.Errorf("error listing Topology kind: %w", err)
+		}
+		k8sIDs := lo.Map(objs.Items, func(obj unstructured.Unstructured, _ int) string { return string(obj.GetUID()) })
 		for _, t := range topologies {
-			obj, err := ctx.Kommons().GetByKind("Topology", t.Namespace, t.Name)
-			if obj != nil {
-				if string(obj.GetUID()) == t.ID.String() {
-					ctx.History.IncrSuccess()
+			if !slices.Contains(k8sIDs, t.ID.String()) {
+				// id mismatch or object not found in k8s, delete current topology
+				if err := db.DeleteTopology(ctx.DB(), t.ID.String()); err != nil {
+					ctx.History.AddErrorf("error deleting topology[%s]: %v", t.ID, err)
 					continue
 				}
+				DeleteTopologyJob(t.ID.String())
 			}
 
-			// If there is an error with GetByKind func, it indicates a problem with kube-api
-			// so we report it but do not delete the topology
-			if err != nil {
-				ctx.History.AddErrorf("error fetching resource from k8s[Topology/%s/%s]: %v", t.Namespace, t.Name, err)
-				continue
-			}
-
-			// id mismatch or object not found in k8s, delete current topology
-			if err := db.DeleteTopology(ctx.DB(), t.ID.String()); err != nil {
-				ctx.History.AddErrorf("error deleting topology[%s]: %v", t.ID, err)
-				continue
-			}
 			ctx.History.IncrSuccess()
-			DeleteTopologyJob(t.ID.String())
 		}
 		return nil
 	},
