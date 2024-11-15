@@ -979,6 +979,11 @@ type KubernetesResourceCheck struct {
 }
 
 func (c *KubernetesResourceCheck) SetCanaryOwnerReference(id, name string) {
+	if id == "" || name == "" {
+		// if the canary isn't persisted
+		return
+	}
+
 	canaryOwnerRef := metav1.OwnerReference{
 		APIVersion: "canaries.flanksource.com/v1",
 		Kind:       "Canary",
