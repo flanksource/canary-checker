@@ -70,6 +70,8 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 		return results.Failf("validation: %v", err)
 	}
 
+	check.SetCanaryOwnerReference(ctx.Canary.GetPersistedID(), ctx.Canary.Name)
+
 	if check.Kubeconfig != nil {
 		var err error
 		ctx, err = ctx.WithKubeconfig(*check.Kubeconfig)

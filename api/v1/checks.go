@@ -14,7 +14,9 @@ import (
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/samber/lo"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	k8sTypes "k8s.io/apimachinery/pkg/types"
 )
 
 // List of additional check label keys that should be included in the check metrics.
@@ -974,6 +976,28 @@ type KubernetesResourceCheck struct {
 	Kubeconfig *types.EnvVar `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
 
 	WaitFor KubernetesResourceCheckWaitFor `json:"waitFor,omitempty"`
+}
+
+func (c *KubernetesResourceCheck) SetCanaryOwnerReference(id, name string) {
+	canaryOwnerRef := metav1.OwnerReference{
+		APIVersion: "canaries.flanksource.com/v1",
+		Kind:       "Canary",
+		Name:       name,
+		UID:        k8sTypes.UID(id),
+		Controller: lo.ToPtr(true),
+	}
+
+	for i, resource := range c.StaticResources {
+		ownerRefs := resource.GetOwnerReferences()
+		ownerRefs = append(ownerRefs, canaryOwnerRef)
+		c.StaticResources[i].SetOwnerReferences(ownerRefs)
+	}
+
+	for i, resource := range c.Resources {
+		ownerRefs := resource.GetOwnerReferences()
+		ownerRefs = append(ownerRefs, canaryOwnerRef)
+		c.Resources[i].SetOwnerReferences(ownerRefs)
+	}
 }
 
 func (c KubernetesResourceCheck) GetDisplayTemplate() Template {
