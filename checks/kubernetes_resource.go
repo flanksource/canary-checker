@@ -70,7 +70,8 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 		return results.Failf("validation: %v", err)
 	}
 
-	check.SetCanaryOwnerReference(ctx.Canary.GetPersistedID(), ctx.Canary.Name)
+	check.SetMissingNamespace(ctx.Canary)
+	check.SetCanaryOwnerReference(ctx.Canary)
 
 	if check.Kubeconfig != nil {
 		var err error
@@ -86,7 +87,7 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 
 	for i := range check.StaticResources {
 		resource := check.StaticResources[i]
-		if err := ctx.Kommons().ApplyUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
+		if err := ctx.Kommons().ApplyUnstructured(resource.GetNamespace(), &resource); err != nil {
 			return results.Failf("failed to apply static resource %s: %v", resource.GetName(), err)
 		}
 	}
@@ -105,7 +106,7 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 
 	for i := range check.Resources {
 		resource := check.Resources[i]
-		if err := ctx.Kommons().ApplyUnstructured(utils.Coalesce(resource.GetNamespace(), ctx.Namespace), &resource); err != nil {
+		if err := ctx.Kommons().ApplyUnstructured(resource.GetNamespace(), &resource); err != nil {
 			return results.Failf("failed to apply resource (%s/%s/%s): %v", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 		}
 	}

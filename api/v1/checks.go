@@ -978,9 +978,37 @@ type KubernetesResourceCheck struct {
 	WaitFor KubernetesResourceCheckWaitFor `json:"waitFor,omitempty"`
 }
 
-func (c *KubernetesResourceCheck) SetCanaryOwnerReference(id, name string) {
+// SetMissingNamespace will set the parent canaries name to resources whose namespace
+// is not explicitly specified.
+func (c *KubernetesResourceCheck) SetMissingNamespace(parent Canary) {
+	for i, r := range c.StaticResources {
+		if r.GetNamespace() == "" {
+			c.StaticResources[i].SetNamespace(parent.GetNamespace())
+		}
+	}
+
+	for i, r := range c.Resources {
+		if r.GetNamespace() == "" {
+			c.Resources[i].SetNamespace(parent.GetNamespace())
+		}
+	}
+}
+
+func (c *KubernetesResourceCheck) SetCanaryOwnerReference(parent Canary) {
+	var (
+		id        = parent.GetPersistedID()
+		name      = parent.GetName()
+		namespace = parent.GetNamespace()
+	)
+
 	if id == "" || name == "" {
 		// if the canary isn't persisted
+		return
+	}
+
+	if namespace == "" {
+		// we don't know the canaries namespace
+		// so we can't set it in the owner references.
 		return
 	}
 
@@ -993,12 +1021,22 @@ func (c *KubernetesResourceCheck) SetCanaryOwnerReference(id, name string) {
 	}
 
 	for i, resource := range c.StaticResources {
+		if resource.GetNamespace() != namespace {
+			// the canary and the resource to be created are in different namespaces.
+			// ownerRef enforces the owner to be in the same repo.
+			continue
+		}
+
 		ownerRefs := resource.GetOwnerReferences()
 		ownerRefs = append(ownerRefs, canaryOwnerRef)
 		c.StaticResources[i].SetOwnerReferences(ownerRefs)
 	}
 
 	for i, resource := range c.Resources {
+		if resource.GetNamespace() != namespace {
+			continue
+		}
+
 		ownerRefs := resource.GetOwnerReferences()
 		ownerRefs = append(ownerRefs, canaryOwnerRef)
 		c.Resources[i].SetOwnerReferences(ownerRefs)
