@@ -221,6 +221,10 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.Ku
 
 		resourceObjs, err := ctx.KubernetesDynamicClient().FetchResources(ctx, append(check.StaticResources, check.Resources...)...)
 		if err != nil {
+			if apiErrors.IsNotFound(err) {
+				return retry.RetryableError(err)
+			}
+
 			return fmt.Errorf("wait for evaluation. fetching resources: %w", err)
 		} else if len(resourceObjs) != check.TotalResources() {
 			var got []string
