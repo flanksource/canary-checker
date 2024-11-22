@@ -16,6 +16,7 @@ import (
 	"github.com/samber/lo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8sTypes "k8s.io/apimachinery/pkg/types"
 )
 
@@ -978,17 +979,27 @@ type KubernetesResourceCheck struct {
 	WaitFor KubernetesResourceCheckWaitFor `json:"waitFor,omitempty"`
 }
 
+func (c *KubernetesResourceCheck) HasResourcesWithMissingNamespace() bool {
+	for _, r := range append(c.StaticResources, c.Resources...) {
+		if r.GetNamespace() == "" {
+			return true
+		}
+	}
+
+	return false
+}
+
 // SetMissingNamespace will set the parent canaries name to resources whose namespace
 // is not explicitly specified.
-func (c *KubernetesResourceCheck) SetMissingNamespace(parent Canary) {
+func (c *KubernetesResourceCheck) SetMissingNamespace(parent Canary, namespacedResources map[schema.GroupVersionKind]bool) {
 	for i, r := range c.StaticResources {
-		if r.GetNamespace() == "" {
+		if r.GetNamespace() == "" && namespacedResources[r.GroupVersionKind()] {
 			c.StaticResources[i].SetNamespace(parent.GetNamespace())
 		}
 	}
 
 	for i, r := range c.Resources {
-		if r.GetNamespace() == "" {
+		if r.GetNamespace() == "" && namespacedResources[r.GroupVersionKind()] {
 			c.Resources[i].SetNamespace(parent.GetNamespace())
 		}
 	}

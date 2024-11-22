@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/gomplate/v3"
 	"github.com/flanksource/is-healthy/pkg/health"
 	"github.com/flanksource/is-healthy/pkg/lua"
+	"github.com/patrickmn/go-cache"
 	"github.com/samber/lo"
 	"github.com/sethvargo/go-retry"
 	"golang.org/x/sync/errgroup"
@@ -70,9 +71,6 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 		return results.Failf("validation: %v", err)
 	}
 
-	check.SetMissingNamespace(ctx.Canary)
-	check.SetCanaryOwnerReference(ctx.Canary)
-
 	if check.Kubeconfig != nil {
 		var err error
 		ctx, err = ctx.WithKubeconfig(*check.Kubeconfig)
@@ -80,6 +78,17 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 			return results.WithError(err).Invalidf("Cannot connect to kubernetes")
 		}
 	}
+
+	if check.HasResourcesWithMissingNamespace() {
+		namespacedResources, err := fetchNamespacedResources(ctx)
+		if err != nil {
+			return results.Failf("failed to get api resources: %w", err)
+		}
+
+		check.SetMissingNamespace(ctx.Canary, namespacedResources)
+	}
+
+	check.SetCanaryOwnerReference(ctx.Canary)
 
 	if err := templateKubernetesResourceCheck(ctx.Canary.GetPersistedID(), ctx.Canary.GetCheckID(check.GetName()), &check); err != nil {
 		return results.Failf("templating error: %v", err)
@@ -477,4 +486,37 @@ func templateKubernetesResourceCheck(canaryID, checkID string, check *v1.Kuberne
 	}
 
 	return nil
+}
+
+var apiResourceCache = cache.New(time.Hour*24, time.Hour*24)
+
+func fetchNamespacedResources(ctx context.Context) (map[schema.GroupVersionKind]bool, error) {
+	kubeconfigCacheKey := ctx.KubernetesRestConfig().Host + ctx.KubernetesRestConfig().APIPath
+	if val, ok := apiResourceCache.Get(kubeconfigCacheKey); ok {
+		return val.(map[schema.GroupVersionKind]bool), nil
+	}
+
+	_, resourceList, err := ctx.Kubernetes().Discovery().ServerGroupsAndResources()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get server groups & resources: %w", err)
+	}
+
+	namespaceResources := make(map[schema.GroupVersionKind]bool)
+	for _, apiResourceList := range resourceList {
+		for _, resource := range apiResourceList.APIResources {
+			if resource.Namespaced {
+				gv, _ := schema.ParseGroupVersion(apiResourceList.GroupVersion)
+				key := schema.GroupVersionKind{
+					Group:   gv.Group,
+					Version: gv.Version,
+					Kind:    resource.Kind,
+				}
+
+				namespaceResources[key] = true
+			}
+		}
+	}
+
+	apiResourceCache.SetDefault(kubeconfigCacheKey, namespaceResources)
+	return namespaceResources, nil
 }
