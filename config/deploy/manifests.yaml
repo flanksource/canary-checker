@@ -1761,14 +1761,14 @@ spec:
                               description: Search query that applies to the resource name, tag & labels.
                               type: string
                             statuses:
-                              description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                              description: Statuses filter resources by the status
                               items:
                                 type: string
                               type: array
                             tagSelector:
                               type: string
                             types:
-                              description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                              description: Types filter resources by the type
                               items:
                                 type: string
                               type: array
@@ -13861,7 +13861,7 @@ spec:
                         description: Search query that applies to the resource name, tag & labels.
                         type: string
                       statuses:
-                        description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                        description: Statuses filter resources by the status
                         items:
                           type: string
                         type: array
@@ -13876,7 +13876,7 @@ spec:
                         description: Deprecated. Use `types`
                         type: string
                       types:
-                        description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                        description: Types filter resources by the type
                         items:
                           type: string
                         type: array
@@ -14010,7 +14010,7 @@ spec:
                                 description: Search query that applies to the resource name, tag & labels.
                                 type: string
                               statuses:
-                                description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                                description: Statuses filter resources by the status
                                 items:
                                   type: string
                                 type: array
@@ -14025,7 +14025,7 @@ spec:
                                 description: Deprecated. Use `types`
                                 type: string
                               types:
-                                description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                                description: Types filter resources by the type
                                 items:
                                   type: string
                                 type: array
@@ -14162,14 +14162,14 @@ spec:
                         description: Search query that applies to the resource name, tag & labels.
                         type: string
                       statuses:
-                        description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                        description: Statuses filter resources by the status
                         items:
                           type: string
                         type: array
                       tagSelector:
                         type: string
                       types:
-                        description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                        description: Types filter resources by the type
                         items:
                           type: string
                         type: array
@@ -14306,14 +14306,14 @@ spec:
                                   description: Search query that applies to the resource name, tag & labels.
                                   type: string
                                 statuses:
-                                  description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                                  description: Statuses filter resources by the status
                                   items:
                                     type: string
                                   type: array
                                 tagSelector:
                                   type: string
                                 types:
-                                  description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                                  description: Types filter resources by the type
                                   items:
                                     type: string
                                   type: array
@@ -14373,7 +14373,7 @@ spec:
                               description: Search query that applies to the resource name, tag & labels.
                               type: string
                             statuses:
-                              description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                              description: Statuses filter resources by the status
                               items:
                                 type: string
                               type: array
@@ -14388,7 +14388,7 @@ spec:
                               description: Deprecated. Use `types`
                               type: string
                             types:
-                              description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                              description: Types filter resources by the type
                               items:
                                 type: string
                               type: array
@@ -14522,7 +14522,7 @@ spec:
                                       description: Search query that applies to the resource name, tag & labels.
                                       type: string
                                     statuses:
-                                      description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                                      description: Statuses filter resources by the status
                                       items:
                                         type: string
                                       type: array
@@ -14537,7 +14537,7 @@ spec:
                                       description: Deprecated. Use `types`
                                       type: string
                                     types:
-                                      description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                                      description: Types filter resources by the type
                                       items:
                                         type: string
                                       type: array
@@ -14674,14 +14674,14 @@ spec:
                               description: Search query that applies to the resource name, tag & labels.
                               type: string
                             statuses:
-                              description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                              description: Statuses filter resources by the status
                               items:
                                 type: string
                               type: array
                             tagSelector:
                               type: string
                             types:
-                              description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                              description: Types filter resources by the type
                               items:
                                 type: string
                               type: array
@@ -14772,7 +14772,7 @@ spec:
                         description: Search query that applies to the resource name, tag & labels.
                         type: string
                       statuses:
-                        description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                        description: Statuses filter resources by the status
                         items:
                           type: string
                         type: array
@@ -14787,7 +14787,7 @@ spec:
                         description: Deprecated. Use `types`
                         type: string
                       types:
-                        description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                        description: Types filter resources by the type
                         items:
                           type: string
                         type: array
@@ -14832,14 +14832,14 @@ spec:
                           description: Search query that applies to the resource name, tag & labels.
                           type: string
                         statuses:
-                          description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                          description: Statuses filter resources by the status
                           items:
                             type: string
                           type: array
                         tagSelector:
                           type: string
                         types:
-                          description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                          description: Types filter resources by the type
                           items:
                             type: string
                           type: array
@@ -14923,7 +14923,7 @@ spec:
                                 description: Search query that applies to the resource name, tag & labels.
                                 type: string
                               statuses:
-                                description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                                description: Statuses filter resources by the status
                                 items:
                                   type: string
                                 type: array
@@ -14938,7 +14938,7 @@ spec:
                                 description: Deprecated. Use `types`
                                 type: string
                               types:
-                                description: StringArray represents a one-dimensional array of the PostgreSQL character types.
+                                description: Types filter resources by the type
                                 items:
                                   type: string
                                 type: array
