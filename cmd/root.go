@@ -8,6 +8,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/checks"
 	"github.com/flanksource/canary-checker/pkg/jobs/canary"
+	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/telemetry"
@@ -76,6 +77,9 @@ var Root = &cobra.Command{
 				connection.HTTPConnection{URL: prometheus.PrometheusURL},
 			)
 		}
+
+		// Setup metrics since v1.AdditionalCheckMetricLabels is set now
+		metrics.SetupMetrics()
 	},
 }
 
