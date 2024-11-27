@@ -8,6 +8,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/runner"
+
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/types"
 	cmap "github.com/orcaman/concurrent-map"
@@ -19,18 +20,12 @@ func init() {
 	CustomCounters = make(map[string]*prometheus.CounterVec)
 	CustomGauges = make(map[string]*prometheus.GaugeVec)
 	CustomHistograms = make(map[string]*prometheus.HistogramVec)
-
-	// Register the metrics with a delay because
-	// v1.AdditionalCheckMetricLabels is nil during init.
-	go func() {
-		time.Sleep(time.Second)
-
-		slices.Sort(v1.AdditionalCheckMetricLabels)
-		setupMetrics()
-	}()
 }
 
-func setupMetrics() {
+// SetupMetrics is called from cmd/root PreRun since we take v1.AdditionalCheckMetricLabels from CLI
+func SetupMetrics() {
+	slices.Sort(v1.AdditionalCheckMetricLabels)
+
 	RequestLatency = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "canary_check_duration",
