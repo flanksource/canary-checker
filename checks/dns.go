@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/samber/lo"
 	"golang.org/x/net/context"
 )
 
@@ -213,6 +214,8 @@ func checkResult(got []string, check v1.DNSCheck) (result bool, message string) 
 	}
 
 	if len(check.ExactReply) != 0 {
+		got = lo.Map(got, func(s string, _ int) string { return strings.ToLower(s) })
+		expected = lo.Map(expected, func(s string, _ int) string { return strings.ToLower(s) })
 		sort.Strings(got)
 		sort.Strings(expected)
 		if !reflect.DeepEqual(got, expected) {

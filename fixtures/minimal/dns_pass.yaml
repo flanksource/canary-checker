@@ -39,11 +39,16 @@ spec:
       querytype: "MX"
       minrecords: 1
       exactreply:
-        - "aspmx.l.google.com. 1"
-        - "alt1.aspmx.l.google.com. 5"
-        - "alt2.aspmx.l.google.com. 5"
-        - "aspmx3.googlemail.com. 10"
-        - "aspmx2.googlemail.com. 10"
+        - aspmx.l.google.com. 1
+        - aspmx.l.google.com. 1
+        - alt1.aspmx.l.google.com. 5
+        - alt2.aspmx.l.google.com. 5
+        - alt2.aspmx.l.google.com. 5
+        - alt1.aspmx.l.google.com. 5
+        - aspmx2.googlemail.com. 10
+        - aspmx3.googlemail.com. 10
+        - aspmx3.googlemail.com. 10
+        - aspmx2.googlemail.com. 10
       timeout: 100
       thresholdMillis: 1000
     - server: 8.8.8.8
@@ -61,10 +66,8 @@ spec:
       querytype: "NS"
       minrecords: 1
       exactreply:
-        - "ns-91.awsdns-11.com."
-        - "ns-908.awsdns-49.net."
-        - "ns-1450.awsdns-53.org."
-        - "ns-1896.awsdns-45.co.uk."
+        - "gina.ns.cloudflare.com."
+        - "walt.ns.cloudflare.com."
       timeout: 100
       thresholdMillis: 1000
   #  - server: 8.8.8.8
