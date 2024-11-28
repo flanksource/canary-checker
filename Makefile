@@ -230,7 +230,7 @@ ginkgo:
 	go install github.com/onsi/ginkgo/v2/ginkgo
 
 .bin/controller-gen: .bin
-		GOBIN=$(PWD)/.bin go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0
+		GOBIN=$(PWD)/.bin go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.16.5
 		CONTROLLER_GEN=$(GOBIN)/controller-gen
 
 .bin/yq: .bin
