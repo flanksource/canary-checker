@@ -1,7 +1,7 @@
 package checks
 
 import (
-	gocontext "context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
@@ -10,7 +10,7 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	alertmanagerClient "github.com/prometheus/alertmanager/api/v2/client"
+	"github.com/flanksource/commons/http"
 	alertmanagerAlert "github.com/prometheus/alertmanager/api/v2/client/alert"
 )
 
@@ -39,35 +39,44 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 		return results.Failf("error getting connection: %v", err)
 	}
 
-	parsedURL, err := url.Parse(connection.URL)
+	path, err := url.JoinPath(connection.URL, "/api/v2/alerts")
 	if err != nil {
-		return results.Failf("error parsing url: %v", err)
-	}
-	client := alertmanagerClient.NewHTTPClientWithConfig(nil, &alertmanagerClient.TransportConfig{
-		Host:     parsedURL.Host,
-		Schemes:  []string{parsedURL.Scheme},
-		BasePath: alertmanagerClient.DefaultBasePath,
-	})
-	var filters []string
-	for k, v := range check.Filters {
-		filters = append(filters, fmt.Sprintf("%s=~%s", k, v))
-	}
-	for _, alert := range check.Alerts {
-		filters = append(filters, fmt.Sprintf("alertname=~%s", alert))
-	}
-	for _, ignore := range check.Ignore {
-		filters = append(filters, fmt.Sprintf("alertname!~%s", ignore))
-	}
-	for k, v := range check.ExcludeFilters {
-		filters = append(filters, fmt.Sprintf("%s!=%s", k, v))
+		results.ErrorMessage(fmt.Errorf("error joining url path: %v", err))
+		return results
 	}
 
-	alerts, err := client.Alert.GetAlerts(&alertmanagerAlert.GetAlertsParams{
-		Context: gocontext.Background(),
-		Filter:  filters,
-	})
+	req := http.NewClient().R(ctx)
+	for k, v := range check.Filters {
+		req.QueryParamAdd("filter", fmt.Sprintf("%s=~%s", k, v))
+	}
+	for _, alert := range check.Alerts {
+		req.QueryParamAdd("filter", fmt.Sprintf("alertname=~%s", alert))
+	}
+	for _, ignore := range check.Ignore {
+		req.QueryParamAdd("filter", fmt.Sprintf("alertname!~%s", ignore))
+	}
+	for k, v := range check.ExcludeFilters {
+		req.QueryParamAdd("filter", fmt.Sprintf("%s!=%s", k, v))
+	}
+
+	var alerts alertmanagerAlert.GetAlertsOK
+	resp, err := req.Get(path)
 	if err != nil {
 		results.ErrorMessage(fmt.Errorf("error fetching from alertmanager: %v", err))
+		return results
+	}
+	if !resp.IsOK() {
+		results.ErrorMessage(fmt.Errorf("received non 2xx from alertmanager: %v", err))
+		return results
+	}
+	respStr, err := resp.AsString()
+	if err != nil {
+		results.ErrorMessage(fmt.Errorf("error reading response from alertmanager: %v", err))
+		return results
+	}
+
+	if err := json.Unmarshal([]byte(respStr), &alerts.Payload); err != nil {
+		results.ErrorMessage(fmt.Errorf("error casting alertmanager response: %v", err))
 		return results
 	}
 
