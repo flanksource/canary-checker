@@ -4498,58 +4498,16 @@ spec:
                     description: VarSource represents a source for a value
                     properties:
                       configMapKeyRef:
+                        $ref: '#/definitions/k8s.io~1api~1core~1v1~0ConfigMapKeySelector'
                         description: Selects a key of a ConfigMap.
-                        properties:
-                          key:
-                            description: The key to select.
-                            type: string
-                          name:
-                            description: |-
-                              Name of the referent.
-                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                              TODO: Add other useful fields. apiVersion, kind, uid?
-                            type: string
-                          optional:
-                            description: Specify whether the ConfigMap or its key must be defined
-                            type: boolean
-                        required:
-                          - key
-                        type: object
-                        x-kubernetes-map-type: atomic
                       fieldRef:
+                        $ref: '#/definitions/k8s.io~1api~1core~1v1~0ObjectFieldSelector'
                         description: |-
                           Selects a field of the pod: supports metadata.name, metadata.namespace, metadata.labels, metadata.annotations,
                           spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
-                        properties:
-                          apiVersion:
-                            description: Version of the schema the FieldPath is written in terms of, defaults to "v1".
-                            type: string
-                          fieldPath:
-                            description: Path of the field to select in the specified API version.
-                            type: string
-                        required:
-                          - fieldPath
-                        type: object
-                        x-kubernetes-map-type: atomic
                       secretKeyRef:
+                        $ref: '#/definitions/k8s.io~1api~1core~1v1~0SecretKeySelector'
                         description: Selects a key of a secret in the pod's namespace
-                        properties:
-                          key:
-                            description: The key of the secret to select from.  Must be a valid secret key.
-                            type: string
-                          name:
-                            description: |-
-                              Name of the referent.
-                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                              TODO: Add other useful fields. apiVersion, kind, uid?
-                            type: string
-                          optional:
-                            description: Specify whether the Secret or its key must be defined
-                            type: boolean
-                        required:
-                          - key
-                        type: object
-                        x-kubernetes-map-type: atomic
                       value:
                         type: string
                     type: object
