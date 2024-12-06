@@ -147,14 +147,6 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 	return client.R(ctx), nil
 }
 
-func truncate(text string, max int) string {
-	length := len(text)
-	if length <= max {
-		return text
-	}
-	return text[0:max]
-}
-
 func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.HTTPCheck)
 	var results pkg.Results
@@ -324,8 +316,8 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		return results.Failf("threshold exceeded %s > %d", utils.Age(elapsed), check.ThresholdMillis)
 	}
 
-	if check.ResponseContent != "" && !strings.Contains(body, check.ResponseContent) {
-		return results.Failf("expected %v, found %v", check.ResponseContent, truncate(body, 100))
+	if check.ResponseContent != "" && !strings.Contains(responseBody, check.ResponseContent) {
+		return results.Failf("expected %v, found %v", check.ResponseContent, responseBody)
 	}
 
 	if check.MaxSSLExpiry > 0 {
