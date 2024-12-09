@@ -317,7 +317,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	}
 
 	if check.ResponseContent != "" && !strings.Contains(responseBody, check.ResponseContent) {
-		return results.Failf("expected %v, found %v", check.ResponseContent, responseBody)
+		return results.Failf("expected %v, found %v", check.ResponseContent, pkg.TruncateMessage(responseBody))
 	}
 
 	if check.MaxSSLExpiry > 0 {
