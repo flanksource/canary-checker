@@ -37,3 +37,6 @@ spec:
       url: https://httpbin.demo.aws.flanksource.com/headers
       test:
         expr: json.headers["User-Agent"].startsWith("canary-checker/")
+    - name: http-body
+      url: https://httpbin.demo.aws.flanksource.com/html
+      responseContent: Herman Melville
