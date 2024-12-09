@@ -16,6 +16,7 @@ import (
 	"github.com/flanksource/commons/collections"
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/commons/properties"
 	cUtils "github.com/flanksource/commons/utils"
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
@@ -193,13 +194,30 @@ func FromExternalCheck(canary Canary, check external.Check) Check {
 	}
 }
 
+func ellipsis(str string, length int) string {
+	if length <= 3 || len(str) <= length {
+		return str
+	}
+	str = strings.TrimSpace(str)
+
+	return strings.TrimSpace(str[0:length-3]) + "..."
+}
+
+func TruncateMessage(s string) string {
+	return ellipsis(s, properties.Int(4*1024, "canary.status.max.message"))
+}
+
+func TruncateError(s string) string {
+	return ellipsis(s, properties.Int(128*1024, "canary.status.max.error"))
+}
+
 func CheckStatusFromResult(result CheckResult) CheckStatus {
 	cs := CheckStatus{
 		Status:  result.Pass,
 		Invalid: result.Invalid,
 		Time:    time.Now().UTC().Format(time.RFC3339),
-		Message: result.Message,
-		Error:   result.Error,
+		Message: TruncateMessage(result.Message),
+		Error:   TruncateError(result.Error),
 		Detail:  result.Detail,
 		Check:   &result.Check,
 	}
