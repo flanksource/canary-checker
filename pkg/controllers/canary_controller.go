@@ -23,6 +23,7 @@ import (
 
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/samber/lo"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -244,8 +245,12 @@ func (r *CanaryReconciler) Report() {
 			canary.Status.LastTransitionedTime = payload.LastTransitionedTime
 		}
 
-		canary.Status.Message = &payload.Message
-		canary.Status.ErrorMessage = &payload.ErrorMessage
+		if payload.Message != "" {
+			canary.Status.Message = lo.ToPtr(pkg.TruncateMessage(payload.Message))
+		}
+		if payload.ErrorMessage != "" {
+			canary.Status.ErrorMessage = lo.ToPtr(pkg.TruncateError(payload.ErrorMessage))
+		}
 
 		canary.Status.LastCheck = &metav1.Time{Time: time.Now()}
 		canary.Status.ChecksStatus = payload.CheckStatus
