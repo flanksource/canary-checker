@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/gomplate/v3"
 	"github.com/flanksource/is-healthy/pkg/health"
 	"github.com/flanksource/is-healthy/pkg/lua"
+	"github.com/flanksource/kommons"
 	"github.com/patrickmn/go-cache"
 	"github.com/samber/lo"
 	"github.com/sethvargo/go-retry"
@@ -26,7 +27,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/commons/collections"
-	"github.com/flanksource/commons/utils"
 )
 
 const (
@@ -94,9 +94,11 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 		return results.Failf("templating error: %v", err)
 	}
 
+	kClient := kommons.NewClient(ctx.KubernetesRestConfig(), ctx.Logger)
+
 	for i := range check.StaticResources {
 		resource := check.StaticResources[i]
-		if err := ctx.Kommons().ApplyUnstructured(resource.GetNamespace(), &resource); err != nil {
+		if err := kClient.ApplyUnstructured(resource.GetNamespace(), &resource); err != nil {
 			return results.Failf("failed to apply static resource %s: %v", resource.GetName(), err)
 		}
 	}
@@ -115,7 +117,7 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 
 	for i := range check.Resources {
 		resource := check.Resources[i]
-		if err := ctx.Kommons().ApplyUnstructured(resource.GetNamespace(), &resource); err != nil {
+		if err := kClient.ApplyUnstructured(resource.GetNamespace(), &resource); err != nil {
 			return results.Failf("failed to apply resource (%s/%s/%s): %v", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 		}
 	}
@@ -229,7 +231,7 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.Ku
 
 		ctx.Logger.V(4).Infof("waiting for %d resources to be in the desired state. (attempts: %d)", check.TotalResources(), attempts)
 
-		resourceObjs, err := ctx.KubernetesDynamicClient().FetchResources(ctx, append(check.StaticResources, check.Resources...)...)
+		resourceObjs, err := ctx.KubernetesClient().FetchResources(ctx, append(check.StaticResources, check.Resources...)...)
 		if err != nil {
 			if apiErrors.IsNotFound(err) {
 				return retry.RetryableError(err)
@@ -319,12 +321,12 @@ func DeleteResources(ctx context.Context, check v1.KubernetesResourceCheck, dele
 			continue // client already cached
 		}
 
-		namespace := utils.Coalesce(resource.GetNamespace(), ctx.Namespace)
-		rc, _, _, err := ctx.Kommons().GetDynamicClientFor(namespace, &resource)
+		rc, err := ctx.KubernetesClient().GetClientByGroupVersionKind(resource.GroupVersionKind().Group, resource.GroupVersionKind().Version, resource.GetKind())
 		if err != nil {
 			return fmt.Errorf("failed to get rest client for (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 		}
-		clients.Store(gvk, rc)
+
+		clients.Store(gvk, rc.Namespace(resource.GetNamespace()))
 	}
 
 	eg, _ := errgroup.WithContext(ctx)
@@ -333,7 +335,7 @@ func DeleteResources(ctx context.Context, check v1.KubernetesResourceCheck, dele
 
 		eg.Go(func() error {
 			cachedClient, _ := clients.Load(resource.GetObjectKind().GroupVersionKind())
-			rc := cachedClient.(dynamic.ResourceInterface)
+			rc := cachedClient.(dynamic.NamespaceableResourceInterface)
 
 			deleteOpt := metav1.DeleteOptions{
 				GracePeriodSeconds: lo.ToPtr(int64(0)),

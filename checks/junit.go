@@ -3,6 +3,7 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -122,30 +123,40 @@ func deletePod(ctx *context.Context, pod *corev1.Pod) {
 	if ctx.Canary.Annotations["skipDelete"] == "true" { // nolint: goconst
 		return
 	}
-	if err := ctx.Kommons().DeleteByKind(podKind, pod.Namespace, pod.Name); err != nil {
+
+	if _, err := ctx.KubernetesClient().DeleteByGVK(ctx, pod.Namespace, pod.Name, pod.GroupVersionKind()); err != nil {
 		ctx.Warnf("failed to delete pod %s/%s: %v", pod.Namespace, pod.Name, err)
 	}
 }
 
 func getLogs(ctx *context.Context, pod corev1.Pod) string {
-	message, _ := ctx.Kommons().GetPodLogs(pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
+	reader, err := ctx.KubernetesClient().GetPodLogs(ctx, pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
+	if err != nil {
+		ctx.Errorf("failed to get pod logs %s/%s: %v", pod.Namespace, pod.Name, err)
+		return ""
+	}
+	defer reader.Close()
+
+	message, err := io.ReadAll(reader)
+	if err != nil {
+		ctx.Errorf("failed to read pod logs %s/%s: %v", pod.Namespace, pod.Name, err)
+		return ""
+	}
+
 	if !ctx.IsTrace() && !ctx.IsDebug() && len(message) > 3000 {
 		message = message[len(message)-3000:]
 	}
-	return message
+	return string(message)
 }
 
 func podExecf(ctx *context.Context, pod corev1.Pod, results pkg.Results, cmd string, args ...interface{}) (string, bool) {
-	if !ctx.IsTrace() {
-		ctx.Kommons().Logger.SetLogLevel(0)
-	}
-
 	_cmd := fmt.Sprintf(cmd, args...)
-	stdout, stderr, err := ctx.Kommons().ExecutePodf(pod.Namespace, pod.Name, containerName, "bash", "-c", _cmd)
+	stdout, stderr, err := ctx.KubernetesClient().ExecutePodf(ctx, pod.Namespace, pod.Name, containerName, "bash", "-c", _cmd)
 	if stderr != "" || err != nil {
 		podFail(ctx, pod, results.Failf("error running %s: %v %v %v", _cmd, stdout, stderr, err))
 		return "", false
 	}
+
 	return strings.TrimSpace(stdout), true
 }
 
@@ -189,7 +200,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	var results pkg.Results
 	results = append(results, result)
 
-	if ctx.Kommons() == nil {
+	if ctx.KubernetesClient() == nil {
 		return results.Failf("Kubernetes is not initialized")
 	}
 
@@ -216,13 +227,13 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	ctx.Tracef("[%s/%s] waiting for tests to complete", ctx.Namespace, ctx.Canary.Name)
 	if ctx.IsTrace() {
 		go func() {
-			if err := ctx.Kommons().StreamLogsV2(ctx.Namespace, pod.Name, timeout, pod.Spec.InitContainers[0].Name); err != nil {
+			if err := ctx.KubernetesClient().StreamLogsV2(ctx, ctx.Namespace, pod.Name, timeout, pod.Spec.InitContainers[0].Name); err != nil {
 				ctx.Error(err, "error streaming")
 			}
 		}()
 	}
 
-	if err := ctx.Kommons().WaitForPod(ctx.Namespace, pod.Name, timeout, corev1.PodRunning, corev1.PodSucceeded, corev1.PodFailed); err != nil {
+	if err := ctx.KubernetesClient().WaitForPod(ctx, ctx.Namespace, pod.Name, timeout, corev1.PodRunning, corev1.PodSucceeded, corev1.PodFailed); err != nil {
 		result.ErrorMessage(err)
 	}
 
