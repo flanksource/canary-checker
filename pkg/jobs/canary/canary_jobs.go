@@ -228,7 +228,7 @@ var CleanupCRDDeleteCanaries = &dutyjob.Job{
 			return nil
 		}
 
-		canaryClient, err := ctx.KubernetesDynamicClient().
+		canaryClient, err := ctx.KubernetesClient().
 			GetClientByGroupVersionKind(v1.GroupVersion.Group, v1.GroupVersion.Version, "Canary")
 		if err != nil {
 			return fmt.Errorf("failed to get kubernetes client for canaries: %w", err)

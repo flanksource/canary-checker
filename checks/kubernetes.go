@@ -49,7 +49,7 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 		return results.Failf("Kubernetes is not initialized")
 	}
 
-	client, err := ctx.KubernetesDynamicClient().GetClientByKind(check.Kind)
+	client, err := ctx.KubernetesClient().GetClientByKind(check.Kind)
 	if err != nil {
 		return results.Failf("Failed to get client for kind %s: %v", check.Kind, err)
 	}
