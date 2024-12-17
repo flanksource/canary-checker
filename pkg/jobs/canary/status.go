@@ -11,7 +11,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/query"
 	dutyTypes "github.com/flanksource/duty/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -59,10 +58,10 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 		}
 
 		// Transition
-		q := query.CheckQueryParams{Check: checkID, StatusCount: 1}
-		if canary.Status.LastTransitionedTime != nil {
-			q.Start = canary.Status.LastTransitionedTime.Format(time.RFC3339)
-		}
+		// q := query.CheckQueryParams{Check: checkID, StatusCount: 1}
+		// if canary.Status.LastTransitionedTime != nil {
+		// 	q.Start = canary.Status.LastTransitionedTime.Format(time.RFC3339)
+		// }
 
 		latestCheckStatus, err := db.LatestCheckStatus(ctx, checkID)
 		if err != nil || latestCheckStatus == nil {
