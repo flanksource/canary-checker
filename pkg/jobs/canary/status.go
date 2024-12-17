@@ -29,9 +29,9 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 
 	var checkStatus = make(map[string]*v1.CheckStatus)
 	var duration int64
-	var messages, errors []string
+	var messages, errorMsgs []string
 	var failEvents []string
-	var msg, errorMsg string
+	var msg string
 	var status v1.CanaryStatusCondition
 	var lastTransitionedTime *metav1.Time
 	var highestLatency float64
@@ -87,10 +87,9 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 		} else if len(messages) > 1 {
 			msg = fmt.Sprintf("%s, (%d more)", messages[0], len(messages)-1)
 		}
-		if len(errors) == 1 {
-			errorMsg = errors[0]
-		} else if len(errors) > 1 {
-			errorMsg = fmt.Sprintf("%s, (%d more)", errors[0], len(errors)-1)
+
+		if result.Error != "" {
+			errorMsgs = append(errorMsgs, result.Error)
 		}
 
 		if result.Pass {
@@ -105,13 +104,20 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 		}
 	}
 
+	var errMsg string
+	if len(errorMsgs) == 1 {
+		errMsg = errorMsgs[0]
+	} else if len(errorMsgs) > 1 {
+		errMsg = fmt.Sprintf("%s, (%d more)", errorMsgs[0], len(errorMsgs)-1)
+	}
+
 	payload := CanaryStatusPayload{
 		Status:               status,
 		CheckStatus:          checkStatus,
 		FailEvents:           failEvents,
 		LastTransitionedTime: lastTransitionedTime,
 		Message:              msg,
-		ErrorMessage:         errorMsg,
+		ErrorMessage:         errMsg,
 		Uptime:               uptimeAgg.String(),
 		Latency:              utils.Age(time.Duration(highestLatency) * time.Millisecond),
 		NamespacedName:       canary.GetNamespacedName(),
