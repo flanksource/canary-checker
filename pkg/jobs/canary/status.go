@@ -31,7 +31,6 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 	var duration int64
 	var messages, errorMsgs []string
 	var failEvents []string
-	var msg string
 	var status v1.CanaryStatusCondition
 	var lastTransitionedTime *metav1.Time
 	var highestLatency float64
@@ -81,11 +80,8 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 			lastTransitionedTime = &metav1.Time{Time: transitionTime}
 		}
 
-		// Update status message
-		if len(messages) == 1 {
-			msg = messages[0]
-		} else if len(messages) > 1 {
-			msg = fmt.Sprintf("%s, (%d more)", messages[0], len(messages)-1)
+		if result.Message != "" {
+			messages = append(messages, result.Message)
 		}
 
 		if result.Error != "" {
@@ -109,6 +105,13 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 		errMsg = errorMsgs[0]
 	} else if len(errorMsgs) > 1 {
 		errMsg = fmt.Sprintf("%s, (%d more)", errorMsgs[0], len(errorMsgs)-1)
+	}
+
+	var msg string
+	if len(messages) == 1 {
+		msg = messages[0]
+	} else if len(messages) > 1 {
+		msg = fmt.Sprintf("%s, (%d more)", messages[0], len(messages)-1)
 	}
 
 	payload := CanaryStatusPayload{
