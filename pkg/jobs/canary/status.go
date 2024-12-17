@@ -32,7 +32,7 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 	var messages, errors []string
 	var failEvents []string
 	var msg, errorMsg string
-	var pass = true
+	var status v1.CanaryStatusCondition
 	var lastTransitionedTime *metav1.Time
 	var highestLatency float64
 	var uptimeAgg dutyTypes.Uptime
@@ -93,14 +93,20 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 			errorMsg = fmt.Sprintf("%s, (%d more)", errors[0], len(errors)-1)
 		}
 
-		if !result.Pass {
+		if result.Pass {
+			status = v1.Passed
+		} else {
 			failEvents = append(failEvents, fmt.Sprintf("%s-%s: %s", result.Check.GetType(), result.Check.GetEndpoint(), result.Message))
-			pass = false
+			status = v1.Failed
+		}
+
+		if result.Invalid {
+			status = v1.Invalid
 		}
 	}
 
 	payload := CanaryStatusPayload{
-		Pass:                 pass,
+		Status:               status,
 		CheckStatus:          checkStatus,
 		FailEvents:           failEvents,
 		LastTransitionedTime: lastTransitionedTime,
@@ -115,7 +121,7 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 }
 
 type CanaryStatusPayload struct {
-	Pass                 bool
+	Status               v1.CanaryStatusCondition
 	CheckStatus          map[string]*v1.CheckStatus
 	FailEvents           []string
 	LastTransitionedTime *metav1.Time
