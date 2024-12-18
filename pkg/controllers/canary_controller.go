@@ -254,11 +254,7 @@ func (r *CanaryReconciler) Report() {
 
 		canary.Status.LastCheck = &metav1.Time{Time: time.Now()}
 		canary.Status.ChecksStatus = payload.CheckStatus
-		if payload.Pass {
-			canary.Status.Status = &v1.Passed
-		} else {
-			canary.Status.Status = &v1.Failed
-		}
+		canary.Status.Status = &payload.Status
 
 		for _, eventMsg := range payload.FailEvents {
 			r.Events.Event(&canary, corev1.EventTypeWarning, "Failed", eventMsg)

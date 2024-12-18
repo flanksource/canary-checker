@@ -11,7 +11,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/metrics"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/query"
 	dutyTypes "github.com/flanksource/duty/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -29,10 +28,9 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 
 	var checkStatus = make(map[string]*v1.CheckStatus)
 	var duration int64
-	var messages, errors []string
+	var messages, errorMsgs []string
 	var failEvents []string
-	var msg, errorMsg string
-	var pass = true
+	var status v1.CanaryStatusCondition
 	var lastTransitionedTime *metav1.Time
 	var highestLatency float64
 	var uptimeAgg dutyTypes.Uptime
@@ -60,10 +58,10 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 		}
 
 		// Transition
-		q := query.CheckQueryParams{Check: checkID, StatusCount: 1}
-		if canary.Status.LastTransitionedTime != nil {
-			q.Start = canary.Status.LastTransitionedTime.Format(time.RFC3339)
-		}
+		// q := query.CheckQueryParams{Check: checkID, StatusCount: 1}
+		// if canary.Status.LastTransitionedTime != nil {
+		// 	q.Start = canary.Status.LastTransitionedTime.Format(time.RFC3339)
+		// }
 
 		latestCheckStatus, err := db.LatestCheckStatus(ctx, checkID)
 		if err != nil || latestCheckStatus == nil {
@@ -81,31 +79,47 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 			lastTransitionedTime = &metav1.Time{Time: transitionTime}
 		}
 
-		// Update status message
-		if len(messages) == 1 {
-			msg = messages[0]
-		} else if len(messages) > 1 {
-			msg = fmt.Sprintf("%s, (%d more)", messages[0], len(messages)-1)
-		}
-		if len(errors) == 1 {
-			errorMsg = errors[0]
-		} else if len(errors) > 1 {
-			errorMsg = fmt.Sprintf("%s, (%d more)", errors[0], len(errors)-1)
+		if result.Message != "" {
+			messages = append(messages, result.Message)
 		}
 
-		if !result.Pass {
+		if result.Error != "" {
+			errorMsgs = append(errorMsgs, result.Error)
+		}
+
+		if result.Pass {
+			status = v1.Passed
+		} else {
 			failEvents = append(failEvents, fmt.Sprintf("%s-%s: %s", result.Check.GetType(), result.Check.GetEndpoint(), result.Message))
-			pass = false
+			status = v1.Failed
+		}
+
+		if result.Invalid {
+			status = v1.Invalid
 		}
 	}
 
+	var errMsg string
+	if len(errorMsgs) == 1 {
+		errMsg = errorMsgs[0]
+	} else if len(errorMsgs) > 1 {
+		errMsg = fmt.Sprintf("%s, (%d more)", errorMsgs[0], len(errorMsgs)-1)
+	}
+
+	var msg string
+	if len(messages) == 1 {
+		msg = messages[0]
+	} else if len(messages) > 1 {
+		msg = fmt.Sprintf("%s, (%d more)", messages[0], len(messages)-1)
+	}
+
 	payload := CanaryStatusPayload{
-		Pass:                 pass,
+		Status:               status,
 		CheckStatus:          checkStatus,
 		FailEvents:           failEvents,
 		LastTransitionedTime: lastTransitionedTime,
 		Message:              msg,
-		ErrorMessage:         errorMsg,
+		ErrorMessage:         errMsg,
 		Uptime:               uptimeAgg.String(),
 		Latency:              utils.Age(time.Duration(highestLatency) * time.Millisecond),
 		NamespacedName:       canary.GetNamespacedName(),
@@ -115,7 +129,7 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 }
 
 type CanaryStatusPayload struct {
-	Pass                 bool
+	Status               v1.CanaryStatusCondition
 	CheckStatus          map[string]*v1.CheckStatus
 	FailEvents           []string
 	LastTransitionedTime *metav1.Time
