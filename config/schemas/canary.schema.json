@@ -1438,7 +1438,7 @@
           "type": "array"
         },
         "checkout": {
-          "$ref": "#/$defs/GitCheckout"
+          "$ref": "#/$defs/GitConnection"
         },
         "artifacts": {
           "items": {
@@ -1647,7 +1647,7 @@
       "additionalProperties": false,
       "type": "object"
     },
-    "GitCheckout": {
+    "GitConnection": {
       "properties": {
         "url": {
           "type": "string"
@@ -1663,6 +1663,12 @@
         },
         "certificate": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "type": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
         },
         "destination": {
           "type": "string"
