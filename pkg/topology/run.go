@@ -16,6 +16,7 @@ import (
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
+	"github.com/flanksource/duty/shell"
 	"github.com/labstack/echo/v4"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
@@ -234,7 +235,7 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 			switch v := result.Detail.(type) {
 			case []any:
 				results = append(results, result.Detail.([]interface{})...)
-			case checks.ExecDetails:
+			case shell.ExecDetails:
 				results = append(results, v.Stdout)
 			case []unstructured.Unstructured:
 				for _, item := range v {

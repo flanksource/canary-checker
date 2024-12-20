@@ -26,6 +26,7 @@ import (
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/shell"
 	"github.com/flanksource/duty/types"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -1635,12 +1636,12 @@ func (in *ExecCheck) DeepCopyInto(out *ExecCheck) {
 	}
 	if in.Checkout != nil {
 		in, out := &in.Checkout, &out.Checkout
-		*out = new(GitCheckout)
+		*out = new(connection.GitConnection)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Artifacts != nil {
 		in, out := &in.Artifacts, &out.Artifacts
-		*out = make([]Artifact, len(*in))
+		*out = make([]shell.Artifact, len(*in))
 		copy(*out, *in)
 	}
 }
