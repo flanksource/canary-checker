@@ -174,6 +174,25 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 		Expect(len(demoCluster.Components[0].Components)).To(Equal(1))
 		Expect(demoCluster.Components[0].Components[0].Name).To(Equal(lo.FromPtr(dummy.KubernetesNodeAKSPool1.Name)))
 	})
+
+	ginkgo.It("should correctly merge multiple property lookup", func() {
+		t, err := yamlFileToTopology("../../fixtures/topology/component-with-property-list.yml")
+		if err != nil {
+			ginkgo.Fail("Error converting yaml to v1.Topology:" + err.Error())
+		}
+
+		rootComponent, history, err := Run(DefaultContext.WithTrace(), *t)
+		Expect(err).To(BeNil())
+
+		Expect(history.Errors).To(HaveLen(0))
+
+		Expect(len(rootComponent[0].Components)).To(Equal(1))
+
+		componentA := rootComponent[0].Components[0]
+
+		Expect(string(componentA.Properties.AsJSON())).To(MatchJSON(`[{"name":"error_percentage","value":10,"min":0,"max":100}]`))
+	})
+
 })
 
 func yamlFileToTopology(file string) (*pkg.Topology, error) {

@@ -318,6 +318,46 @@ func lookupProperty(ctx *ComponentContext, property *v1.Property) ([]byte, error
 			return nil, err
 		}
 
+		// Multiple results signify that the lookup has returned
+		// more than one property and they are flattened
+		if len(results) > 1 {
+			var props types.Properties
+			for _, r := range results {
+				var dataStr string
+				var ok bool
+				if dataStr, ok = r.(string); !ok {
+					return nil, fmt.Errorf("unknown property type %T", results)
+				}
+				dataStr = strings.TrimSpace(dataStr)
+				if strings.HasPrefix(dataStr, "[") && strings.HasSuffix(dataStr, "]") {
+					if isPropertyList([]byte(dataStr)) {
+						var prop types.Properties
+						if err := json.Unmarshal([]byte(dataStr), &prop); err != nil {
+							return nil, fmt.Errorf("error marshaling property: %w", err)
+						}
+						if prop != nil {
+							props = append(props, prop...)
+						}
+					}
+				} else {
+					var msa map[string]any
+					if err := json.Unmarshal([]byte(dataStr), &msa); err != nil {
+						return nil, fmt.Errorf("error unmarshaling: %w", err)
+					}
+					if isProperty(msa) {
+						var prop *types.Property
+						if err := json.Unmarshal([]byte(dataStr), &prop); err != nil {
+							return nil, fmt.Errorf("error marshaling property: %w", err)
+						}
+						if prop != nil {
+							props = append(props, prop)
+						}
+					}
+				}
+			}
+			return json.Marshal(props)
+		}
+
 		var dataStr string
 		var ok bool
 		if dataStr, ok = results[0].(string); !ok {
@@ -366,8 +406,14 @@ func mergeComponentProperties(components pkg.Components, propertiesRaw []byte) e
 		if err := json.Unmarshal(propertiesRaw, &properties); err != nil {
 			return err
 		}
-		for _, comp := range components {
-			comp.Properties = append(comp.Properties, properties...)
+		for _, p := range properties {
+			for _, comp := range components {
+				if cProp := comp.Properties.Find(p.Name); cProp == nil {
+					comp.Properties = append(comp.Properties, p)
+				} else {
+					cProp.Merge(p)
+				}
+			}
 		}
 	}
 	return nil
