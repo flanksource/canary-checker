@@ -190,7 +190,7 @@ var _ = ginkgo.Describe("Topology run", ginkgo.Ordered, func() {
 
 		componentA := rootComponent[0].Components[0]
 
-		Expect(string(componentA.Properties.AsJSON())).To(MatchJSON(`[{"name":"error_percentage","value":10,"min":0,"max":100}`))
+		Expect(string(componentA.Properties.AsJSON())).To(MatchJSON(`[{"name":"error_percentage","value":10,"min":0,"max":100}]`))
 	})
 
 })
