@@ -1,6 +1,8 @@
 package topology
 
-import "strings"
+import (
+	"strings"
+)
 
 func isComponent(s map[string]interface{}) bool {
 	_, name := s["name"]
