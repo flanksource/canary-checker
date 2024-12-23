@@ -1681,6 +1681,12 @@
     },
     "ExecConnections": {
       "properties": {
+        "fromConfigItem": {
+          "type": "string"
+        },
+        "kubernetes": {
+          "$ref": "#/$defs/KubernetesConnection"
+        },
         "aws": {
           "$ref": "#/$defs/AWSConnection"
         },
@@ -2520,6 +2526,18 @@
         "name",
         "kind"
       ]
+    },
+    "KubernetesConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "kubeconfig": {
+          "$ref": "#/$defs/EnvVar"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "KubernetesResourceCheck": {
       "properties": {
