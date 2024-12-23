@@ -5496,7 +5496,7 @@ spec:
                             description: Skip TLS verify when connecting to aws
                             type: boolean
                           usePathStyle:
-                            description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                            description: "Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY"
                             type: boolean
                         type: object
                       description:
@@ -6981,7 +6981,7 @@ spec:
                             type: string
                         type: object
                       endpoint:
-                        description: 'Deprecated: Use url instead'
+                        description: "Deprecated: Use url instead"
                         type: string
                       env:
                         description: EnvVars are the environment variables that are accessible to templated body
@@ -11390,7 +11390,7 @@ spec:
                             type: string
                         type: object
                       host:
-                        description: 'Deprecated: use `url` instead'
+                        description: "Deprecated: use `url` instead"
                         type: string
                       icon:
                         description: Icon for overwriting default icon on the dashboard
@@ -11949,7 +11949,7 @@ spec:
                   items:
                     properties:
                       addr:
-                        description: 'Deprecated: Use url instead'
+                        description: "Deprecated: Use url instead"
                         type: string
                       connection:
                         description: Connection name e.g. connection://http/google
@@ -12559,7 +12559,7 @@ spec:
                             type: array
                         type: object
                       repository:
-                        description: 'Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name'
+                        description: "Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name"
                         type: string
                       secretKey:
                         description: SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss
@@ -12966,7 +12966,7 @@ spec:
                         description: Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is
                         type: string
                       usePathStyle:
-                        description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
+                        description: "Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY"
                         type: boolean
                     required:
                       - name
