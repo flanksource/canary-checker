@@ -215,7 +215,7 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 			return nil
 		})
 		if retryErr != nil {
-			return results.Failf(retryErr.Error())
+			return results.ErrorMessage(retryErr)
 		}
 	}
 
@@ -239,6 +239,7 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.Ku
 		waitInterval = wt
 	}
 	var resourceObjs []unstructured.Unstructured
+	var err error
 	var attempts int
 	backoff := retry.WithMaxDuration(waitTimeout, retry.NewConstant(waitInterval))
 	retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
@@ -247,7 +248,7 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.Ku
 
 		ctx.Tracef("waiting for %d resources, attempt=%d, timeout=%s", check.TotalResources(), attempts, waitTimeout)
 
-		resourceObjs, err := ctx.KubernetesClient().FetchResources(ctx, append(check.StaticResources, check.Resources...)...)
+		resourceObjs, err = ctx.KubernetesClient().FetchResources(ctx, append(check.StaticResources, check.Resources...)...)
 		if err != nil {
 			if apiErrors.IsNotFound(err) {
 				return retry.RetryableError(err)
