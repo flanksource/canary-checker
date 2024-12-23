@@ -18,7 +18,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.13.1
 	github.com/flanksource/artifacts v1.0.15
 	github.com/flanksource/commons v1.31.24
-	github.com/flanksource/duty v1.0.774
+	github.com/flanksource/duty v1.0.775
 	github.com/flanksource/gomplate/v3 v3.24.48
 	github.com/flanksource/is-healthy v1.0.49
 	github.com/flanksource/kommons v0.31.6
