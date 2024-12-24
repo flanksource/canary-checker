@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=../values.schema.json
+
+canaryNamespace: default
+serviceAccount:
+  rbac:
+    clusterRole: false

@@ -42,6 +42,10 @@ func resourceLabelKey(key string) string {
 	return fmt.Sprintf("canaries.flanksource.com/%s", key)
 }
 
+func getName(o unstructured.Unstructured) string {
+	return fmt.Sprintf("%s/%s/%s", o.GetNamespace(), o.GetKind(), o.GetName())
+}
+
 type KubernetesResourceChecker struct{}
 
 func (c *KubernetesResourceChecker) Type() string {
@@ -122,13 +126,22 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 		}
 	}
 
+	resourceMap := map[string]map[string]any{}
+	var healthMap map[string]health.HealthStatus
 	if !check.WaitFor.Disable {
-		if err := c.evalWaitFor(ctx, check); err != nil {
+		var err error
+		var resourceObjs []unstructured.Unstructured
+		if healthMap, resourceObjs, err = c.evalWaitFor(ctx, check); err != nil {
 			return results.Failf("error in evaluating wait for: %v", err)
+		}
+
+		for _, r := range resourceObjs {
+			r.SetManagedFields(nil)
+			resourceMap[getName(r)] = r.Object
 		}
 	}
 
-	ctx.Logger.V(4).Infof("found %d checks to run", len(check.Checks))
+	ctx.Tracef("found %d checks to run", len(check.Checks))
 
 	displayPerCheck := map[string]string{}
 	for _, c := range check.Checks {
@@ -177,7 +190,7 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 		}
 
 		retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
-			ctx.Logger.V(4).Infof("running check: %s", virtualCanary.Name)
+			ctx.Tracef("running check: %s", virtualCanary.Name)
 
 			ctx = _ctx.(context.Context)
 			checkCtx := context.New(ctx.Context, virtualCanary)
@@ -202,17 +215,20 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 			return nil
 		})
 		if retryErr != nil {
-			return results.Failf(retryErr.Error())
+			return results.ErrorMessage(retryErr)
 		}
 	}
 
 	result.AddData(map[string]any{
-		"display": displayPerCheck,
+		"health":    healthMap,
+		"resources": resourceMap,
+		"display":   displayPerCheck,
 	})
 	return results
 }
 
-func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.KubernetesResourceCheck) error {
+func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.KubernetesResourceCheck) (map[string]health.HealthStatus, []unstructured.Unstructured, error) {
+	healthMap := make(map[string]health.HealthStatus)
 	waitTimeout := resourceWaitTimeoutDefault
 	if wt, _ := check.WaitFor.GetTimeout(); wt > 0 {
 		waitTimeout = wt
@@ -222,16 +238,17 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.Ku
 	if wt, _ := check.WaitFor.GetInterval(); wt > 0 {
 		waitInterval = wt
 	}
-
+	var resourceObjs []unstructured.Unstructured
+	var err error
 	var attempts int
 	backoff := retry.WithMaxDuration(waitTimeout, retry.NewConstant(waitInterval))
 	retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
 		ctx = _ctx.(context.Context)
 		attempts++
 
-		ctx.Logger.V(4).Infof("waiting for %d resources to be in the desired state. (attempts: %d)", check.TotalResources(), attempts)
+		ctx.Tracef("waiting for %d resources, attempt=%d, timeout=%s", check.TotalResources(), attempts, waitTimeout)
 
-		resourceObjs, err := ctx.KubernetesClient().FetchResources(ctx, append(check.StaticResources, check.Resources...)...)
+		resourceObjs, err = ctx.KubernetesClient().FetchResources(ctx, append(check.StaticResources, check.Resources...)...)
 		if err != nil {
 			if apiErrors.IsNotFound(err) {
 				return retry.RetryableError(err)
@@ -257,21 +274,29 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.Ku
 		}
 		if response, err := gomplate.RunTemplate(templateVar, gomplate.Template{Expression: waitForExpr}); err != nil {
 			return fmt.Errorf("wait for expression evaluation: %w", err)
-		} else if parsed, err := strconv.ParseBool(response); err != nil {
+		} else if passed, err := strconv.ParseBool(response); err != nil {
 			return fmt.Errorf("wait for expression (%q) didn't evaluate to a boolean", check.WaitFor.Expr)
-		} else if !parsed {
+		} else {
+			notReadyResources := []string{}
 			for _, r := range resourceObjs {
 				rh, _ := health.GetResourceHealth(&r, lua.ResourceHealthOverrides{})
-				ctx.Logger.V(4).Infof("health for (namespace:%s gvk:%v) = %+v", r.GetNamespace(), r.GetObjectKind().GroupVersionKind(), rh)
+				name := getName(r)
+				healthMap[name] = *rh
+				ctx.Tracef("health for %s: %s ready=%v", name, rh, rh.Ready)
+				if rh.Health.IsWorseThan(health.HealthWarning) {
+					notReadyResources = append(notReadyResources, fmt.Sprintf("%s: %s", name, rh))
+				} else if !rh.Ready {
+					notReadyResources = append(notReadyResources, fmt.Sprintf("%s: not ready", name))
+				}
 			}
-
-			return retry.RetryableError(fmt.Errorf("not all resources are in their desired state"))
+			if passed {
+				return nil
+			}
+			return retry.RetryableError(fmt.Errorf("%s", strings.Join(notReadyResources, ", ")))
 		}
-
-		return nil
 	})
 
-	return retryErr
+	return healthMap, resourceObjs, retryErr
 }
 
 func (c *KubernetesResourceChecker) validate(ctx context.Context, check v1.KubernetesResourceCheck) error {
@@ -304,7 +329,7 @@ func (c *KubernetesResourceChecker) validate(ctx context.Context, check v1.Kuber
 }
 
 func DeleteResources(ctx context.Context, check v1.KubernetesResourceCheck, deleteStatic bool) error {
-	ctx.Logger.V(4).Infof("deleting resources")
+	ctx.Tracef("deleting resources")
 
 	resources := check.Resources
 	if deleteStatic {
@@ -403,7 +428,7 @@ func DeleteResources(ctx context.Context, check v1.KubernetesResourceCheck, dele
 		select {
 		case <-ticker.C:
 			if len(resources) == 0 {
-				ctx.Logger.V(4).Infof("all the resources have been deleted")
+				ctx.Tracef("all the resources have been deleted")
 				return nil
 			}
 
@@ -424,10 +449,10 @@ func DeleteResources(ctx context.Context, check v1.KubernetesResourceCheck, dele
 				if listResponse, err := rc.List(ctx, metav1.ListOptions{LabelSelector: labelSelector}); err != nil {
 					return fmt.Errorf("error getting resource (%s/%s/%s) while polling: %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 				} else if listResponse == nil || len(listResponse.Items) == 0 {
-					ctx.Logger.V(4).Infof("all (%v) have been deleted", gvk)
+					ctx.Tracef("all (%v) have been deleted", gvk)
 					deleted[gvk] = struct{}{}
 				} else {
-					ctx.Logger.V(4).Infof("all (%v) have not been deleted", gvk)
+					ctx.Tracef("all (%v) have not been deleted", gvk)
 				}
 			}
 
