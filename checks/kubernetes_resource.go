@@ -109,13 +109,13 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 
 	defer func() {
 		if err := DeleteResources(ctx, check, false); err != nil {
-			results.Failf(err.Error())
+			results.Failf("failed to delete resources: %s", err)
 		}
 	}()
 
 	if check.ClearResources {
 		if err := DeleteResources(ctx, check, false); err != nil {
-			results.Failf(err.Error())
+			results.Failf("failed to delete resources on startup: %s", err)
 		}
 	}
 
