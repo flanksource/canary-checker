@@ -14,5 +14,6 @@ resources:
   - kubernetes_resource_ingress_pass.yaml
   - kubernetes_resource_namespace_pass.yaml
   - kubernetes_resource_pod_exit_code_pass.yaml
+  - kubernetes_resource_postgresql_helmrelease_pass.yaml
   - kubernetes_resource_service_fail.yaml
   - kubernetes_resource_service_pass.yaml

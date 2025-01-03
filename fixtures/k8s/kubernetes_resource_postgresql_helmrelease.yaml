@@ -1,0 +1,65 @@
+---
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: helmrelease-postgres
+  namespace: default
+spec:
+  schedule: "@every 1h"
+  kubernetesResource:
+    - name: helmrelease-postgres
+      namespace: default
+      description: Deploy postgresql via HelmRelease and ensure it's queryable
+      staticResources:
+        - apiVersion: source.toolkit.fluxcd.io/v1
+          kind: HelmRepository
+          metadata:
+            name: bitnami-postgres
+            namespace: flux-system
+          spec:
+            url: https://charts.bitnami.com/bitnami
+            interval: 1h
+      resources:
+        - apiVersion: helm.toolkit.fluxcd.io/v2
+          kind: HelmRelease
+          metadata:
+            name: postgresql
+            namespace: default
+          spec:
+            chart:
+              spec:
+                chart: postgresql
+                version: 12.5.6
+                sourceRef:
+                  kind: HelmRepository
+                  name: bitnami-postgres
+                  namespace: flux-system
+            values:
+              auth:
+                database: exampledb
+                password: qwerty123
+                username: admin
+                postgresPassword: qwerty123
+              primary:
+                persistence:
+                  enabled: false
+            install:
+              createNamespace: true
+            interval: 5m
+      waitFor:
+        timeout: 5m
+        expr: dyn(resources).all(r, k8s.isReady(r))
+        interval: 2s
+      checks:
+        - postgres:
+            - url: postgres://$(username):$(password)@postgresql.default.svc:5432/exampledb?sslmode=disable
+              name: postgres schemas check
+              query: SELECT 1
+              password:
+                value: qwerty123
+              username:
+                value: admin
+      checkRetries:
+        delay: 5s
+        timeout: 1m
+        interval: 5s
