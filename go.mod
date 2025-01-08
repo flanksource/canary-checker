@@ -18,8 +18,8 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.13.1
 	github.com/flanksource/artifacts v1.0.15
 	github.com/flanksource/commons v1.35.3
-	github.com/flanksource/duty v1.0.779
-	github.com/flanksource/gomplate/v3 v3.24.49
+	github.com/flanksource/duty v1.0.800
+	github.com/flanksource/gomplate/v3 v3.24.50
 	github.com/flanksource/is-healthy v1.0.57
 	github.com/flanksource/kommons v0.31.6
 	github.com/friendsofgo/errors v0.9.2
@@ -71,7 +71,7 @@ require (
 	google.golang.org/genproto v0.0.0-20240903143218-8af14fe29dc1
 	google.golang.org/grpc v1.66.2
 	gopkg.in/flanksource/yaml.v3 v3.2.3
-	gorm.io/gorm v1.25.11
+	gorm.io/gorm v1.25.12
 	k8s.io/api v0.31.1
 	k8s.io/apimachinery v0.31.1
 	k8s.io/client-go v0.31.1
@@ -142,7 +142,7 @@ require (
 	github.com/exaring/otelpgx v0.6.2 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/fergusstrange/embedded-postgres v1.25.0 // indirect
+	github.com/fergusstrange/embedded-postgres v1.29.0 // indirect
 	github.com/flanksource/kubectl-neat v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
@@ -204,9 +204,16 @@ require (
 	github.com/invopop/jsonschema v0.12.0 // indirect
 	github.com/itchyny/gojq v0.12.17 // indirect
 	github.com/itchyny/timefmt-go v0.1.6 // indirect
+	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
+	github.com/jackc/pgconn v1.14.0 // indirect
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438 // indirect
+	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgproto3/v2 v2.3.2 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20231201235250-de7065d80cb9 // indirect
+	github.com/jackc/pgtype v1.14.0 // indirect
+	github.com/jackc/pgx/v4 v4.18.1 // indirect
+	github.com/jackc/puddle v1.3.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jeremywohl/flatten v0.0.0-20180923035001-588fe0d4c603 // indirect
