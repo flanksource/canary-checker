@@ -1743,6 +1743,11 @@ spec:
                               type: string
                             fieldSelector:
                               type: string
+                            health:
+                              description: |-
+                                Health filters resources by the health.
+                                Multiple healths can be provided separated by comma.
+                              type: string
                             id:
                               type: string
                             includeDeleted:
@@ -13899,6 +13904,11 @@ spec:
                         type: string
                       fieldSelector:
                         type: string
+                      health:
+                        description: |-
+                          Health filters resources by the health.
+                          Multiple healths can be provided separated by comma.
+                        type: string
                       id:
                         type: string
                       includeDeleted:
@@ -14047,6 +14057,11 @@ spec:
                                 description: Deprecated. Use `fieldSelector (external_id=)`
                                 type: string
                               fieldSelector:
+                                type: string
+                              health:
+                                description: |-
+                                  Health filters resources by the health.
+                                  Multiple healths can be provided separated by comma.
                                 type: string
                               id:
                                 type: string
@@ -14200,6 +14215,11 @@ spec:
                         type: string
                       fieldSelector:
                         type: string
+                      health:
+                        description: |-
+                          Health filters resources by the health.
+                          Multiple healths can be provided separated by comma.
+                        type: string
                       id:
                         type: string
                       includeDeleted:
@@ -14344,6 +14364,11 @@ spec:
                                   type: string
                                 fieldSelector:
                                   type: string
+                                health:
+                                  description: |-
+                                    Health filters resources by the health.
+                                    Multiple healths can be provided separated by comma.
+                                  type: string
                                 id:
                                   type: string
                                 includeDeleted:
@@ -14410,6 +14435,11 @@ spec:
                               description: Deprecated. Use `fieldSelector (external_id=)`
                               type: string
                             fieldSelector:
+                              type: string
+                            health:
+                              description: |-
+                                Health filters resources by the health.
+                                Multiple healths can be provided separated by comma.
                               type: string
                             id:
                               type: string
@@ -14559,6 +14589,11 @@ spec:
                                       description: Deprecated. Use `fieldSelector (external_id=)`
                                       type: string
                                     fieldSelector:
+                                      type: string
+                                    health:
+                                      description: |-
+                                        Health filters resources by the health.
+                                        Multiple healths can be provided separated by comma.
                                       type: string
                                     id:
                                       type: string
@@ -14712,6 +14747,11 @@ spec:
                               type: string
                             fieldSelector:
                               type: string
+                            health:
+                              description: |-
+                                Health filters resources by the health.
+                                Multiple healths can be provided separated by comma.
+                              type: string
                             id:
                               type: string
                             includeDeleted:
@@ -14810,6 +14850,11 @@ spec:
                         type: string
                       fieldSelector:
                         type: string
+                      health:
+                        description: |-
+                          Health filters resources by the health.
+                          Multiple healths can be provided separated by comma.
+                        type: string
                       id:
                         type: string
                       includeDeleted:
@@ -14869,6 +14914,11 @@ spec:
                              'max-age=X' (cache for X duration)
                           type: string
                         fieldSelector:
+                          type: string
+                        health:
+                          description: |-
+                            Health filters resources by the health.
+                            Multiple healths can be provided separated by comma.
                           type: string
                         id:
                           type: string
@@ -14960,6 +15010,11 @@ spec:
                                 description: Deprecated. Use `fieldSelector (external_id=)`
                                 type: string
                               fieldSelector:
+                                type: string
+                              health:
+                                description: |-
+                                  Health filters resources by the health.
+                                  Multiple healths can be provided separated by comma.
                                 type: string
                               id:
                                 type: string
