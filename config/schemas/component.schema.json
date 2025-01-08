@@ -1142,6 +1142,9 @@
         "fieldSelector": {
           "type": "string"
         },
+        "health": {
+          "type": "string"
+        },
         "types": {
           "$ref": "#/$defs/Items"
         },
