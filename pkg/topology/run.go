@@ -530,11 +530,11 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 	if !t.Spec.GroupBy.IsEmpty() {
 		tags, err := db.GetAllValuesForConfigTag(job.Context, t.Spec.GroupBy)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to find distinct tags to group by (%#v): %w", t.Spec.GroupBy, err)
 		} else if len(tags) != 0 {
 			groupByTags = tags
 		} else {
-			job.Warnf("no values found for tag: %s", t.Spec.GroupBy.Tag)
+			job.Warnf("no values found for groupBy: %#v", t.Spec.GroupBy)
 		}
 	}
 
@@ -730,9 +730,9 @@ func (tj *TopologyJob) run(ctx *ComponentContext, job job.JobRuntime) (pkg.Compo
 	results = append(results, rootComponent)
 
 	if ctx.IsTrace() {
-		ctx.Tracef(results.Debug(ctx.Logger.IsLevelEnabled(5), ""))
+		ctx.Tracef("%s", results.Debug(ctx.Logger.IsLevelEnabled(5), ""))
 	} else if ctx.Logger.IsLevelEnabled(5) {
-		ctx.Infof(results.Debug(ctx.Logger.IsLevelEnabled(5), ""))
+		ctx.Infof("%s", results.Debug(ctx.Logger.IsLevelEnabled(5), ""))
 	}
 
 	for _, c := range results.Walk() {
