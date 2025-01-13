@@ -16,10 +16,8 @@ import (
 type ContainerdPullChecker struct{}
 
 func (c *ContainerdPullChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
-	result := pkg.Fail(extConfig, ctx.Canary).ErrorMessage(errors.New("containerd not supported on windows"))
 	var results pkg.Results
-	results = append(results, result)
-	return results
+	return results.Failf("containerd not supported on windows")
 }
 
 func (c *ContainerdPullChecker) Type() string {
