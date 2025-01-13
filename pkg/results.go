@@ -25,6 +25,21 @@ func Invalid(check external.Check, canary v1.Canary, reason string) Results {
 	}}
 }
 
+func SetupError(canary v1.Canary, err error) Results {
+	var results Results
+	for _, check := range canary.Spec.GetAllChecks() {
+		results = append(results, &CheckResult{
+			Start:   time.Now(),
+			Pass:    false,
+			Invalid: true,
+			Error:   err.Error(),
+			Check:   check,
+			Data:    make(map[string]interface{}),
+		})
+	}
+	return results
+}
+
 func Success(check external.Check, canary v1.Canary) *CheckResult {
 	result := New(check, canary)
 	result.Pass = true
