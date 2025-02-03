@@ -2,12 +2,14 @@ package metrics
 
 import (
 	"slices"
+	"sync"
 	"time"
 
 	"github.com/asecurityteam/rolling"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/runner"
+	"gonum.org/v1/gonum/stat"
 
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/types"
@@ -156,7 +158,9 @@ func GetMetrics(key string) (uptime types.Uptime, latency types.Latency) {
 
 	lat, ok := latencies.Get(key)
 	if ok {
-		latency = types.Latency{Rolling1H: lat.(*rolling.TimePolicy).Reduce(rolling.Percentile(95))}
+		lb := lat.(*LatencyBuffer)
+		p95, _ := lb.GetStats()
+		latency = types.Latency{Rolling1H: p95}
 	}
 	return
 }
@@ -194,7 +198,8 @@ func Record(
 	severity := canary.Spec.Severity
 	// We are recording aggreated metrics at the canary level, not the individual check level
 	key := canary.GetCheckID(result.Check.GetName())
-	var fail, pass, latency *rolling.TimePolicy
+	var fail, pass *rolling.TimePolicy
+	var latency *LatencyBuffer
 
 	_fail, ok := failed.Get(key)
 	if !ok {
@@ -214,10 +219,10 @@ func Record(
 
 	_latencyV, ok := latencies.Get(key)
 	if !ok {
-		latency = rolling.NewTimePolicy(rolling.NewWindow(3600), time.Second)
+		latency = NewLatencyBuffer(2*time.Minute, 1*time.Hour)
 		latencies.Set(key, latency)
 	} else {
-		latency = _latencyV.(*rolling.TimePolicy)
+		latency = _latencyV.(*LatencyBuffer)
 	}
 
 	var additionalLabels []string
@@ -238,7 +243,7 @@ func Record(
 
 	if result.Duration > 0 {
 		RequestLatency.WithLabelValues(checkMetricLabels...).Observe(float64(result.Duration))
-		latency.Append(float64(result.Duration))
+		latency.Add(float64(result.Duration))
 	}
 
 	gaugeLabels := append([]string{key, checkType, canaryName, canaryNamespace, name}, v1.AdditionalCheckMetricLabels...)
@@ -293,7 +298,8 @@ func Record(
 
 	_uptime = types.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
 	if latency != nil {
-		_latency = types.Latency{Rolling1H: latency.Reduce(rolling.Percentile(95))}
+		p95, _ := latency.GetStats()
+		_latency = types.Latency{Rolling1H: p95}
 	} else {
 		_latency = types.Latency{}
 	}
@@ -404,4 +410,69 @@ func UnregisterGauge(ctx context.Context, checkIDs []string) {
 		ctx.Debugf("Unregistering gauge for checkID %s", checkID)
 		Gauge.DeletePartialMatch(prometheus.Labels{"key": checkID})
 	}
+}
+
+type LatencyBuffer struct {
+	buffers      [][]float64
+	current      int
+	bufferSize   int
+	maxBuffers   int
+	interval     time.Duration
+	lastRotation time.Time
+	mu           sync.RWMutex
+}
+
+func NewLatencyBuffer(bufferInterval time.Duration, totalDuration time.Duration) *LatencyBuffer {
+	maxBuffers := int(totalDuration / bufferInterval)
+	return &LatencyBuffer{
+		buffers:      make([][]float64, maxBuffers),
+		current:      0,
+		bufferSize:   1000,
+		maxBuffers:   maxBuffers,
+		interval:     bufferInterval,
+		lastRotation: time.Now(),
+	}
+}
+
+func (lb *LatencyBuffer) Add(latency float64) {
+	lb.mu.Lock()
+	defer lb.mu.Unlock()
+
+	now := time.Now()
+	intervalsPassed := int(now.Sub(lb.lastRotation) / lb.interval)
+
+	if intervalsPassed > 0 {
+		// Rotate the buffer for each interval that has passed
+		for i := 0; i < intervalsPassed; i++ {
+			lb.current = (lb.current + 1) % lb.maxBuffers
+			lb.buffers[lb.current] = make([]float64, 0, lb.bufferSize)
+		}
+		lb.lastRotation = lb.lastRotation.Add(time.Duration(intervalsPassed) * lb.interval)
+	}
+
+	if lb.buffers[lb.current] == nil {
+		lb.buffers[lb.current] = make([]float64, 0, lb.bufferSize)
+	}
+	lb.buffers[lb.current] = append(lb.buffers[lb.current], latency)
+}
+
+func (lb *LatencyBuffer) GetStats() (p95, p99 float64) {
+	lb.mu.RLock()
+	defer lb.mu.RUnlock()
+
+	var allLatencies []float64
+	for _, buffer := range lb.buffers {
+		if buffer != nil {
+			allLatencies = append(allLatencies, buffer...)
+		}
+	}
+
+	if len(allLatencies) == 0 {
+		return 0, 0
+	}
+
+	slices.Sort(allLatencies)
+	p95 = stat.Quantile(0.95, stat.Empirical, allLatencies, nil)
+	p99 = stat.Quantile(0.99, stat.Empirical, allLatencies, nil)
+	return
 }
