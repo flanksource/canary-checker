@@ -174,7 +174,7 @@ func GetAllValuesForConfigTag(ctx context.Context, tagSelector v1.TopologyTagSel
 
 	if !tagSelector.Selector.IsEmpty() {
 		var err error
-		q, err = query.SetResourceSelectorClause(ctx, tagSelector.Selector, q, "config_items", models.AllowedColumnFieldsInConfigs)
+		q, err = query.SetResourceSelectorClause(ctx, tagSelector.Selector, q, "config_items")
 		if err != nil {
 			return nil, fmt.Errorf("error seting resource selector on topology group by: %w", err)
 		}
