@@ -1459,6 +1459,12 @@
         "fromConfigItem": {
           "type": "string"
         },
+        "eksPodIdentity": {
+          "type": "boolean"
+        },
+        "serviceAccount": {
+          "type": "boolean"
+        },
         "kubernetes": {
           "$ref": "#/$defs/KubernetesConnection"
         },

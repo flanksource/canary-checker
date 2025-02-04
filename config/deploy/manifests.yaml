@@ -4948,6 +4948,9 @@ spec:
                               tenantID:
                                 type: string
                             type: object
+                          eksPodIdentity:
+                            description: EKSPodIdentity when enabled will allow access to AWS_* env vars
+                            type: boolean
                           fromConfigItem:
                             type: string
                           gcp:
@@ -5048,6 +5051,9 @@ spec:
                                     type: object
                                 type: object
                             type: object
+                          serviceAccount:
+                            description: ServiceAccount when enabled will allow access to KUBERNETES env vars
+                            type: boolean
                         type: object
                       description:
                         description: Description for the check
