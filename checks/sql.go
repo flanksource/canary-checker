@@ -118,7 +118,7 @@ func querySQL(driver string, connection string, query string) (SQLDetails, error
 					return result, fmt.Errorf("failed to parse json column: %s", *v)
 				}
 			default:
-				row[columns[i]] = val
+				row[columns[i]] = fmt.Sprint(val)
 			}
 		}
 
