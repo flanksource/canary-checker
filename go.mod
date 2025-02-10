@@ -18,7 +18,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.13.1
 	github.com/flanksource/artifacts v1.0.15
 	github.com/flanksource/commons v1.36.1
-	github.com/flanksource/duty v1.0.838
+	github.com/flanksource/duty v1.0.839
 	github.com/flanksource/gomplate/v3 v3.24.55
 	github.com/flanksource/is-healthy v1.0.60
 	github.com/flanksource/kommons v0.31.6
@@ -151,7 +151,7 @@ require (
 	github.com/emirpasic/gods/v2 v2.0.0-alpha // indirect
 	github.com/evanphx/json-patch/v5 v5.9.0 // indirect
 	github.com/exaring/otelpgx v0.6.2 // indirect
-	github.com/fatih/color v1.16.0 // indirect
+	github.com/fatih/color v1.17.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fergusstrange/embedded-postgres v1.29.0 // indirect
 	github.com/flanksource/kubectl-neat v1.0.4 // indirect
@@ -282,7 +282,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/skeema/knownhosts v1.2.2 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
-	github.com/tidwall/gjson v1.14.4 // indirect
+	github.com/tidwall/gjson v1.17.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.0.4 // indirect
