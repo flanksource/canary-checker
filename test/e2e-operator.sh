@@ -32,7 +32,10 @@ echo "Waiting for server to accept connections"
 
 echo "::group::Deploying Base"
 ## applying CRD and a sample fixture for the operator
-kubectl apply -f config/deploy/crd.yaml
+kubectl apply -f config/deploy/Canary.yml
+kubectl apply -f config/deploy/Topology.yml
+kubectl apply -f config/deploy/Component.yml
+
 ## FIXME: kubectl wait for condition on CRD
 # kubectl wait --for condition=established --timeout=60s crd/canaries.canaries.flanksource.com
 sleep 10
@@ -65,6 +68,16 @@ done
 CANARY_COUNT=$(kubectl get canaries.canaries.flanksource.com -A --no-headers | wc -l)
 CANARY_COUNT=$(echo "$CANARY_COUNT" | xargs)
 STATUS_COUNT_POSTGRES=$(curl -s http://0.0.0.0:8080/api/summary | jq ".checks_summary | length")
+
+
+echo "::group::Dry Running Fixtures"
+
+for fixture in minimal datasources k8s git ldap opensearch prometheus external elasticsearch aws azure; do
+    for f in $(find ./fixtures/$fixture -name "*.yaml" ! -name "kustomization.yaml" ! -name "_*" ); do
+        kubectl apply -f $f --dry-run=server
+    done
+done
+echo "::endgroup::"
 
 
 echo "Canary count: ${CANARY_COUNT}"
