@@ -270,7 +270,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	responseStatus.WithLabelValues(strconv.Itoa(status), statusCodeToClass(status), check.URL).Inc()
 	age := response.GetSSLAge()
 	if age != nil {
-		sslExpiration.WithLabelValues(check.URL).Set(age.Hours() * 24)
+		sslExpiration.WithLabelValues(check.URL).Set(age.Hours() / 24)
 	}
 
 	data := map[string]interface{}{
