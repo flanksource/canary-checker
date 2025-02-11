@@ -293,7 +293,12 @@ func Record(
 
 	_uptime = types.Uptime{Passed: int(pass.Reduce(rolling.Sum)), Failed: int(fail.Reduce(rolling.Sum))}
 	if latency != nil {
-		_latency = types.Latency{Rolling1H: latency.Reduce(rolling.Percentile(95))}
+		percentile := latency.Reduce(rolling.Percentile(95))
+		if percentile == 0 {
+			// Sometimes p95 can be reported as 0 if sample set size is 1
+			percentile = latency.Reduce(rolling.Percentile(99))
+		}
+		_latency = types.Latency{Rolling1H: percentile}
 	} else {
 		_latency = types.Latency{}
 	}

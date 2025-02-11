@@ -6,7 +6,7 @@ metadata:
 spec:
   schedule: "@every 5m"
   mssql:
-    - url: "server=mssql.canaries.svc.cluster.local;user id=$(username);password=$(password);port=1433;database=master"
+    - url: "server=mssql.canaries.svc.cluster.local;user id=$(username);password=$(password);port=1433;database=master;TrustServerCertificate=True"
       name: mssql pass
       username:
         value: sa
