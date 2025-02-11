@@ -7166,6 +7166,8 @@ spec:
                       skipTLSVerify:
                         description: Skip TLS verify when connecting to aws
                         type: boolean
+                      storageClass:
+                        type: string
                       transformDeleteStrategy:
                         type: string
                       usePathStyle:
