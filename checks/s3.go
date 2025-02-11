@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/commons/utils"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/prometheus/client_golang/prometheus"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -93,9 +94,10 @@ func (c *S3Checker) Check(ctx *context.Context, check v1.S3Check) pkg.Results {
 	data := utils.RandomString(16)
 	updateTimer := NewTimer()
 	_, err = client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: &check.BucketName,
-		Key:    &check.ObjectPath,
-		Body:   bytes.NewReader([]byte(data)),
+		Bucket:       &check.BucketName,
+		Key:          &check.ObjectPath,
+		Body:         bytes.NewReader([]byte(data)),
+		StorageClass: types.StorageClass(check.StorageClass),
 	})
 	if err != nil {
 		return results.Failf("Failed to put object %s in bucket %s: %v", check.ObjectPath, check.BucketName, err)
