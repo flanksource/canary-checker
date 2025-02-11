@@ -4,7 +4,9 @@ namespace: canary-checker
 resources:
   - ./base
   - ./namespace.yaml
-  - ./deploy/crd.yaml
+  - ./deploy/Canary.yml
+  - ./deploy/Topology.yml
+  - ./deploy/Component.yml
 images:
   - name: controller
     newName: docker.io/flanksource/canary-checker

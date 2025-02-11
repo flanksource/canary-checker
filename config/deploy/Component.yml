@@ -1,0 +1,473 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: components.canaries.flanksource.com
+spec:
+  group: canaries.flanksource.com
+  names:
+    kind: Component
+    listKind: ComponentList
+    plural: components
+    singular: component
+  scope: Namespaced
+  versions:
+    - name: v1
+      schema:
+        openAPIV3Schema:
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: ComponentSpec defines the specification for a component.
+              properties:
+                checks:
+                  items:
+                    type: object
+                  type: array
+                components:
+                  description: Create new child components
+                  items:
+                    type: object
+                  type: array
+                  x-kubernetes-preserve-unknown-fields: true
+                configID:
+                  type: string
+                configs:
+                  description: Lookup and associate config items with this component
+                  items:
+                    description: |-
+                      ConfigQuery is used to look up and associate
+                      config items with a component.
+                    properties:
+                      agent:
+                        description: |-
+                          Agent can be the agent id or the name of the agent.
+                           Additionally, the special "self" value can be used to select resources without an agent.
+                        type: string
+                      cache:
+                        description: |-
+                          Cache directives
+                           'no-cache' (should not fetch from cache but can be cached)
+                           'no-store' (should not cache)
+                           'max-age=X' (cache for X duration)
+                        type: string
+                      class:
+                        description: Deprecated. Use `fieldSelector (config_class=)`
+                        type: string
+                      external_id:
+                        description: Deprecated. Use `fieldSelector (external_id=)`
+                        type: string
+                      fieldSelector:
+                        type: string
+                      health:
+                        description: |-
+                          Health filters resources by the health.
+                          Multiple healths can be provided separated by comma.
+                        type: string
+                      id:
+                        type: string
+                      includeDeleted:
+                        type: boolean
+                      labelSelector:
+                        type: string
+                      limit:
+                        type: integer
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                      scope:
+                        type: string
+                      search:
+                        description: Search query that applies to the resource name, tag & labels.
+                        type: string
+                      statuses:
+                        description: Statuses filter resources by the status
+                        items:
+                          type: string
+                        type: array
+                      tagSelector:
+                        type: string
+                      tags:
+                        additionalProperties:
+                          type: string
+                        description: Deprecated. Use `labelSelector`
+                        type: object
+                      type:
+                        description: Deprecated. Use `types`
+                        type: string
+                      types:
+                        description: Types filter resources by the type
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  type: array
+                externalID:
+                  type: string
+                forEach:
+                  description: |-
+                    Only applies when using lookup, when specified the components and properties
+                    specified under ForEach will be templated using the components returned by the lookup
+                    ${.properties} can be used to reference the properties of the component
+                    ${.component} can be used to reference the component itself
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                health:
+                  type: string
+                healthExpr:
+                  description: |-
+                    healthExpr allows defining a cel expression to evaluate the health of a component
+                    based on the summary.
+                  type: string
+                hidden:
+                  description: If set to true, do not display in UI
+                  type: boolean
+                icon:
+                  type: string
+                id:
+                  properties:
+                    expr:
+                      type: string
+                    javascript:
+                      type: string
+                    jsonPath:
+                      type: string
+                    template:
+                      type: string
+                  type: object
+                labels:
+                  additionalProperties:
+                    type: string
+                  type: object
+                lifecycle:
+                  description: The lifecycle state of the component e.g. production, staging, dev, etc.
+                  type: string
+                logs:
+                  description: Logs is a list of logs selector for apm-hub.
+                  items:
+                    properties:
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      name:
+                        type: string
+                      type:
+                        type: string
+                    type: object
+                  type: array
+                lookup:
+                  description: |-
+                    Lookup component definitions from an external source, use the
+                    forEach property to iterate over the results to further enrich each component.
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                name:
+                  type: string
+                namespace:
+                  type: string
+                order:
+                  type: integer
+                owner:
+                  type: string
+                parentLookup:
+                  description: Reference to populate parent_id
+                  properties:
+                    externalID:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                properties:
+                  items:
+                    properties:
+                      color:
+                        type: string
+                      configLookup:
+                        properties:
+                          config:
+                            description: Lookup a config by it
+                            properties:
+                              agent:
+                                description: |-
+                                  Agent can be the agent id or the name of the agent.
+                                   Additionally, the special "self" value can be used to select resources without an agent.
+                                type: string
+                              cache:
+                                description: |-
+                                  Cache directives
+                                   'no-cache' (should not fetch from cache but can be cached)
+                                   'no-store' (should not cache)
+                                   'max-age=X' (cache for X duration)
+                                type: string
+                              class:
+                                description: Deprecated. Use `fieldSelector (config_class=)`
+                                type: string
+                              external_id:
+                                description: Deprecated. Use `fieldSelector (external_id=)`
+                                type: string
+                              fieldSelector:
+                                type: string
+                              health:
+                                description: |-
+                                  Health filters resources by the health.
+                                  Multiple healths can be provided separated by comma.
+                                type: string
+                              id:
+                                type: string
+                              includeDeleted:
+                                type: boolean
+                              labelSelector:
+                                type: string
+                              limit:
+                                type: integer
+                              name:
+                                type: string
+                              namespace:
+                                type: string
+                              scope:
+                                type: string
+                              search:
+                                description: Search query that applies to the resource name, tag & labels.
+                                type: string
+                              statuses:
+                                description: Statuses filter resources by the status
+                                items:
+                                  type: string
+                                type: array
+                              tagSelector:
+                                type: string
+                              tags:
+                                additionalProperties:
+                                  type: string
+                                description: Deprecated. Use `labelSelector`
+                                type: object
+                              type:
+                                description: Deprecated. Use `types`
+                                type: string
+                              types:
+                                description: Types filter resources by the type
+                                items:
+                                  type: string
+                                type: array
+                            type: object
+                          display:
+                            description: Apply transformations to the value
+                            properties:
+                              expr:
+                                type: string
+                              javascript:
+                                type: string
+                              jsonPath:
+                                type: string
+                              template:
+                                type: string
+                            type: object
+                          field:
+                            description: A JSONPath expression to lookup the value in the config
+                            type: string
+                          id:
+                            type: string
+                        type: object
+                      headline:
+                        type: boolean
+                      icon:
+                        type: string
+                      label:
+                        type: string
+                      lastTransition:
+                        type: string
+                      links:
+                        items:
+                          properties:
+                            icon:
+                              type: string
+                            label:
+                              type: string
+                            text:
+                              type: string
+                            tooltip:
+                              type: string
+                            type:
+                              description: e.g. documentation, support, playbook
+                              type: string
+                            url:
+                              type: string
+                          type: object
+                        type: array
+                      lookup:
+                        description: CanarySpec defines the desired state of Canary
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      max:
+                        format: int64
+                        type: integer
+                      min:
+                        format: int64
+                        type: integer
+                      name:
+                        type: string
+                      order:
+                        type: integer
+                      status:
+                        type: string
+                      summary:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      text:
+                        type: string
+                      tooltip:
+                        type: string
+                      type:
+                        type: string
+                      unit:
+                        description: e.g. milliseconds, bytes, millicores, epoch etc.
+                        type: string
+                      value:
+                        format: int64
+                        type: integer
+                    type: object
+                  type: array
+                  x-kubernetes-preserve-unknown-fields: true
+                relationships:
+                  items:
+                    properties:
+                      ref:
+                        type: string
+                      type:
+                        description: The type of relationship, e.g. dependsOn, subcomponentOf, providesApis, consumesApis
+                        type: string
+                    type: object
+                  type: array
+                selectors:
+                  description: Lookup and associcate other components with this component
+                  items:
+                    properties:
+                      agent:
+                        description: |-
+                          Agent can be the agent id or the name of the agent.
+                           Additionally, the special "self" value can be used to select resources without an agent.
+                        type: string
+                      cache:
+                        description: |-
+                          Cache directives
+                           'no-cache' (should not fetch from cache but can be cached)
+                           'no-store' (should not cache)
+                           'max-age=X' (cache for X duration)
+                        type: string
+                      fieldSelector:
+                        type: string
+                      health:
+                        description: |-
+                          Health filters resources by the health.
+                          Multiple healths can be provided separated by comma.
+                        type: string
+                      id:
+                        type: string
+                      includeDeleted:
+                        type: boolean
+                      labelSelector:
+                        type: string
+                      limit:
+                        type: integer
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                      scope:
+                        type: string
+                      search:
+                        description: Search query that applies to the resource name, tag & labels.
+                        type: string
+                      statuses:
+                        description: Statuses filter resources by the status
+                        items:
+                          type: string
+                        type: array
+                      tagSelector:
+                        type: string
+                      types:
+                        description: Types filter resources by the type
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  type: array
+                statusExpr:
+                  description: |-
+                    statusExpr allows defining a cel expression to evaluate the status of a component
+                    based on the summary.
+                  type: string
+                summary:
+                  description: Summary is the health, incidents, insights & check summary
+                  properties:
+                    checks:
+                      additionalProperties:
+                        type: integer
+                      type: object
+                    healthy:
+                      type: integer
+                    incidents:
+                      additionalProperties:
+                        additionalProperties:
+                          type: integer
+                        type: object
+                      type: object
+                    info:
+                      type: integer
+                    insights:
+                      additionalProperties:
+                        additionalProperties:
+                          type: integer
+                        type: object
+                      type: object
+                    unhealthy:
+                      type: integer
+                    warning:
+                      type: integer
+                  type: object
+                tooltip:
+                  type: string
+                type:
+                  description: The type of component, e.g. service, API, website, library, database, etc.
+                  type: string
+              type: object
+            status:
+              properties:
+                status:
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
