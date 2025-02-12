@@ -2,7 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: redis-fail
-  namespace: canaries
   labels:
     "Expected-Fail": "true"
 spec:

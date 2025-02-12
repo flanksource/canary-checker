@@ -60,9 +60,9 @@ type TopologySpec struct {
 	PushLocation connection.HTTPConnection `json:"push,omitempty"`
 }
 
-func (s Topology) NextRuntime() (*time.Time, error) {
-	if s.Spec.Schedule != "" {
-		schedule, err := cron.ParseStandard(s.Spec.Schedule)
+func (t Topology) NextRuntime() (*time.Time, error) {
+	if t.Spec.Schedule != "" {
+		schedule, err := cron.ParseStandard(t.Spec.Schedule)
 		if err != nil {
 			return nil, err
 		}
@@ -72,11 +72,11 @@ func (s Topology) NextRuntime() (*time.Time, error) {
 	return nil, nil
 }
 
-func (s Topology) String() string {
-	return fmt.Sprintf("%s/%s", s.Namespace, s.Name)
+func (t Topology) String() string {
+	return fmt.Sprintf("%s/%s", t.Namespace, t.Name)
 }
-func (s Topology) IsEmpty() bool {
-	return len(s.Spec.Properties) == 0 && len(s.Spec.Components) == 0 && s.Name == ""
+func (t Topology) IsEmpty() bool {
+	return len(t.Spec.Properties) == 0 && len(t.Spec.Components) == 0 && t.Name == ""
 }
 
 func (spec TopologySpec) GetSchedule() string {
@@ -90,8 +90,8 @@ type TopologyStatus struct {
 	Status             string `json:"status,omitempty"`
 }
 
-func (s Topology) GetPersistedID() string {
-	return string(s.GetUID())
+func (t Topology) GetPersistedID() string {
+	return string(t.GetUID())
 }
 
 type Selector struct {

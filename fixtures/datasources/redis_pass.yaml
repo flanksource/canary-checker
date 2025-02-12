@@ -2,7 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: redis-succeed
-  namespace: canaries
 spec:
   schedule: "@every 5m"
   redis:

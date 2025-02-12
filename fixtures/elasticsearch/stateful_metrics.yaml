@@ -2,7 +2,7 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: "container-log-counts"
-  namespace: observability
+spec:
   # The schedule can be as short or as long as you want, the query will always search for log
   # since the last query
   schedule: "@every 5m"

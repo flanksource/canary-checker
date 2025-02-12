@@ -3,7 +3,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: pod-exit-code-check
-  namespace: default
   labels:
     "Expected-Fail": "false"
 spec:

@@ -3,7 +3,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: ingress-test
-  namespace: default
   labels:
     "Expected-Fail": "false"
 spec:
@@ -12,8 +11,8 @@ spec:
     - name: ingress-accessibility-check
       namespace: default
       description: "deploy httpbin & check that it's accessible via ingress"
-      waitFor: 
-        expr: 'dyn(resources).all(r, k8s.isReady(r))'
+      waitFor:
+        expr: "dyn(resources).all(r, k8s.isReady(r))"
         interval: 2s
         timeout: 5m
       staticResources:

@@ -2,7 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: namespaced-http-check
-  namespace: default
 spec:
   schedule: "@every 5m"
   http:
