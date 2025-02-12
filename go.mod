@@ -4,6 +4,10 @@ go 1.23
 
 toolchain go1.23.4
 
+godebug (
+	x509negativeserial=1
+)
+
 require (
 	cloud.google.com/go/storage v1.43.0
 	github.com/allegro/bigcache v1.2.1
