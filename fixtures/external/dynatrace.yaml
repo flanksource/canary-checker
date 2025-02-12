@@ -12,9 +12,10 @@ spec:
     - name: dynatrace
       scheme: https
       host: <HOST>
-      apiKey: 
-        value: '<ACCESS_TOKEN>' # https://www.dynatrace.com/support/help/manage/access-control/access-tokens/personal-access-token
-      javascript: |
+      apiKey:
+        value: "<ACCESS_TOKEN>" # https://www.dynatrace.com/support/help/manage/access-control/access-tokens/personal-access-token
+      display:
+        javascript: |
           var out = _.map(results, function(r) {
             return {
               name: r.title,

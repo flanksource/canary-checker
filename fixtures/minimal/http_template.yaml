@@ -9,7 +9,8 @@ spec:
       url: https://webhook.site/#!/9f1392a6-718a-4ef5-a8e2-bfb55b08afca/f93d307b-0aaf-4a38-b9b3-db5daaae5657/1
       responseCodes: [200]
       templateBody: true
-      envVar:
+
+      env:
         - name: db
           valueFrom:
             secretKeyRef:

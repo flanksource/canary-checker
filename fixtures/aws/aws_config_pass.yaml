@@ -5,7 +5,8 @@ metadata:
 spec:
   schedule: "@every 5m"
   awsConfig:
-    - query: |
+    - name: aws config pass
+      query: |
         SELECT
         configuration.complianceType,
         COUNT(*)
@@ -13,17 +14,16 @@ spec:
         resourceType = 'AWS::Config::ResourceCompliance'
         GROUP BY
         configuration.complianceType
-      awsConnection:
-        accessKeyID:
-          valueFrom:
-            secretKeyRef:
-              name: aws-credentials
-              key: AWS_ACCESS_KEY_ID
-        secretKey:
-          valueFrom:
-            secretKeyRef:
-              name: aws-credentials
-              key: AWS_SECRET_ACCESS_KEY
-        region: af-south-1
+      accessKey:
+        valueFrom:
+          secretKeyRef:
+            name: aws-credentials
+            key: AWS_ACCESS_KEY_ID
+      secretKey:
+        valueFrom:
+          secretKeyRef:
+            name: aws-credentials
+            key: AWS_SECRET_ACCESS_KEY
+      region: af-south-1
       display:
         template: "{{ .results }}"

@@ -3,7 +3,6 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: always-passing
-  namespace: canaries
 spec:
   schedule: "0 * * * *"
   concurrencyPolicy: Forbid

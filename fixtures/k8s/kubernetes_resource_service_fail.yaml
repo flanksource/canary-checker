@@ -3,7 +3,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: invalid-service-spec-test
-  namespace: default
   labels:
     "Expected-Fail": "true"
 spec:

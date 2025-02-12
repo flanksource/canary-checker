@@ -2,7 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: postgres-succeed
-  namespace: canaries
 spec:
   schedule: "@every 5m"
   postgres:

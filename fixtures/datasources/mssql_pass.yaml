@@ -2,7 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: mssql-pass
-  namespace: canaries
 spec:
   schedule: "@every 5m"
   mssql:
