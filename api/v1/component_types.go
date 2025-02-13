@@ -139,6 +139,7 @@ type Property struct {
 	Headline bool   `json:"headline,omitempty"`
 	Type     string `json:"type,omitempty"`
 	Color    string `json:"color,omitempty"`
+	Hidden   bool   `json:"hidden,omitempty"`
 	// e.g. milliseconds, bytes, millicores, epoch etc.
 	Unit           string       `json:"unit,omitempty"`
 	Value          *int64       `json:"value,omitempty"`
