@@ -294,6 +294,8 @@ spec:
                         type: object
                       headline:
                         type: boolean
+                      hidden:
+                        type: boolean
                       icon:
                         type: string
                       label:
